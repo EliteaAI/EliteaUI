@@ -94,6 +94,17 @@ describe('TriggerTypeSelector EL-7011 US-37', () => {
     expect(screen.getByTestId('option-schedule').textContent).toBe('Schedule');
   });
 
+  it('shows the legacy schedule notice only for a stored schedule', () => {
+    const { unmount } = render(<TriggerTypeSelector />);
+    expect(screen.queryByText(/no longer editable here/i)).toBeNull();
+    unmount();
+
+    mocks.triggerData = { type: 'schedule', cron: '0 0 * * 6' };
+    render(<TriggerTypeSelector />);
+
+    expect(screen.getByText(/no longer editable here/i)).toBeTruthy();
+  });
+
   it('R2.3 greys out Webhook when the pipeline gains an interactive node', () => {
     setForm(HITL_YAML);
 

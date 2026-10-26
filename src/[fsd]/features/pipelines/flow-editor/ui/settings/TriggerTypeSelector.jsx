@@ -8,6 +8,7 @@ import { Box, IconButton, Link, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { FlowEditorConstants, WebhookConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { LegacyScheduleNotice } from '@/[fsd]/features/schedule';
 import { useDelegatedOauthToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { useSelectedProject, useToast } from '@/[fsd]/shared/lib/hooks';
 import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
@@ -367,6 +368,13 @@ const TriggerTypeSelector = memo(props => {
           .
         </Typography>
       </BannerMessage>
+
+      {isLegacySchedule && (
+        <LegacyScheduleNotice
+          cron={triggerData?.cron}
+          onOpenSchedules={scrollToSchedules}
+        />
+      )}
 
       <PipelineWebhookModal
         open={isWebhookModalOpen}
