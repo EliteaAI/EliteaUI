@@ -10,7 +10,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 
 import EntitySchedulesSection from '../EntitySchedulesSection';
 
-// EL-7011 US-35 and US-36: the Schedules section of the agent and pipeline editors
+// and the Schedules section of the agent and pipeline editors
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -90,7 +90,7 @@ const renderSection = (props = {}, path = '/agents/my/12') =>
 
 const LinkState = () => <span data-testid="link-state">{JSON.stringify(useLocation().state)}</span>;
 
-describe('EntitySchedulesSection EL-7011', () => {
+describe('EntitySchedulesSection', () => {
   beforeEach(() => {
     mocks.permissions = ALL_RIGHTS;
     mocks.cardProps = [];
@@ -113,8 +113,8 @@ describe('EntitySchedulesSection EL-7011', () => {
     expect(anchor).toContainElement(screen.getByTestId('agent-schedules-section-header'));
   });
 
-  describe('agent editor (US-35)', () => {
-    it('TC-US35-01 TC-US35-18 R1.1 R1.6 EL-7011 CR-20 shows the header with "+ Schedule", the count and the "Manage Schedules" link without an icon', () => {
+  describe('agent editor', () => {
+    it('TC-US35-01 TC-US35-18 shows the header with "+ Schedule", the count and the "Manage Schedules" link without an icon', () => {
       renderSection();
 
       expect(screen.getByText('Schedules')).toBeInTheDocument();
@@ -124,11 +124,11 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(link).toHaveTextContent(/^Manage Schedules$/);
       expect(link.querySelector('svg')).toBeNull();
       expect(link).toHaveAttribute('href', '/settings/schedules?entityType=agent&entityId=12');
-      // BUG-38: the app link colour, not the brand colour
+      // the app link colour, not the brand colour
       expect(link).toHaveStyle({ color: theme.palette.text.link });
     });
 
-    it('R1.4 R1.5 EL-7011 CR-15 the add button is an iconLabel button with a plus icon', () => {
+    it('the add button is an iconLabel button with a plus icon', () => {
       renderSection();
 
       const add = screen.getByTestId('agent-schedules-section-add');
@@ -137,21 +137,21 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(add.querySelector('.MuiButton-startIcon svg')).toBeInTheDocument();
     });
 
-    it('owner bug 2026-10-21 shows two skeleton cards while the first page loads', () => {
+    it('shows two skeleton cards while the first page loads', () => {
       mocks.entitySchedules.mockReturnValue(listOf([], { isFetching: true }));
       renderSection();
 
       expect(screen.getAllByTestId('agent-schedules-section-skeleton')).toHaveLength(2);
     });
 
-    it('owner bug 2026-10-21 shows no skeleton once rows are on screen', () => {
+    it('shows no skeleton once rows are on screen', () => {
       mocks.entitySchedules.mockReturnValue(listOf([{ id: 1, name: 'Daily digest' }], { isFetching: true }));
       renderSection();
 
       expect(screen.queryByTestId('agent-schedules-section-skeleton')).not.toBeInTheDocument();
     });
 
-    it('TC-US35-10 R5.5 Open run history of a card opens the nested edit form on its Runs section', () => {
+    it('TC-US35-10 Open run history of a card opens the nested edit form on its Runs section', () => {
       renderSection({}, '/agents/my/12?viewMode=owner');
 
       act(() => mocks.cardProps.at(-1).onOpenRunHistory(2));
@@ -162,7 +162,7 @@ describe('EntitySchedulesSection EL-7011', () => {
       );
     });
 
-    it('TC-US35-18 R3.6 "Open all in Schedules" passes the agent name for the entity chip', () => {
+    it('TC-US35-18 "Open all in Schedules" passes the agent name for the entity chip', () => {
       renderSection({ entityName: 'Digest bot' });
 
       fireEvent.click(screen.getByTestId('agent-schedules-section-open-all'));
@@ -170,7 +170,7 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(screen.getByTestId('link-state')).toHaveTextContent('{"entityName":"Digest bot"}');
     });
 
-    it('TC-US35-04 R2.1 requests the schedules of this agent and shows one card per row', () => {
+    it('TC-US35-04 requests the schedules of this agent and shows one card per row', () => {
       renderSection();
 
       expect(mocks.entitySchedules).toHaveBeenLastCalledWith({
@@ -186,14 +186,14 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(mocks.cardProps[0]).toMatchObject({ entityType: 'agent', currentUserId: 3 });
     });
 
-    it('TC-US35-19 R1.6 counts one schedule in the singular', () => {
+    it('TC-US35-19 counts one schedule in the singular', () => {
       mocks.entitySchedules.mockReturnValue(listOf([{ id: 1, name: 'Daily digest' }]));
       renderSection();
 
       expect(screen.getByText('1 schedule runs the base version')).toBeInTheDocument();
     });
 
-    it('TC-US35-07 R2.5 shows "No schedules run the base version yet." with "+ Schedule" for an empty list', () => {
+    it('TC-US35-07 shows "No schedules run the base version yet." with "+ Schedule" for an empty list', () => {
       mocks.entitySchedules.mockReturnValue(listOf([]));
       renderSection();
 
@@ -202,14 +202,14 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(screen.queryByTestId(/^card-/)).not.toBeInTheDocument();
     });
 
-    it('R2.5 shows no empty state while the first page loads', () => {
+    it('shows no empty state while the first page loads', () => {
       mocks.entitySchedules.mockReturnValue(listOf([], { isFetching: true }));
       renderSection();
 
       expect(screen.queryByText('No schedules run the base version yet.')).not.toBeInTheDocument();
     });
 
-    it('TC-US35-06 R2.4 "Show more" loads the next cards', () => {
+    it('TC-US35-06 "Show more" loads the next cards', () => {
       const list = listOf([{ id: 1, name: 'Daily digest' }], { total: 25, hasMore: true });
       mocks.entitySchedules.mockReturnValue(list);
       renderSection();
@@ -219,7 +219,7 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(list.loadMore).toHaveBeenCalledTimes(1);
     });
 
-    it('TC-US35-03 R1.5 shows the error text and a retry button that refetches', () => {
+    it('TC-US35-03 shows the error text and a retry button that refetches', () => {
       const list = listOf([], { isError: true, error: { status: 500, data: { error: 'Server down' } } });
       mocks.entitySchedules.mockReturnValue(list);
       renderSection();
@@ -230,7 +230,7 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(screen.queryByText('No schedules run the base version yet.')).not.toBeInTheDocument();
     });
 
-    it('TC-US35-08 R3.1 "+ Schedule" opens the nested create form with the editor as the return target', () => {
+    it('TC-US35-08 "+ Schedule" opens the nested create form with the editor as the return target', () => {
       renderSection({}, '/agents/my/12/70?viewMode=owner');
 
       fireEvent.click(screen.getByTestId('agent-schedules-section-add'));
@@ -242,7 +242,7 @@ describe('EntitySchedulesSection EL-7011', () => {
       );
     });
 
-    it('TC-US35-10 R3.2 a card opens the nested edit form with the editor as the return target', () => {
+    it('TC-US35-10 a card opens the nested edit form with the editor as the return target', () => {
       renderSection({}, '/agents/my/12?viewMode=owner');
 
       fireEvent.click(screen.getByTestId('card-2'));
@@ -253,7 +253,7 @@ describe('EntitySchedulesSection EL-7011', () => {
       );
     });
 
-    it('TC-US35-09 R3.4 hides "+ Schedule" without the create permission', () => {
+    it('TC-US35-09 hides "+ Schedule" without the create permission', () => {
       mocks.permissions = [PERMISSIONS.schedules.list];
       renderSection();
 
@@ -261,7 +261,7 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(screen.queryByTestId('agent-schedules-section-add')).not.toBeInTheDocument();
     });
 
-    it('TC-US35-14 R1.2 hides the section and sends no request without the list permission', () => {
+    it('TC-US35-14 hides the section and sends no request without the list permission', () => {
       mocks.permissions = [];
       const { container } = renderSection();
 
@@ -269,28 +269,28 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(mocks.entitySchedules).toHaveBeenLastCalledWith(expect.objectContaining({ skip: true }));
     });
 
-    it('TC-US35-15 R1.2 hides the section on a 403 of the list', () => {
+    it('TC-US35-15 hides the section on a 403 of the list', () => {
       mocks.entitySchedules.mockReturnValue(listOf([], { isError: true, error: { status: 403 } }));
       const { container } = renderSection();
 
       expect(container).toBeEmptyDOMElement();
     });
 
-    it('TC-US35-13 R1.3 hides the section inside a chat', () => {
+    it('TC-US35-13 hides the section inside a chat', () => {
       const { container } = renderSection({ isChatView: true });
 
       expect(container).toBeEmptyDOMElement();
     });
 
-    it('TC-US35-02 R1.4 hides the section for an unsaved agent', () => {
+    it('TC-US35-02 hides the section for an unsaved agent', () => {
       const { container } = renderSection({ entityId: undefined });
 
       expect(container).toBeEmptyDOMElement();
     });
   });
 
-  describe('editor version (US-58 CR-19)', () => {
-    it('R4.2 EL-7011 CR-19 requests the schedules of the editor version', () => {
+  describe('editor version', () => {
+    it('requests the schedules of the editor version', () => {
       renderSection({ versionId: 71, versionName: 'v1.0.1' });
 
       expect(mocks.entitySchedules).toHaveBeenLastCalledWith({
@@ -301,12 +301,12 @@ describe('EntitySchedulesSection EL-7011', () => {
       });
     });
 
-    it('R4.4 EL-7011 CR-19 names the version "base" as the base version', () => {
+    it('names the version "base" as the base version', () => {
       renderSection({ versionId: 70, versionName: 'base' });
       expect(screen.getByText('2 schedules run the base version')).toBeInTheDocument();
     });
 
-    it('R4.4 EL-7011 CR-19 names the version in the count text', () => {
+    it('names the version in the count text', () => {
       renderSection({ versionId: 71, versionName: 'v1.0.1' });
       expect(screen.getByText('2 schedules run version v1.0.1')).toBeInTheDocument();
 
@@ -316,7 +316,7 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(screen.getByText('1 schedule runs version v1.0.1')).toBeInTheDocument();
     });
 
-    it('R4.5 EL-7011 CR-19 names the version in the empty state and keeps the add button and link', () => {
+    it('names the version in the empty state and keeps the add button and link', () => {
       mocks.entitySchedules.mockReturnValue(listOf([]));
       renderSection({ versionId: 71, versionName: 'v1.0.1' });
 
@@ -325,7 +325,7 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(screen.getByTestId('agent-schedules-section-open-all')).toBeInTheDocument();
     });
 
-    it('R5.1 EL-7011 CR-19 "+ Schedule" passes the editor versionId in the form URL', () => {
+    it('"+ Schedule" passes the editor versionId in the form URL', () => {
       renderSection({ versionId: 71 }, '/agents/my/12?viewMode=owner');
 
       fireEvent.click(screen.getByTestId('agent-schedules-section-add'));
@@ -336,7 +336,7 @@ describe('EntitySchedulesSection EL-7011', () => {
       );
     });
 
-    it('R5.2 EL-7011 CR-19 Edit passes the version of that schedule in the form URL', () => {
+    it('Edit passes the version of that schedule in the form URL', () => {
       mocks.entitySchedules.mockReturnValue(listOf([{ id: 2, name: 'Friday recap', version_id: 72 }]));
       renderSection({ versionId: 71 }, '/agents/my/12');
 
@@ -349,11 +349,11 @@ describe('EntitySchedulesSection EL-7011', () => {
     });
   });
 
-  describe('pipeline editor (US-36)', () => {
+  describe('pipeline editor', () => {
     const renderPipeline = (props = {}) =>
       renderSection({ entityType: 'pipeline', entityId: 9, ...props }, '/pipelines/all/9?viewMode=owner');
 
-    it('TC-US36-01 TC-US36-03 TC-US36-16 R1.1 R1.4 R2.1 lists the schedules of this pipeline with the pipeline count text', () => {
+    it('TC-US36-01 TC-US36-03 TC-US36-16 lists the schedules of this pipeline with the pipeline count text', () => {
       renderPipeline();
 
       expect(mocks.entitySchedules).toHaveBeenLastCalledWith({
@@ -367,7 +367,7 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(mocks.cardProps.map(card => card.entityType)).toEqual(['pipeline', 'pipeline']);
     });
 
-    it('TC-US36-01 TC-US36-16 R1.6 BUG-32 EL-7011 narrower than 30 rem: button and link on row 1, count wraps on row 2', () => {
+    it('TC-US36-01 TC-US36-16 narrower than 30 rem: button and link on row 1, count wraps on row 2', () => {
       renderPipeline();
 
       const css = [...document.querySelectorAll('style')].map(style => style.textContent).join('');
@@ -385,7 +385,7 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(count).not.toHaveStyle({ whiteSpace: 'nowrap', textOverflow: 'ellipsis' });
     });
 
-    it('TC-US36-17 R1.4 shows the empty state of a pipeline without schedules', () => {
+    it('TC-US36-17 shows the empty state of a pipeline without schedules', () => {
       mocks.entitySchedules.mockReturnValue(listOf([]));
       renderPipeline();
 
@@ -393,17 +393,17 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(screen.queryByText(/^\d+ schedules? runs? /)).not.toBeInTheDocument();
     });
 
-    it('TC-US36-11 R1.2 hides the section of a pipeline opened in a chat', () => {
+    it('TC-US36-11 hides the section of a pipeline opened in a chat', () => {
       expect(renderPipeline({ isChatView: true }).container).toBeEmptyDOMElement();
     });
 
-    it('TC-US36-12 R1.3 hides the pipeline section without the list permission', () => {
+    it('TC-US36-12 hides the pipeline section without the list permission', () => {
       mocks.permissions = [PERMISSIONS.schedules.create];
 
       expect(renderPipeline().container).toBeEmptyDOMElement();
     });
 
-    it('TC-US36-04 TC-US36-09 R2.2 R2.3 passes every row the server returns, a migrated one and another owner included, to a card', () => {
+    it('TC-US36-04 TC-US36-09 passes every row the server returns, a migrated one and another owner included, to a card', () => {
       const migrated = { id: 5, name: 'Legacy nightly', owner: { id: 8, name: 'Old Creator' } };
       mocks.entitySchedules.mockReturnValue(listOf([migrated]));
       renderPipeline();
@@ -412,7 +412,7 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(mocks.cardProps[0]).toMatchObject({ row: migrated, currentUserId: 3, entityType: 'pipeline' });
     });
 
-    it('TC-US36-06 R3.1 "+ Schedule" opens the create form nested in the pipeline', () => {
+    it('TC-US36-06 "+ Schedule" opens the create form nested in the pipeline', () => {
       renderPipeline();
 
       fireEvent.click(screen.getByTestId('pipeline-schedules-section-add'));

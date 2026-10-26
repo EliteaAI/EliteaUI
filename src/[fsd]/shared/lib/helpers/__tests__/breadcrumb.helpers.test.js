@@ -153,7 +153,7 @@ describe('applyBreadcrumbLabels', () => {
     expect(labelsOf(applyBreadcrumbLabels(trail, 'Figma'))).toEqual(['MCPs', 'Figma', 'Run History']);
   });
 
-  it('EL-7011 US-35 nests the schedule form under the agent: Agents / <agent> / New or Edit Schedule', () => {
+  it('nests the schedule form under the agent: Agents / <agent> / New or Edit Schedule', () => {
     const create = resolveBreadcrumbTrail('/agents/all/12/schedules/create');
     const edit = resolveBreadcrumbTrail('/agents/all/12/schedules/4');
 
@@ -171,7 +171,7 @@ describe('applyBreadcrumbLabels', () => {
     expect(getBreadcrumbEntityId(edit)).toBe('12');
   });
 
-  it('EL-7011 US-36 nests the schedule form under the pipeline: Pipelines / <pipeline> / ...', () => {
+  it('nests the schedule form under the pipeline: Pipelines / <pipeline> /...', () => {
     const create = resolveBreadcrumbTrail('/pipelines/all/9/schedules/create');
     const edit = resolveBreadcrumbTrail('/pipelines/all/9/schedules/4');
 

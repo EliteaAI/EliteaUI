@@ -389,7 +389,7 @@ describe('IndexScheduleModal credentials', () => {
     expect(onSubmit).toHaveBeenCalledWith(CRON, { elitea_title: PERSONAL_C, private: true });
   });
 
-  it('saves the stored cron unchanged with the stored credential (R1.4, EL-7011)', async () => {
+  it('saves the stored cron unchanged with the stored credential', async () => {
     renderModal({ isEdit: true, credentials: { elitea_title: PROJECT_A, private: false } });
 
     await waitFor(() => expect(shownValue()).toHaveTextContent(PROJECT_A));
@@ -399,7 +399,7 @@ describe('IndexScheduleModal credentials', () => {
     expect(onSubmit).toHaveBeenCalledWith(CRON, { elitea_title: PROJECT_A, private: false });
   });
 
-  it('renders nothing while the popup is closed (R1.4, EL-7011)', () => {
+  it('renders nothing while the popup is closed', () => {
     renderModal({ open: false });
 
     expect(screen.queryByTestId('schedule-save')).not.toBeInTheDocument();

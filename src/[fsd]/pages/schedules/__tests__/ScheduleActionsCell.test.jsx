@@ -6,7 +6,7 @@ import { cleanup, render } from '@testing-library/react';
 
 import ScheduleActionsCell from '../ScheduleActionsCell';
 
-// EL-7011: Edit in the row menu opens the Edit schedule subpage (US-32 R1.1).
+// Edit in the row menu opens the Edit schedule subpage.
 
 const navigate = vi.fn();
 const menuProps = vi.fn();
@@ -21,7 +21,7 @@ vi.mock('@/[fsd]/features/schedule', () => ({
   },
 }));
 
-describe('ScheduleActionsCell (EL-7011)', () => {
+describe('ScheduleActionsCell', () => {
   afterEach(cleanup);
 
   it('onEdit opens the schedule subpage of the row', () => {
@@ -30,7 +30,7 @@ describe('ScheduleActionsCell (EL-7011)', () => {
     expect(navigate).toHaveBeenCalledWith('/settings/schedules/64');
   });
 
-  it('owner bug 2026-10-21 US-28 Open run history opens the schedule subpage on its Runs section', () => {
+  it('Open run history opens the schedule subpage on its Runs section', () => {
     render(<ScheduleActionsCell row={{ id: 64, name: 'Nightly' }} />);
     menuProps.mock.calls.at(-1)[0].onOpenRunHistory();
     expect(navigate).toHaveBeenCalledWith({ pathname: '/settings/schedules/64', hash: '#runs' });

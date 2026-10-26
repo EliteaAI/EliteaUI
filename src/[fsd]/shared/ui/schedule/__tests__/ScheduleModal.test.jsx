@@ -101,7 +101,7 @@ describe('ScheduleModal timezone handling', () => {
   });
 });
 
-describe('ScheduleModal popup contract (R1.4, EL-7011)', () => {
+describe('ScheduleModal popup contract', () => {
   it('keeps the popup, tab, summary and button test ids', () => {
     renderModal({ cron: '51 12 * * *' });
 

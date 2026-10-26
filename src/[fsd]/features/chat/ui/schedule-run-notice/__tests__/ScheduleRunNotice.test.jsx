@@ -2,14 +2,13 @@
 import { act } from 'react';
 
 import { MemoryRouter } from 'react-router-dom';
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import '@testing-library/jest-dom/vitest';
 import { ThemeProvider, createTheme } from '@mui/material';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import lightPalette from '@/lightPalette';
+import '@testing-library/jest-dom/vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import ScheduleRunNotice from '../ScheduleRunNotice';
 
@@ -53,13 +52,13 @@ const ui = (conversationId = 1, list = participants) => (
 
 const emit = payload => act(() => mocks.handler(payload));
 
-describe('EL-7011 ScheduleRunNotice', () => {
+describe('ScheduleRunNotice', () => {
   beforeEach(() => {
     mocks.handler = null;
   });
   afterEach(() => cleanup());
 
-  it('R1.1 EL-7011 shows a Success notice with an icon for a participant agent', () => {
+  it('shows a Success notice with an icon for a participant agent', () => {
     render(ui());
     emit(event());
 
@@ -69,7 +68,7 @@ describe('EL-7011 ScheduleRunNotice', () => {
     expect(notice.previousElementSibling.tagName.toLowerCase()).toBe('svg');
   });
 
-  it('R1.2 EL-7011 shows a Failed notice with an icon for a participant agent', () => {
+  it('shows a Failed notice with an icon for a participant agent', () => {
     render(ui());
     emit(event({ status: 'failed' }));
 
@@ -78,7 +77,7 @@ describe('EL-7011 ScheduleRunNotice', () => {
     expect(notice.previousElementSibling.tagName.toLowerCase()).toBe('svg');
   });
 
-  it('R1.3 EL-7011 replaces the notice when a newer event matches', () => {
+  it('replaces the notice when a newer event matches', () => {
     render(ui());
     emit(event());
     emit(event({ status: 'failed' }));
@@ -87,14 +86,14 @@ describe('EL-7011 ScheduleRunNotice', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Failed');
   });
 
-  it.each(['running', 'queued', undefined])('R1.4 EL-7011 ignores the status %s', status => {
+  it.each(['running', 'queued', undefined])('ignores the status %s', status => {
     render(ui());
     emit(event({ status }));
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
-  it('R1.4 EL-7011 keeps the shown notice when a later event has an unknown status', () => {
+  it('keeps the shown notice when a later event has an unknown status', () => {
     render(ui());
     emit(event());
     emit(event({ status: 'running' }));
@@ -102,21 +101,21 @@ describe('EL-7011 ScheduleRunNotice', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Success');
   });
 
-  it('R3.3 EL-7011 ignores an event for another agent', () => {
+  it('ignores an event for another agent', () => {
     render(ui());
     emit(event({ entity_id: 999 }));
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
-  it('R3.3 EL-7011 ignores an event for another project', () => {
+  it('ignores an event for another project', () => {
     render(ui());
     emit(event({ project_id: PROJECT_ID + 1 }));
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
-  it('R2.1 EL-7011 links Open run to the run history of the agent', () => {
+  it('links Open run to the run history of the agent', () => {
     render(ui());
     emit(event());
 
@@ -143,7 +142,7 @@ describe('EL-7011 ScheduleRunNotice', () => {
     );
   });
 
-  it('R2.2 EL-7011 shows no link without conversation_id', () => {
+  it('shows no link without conversation_id', () => {
     render(ui());
     emit(event({ conversation_id: undefined }));
 
@@ -151,7 +150,7 @@ describe('EL-7011 ScheduleRunNotice', () => {
     expect(screen.queryByRole('link', { name: 'Open run' })).not.toBeInTheDocument();
   });
 
-  it('R3.4 EL-7011 hides the notice when the user closes it', () => {
+  it('hides the notice when the user closes it', () => {
     render(ui());
     emit(event());
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss notice' }));
@@ -159,7 +158,7 @@ describe('EL-7011 ScheduleRunNotice', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
-  it('R3.4 EL-7011 clears the notice when the conversation changes', () => {
+  it('clears the notice when the conversation changes', () => {
     const { rerender } = render(ui(1));
     emit(event());
     expect(screen.getByRole('status')).toBeInTheDocument();

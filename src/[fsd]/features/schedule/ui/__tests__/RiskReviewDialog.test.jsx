@@ -23,7 +23,7 @@ vi.mock('@/[fsd]/shared/ui/input/StyledInputEnhancer', () => ({
   ),
 }));
 
-// EL-7011 owner CR 2026-10-21: the dialog "Review risks before scheduling" opened on Save (US-33)
+// the dialog "Review risks before scheduling" opened on Save
 
 const TOOLS = [
   {
@@ -84,7 +84,7 @@ const pickRunWithoutAsking = () => fireEvent.click(screen.getByRole('radio', { n
 const typeName = text =>
   fireEvent.change(screen.getByLabelText(/Type the schedule name/), { target: { value: text } });
 
-describe('EL-7011 owner CR RiskReviewDialog', () => {
+describe('RiskReviewDialog', () => {
   afterEach(cleanup);
 
   it('names the entity and shows one card per tool with its effect and badge', () => {

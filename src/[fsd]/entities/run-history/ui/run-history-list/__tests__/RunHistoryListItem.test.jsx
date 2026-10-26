@@ -242,14 +242,14 @@ describe('RunHistoryListItem re-rendering', () => {
   });
 });
 
-describe('RunHistoryListItem schedule run cells (EL-7011 CR-22 review r9)', () => {
+describe('RunHistoryListItem schedule run cells', () => {
   const COLUMNS = [
     { id: 'schedule', label: 'Schedule', width: '7.5rem', render: () => 'Sched Monday digest for the squad' },
     { id: 'status', label: 'Status', width: '5.75rem', render: () => 'Waiting for input' },
     { id: 'empty', label: 'Empty', width: '5rem', render: () => '-' },
   ];
 
-  it('CR-22 review r9 gives a cut Status or Schedule value its full text in a tooltip', () => {
+  it('gives a cut Status or Schedule value its full text in a tooltip', () => {
     renderItem(CONVERSATION_ROW, { extraColumns: COLUMNS });
 
     expect(screen.getByText('Waiting for input')).toHaveAttribute('data-tooltip', 'Waiting for input');

@@ -6,7 +6,7 @@ import { convertConversationToChatHistory } from '@/common/convertChatConversati
 
 import { findRunAnswer } from '../scheduleRuns.helpers';
 
-// EL-7011 CR-21: trimmed from the live answer of conversation 108 (schedule 47, test run 101). The answer
+// trimmed from the live answer of conversation 108 (schedule 47, test run 101). The answer
 // message has no message-level `content`; its text is in the `text_message` item.
 const ANSWER =
   'I’m the **Sched Monday Digest** for the **Schedules squad**.\n\nI can summarise it, but I don’t have the ' +
@@ -49,7 +49,7 @@ const CONVERSATION_108 = {
   ],
 };
 
-describe('EL-7011 CR-21 the answer of a schedule run', () => {
+describe('the answer of a schedule run', () => {
   it('reads the text_message item of the last answer in the real conversation shape', () => {
     expect(findRunAnswer(convertConversationToChatHistory(CONVERSATION_108))).toBe(ANSWER);
   });

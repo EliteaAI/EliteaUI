@@ -12,7 +12,7 @@ import {
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { ScheduleSettingsSection, StopOnDateField } from '@/[fsd]/shared/ui/schedule';
 
-// entityType: the form is nested in that editor and locks its entity (owner CR 2026-10-21)
+// entityType: the form is nested in that editor and locks its entity
 const CreateSchedulePage = props => {
   const { entityType } = props;
   const projectId = useSelectedProjectId();

@@ -5,7 +5,7 @@ import { act, renderHook } from '@testing-library/react';
 
 import { useScheduleRowActions } from '../useScheduleRowActions.hooks';
 
-// EL-7011 US-28: row hook for calls, toasts and busy state (R2.1, R2.4, R3.1, R3.2, R4.2, R5.1, R5.2).
+// row hook for calls, toasts and busy state.
 
 const mocks = vi.hoisted(() => ({
   run: vi.fn(),
@@ -53,7 +53,7 @@ const fail = error => ({ unwrap: () => Promise.reject(error) });
 
 const setup = () => renderHook(() => useScheduleRowActions({ id: 7, name: 'Nightly digest' })).result;
 
-describe('useScheduleRowActions EL-7011', () => {
+describe('useScheduleRowActions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.state.isLoading = false;
@@ -62,7 +62,7 @@ describe('useScheduleRowActions EL-7011', () => {
     mocks.cacheKeys.length = 0;
   });
 
-  it('R2.1 EL-7011 runs the schedule and shows a success toast', async () => {
+  it('runs the schedule and shows a success toast', async () => {
     mocks.run.mockReturnValue(ok());
     const result = setup();
     await act(() => result.current.onRun());
@@ -70,7 +70,7 @@ describe('useScheduleRowActions EL-7011', () => {
     expect(mocks.toastSuccess).toHaveBeenCalledWith('Run started');
   });
 
-  it('R2.4 EL-7011 shows the server text of a 409 on run', async () => {
+  it('shows the server text of a 409 on run', async () => {
     mocks.run.mockReturnValue(fail({ status: 409, data: { error: 'run is active', active_run_id: 5 } }));
     const result = setup();
     await act(() => result.current.onRun());
@@ -78,7 +78,7 @@ describe('useScheduleRowActions EL-7011', () => {
     expect(mocks.toastSuccess).not.toHaveBeenCalled();
   });
 
-  it('R5.1 EL-7011 shows the server text of a 409 on pause, resume and delete', async () => {
+  it('shows the server text of a 409 on pause, resume and delete', async () => {
     mocks.pause.mockReturnValue(fail({ status: 409, data: { error: 'Schedule is locked' } }));
     mocks.resume.mockReturnValue(fail({ status: 409, data: { error: 'Schedule is locked' } }));
     mocks.remove.mockReturnValue(fail({ status: 409, data: { error: 'Delete blocked' } }));
@@ -91,7 +91,7 @@ describe('useScheduleRowActions EL-7011', () => {
     expect(mocks.toastError).toHaveBeenLastCalledWith('Delete blocked');
   });
 
-  it('R3.1 EL-7011 pause and resume call their own mutations and toast', async () => {
+  it('pause and resume call their own mutations and toast', async () => {
     mocks.pause.mockReturnValue(ok());
     mocks.resume.mockReturnValue(ok());
     const result = setup();
@@ -103,7 +103,7 @@ describe('useScheduleRowActions EL-7011', () => {
     expect(mocks.toastSuccess).toHaveBeenLastCalledWith('Schedule resumed');
   });
 
-  it('R3.2 and R5.1 EL-7011 shows the server text when the pause fails', async () => {
+  it('shows the server text when the pause fails', async () => {
     mocks.pause.mockReturnValue(fail({ status: 500, data: { message: 'Server broke' } }));
     const result = setup();
     await act(() => result.current.onPause());
@@ -111,7 +111,7 @@ describe('useScheduleRowActions EL-7011', () => {
     expect(mocks.toastSuccess).not.toHaveBeenCalled();
   });
 
-  it('R4.2 EL-7011 deletes the schedule and toasts; a failure shows the error', async () => {
+  it('deletes the schedule and toasts; a failure shows the error', async () => {
     mocks.remove.mockReturnValueOnce(ok()).mockReturnValueOnce(fail({ status: 404, originalStatus: 404 }));
     const result = setup();
     await act(() => result.current.onDelete());
@@ -121,7 +121,7 @@ describe('useScheduleRowActions EL-7011', () => {
     expect(mocks.toastError).toHaveBeenCalledWith('The requested resource was not found!');
   });
 
-  it('CR-16 R4.2 onExport exports ids=[row.id] and saves the blob', async () => {
+  it('onExport exports ids=[row.id] and saves the blob', async () => {
     const blob = new Blob(['schedules: []']);
     mocks.exportSchedules.mockResolvedValue({ data: { blob, filename: 'schedules_3.yaml' } });
     const result = setup();
@@ -131,7 +131,7 @@ describe('useScheduleRowActions EL-7011', () => {
     expect(mocks.toastError).not.toHaveBeenCalled();
   });
 
-  it('CR-16 R2.4 a failed export shows the error toast and saves nothing', async () => {
+  it('a failed export shows the error toast and saves nothing', async () => {
     mocks.exportSchedules.mockResolvedValue({
       error: { status: 400, data: { code: 'invalid_input', error: 'ids must be numbers', field: 'ids' } },
     });
@@ -141,24 +141,24 @@ describe('useScheduleRowActions EL-7011', () => {
     expect(mocks.download).not.toHaveBeenCalled();
   });
 
-  it('CR-16 R4.1 gives no onExport without the export permission', () => {
+  it('gives no onExport without the export permission', () => {
     mocks.canExport = false;
     expect(setup().current.onExport).toBeUndefined();
   });
 
-  it('CR-16 reports busy while the export runs', () => {
+  it('reports busy while the export runs', () => {
     mocks.exportState.isFetching = true;
     expect(setup().current.isBusy).toBe(true);
   });
 
-  it('R5.2 EL-7011 reports busy while a call runs, with one cache key per row', () => {
+  it('reports busy while a call runs, with one cache key per row', () => {
     mocks.state.isLoading = true;
     const result = setup();
     expect(result.current.isBusy).toBe(true);
     expect(new Set(mocks.cacheKeys)).toEqual(new Set(['schedule-row-7']));
   });
 
-  it('R5.2 EL-7011 is not busy when idle', () => {
+  it('is not busy when idle', () => {
     expect(setup().current.isBusy).toBe(false);
   });
 });

@@ -14,7 +14,7 @@ const theme = createTheme(getDesignTokens('dark'));
 afterEach(() => cleanup());
 
 describe('TabGroupButton', () => {
-  it('EL-7011 stays below dialogs, so an open dialog is never covered by the tabs', () => {
+  it('stays below dialogs, so an open dialog is never covered by the tabs', () => {
     render(
       <ThemeProvider theme={theme}>
         <TabGroupButton

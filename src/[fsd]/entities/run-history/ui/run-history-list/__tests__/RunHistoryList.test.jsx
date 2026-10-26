@@ -62,8 +62,8 @@ const RUNS = [
   { id: 2, created_at: 1786693434, duration: 2, event_label: 'Chat', event_sort: 'a' },
 ];
 
-describe('RunHistoryList event column title (EL-7011 US-38)', () => {
-  it('EL-7011 R1.1 R1.2 shows the given event column title', () => {
+describe('RunHistoryList event column title', () => {
+  it('shows the given event column title', () => {
     render(
       <RunHistoryList
         hasEvent
@@ -74,15 +74,15 @@ describe('RunHistoryList event column title (EL-7011 US-38)', () => {
     expect(screen.getByTestId('header')).toHaveTextContent('Date|Execution type|Version|Duration');
   });
 
-  it('EL-7011 R2.2 keeps the Event title when no title is given', () => {
+  it('keeps the Event title when no title is given', () => {
     render(<RunHistoryList hasEvent />);
 
     expect(screen.getByTestId('header')).toHaveTextContent('Date|Event|Version|Duration');
   });
 });
 
-describe('RunHistoryList event column rows (EL-7011 US-38)', () => {
-  it('EL-7011 R1.5 sorts rows by the event label when the title is clicked', () => {
+describe('RunHistoryList event column rows', () => {
+  it('sorts rows by the event label when the title is clicked', () => {
     renderList({ conversations: RUNS, eventColumnLabel: 'Execution type' });
 
     fireEvent.click(screen.getByText('sort Execution type'));
@@ -94,7 +94,7 @@ describe('RunHistoryList event column rows (EL-7011 US-38)', () => {
     expect(rowTexts()).toEqual(['Schedule', 'Chat']);
   });
 
-  it('EL-7011 R2.3 R2.4 shows "-" and keeps a row without an event selectable', () => {
+  it('shows "-" and keeps a row without an event selectable', () => {
     const onSelect = vi.fn();
 
     renderList({
@@ -112,7 +112,7 @@ describe('RunHistoryList event column rows (EL-7011 US-38)', () => {
   });
 });
 
-describe('RunHistoryList extra columns (EL-7011 CR-22)', () => {
+describe('RunHistoryList extra columns', () => {
   const COLUMNS = [
     {
       id: 'schedule',
@@ -123,7 +123,7 @@ describe('RunHistoryList extra columns (EL-7011 CR-22)', () => {
     { id: 'status', label: 'Status', width: '7rem', render: row => (row.schedule_run ? 'Success' : '-') },
   ];
 
-  it('CR-22 shows Schedule and Status columns with - for a chat row', () => {
+  it('shows Schedule and Status columns with - for a chat row', () => {
     renderList({
       extraColumns: COLUMNS,
       conversations: [
@@ -145,7 +145,7 @@ describe('RunHistoryList extra columns (EL-7011 CR-22)', () => {
     expect(within(chat).getAllByText('-')).toHaveLength(2);
   });
 
-  it('CR-22 no extra column without extraColumns (R2.1)', () => {
+  it('no extra column without extraColumns', () => {
     renderList({ conversations: RUNS });
 
     expect(screen.getByTestId('header')).toHaveTextContent('Date|Event|Duration');

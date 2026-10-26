@@ -72,7 +72,7 @@ const expectSummary = (name, more) => {
   else expect(moreChip).not.toBeInTheDocument();
 };
 
-describe('OwnerFilter EL-7011 R2.1 R2.2', () => {
+describe('OwnerFilter', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     setUsers();
@@ -83,7 +83,7 @@ describe('OwnerFilter EL-7011 R2.1 R2.2', () => {
     vi.clearAllMocks();
   });
 
-  it('R2.1 shows the users and reports a picked owner', () => {
+  it('shows the users and reports a picked owner', () => {
     const onChangeOwners = vi.fn();
     renderFilter({ onChangeOwners });
     const input = screen.getByRole('combobox');
@@ -92,7 +92,7 @@ describe('OwnerFilter EL-7011 R2.1 R2.2', () => {
     expect(onChangeOwners).toHaveBeenCalledWith([expect.objectContaining({ id: 1 })]);
   });
 
-  it('BUG-13 R2.1 R2.3 EL-7011 four owners show one chip and +3, closed, open and closed again', () => {
+  it('four owners show one chip and +3, closed, open and closed again', () => {
     renderFilter({ selectedOwners: OWNERS });
     expectSummary('Owner 1', '+3');
     openList();
@@ -102,14 +102,14 @@ describe('OwnerFilter EL-7011 R2.1 R2.2', () => {
     expectSummary('Owner 1', '+3');
   });
 
-  it('BUG-13 R2.1 EL-7011 one owner shows one chip and no +N, closed and open', () => {
+  it('one owner shows one chip and no +N, closed and open', () => {
     renderFilter({ selectedOwners: OWNERS.slice(0, 1) });
     expectSummary('Owner 1', null);
     openList();
     expectSummary('Owner 1', null);
   });
 
-  it('BUG-13 R2.1 EL-7011 no owner shows the placeholder and no chip, closed and open', () => {
+  it('no owner shows the placeholder and no chip, closed and open', () => {
     renderFilter();
     expect(screen.getByPlaceholderText('Search users...')).toBeInTheDocument();
     openList();
@@ -117,7 +117,7 @@ describe('OwnerFilter EL-7011 R2.1 R2.2', () => {
     expect(screen.queryByTestId('schedules-owner-more')).not.toBeInTheDocument();
   });
 
-  it('BUG-13 R2.1 EL-7011 the x on the chip removes the first owner and the next one moves in', () => {
+  it('the x on the chip removes the first owner and the next one moves in', () => {
     const onChangeOwners = vi.fn();
     const { rerender } = renderFilter({ selectedOwners: OWNERS, onChangeOwners });
     fireEvent.click(screen.getByTestId('schedules-owner-chip').querySelector('.MuiChip-deleteIcon'));
@@ -151,7 +151,7 @@ describe('OwnerFilter EL-7011 R2.1 R2.2', () => {
     expect(onChangeOwners.mock.calls[0][0].map(owner => owner.id)).toEqual([12]);
   });
 
-  it('BUG-13 R2.1 EL-7011 the +N chip names the other owners in its tooltip and label', () => {
+  it('the +N chip names the other owners in its tooltip and label', () => {
     renderFilter({ selectedOwners: OWNERS });
     const more = screen.getByTestId('schedules-owner-more');
     expect(more).toHaveAttribute('tabindex', '0');
@@ -166,7 +166,7 @@ describe('OwnerFilter EL-7011 R2.1 R2.2', () => {
     expect(tooltip).not.toHaveTextContent('Owner 1');
   });
 
-  it('TC-US27-08 R2.2 sends the typed text as query after 300 ms', () => {
+  it('TC-US27-08 sends the typed text as query after 300 ms', () => {
     renderFilter();
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'ann' } });
     expect(lastQuery()).toBe('');
@@ -193,7 +193,7 @@ describe('OwnerFilter EL-7011 R2.1 R2.2', () => {
     expect(mocks.onLoadMoreUsers).toHaveBeenCalledTimes(loadMoreCalls);
   });
 
-  it('TC-US27-10 R2.2 keeps the loaded users and shows a toast when a request fails', () => {
+  it('TC-US27-10 keeps the loaded users and shows a toast when a request fails', () => {
     setUsers({ isUsersError: true, usersError: { status: 500 } });
     renderFilter();
     fireEvent.mouseDown(screen.getByRole('combobox'));

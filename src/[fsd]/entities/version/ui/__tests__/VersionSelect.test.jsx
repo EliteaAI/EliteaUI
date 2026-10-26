@@ -7,7 +7,7 @@ import { cleanup, render } from '@testing-library/react';
 
 import VersionSelect from '../VersionSelect';
 
-// EL-7011 US-31: the Schedule form uses VersionSelect without URL params (R3.4, R3.5).
+// the Schedule form uses VersionSelect without URL params.
 
 let singleSelectProps;
 const navigate = vi.fn();
@@ -45,12 +45,12 @@ const VERSIONS = [
   { id: 11, name: 'v2', created_at: '2026-02-01T00:00:00Z' },
 ];
 
-describe('EL-7011 R3.4 R3.5 getDefaultVersionId', () => {
-  it('returns meta.default_version_id when set (R3.4)', () => {
+describe('getDefaultVersionId', () => {
+  it('returns meta.default_version_id when set', () => {
     expect(getDefaultVersionId({ meta: { default_version_id: 11 }, versions: VERSIONS })).toBe(11);
   });
 
-  it('returns the base version id when no default is set (R3.5)', () => {
+  it('returns the base version id when no default is set', () => {
     expect(getDefaultVersionId({ meta: {}, versions: VERSIONS })).toBe(10);
     expect(getDefaultVersionId({ versions: VERSIONS })).toBe(10);
   });
@@ -61,7 +61,7 @@ describe('EL-7011 R3.4 R3.5 getDefaultVersionId', () => {
   });
 });
 
-describe('EL-7011 R3.4 VersionSelect controlled mode', () => {
+describe('VersionSelect controlled mode', () => {
   beforeEach(() => {
     singleSelectProps = undefined;
     navigate.mockClear();

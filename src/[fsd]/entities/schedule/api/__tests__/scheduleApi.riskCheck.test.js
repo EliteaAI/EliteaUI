@@ -7,7 +7,7 @@ vi.mock('@/api/eliteaApi.js', async () => (await import('./scheduleApi.testSetup
 
 const { scheduleApi } = await import('../scheduleApi.js');
 
-// EL-7011 owner CR 2026-10-21: risk review before saving a schedule (US-33, US-31, US-32)
+// risk review before saving a schedule
 const BASE = '/elitea_core/schedules/prompt_lib/5';
 const CHECK_ANSWER = {
   blocking: [],
@@ -25,7 +25,7 @@ const requestAt = async (spy, index) => {
   return { url: new URL(arg.url), method: arg.method, body: await arg.clone().json() };
 };
 
-describe('EL-7011 owner CR schedule risk check API', () => {
+describe('schedule risk check API', () => {
   let fetchSpy;
 
   beforeEach(() => {
@@ -33,7 +33,7 @@ describe('EL-7011 owner CR schedule risk check API', () => {
     fetchSpy = vi.spyOn(globalThis, 'fetch');
   });
 
-  it('US-33 sends a dry-run check with POST to .../check and returns the findings', async () => {
+  it('sends a dry-run check with POST to.../check and returns the findings', async () => {
     fetchSpy.mockResolvedValue(jsonResponse(CHECK_ANSWER));
 
     const result = await makeStore().dispatch(
@@ -52,7 +52,7 @@ describe('EL-7011 owner CR schedule risk check API', () => {
     expect(result.data).toEqual(CHECK_ANSWER);
   });
 
-  it('US-33 a check refetches no schedule list, because it saves nothing', async () => {
+  it('a check refetches no schedule list, because it saves nothing', async () => {
     fetchSpy.mockImplementation(async arg =>
       arg.url.endsWith('/check') ? jsonResponse(CHECK_ANSWER) : jsonResponse({ total: 0, rows: [] }),
     );
@@ -66,7 +66,7 @@ describe('EL-7011 owner CR schedule risk check API', () => {
     expect(fetchSpy).toHaveBeenCalledTimes(2);
   });
 
-  it('US-31 sends risk_ack in the create body', async () => {
+  it('sends risk_ack in the create body', async () => {
     fetchSpy.mockResolvedValue(jsonResponse({ id: 1 }));
 
     await makeStore().dispatch(
@@ -82,7 +82,7 @@ describe('EL-7011 owner CR schedule risk check API', () => {
     expect(request.body).toEqual({ name: 'Daily digest', risk_ack: RISK_ACK });
   });
 
-  it('US-32 sends risk_ack in the update body', async () => {
+  it('sends risk_ack in the update body', async () => {
     fetchSpy.mockResolvedValue(jsonResponse({ id: 3 }));
 
     await makeStore().dispatch(

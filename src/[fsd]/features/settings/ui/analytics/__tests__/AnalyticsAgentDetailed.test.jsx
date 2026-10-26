@@ -348,9 +348,18 @@ describe('AnalyticsAgentDetailed — versions, models, triggers and recent runs 
     expect(firstCells('analytics-agent-detail-triggers')).toEqual(['Manual (legacy)', 'Scheduled']);
   });
 
-  it('EL-7011 R1.3 shows every trigger source with its label and keeps the label sort (R2.3)', () => {
+  it('shows every trigger source with its label and keeps the label sort', () => {
     const sources = ['chat', 'api', 'mcp', 'webhook', 'scheduled', 'schedule_manual', 'index', 'manual'];
-    const labels = ['Chat', 'API', 'MCP', 'Webhook', 'Scheduled', 'Schedule run now', 'Index runs', 'Manual (legacy)'];
+    const labels = [
+      'Chat',
+      'API',
+      'MCP',
+      'Webhook',
+      'Scheduled',
+      'Schedule run now',
+      'Index runs',
+      'Manual (legacy)',
+    ];
     useAnalyticsAgentDetailQuery.mockReturnValue(
       detailQuery({
         ...TABLES,
@@ -366,7 +375,9 @@ describe('AnalyticsAgentDetailed — versions, models, triggers and recent runs 
 
     expect(firstCells('analytics-agent-detail-triggers')).toEqual(labels);
     fireEvent.click(within(screen.getByTestId('analytics-agent-detail-triggers')).getByText('Trigger'));
-    expect(firstCells('analytics-agent-detail-triggers')).toEqual([...labels].sort((a, b) => b.localeCompare(a, undefined, { sensitivity: 'base' })));
+    expect(firstCells('analytics-agent-detail-triggers')).toEqual(
+      [...labels].sort((a, b) => b.localeCompare(a, undefined, { sensitivity: 'base' })),
+    );
   });
 
   it('sorts Versions by runs and Models by tokens by default', () => {

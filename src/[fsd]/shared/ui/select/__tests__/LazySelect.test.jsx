@@ -77,13 +77,13 @@ const scrollList = (list, distanceToEnd, pauseMs = DEBOUNCE_MS) => {
   act(() => vi.advanceTimersByTime(pauseMs));
 };
 
-describe('LazySelect paging, EL-7011 R1.1 R1.3 R1.4', () => {
+describe('LazySelect paging,', () => {
   afterEach(() => {
     cleanup();
     vi.useRealTimers();
   });
 
-  it('EL-7011 R1.1 calls onLoadMore once when the list is scrolled to its end (TC-US25-01)', async () => {
+  it('calls onLoadMore once when the list is scrolled to its end (TC-US25-01)', async () => {
     const onLoadMore = vi.fn();
     const { list } = await setup({ onLoadMore });
 
@@ -92,7 +92,7 @@ describe('LazySelect paging, EL-7011 R1.1 R1.3 R1.4', () => {
     expect(onLoadMore).toHaveBeenCalledTimes(1);
   });
 
-  it('EL-7011 R1.3 does not call onLoadMore when all items are loaded (TC-US25-02)', async () => {
+  it('does not call onLoadMore when all items are loaded (TC-US25-02)', async () => {
     const onLoadMore = vi.fn();
     const { list } = await setup({ options: makeOptions(45), total: 45, onLoadMore });
 
@@ -101,7 +101,7 @@ describe('LazySelect paging, EL-7011 R1.1 R1.3 R1.4', () => {
     expect(onLoadMore).not.toHaveBeenCalled();
   });
 
-  it('EL-7011 R1.1 does not call onLoadMore when the end is more than 10 px away (TC-US25-03)', async () => {
+  it('does not call onLoadMore when the end is more than 10 px away (TC-US25-03)', async () => {
     const onLoadMore = vi.fn();
     const { list } = await setup({ onLoadMore });
 
@@ -110,7 +110,7 @@ describe('LazySelect paging, EL-7011 R1.1 R1.3 R1.4', () => {
     expect(onLoadMore).not.toHaveBeenCalled();
   });
 
-  it('EL-7011 R1.1 does not call onLoadMore while a page is fetching (TC-US25-04)', async () => {
+  it('does not call onLoadMore while a page is fetching (TC-US25-04)', async () => {
     const onLoadMore = vi.fn();
     const { list } = await setup({ isFetching: true, onLoadMore });
 
@@ -121,7 +121,7 @@ describe('LazySelect paging, EL-7011 R1.1 R1.3 R1.4', () => {
     expect(onLoadMore).not.toHaveBeenCalled();
   });
 
-  it('EL-7011 R1.4 keeps the loaded items and asks again on the next scroll after a failed page (TC-US25-05)', async () => {
+  it('keeps the loaded items and asks again on the next scroll after a failed page (TC-US25-05)', async () => {
     const onLoadMore = vi.fn();
     const { list, rerender } = await setup({ onLoadMore });
 
@@ -134,7 +134,7 @@ describe('LazySelect paging, EL-7011 R1.1 R1.3 R1.4', () => {
     expect(within(list).getAllByRole('option')).toHaveLength(20);
   });
 
-  it('EL-7011 R1.3 keeps paging when the total is unknown', async () => {
+  it('keeps paging when the total is unknown', async () => {
     const onLoadMore = vi.fn();
     const { list } = await setup({ total: undefined, onLoadMore });
 
@@ -143,7 +143,7 @@ describe('LazySelect paging, EL-7011 R1.1 R1.3 R1.4', () => {
     expect(onLoadMore).toHaveBeenCalledTimes(1);
   });
 
-  it('EL-7011 R1.1 keeps a pending scroll when a page lands within 300 ms', async () => {
+  it('keeps a pending scroll when a page lands within 300 ms', async () => {
     const onLoadMore = vi.fn();
     const { list, rerender } = await setup({ onLoadMore });
 
@@ -155,13 +155,13 @@ describe('LazySelect paging, EL-7011 R1.1 R1.3 R1.4', () => {
   });
 });
 
-describe('LazySelect search, EL-7011 R2.1 R2.2', () => {
+describe('LazySelect search,', () => {
   afterEach(() => {
     cleanup();
     vi.useRealTimers();
   });
 
-  it('EL-7011 R2.1 passes the typed text to onSearch 300 ms after the last key (TC-US25-06)', async () => {
+  it('passes the typed text to onSearch 300 ms after the last key (TC-US25-06)', async () => {
     const onSearch = vi.fn();
     await setup({ onSearch });
 
@@ -173,7 +173,7 @@ describe('LazySelect search, EL-7011 R2.1 R2.2', () => {
     expect(onSearch).toHaveBeenCalledWith('dig');
   });
 
-  it('EL-7011 R2.2 shows exactly the items the caller returns, with no local filter (TC-US25-07)', async () => {
+  it('shows exactly the items the caller returns, with no local filter (TC-US25-07)', async () => {
     const { rerender } = await setup({ options: [] });
     typeKeys(within(screen.getByRole('listbox')).getByRole('textbox'), 'dig', 0);
     act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
@@ -190,7 +190,7 @@ describe('LazySelect search, EL-7011 R2.1 R2.2', () => {
     expect(options.map(option => option.textContent)).toEqual(['Digital agent', 'Planner']);
   });
 
-  it('EL-7011 R2.1 sends no onSearch call while the user keeps typing (TC-US25-08)', async () => {
+  it('sends no onSearch call while the user keeps typing (TC-US25-08)', async () => {
     const onSearch = vi.fn();
     await setup({ onSearch });
 
@@ -199,7 +199,7 @@ describe('LazySelect search, EL-7011 R2.1 R2.2', () => {
     expect(onSearch).not.toHaveBeenCalled();
   });
 
-  it('EL-7011 R2.1 sends an empty text to onSearch at once and drops the pending text', async () => {
+  it('sends an empty text to onSearch at once and drops the pending text', async () => {
     const onSearch = vi.fn();
     await setup({ onSearch });
     const field = within(screen.getByRole('listbox')).getByRole('textbox');
@@ -212,7 +212,7 @@ describe('LazySelect search, EL-7011 R2.1 R2.2', () => {
     expect(onSearch).toHaveBeenCalledTimes(1);
   });
 
-  it('EL-7011 R2.1 shows the search text the caller passes after a reset', async () => {
+  it('shows the search text the caller passes after a reset', async () => {
     const { rerender } = await setup({ searchString: 'dig' });
 
     rerender({ searchString: '' });
@@ -221,31 +221,31 @@ describe('LazySelect search, EL-7011 R2.1 R2.2', () => {
   });
 });
 
-describe('LazySelect loading row and empty text, EL-7011 R1.2 R2.3', () => {
+describe('LazySelect loading row and empty text,', () => {
   afterEach(() => {
     cleanup();
     vi.useRealTimers();
   });
 
-  it('EL-7011 R1.2 shows the loading row while a page loads (TC-US25-13)', async () => {
+  it('shows the loading row while a page loads (TC-US25-13)', async () => {
     const { list } = await setup({ isFetching: true });
 
     expect(within(list).getByRole('progressbar')).toBeInTheDocument();
   });
 
-  it('EL-7011 R2.3 shows the empty text when no item matches and nothing loads (TC-US25-14)', async () => {
+  it('shows the empty text when no item matches and nothing loads (TC-US25-14)', async () => {
     const { list } = await setup({ options: [], total: 0 });
 
     expect(within(list).getByText('Nothing found')).toBeInTheDocument();
   });
 
-  it('EL-7011 R2.3 shows no empty text while the list loads (TC-US25-15)', async () => {
+  it('shows no empty text while the list loads (TC-US25-15)', async () => {
     const { list } = await setup({ options: [], total: 0, isFetching: true });
 
     expect(within(list).queryByText('Nothing found')).not.toBeInTheDocument();
   });
 
-  it('EL-7011 R1.2 R2.3 shows no loading row and no empty text for an idle list with items (TC-US25-16)', async () => {
+  it('shows no loading row and no empty text for an idle list with items (TC-US25-16)', async () => {
     const { list } = await setup();
 
     expect(within(list).queryByRole('progressbar')).not.toBeInTheDocument();

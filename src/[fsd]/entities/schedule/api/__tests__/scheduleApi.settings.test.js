@@ -7,7 +7,7 @@ vi.mock('@/api/eliteaApi.js', async () => (await import('./scheduleApi.testSetup
 
 const { scheduleApi } = await import('../scheduleApi.js');
 
-// EL-7011 owner CR 2026-10-21: "Run without asking" is a project setting (US-33, US-39)
+// "Run without asking" is a project setting
 const PATH = '/elitea_core/schedules/prompt_lib/5/settings';
 
 const makeStore = () => makeStoreFor(scheduleApi);
@@ -27,7 +27,7 @@ const requestAt = async (spy, index) => {
 const cached = store =>
   scheduleApi.endpoints.getScheduleSettings.select({ projectId: 5 })(store.getState()).data;
 
-describe('EL-7011 owner CR project schedule settings API', () => {
+describe('project schedule settings API', () => {
   let fetchSpy;
 
   beforeEach(() => {
@@ -35,7 +35,7 @@ describe('EL-7011 owner CR project schedule settings API', () => {
     fetchSpy = vi.spyOn(globalThis, 'fetch');
   });
 
-  it('US-39 loads the setting with GET on the project settings URL', async () => {
+  it('loads the setting with GET on the project settings URL', async () => {
     fetchSpy.mockResolvedValue(jsonResponse({ allow_run_without_asking: false }));
 
     const result = await makeStore().dispatch(
@@ -48,7 +48,7 @@ describe('EL-7011 owner CR project schedule settings API', () => {
     expect(result.data).toEqual({ allow_run_without_asking: false });
   });
 
-  it('US-39 sends only allow_run_without_asking with PUT and updates the cache before the reply', async () => {
+  it('sends only allow_run_without_asking with PUT and updates the cache before the reply', async () => {
     let reply;
     fetchSpy.mockResolvedValueOnce(jsonResponse({ allow_run_without_asking: false }));
     const store = makeStore();
@@ -71,7 +71,7 @@ describe('EL-7011 owner CR project schedule settings API', () => {
     expect(cached(store)).toEqual({ allow_run_without_asking: true });
   });
 
-  it('US-39 returns the cache to the saved value when the save fails', async () => {
+  it('returns the cache to the saved value when the save fails', async () => {
     fetchSpy.mockResolvedValueOnce(jsonResponse({ allow_run_without_asking: false }));
     const store = makeStore();
     await store.dispatch(scheduleApi.endpoints.getScheduleSettings.initiate({ projectId: 5 }));
@@ -85,7 +85,7 @@ describe('EL-7011 owner CR project schedule settings API', () => {
     expect(cached(store)).toEqual({ allow_run_without_asking: false });
   });
 
-  it('US-33 refetches the schedule list the form reads after a successful save', async () => {
+  it('refetches the schedule list the form reads after a successful save', async () => {
     fetchSpy.mockImplementation(async arg =>
       arg.method === 'PUT'
         ? jsonResponse({ allow_run_without_asking: true })
@@ -104,7 +104,7 @@ describe('EL-7011 owner CR project schedule settings API', () => {
     expect(refetch.url.pathname).toBe('/elitea_core/schedules/prompt_lib/5');
   });
 
-  it('US-33 keeps the schedule list cache when the save fails', async () => {
+  it('keeps the schedule list cache when the save fails', async () => {
     fetchSpy.mockImplementation(async arg =>
       arg.method === 'PUT' ? jsonResponse({ error: 'forbidden' }, 403) : jsonResponse({ total: 0, rows: [] }),
     );

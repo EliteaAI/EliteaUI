@@ -49,7 +49,7 @@ const decide = async (action, fetchSpy) => {
   return { request, body: await request.json() };
 };
 
-describe('EL-7011 run history decideWaitingRun', () => {
+describe('run history decideWaitingRun', () => {
   let fetchSpy;
 
   beforeEach(() => {
@@ -57,7 +57,7 @@ describe('EL-7011 run history decideWaitingRun', () => {
     fetchSpy = vi.spyOn(globalThis, 'fetch');
   });
 
-  it('R2.1 EL-7011: approve posts hitl_action approve with the paused message id to continue_predict', async () => {
+  it('approve posts hitl_action approve with the paused message id to continue_predict', async () => {
     const { request, body } = await decide('approve', fetchSpy);
 
     expect(request.method).toBe('POST');
@@ -70,7 +70,7 @@ describe('EL-7011 run history decideWaitingRun', () => {
     });
   });
 
-  it('R2.2 EL-7011: reject posts hitl_action reject with the paused message id to continue_predict', async () => {
+  it('reject posts hitl_action reject with the paused message id to continue_predict', async () => {
     const { request, body } = await decide('reject', fetchSpy);
 
     expect(request.method).toBe('POST');

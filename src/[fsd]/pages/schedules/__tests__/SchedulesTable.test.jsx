@@ -22,7 +22,12 @@ vi.mock('@mui/material', async importOriginal => {
   const { forwardRef } = await import('react');
   const Box = forwardRef((props, ref) => {
     if (props.role === 'img' && props['aria-label'] === 'Agent') iconBoxSx.push(props.sx);
-    return <actual.Box {...props} ref={ref} />;
+    return (
+      <actual.Box
+        {...props}
+        ref={ref}
+      />
+    );
   });
   return { ...actual, Box };
 });
@@ -126,8 +131,8 @@ afterEach(() => {
   rowActions.isBusy = false;
 });
 
-describe('EL-7011 US-26 SchedulesTable', () => {
-  it('R2.2 EL-7011 shows the eight columns, with Entity Name and no Type, and no view switch', () => {
+describe('SchedulesTable', () => {
+  it('shows the eight columns, with Entity Name and no Type, and no view switch', () => {
     renderTable([makeRow()]);
     [
       'Name & Description',
@@ -144,47 +149,47 @@ describe('EL-7011 US-26 SchedulesTable', () => {
     expect(screen.queryByRole('button', { name: /tiles|view/i })).toBeNull();
   });
 
-  it('R2.3 EL-7011 shows one agent icon named Agent, never the pipeline icon', () => {
+  it('shows one agent icon named Agent, never the pipeline icon', () => {
     renderTable([makeRow()]);
     expect(screen.getAllByTestId('icon-agent')).toHaveLength(1);
     expect(screen.queryByTestId('icon-pipeline')).toBeNull();
     expect(screen.getByRole('img', { name: 'Agent' })).toBeInTheDocument();
   });
 
-  it('R2.3 EL-7011 shows one pipeline icon named Pipeline', () => {
+  it('shows one pipeline icon named Pipeline', () => {
     renderTable([makeRow({ entity_type: 'pipeline' })]);
     expect(screen.getAllByTestId('icon-pipeline')).toHaveLength(1);
     expect(screen.queryByTestId('icon-agent')).toBeNull();
     expect(screen.getByRole('img', { name: 'Pipeline' })).toBeInTheDocument();
   });
 
-  it('R2.6 EL-7011 shows the version on a second line of the Entity Name cell', () => {
+  it('shows the version on a second line of the Entity Name cell', () => {
     renderTable([makeRow()]);
     const cell = within(screen.getByTestId('schedule-column-value-entity_name'));
     expect(cell.getByText('Report agent')).toBeInTheDocument();
     expect(cell.getByText('base')).toBeInTheDocument();
   });
 
-  it('R2.6 EL-7011 shows no second line without a version', () => {
+  it('shows no second line without a version', () => {
     renderTable([makeRow({ version_name: null })]);
     const cell = screen.getByTestId('schedule-column-value-entity_name');
     expect(within(cell).getByText('Report agent')).toBeInTheDocument();
     expect(cell).not.toHaveTextContent('base');
   });
 
-  it('R2.4 shows the rule with the timezone and Next run in the viewer timezone', () => {
+  it('shows the rule with the timezone and Next run in the viewer timezone', () => {
     renderTable([makeRow()]);
     expect(screen.getByText('At 00:00 on Saturday (America/New_York)')).toBeInTheDocument();
     expect(screen.getByTestId('schedule-column-value-next_run')).toHaveTextContent(/^[A-Z][a-z]{2}, \d{2} /);
   });
 
-  it('EL-7011 shows the description under the bold name, like Agents', () => {
+  it('shows the description under the bold name, like Agents', () => {
     renderTable([makeRow()]);
     expect(screen.getByTestId('schedule-name')).toHaveTextContent('Nightly');
     expect(screen.getByTestId('schedule-description')).toHaveTextContent('Sends the nightly report');
   });
 
-  it('EL-7011 shows sort arrows on the sortable headers only and sorts by the API field', () => {
+  it('shows sort arrows on the sortable headers only and sorts by the API field', () => {
     const onSort = vi.fn();
     renderTable([makeRow()], false, onSort);
     ['name', 'entity_name', 'next_run', 'last_run', 'enabled'].forEach(field =>
@@ -197,25 +202,25 @@ describe('EL-7011 US-26 SchedulesTable', () => {
     expect(onSort).toHaveBeenCalledWith('entity_name');
   });
 
-  it('EL-7011 shows the owner name in Owner', () => {
+  it('shows the owner name in Owner', () => {
     renderTable([makeRow()]);
     const owner = screen.getByTestId('schedule-column-value-owner');
     expect(within(owner).getByTestId('author')).toBeInTheDocument();
     expect(within(owner).getByText('Ann')).toBeInTheDocument();
   });
 
-  it('R2.2 EL-7011 shows the row menu with the allowed actions', () => {
+  it('shows the row menu with the allowed actions', () => {
     renderTable([makeRow({ allowed_actions: ['run', 'pause', 'delete'] })]);
     expect(screen.getByTestId('schedule-1-menu-button')).toHaveTextContent('3');
   });
 
-  it('R1.3 EL-7011 shows no menu and a disabled Enabled switch without allowed actions', () => {
+  it('shows no menu and a disabled Enabled switch without allowed actions', () => {
     renderTable([makeRow({ allowed_actions: [] })]);
     expect(screen.queryByTestId('schedule-1-menu-button')).toBeNull();
     expect(screen.getByRole('switch', { name: 'Enable Nightly' })).toBeDisabled();
   });
 
-  it('R3.1 EL-7011 pauses an enabled schedule from the switch', () => {
+  it('pauses an enabled schedule from the switch', () => {
     renderTable([makeRow()]);
     const toggle = screen.getByRole('switch', { name: 'Enable Nightly' });
     expect(toggle).toBeChecked();
@@ -224,20 +229,20 @@ describe('EL-7011 US-26 SchedulesTable', () => {
     expect(rowActions.onResume).not.toHaveBeenCalled();
   });
 
-  it('R3.1 EL-7011 resumes a paused schedule from the switch', () => {
+  it('resumes a paused schedule from the switch', () => {
     renderTable([makeRow({ enabled: false })]);
     fireEvent.click(screen.getByRole('switch', { name: 'Enable Nightly' }));
     expect(rowActions.onResume).toHaveBeenCalledTimes(1);
     expect(rowActions.onPause).not.toHaveBeenCalled();
   });
 
-  it('R3.1 EL-7011 disables the switch while a row call is busy', () => {
+  it('disables the switch while a row call is busy', () => {
     rowActions.isBusy = true;
     renderTable([makeRow()]);
     expect(screen.getByRole('switch', { name: 'Enable Nightly' })).toBeDisabled();
   });
 
-  it('R2.3 EL-7011 polls every 10 seconds only while a row shows Running', () => {
+  it('polls every 10 seconds only while a row shows Running', () => {
     expect(getPollingInterval([makeRow(), makeRow({ id: 2, last_run_status: 'running' })])).toBe(10000);
     expect(getPollingInterval([makeRow()])).toBe(0);
     expect(getPollingInterval(undefined)).toBe(0);
@@ -263,7 +268,7 @@ describe('EL-7011 US-26 SchedulesTable', () => {
     expect(within(cell).getByText(label)).toBeInTheDocument();
   });
 
-  it('BUG-35 US-28 R2.5 refetches for a Running row but not for a row that only waits for approval', () => {
+  it('refetches for a Running row but not for a row that only waits for approval', () => {
     expect(getPollingInterval([makeRow({ last_run_status: 'waiting_for_approval' })])).toBe(0);
     expect(
       getPollingInterval([
@@ -273,42 +278,42 @@ describe('EL-7011 US-26 SchedulesTable', () => {
     ).toBe(10000);
   });
 
-  it('R2.5 shows no reason for a successful last run', () => {
+  it('shows no reason for a successful last run', () => {
     renderTable([makeRow({ last_run_reason: 'ignored' })]);
     expect(screen.queryByText('ignored')).toBeNull();
   });
 
-  it('R3.1 shows the empty state without rows', () => {
+  it('shows the empty state without rows', () => {
     renderTable([]);
     expect(screen.getByText('No schedules')).toBeInTheDocument();
   });
 
-  it('EL-7011 R1.4 shows the emptyMessage prop when it is set', () => {
+  it('shows the emptyMessage prop when it is set', () => {
     renderTable([], false, vi.fn(), 'No schedules match the filters');
     expect(screen.getByText('No schedules match the filters')).toBeInTheDocument();
     expect(screen.queryByText('No schedules')).not.toBeInTheDocument();
   });
 
-  it('R2.1 shows the loading text, not the empty state, while loading', () => {
+  it('shows the loading text, not the empty state, while loading', () => {
     renderTable([], true);
     expect(screen.getByText('Loading...')).toBeInTheDocument();
     expect(screen.queryByText('No schedules')).not.toBeInTheDocument();
   });
 
-  it('EL-7011 R1.4 keeps the filter bar on screen when no row matches', () => {
+  it('keeps the filter bar on screen when no row matches', () => {
     renderTable([], false, vi.fn(), 'No schedules match the filters', <span data-testid="bar" />);
     expect(screen.getByTestId('bar')).toBeInTheDocument();
     expect(screen.getByText('No schedules match the filters')).toBeInTheDocument();
   });
 
-  it('EL-7011 tells screen readers the result count', () => {
+  it('tells screen readers the result count', () => {
     renderTable([makeRow(), makeRow({ id: 2 })], false, vi.fn(), undefined, <span />);
     expect(screen.getByText('2 schedules')).toHaveAttribute('aria-live', 'polite');
   });
 });
 
-// EL-7011 QA bug 2026-10-21 table width, owner: no hidden columns (spec schedules-table-fit-spec.md)
-describe('EL-7011 US-26 SchedulesTable fits 8 columns at 1280, 1440 and 1600 px', () => {
+// QA bug table width, owner: no hidden columns (spec schedules-table-fit-spec.md)
+describe('SchedulesTable fits 8 columns at 1280, 1440 and 1600 px', () => {
   const FIELDS = ['name', 'entity_name', 'schedule', 'next_run', 'last_run', 'owner', 'enabled', 'actions'];
   const DATA_FIELDS = ['entity_name', 'schedule', 'next_run', 'last_run', 'owner', 'enabled'];
   const SORTABLE = ['name', 'entity_name', 'next_run', 'last_run', 'enabled'];
@@ -382,7 +387,7 @@ describe('EL-7011 US-26 SchedulesTable fits 8 columns at 1280, 1440 and 1600 px'
     expect(within(owner).getByLabelText('Ann')).toBeInTheDocument();
   });
 
-  it('AC4 CR-23 R5.1 at 1280 px shows the last run date and time on two lines, the status icon after the time, the reason in a tooltip', () => {
+  it('AC4 at 1280 px shows the last run date and time on two lines, the status icon after the time, the reason in a tooltip', () => {
     setWindowWidth(1280);
     renderTable([makeRow({ last_run_status: 'failed', last_run_reason: 'Agent is deleted' })]);
     const lastRun = screen.getByTestId('schedule-column-value-last_run');
@@ -423,7 +428,7 @@ describe('EL-7011 US-26 SchedulesTable fits 8 columns at 1280, 1440 and 1600 px'
     setWindowWidth(1440);
     renderTable([makeRow()]);
     expect(screen.getByTestId('schedule-column-value-owner')).toHaveTextContent('Ann');
-    // CR-23 R5.1 and D11: line 1 the date and time on one line, line 2 the status icon and word
+    // and D11: line 1 the date and time on one line, line 2 the status icon and word
     const lastRun = screen.getByTestId('schedule-column-value-last_run');
     expect(lastRun).toHaveTextContent(`${dateOf(LAST_RUN)} ${timeOf(LAST_RUN)}`);
     expect(within(lastRun).getByRole('img', { name: 'Success' })).toBeInTheDocument();
@@ -441,7 +446,7 @@ describe('EL-7011 US-26 SchedulesTable fits 8 columns at 1280, 1440 and 1600 px'
   it('AC4 at 1600 px shows the owner name, the status chip and the calendar icon', () => {
     renderTable([makeRow()]);
     expect(screen.getByTestId('schedule-column-value-owner')).toHaveTextContent('Ann');
-    // CR-23 R5.1 and D11: the calendar icon and the date on line 1, the status icon and word on line 2
+    // and D11: the calendar icon and the date on line 1, the status icon and word on line 2
     const lastRun = screen.getByTestId('schedule-column-value-last_run');
     expect(within(lastRun).getByTestId('calendar-icon')).toBeInTheDocument();
     expect(lastRun).toHaveTextContent(`${dateOf(LAST_RUN)} ${timeOf(LAST_RUN)}`);
@@ -452,14 +457,14 @@ describe('EL-7011 US-26 SchedulesTable fits 8 columns at 1280, 1440 and 1600 px'
     ).toBeInTheDocument();
   });
 
-  it.each([1280, 1440, 1600])('CR-23 R5.2 at %i px shows - in Last run for a row with no run', width => {
+  it.each([1280, 1440, 1600])('at %i px shows - in Last run for a row with no run', width => {
     setWindowWidth(width);
     renderTable([makeRow({ last_run: null, last_run_status: null })]);
     expect(screen.getByTestId('schedule-column-value-last_run')).toHaveTextContent(/^-$/);
   });
 
   it.each([1440, 1600])(
-    'CR-23 R2.5 at %i px shows the reason after the status on line 2, with the full text in the tooltip',
+    'at %i px shows the reason after the status on line 2, with the full text in the tooltip',
     width => {
       setWindowWidth(width);
       renderTable([

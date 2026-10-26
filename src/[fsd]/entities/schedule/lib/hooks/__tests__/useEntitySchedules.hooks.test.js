@@ -5,7 +5,7 @@ import { act, renderHook } from '@testing-library/react';
 
 import { useEntitySchedules } from '../useEntitySchedules.hooks';
 
-// EL-7011 US-35: the schedule list of one agent or pipeline, 20 cards per page (R1.6, R2.1, R2.4)
+// the schedule list of one agent or pipeline, 20 cards per page
 
 const mocks = vi.hoisted(() => ({ listQuery: vi.fn() }));
 
@@ -14,10 +14,10 @@ vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelecte
 
 const rowsOf = count => Array.from({ length: count }, (_, index) => ({ id: index + 1 }));
 
-describe('useEntitySchedules EL-7011 US-35', () => {
+describe('useEntitySchedules', () => {
   afterEach(() => vi.clearAllMocks());
 
-  it('TC-US35-04 R2.1 requests the first 20 schedules of the entity', () => {
+  it('TC-US35-04 requests the first 20 schedules of the entity', () => {
     mocks.listQuery.mockReturnValue({ data: { rows: rowsOf(2), total: 2 } });
 
     const { result } = renderHook(() => useEntitySchedules({ entityType: 'agent', entityId: 12 }));
@@ -31,7 +31,7 @@ describe('useEntitySchedules EL-7011 US-35', () => {
     expect(result.current.hasMore).toBe(false);
   });
 
-  it('TC-US35-06 R2.4 loads 20 more on Show more while more rows exist', () => {
+  it('TC-US35-06 loads 20 more on Show more while more rows exist', () => {
     mocks.listQuery.mockReturnValue({ data: { rows: rowsOf(20), total: 25 } });
 
     const { result } = renderHook(() => useEntitySchedules({ entityType: 'pipeline', entityId: 4 }));
@@ -45,7 +45,7 @@ describe('useEntitySchedules EL-7011 US-35', () => {
     );
   });
 
-  it('TC-US35-06 R2.4 starts again at 20 rows when the editor opens another entity', () => {
+  it('TC-US35-06 starts again at 20 rows when the editor opens another entity', () => {
     mocks.listQuery.mockReturnValue({ data: { rows: rowsOf(20), total: 25 } });
 
     const { result, rerender } = renderHook(props => useEntitySchedules(props), {
@@ -60,7 +60,7 @@ describe('useEntitySchedules EL-7011 US-35', () => {
     );
   });
 
-  it('R1.4 sends no request without an entity id or when skipped', () => {
+  it('sends no request without an entity id or when skipped', () => {
     mocks.listQuery.mockReturnValue({});
 
     const { result } = renderHook(() => useEntitySchedules({ entityType: 'agent', entityId: undefined }));
@@ -72,7 +72,7 @@ describe('useEntitySchedules EL-7011 US-35', () => {
     expect(mocks.listQuery).toHaveBeenLastCalledWith(expect.anything(), { skip: true });
   });
 
-  it('R2.4 stops at the 100 rows the list API answers at most', () => {
+  it('stops at the 100 rows the list API answers at most', () => {
     mocks.listQuery.mockReturnValue({ data: { rows: rowsOf(100), total: 130 } });
 
     const { result } = renderHook(() => useEntitySchedules({ entityType: 'agent', entityId: 12 }));
@@ -82,7 +82,7 @@ describe('useEntitySchedules EL-7011 US-35', () => {
     expect(result.current.hasMore).toBe(false);
   });
 
-  it('R4.2 EL-7011 CR-19 sends the version_id of the editor version to the list query', () => {
+  it('sends the version_id of the editor version to the list query', () => {
     mocks.listQuery.mockReturnValue({ data: { rows: rowsOf(1), total: 1 } });
 
     renderHook(() => useEntitySchedules({ entityType: 'agent', entityId: 12, versionId: 71 }));
@@ -93,7 +93,7 @@ describe('useEntitySchedules EL-7011 US-35', () => {
     );
   });
 
-  it('R4.3 EL-7011 CR-19 reloads from the first 20 rows when the editor version changes', () => {
+  it('reloads from the first 20 rows when the editor version changes', () => {
     mocks.listQuery.mockReturnValue({ data: { rows: rowsOf(20), total: 25 } });
 
     const { result, rerender } = renderHook(props => useEntitySchedules(props), {

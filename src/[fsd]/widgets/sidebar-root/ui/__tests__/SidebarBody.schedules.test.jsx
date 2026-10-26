@@ -70,16 +70,16 @@ const renderBody = permissions => {
 
 const navTitles = () => screen.getAllByRole('button').map(b => b.textContent);
 
-describe('EL-7011 CR-03 Schedules out of the main navigation', () => {
+describe('Schedules out of the main navigation', () => {
   afterEach(cleanup);
 
-  it('R1.5 shows no Schedules item even with the list permission', () => {
+  it('shows no Schedules item even with the list permission', () => {
     renderBody([PERMISSIONS.schedules.list, PERMISSIONS.pipelines.list, PERMISSIONS.applications.list]);
     expect(navTitles()).toContain('Pipelines');
     expect(screen.queryByText('Schedules')).toBeNull();
   });
 
-  it('R1.3 declares the Settings routes, their breadcrumb and every schedule permission', () => {
+  it('declares the Settings routes, their breadcrumb and every schedule permission', () => {
     expect(RouteDefinitions.Schedules).toBe('/settings/schedules');
     expect(RouteDefinitions.CreateSchedule).toBe('/settings/schedules/create');
     expect(BREADCRUMB_REGISTRY[RouteDefinitions.Schedules].label).toBe('Schedules');

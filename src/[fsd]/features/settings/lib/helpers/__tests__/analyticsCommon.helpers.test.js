@@ -192,7 +192,7 @@ describe('run trace helpers', () => {
 });
 
 describe('shared entity labels', () => {
-  it('R1.1 EL-7011 maps every trigger source to its label', () => {
+  it('maps every trigger source to its label', () => {
     const expected = {
       chat: 'Chat',
       api: 'API',
@@ -209,7 +209,7 @@ describe('shared entity labels', () => {
     });
   });
 
-  it('R1.2 EL-7011 labels the entity kind and shows a dash when it is missing or empty', () => {
+  it('labels the entity kind and shows a dash when it is missing or empty', () => {
     expect(entityKindLabel('agent')).toBe('Agent');
     expect(entityKindLabel('pipeline')).toBe('Pipeline');
     expect(entityKindLabel(null)).toBe('-');
@@ -223,11 +223,11 @@ describe('shared entity labels', () => {
     expect(formatTriggerLabel('future_source')).toBe('future_source');
   });
 
-  it('R2.1 EL-7011 shows the raw key of an unlabelled source', () => {
+  it('shows the raw key of an unlabelled source', () => {
     expect(triggerSourceLabel('future_source')).toBe('future_source');
   });
 
-  it('R1.5 EL-7011 names the new sources in the trigger tooltips', () => {
+  it('names the new sources in the trigger tooltips', () => {
     const texts = [TOOLTIP_TEXTS.skillDetail.TRIGGERS, TOOLTIP_TEXTS.agentDetail.TRIGGERS_SECTION].join(' ');
 
     ['Chat', 'API', 'MCP', 'Webhook', 'Scheduled', 'Schedule run now', 'Index runs'].forEach(label =>
@@ -249,7 +249,7 @@ describe('shared entity labels', () => {
   });
 });
 
-describe('R1.5 EL-7011 analytics texts name the trigger sources', () => {
+describe('analytics texts name the trigger sources', () => {
   const automated = GUIDE_SECTIONS.flatMap(s => s.metrics).find(m => m.name === 'Automated Activity');
   const { overview } = TOOLTIP_TEXTS;
   const autoTexts = [overview.AUTOMATED_ACTIVITY, automated.description];

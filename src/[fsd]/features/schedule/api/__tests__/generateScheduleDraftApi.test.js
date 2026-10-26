@@ -25,16 +25,12 @@ const makeStore = () =>
     middleware: getDefault => getDefault().concat(eliteaApi.middleware),
   });
 
-describe('R2.1 EL-7011 generateScheduleDraft', () => {
+describe('generateScheduleDraft', () => {
   afterEach(() => vi.restoreAllMocks());
 
   it('posts the body to the project draft url without projectId', async () => {
     const draft = { draft: { name: 'n' }, warnings: [] };
-    const fetchMock = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(
-        Response.json(draft, { status: 200 }),
-      );
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json(draft, { status: 200 }));
     const body = { prompt: 'p', current: {}, locked_entity: null, timezone: 'UTC' };
 
     const result = await makeStore().dispatch(

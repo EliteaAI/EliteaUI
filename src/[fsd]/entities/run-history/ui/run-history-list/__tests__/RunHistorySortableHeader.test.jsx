@@ -14,8 +14,8 @@ const theme = createTheme({
   palette: { background: { surface: { interactive: { default: '#eee' } } }, border: { lines: '#ccc' } },
 });
 
-describe('RunHistorySortableHeader EL-7011 CR-22 review r9', () => {
-  it('CR-22 review r9 pads the header like the rows, so header and value columns start at the same x', () => {
+describe('RunHistorySortableHeader', () => {
+  it('pads the header like the rows, so header and value columns start at the same x', () => {
     render(
       <ThemeProvider theme={theme}>
         <RunHistorySortableHeader

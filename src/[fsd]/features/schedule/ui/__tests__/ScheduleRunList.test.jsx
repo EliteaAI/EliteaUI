@@ -10,7 +10,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 
 import ScheduleRunList from '../ScheduleRunList';
 
-// EL-7011 US-32 R4, owner CR 2026-10-21 test panel log: the two-line run rows of the right block (CR-21)
+// test panel log: the two-line run rows of the right block
 
 const withConversation = {
   id: 1,
@@ -65,20 +65,20 @@ const rows = () => screen.getAllByTestId('schedule-run-row');
 const cell = (row, name) => within(row).getByTestId(`schedule-run-${name}`);
 const rowButton = row => within(row).getByRole('button');
 
-describe('ScheduleRunList EL-7011 US-32 CR-21', () => {
+describe('ScheduleRunList', () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
   });
 
-  it('R1.1 TC-US41-01 TC-US41-03 labels a waiting run and no finished run as waiting', () => {
+  it('TC-US41-01 TC-US41-03 labels a waiting run and no finished run as waiting', () => {
     renderList([waitingRun, withConversation]);
 
     expect(screen.getAllByTestId('schedule-run-status')).toHaveLength(2);
     expect(screen.getAllByText(/waiting/i)).toHaveLength(1);
   });
 
-  it('R4.1 CR-21 shows no column header and lists the runs as items of one list, newest first', () => {
+  it('shows no column header and lists the runs as items of one list, newest first', () => {
     renderList([withConversation, withoutConversation, manual]);
 
     expect(screen.getByRole('list')).toBeInTheDocument();
@@ -90,7 +90,7 @@ describe('ScheduleRunList EL-7011 US-32 CR-21', () => {
     );
   });
 
-  it('CR-21 puts date, trigger and status on line 1 and version and duration on line 2', () => {
+  it('puts date, trigger and status on line 1 and version and duration on line 2', () => {
     renderList([withConversation]);
     const [row] = rows();
 
@@ -107,12 +107,12 @@ describe('ScheduleRunList EL-7011 US-32 CR-21', () => {
     expect(rows().map(row => cell(row, 'version').textContent)).toEqual(['v2', 'v3', '–']);
   });
 
-  it('R4.2 shows the reason of a run on line 2', () => {
+  it('shows the reason of a run on line 2', () => {
     renderList([withoutConversation]);
     expect(cell(rows()[0], 'line2')).toHaveTextContent('Model unavailable');
   });
 
-  it('CR-21 each row is one button that opens the run, a waiting run reads Review', () => {
+  it('each row is one button that opens the run, a waiting run reads Review', () => {
     const onOpen = renderList([withConversation, waitingRun]);
 
     expect(within(rows()[0]).getByText('Review')).toBeInTheDocument();
@@ -123,7 +123,7 @@ describe('ScheduleRunList EL-7011 US-32 CR-21', () => {
     expect(onOpen).toHaveBeenLastCalledWith(withConversation);
   });
 
-  it('CR-21 owner decision: a run without a conversation (Skipped, Blocked) opens too', () => {
+  it('owner decision: a run without a conversation (Skipped, Blocked) opens too', () => {
     const skipped = { ...withoutConversation, id: 7, status: 'skipped', reason: 'Agent was deleted' };
     const onOpen = renderList([skipped]);
 
@@ -133,14 +133,14 @@ describe('ScheduleRunList EL-7011 US-32 CR-21', () => {
     expect(rowButton(rows()[0])).not.toHaveAttribute('aria-disabled');
   });
 
-  it('CR-21 marks the selected run with aria-current and the row id for the focus', () => {
+  it('marks the selected run with aria-current and the row id for the focus', () => {
     renderList([withConversation, manual], { selectedRunId: 3 });
 
     expect(rows().map(row => rowButton(row).getAttribute('aria-current'))).toEqual([null, 'true']);
     expect(rows().map(row => rowButton(row).dataset.runId)).toEqual(['1', '3']);
   });
 
-  it('CR-21 sorts by trigger, by duration (longest first) and by version name; ties and gaps go newest first', () => {
+  it('sorts by trigger, by duration (longest first) and by version name; ties and gaps go newest first', () => {
     const runs = [withConversation, withoutConversation, manual, waitingRun];
     renderList(runs, { sort: 'trigger' });
     expect(rows().map(row => rowButton(row).dataset.runId)).toEqual(['4', '1', '3', '2']);
@@ -155,7 +155,7 @@ describe('ScheduleRunList EL-7011 US-32 CR-21', () => {
     expect(rows().map(row => rowButton(row).dataset.runId)).toEqual(['2', '1', '4', '3']);
   });
 
-  it('CR-21 sorts newest first, oldest first, or by status', () => {
+  it('sorts newest first, oldest first, or by status', () => {
     renderList([withConversation, withoutConversation, manual], { sort: 'oldest' });
     expect(rows().map(row => cell(row, 'trigger').textContent)).toEqual(['manual', 'cron', 'test']);
     cleanup();
@@ -168,7 +168,7 @@ describe('ScheduleRunList EL-7011 US-32 CR-21', () => {
     ]);
   });
 
-  it('R4.1 says so when the schedule has no runs', () => {
+  it('says so when the schedule has no runs', () => {
     renderList([]);
     expect(screen.getByText('No runs yet.')).toBeInTheDocument();
   });

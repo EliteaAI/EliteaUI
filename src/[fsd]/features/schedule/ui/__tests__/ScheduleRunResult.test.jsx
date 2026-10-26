@@ -10,7 +10,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 
 import ScheduleRunResult from '../ScheduleRunResult';
 
-// EL-7011 owner CR 2026-10-21 test panel log: the result card of a finished run
+// test panel log: the result card of a finished run
 
 const run = {
   id: 12,
@@ -35,7 +35,7 @@ const renderResult = props =>
     </MemoryRouter>,
   );
 
-describe('ScheduleRunResult EL-7011 owner CR 2026-10-21', () => {
+describe('ScheduleRunResult', () => {
   afterEach(() => cleanup());
 
   it('shows the status chip, duration, tokens and cost', () => {
@@ -45,7 +45,7 @@ describe('ScheduleRunResult EL-7011 owner CR 2026-10-21', () => {
     expect(screen.getByTestId('schedule-run-summary')).toHaveTextContent('38 s · 2,140 tokens · $0.0300');
   });
 
-  it('CR-25 has no Open conversation link, even when the run has a conversation', () => {
+  it('has no Open conversation link, even when the run has a conversation', () => {
     renderResult();
 
     expect(screen.queryByText(/Open conversation/)).not.toBeInTheDocument();
@@ -78,8 +78,8 @@ describe('ScheduleRunResult EL-7011 owner CR 2026-10-21', () => {
     expect(screen.queryByTestId('schedule-run-answer')).not.toBeInTheDocument();
   });
 
-  // CR-21 option A: below a 1000 px window height the answer keeps 2 lines, so the card fits the right block
-  // CR-21 fit spec: one header row, so the card stays 88 px with 2 answer lines under 1000 px window height
+  // option A: below a 1000 px window height the answer keeps 2 lines, so the card fits the right block
+  // fit spec: one header row, so the card stays 88 px with 2 answer lines under 1000 px window height
   it('keeps the header on one row: the stats get an ellipsis and a tooltip', () => {
     renderResult();
     const header = screen.getByTestId('schedule-run-status').parentElement;

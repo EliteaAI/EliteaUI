@@ -6,7 +6,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 
 import ApplicationInformation from '../ApplicationInformation';
 
-// EL-7011 US-37 R2.5: the information panel shows the trigger type only, never a schedule info row.
+// the information panel shows the trigger type only, never a schedule info row.
 
 vi.mock('formik', () => ({
   useFormikContext: () => ({ values: { id: 7, version_details: { id: 70, agent_type: 'pipeline' } } }),
@@ -16,7 +16,13 @@ vi.mock('@/[fsd]/features/agent/ui/agent-details/configurations/index.js', () =>
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProject: () => ({ id: 1 }) }));
 vi.mock('@/[fsd]/shared/ui/accordion/BasicAccordion', () => ({
-  default: ({ items }) => <div>{items.map(item => <div key={item.title}>{item.content}</div>)}</div>,
+  default: ({ items }) => (
+    <div>
+      {items.map(item => (
+        <div key={item.title}>{item.content}</div>
+      ))}
+    </div>
+  ),
 }));
 vi.mock('@/[fsd]/shared/ui/button', () => ({ CopyToClipboardButton: () => null }));
 vi.mock('@/api/applications', () => ({
@@ -28,7 +34,7 @@ vi.mock('@/api/applications', () => ({
 vi.mock('@/common/utils.jsx', () => ({ buildForkedEntityHref: () => '', capitalizeFirstChar: s => s }));
 vi.mock('@/components/Fork/LabelLinkWithToolTip.jsx', () => ({ LabelLinkWithToolTip: () => null }));
 
-describe('ApplicationInformation EL-7011 R2.5', () => {
+describe('ApplicationInformation', () => {
   afterEach(cleanup);
 
   it('shows the trigger type but no schedule info row', () => {

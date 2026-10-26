@@ -375,7 +375,7 @@ describe('RunHistoryContainer owner project', () => {
   });
 });
 
-describe('RunHistoryContainer R4.1 EL-7011 query params', () => {
+describe('RunHistoryContainer query params', () => {
   it('merges the query params into the run list request', () => {
     renderContainer('', { queryParams: { schedule_id: 42 } });
 
@@ -400,7 +400,7 @@ describe('RunHistoryContainer R4.1 EL-7011 query params', () => {
   });
 });
 
-describe('RunHistoryContainer EL-7011 US-32 stacked layout', () => {
+describe('RunHistoryContainer stacked layout', () => {
   it('puts the run detail below the list with the full width and its own height', () => {
     renderContainer('', { layout: 'stacked' });
 
@@ -423,8 +423,8 @@ describe('RunHistoryContainer EL-7011 US-32 stacked layout', () => {
   });
 });
 
-describe('RunHistoryContainer EL-7011 CR-22 list column width', () => {
-  it('CR-22 review r3 widens the list column to 48 rem with the schedule columns, so the panel starts after it', () => {
+describe('RunHistoryContainer list column width', () => {
+  it('widens the list column to 48 rem with the schedule columns, so the panel starts after it', () => {
     renderContainer('', {
       extraColumns: [{ id: 'schedule', label: 'Schedule', width: '9rem', render: () => '-' }],
     });
@@ -432,7 +432,7 @@ describe('RunHistoryContainer EL-7011 CR-22 list column width', () => {
     expect(screen.getByTestId('run-history-list-column')).toHaveStyle({ maxWidth: '48rem' });
   });
 
-  it('CR-22 review r3 keeps the 32 rem column for the other histories', () => {
+  it('keeps the 32 rem column for the other histories', () => {
     renderContainer('');
 
     expect(screen.getByTestId('run-history-list-column')).toHaveStyle({ maxWidth: '32rem' });

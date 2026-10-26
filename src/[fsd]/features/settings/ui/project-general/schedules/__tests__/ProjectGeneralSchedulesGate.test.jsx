@@ -43,21 +43,21 @@ const renderContent = () =>
 
 afterEach(cleanup);
 
-describe('EL-7011 R1.1 R1.2 Schedules section gate', () => {
-  it('R1.1 shows the Schedules section with the schedules list permission', () => {
+describe('Schedules section gate', () => {
+  it('shows the Schedules section with the schedules list permission', () => {
     perm.allowed = [PERMISSIONS.schedules.list];
     renderContent();
     expect(screen.getByTestId('schedules-section')).toBeInTheDocument();
   });
 
-  it('EL-7011 owner CR shows Get notified and Allow Run without asking in the Schedules section', () => {
+  it('shows Get notified and Allow Run without asking in the Schedules section', () => {
     perm.allowed = [PERMISSIONS.schedules.list];
     renderContent();
     expect(screen.getByTestId('schedule-notifications')).toBeInTheDocument();
     expect(screen.getByTestId('schedule-run-without-asking')).toBeInTheDocument();
   });
 
-  it('R1.2 hides the Schedules section without the permission', () => {
+  it('hides the Schedules section without the permission', () => {
     perm.allowed = [];
     renderContent();
     expect(screen.queryByTestId('schedules-section')).not.toBeInTheDocument();

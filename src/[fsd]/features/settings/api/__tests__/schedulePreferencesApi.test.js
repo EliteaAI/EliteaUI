@@ -40,7 +40,7 @@ const makeStore = () =>
 const cached = store =>
   schedulePreferencesApi.endpoints.getSchedulePreferences.select({ projectId: 7 })(store.getState()).data;
 
-describe('EL-7011 schedule preferences API', () => {
+describe('schedule preferences API', () => {
   let fetchSpy;
 
   beforeEach(() => {
@@ -48,7 +48,7 @@ describe('EL-7011 schedule preferences API', () => {
     fetchSpy = vi.spyOn(globalThis, 'fetch');
   });
 
-  it('R2.1 EL-7011: loads the value of the current user and project with GET', async () => {
+  it('loads the value of the current user and project with GET', async () => {
     fetchSpy.mockResolvedValue(jsonResponse({ get_notified: false }));
     const store = makeStore();
 
@@ -62,7 +62,7 @@ describe('EL-7011 schedule preferences API', () => {
     expect(result.data).toEqual({ get_notified: false });
   });
 
-  it('R2.3 EL-7011: sends the new value with PUT at once and updates the cache before the reply', async () => {
+  it('sends the new value with PUT at once and updates the cache before the reply', async () => {
     let reply;
     fetchSpy.mockResolvedValueOnce(jsonResponse({ get_notified: true }));
     const store = makeStore();
@@ -88,7 +88,7 @@ describe('EL-7011 schedule preferences API', () => {
     expect(cached(store)).toEqual({ get_notified: false });
   });
 
-  it('R2.5 EL-7011: returns the cache to the saved value when the save fails', async () => {
+  it('returns the cache to the saved value when the save fails', async () => {
     fetchSpy.mockResolvedValueOnce(jsonResponse({ get_notified: true }));
     const store = makeStore();
     await store.dispatch(schedulePreferencesApi.endpoints.getSchedulePreferences.initiate({ projectId: 7 }));

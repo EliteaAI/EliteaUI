@@ -6,7 +6,7 @@ import { act, renderHook } from '@testing-library/react';
 
 import { useScheduleRunsView } from '../useScheduleRunsView.hooks';
 
-// EL-7011 CR-21: the Runs section in the right block and the run the panel shows
+// the Runs section in the right block and the run the panel shows
 
 const mocks = vi.hoisted(() => ({ runs: [], loaded: true, applicationDetails: vi.fn() }));
 
@@ -62,7 +62,7 @@ const setup = (entry = '/', scheduleId = 9) =>
   renderHook(() => useScheduleRunsView(scheduleId, 3), { wrapper: wrapperFor(entry) });
 const mount = (result, section) => act(() => result.current.runsSectionRef(section));
 
-describe('useScheduleRunsView EL-7011 CR-21', () => {
+describe('useScheduleRunsView', () => {
   beforeEach(() => mocks.applicationDetails.mockReturnValue({}));
   afterEach(() => {
     vi.clearAllMocks();
@@ -70,7 +70,7 @@ describe('useScheduleRunsView EL-7011 CR-21', () => {
     mocks.loaded = true;
   });
 
-  it('R5.6 Run History expands a collapsed Runs section, scrolls to it and focuses the newest row', () => {
+  it('Run History expands a collapsed Runs section, scrolls to it and focuses the newest row', () => {
     mocks.runs = [cron, waiting];
     const section = makeSection(mocks.runs);
     const { result } = setup();
@@ -85,7 +85,7 @@ describe('useScheduleRunsView EL-7011 CR-21', () => {
     expect(result.current.viewedRun).toBeUndefined();
   });
 
-  it('R4.6 Run History with a run id selects the run, focuses its row and announces it', () => {
+  it('Run History with a run id selects the run, focuses its row and announces it', () => {
     mocks.runs = [cron, waiting];
     const section = makeSection(mocks.runs);
     const { result } = setup();
@@ -99,7 +99,7 @@ describe('useScheduleRunsView EL-7011 CR-21', () => {
     expect(result.current.announcement).toMatch(/^Showing run .*, cron, Waiting for input$/);
   });
 
-  it('R5.6 Run History called with a click event shows the list and selects no run', () => {
+  it('Run History called with a click event shows the list and selects no run', () => {
     mocks.runs = [cron];
     const section = makeSection(mocks.runs);
     const { result } = setup();
@@ -112,7 +112,7 @@ describe('useScheduleRunsView EL-7011 CR-21', () => {
     expect(() => act(() => result.current.showRunHistory(null))).not.toThrow();
   });
 
-  it('R4.7 #runs scrolls once the Runs section mounts, even when it mounts after the schedule', () => {
+  it('#runs scrolls once the Runs section mounts, even when it mounts after the schedule', () => {
     mocks.runs = [cron];
     const section = makeSection(mocks.runs);
     const { result } = setup('/#runs');
@@ -125,7 +125,7 @@ describe('useScheduleRunsView EL-7011 CR-21', () => {
     expect(rowOf(section, cron).focus).toHaveBeenCalled();
   });
 
-  it('R4.7 #runs waits for the schedule, then scrolls only once', () => {
+  it('#runs waits for the schedule, then scrolls only once', () => {
     mocks.runs = [cron];
     const section = makeSection(mocks.runs);
     const { result, rerender } = renderHook(({ id }) => useScheduleRunsView(id, 3), {
@@ -141,7 +141,7 @@ describe('useScheduleRunsView EL-7011 CR-21', () => {
     expect(section.scrollIntoView).toHaveBeenCalledTimes(1);
   });
 
-  it('R4.7 #runs waits for the runs to load before it picks a row', () => {
+  it('#runs waits for the runs to load before it picks a row', () => {
     mocks.loaded = false;
     mocks.runs = [];
     const section = makeSection([cron]);
@@ -166,7 +166,7 @@ describe('useScheduleRunsView EL-7011 CR-21', () => {
     expect(rowOf(section, cron).focus).not.toHaveBeenCalled();
   });
 
-  it('R5.6 history_run_id selects the linked run, scrolls to its row and announces it', () => {
+  it('history_run_id selects the linked run, scrolls to its row and announces it', () => {
     mocks.runs = [cron, waiting];
     const section = makeSection(mocks.runs);
     const { result } = setup('/?history_run_id=90');
@@ -179,7 +179,7 @@ describe('useScheduleRunsView EL-7011 CR-21', () => {
     expect(result.current.runNotFound).toBe(false);
   });
 
-  it('R4.6 an unknown history_run_id shows no run, flags it and focuses the section', () => {
+  it('an unknown history_run_id shows no run, flags it and focuses the section', () => {
     mocks.runs = [cron, waiting];
     const section = makeSection(mocks.runs);
     const { result } = setup('/?history_run_id=5');
@@ -191,7 +191,7 @@ describe('useScheduleRunsView EL-7011 CR-21', () => {
     expect(rowOf(section, cron).focus).not.toHaveBeenCalled();
   });
 
-  it('R4.7 a new #runs request after the hash changes scrolls again', () => {
+  it('a new #runs request after the hash changes scrolls again', () => {
     mocks.runs = [cron];
     const section = makeSection(mocks.runs);
     const holder = { current: null };
@@ -253,7 +253,7 @@ describe('useScheduleRunsView EL-7011 CR-21', () => {
     delete window.matchMedia;
   });
 
-  it('R1.2 TC-US41-04 shows the run of the notice link (history_run_id) in the panel', () => {
+  it('TC-US41-04 shows the run of the notice link (history_run_id) in the panel', () => {
     mocks.runs = [cron, waiting];
     expect(setup('/?history_run_id=90').result.current.viewedRun).toBe(waiting);
     expect(setup('/?history_run_id=5').result.current.viewedRun).toBeUndefined();

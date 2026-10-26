@@ -70,9 +70,9 @@ const renderSection = props =>
 
 const openCronTab = () => fireEvent.click(screen.getByText('Cron expression'));
 
-describe('EL-7011 US-30 ScheduleSettingsSection', () => {
-  describe('R1.1 and R1.2 one cron value for both tabs', () => {
-    it('R1.1 passes the Builder cron to the caller and shows it on the Cron expression tab (TC-US30-01)', () => {
+describe('ScheduleSettingsSection', () => {
+  describe('one cron value for both tabs', () => {
+    it('passes the Builder cron to the caller and shows it on the Cron expression tab (TC-US30-01)', () => {
       const onChange = vi.fn();
       renderSection({ initial: '15 3 * * 1', onChange });
 
@@ -83,7 +83,7 @@ describe('EL-7011 US-30 ScheduleSettingsSection', () => {
       expect(screen.getByTestId('pipeline-schedule-cron-input')).toHaveValue('0 0 * * 6');
     });
 
-    it('R1.2 shows a cron typed on the cron tab in the Builder (TC-US30-02)', () => {
+    it('shows a cron typed on the cron tab in the Builder (TC-US30-02)', () => {
       renderSection({ initial: '0 0 * * 6' });
 
       openCronTab();
@@ -96,8 +96,8 @@ describe('EL-7011 US-30 ScheduleSettingsSection', () => {
     });
   });
 
-  describe('R1.3 cron tab field and hint', () => {
-    it('R1.3 shows a text field and the hint on the Cron expression tab (TC-US30-05)', () => {
+  describe('cron tab field and hint', () => {
+    it('shows a text field and the hint on the Cron expression tab (TC-US30-05)', () => {
       renderSection();
 
       openCronTab();
@@ -106,14 +106,14 @@ describe('EL-7011 US-30 ScheduleSettingsSection', () => {
       expect(screen.getByText(HINT)).toBeInTheDocument();
     });
 
-    it('R1.3 shows no cron field or hint on the Builder tab (TC-US30-06)', () => {
+    it('shows no cron field or hint on the Builder tab (TC-US30-06)', () => {
       renderSection();
 
       expect(screen.queryByText(HINT)).not.toBeInTheDocument();
       expect(screen.queryByTestId('pipeline-schedule-cron-input')).not.toBeInTheDocument();
     });
 
-    it('R1.3 builds the test ids from testIdPrefix', () => {
+    it('builds the test ids from testIdPrefix', () => {
       renderSection({ testIdPrefix: 'schedule-settings' });
 
       openCronTab();
@@ -123,8 +123,8 @@ describe('EL-7011 US-30 ScheduleSettingsSection', () => {
     });
   });
 
-  describe('R2.1 and R2.2 info block', () => {
-    it('R2.1 shows the rule, the timezone name and the next run under each tab (TC-US30-07)', () => {
+  describe('info block', () => {
+    it('shows the rule, the timezone name and the next run under each tab (TC-US30-07)', () => {
       renderSection({ initial: '0 0 * * 6' });
 
       const expectInfo = () => {
@@ -140,7 +140,7 @@ describe('EL-7011 US-30 ScheduleSettingsSection', () => {
       expectInfo();
     });
 
-    it('R2.2 shows the timezone notice when the schedule timezone differs (TC-US30-08)', () => {
+    it('shows the timezone notice when the schedule timezone differs (TC-US30-08)', () => {
       renderSection({ initial: '0 0 * * 6', sourceTimezone: FOREIGN_TIMEZONE });
 
       const notice = screen.getByTestId('schedule-timezone-notice');
@@ -149,7 +149,7 @@ describe('EL-7011 US-30 ScheduleSettingsSection', () => {
       expect(screen.getByTestId('pipeline-schedule-info')).toHaveTextContent(BROWSER_TIMEZONE);
     });
 
-    it('R2.2 says the cron cannot be converted when its time is not fixed', () => {
+    it('says the cron cannot be converted when its time is not fixed', () => {
       renderSection({ initial: '*/5 * * * *', sourceTimezone: FOREIGN_TIMEZONE });
 
       expect(screen.getByTestId('schedule-timezone-notice')).toHaveTextContent(
@@ -157,7 +157,7 @@ describe('EL-7011 US-30 ScheduleSettingsSection', () => {
       );
     });
 
-    it('R2.2 keeps the notice text when the cron changes after mount', () => {
+    it('keeps the notice text when the cron changes after mount', () => {
       renderSection({ initial: '0 0 * * 6', sourceTimezone: FOREIGN_TIMEZONE });
       const before = screen.getByTestId('schedule-timezone-notice').textContent;
 
@@ -170,15 +170,15 @@ describe('EL-7011 US-30 ScheduleSettingsSection', () => {
       expect(screen.getByTestId('schedule-timezone-notice').textContent).toBe(before);
     });
 
-    it('R2.2 shows no notice when the timezones match', () => {
+    it('shows no notice when the timezones match', () => {
       renderSection({ sourceTimezone: BROWSER_TIMEZONE });
 
       expect(screen.queryByTestId('schedule-timezone-notice')).not.toBeInTheDocument();
     });
   });
 
-  describe('R2.3 and R2.4 errors', () => {
-    it('R2.3 shows no next run for an invalid cron (TC-US30-09)', () => {
+  describe('errors', () => {
+    it('shows no next run for an invalid cron (TC-US30-09)', () => {
       renderSection();
 
       openCronTab();
@@ -189,7 +189,7 @@ describe('EL-7011 US-30 ScheduleSettingsSection', () => {
       expect(screen.queryByTestId('pipeline-schedule-next-run')).not.toBeInTheDocument();
     });
 
-    it('R2.3 shows the validation message with an error icon under the cron field (TC-US30-10)', () => {
+    it('shows the validation message with an error icon under the cron field (TC-US30-10)', () => {
       renderSection();
 
       openCronTab();
@@ -200,7 +200,7 @@ describe('EL-7011 US-30 ScheduleSettingsSection', () => {
       expect(screen.getByTestId('error-icon')).toBeInTheDocument();
     });
 
-    it('R2.3 places the error row under the cron field, before the info block and the notice', () => {
+    it('places the error row under the cron field, before the info block and the notice', () => {
       renderSection({ sourceTimezone: FOREIGN_TIMEZONE });
 
       openCronTab();
@@ -215,7 +215,7 @@ describe('EL-7011 US-30 ScheduleSettingsSection', () => {
       expect(follows(error, screen.getByTestId('schedule-timezone-notice'))).toBe(true);
     });
 
-    it('R2.3 shows the required message and no next run for an empty cron (TC-US30-12)', () => {
+    it('shows the required message and no next run for an empty cron (TC-US30-12)', () => {
       renderSection();
 
       openCronTab();
@@ -227,7 +227,7 @@ describe('EL-7011 US-30 ScheduleSettingsSection', () => {
       expect(screen.queryByTestId('pipeline-schedule-next-run')).not.toBeInTheDocument();
     });
 
-    it('R2.4 shows the server error under the cron field (TC-US30-11)', () => {
+    it('shows the server error under the cron field (TC-US30-11)', () => {
       renderSection({ initial: '*/1 * * * *', error: 'Runs must be at least 5 minutes apart' });
 
       expect(screen.getByTestId('pipeline-schedule-cron-error')).toHaveTextContent(
@@ -237,7 +237,7 @@ describe('EL-7011 US-30 ScheduleSettingsSection', () => {
   });
 });
 
-describe('EL-7011 US-32 ScheduleSettingsSection opening tab', () => {
+describe('ScheduleSettingsSection opening tab', () => {
   it('opens a saved cron the Builder cannot show on the Cron expression tab, with its error', () => {
     renderSection({ initial: '0 * * * *' });
 

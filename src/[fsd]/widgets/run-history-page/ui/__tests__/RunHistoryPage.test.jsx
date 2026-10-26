@@ -134,7 +134,7 @@ describe('RunHistoryPage opening run analytics', () => {
   });
 });
 
-describe('RunHistoryPage execution type column (R1.1, EL-7011 US-38)', () => {
+describe('RunHistoryPage execution type column', () => {
   afterEach(() => cleanup());
 
   it('passes the column label and row decorator through to the container', () => {
@@ -153,10 +153,10 @@ describe('RunHistoryPage execution type column (R1.1, EL-7011 US-38)', () => {
   });
 });
 
-describe('RunHistoryPage schedule filter and links (EL-7011 CR-22)', () => {
+describe('RunHistoryPage schedule filter and links', () => {
   afterEach(() => cleanup());
 
-  it('CR-22 ?schedule_id=4 sends schedule_id to the list and preselects the filter', () => {
+  it('?schedule_id=4 sends schedule_id to the list and preselects the filter', () => {
     renderAt('/agents/all/127/history?schedule_id=4', { scheduleEntityType: 'agent' });
 
     expect(scheduleList.args).toMatchObject({ entityType: 'agent', entityId: '127', skip: false });
@@ -173,7 +173,7 @@ describe('RunHistoryPage schedule filter and links (EL-7011 CR-22)', () => {
     expect(scheduleList.args).toEqual({ entityType: 'agent', entityId: '127', skip: false });
   });
 
-  it('CR-22 a schedule not in the caller list shows a plain name', () => {
+  it('a schedule not in the caller list shows a plain name', () => {
     renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
     const [scheduleColumn] = containerProps.current.extraColumns;
 
@@ -192,17 +192,17 @@ describe('RunHistoryPage schedule filter and links (EL-7011 CR-22)', () => {
       'href',
       '/agents/all/127/schedules/4',
     );
-    // CR-22 review r8: a cut name shows in full on hover
+    // a cut name shows in full on hover
     expect(screen.getByRole('link', { name: 'Daily digest' })).toHaveAttribute('title', 'Daily digest');
-    // CR-22 review r3: the theme link (MUI Link), not the browser default blue
+    // the theme link (MUI Link), not the browser default blue
     expect(screen.getByRole('link', { name: 'Daily digest' })).toHaveClass('MuiLink-root');
-    // BUG-38: the app link colour, not the brand colour (4.5:1 for small text)
+    // the app link colour, not the brand colour (4.5:1 for small text)
     expect(screen.getByRole('link', { name: 'Daily digest' })).toHaveStyle({
       color: LIGHT_THEME.palette.text.link,
     });
   });
 
-  it('CR-22 review r2 ignores a schedule_id that is not a number, and keeps an unknown valid id as an option', () => {
+  it('ignores a schedule_id that is not a number, and keeps an unknown valid id as an option', () => {
     renderAt('/agents/all/127/history?schedule_id=abc', { scheduleEntityType: 'agent' });
     expect(containerProps.current.queryParams).toEqual({});
     expect(screen.getByLabelText('Schedule')).toHaveValue('');
@@ -214,18 +214,18 @@ describe('RunHistoryPage schedule filter and links (EL-7011 CR-22)', () => {
     expect(screen.getByRole('option', { name: 'Schedule 55' })).toBeInTheDocument();
   });
 
-  it('CR-22 review r3 shows "All schedules" as the value when no schedule is chosen', () => {
+  it('shows "All schedules" as the value when no schedule is chosen', () => {
     renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
 
     const select = screen.getByLabelText('Schedule');
     expect(select).toHaveValue('');
     expect(select).toHaveAttribute('data-display-empty', 'true');
-    // CR-22 review r4: the label sits above the shown "All schedules", not on top of it
+    // the label sits above the shown "All schedules", not on top of it
     expect(select).toHaveAttribute('data-shrink-label', 'true');
     expect(screen.getByRole('option', { name: 'All schedules' })).toHaveValue('');
   });
 
-  it('CR-22 histories without schedules show no filter and no extra columns', () => {
+  it('histories without schedules show no filter and no extra columns', () => {
     renderAt('/agents/all/127/history');
 
     expect(screen.queryByLabelText('Schedule')).not.toBeInTheDocument();

@@ -64,32 +64,32 @@ const pick = (selectLabel, optionName) => {
   fireEvent.click(screen.getByRole('option', { name: optionName }));
 };
 
-describe('EL-7011 US-27 SchedulesFilters', () => {
+describe('SchedulesFilters', () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => {
     cleanup();
     vi.useRealTimers();
   });
 
-  it('R1.1 EL-7011: picking a type emits entityType', () => {
+  it('picking a type emits entityType', () => {
     const onChange = renderBar();
     pick('type', 'Pipeline');
     expect(onChange).toHaveBeenCalledWith({ ...EMPTY, entityType: 'pipeline' });
   });
 
-  it('R1.1 EL-7011: picking a status emits status', () => {
+  it('picking a status emits status', () => {
     const onChange = renderBar();
     pick('status', 'Failed');
     expect(onChange).toHaveBeenCalledWith({ ...EMPTY, status: 'failed' });
   });
 
-  it('R1.1 EL-7011 CR-23: the approval wait option reads "Waiting for input" and emits waiting_for_approval', () => {
+  it('the approval wait option reads "Waiting for input" and emits waiting_for_approval', () => {
     const onChange = renderBar();
     pick('status', 'Waiting for input');
     expect(onChange).toHaveBeenCalledWith({ ...EMPTY, status: 'waiting_for_approval' });
   });
 
-  it('R1.1 EL-7011: picking an enabled state emits a boolean, and "All" clears it', () => {
+  it('picking an enabled state emits a boolean, and "All" clears it', () => {
     const onChange = renderBar();
     pick('enabled', 'No');
     expect(onChange).toHaveBeenLastCalledWith({ ...EMPTY, enabled: false });
@@ -99,7 +99,7 @@ describe('EL-7011 US-27 SchedulesFilters', () => {
     expect(onChangeAll).toHaveBeenCalledWith({ ...EMPTY, enabled: '' });
   });
 
-  it('R1.2 EL-7011: typing emits search once, 300 ms after the last key', () => {
+  it('typing emits search once, 300 ms after the last key', () => {
     const onChange = renderBar();
     const input = screen.getByPlaceholderText('Search');
     fireEvent.change(input, { target: { value: 'n' } });
@@ -111,13 +111,13 @@ describe('EL-7011 US-27 SchedulesFilters', () => {
     expect(onChange).toHaveBeenCalledWith({ ...EMPTY, search: 'nightly' });
   });
 
-  it('R2.1 EL-7011: an admin sees the Owner filter and its picks emit ownerIds', () => {
+  it('an admin sees the Owner filter and its picks emit ownerIds', () => {
     const onChange = renderBar();
     fireEvent.click(screen.getByTestId('owner-filter'));
     expect(onChange).toHaveBeenCalledWith({ ...EMPTY, ownerIds: ['a', 'b'] });
   });
 
-  it('R2.1 EL-7011 BUG-13: the Owner input has the height and inner paddings of the Type select', () => {
+  it('the Owner input has the height and inner paddings of the Type select', () => {
     renderBar();
     const owner = getComputedStyle(screen.getByTestId('owner-input-root'));
     const type = getComputedStyle(
@@ -130,7 +130,7 @@ describe('EL-7011 US-27 SchedulesFilters', () => {
     }
   });
 
-  it('R2.1 EL-7011 BUG-13: a long owner name ends with an ellipsis and the input keeps room to type', () => {
+  it('a long owner name ends with an ellipsis and the input keeps room to type', () => {
     renderBar();
     const chip = screen.getByTestId('owner-chip');
     const label = getComputedStyle(chip.firstElementChild);
@@ -140,18 +140,18 @@ describe('EL-7011 US-27 SchedulesFilters', () => {
     expect(getComputedStyle(screen.getByTestId('owner-input')).minWidth).toBe('1rem');
   });
 
-  it('R2.4 EL-7011: a regular user sees no Owner filter', () => {
+  it('a regular user sees no Owner filter', () => {
     renderBar({ isAdmin: false });
     expect(screen.queryByTestId('owner-filter')).not.toBeInTheDocument();
   });
 
-  it('TC-US35-18 US-35 R3.6 EL-7011: hides the Type filter while the entity chip shows', () => {
+  it('TC-US35-18 hides the Type filter while the entity chip shows', () => {
     renderBar({ hideEntityType: true });
     expect(screen.queryByTestId('schedules-filter-type')).not.toBeInTheDocument();
     expect(screen.getByTestId('schedules-filter-status')).toBeInTheDocument();
   });
 
-  it('R3.1 EL-7011: the bar has only Type, Status, Enabled, search and Owner', () => {
+  it('the bar has only Type, Status, Enabled, search and Owner', () => {
     renderBar();
     expect(screen.getAllByRole('combobox')).toHaveLength(3);
     expect(screen.getAllByRole('textbox')).toHaveLength(1);
@@ -159,7 +159,7 @@ describe('EL-7011 US-27 SchedulesFilters', () => {
     expect(screen.queryByText(/tag/i)).not.toBeInTheDocument();
   });
 
-  it('EL-7011: every control has an accessible name', () => {
+  it('every control has an accessible name', () => {
     renderBar();
     expect(screen.getByRole('group', { name: 'Schedule filters' })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Search schedules' })).toBeInTheDocument();
@@ -172,7 +172,7 @@ describe('EL-7011 US-27 SchedulesFilters', () => {
     expect(screen.getByRole('combobox', { name: 'Type' })).toHaveTextContent('Pipeline');
   });
 
-  it('EL-7011: the title, then the controls in column order: Search, Type, Status, Owner, Enabled', () => {
+  it('the title, then the controls in column order: Search, Type, Status, Owner, Enabled', () => {
     renderBar({ hasFilters: true });
     const bar = screen.getByRole('group', { name: 'Schedule filters' });
     const ids = [...bar.children].map(child => child.dataset.testid ?? child.getAttribute('aria-label'));
@@ -185,7 +185,7 @@ describe('EL-7011 US-27 SchedulesFilters', () => {
     ]);
   });
 
-  it('EL-7011: "Clear filters" shows only while a filter is set', () => {
+  it('"Clear filters" shows only while a filter is set', () => {
     renderBar();
     expect(screen.queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument();
     cleanup();
@@ -193,7 +193,7 @@ describe('EL-7011 US-27 SchedulesFilters', () => {
     expect(screen.getByRole('button', { name: 'Clear filters' })).toBeInTheDocument();
   });
 
-  it('R1.3 EL-7011: "Clear filters" empties the search and the owners and focuses the search', () => {
+  it('"Clear filters" empties the search and the owners and focuses the search', () => {
     const onClear = vi.fn();
     const onChange = renderBar({ hasFilters: true, onClear });
     const input = screen.getByRole('textbox', { name: 'Search schedules' });
@@ -211,7 +211,7 @@ describe('EL-7011 US-27 SchedulesFilters', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it('R1.2 EL-7011: Escape in the search empties it', () => {
+  it('Escape in the search empties it', () => {
     const onChange = renderBar({ value: { ...EMPTY, search: 'nightly' } });
     const input = screen.getByRole('textbox', { name: 'Search schedules' });
     fireEvent.keyDown(input, { key: 'Escape' });
@@ -220,7 +220,7 @@ describe('EL-7011 US-27 SchedulesFilters', () => {
     expect(onChange).toHaveBeenCalledWith({ ...EMPTY, search: '' });
   });
 
-  it('EL-7011 shows the "Filters:" title before the controls', () => {
+  it('shows the "Filters:" title before the controls', () => {
     renderBar();
     const group = screen.getByRole('group', { name: 'Schedule filters' });
     expect(group.firstElementChild).toHaveTextContent('Filters:');

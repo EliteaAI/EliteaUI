@@ -6,7 +6,7 @@ import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { RISK_CHECK_STATUS } from '../../constants';
 import { useScheduleRiskCheck } from '../useScheduleRiskCheck.hooks';
 
-// EL-7011 owner CR 2026-10-21: the dry-run risk check of the schedule form (US-33, US-31, US-32)
+// the dry-run risk check of the schedule form
 
 const mocks = vi.hoisted(() => ({ check: vi.fn() }));
 
@@ -23,7 +23,9 @@ const CLEAR = {
 };
 const SENSITIVE = [{ code: 'sensitive_action', toolkit: 'Outlook', tool: 'send_email' }];
 const answer = data => ({ unwrap: () => Promise.resolve(data) });
-const failure = () => ({ unwrap: () => Promise.reject(Object.assign(new Error('Request failed'), { status: 500 })) });
+const failure = () => ({
+  unwrap: () => Promise.reject(Object.assign(new Error('Request failed'), { status: 500 })),
+});
 
 // The check body of the default entity and version
 const CHECK_CALL = { projectId: 5, entity_type: 'agent', application_id: 7, version_id: 71 };
@@ -40,7 +42,7 @@ const setVisibility = state => {
   });
 };
 
-describe('useScheduleRiskCheck EL-7011 owner CR', () => {
+describe('useScheduleRiskCheck', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.check.mockReturnValue(answer(CLEAR));
@@ -67,7 +69,7 @@ describe('useScheduleRiskCheck EL-7011 owner CR', () => {
     expect(result.current.result).toEqual(CLEAR);
   });
 
-  it('US-33 R2.6 EL-7011 BUG-36 sends schedule_id on an edit, so the server scans as the owner', async () => {
+  it('sends schedule_id on an edit, so the server scans as the owner', async () => {
     const { result } = setup({ entityType: 'agent', applicationId: 7, versionId: 71, scheduleId: 3 });
 
     await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));
@@ -130,8 +132,8 @@ describe('useScheduleRiskCheck EL-7011 owner CR', () => {
     await waitFor(() => expect(mocks.check).toHaveBeenCalledTimes(2));
   });
 
-  // CR-11 review r2: the review dialog must keep its tools when a tab-return check fails
-  it('US-33 R2.1 EL-7011 BUG-62 shows the failed state and keeps the findings of the same version when a re-check fails', async () => {
+  // the review dialog must keep its tools when a tab-return check fails
+  it('shows the failed state and keeps the findings of the same version when a re-check fails', async () => {
     mocks.check.mockReturnValueOnce(answer({ ...CLEAR, sensitive: SENSITIVE, fingerprint: 'fp-1' }));
     const { result } = setup();
     await waitFor(() => expect(result.current.result?.fingerprint).toBe('fp-1'));

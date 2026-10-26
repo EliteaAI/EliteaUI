@@ -36,7 +36,7 @@ const build = (eventType, meta) => ({
   meta: { message: 'Run of [Nightly sync]() failed', ...meta },
 });
 
-describe('EL-7011 US-40 R2.1 schedule notice link', () => {
+describe('schedule notice link', () => {
   afterEach(cleanup);
 
   it('links a run event to the run of its schedule', () => {
@@ -54,7 +54,7 @@ describe('EL-7011 US-40 R2.1 schedule notice link', () => {
   });
 });
 
-describe('EL-7011 US-40 R1.4 and R2.5 schedule notice text', () => {
+describe('schedule notice text', () => {
   afterEach(cleanup);
 
   it('shows the message of an owner change with the schedule name', () => {

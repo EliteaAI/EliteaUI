@@ -5,7 +5,7 @@ import { act, renderHook } from '@testing-library/react';
 
 import { useScheduleRun, useScheduleRunConversation, useScheduleRuns } from '../useScheduleRuns.hooks';
 
-// EL-7011 owner CR 2026-10-21 test panel log: one run polled while active, and its conversation
+// test panel log: one run polled while active, and its conversation
 
 const mocks = vi.hoisted(() => ({
   useGetScheduleRunQuery: vi.fn(),
@@ -33,7 +33,7 @@ const pollingOf = () => mocks.useGetScheduleRunQuery.mock.lastCall[1].pollingInt
 const mockRun = (run, extra = {}) =>
   mocks.useGetScheduleRunQuery.mockReturnValue({ currentData: run, refetch: vi.fn(), ...extra });
 
-describe('useScheduleRun EL-7011 owner CR 2026-10-21', () => {
+describe('useScheduleRun', () => {
   afterEach(() => vi.clearAllMocks());
 
   it('reads the run of the schedule and polls every 2 seconds while it runs or waits', () => {
@@ -58,7 +58,7 @@ describe('useScheduleRun EL-7011 owner CR 2026-10-21', () => {
     });
   });
 
-  it('CR-12 D3: polls a finished run until the usage figures arrive, then stops', () => {
+  it('D3: polls a finished run until the usage figures arrive, then stops', () => {
     const ended = { id: 12, status: 'success', conversation_id: 70 };
     mockRun({ ...ended, summary: { tokens: null, cost_usd: null } });
     const { rerender } = renderHook(() => useScheduleRun(9, 12));
@@ -69,7 +69,7 @@ describe('useScheduleRun EL-7011 owner CR 2026-10-21', () => {
     expect(pollingOf()).toBe(0);
   });
 
-  it('CR-12 D3: gives up on the usage figures after 10 seconds', () => {
+  it('D3: gives up on the usage figures after 10 seconds', () => {
     vi.useFakeTimers();
     try {
       mockRun({ id: 12, status: 'success', conversation_id: 70, summary: { tokens: null } });
@@ -84,7 +84,7 @@ describe('useScheduleRun EL-7011 owner CR 2026-10-21', () => {
     }
   });
 
-  it('CR-12 D3: a run without a conversation never has usage, so it is not polled', () => {
+  it('D3: a run without a conversation never has usage, so it is not polled', () => {
     mockRun({ id: 12, status: 'skipped', conversation_id: null, summary: { tokens: null } });
     renderHook(() => useScheduleRun(9, 12));
     expect(pollingOf()).toBe(0);
@@ -106,7 +106,7 @@ describe('useScheduleRun EL-7011 owner CR 2026-10-21', () => {
   });
 });
 
-describe('useScheduleRunConversation EL-7011 owner CR 2026-10-21', () => {
+describe('useScheduleRunConversation', () => {
   afterEach(() => vi.clearAllMocks());
 
   const conversation = { uuid: 'conv-uuid', message_groups: [] };
@@ -140,7 +140,7 @@ describe('useScheduleRunConversation EL-7011 owner CR 2026-10-21', () => {
   });
 });
 
-describe('useScheduleRuns EL-7011 owner CR 2026-10-21', () => {
+describe('useScheduleRuns', () => {
   afterEach(() => vi.clearAllMocks());
 
   it('asks for no runs before the schedule has loaded', () => {

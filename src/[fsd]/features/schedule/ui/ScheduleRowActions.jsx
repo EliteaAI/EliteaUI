@@ -12,7 +12,7 @@ import PlayIcon from '@/components/Icons/PlayIcon';
 
 import ChangeOwnerDialog from './ChangeOwnerDialog';
 
-// Owner CR 2026-10-21: every item shows a small icon; the item sets the colour through currentColor
+// Owner CR : every item shows a small icon; the item sets the colour through currentColor
 const ICON_SX = { fontSize: '1rem' };
 const SVG_ICON_STYLE = { width: '1rem', height: '1rem' };
 // The icon-only menu button needs a name for screen readers

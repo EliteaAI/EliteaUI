@@ -10,7 +10,7 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 
 import ScheduleRiskBlockBox from '../ScheduleRiskBlockBox';
 
-// EL-7011 owner CR 2026-10-21: the red box under the entity when the risk check blocks the save (US-33)
+// the red box under the entity when the risk check blocks the save
 
 const SIGNIN = [
   {
@@ -33,8 +33,8 @@ const STEPS = ['Review', 'Approve', 'Publish'].map(label => ({
   fix: { entity_type: 'pipeline', id: 9, version_id: 90 },
 }));
 
-// CR-11 review r2: a new tab is outside the router, so the link carries the origin, basename and project
-// The editor route needs the owner view mode, or it shows Page not found (CR-11 live check)
+// a new tab is outside the router, so the link carries the origin, basename and project
+// The editor route needs the owner view mode, or it shows Page not found (live check)
 const appUrl = path => `${window.location.origin}${getBasename()}/5${path}?viewMode=owner`;
 
 const setup = props =>
@@ -50,7 +50,7 @@ const setup = props =>
     </ThemeProvider>,
   );
 
-describe('EL-7011 owner CR ScheduleRiskBlockBox', () => {
+describe('ScheduleRiskBlockBox', () => {
   afterEach(cleanup);
 
   it('lists every personal sign-in of the agent in one box with the fix link', () => {

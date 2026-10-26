@@ -1115,13 +1115,13 @@ describe('Automated Activity export', () => {
   });
 });
 
-describe('BUG-31 Chat Messages export section', () => {
+describe('Chat Messages export section', () => {
   const AGENT_ROW = { entity_id: 3, entity_name: 'Reviewer', events: 4 };
   const sheetsWith = ({ agents, overview = {}, overviewUsage = {} }) =>
     buildAnalyticsSheets({ overview, overviewUsage, costs: {}, users: {}, skills: {}, agents, meta: META });
   const sheet = (sheets, name) => sheets.find(s => s.sheetName === name);
 
-  it('R3.1 EL-7011 leaves the Chat Messages section out when chat_daily is empty', () => {
+  it('leaves the Chat Messages section out when chat_daily is empty', () => {
     const agentsSheet = sheet(
       sheetsWith({ agents: { rows: [AGENT_ROW], chat_daily: [] } }),
       'Agents & Pipelines',
@@ -1130,7 +1130,7 @@ describe('BUG-31 Chat Messages export section', () => {
     expect(sectionTitles(agentsSheet)).not.toContain('Chat Messages');
   });
 
-  it('R3.2 EL-7011 writes one Chat Messages row per day when chat_daily has rows', () => {
+  it('writes one Chat Messages row per day when chat_daily has rows', () => {
     const agentsSheet = sheet(
       sheetsWith({ agents: { rows: [AGENT_ROW], chat_daily: [{ date: '2026-09-02', messages: 2 }] } }),
       'Agents & Pipelines',
@@ -1140,7 +1140,7 @@ describe('BUG-31 Chat Messages export section', () => {
     expect(chat.rows).toEqual([{ date: '2026-09-02', messages: 2 }]);
   });
 
-  it('R2.4 EL-7011 still writes the Overview card Chat Messages count in Summary Metrics', () => {
+  it('still writes the Overview card Chat Messages count in Summary Metrics', () => {
     const sheets = sheetsWith({
       agents: { rows: [], chat_daily: [] },
       overview: { kpis: { chat_msgs: 2 } },
@@ -1151,7 +1151,7 @@ describe('BUG-31 Chat Messages export section', () => {
     expect(metrics.find(r => r.metric === 'Chat Messages').value).toBe(2);
   });
 
-  it('R2.5 EL-7011 still shows "No data available" in the agents sections when the list is empty', () => {
+  it('still shows "No data available" in the agents sections when the list is empty', () => {
     const agentsSheet = sheet(sheetsWith({ agents: { rows: [], chat_daily: [] } }), 'Agents & Pipelines');
     const top = agentsSheet.sections.find(s => s.title === 'Most Active Agents & Pipelines');
 

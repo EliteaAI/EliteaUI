@@ -6,7 +6,7 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 
 import ScheduleImportReport from '../ScheduleImportReport';
 
-// EL-7011 R3.3: the import report shows created, updated, skipped and failed groups with counts and icons.
+// the import report shows created, updated, skipped and failed groups with counts and icons.
 
 const REPORT = {
   created: [
@@ -18,7 +18,7 @@ const REPORT = {
   failed: [{ name: 'Bad', reason: 'invalid cron' }],
 };
 
-describe('EL-7011 R3.3 ScheduleImportReport', () => {
+describe('ScheduleImportReport', () => {
   afterEach(cleanup);
 
   it('shows four groups with counts and an icon before each', () => {
@@ -36,7 +36,7 @@ describe('EL-7011 R3.3 ScheduleImportReport', () => {
     });
   });
 
-  it('CR-04 shows the Updated group after Created and before Skipped and Failed', () => {
+  it('shows the Updated group after Created and before Skipped and Failed', () => {
     render(<ScheduleImportReport report={REPORT} />);
     const order = screen.getAllByTestId(/^import-report-(created|updated|skipped|failed)$/);
     expect(order.map(group => group.dataset.testid)).toEqual([
@@ -47,13 +47,13 @@ describe('EL-7011 R3.3 ScheduleImportReport', () => {
     ]);
   });
 
-  it('CR-04 lists each updated item with its name and note', () => {
+  it('lists each updated item with its name and note', () => {
     render(<ScheduleImportReport report={REPORT} />);
     const group = screen.getByTestId('import-report-updated');
     expect(within(group).getByText('Nightly - Key match. Owner kept.')).toBeInTheDocument();
   });
 
-  it('CR-04 hides the Updated group when it is empty or missing (older server)', () => {
+  it('hides the Updated group when it is empty or missing (older server)', () => {
     const { rerender } = render(<ScheduleImportReport report={{ ...REPORT, updated: [] }} />);
     expect(screen.queryByTestId('import-report-updated')).toBeNull();
 

@@ -40,21 +40,21 @@ const renderSettings = (permissions, pathname = '/settings/project-general') => 
 
 const PROJECT_PERMISSIONS = [PERMISSIONS.schedules.list, PERMISSIONS.projectContext.view];
 
-describe('EL-7011 CR-03 Schedules in Settings', () => {
+describe('Schedules in Settings', () => {
   afterEach(cleanup);
 
-  it('R1.1 shows Schedules right after Project Context with the list permission', () => {
+  it('shows Schedules right after Project Context with the list permission', () => {
     renderSettings(PROJECT_PERMISSIONS);
     const labels = screen.getAllByText(/./, { selector: 'span' }).map(node => node.textContent);
     expect(labels.indexOf('Schedules')).toBe(labels.indexOf('Project Context') + 1);
   });
 
-  it('R1.2 hides Schedules without the list permission', () => {
+  it('hides Schedules without the list permission', () => {
     renderSettings([PERMISSIONS.projectContext.view]);
     expect(screen.queryByText('Schedules')).toBeNull();
   });
 
-  it('R1.3 marks the Schedules tab active on /settings/schedules/create', () => {
+  it('marks the Schedules tab active on /settings/schedules/create', () => {
     renderSettings(PROJECT_PERMISSIONS, '/settings/schedules/create');
     expect(screen.getByText('Schedules').closest('[aria-current]')).toHaveAttribute('aria-current', 'page');
   });

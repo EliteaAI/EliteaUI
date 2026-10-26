@@ -35,10 +35,10 @@ vi.mock('@/pages/Applications/Components/Applications/ApplicationInformation', (
 
 const order = () => screen.getAllByTestId(/^(starters|schedules|advanced)$/).map(node => node.dataset.testid);
 
-describe('PipelineConfigurationForm EL-7011 section order', () => {
+describe('PipelineConfigurationForm section order', () => {
   afterEach(cleanup);
 
-  it('R1.2 EL-7011: Schedules follows Chat starters and precedes Advanced', () => {
+  it('Schedules follows Chat starters and precedes Advanced', () => {
     render(
       <PipelineConfigurationForm
         viewMode={ViewMode.Owner}
@@ -48,7 +48,7 @@ describe('PipelineConfigurationForm EL-7011 section order', () => {
     expect(order()).toEqual(['starters', 'schedules', 'advanced']);
   });
 
-  it('R1.2 EL-7011: Schedules sits right before Advanced when Chat starters is hidden', () => {
+  it('Schedules sits right before Advanced when Chat starters is hidden', () => {
     render(
       <PipelineConfigurationForm
         viewMode={ViewMode.Public}
@@ -58,7 +58,7 @@ describe('PipelineConfigurationForm EL-7011 section order', () => {
     expect(order()).toEqual(['schedules', 'advanced']);
   });
 
-  it('R1.3 EL-7011: passes isChatView so the chat shows no Schedules section', () => {
+  it('passes isChatView so the chat shows no Schedules section', () => {
     render(
       <PipelineConfigurationForm
         viewMode={ViewMode.Owner}

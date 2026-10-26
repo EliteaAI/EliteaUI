@@ -1,5 +1,5 @@
 /**
- * Shared jsdom stubs and the theme wrapper for the EL-7011 Schedules page tests.
+ * Shared jsdom stubs and the theme wrapper for the Schedules page tests.
  *
  * Call installGlobalStubs() from vi.hoisted (dynamic import) so the stubs exist
  * before the components under test load: the store reads localStorage at module

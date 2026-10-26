@@ -24,7 +24,9 @@ const { fetchDetails, getTraces, detailsResult } = vi.hoisted(() => ({
 }));
 
 vi.mock('@/[fsd]/entities/run-history/api', () => ({
-  RunHistoryApi: { useLazyGetRunHistoryDetailsQuery: () => [fetchDetails, { ...detailsResult, reset: vi.fn() }] },
+  RunHistoryApi: {
+    useLazyGetRunHistoryDetailsQuery: () => [fetchDetails, { ...detailsResult, reset: vi.fn() }],
+  },
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: () => 7,
@@ -65,8 +67,8 @@ beforeEach(() => {
 
 afterEach(cleanup);
 
-describe('RunHistoryChat EL-7011 US-41', () => {
-  it('R1.3 passes a handler that adds the conversation uuid and the paused message id', () => {
+describe('RunHistoryChat', () => {
+  it('passes a handler that adds the conversation uuid and the paused message id', () => {
     const onHitlResume = vi.fn();
 
     renderChat({ onHitlResume });
@@ -82,7 +84,7 @@ describe('RunHistoryChat EL-7011 US-41', () => {
     });
   });
 
-  it('R3.1 passes no handler when none is given, so the buttons stay disabled', () => {
+  it('passes no handler when none is given, so the buttons stay disabled', () => {
     renderChat();
 
     expect(received.at(-1).onHitlResume).toBeUndefined();

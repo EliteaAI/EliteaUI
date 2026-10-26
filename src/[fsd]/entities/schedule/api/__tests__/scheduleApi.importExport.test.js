@@ -15,7 +15,7 @@ const yamlResponse = headers =>
     headers: { 'Content-Type': 'application/x-yaml', ...headers },
   });
 
-describe('R2 EL-7011 schedule export query', () => {
+describe('schedule export query', () => {
   let fetchSpy;
 
   beforeEach(() => {
@@ -23,7 +23,7 @@ describe('R2 EL-7011 schedule export query', () => {
     fetchSpy = vi.spyOn(globalThis, 'fetch');
   });
 
-  it('R2.1 requests the export of the project without ids and returns a blob', async () => {
+  it('requests the export of the project without ids and returns a blob', async () => {
     fetchSpy.mockImplementation(async () => yamlResponse());
     const result = await makeStore().dispatch(
       scheduleApi.endpoints.exportSchedules.initiate({ projectId: 5 }),
@@ -35,7 +35,7 @@ describe('R2 EL-7011 schedule export query', () => {
     expect(result.data.blob).toBeInstanceOf(Blob);
   });
 
-  it('R4.2 EL-7011 sends ids=7 when one schedule is exported', async () => {
+  it('sends ids=7 when one schedule is exported', async () => {
     fetchSpy.mockImplementation(async () => yamlResponse());
     await makeStore().dispatch(scheduleApi.endpoints.exportSchedules.initiate({ projectId: 5, ids: [7] }));
 
@@ -44,7 +44,7 @@ describe('R2 EL-7011 schedule export query', () => {
     expect(url.searchParams.get('ids')).toBe('7');
   });
 
-  it('R2.2 uses the file name from Content-Disposition', async () => {
+  it('uses the file name from Content-Disposition', async () => {
     fetchSpy.mockImplementation(async () =>
       yamlResponse({ 'Content-Disposition': 'attachment; filename="schedules_5.yaml"' }),
     );
@@ -55,7 +55,7 @@ describe('R2 EL-7011 schedule export query', () => {
     expect(result.data.filename).toBe('schedules_5.yaml');
   });
 
-  it('R2.3 falls back to schedules_<project>.yaml without Content-Disposition', async () => {
+  it('falls back to schedules_<project>.yaml without Content-Disposition', async () => {
     fetchSpy.mockImplementation(async () => yamlResponse());
     const result = await makeStore().dispatch(
       scheduleApi.endpoints.exportSchedules.initiate({ projectId: 7 }),
@@ -64,7 +64,7 @@ describe('R2 EL-7011 schedule export query', () => {
     expect(result.data.filename).toBe('schedules_7.yaml');
   });
 
-  it('R2.4 EL-7011 keeps the JSON error of a 403 in error.data', async () => {
+  it('keeps the JSON error of a 403 in error.data', async () => {
     fetchSpy.mockImplementation(async () => jsonResponse({ error: 'Forbidden for you' }, 403));
     const result = await makeStore().dispatch(
       scheduleApi.endpoints.exportSchedules.initiate({ projectId: 5 }),
@@ -75,7 +75,7 @@ describe('R2 EL-7011 schedule export query', () => {
   });
 });
 
-describe('R3 EL-7011 schedule import mutation', () => {
+describe('schedule import mutation', () => {
   let fetchSpy;
   const file = new File(['schedules: []'], 'schedules.yaml', { type: 'application/x-yaml' });
   const report = created => ({ created, skipped: [], failed: [] });
@@ -85,7 +85,7 @@ describe('R3 EL-7011 schedule import mutation', () => {
     fetchSpy = vi.spyOn(globalThis, 'fetch');
   });
 
-  it('R3.2 posts the file as multipart field file to the import endpoint', async () => {
+  it('posts the file as multipart field file to the import endpoint', async () => {
     const appendSpy = vi.spyOn(FormData.prototype, 'append');
     fetchSpy.mockImplementation(async () => jsonResponse(report([])));
     const result = await makeStore().dispatch(
@@ -119,20 +119,20 @@ describe('R3 EL-7011 schedule import mutation', () => {
     return listCalls().length;
   };
 
-  it('R3.5 reloads the schedule list when schedules were created', async () => {
+  it('reloads the schedule list when schedules were created', async () => {
     expect(await importThenCountListCalls(report([{ name: 'a', schedule_id: 1 }]))).toBe(2);
   });
 
-  it('R3.5 CR-04 reloads the schedule list when schedules were only updated', async () => {
+  it('reloads the schedule list when schedules were only updated', async () => {
     const answer = { ...report([]), updated: [{ name: 'a', schedule_id: 1 }] };
     expect(await importThenCountListCalls(answer)).toBe(2);
   });
 
-  it('R3.5 does not reload the list when nothing was created', async () => {
+  it('does not reload the list when nothing was created', async () => {
     expect(await importThenCountListCalls(report([]))).toBe(1);
   });
 
-  it('R3.4 EL-7011 does not reload the list on a 400', async () => {
+  it('does not reload the list on a 400', async () => {
     expect(await importThenCountListCalls({ error: 'not valid YAML' }, 400)).toBe(1);
   });
 });

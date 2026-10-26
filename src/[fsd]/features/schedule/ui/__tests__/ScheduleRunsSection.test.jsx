@@ -12,7 +12,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 
 import ScheduleRunsSection from '../ScheduleRunsSection';
 
-// EL-7011 owner CR 2026-10-21 test panel log: the Runs section in the right block under the panel (CR-21)
+// test panel log: the Runs section in the right block under the panel
 
 const run = {
   id: 1,
@@ -42,13 +42,13 @@ const renderSection = props => {
   return { ...handlers, ref };
 };
 
-describe('ScheduleRunsSection EL-7011 CR-21', () => {
+describe('ScheduleRunsSection', () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
   });
 
-  it('R4.1 holds the run rows under the RUNS OF THIS SCHEDULE title, and a row reaches the panel', () => {
+  it('holds the run rows under the RUNS OF THIS SCHEDULE title, and a row reaches the panel', () => {
     const { onOpen } = renderSection({ selectedRunId: 1 });
 
     expect(screen.getByTestId('schedule-section-runs')).toHaveTextContent('RUNS OF THIS SCHEDULE');
@@ -81,7 +81,7 @@ describe('ScheduleRunsSection EL-7011 CR-21', () => {
     expect(onExpandedChange).toHaveBeenCalledWith(true);
   });
 
-  it('CR-21 sorts the rows with the Sort select: Newest, Oldest, Status, Trigger, Duration, Version', () => {
+  it('sorts the rows with the Sort select: Newest, Oldest, Status, Trigger, Duration, Version', () => {
     const older = { ...run, id: 2, trigger: 'test', status: 'failed', started_at: '2026-10-20T09:00:00Z' };
     renderSection({ runs: [older, run] });
     const triggers = () => screen.getAllByTestId('schedule-run-trigger').map(chip => chip.textContent);
@@ -104,13 +104,13 @@ describe('ScheduleRunsSection EL-7011 CR-21', () => {
     expect(triggers()).toEqual(['test', 'cron']);
   });
 
-  it('CR-21 hides the Sort select without runs', () => {
+  it('hides the Sort select without runs', () => {
     renderSection({ runs: [] });
     expect(screen.queryByRole('combobox', { name: 'Sort runs' })).toBeNull();
     expect(screen.getByText('No runs yet.')).toBeInTheDocument();
   });
 
-  it('CR-21 shows the run total of the query next to the title, also 0 without runs', () => {
+  it('shows the run total of the query next to the title, also 0 without runs', () => {
     renderSection({ total: 26 });
     expect(screen.getByTestId('schedule-runs-count')).toHaveTextContent('26');
     cleanup();
@@ -118,7 +118,7 @@ describe('ScheduleRunsSection EL-7011 CR-21', () => {
     expect(screen.getByTestId('schedule-runs-count')).toHaveTextContent('0');
   });
 
-  it('CR-21 places the count right after the title, before the Sort select', () => {
+  it('places the count right after the title, before the Sort select', () => {
     renderSection({ total: 6 });
     const title = screen.getByText('RUNS OF THIS SCHEDULE', { exact: false });
     const count = screen.getByTestId('schedule-runs-count');
@@ -128,19 +128,19 @@ describe('ScheduleRunsSection EL-7011 CR-21', () => {
     expect(count.compareDocumentPosition(sort) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('CR-21 shows no count while the total is unknown', () => {
+  it('shows no count while the total is unknown', () => {
     renderSection();
     expect(screen.queryByTestId('schedule-runs-count')).toBeNull();
   });
 
-  it('CR-21 shows the not-in-the-list note for an unknown history_run_id', () => {
+  it('shows the not-in-the-list note for an unknown history_run_id', () => {
     renderSection({ runNotFound: true });
     expect(screen.getByRole('region', { name: 'Runs of this schedule' })).toHaveTextContent(
       'That run is not in the list.',
     );
   });
 
-  it('CR-21 announces the shown run in one polite live region', () => {
+  it('announces the shown run in one polite live region', () => {
     renderSection({ announcement: 'Showing run 21 Oct, 09:00, cron, Success' });
     const status = screen.getByRole('status');
 
@@ -149,23 +149,23 @@ describe('ScheduleRunsSection EL-7011 CR-21', () => {
   });
 });
 
-describe('ScheduleRunsSection Open full history (EL-7011 CR-22, US-32 R6.3)', () => {
+describe('ScheduleRunsSection Open full history', () => {
   afterEach(() => cleanup());
 
-  it('CR-22 R6.3 links to the entity History filtered to this schedule', () => {
+  it('links to the entity History filtered to this schedule', () => {
     renderSection({ fullHistoryLink: '/pipelines/all/80/history?schedule_id=4' });
 
     expect(screen.getByRole('link', { name: 'Open full history' })).toHaveAttribute(
       'href',
       '/pipelines/all/80/history?schedule_id=4',
     );
-    // BUG-38: the app link colour, not the brand colour
+    // the app link colour, not the brand colour
     expect(screen.getByRole('link', { name: 'Open full history' })).toHaveStyle({
       color: theme.palette.text.link,
     });
   });
 
-  it('CR-22 shows no link without fullHistoryLink', () => {
+  it('shows no link without fullHistoryLink', () => {
     renderSection();
 
     expect(screen.queryByRole('link', { name: 'Open full history' })).not.toBeInTheDocument();

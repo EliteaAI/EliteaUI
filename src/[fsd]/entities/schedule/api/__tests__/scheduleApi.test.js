@@ -22,7 +22,7 @@ const lastRequestOf = async spy => {
   };
 };
 
-describe('R2.1 EL-7011 schedule list query', () => {
+describe('schedule list query', () => {
   let fetchSpy;
 
   beforeEach(() => {
@@ -62,7 +62,7 @@ describe('R2.1 EL-7011 schedule list query', () => {
     expect(url.searchParams.get('status')).toBe('failed');
   });
 
-  it('EL-7011 sends sortBy and sortOrder as sort_by and sort_order', async () => {
+  it('sends sortBy and sortOrder as sort_by and sort_order', async () => {
     const store = makeStore();
     await store.dispatch(
       scheduleApi.endpoints.getScheduleList.initiate({
@@ -78,7 +78,7 @@ describe('R2.1 EL-7011 schedule list query', () => {
     expect(url.searchParams.get('sort_order')).toBe('desc');
   });
 
-  it('EL-7011 keeps the sort in the cache key, so a new sort requests again', async () => {
+  it('keeps the sort in the cache key, so a new sort requests again', async () => {
     const store = makeStore();
     const args = { projectId: 5, page: 0, sortBy: 'name', sortOrder: 'asc' };
     await store.dispatch(scheduleApi.endpoints.getScheduleList.initiate(args));
@@ -95,7 +95,7 @@ describe('R2.1 EL-7011 schedule list query', () => {
   });
 });
 
-describe('R3.2 EL-7011 project switch', () => {
+describe('project switch', () => {
   it('requests the list of the new project from the first page', async () => {
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
@@ -112,7 +112,7 @@ describe('R3.2 EL-7011 project switch', () => {
   });
 });
 
-describe('R3.4 EL-7011 no client-side widening', () => {
+describe('no client-side widening', () => {
   it('returns the rows of the API unchanged and adds no owner filter', async () => {
     const rows = [
       { id: 1, owner_id: 9 },
@@ -146,7 +146,7 @@ describe('R3.4 EL-7011 no client-side widening', () => {
   });
 });
 
-describe('R6.1 EL-7011 create schedule mutation', () => {
+describe('create schedule mutation', () => {
   let fetchSpy;
 
   beforeEach(() => {
@@ -200,7 +200,7 @@ describe('R6.1 EL-7011 create schedule mutation', () => {
   });
 });
 
-describe('R6.2 EL-7011 create sends the form body unchanged', () => {
+describe('create sends the form body unchanged', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
@@ -232,7 +232,7 @@ describe('R6.2 EL-7011 create sends the form body unchanged', () => {
   });
 });
 
-describe('R1.1 R1.2 R2.3 R3.2 EL-7011 list filter arguments', () => {
+describe('list filter arguments', () => {
   let fetchSpy;
 
   const listParams = async args => {
@@ -249,7 +249,7 @@ describe('R1.1 R1.2 R2.3 R3.2 EL-7011 list filter arguments', () => {
       .mockImplementation(async () => jsonResponse({ total: 0, rows: [] }));
   });
 
-  it('R1.1 sends entityType, status and enabled as entity_type, status and enabled', async () => {
+  it('sends entityType, status and enabled as entity_type, status and enabled', async () => {
     const params = await listParams({ entityType: 'pipeline', status: 'failed', enabled: true });
 
     expect(params.get('entity_type')).toBe('pipeline');
@@ -257,23 +257,23 @@ describe('R1.1 R1.2 R2.3 R3.2 EL-7011 list filter arguments', () => {
     expect(params.get('enabled')).toBe('true');
   });
 
-  it('US-35 R2.1 sends entityId as entity_id', async () => {
+  it('sends entityId as entity_id', async () => {
     expect((await listParams({ entityType: 'agent', entityId: '12' })).get('entity_id')).toBe('12');
   });
 
-  it('R1.1 sends enabled=false, because false is a real filter value', async () => {
+  it('sends enabled=false, because false is a real filter value', async () => {
     expect((await listParams({ enabled: false })).get('enabled')).toBe('false');
   });
 
-  it('R1.2 sends the search text as search', async () => {
+  it('sends the search text as search', async () => {
     expect((await listParams({ search: 'daily' })).get('search')).toBe('daily');
   });
 
-  it('R2.3 sends the owner ids comma separated in owner_ids', async () => {
+  it('sends the owner ids comma separated in owner_ids', async () => {
     expect((await listParams({ ownerIds: ['a', 'b'] })).get('owner_ids')).toBe('a,b');
   });
 
-  it('R3.2 sends no filter parameter for empty values and no tag parameter', async () => {
+  it('sends no filter parameter for empty values and no tag parameter', async () => {
     const params = await listParams({
       entityType: undefined,
       status: '',
@@ -285,7 +285,7 @@ describe('R1.1 R1.2 R2.3 R3.2 EL-7011 list filter arguments', () => {
     expect([...params.keys()].sort((a, b) => a.localeCompare(b))).toEqual(['limit', 'offset']);
   });
 
-  it('R1.1 keeps the filters in the cache key, so a new filter requests again', async () => {
+  it('keeps the filters in the cache key, so a new filter requests again', async () => {
     const store = makeStore();
     await store.dispatch(scheduleApi.endpoints.getScheduleList.initiate({ projectId: 5, status: 'failed' }));
     await store.dispatch(scheduleApi.endpoints.getScheduleList.initiate({ projectId: 5, status: 'success' }));
@@ -294,7 +294,7 @@ describe('R1.1 R1.2 R2.3 R3.2 EL-7011 list filter arguments', () => {
   });
 });
 
-describe('R2.1 R3.1 R3.2 R4.2 EL-7011 schedule row mutations', () => {
+describe('schedule row mutations', () => {
   const rows = () => [
     { id: 1, enabled: true },
     { id: 2, enabled: true },
@@ -320,7 +320,7 @@ describe('R2.1 R3.1 R3.2 R4.2 EL-7011 schedule row mutations', () => {
     fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(args => handler(args));
   });
 
-  it('R2.1 posts the manual trigger to the run endpoint and returns the run id', async () => {
+  it('posts the manual trigger to the run endpoint and returns the run id', async () => {
     const store = makeStore();
     handler = async () => jsonResponse({ run_id: 9 }, 202);
 
@@ -335,7 +335,7 @@ describe('R2.1 R3.1 R3.2 R4.2 EL-7011 schedule row mutations', () => {
     expect(result.data).toEqual({ run_id: 9 });
   });
 
-  it('R2.1 returns the 409 error with the active run id and does not refetch the list', async () => {
+  it('returns the 409 error with the active run id and does not refetch the list', async () => {
     const store = await setup();
     const callsBefore = fetchSpy.mock.calls.length;
     handler = async () => jsonResponse({ error: 'busy', active_run_id: 3 }, 409);
@@ -349,7 +349,7 @@ describe('R2.1 R3.1 R3.2 R4.2 EL-7011 schedule row mutations', () => {
     expect(fetchSpy.mock.calls).toHaveLength(callsBefore + 1);
   });
 
-  it('R2.1 refetches the list after a run is accepted', async () => {
+  it('refetches the list after a run is accepted', async () => {
     const store = await setup();
     const callsBefore = fetchSpy.mock.calls.length;
     handler = async args =>
@@ -363,7 +363,7 @@ describe('R2.1 R3.1 R3.2 R4.2 EL-7011 schedule row mutations', () => {
   it.each([
     ['pauseSchedule', 'pause'],
     ['resumeSchedule', 'resume'],
-  ])('R3.1 %s posts with no body to the %s path', async (endpoint, action) => {
+  ])('%s posts with no body to the %s path', async (endpoint, action) => {
     const store = makeStore();
     handler = async () => jsonResponse({ id: 7 });
 
@@ -379,7 +379,7 @@ describe('R2.1 R3.1 R3.2 R4.2 EL-7011 schedule row mutations', () => {
     ['pauseSchedule', true, false],
     ['resumeSchedule', false, true],
   ])(
-    'R3.1 %s patches Enabled in every cached list entry before the server answers',
+    '%s patches Enabled in every cached list entry before the server answers',
     async (endpoint, before, after) => {
       handler = async () => jsonResponse({ rows: rows().map(row => ({ ...row, enabled: before })) });
       const store = await setup();
@@ -402,7 +402,7 @@ describe('R2.1 R3.1 R3.2 R4.2 EL-7011 schedule row mutations', () => {
     },
   );
 
-  it('R3.2 restores the previous Enabled value in every cached entry when the pause fails', async () => {
+  it('restores the previous Enabled value in every cached entry when the pause fails', async () => {
     const store = await setup();
     handler = async args =>
       args.method === 'POST' ? jsonResponse({ error: 'no' }, 403) : jsonResponse({ rows: rows() });
@@ -416,7 +416,7 @@ describe('R2.1 R3.1 R3.2 R4.2 EL-7011 schedule row mutations', () => {
     expect(cachedEnabled(store, 1, 1)).toBe(true);
   });
 
-  it('R4.2 sends DELETE to the schedule path and refetches the list', async () => {
+  it('sends DELETE to the schedule path and refetches the list', async () => {
     const store = await setup();
     const callsBefore = fetchSpy.mock.calls.length;
 
@@ -429,7 +429,7 @@ describe('R2.1 R3.1 R3.2 R4.2 EL-7011 schedule row mutations', () => {
     await vi.waitFor(() => expect(fetchSpy.mock.calls.length).toBeGreaterThan(callsBefore + 1));
   });
 
-  it('R4.2 keeps the list cache when the delete fails', async () => {
+  it('keeps the list cache when the delete fails', async () => {
     const store = await setup();
     const callsBefore = fetchSpy.mock.calls.length;
     handler = async () => jsonResponse({ error: 'no' }, 403);
@@ -443,7 +443,7 @@ describe('R2.1 R3.1 R3.2 R4.2 EL-7011 schedule row mutations', () => {
   });
 });
 
-describe('R3.1 R3.2 R3.4 EL-7011 change schedule owner', () => {
+describe('change schedule owner', () => {
   let fetchSpy;
   let respond;
 
@@ -461,7 +461,7 @@ describe('R3.1 R3.2 R3.4 EL-7011 change schedule owner', () => {
     });
   });
 
-  it('R3.1 posts owner_id to the owner path and refetches the list', async () => {
+  it('posts owner_id to the owner path and refetches the list', async () => {
     const store = makeStore();
     await store.dispatch(scheduleApi.endpoints.getScheduleList.initiate({ projectId: 5 }));
     const callsBefore = fetchSpy.mock.calls.length;
@@ -477,7 +477,7 @@ describe('R3.1 R3.2 R3.4 EL-7011 change schedule owner', () => {
     await vi.waitFor(() => expect(fetchSpy.mock.calls.length).toBeGreaterThan(callsBefore + 1));
   });
 
-  it('R3.2 keeps the list cache and returns the error body on 400', async () => {
+  it('keeps the list cache and returns the error body on 400', async () => {
     const store = makeStore();
     await store.dispatch(scheduleApi.endpoints.getScheduleList.initiate({ projectId: 5 }));
     const callsBefore = fetchSpy.mock.calls.length;
@@ -492,7 +492,7 @@ describe('R3.1 R3.2 R3.4 EL-7011 change schedule owner', () => {
     expect(fetchSpy.mock.calls).toHaveLength(callsBefore + 1);
   });
 
-  it.each([403, 404])('R3.4 refetches the list after a %i', async status => {
+  it.each([403, 404])('refetches the list after a %i', async status => {
     const store = makeStore();
     await store.dispatch(scheduleApi.endpoints.getScheduleList.initiate({ projectId: 5 }));
     const callsBefore = fetchSpy.mock.calls.length;
@@ -507,7 +507,7 @@ describe('R3.1 R3.2 R3.4 EL-7011 change schedule owner', () => {
   });
 });
 
-describe('R1.3 EL-7011 run without asking flag on the schedule list', () => {
+describe('run without asking flag on the schedule list', () => {
   const listWith = async body => {
     vi.restoreAllMocks();
     vi.spyOn(globalThis, 'fetch').mockImplementation(async () => jsonResponse(body));
@@ -543,7 +543,7 @@ describe('R1.3 EL-7011 run without asking flag on the schedule list', () => {
   });
 });
 
-describe('R2.1 R3.2 R4.3 EL-7011 schedule details, update, test run and runs', () => {
+describe('schedule details, update, test run and runs', () => {
   let fetchSpy;
   let handler;
 
@@ -553,7 +553,7 @@ describe('R2.1 R3.2 R4.3 EL-7011 schedule details, update, test run and runs', (
     fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(args => handler(args));
   });
 
-  it('R2.1 getSchedule reads the schedule path and returns the schedule', async () => {
+  it('getSchedule reads the schedule path and returns the schedule', async () => {
     handler = async () => jsonResponse({ id: 7, allowed_actions: ['run'] });
 
     const result = await makeStore().dispatch(
@@ -566,7 +566,7 @@ describe('R2.1 R3.2 R4.3 EL-7011 schedule details, update, test run and runs', (
     expect(result.data).toEqual({ id: 7, allowed_actions: ['run'] });
   });
 
-  it('EL-7011 owner CR 2026-10-21 getScheduleRun reads one run with its log and declares the runs tag', async () => {
+  it('getScheduleRun reads one run with its log and declares the runs tag', async () => {
     const run = {
       id: 12,
       status: 'running',
@@ -589,7 +589,7 @@ describe('R2.1 R3.2 R4.3 EL-7011 schedule details, update, test run and runs', (
     await vi.waitFor(() => expect(fetchSpy.mock.calls.length).toBe(callsBefore + 1));
   });
 
-  it('R2.1 getSchedule returns the 404 error', async () => {
+  it('getSchedule returns the 404 error', async () => {
     handler = async () => jsonResponse({ error: 'not found' }, 404);
 
     const result = await makeStore().dispatch(
@@ -599,7 +599,7 @@ describe('R2.1 R3.2 R4.3 EL-7011 schedule details, update, test run and runs', (
     expect(result.error.status).toBe(404);
   });
 
-  it('R2.1 updateSchedule puts the whole body without projectId and scheduleId', async () => {
+  it('updateSchedule puts the whole body without projectId and scheduleId', async () => {
     const body = { name: 'n', description: null, prompt: 'p {{a}}', variables: [{ name: 'a', value: 'x' }] };
 
     await makeStore().dispatch(
@@ -612,7 +612,7 @@ describe('R2.1 R3.2 R4.3 EL-7011 schedule details, update, test run and runs', (
     expect(request.body).toEqual(body);
   });
 
-  it('R2.1 updateSchedule never sends enabled and leaves the cached Enabled values alone', async () => {
+  it('updateSchedule never sends enabled and leaves the cached Enabled values alone', async () => {
     const store = makeStore();
     handler = async args =>
       args.method === 'PUT' ? jsonResponse({}) : jsonResponse({ rows: [{ id: 7, enabled: true }] });
@@ -634,7 +634,7 @@ describe('R2.1 R3.2 R4.3 EL-7011 schedule details, update, test run and runs', (
     expect(row.enabled).toBe(true);
   });
 
-  it('R3.2 runSchedule posts the test trigger when asked', async () => {
+  it('runSchedule posts the test trigger when asked', async () => {
     handler = async () => jsonResponse({ run_id: 81 }, 202);
 
     const result = await makeStore().dispatch(
@@ -645,7 +645,7 @@ describe('R2.1 R3.2 R4.3 EL-7011 schedule details, update, test run and runs', (
     expect(result.data).toEqual({ run_id: 81 });
   });
 
-  it('R4.3 getScheduleRuns turns page and pageSize into limit and offset', async () => {
+  it('getScheduleRuns turns page and pageSize into limit and offset', async () => {
     handler = async () => jsonResponse({ total: 1, rows: [{ id: 1, status: 'running' }] });
 
     const result = await makeStore().dispatch(
@@ -659,7 +659,7 @@ describe('R2.1 R3.2 R4.3 EL-7011 schedule details, update, test run and runs', (
     expect(result.data.rows[0].status).toBe('running');
   });
 
-  it('R4.3 getScheduleRuns defaults to the first page', async () => {
+  it('getScheduleRuns defaults to the first page', async () => {
     await makeStore().dispatch(
       scheduleApi.endpoints.getScheduleRuns.initiate({ projectId: 5, scheduleId: 7 }),
     );
@@ -672,7 +672,7 @@ describe('R2.1 R3.2 R4.3 EL-7011 schedule details, update, test run and runs', (
   it.each([
     ['runSchedule', { projectId: 5, scheduleId: 7, trigger: 'test' }],
     ['updateSchedule', { projectId: 5, scheduleId: 7, name: 'n' }],
-  ])('R4.3 %s refetches the runs after success', async (endpoint, args) => {
+  ])('%s refetches the runs after success', async (endpoint, args) => {
     const store = makeStore();
     await store.dispatch(scheduleApi.endpoints.getScheduleRuns.initiate({ projectId: 5, scheduleId: 7 }));
     const callsBefore = fetchSpy.mock.calls.length;
@@ -683,7 +683,7 @@ describe('R2.1 R3.2 R4.3 EL-7011 schedule details, update, test run and runs', (
     expect(SCHEDULE_RUNS_TAG).toBe('SCHEDULE_RUNS_TAG');
   });
 
-  it('R4.3 runSchedule keeps the runs cache when the run is refused', async () => {
+  it('runSchedule keeps the runs cache when the run is refused', async () => {
     const store = makeStore();
     await store.dispatch(scheduleApi.endpoints.getScheduleRuns.initiate({ projectId: 5, scheduleId: 7 }));
     const callsBefore = fetchSpy.mock.calls.length;

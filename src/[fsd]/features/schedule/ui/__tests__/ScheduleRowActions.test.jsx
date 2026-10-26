@@ -9,7 +9,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import ScheduleRowActions from '../ScheduleRowActions';
 
-// EL-7011 US-28: row action menu filtered by allowed_actions (R1.1 to R1.3, R4.1, R4.3).
+// row action menu filtered by allowed_actions.
 
 vi.mock('../ChangeOwnerDialog', () => ({
   default: ({ open, schedule, onClose }) =>
@@ -41,10 +41,10 @@ const renderMenu = (row, handlers = {}) =>
 
 const openMenu = () => fireEvent.click(screen.getByTestId('schedule-7-menu-button'));
 
-describe('ScheduleRowActions (EL-7011 US-28)', () => {
+describe('ScheduleRowActions', () => {
   afterEach(cleanup);
 
-  it('R1.1 shows only the actions the row allows', () => {
+  it('shows only the actions the row allows', () => {
     renderMenu({ allowed_actions: ['run', 'pause'] });
     openMenu();
     expect(screen.getByText('Run now')).toBeInTheDocument();
@@ -53,14 +53,14 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
     expect(screen.queryByText('Resume')).not.toBeInTheDocument();
   });
 
-  it('R1.1 ignores server actions the menu does not offer', () => {
+  it('ignores server actions the menu does not offer', () => {
     renderMenu({ allowed_actions: ['unknown', 'delete'] });
     openMenu();
     expect(screen.getAllByRole('menuitem')).toHaveLength(1);
     expect(screen.getByText('Delete')).toBeInTheDocument();
   });
 
-  it('EL-7011 lists Run now, Edit, Pause, Change owner and Delete in this order', () => {
+  it('lists Run now, Edit, Pause, Change owner and Delete in this order', () => {
     renderMenu({ allowed_actions: ['delete', 'change_owner', 'pause', 'edit', 'run'] });
     openMenu();
     expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
@@ -72,7 +72,7 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
     ]);
   });
 
-  it('owner bug 2026-10-21 the table menu lists Open run history between Pause and Change owner', () => {
+  it('the table menu lists Open run history between Pause and Change owner', () => {
     renderMenu(
       { allowed_actions: ['delete', 'change_owner', 'pause', 'edit', 'run'] },
       { onOpenRunHistory: vi.fn() },
@@ -88,7 +88,7 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
     ]);
   });
 
-  it('EL-7011 Edit shows only when edit is allowed and calls onEdit', () => {
+  it('Edit shows only when edit is allowed and calls onEdit', () => {
     const onEdit = vi.fn();
     renderMenu({ allowed_actions: ['edit'] }, { onEdit });
     openMenu();
@@ -100,7 +100,7 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
     expect(screen.queryByText('Edit')).not.toBeInTheDocument();
   });
 
-  it('TC-US35-22 US-35 R5.1 the card menu lists Run now, Edit, Pause, Open run history and Delete', () => {
+  it('TC-US35-22 the card menu lists Run now, Edit, Pause, Open run history and Delete', () => {
     renderMenu(
       { allowed_actions: ['delete', 'change_owner', 'pause', 'edit', 'run'] },
       { onEdit: vi.fn(), onOpenRunHistory: vi.fn(), hideChangeOwner: true },
@@ -115,7 +115,7 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
     ]);
   });
 
-  it('TC-US35-12 US-35 R3.3 Open run history needs edit and calls onOpenRunHistory', () => {
+  it('TC-US35-12 Open run history needs edit and calls onOpenRunHistory', () => {
     const onOpenRunHistory = vi.fn();
     renderMenu({ allowed_actions: ['edit'] }, { onOpenRunHistory });
     openMenu();
@@ -127,19 +127,19 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
     expect(screen.queryByText('Open run history')).not.toBeInTheDocument();
   });
 
-  it('US-35 R5.1 the page menu offers no Open run history without the handler', () => {
+  it('the page menu offers no Open run history without the handler', () => {
     renderMenu({ allowed_actions: ['edit'] }, { onEdit: vi.fn() });
     openMenu();
     expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual(['Edit']);
   });
 
-  it('R1.1 EL-7011 shows Change owner only when change_owner is allowed', () => {
+  it('shows Change owner only when change_owner is allowed', () => {
     renderMenu({ allowed_actions: ['run'] });
     openMenu();
     expect(screen.queryByText('Change owner')).not.toBeInTheDocument();
   });
 
-  it('R1.2 EL-7011 Change owner opens the dialog with the row schedule and closes it', () => {
+  it('Change owner opens the dialog with the row schedule and closes it', () => {
     renderMenu({ allowed_actions: ['change_owner'], owner: { id: 3, name: 'Ann' } });
     expect(screen.queryByTestId('change-owner-dialog')).not.toBeInTheDocument();
     openMenu();
@@ -154,26 +154,26 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
     expect(screen.queryByTestId('change-owner-dialog')).not.toBeInTheDocument();
   });
 
-  it('R1.2 offers Pause and not Resume while the schedule is enabled', () => {
+  it('offers Pause and not Resume while the schedule is enabled', () => {
     renderMenu({ enabled: true, allowed_actions: ['pause', 'resume'] });
     openMenu();
     expect(screen.getByText('Pause')).toBeInTheDocument();
     expect(screen.queryByText('Resume')).not.toBeInTheDocument();
   });
 
-  it('R1.2 offers Resume and not Pause while the schedule is paused', () => {
+  it('offers Resume and not Pause while the schedule is paused', () => {
     renderMenu({ enabled: false, allowed_actions: ['pause', 'resume'] });
     openMenu();
     expect(screen.getByText('Resume')).toBeInTheDocument();
     expect(screen.queryByText('Pause')).not.toBeInTheDocument();
   });
 
-  it('R1.3 renders no menu when allowed_actions is empty', () => {
+  it('renders no menu when allowed_actions is empty', () => {
     const { container } = renderMenu({ allowed_actions: [] });
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('CR-16 R4.1 shows Export before Delete when onExport is given, and calls it', () => {
+  it('shows Export before Delete when onExport is given, and calls it', () => {
     const onExport = vi.fn();
     renderMenu({ allowed_actions: ['delete', 'edit', 'run'] }, { onExport });
     openMenu();
@@ -187,13 +187,13 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
     expect(onExport).toHaveBeenCalledTimes(1);
   });
 
-  it('CR-16 R4.1 shows no Export without onExport (no export permission)', () => {
+  it('shows no Export without onExport (no export permission)', () => {
     renderMenu({ allowed_actions: ['edit', 'delete'] });
     openMenu();
     expect(screen.queryByText('Export')).not.toBeInTheDocument();
   });
 
-  it('R1.1 calls the handler of the picked action', () => {
+  it('calls the handler of the picked action', () => {
     const onRun = vi.fn();
     const onPause = vi.fn();
     renderMenu({ allowed_actions: ['run', 'pause'] }, { onRun, onPause });
@@ -203,12 +203,12 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
     expect(onPause).not.toHaveBeenCalled();
   });
 
-  it('R1.1 disables the button while a request runs', () => {
+  it('disables the button while a request runs', () => {
     renderMenu({ allowed_actions: ['run'] }, { isBusy: true });
     expect(screen.getByTestId('schedule-7-menu-button')).toBeDisabled();
   });
 
-  it('R4.1 Delete opens the standard confirmation with the schedule name', () => {
+  it('Delete opens the standard confirmation with the schedule name', () => {
     const onDelete = vi.fn();
     renderMenu({ allowed_actions: ['delete'] }, { onDelete });
     openMenu();
@@ -218,7 +218,7 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
     expect(onDelete).not.toHaveBeenCalled();
   });
 
-  it('R4.1 confirming the typed name calls onDelete', () => {
+  it('confirming the typed name calls onDelete', () => {
     const onDelete = vi.fn();
     renderMenu({ allowed_actions: ['delete'] }, { onDelete });
     openMenu();
@@ -228,7 +228,7 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
     expect(onDelete).toHaveBeenCalledTimes(1);
   });
 
-  it('EL-7011 owner CR 2026-10-21 every menu item shows an icon left of its label', () => {
+  it('every menu item shows an icon left of its label', () => {
     renderMenu(
       { allowed_actions: ['run', 'edit', 'pause', 'change_owner', 'delete'] },
       { onOpenRunHistory: vi.fn() },
@@ -242,13 +242,13 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
     });
   });
 
-  it('EL-7011 owner CR 2026-10-21 Resume shows an icon', () => {
+  it('Resume shows an icon', () => {
     renderMenu({ enabled: false, allowed_actions: ['resume'] });
     openMenu();
     expect(screen.getByTestId('resume-menuitem').querySelector('.MuiListItemIcon-root svg')).not.toBeNull();
   });
 
-  it('EL-7011 owner CR 2026-10-21 icons use the muted icon colour and Delete uses the error colour', () => {
+  it('icons use the muted icon colour and Delete uses the error colour', () => {
     renderMenu({ allowed_actions: ['edit', 'delete'] });
     openMenu();
     const editIcon = screen.getByTestId('edit-menuitem').querySelector('.MuiListItemIcon-root');
@@ -262,7 +262,7 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
     });
   });
 
-  it('R4.3 cancel keeps the row and sends no request', () => {
+  it('cancel keeps the row and sends no request', () => {
     const onDelete = vi.fn();
     renderMenu({ allowed_actions: ['delete'] }, { onDelete });
     openMenu();

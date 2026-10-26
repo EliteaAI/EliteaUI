@@ -9,7 +9,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import SchedulePromptSummary from '../SchedulePromptSummary';
 
-// EL-7011 owner CR 2026-10-21 test panel log: the read-only prompt box with Run test
+// test panel log: the read-only prompt box with Run test
 
 const PROMPT =
   'List open pull requests of {{repository}} in {{channel}} for {{region}} and post a short summary.';
@@ -35,11 +35,11 @@ const chipTexts = () => screen.getAllByTestId('schedule-prompt-chip').map(chip =
 const runTest = () => screen.getByRole('button', { name: 'Run test' });
 const chevron = () => screen.getByRole('button', { name: 'Show the full prompt' });
 
-describe('SchedulePromptSummary EL-7011 owner CR 2026-10-21', () => {
+describe('SchedulePromptSummary', () => {
   afterEach(() => cleanup());
 
-  // CR-21 option A: one pinned line of 61 px; the chevron opens the full prompt
-  it('CR-21 shows one line: the prompt, the version chip and Run test, with the chevron closed', () => {
+  // option A: one pinned line of 61 px; the chevron opens the full prompt
+  it('shows one line: the prompt, the version chip and Run test, with the chevron closed', () => {
     renderBox();
 
     expect(chevron()).toHaveAttribute('aria-expanded', 'false');
@@ -53,7 +53,7 @@ describe('SchedulePromptSummary EL-7011 owner CR 2026-10-21', () => {
     expect(runTest()).toBeEnabled();
   });
 
-  it('CR-21 the chevron opens the region it controls and closes it again', () => {
+  it('the chevron opens the region it controls and closes it again', () => {
     renderBox();
     fireEvent.click(chevron());
 
@@ -64,7 +64,7 @@ describe('SchedulePromptSummary EL-7011 owner CR 2026-10-21', () => {
     expect(chevron()).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('CR-21 closes the full prompt when a test starts', () => {
+  it('closes the full prompt when a test starts', () => {
     const onTestRun = renderBox();
     fireEvent.click(chevron());
 
@@ -83,7 +83,7 @@ describe('SchedulePromptSummary EL-7011 owner CR 2026-10-21', () => {
     expect(chevron()).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('CR-21 describes Run test with the given note', () => {
+  it('describes Run test with the given note', () => {
     renderBox({ description: 'A test never changes Last run or Next run.' });
 
     expect(runTest()).toHaveAccessibleDescription('A test never changes Last run or Next run.');

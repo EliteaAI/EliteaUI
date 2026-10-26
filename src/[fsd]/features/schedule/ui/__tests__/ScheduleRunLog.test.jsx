@@ -10,7 +10,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 
 import ScheduleRunLog from '../ScheduleRunLog';
 
-// EL-7011 owner CR 2026-10-21 test panel log: one monospace line per server event, coloured by level
+// test panel log: one monospace line per server event, coloured by level
 
 const at = second => `2026-10-21T10:42:${String(second).padStart(2, '0')}Z`;
 const EVENTS = [
@@ -39,7 +39,7 @@ const renderLog = props =>
   );
 const lines = () => screen.getAllByTestId('schedule-run-log-line');
 
-describe('ScheduleRunLog EL-7011 owner CR 2026-10-21', () => {
+describe('ScheduleRunLog', () => {
   afterEach(() => cleanup());
 
   it('shows each event kind as a line with its HH:mm:ss time and text', () => {
@@ -72,14 +72,14 @@ describe('ScheduleRunLog EL-7011 owner CR 2026-10-21', () => {
     expect(lines()[0].dataset.level).toBe('error');
   });
 
-  it('CR-12 makes the scroll box reachable by keyboard and names it', () => {
+  it('makes the scroll box reachable by keyboard and names it', () => {
     renderLog();
 
     const box = screen.getByRole('log', { name: 'Run log' });
     expect(box).toHaveAttribute('tabindex', '0');
   });
 
-  it('CR-12 shows a short tool result in the line only', () => {
+  it('shows a short tool result in the line only', () => {
     renderLog({
       events: [{ at: at(5), kind: 'tool_call', text: 'Tool call: github · list (9 ms): ok', summary: 'ok' }],
     });
@@ -87,7 +87,7 @@ describe('ScheduleRunLog EL-7011 owner CR 2026-10-21', () => {
     expect(screen.queryByRole('button', { name: /full result/i })).not.toBeInTheDocument();
   });
 
-  it('CR-12 shows the full tool result of a long or multi-line result on demand', () => {
+  it('shows the full tool result of a long or multi-line result on demand', () => {
     const summary = `{\n  "items": [${'1, '.repeat(100)}]\n}`;
     renderLog({
       events: [
@@ -147,7 +147,7 @@ describe('ScheduleRunLog EL-7011 owner CR 2026-10-21', () => {
     expect(box.scrollTop).toBe(100);
   });
 
-  // CR-21 option A: the log keeps 5 lines (5 x 22 px + 28 px padding) and may shrink to them in the panel body
+  // option A: the log keeps 5 lines (5 x 22 px + 28 px padding) and may shrink to them in the panel body
   it('keeps at least 5 lines and shrinks no further inside the panel body', () => {
     renderLog();
     expect(screen.getByTestId('schedule-run-log')).toHaveStyle({

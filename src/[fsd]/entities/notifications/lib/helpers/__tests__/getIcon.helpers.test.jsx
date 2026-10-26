@@ -15,9 +15,8 @@ const theme = {
   },
 };
 
-// EL-7011 US-40: R1.1 to R1.4
-describe('getIcon for schedule notifications (EL-7011)', () => {
-  it('R1.1 shows the error icon for failed, expired and disabled schedules', () => {
+describe('getIcon for schedule notifications', () => {
+  it('shows the error icon for failed, expired and disabled schedules', () => {
     for (const type of [
       NotificationType.ScheduleRunFailed,
       NotificationType.ScheduleApprovalExpired,
@@ -28,15 +27,15 @@ describe('getIcon for schedule notifications (EL-7011)', () => {
     }
   });
 
-  it('R1.2 shows the warning icon when approval is needed', () => {
+  it('shows the warning icon when approval is needed', () => {
     expect(getIcon(NotificationType.ScheduleApprovalNeeded, theme).type).toBe(AttentionIcon);
   });
 
-  it('R1.3 shows the success icon for a successful run', () => {
+  it('shows the success icon for a successful run', () => {
     expect(getIcon(NotificationType.ScheduleRunSucceeded, theme).type).toBe(SuccessIcon);
   });
 
-  it('R1.4 shows the info icon for admin edit and owner change', () => {
+  it('shows the info icon for admin edit and owner change', () => {
     for (const type of [NotificationType.ScheduleEditedByAdmin, NotificationType.ScheduleOwnerChanged]) {
       expect(getIcon(type, theme).type).toBe(InfoIcon);
     }

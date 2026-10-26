@@ -9,7 +9,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 
 import ImportSchedulesDialog from '../ImportSchedulesDialog';
 
-// EL-7011 R3.1, R3.2, R3.3, R3.4, R3.6: the import dialog picks a YAML file, uploads it and shows the result.
+// the import dialog picks a YAML file, uploads it and shows the result.
 
 const mocks = vi.hoisted(() => ({ importSchedules: vi.fn(), isLoading: false }));
 
@@ -52,7 +52,7 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-describe('EL-7011 R3.1 ImportSchedulesDialog file pick', () => {
+describe('ImportSchedulesDialog file pick', () => {
   it('accepts one yaml or yml file and keeps Upload disabled until a file is chosen', () => {
     renderDialog();
 
@@ -65,7 +65,7 @@ describe('EL-7011 R3.1 ImportSchedulesDialog file pick', () => {
   });
 });
 
-describe('EL-7011 R3.1 ImportSchedulesDialog file input', () => {
+describe('ImportSchedulesDialog file input', () => {
   it('has an accessible name', () => {
     renderDialog();
 
@@ -87,7 +87,7 @@ describe('EL-7011 R3.1 ImportSchedulesDialog file input', () => {
   });
 });
 
-describe('EL-7011 R3.2 and R3.3 ImportSchedulesDialog upload', () => {
+describe('ImportSchedulesDialog upload', () => {
   it('sends the file to the current project and shows the report', async () => {
     mocks.importSchedules.mockReturnValue(answer({ created: [{ name: 'Daily' }], skipped: [], failed: [] }));
     renderDialog();
@@ -99,7 +99,7 @@ describe('EL-7011 R3.2 and R3.3 ImportSchedulesDialog upload', () => {
     expect(mocks.importSchedules).toHaveBeenCalledWith({ projectId: 7, file });
   });
 
-  it('CR-04 shows the updated items of the report', async () => {
+  it('shows the updated items of the report', async () => {
     mocks.importSchedules.mockReturnValue(
       answer({ created: [], updated: [{ name: 'Daily', note: 'Key match.' }], skipped: [], failed: [] }),
     );
@@ -113,7 +113,7 @@ describe('EL-7011 R3.2 and R3.3 ImportSchedulesDialog upload', () => {
   });
 });
 
-describe('EL-7011 R3.4 ImportSchedulesDialog errors', () => {
+describe('ImportSchedulesDialog errors', () => {
   it('shows the server text and keeps the dialog and the chosen file', async () => {
     mocks.importSchedules.mockReturnValue(fail({ status: 400, data: { error: 'File is too large' } }));
     const onClose = renderDialog();
@@ -127,7 +127,7 @@ describe('EL-7011 R3.4 ImportSchedulesDialog errors', () => {
   });
 });
 
-describe('EL-7011 R3.6 ImportSchedulesDialog while uploading', () => {
+describe('ImportSchedulesDialog while uploading', () => {
   it('hides the close button, ignores Escape and disables Upload', () => {
     mocks.isLoading = true;
     const onClose = renderDialog();

@@ -31,7 +31,9 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProject: () => ({ id: 1 }),
   useToast: () => ({ toastSuccess: vi.fn(), toastError: vi.fn() }),
 }));
-vi.mock('@/[fsd]/shared/ui/banner-message', () => ({ BannerMessage: ({ children }) => <div>{children}</div> }));
+vi.mock('@/[fsd]/shared/ui/banner-message', () => ({
+  BannerMessage: ({ children }) => <div>{children}</div>,
+}));
 vi.mock('@/[fsd]/shared/ui/select', () => ({
   SingleSelect: ({ value, options, disabled }) => (
     <div
@@ -66,7 +68,7 @@ const setForm = instructions => {
   mocks.formValues = { version_details: { id: 7, instructions } };
 };
 
-describe('TriggerTypeSelector EL-7011 US-37', () => {
+describe('TriggerTypeSelector', () => {
   beforeEach(() => {
     cleanup();
     vi.clearAllMocks();
@@ -75,7 +77,7 @@ describe('TriggerTypeSelector EL-7011 US-37', () => {
     setForm(PLAIN_YAML);
   });
 
-  it('R1.1 lists only Chat Message and Webhook when no schedule is stored', () => {
+  it('lists only Chat Message and Webhook when no schedule is stored', () => {
     render(<TriggerTypeSelector />);
 
     expect(screen.getByTestId('option-chat_message')).toBeTruthy();
@@ -83,7 +85,7 @@ describe('TriggerTypeSelector EL-7011 US-37', () => {
     expect(screen.queryByTestId('option-schedule')).toBeNull();
   });
 
-  it('R2.1 and R2.2 show a stored schedule as a disabled value in a disabled select', () => {
+  it('show a stored schedule as a disabled value in a disabled select', () => {
     mocks.triggerData = { type: 'schedule', cron: '0 0 * * 6' };
 
     render(<TriggerTypeSelector />);
@@ -105,7 +107,7 @@ describe('TriggerTypeSelector EL-7011 US-37', () => {
     expect(screen.getByText(/no longer editable here/i)).toBeTruthy();
   });
 
-  it('R2.3 greys out Webhook when the pipeline gains an interactive node', () => {
+  it('greys out Webhook when the pipeline gains an interactive node', () => {
     setForm(HITL_YAML);
 
     render(<TriggerTypeSelector />);
@@ -114,7 +116,7 @@ describe('TriggerTypeSelector EL-7011 US-37', () => {
     expect(screen.getByTestId('option-chat_message').dataset.disabled).toBe('false');
   });
 
-  it('R2.4 sends no trigger update for a stored schedule when the pipeline becomes restricted', () => {
+  it('sends no trigger update for a stored schedule when the pipeline becomes restricted', () => {
     mocks.triggerData = { type: 'schedule' };
     const { rerender } = render(<TriggerTypeSelector />);
 
@@ -124,7 +126,7 @@ describe('TriggerTypeSelector EL-7011 US-37', () => {
     expect(mocks.updateTrigger).not.toHaveBeenCalled();
   });
 
-  it('R2.4 still resets a stored webhook when the pipeline becomes restricted', () => {
+  it('still resets a stored webhook when the pipeline becomes restricted', () => {
     mocks.triggerData = { type: 'webhook' };
     const { rerender } = render(<TriggerTypeSelector />);
 
@@ -134,14 +136,14 @@ describe('TriggerTypeSelector EL-7011 US-37', () => {
     expect(mocks.updateTrigger).toHaveBeenCalledTimes(1);
   });
 
-  it('R1.2 shows a hint that names the Schedules section', () => {
+  it('shows a hint that names the Schedules section', () => {
     render(<TriggerTypeSelector />);
 
     expect(screen.getByText(/to run this pipeline on a timer, use the/i)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Schedules section' })).toBeTruthy();
   });
 
-  it('R1.3 scrolls to the Schedules section when the link is activated', () => {
+  it('scrolls to the Schedules section when the link is activated', () => {
     const section = document.createElement('div');
     section.id = 'entity-schedules-section';
     section.scrollIntoView = vi.fn();
@@ -154,7 +156,7 @@ describe('TriggerTypeSelector EL-7011 US-37', () => {
     section.remove();
   });
 
-  it('R1.4 keeps the hint and does nothing when the Schedules section is missing', () => {
+  it('keeps the hint and does nothing when the Schedules section is missing', () => {
     render(<TriggerTypeSelector />);
 
     expect(() => fireEvent.click(screen.getByRole('button', { name: 'Schedules section' }))).not.toThrow();

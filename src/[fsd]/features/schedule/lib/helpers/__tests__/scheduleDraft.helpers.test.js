@@ -37,7 +37,7 @@ const agentDraft = {
   approval_rule: 'never',
 };
 
-describe('EL-7011 R2.1 toDraftRequest', () => {
+describe('toDraftRequest', () => {
   it('sends the current values, the browser timezone and a null lock', () => {
     const body = toDraftRequest(values, null, 'Europe/Kyiv');
     expect(body.timezone).toBe('Europe/Kyiv');
@@ -45,7 +45,7 @@ describe('EL-7011 R2.1 toDraftRequest', () => {
     expect(body.current).toMatchObject({ entity_type: 'agent', application_id: 'A1', cron: '0 0 * * 6' });
   });
 
-  it('EL-7011 R2.1 names the locked entity by type and id', () => {
+  it('names the locked entity by type and id', () => {
     expect(toDraftRequest(values, { type: 'agent', id: 'A1' }, 'UTC').locked_entity).toEqual({
       entity_type: 'agent',
       application_id: 'A1',
@@ -53,7 +53,7 @@ describe('EL-7011 R2.1 toDraftRequest', () => {
   });
 });
 
-describe('EL-7011 R2.4 and R2.5 draftToFormValues', () => {
+describe('draftToFormValues', () => {
   it('fills every drafted field the form has and ignores approval_rule', () => {
     const result = draftToFormValues(agentDraft, values, null);
     expect(result).toMatchObject({
@@ -70,14 +70,14 @@ describe('EL-7011 R2.4 and R2.5 draftToFormValues', () => {
     expect(result).not.toHaveProperty('approval_rule');
   });
 
-  it('R2.5 shows one variable field per placeholder with drafted values by name', () => {
+  it('shows one variable field per placeholder with drafted values by name', () => {
     expect(draftToFormValues(agentDraft, values, null).variables).toEqual([
       { name: 'team', value: 'EPAM' },
       { name: 'topic', value: '' },
     ]);
   });
 
-  it('R2.5 gives a pipeline drafted without a run mode Entry point and no prompt', () => {
+  it('gives a pipeline drafted without a run mode Entry point and no prompt', () => {
     const draft = { ...agentDraft, entity_type: 'pipeline', application_id: 'PL1', run_mode: null };
     expect(draftToFormValues(draft, values, null)).toMatchObject({
       type: 'pipeline',
@@ -97,8 +97,8 @@ describe('EL-7011 R2.4 and R2.5 draftToFormValues', () => {
   });
 });
 
-describe('EL-7011 R2.4 and R2.5 draft keeps or resets the what-to-run fields', () => {
-  it('R2.4 clears the entity and version when the draft changes the type and names neither', () => {
+describe('draft keeps or resets the what-to-run fields', () => {
+  it('clears the entity and version when the draft changes the type and names neither', () => {
     const draft = { entity_type: 'pipeline' };
     expect(draftToFormValues(draft, values, null)).toMatchObject({
       type: 'pipeline',
@@ -108,18 +108,18 @@ describe('EL-7011 R2.4 and R2.5 draft keeps or resets the what-to-run fields', (
     });
   });
 
-  it('R2.4 clears the version when the draft names another entity without a version', () => {
+  it('clears the version when the draft names another entity without a version', () => {
     const draft = { entity_type: 'agent', application_id: 'A2' };
     expect(draftToFormValues(draft, values, null)).toMatchObject({ application_id: 'A2', version_id: '' });
   });
 
-  it('R2.4 keeps the version when the drafted entity id is the same id as a number', () => {
+  it('keeps the version when the drafted entity id is the same id as a number', () => {
     const form = { ...values, application_id: '7', version_id: '70' };
     const draft = { entity_type: form.type, application_id: 7 };
     expect(draftToFormValues(draft, form, null)).toMatchObject({ application_id: 7, version_id: '70' });
   });
 
-  it('R2.5 keeps run mode, prompt and variables when the draft omits them', () => {
+  it('keeps run mode, prompt and variables when the draft omits them', () => {
     const pipeline = {
       ...values,
       type: 'pipeline',
@@ -135,7 +135,7 @@ describe('EL-7011 R2.4 and R2.5 draft keeps or resets the what-to-run fields', (
     });
   });
 
-  it('R2.5 keeps the agent prompt when the draft omits it', () => {
+  it('keeps the agent prompt when the draft omits it', () => {
     expect(draftToFormValues({ name: 'New' }, values, null)).toMatchObject({
       prompt: 'Old {{topic}}',
       variables: [{ name: 'topic', value: 'sales' }],
@@ -143,7 +143,7 @@ describe('EL-7011 R2.4 and R2.5 draft keeps or resets the what-to-run fields', (
   });
 });
 
-describe('EL-7011 R2.1 isScheduleFormEmpty', () => {
+describe('isScheduleFormEmpty', () => {
   it('is true only when name, prompt and entity are all empty', () => {
     const empty = { name: '', prompt: '', application_id: '' };
     expect(isScheduleFormEmpty(empty)).toBe(true);
@@ -153,10 +153,10 @@ describe('EL-7011 R2.1 isScheduleFormEmpty', () => {
   });
 });
 
-describe('EL-7011 R3.4 and R3.5 lock rule', () => {
+describe('lock rule', () => {
   const lock = { type: 'agent', id: 'A1' };
 
-  it('R3.4 keeps Type and entity when the draft names another entity', () => {
+  it('keeps Type and entity when the draft names another entity', () => {
     const draft = { ...agentDraft, entity_type: 'pipeline', application_id: 'PL1', version_id: 'PV1' };
     expect(draftToFormValues(draft, values, lock)).toMatchObject({
       type: 'agent',
@@ -167,16 +167,16 @@ describe('EL-7011 R3.4 and R3.5 lock rule', () => {
     });
   });
 
-  it('R3.5 takes the drafted version when it belongs to the locked entity', () => {
+  it('takes the drafted version when it belongs to the locked entity', () => {
     expect(draftToFormValues(agentDraft, values, lock).version_id).toBe('V2');
   });
 
-  it('R3.5 takes the drafted version when the locked id is a string and the draft id a number', () => {
+  it('takes the drafted version when the locked id is a string and the draft id a number', () => {
     const draft = { ...agentDraft, application_id: 7, version_id: 71 };
     expect(draftToFormValues(draft, values, { type: 'agent', id: '7' }).version_id).toBe(71);
   });
 
-  it('R3.4 keeps a locked pipeline and takes the drafted run mode', () => {
+  it('keeps a locked pipeline and takes the drafted run mode', () => {
     const pipeline = {
       ...values,
       type: 'pipeline',
@@ -193,7 +193,7 @@ describe('EL-7011 R3.4 and R3.5 lock rule', () => {
   });
 });
 
-describe('EL-7011 R3.1 changedFields', () => {
+describe('changedFields', () => {
   it('lists each changed field with its current and drafted value', () => {
     const fields = changedFields(values, agentDraft, null);
     expect(fields).toContainEqual({ field: 'description', current: 'Old', drafted: 'New' });

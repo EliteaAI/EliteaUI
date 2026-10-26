@@ -35,10 +35,10 @@ vi.mock('@/pages/Applications/Components/Applications/ApplicationInformation', (
 
 const order = () => screen.getAllByTestId(/^(starters|schedules|advanced)$/).map(node => node.dataset.testid);
 
-describe('ApplicationConfigurationForm EL-7011 section order', () => {
+describe('ApplicationConfigurationForm section order', () => {
   afterEach(cleanup);
 
-  it('R1.1 EL-7011: Schedules follows Chat starters and precedes Advanced', () => {
+  it('Schedules follows Chat starters and precedes Advanced', () => {
     render(
       <ApplicationConfigurationForm
         viewMode={ViewMode.Owner}
@@ -48,7 +48,7 @@ describe('ApplicationConfigurationForm EL-7011 section order', () => {
     expect(order()).toEqual(['starters', 'schedules', 'advanced']);
   });
 
-  it('R1.3 EL-7011: passes isChatView so the chat shows no Schedules section', () => {
+  it('passes isChatView so the chat shows no Schedules section', () => {
     render(
       <ApplicationConfigurationForm
         viewMode={ViewMode.Owner}

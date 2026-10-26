@@ -5,7 +5,7 @@ import { act, renderHook } from '@testing-library/react';
 
 import { useWaitingRunDecision } from '../useWaitingRunDecision.hooks';
 
-// EL-7011 US-41: owner-only decision on a waiting run (R2.3, R2.4, R2.5, R3.1, R3.3).
+// owner-only decision on a waiting run.
 
 const mocks = vi.hoisted(() => ({
   decide: vi.fn(),
@@ -38,14 +38,14 @@ const DEFAULT_SCHEDULE = { owner: { id: 5 }, created_by: 9 };
 const setup = (schedule = DEFAULT_SCHEDULE) =>
   renderHook(() => useWaitingRunDecision({ schedule, onDecided: mocks.refetch })).result;
 
-describe('useWaitingRunDecision EL-7011', () => {
+describe('useWaitingRunDecision', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('R3.1 EL-7011 gives a non-owner no handler', () => {
+  it('gives a non-owner no handler', () => {
     expect(setup({ owner: { id: 9 }, created_by: 5 }).current).toBeUndefined();
   });
 
-  it('R2.3 EL-7011 sends the decision and refetches the run rows', async () => {
+  it('sends the decision and refetches the run rows', async () => {
     mocks.decide.mockReturnValue(ok());
     const result = setup();
     await act(() => result.current(request));
@@ -59,7 +59,7 @@ describe('useWaitingRunDecision EL-7011', () => {
     expect(mocks.toastError).not.toHaveBeenCalled();
   });
 
-  it.each([400, 409])('R2.4 EL-7011 shows an info toast and refetches on %s', async status => {
+  it.each([400, 409])('shows an info toast and refetches on %s', async status => {
     mocks.decide.mockReturnValue(fail({ status }));
     const result = setup();
     await act(() => result.current(request));
@@ -67,7 +67,7 @@ describe('useWaitingRunDecision EL-7011', () => {
     expect(mocks.refetch).toHaveBeenCalledTimes(1);
   });
 
-  it('R2.5 EL-7011 shows an error toast and does not refetch on a 500', async () => {
+  it('shows an error toast and does not refetch on a 500', async () => {
     mocks.decide.mockReturnValue(fail({ status: 500, data: { message: 'boom' } }));
     const result = setup();
     await act(() => result.current(request));
@@ -75,7 +75,7 @@ describe('useWaitingRunDecision EL-7011', () => {
     expect(mocks.refetch).not.toHaveBeenCalled();
   });
 
-  it('R3.3 EL-7011 shows an error toast on a 403 and does not refetch', async () => {
+  it('shows an error toast on a 403 and does not refetch', async () => {
     mocks.decide.mockReturnValue(fail({ status: 403 }));
     const result = setup();
     await act(() => result.current(request));

@@ -9,7 +9,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 
 import ScheduleRunApproval from '../ScheduleRunApproval';
 
-// EL-7011 owner CR 2026-10-21 test panel log, US-41: Approve and Reject at the paused log line
+// test panel log, Approve and Reject at the paused log line
 
 const mocks = vi.hoisted(() => ({ decide: vi.fn(), hookArgs: null, isOwner: true, dispatch: vi.fn() }));
 
@@ -40,7 +40,7 @@ const renderApproval = props =>
   );
 const button = name => screen.getByRole('button', { name });
 
-describe('ScheduleRunApproval EL-7011 owner CR 2026-10-21', () => {
+describe('ScheduleRunApproval', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-10-21T10:44:00Z'));
@@ -53,7 +53,7 @@ describe('ScheduleRunApproval EL-7011 owner CR 2026-10-21', () => {
     mocks.isOwner = true;
   });
 
-  it('Approve and Reject send the US-41 decision for the paused message', async () => {
+  it('Approve and Reject send the decision for the paused message', async () => {
     renderApproval();
 
     fireEvent.click(button('Approve'));
@@ -88,7 +88,7 @@ describe('ScheduleRunApproval EL-7011 owner CR 2026-10-21', () => {
     expect(screen.getByText('Expires in 23 h 58 min')).toBeInTheDocument();
   });
 
-  it('disables both buttons with the owner note for anyone but the owner', () => {
+  it('disables both buttons with the for anyone but the owner', () => {
     mocks.isOwner = false;
     renderApproval();
 

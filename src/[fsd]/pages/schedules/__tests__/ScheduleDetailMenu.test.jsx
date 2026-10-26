@@ -9,7 +9,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import ScheduleDetailMenu from '../ScheduleDetailMenu';
 
-// EL-7011 CR-16 (US-43 R4.3 to R4.5): the Edit schedule page header menu with Export only
+// the Edit schedule page header menu with Export only
 
 const mocks = vi.hoisted(() => ({
   onExport: vi.fn(),
@@ -39,7 +39,7 @@ const renderMenu = () =>
   );
 const openMenu = () => fireEvent.click(screen.getByTestId('schedule-detail-menu-button'));
 
-describe('ScheduleDetailMenu EL-7011 CR-16', () => {
+describe('ScheduleDetailMenu', () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
@@ -47,14 +47,14 @@ describe('ScheduleDetailMenu EL-7011 CR-16', () => {
     mocks.isBusy = false;
   });
 
-  it('R4.3 disables Export while an export runs, so a second click starts no second download', () => {
+  it('disables Export while an export runs, so a second click starts no second download', () => {
     mocks.isBusy = true;
     renderMenu();
     openMenu();
     expect(screen.getByRole('menuitem', { name: /Export/ })).toHaveAttribute('aria-disabled', 'true');
   });
 
-  it('R4.3 shows only Export, and Export exports this schedule', () => {
+  it('shows only Export, and Export exports this schedule', () => {
     renderMenu();
     openMenu();
     expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual(['Export']);
@@ -62,7 +62,7 @@ describe('ScheduleDetailMenu EL-7011 CR-16', () => {
     expect(mocks.onExport).toHaveBeenCalledTimes(1);
   });
 
-  it('R4.5 renders no menu without the export permission', () => {
+  it('renders no menu without the export permission', () => {
     mocks.canExport = false;
     const { container } = renderMenu();
     expect(container).toBeEmptyDOMElement();

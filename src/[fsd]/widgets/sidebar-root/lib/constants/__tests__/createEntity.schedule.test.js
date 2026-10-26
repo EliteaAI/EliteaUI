@@ -8,8 +8,8 @@ import {
   RouteToLabelMap,
 } from '../createEntity.constants';
 
-// EL-7011 CR-03: a schedule is created from the + button of Settings > Schedules, not from the sidebar
-describe('EL-7011 R1.5 no Schedule option in the sidebar Create button', () => {
+// a schedule is created from the + button of Settings > Schedules, not from the sidebar
+describe('no Schedule option in the sidebar Create button', () => {
   it('lists no Schedule option and no Schedules label', () => {
     expect(DropdownItems.some(item => item.label === 'Schedule')).toBe(false);
     expect(RouteToLabelMap.some(({ label }) => label === 'Schedule')).toBe(false);

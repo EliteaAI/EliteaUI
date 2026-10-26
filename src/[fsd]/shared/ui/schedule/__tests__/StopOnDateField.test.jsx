@@ -79,8 +79,8 @@ const Harness = ({ initialValue = null, onChange, error, timezone }) => {
   );
 };
 
-describe('EL-7011 R3 StopOnDateField', () => {
-  it('R3.1 TC-US30-13: checking the box shows a date field with a mask and a calendar', async () => {
+describe('StopOnDateField', () => {
+  it('TC-US30-13: checking the box shows a date field with a mask and a calendar', async () => {
     const user = userEvent.setup();
     render(<Harness />);
 
@@ -91,7 +91,7 @@ describe('EL-7011 R3 StopOnDateField', () => {
     expect(await screen.findByRole('grid')).toBeInTheDocument();
   });
 
-  it('R3.2 TC-US30-14: unchecking hides the field and passes null', async () => {
+  it('TC-US30-14: unchecking hides the field and passes null', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     render(
@@ -108,20 +108,20 @@ describe('EL-7011 R3 StopOnDateField', () => {
     expect(screen.queryByRole('button', { name: /choose date/i })).not.toBeInTheDocument();
   });
 
-  it('R3.3 TC-US30-15: a past date is marked invalid with the message', () => {
+  it('TC-US30-15: a past date is marked invalid with the message', () => {
     render(<Harness initialValue={PAST_DATE} />);
 
     expect(screen.getByText(PAST_DATE_MESSAGE)).toBeInTheDocument();
     expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'true');
   });
 
-  it('R3.3 CR-02 EL-7011: a screen reader reads the error with the date field', () => {
+  it('a screen reader reads the error with the date field', () => {
     render(<Harness initialValue={PAST_DATE} />);
 
     expect(screen.getByRole('textbox')).toHaveAccessibleDescription(PAST_DATE_MESSAGE);
   });
 
-  it('R3.4 TC-US30-16: a server error shows under the date field', () => {
+  it('TC-US30-16: a server error shows under the date field', () => {
     render(
       <Harness
         initialValue={FUTURE_DATE}
@@ -132,7 +132,7 @@ describe('EL-7011 R3 StopOnDateField', () => {
     expect(screen.getByText('Stop date is not allowed')).toBeInTheDocument();
   });
 
-  it('R3.1 TC-US30-17: with no value the box is unchecked and no date field shows', () => {
+  it('TC-US30-17: with no value the box is unchecked and no date field shows', () => {
     render(<Harness />);
 
     expect(screen.getByRole('checkbox', { name: LABEL })).not.toBeChecked();
@@ -140,7 +140,7 @@ describe('EL-7011 R3 StopOnDateField', () => {
     expect(screen.queryByRole('button', { name: /choose date/i })).not.toBeInTheDocument();
   });
 
-  it('R3.1: a value that arrives after mount checks the box and shows the date', () => {
+  it('a value that arrives after mount checks the box and shows the date', () => {
     const { rerender } = render(
       <StopOnDateField
         value={null}
@@ -160,7 +160,7 @@ describe('EL-7011 R3 StopOnDateField', () => {
     expect(screen.getByRole('textbox', { name: DATE_LABEL })).toHaveValue('31/12/2999');
   });
 
-  it('R3.2: a value reset to null after mount unchecks the box and hides the field', () => {
+  it('a value reset to null after mount unchecks the box and hides the field', () => {
     const { rerender } = render(
       <StopOnDateField
         value={FUTURE_DATE}
@@ -180,7 +180,7 @@ describe('EL-7011 R3 StopOnDateField', () => {
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 
-  it('R3.1: the date field has the accessible name "Stop date"', async () => {
+  it('the date field has the accessible name "Stop date"', async () => {
     const user = userEvent.setup();
     render(<Harness />);
 
@@ -189,7 +189,7 @@ describe('EL-7011 R3 StopOnDateField', () => {
     expect(screen.getByRole('textbox', { name: DATE_LABEL })).toBeInTheDocument();
   });
 
-  it('R3.1: typing a valid future date passes it as yyyy-MM-dd', async () => {
+  it('typing a valid future date passes it as yyyy-MM-dd', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     render(<Harness onChange={onChange} />);
@@ -201,7 +201,7 @@ describe('EL-7011 R3 StopOnDateField', () => {
     expect(onChange).toHaveBeenLastCalledWith(FUTURE_DATE);
   });
 
-  it('R3.1 TC-US30-13: the open calendar shows Clear and Apply', async () => {
+  it('TC-US30-13: the open calendar shows Clear and Apply', async () => {
     const user = userEvent.setup();
     render(<Harness />);
     await user.click(screen.getByRole('checkbox', { name: LABEL }));
@@ -212,7 +212,7 @@ describe('EL-7011 R3 StopOnDateField', () => {
     expect(screen.getByRole('button', { name: 'Apply' })).toBeInTheDocument();
   });
 
-  it('R3.2 TC-US30-18: Apply commits the picked day as yyyy-MM-dd; a day click alone keeps the popup open', async () => {
+  it('TC-US30-18: Apply commits the picked day as yyyy-MM-dd; a day click alone keeps the popup open', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     render(
@@ -231,7 +231,7 @@ describe('EL-7011 R3 StopOnDateField', () => {
     expect(onChange).toHaveBeenLastCalledWith('2090-06-15');
   });
 
-  it('R3.3 TC-US30-19: Clear passes null and the box stays checked', async () => {
+  it('TC-US30-19: Clear passes null and the box stays checked', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     render(
@@ -248,7 +248,7 @@ describe('EL-7011 R3 StopOnDateField', () => {
     expect(screen.getByRole('checkbox', { name: LABEL })).toBeChecked();
   });
 
-  it('R3.1 BUG-33 EL-7011: the underlined field does not stretch across the form width', () => {
+  it('the underlined field does not stretch across the form width', () => {
     render(<Harness initialValue={FUTURE_DATE} />);
 
     const field = screen.getByText('Stop date:').parentElement;

@@ -9,7 +9,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 
 import ScheduleRunStatusChip from '../ScheduleRunStatusChip';
 
-// EL-7011 QA 2026-10-21 table width: the Schedules table shows the last run as a chip, a word or an icon
+// table width: the Schedules table shows the last run as a chip, a word or an icon
 
 const renderChip = props =>
   render(
@@ -20,7 +20,7 @@ const renderChip = props =>
 
 afterEach(() => cleanup());
 
-describe('EL-7011 ScheduleRunStatusChip', () => {
+describe('ScheduleRunStatusChip', () => {
   it('keeps the outlined chip with the icon and the word by default', () => {
     renderChip({ status: 'failed' });
     const chip = screen.getByTestId('schedule-run-status');

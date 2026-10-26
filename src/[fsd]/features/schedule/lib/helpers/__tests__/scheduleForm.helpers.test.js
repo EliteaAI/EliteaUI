@@ -34,7 +34,7 @@ const agentValues = {
   expires_at: null,
 };
 
-describe('EL-7011 R2.3 description limit', () => {
+describe('description limit', () => {
   it('schedule form schema rejects a description over MAX_DESCRIPTION_LENGTH', async () => {
     const tooLong = { ...agentValues, description: 'a'.repeat(MAX_DESCRIPTION_LENGTH + 1) };
     await expect(scheduleFormSchema.validate(tooLong)).rejects.toThrow();
@@ -44,7 +44,7 @@ describe('EL-7011 R2.3 description limit', () => {
   });
 });
 
-describe('EL-7011 R6.1 required fields', () => {
+describe('required fields', () => {
   it('schedule form schema asks for a name, an entity and a version', async () => {
     const empty = { ...agentValues, name: ' ', application_id: '', version_id: null };
     const error = await scheduleFormSchema.validate(empty, { abortEarly: false }).catch(e => e);
@@ -54,7 +54,7 @@ describe('EL-7011 R6.1 required fields', () => {
   });
 });
 
-describe('EL-7011 R3.6 Type switch', () => {
+describe('Type switch', () => {
   it('resetWhatToRun to pipeline clears entity, version, prompt and variables and sets Entry point', () => {
     const next = resetWhatToRun(agentValues, 'pipeline');
     expect(next).toMatchObject({
@@ -81,7 +81,7 @@ describe('EL-7011 R3.6 Type switch', () => {
   });
 });
 
-describe('EL-7011 R4.3 variables follow placeholders', () => {
+describe('variables follow placeholders', () => {
   it('syncPromptVariables gives one sorted field per unique placeholder', () => {
     expect(syncPromptVariables('Report for {{team}} since {{ day }}, cc {{team}}', [])).toEqual([
       { name: 'day', value: '' },
@@ -89,7 +89,7 @@ describe('EL-7011 R4.3 variables follow placeholders', () => {
     ]);
   });
 
-  it('R1.5 EL-7011 syncPromptVariables and buildEditValues accept a schedule with no prompt', () => {
+  it('syncPromptVariables and buildEditValues accept a schedule with no prompt', () => {
     expect(syncPromptVariables(null, [])).toEqual([]);
     expect(syncPromptVariables(undefined)).toEqual([]);
     expect(
@@ -106,12 +106,12 @@ describe('EL-7011 R4.3 variables follow placeholders', () => {
     ).toMatchObject({ prompt: '', variables: [] });
   });
 
-  // BUG-36 live check: the edit form started as "Pause and ask me", so a confirmed schedule reopened the review
+  // live check: the edit form started as "Pause and ask me", so a confirmed schedule reopened the review
   it.each([
     ['run_without_asking', 'run_without_asking'],
     ['pause_and_ask', 'pause_and_ask'],
     [undefined, DEFAULT_APPROVAL_RULE],
-  ])('BUG-36 EL-7011 buildEditValues keeps the saved approval rule %s', (saved, expected) => {
+  ])('buildEditValues keeps the saved approval rule %s', (saved, expected) => {
     const schedule = {
       id: 7,
       name: 'Daily',
@@ -133,7 +133,7 @@ describe('EL-7011 R4.3 variables follow placeholders', () => {
   });
 });
 
-describe('EL-7011 R4.5 prompt is required', () => {
+describe('prompt is required', () => {
   it('isPromptShown is true for an agent and for a pipeline in Prompt mode only', () => {
     expect(isPromptShown({ type: 'agent', run_mode: null })).toBe(true);
     expect(isPromptShown({ type: 'pipeline', run_mode: 'prompt' })).toBe(true);
@@ -152,7 +152,7 @@ describe('EL-7011 R4.5 prompt is required', () => {
   });
 });
 
-describe('EL-7011 R5.1 and R5.3 entity from the URL', () => {
+describe('entity from the URL', () => {
   it('buildInitialValues presets Type and entity from entityType and entityId', () => {
     const { values, urlEntity } = buildInitialValues(
       new URLSearchParams('entityType=pipeline&entityId=9'),
@@ -169,7 +169,7 @@ describe('EL-7011 R5.1 and R5.3 entity from the URL', () => {
     expect(returnTo).toBe('/settings/schedules');
   });
 
-  it('R1.3 EL-7011 buildInitialValues holds the schedule settings in the form values', () => {
+  it('buildInitialValues holds the schedule settings in the form values', () => {
     const { values } = buildInitialValues(new URLSearchParams(''), null);
     expect(values).toMatchObject({
       cron: DEFAULT_SCHEDULE_CRON,
@@ -178,7 +178,7 @@ describe('EL-7011 R5.1 and R5.3 entity from the URL', () => {
     });
   });
 
-  it('R6.5 EL-7011 buildInitialValues accepts only an in-app returnTo path', () => {
+  it('buildInitialValues accepts only an in-app returnTo path', () => {
     const returnTo = state => buildInitialValues(new URLSearchParams(''), { returnTo: state }).returnTo;
     expect(returnTo('//evil.example')).toBe('/settings/schedules');
     expect(returnTo('https://evil.example')).toBe('/settings/schedules');
@@ -193,7 +193,7 @@ describe('EL-7011 R5.1 and R5.3 entity from the URL', () => {
     expect(returnTo).toBe('/agents/3');
   });
 
-  it('US-35 R4.1 buildInitialValues locks the entity of the editor route and returns to the editor', () => {
+  it('buildInitialValues locks the entity of the editor route and returns to the editor', () => {
     const entityRoute = { lockedEntity: { type: 'agent', id: '12' }, returnTo: '/agents/all/12' };
     const { values, urlEntity, returnTo } = buildInitialValues(new URLSearchParams(''), null, entityRoute);
     expect(urlEntity).toEqual({ type: 'agent', id: '12' });
@@ -201,7 +201,7 @@ describe('EL-7011 R5.1 and R5.3 entity from the URL', () => {
     expect(returnTo).toBe('/agents/all/12');
   });
 
-  it('US-35 R3.5 the state returnTo wins over the editor route, and edit values return to the editor', () => {
+  it('the state returnTo wins over the editor route, and edit values return to the editor', () => {
     const entityRoute = { lockedEntity: { type: 'agent', id: '12' }, returnTo: '/agents/all/12' };
     const state = { returnTo: '/agents/all/12/70' };
     expect(buildInitialValues(new URLSearchParams(''), state, entityRoute).returnTo).toBe(
@@ -229,7 +229,7 @@ describe('EL-7011 R5.1 and R5.3 entity from the URL', () => {
   });
 });
 
-describe('EL-7011 R6.2 create body', () => {
+describe('create body', () => {
   it('toCreateBody sends run_mode null for an agent and null description for an empty one', () => {
     expect(toCreateBody({ ...agentValues, run_mode: 'prompt' })).toEqual({
       name: 'Night report',
@@ -270,7 +270,7 @@ describe('EL-7011 R6.2 create body', () => {
   });
 });
 
-describe('EL-7011 R6.3 server 400 messages', () => {
+describe('server 400 messages', () => {
   it('toFieldErrors maps the message to its field', () => {
     const error = { status: 400, data: { error: 'Enter a prompt for the agent', field: 'prompt' } };
     expect(toFieldErrors(error)).toEqual({ prompt: 'Enter a prompt for the agent' });
@@ -282,7 +282,7 @@ describe('EL-7011 R6.3 server 400 messages', () => {
   });
 });
 
-describe('EL-7011 R1.4 approval rule in the body', () => {
+describe('approval rule in the body', () => {
   it('toCreateBody sends the chosen rule', () => {
     expect(toCreateBody({ ...agentValues, approval_rule: 'run_without_asking' }).approval_rule).toBe(
       'run_without_asking',
@@ -294,7 +294,7 @@ describe('EL-7011 R1.4 approval rule in the body', () => {
   });
 });
 
-describe('EL-7011 R2.3 save warnings', () => {
+describe('save warnings', () => {
   it('toWarningItems maps each server code to a label, text and target', () => {
     const items = toWarningItems([
       { code: 'human_input_step', message: 'Asks a person', step: 'ask' },
@@ -345,7 +345,7 @@ const saved = {
   created_by: 3,
 };
 
-describe('EL-7011 R1.5 edit values', () => {
+describe('edit values', () => {
   it('fills the form with the saved values and one variable per placeholder', () => {
     const { values, returnTo } = buildEditValues(
       { ...saved, prompt: 'Hi {{team}} {{day}}' },
@@ -378,7 +378,7 @@ describe('EL-7011 R1.5 edit values', () => {
     expect(values.expires_at).toBeNull();
   });
 
-  it('R2.1 keeps the saved cron and time zone, so an unchanged Save stays in the schedule zone', () => {
+  it('keeps the saved cron and time zone, so an unchanged Save stays in the schedule zone', () => {
     const tokyo = {
       ...saved,
       cron: '0 9 * * *',
@@ -398,7 +398,7 @@ describe('EL-7011 R1.5 edit values', () => {
   });
 });
 
-describe('EL-7011 R2.3 R2.5 update body', () => {
+describe('update body', () => {
   it('has the create body rules and no created_by', () => {
     const { values } = buildEditValues(saved, undefined);
     const body = toUpdateBody({ ...values, created_by: 3 });
@@ -414,7 +414,7 @@ describe('EL-7011 R2.3 R2.5 update body', () => {
   });
 });
 
-describe('EL-7011 owner CR 2026-10-21 risk review blocking findings', () => {
+describe('risk review blocking findings', () => {
   it('toRiskItems puts the findings of one code in one group, in the order the server sends them', () => {
     const github = { code: 'personal_signin_required', toolkit: 'github-personal' };
     const review = { code: 'human_input_step', step: 'review', step_label: 'Review' };

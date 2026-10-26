@@ -47,7 +47,7 @@ describe('AutomatedActivityTable', () => {
     );
   });
 
-  it('EL-7011 R2.3 names the sources in the subtitle with their exact labels', () => {
+  it('names the sources in the subtitle with their exact labels', () => {
     renderTable([SCHEDULED]);
 
     expect(screen.getByText(/Webhook, Scheduled, Schedule run now, Index runs/)).toBeInTheDocument();
@@ -67,7 +67,7 @@ describe('AutomatedActivityTable', () => {
     expect(cells).toEqual(['Total', '', '5', '13', '7', '$0.7500']);
   });
 
-  it('EL-7011 R1.2 shows one row per source and entity type with an Entity type column', () => {
+  it('shows one row per source and entity type with an Entity type column', () => {
     const agent = { ...SCHEDULED, entity_kind: 'agent' };
     const pipeline = { ...SCHEDULED, entity_kind: 'pipeline', runs: 1 };
     const noKind = { ...WEBHOOK, entity_kind: null };
@@ -87,7 +87,7 @@ describe('AutomatedActivityTable', () => {
     expect(within(rows[2]).getByText('Pipeline')).toBeInTheDocument();
   });
 
-  it('EL-7011 R2.3 sorts by the label text of the source and the entity type', () => {
+  it('sorts by the label text of the source and the entity type', () => {
     renderTable([
       { ...WEBHOOK, entity_kind: 'pipeline' },
       { ...SCHEDULED, entity_kind: 'agent' },

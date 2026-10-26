@@ -9,7 +9,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 
 import GridTableHeader from '../GridTableHeader';
 
-// EL-7011 QA 2026-10-21 table width: the compact density narrows the header padding; the default stays
+// table width: the compact density narrows the header padding; the default stays
 
 const COLUMNS = [
   { field: 'name', label: 'Name & Description', sortable: true },
@@ -31,7 +31,7 @@ const renderHeader = props =>
 
 afterEach(() => cleanup());
 
-describe('EL-7011 GridTableHeader density', () => {
+describe('GridTableHeader density', () => {
   it('keeps the 0.75 rem cell padding and no label title by default', () => {
     renderHeader();
     const cell = screen.getByTestId('t-column-header-owner');
