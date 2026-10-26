@@ -5,7 +5,7 @@ import { Link as RouterLink, useLocation, useNavigate, useParams, useSearchParam
 import { Box, Link } from '@mui/material';
 
 import { RunHistoryContainer, SCHEDULE_RUN_COLUMNS } from '@/[fsd]/entities/run-history';
-import { buildScheduleFormLink, useGetScheduleListQuery } from '@/[fsd]/entities/schedule';
+import { buildScheduleFormLink, useAllEntitySchedules } from '@/[fsd]/entities/schedule';
 import { ChatMessageList } from '@/[fsd]/features/chat';
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
@@ -20,8 +20,6 @@ import { SearchParams } from '@/common/constants';
 const DEFAULT_TAB = 'all';
 const SCHEDULE_ID_PARAM = 'schedule_id';
 const ALL_SCHEDULES = '';
-// lean: one request of up to 100 rows, the list API limit (the same bound as the editor Schedules section)
-const MAX_SCHEDULES = 100;
 const NO_QUERY_PARAMS = {};
 
 const RunHistoryPage = memo(props => {
@@ -40,11 +38,11 @@ const RunHistoryPage = memo(props => {
   const versions = data?.versions ?? [];
 
   // The caller's schedules of this agent or pipeline fill the filter and decide which names link
-  const { data: scheduleData } = useGetScheduleListQuery(
-    { projectId, entityType: scheduleEntityType, entityId: agentId, pageSize: MAX_SCHEDULES },
-    { skip: !scheduleEntityType || !projectId || !agentId },
-  );
-  const schedules = useMemo(() => scheduleData?.rows ?? [], [scheduleData]);
+  const { rows: schedules } = useAllEntitySchedules({
+    entityType: scheduleEntityType,
+    entityId: agentId,
+    skip: !scheduleEntityType,
+  });
   // A positive whole number only: anything else (for example "abc") is ignored, not sent as NaN
   const rawScheduleId = searchParams.get(SCHEDULE_ID_PARAM) ?? ALL_SCHEDULES;
   const scheduleIdParam = /^[1-9]\d*$/.test(rawScheduleId) ? rawScheduleId : ALL_SCHEDULES;

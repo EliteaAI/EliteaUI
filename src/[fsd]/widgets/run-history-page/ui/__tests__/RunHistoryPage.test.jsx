@@ -53,9 +53,9 @@ const scheduleList = vi.hoisted(() => ({ args: null, rows: [{ id: 4, name: 'Dail
 
 vi.mock('@/[fsd]/entities/schedule', async () => ({
   ...(await vi.importActual('@/[fsd]/entities/schedule/lib/helpers')),
-  useGetScheduleListQuery: (args, options) => {
-    scheduleList.args = { args, options };
-    return { data: options?.skip ? undefined : { rows: scheduleList.rows } };
+  useAllEntitySchedules: args => {
+    scheduleList.args = args;
+    return { rows: args.skip ? [] : scheduleList.rows };
   },
 }));
 
@@ -159,12 +159,18 @@ describe('RunHistoryPage schedule filter and links (EL-7011 CR-22)', () => {
   it('CR-22 ?schedule_id=4 sends schedule_id to the list and preselects the filter', () => {
     renderAt('/agents/all/127/history?schedule_id=4', { scheduleEntityType: 'agent' });
 
-    expect(scheduleList.args.args).toMatchObject({ projectId: 2, entityType: 'agent', entityId: '127' });
+    expect(scheduleList.args).toMatchObject({ entityType: 'agent', entityId: '127', skip: false });
     expect(containerProps.current.queryParams).toEqual({ schedule_id: 4 });
     expect(screen.getByLabelText('Schedule')).toHaveValue('4');
 
     fireEvent.change(screen.getByLabelText('Schedule'), { target: { value: '' } });
     expect(containerProps.current.queryParams).toEqual({});
+  });
+
+  it('loads every page of the entity schedules so every name can link', () => {
+    renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
+
+    expect(scheduleList.args).toEqual({ entityType: 'agent', entityId: '127', skip: false });
   });
 
   it('CR-22 a schedule not in the caller list shows a plain name', () => {
@@ -224,6 +230,6 @@ describe('RunHistoryPage schedule filter and links (EL-7011 CR-22)', () => {
 
     expect(screen.queryByLabelText('Schedule')).not.toBeInTheDocument();
     expect(containerProps.current.extraColumns).toBeUndefined();
-    expect(scheduleList.args.options.skip).toBe(true);
+    expect(scheduleList.args.skip).toBe(true);
   });
 });
