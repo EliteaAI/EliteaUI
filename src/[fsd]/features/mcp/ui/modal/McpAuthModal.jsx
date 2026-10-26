@@ -55,6 +55,8 @@ const McpAuthModal = memo(props => {
     formClientId = '',
     formClientSecret = '',
     formScopes,
+    // Default app mode (#7149): the admin app's secret is resolved server-side from this id
+    oauthAppId,
     projectId,
     toolkitId,
     toolkitType, // Pre-built MCP type (e.g., 'mcp_github') - used as storage key
@@ -72,6 +74,8 @@ const McpAuthModal = memo(props => {
   const oauthAuthorizationServer = mcpAuthMetadata?.oauthAuthorizationServer;
   const oauthMetadata = mcpAuthMetadata?.oauthMetadata;
   const providedSettings = mcpAuthMetadata?.providedSettings;
+  // From the credential form, or from the runtime's sign-in prompt for a Default-app credential
+  const effectiveOAuthAppId = oauthAppId || providedSettings?.oauth_app_id;
   const resourceScopes = mcpAuthMetadata?.resourceScopes;
   const protectedResource = mcpAuthMetadata?.protectedResource;
 
@@ -132,8 +136,12 @@ const McpAuthModal = memo(props => {
   }, []);
 
   const clientRequirements = useMemo(
-    () => McpClientRegistrationHelpers.getOAuthClientRequirements(oauthAuthorizationServer, providedSettings),
-    [oauthAuthorizationServer, providedSettings],
+    () =>
+      McpClientRegistrationHelpers.getOAuthClientRequirements(
+        oauthAuthorizationServer,
+        effectiveOAuthAppId ? { ...providedSettings, has_mcp_client_secret: true } : providedSettings,
+      ),
+    [oauthAuthorizationServer, providedSettings, effectiveOAuthAppId],
   );
   const hasAuthServerMetadata = Boolean(
     oauthAuthorizationServer?.authorization_endpoint &&
@@ -249,6 +257,7 @@ const McpAuthModal = memo(props => {
         authWindow, // Pass the pre-opened window
         projectId,
         toolkitId,
+        oauthAppId: effectiveOAuthAppId,
         // Pass toolkitType for pre-built MCPs so tokens are stored under toolkitType key
         toolkitType: isPrebuildMcp ? toolkitType : undefined,
       });
@@ -256,7 +265,7 @@ const McpAuthModal = memo(props => {
       // Save credentials if checkbox is checked and user provided them
       const finalClientId = client_id?.trim() || clientId;
       const finalClientSecret = client_secret?.trim() || clientSecret;
-      if (saveCredentials && (finalClientId || finalClientSecret)) {
+      if (saveCredentials && !effectiveOAuthAppId && (finalClientId || finalClientSecret)) {
         McpAuthHelpers.setSavedCredentials({
           serverUrl: storageKey,
           clientId: finalClientId,
@@ -303,6 +312,7 @@ const McpAuthModal = memo(props => {
     toolkitType,
     isPrebuildMcp,
     saveCredentials,
+    effectiveOAuthAppId,
   ]);
 
   const onClientIdChange = useCallback(e => {
@@ -313,9 +323,14 @@ const McpAuthModal = memo(props => {
     setClientSecret(e.target.value);
   }, []);
 
-  const onScopeChange = useCallback(e => {
-    setScope(e.target.value);
-  }, []);
+  const onScopeChange = useCallback(
+    e => {
+      // The default app's scopes are set by the administrator
+      if (effectiveOAuthAppId) return;
+      setScope(e.target.value);
+    },
+    [effectiveOAuthAppId],
+  );
 
   const onSaveCredentialsChange = useCallback(e => {
     setSaveCredentials(e.target.checked);
@@ -402,6 +417,7 @@ const McpAuthModal = memo(props => {
             saveCredentials={saveCredentials}
             onSaveCredentialsChange={onSaveCredentialsChange}
             showSaveCredentials={showsCredentialFields}
+            scopeLocked={Boolean(effectiveOAuthAppId)}
           />
         ) : (
           <Typography

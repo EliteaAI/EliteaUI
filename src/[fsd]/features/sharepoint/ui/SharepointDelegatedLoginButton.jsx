@@ -23,6 +23,7 @@ const SharepointDelegatedLoginButton = memo(props => {
       client_id: spConfig?.client_id,
       client_secret: spConfig?.client_secret,
       scopes: spConfig?.scopes,
+      oauth_app_id: spConfig?.oauth_app_id,
     },
     toolkitId,
   });

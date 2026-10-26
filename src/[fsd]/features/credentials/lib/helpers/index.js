@@ -8,3 +8,4 @@ export * as LlmModelFormHelpers from './llmModelForm.helpers.js';
 export * as CredentialLabelHelpers from './credentialLabel.helpers';
 export * as CredentialsListHelpers from './credentialsList.helpers';
 export * as StoredLoginHelpers from './storedLogin.helpers';
+export * as OAuthAppHelpers from './oauthApp.helpers';

@@ -11,7 +11,7 @@ import {
   ConfigurationTitlesConstants,
   LlmModelFormConstants,
 } from '@/[fsd]/features/credentials/lib/constants';
-import { CredentialProbeHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import { CredentialProbeHelpers, OAuthAppHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { CredentialLogoutModal, LlmModelForm } from '@/[fsd]/features/credentials/ui';
 import { CREDENTIALS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthFlowHelpers, McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
@@ -50,15 +50,24 @@ const CredentialForm = memo(props => {
     setApiError,
   } = props;
   const [view, setView] = useState(ToolkitViewOptions.Form);
-  const { setFieldValue } = useFormikContext();
+  const {
+    setFieldValue,
+    resetForm,
+    values: formikValues,
+    initialValues: formikInitialValues,
+  } = useFormikContext();
+  const formikStateRef = useRef({});
+  formikStateRef.current = { values: formikValues, initialValues: formikInitialValues };
 
   const [searchParams] = useSearchParams();
 
   const { personal_project_id } = useSelector(state => state.user);
   const selectedProjectId = useSelectedProjectId();
+  // Teams/Outlook/SharePoint credentials are never shared: every project uses the admin's OAuth app instead
   const excludedFields = useMemo(() => {
-    return selectedProjectId !== PUBLIC_PROJECT_ID ? ['shared'] : [];
-  }, [selectedProjectId]);
+    const isOAuthAppCredential = OAuthAppHelpers.isOAuthAppCredentialType(credentialDetails?.type);
+    return selectedProjectId !== PUBLIC_PROJECT_ID || isOAuthAppCredential ? ['shared'] : [];
+  }, [selectedProjectId, credentialDetails?.type]);
 
   const toolType = useMemo(() => {
     return credentialDetails?.type || '';
@@ -135,6 +144,21 @@ const CredentialForm = memo(props => {
     [onChangeCredentialDetail, setFieldValue, setValidationErrorMessages],
   );
 
+  // A value the form fills in on its own (e.g. the admin's default OAuth app) is not a user edit:
+  // it also goes into Formik's baseline, so it never marks the form dirty or blocks leaving after save.
+  const setDefaultField = useCallback(
+    (field, value) => {
+      onChangeCredentialDetail(prevState => updateObjectByPath(prevState || {}, field, value));
+      // resetForm moves Formik's baseline; the user's own edits stay dirty against it
+      const { values: currentValues, initialValues: baseline } = formikStateRef.current;
+      const values = updateObjectByPath(currentValues || {}, field, value);
+      resetForm({ values: updateObjectByPath(baseline || {}, field, value) });
+      // Re-apply the user's own edits on top of the new baseline
+      Object.keys(values).forEach(key => setFieldValue(key, values[key], false));
+    },
+    [onChangeCredentialDetail, resetForm, setFieldValue],
+  );
+
   const onSaveConfiguration = useCallback(
     async config => {
       setConfiguration({
@@ -168,6 +192,7 @@ const CredentialForm = memo(props => {
       client_id: credentialDetails?.settings?.client_id,
       client_secret: credentialDetails?.settings?.client_secret,
       scopes: credentialDetails?.settings?.scopes,
+      oauth_app_id: credentialDetails?.settings?.oauth_app_id,
     },
   });
 
@@ -304,6 +329,7 @@ const CredentialForm = memo(props => {
           // editToolDetail={values}
           setEditToolDetail={onChangeCredentialDetail}
           editField={editField}
+          setDefaultField={setDefaultField}
           toolErrors={toolErrors}
           setToolErrors={setToolErrors}
           showValidation={showValidation}

@@ -4,7 +4,7 @@ import YAML from 'js-yaml';
 
 import { Box, FormControlLabel, Typography } from '@mui/material';
 
-import { CredentialsSelect } from '@/[fsd]/features/credentials';
+import { CredentialsSelect, OAuthAppSelect } from '@/[fsd]/features/credentials';
 import { OpenApiHelpers, ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { ArrayFieldInput, CheckboxListInput } from '@/[fsd]/features/toolkits/ui/form/tool-base';
@@ -34,6 +34,7 @@ const ToolBaseProperty = memo(props => {
     setToolErrors,
     settings,
     editField,
+    setDefaultField,
     handleInputChange,
     required,
     specifiedProjectId,
@@ -46,6 +47,7 @@ const ToolBaseProperty = memo(props => {
     options: presetOptions,
     noAccordionWrapper = false,
     onCredentialReload,
+    credentialType,
   } = props;
 
   const styles = toolBasePropertyStyles(theme);
@@ -263,6 +265,26 @@ const ToolBaseProperty = memo(props => {
           />
         )}
       </>
+    );
+  }
+  if (uiComponent === 'oauth_app_select') {
+    return (
+      <OAuthAppSelect
+        key={k}
+        k={k}
+        value={settings[k]}
+        credentialType={credentialType}
+        label={label}
+        description={description}
+        required={required}
+        editField={editField}
+        setDefaultField={setDefaultField || editField}
+        fieldPath={buildEditFieldPath(k)}
+        endpointPath={buildEditFieldPath('oauth_discovery_endpoint')}
+        endpoint={settings?.oauth_discovery_endpoint}
+        disabled={disableConfigFields || disabled}
+        appError={settings?.app_error}
+      />
     );
   }
   if (uiComponent === 'checkbox_list') {
