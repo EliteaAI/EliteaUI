@@ -697,3 +697,44 @@ describe('R2.1 R3.2 R4.3 EL-7011 schedule details, update, test run and runs', (
     expect(fetchSpy.mock.calls).toHaveLength(callsBefore + 1);
   });
 });
+
+describe('mutations invalidate only the schedule they change', () => {
+  let fetchSpy;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async () => jsonResponse({ id: 7, rows: [] }));
+  });
+
+  const urlsAfter = async callsBefore =>
+    requestedUrls(fetchSpy)
+      .slice(callsBefore)
+      .map(url => url.pathname);
+
+  it.each([
+    ['updateSchedule', { projectId: 5, scheduleId: 7 }],
+    ['runSchedule', { projectId: 5, scheduleId: 7, trigger: 'test' }],
+    ['pauseSchedule', { projectId: 5, scheduleId: 7 }],
+    ['resumeSchedule', { projectId: 5, scheduleId: 7 }],
+  ])('%s refetches schedule 7 and its runs, not schedule 8', async (endpoint, args) => {
+    const store = makeStore();
+    const { endpoints } = scheduleApi;
+    for (const scheduleId of [7, 8]) {
+      await store.dispatch(endpoints.getSchedule.initiate({ projectId: 5, scheduleId }));
+      await store.dispatch(endpoints.getScheduleRuns.initiate({ projectId: 5, scheduleId }));
+    }
+    const callsBefore = fetchSpy.mock.calls.length;
+
+    await store.dispatch(endpoints[endpoint].initiate(args));
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    const paths = (await urlsAfter(callsBefore)).filter(
+      path => !path.endsWith('/pause') && !path.endsWith('/resume'),
+    );
+    expect(paths.some(path => path.endsWith('/7'))).toBe(true);
+    expect(paths.some(path => path.endsWith('/7/runs'))).toBe(true);
+    expect(paths.some(path => path.endsWith('/8') || path.endsWith('/8/runs'))).toBe(false);
+  });
+});

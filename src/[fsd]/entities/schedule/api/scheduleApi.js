@@ -10,6 +10,16 @@ const SCHEDULE_SETTINGS_TAG = 'SCHEDULE_SETTINGS_TAG';
 const isSet = value => value !== undefined && value !== null && value !== '' && value?.length !== 0;
 
 const schedulesPath = projectId => `/elitea_core/schedules/prompt_lib/${projectId}`;
+const LIST_ID = 'LIST';
+const listTag = { type: SCHEDULES_TAG, id: LIST_ID };
+
+// A change to one schedule refetches the lists, that schedule and its runs; other schedules stay cached
+const scheduleTags = scheduleId => [
+  listTag,
+  { type: SCHEDULES_TAG, id: scheduleId },
+  { type: SCHEDULE_RUNS_TAG, id: scheduleId },
+];
+
 const schedulePath = (projectId, scheduleId) => `${schedulesPath(projectId)}/${scheduleId}`;
 
 // POST .../pause or .../resume with no body. Enabled changes in every cached list entry at once
@@ -35,7 +45,7 @@ const setEnabledMutation = (build, action, enabled) =>
         patches.forEach(patch => patch.undo());
       }
     },
-    invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG, SCHEDULE_RUNS_TAG]),
+    invalidatesTags: (_, error, { scheduleId }) => (error ? [] : scheduleTags(scheduleId)),
   });
 
 export const scheduleApi = eliteaApi
@@ -83,12 +93,12 @@ export const scheduleApi = eliteaApi
           ...response,
           runWithoutAskingAllowed: response?.run_without_asking_allowed === true,
         }),
-        providesTags: [SCHEDULES_TAG],
+        providesTags: [listTag],
       }),
 
       getSchedule: build.query({
         query: ({ projectId, scheduleId }) => ({ url: schedulePath(projectId, scheduleId) }),
-        providesTags: [SCHEDULES_TAG],
+        providesTags: (_, _error, { scheduleId }) => [{ type: SCHEDULES_TAG, id: scheduleId }],
       }),
 
       getScheduleRuns: build.query({
@@ -96,7 +106,7 @@ export const scheduleApi = eliteaApi
           url: `${schedulePath(projectId, scheduleId)}/runs`,
           params: { limit: pageSize, offset: page * pageSize },
         }),
-        providesTags: [SCHEDULE_RUNS_TAG],
+        providesTags: (_, _error, { scheduleId }) => [{ type: SCHEDULE_RUNS_TAG, id: scheduleId }],
       }),
 
       // One run with its log `events` and `summary`
@@ -104,7 +114,7 @@ export const scheduleApi = eliteaApi
         query: ({ projectId, scheduleId, runId }) => ({
           url: `${schedulePath(projectId, scheduleId)}/runs/${runId}`,
         }),
-        providesTags: [SCHEDULE_RUNS_TAG],
+        providesTags: (_, _error, { scheduleId }) => [{ type: SCHEDULE_RUNS_TAG, id: scheduleId }],
       }),
 
       createSchedule: build.mutation({
@@ -113,7 +123,7 @@ export const scheduleApi = eliteaApi
           method: 'POST',
           body,
         }),
-        invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG]),
+        invalidatesTags: (_, error) => (error ? [] : [listTag]),
       }),
 
       // Dry run of the save risk scan; it writes nothing, so it invalidates nothing
@@ -131,7 +141,7 @@ export const scheduleApi = eliteaApi
           method: 'POST',
           body: { trigger },
         }),
-        invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG, SCHEDULE_RUNS_TAG]),
+        invalidatesTags: (_, error, { scheduleId }) => (error ? [] : scheduleTags(scheduleId)),
       }),
 
       // enabled is never sent: pause and resume are their own actions
@@ -142,7 +152,7 @@ export const scheduleApi = eliteaApi
           method: 'PUT',
           body,
         }),
-        invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG, SCHEDULE_RUNS_TAG]),
+        invalidatesTags: (_, error, { scheduleId }) => (error ? [] : scheduleTags(scheduleId)),
       }),
 
       pauseSchedule: setEnabledMutation(build, 'pause', false),
@@ -155,7 +165,8 @@ export const scheduleApi = eliteaApi
           body: { owner_id: ownerId },
         }),
         // A 403 or 404 means the row changed on the server, so the list refetches too
-        invalidatesTags: (_, error) => (!error || [403, 404].includes(error.status) ? [SCHEDULES_TAG] : []),
+        invalidatesTags: (_, error, { scheduleId }) =>
+          !error || [403, 404].includes(error.status) ? scheduleTags(scheduleId) : [],
       }),
 
       deleteSchedule: build.mutation({
@@ -163,7 +174,7 @@ export const scheduleApi = eliteaApi
           url: schedulePath(projectId, scheduleId),
           method: 'DELETE',
         }),
-        invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG]),
+        invalidatesTags: (_, error) => (error ? [] : [listTag]),
       }),
 
       // Lazy use only. A function responseHandler also runs for error responses, so branch on ok
@@ -199,7 +210,7 @@ export const scheduleApi = eliteaApi
           };
         },
         invalidatesTags: (result, error) =>
-          !error && (result?.created?.length || result?.updated?.length) ? [SCHEDULES_TAG] : [],
+          !error && (result?.created?.length || result?.updated?.length) ? [listTag] : [],
       }),
 
       // Project setting "Allow Run without asking"; read by any member
@@ -228,7 +239,7 @@ export const scheduleApi = eliteaApi
             patch.undo();
           }
         },
-        invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG]),
+        invalidatesTags: (_, error) => (error ? [] : [listTag]),
       }),
     }),
   });
