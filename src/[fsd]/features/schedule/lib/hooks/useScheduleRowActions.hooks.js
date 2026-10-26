@@ -6,9 +6,8 @@ import {
   usePauseScheduleMutation,
   useResumeScheduleMutation,
   useRunScheduleMutation,
-} from '@/[fsd]/entities/schedule/api/scheduleApi.js';
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks/useSelectedProject.hooks';
-import { useToast } from '@/[fsd]/shared/lib/hooks/useToast.hooks';
+} from '@/[fsd]/entities/schedule';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage, downloadBlobFile } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
@@ -56,7 +55,7 @@ export const useScheduleRowActions = row => {
     [perform, deleteSchedule, projectId, scheduleId, row.name],
   );
 
-  // CR-16: one schedule in the list export format; no onExport means no Export item
+  // One schedule in the list export format; no onExport means no Export item
   const onExport = useCallback(async () => {
     const { data, error } = await exportSchedules({ projectId, ids: [scheduleId] });
     if (error) toastError(buildErrorMessage(error));

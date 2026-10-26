@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 
 import { Box, Link, List, ListItem, Typography } from '@mui/material';
 
-import { buildEntityEditorLink } from '@/[fsd]/entities/schedule/lib/helpers';
+import { buildEntityEditorLink } from '@/[fsd]/entities/schedule';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import BannerMessage from '@/[fsd]/shared/ui/banner-message/BannerMessage';
 import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
@@ -47,7 +47,7 @@ const describeGroup = (code, findings, entityType) => {
   };
 };
 
-// The red boxes under the entity when the risk check blocks the save: one box per cause kind (owner CR 2026-10-21)
+// The red boxes under the entity when the risk check blocks the save: one box per cause kind
 const ScheduleRiskBlockBox = memo(props => {
   const { blocking, entityType, entityId, versionId, projectId } = props;
   const groups = useMemo(() => toRiskItems(blocking), [blocking]);

@@ -24,21 +24,21 @@ const toRunsArgs = (projectId, scheduleId) => ({
   skip: !projectId || scheduleId == null,
 });
 
-// True once the runs of the schedule have arrived, an empty list included (CR-21 scroll and focus wait for it)
+// True once the runs of the schedule have arrived, an empty list included: the scroll and focus wait for it
 export const useScheduleRunsLoaded = scheduleId => {
   const projectId = useSelectedProjectId();
   const { args, skip } = toRunsArgs(projectId, scheduleId);
   return !!useGetScheduleRunsQuery(args, { skip }).currentData;
 };
 
-// The run total the list API sends with the page; undefined until the runs arrive (CR-21 runs count)
+// The run total the list API sends with the page; undefined until the runs arrive
 export const useScheduleRunsTotal = scheduleId => {
   const projectId = useSelectedProjectId();
   const { args, skip } = toRunsArgs(projectId, scheduleId);
   return useGetScheduleRunsQuery(args, { skip }).currentData?.total;
 };
 
-// The runs of one schedule, refreshed every 3 seconds while one of them is running (R4.3, R4.4)
+// The runs of one schedule, refreshed every 3 seconds while one of them is running
 export const useScheduleRuns = scheduleId => {
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
@@ -57,7 +57,7 @@ export const useScheduleRuns = scheduleId => {
   return runs;
 };
 
-// One run with its log, polled every 2 seconds while it runs or waits (owner CR 2026-10-21 test panel log)
+// One run with its log, polled every 2 seconds while it runs or waits
 export const useScheduleRun = (scheduleId, runId) => {
   const projectId = useSelectedProjectId();
 
@@ -65,7 +65,7 @@ export const useScheduleRun = (scheduleId, runId) => {
   const skip = !projectId || runId == null;
   const { currentData, isError, refetch } = useGetScheduleRunQuery(args, { skip });
   const [usageWaitOver, setUsageWaitOver] = useState(false);
-  // A finished run with a conversation gets its tokens and cost shortly after the end (CR-12 D3)
+  // A finished run with a conversation gets its tokens and cost shortly after the end
   const waitingForUsage =
     !!currentData &&
     !isRunActive(currentData.status) &&
@@ -85,7 +85,7 @@ export const useScheduleRun = (scheduleId, runId) => {
   return { run: currentData, isError, refetch };
 };
 
-// The conversation of a paused or ended run: the decision call needs its uuid and paused message (US-41)
+// The conversation of a paused or ended run: the decision call needs its uuid and paused message
 export const useScheduleRunConversation = run => {
   const projectId = useSelectedProjectId();
   const conversationId = run?.conversation_id;

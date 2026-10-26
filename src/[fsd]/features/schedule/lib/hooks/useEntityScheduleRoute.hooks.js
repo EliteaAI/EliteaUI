@@ -17,7 +17,7 @@ export const useEntityScheduleRoute = entityType => {
     // The editor answers "Page not found." without viewMode, so the fallback keeps the form search and adds it
     const query = new URLSearchParams(search);
     query.set(SearchParams.ViewMode, viewMode);
-    // The editor version rides in SearchParams.VersionId: the form locks to it and Save returns to it (R5.3, R5.5)
+    // The editor version rides in SearchParams.VersionId: the form locks to it and Save returns to it
     const versionId = query.get(SearchParams.VersionId);
     query.delete(SearchParams.VersionId);
     const editorLink = buildEntityEditorLink({ entityType, entityId: agentId, tab });

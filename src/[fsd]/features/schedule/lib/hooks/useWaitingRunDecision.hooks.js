@@ -2,9 +2,8 @@ import { useCallback } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { useDecideWaitingRunMutation } from '@/[fsd]/entities/run-history/api/runHistoryApi.js';
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks/useSelectedProject.hooks';
-import { useToast } from '@/[fsd]/shared/lib/hooks/useToast.hooks';
+import { RunHistoryApi } from '@/[fsd]/entities/run-history';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { buildErrorMessage } from '@/common/utils';
 
 // Owner-only approve or reject of a waiting schedule run. Returns undefined for any other
@@ -13,7 +12,7 @@ export const useWaitingRunDecision = ({ schedule, onDecided }) => {
   const projectId = useSelectedProjectId();
   const userId = useSelector(state => state.user.id);
   const { toastError, toastInfo } = useToast();
-  const [decideWaitingRun] = useDecideWaitingRunMutation();
+  const [decideWaitingRun] = RunHistoryApi.useDecideWaitingRunMutation();
 
   const onHitlResume = useCallback(
     async ({ action, conversationUuid, messageId }) => {

@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { useChangeScheduleOwnerMutation } from '@/[fsd]/entities/schedule/api/scheduleApi';
+import { useChangeScheduleOwnerMutation } from '@/[fsd]/entities/schedule';
 import { useSelectedProjectId, useToast, useUserList } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import BannerMessage from '@/[fsd]/shared/ui/banner-message/BannerMessage';

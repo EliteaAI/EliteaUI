@@ -18,7 +18,7 @@ const CARDS = [
 ];
 
 /**
- * The two approval rules as radio cards (owner CR 2026-10-21). `disabledNote` replaces the text of a
+ * The two approval rules as radio cards. `disabledNote` replaces the text of a
  * disabled "Run without asking"; `children` shows inside that card while it is selected.
  */
 const ApprovalRuleCards = memo(props => {

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useLocation, useSearchParams } from 'react-router-dom';
 
-import { compareRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
+import { compareRunTimestamp } from '@/[fsd]/entities/run-history';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useApplicationDetailsQuery } from '@/api/applications';
 
@@ -16,7 +16,7 @@ const scrollBehavior = () => (matches('(prefers-reduced-motion: reduce)') ? 'aut
 const byNewest = (a, b) => compareRunTimestamp(b.started_at, a.started_at);
 
 /**
- * The Edit schedule page state shared by the test panel and the Runs section (owner CR 2026-10-21):
+ * The Edit schedule page state shared by the test panel and the Runs section:
  * the run the panel shows, the open state of the Runs section and the scroll targets.
  */
 export const useScheduleRunsView = (scheduleId, applicationId) => {
@@ -24,7 +24,7 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
   const runs = useScheduleRuns(scheduleId);
   const runsLoaded = useScheduleRunsLoaded(scheduleId);
   const runsTotal = useScheduleRunsTotal(scheduleId);
-  // The approval notice links here with the conversation of the waiting run (US-41 R1.2)
+  // The approval notice links here with the conversation of the waiting run
   const linkedConversationId = useSearchParams()[0].get('history_run_id');
   // undefined: nothing chosen yet, so the notice link decides; null: back to the test
   const [chosenRunId, setChosenRunId] = useState();
@@ -59,7 +59,7 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
     if (!isWide()) panelRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
   }, []);
   const backToTest = useCallback(() => setChosenRunId(null), []);
-  // Run History (CR-21): open the Runs section and select the run when one is named. The effect below
+  // Run History: open the Runs section and select the run when one is named. The effect below
   // scrolls and focuses once the section and the runs are there. The arg may be a click event.
   const showRunHistory = useCallback(arg => {
     const runId = arg?.runId;

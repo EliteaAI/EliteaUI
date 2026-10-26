@@ -12,8 +12,8 @@ import { VISUALLY_HIDDEN } from '../lib/constants';
 const MAX_VARIABLE_CHIPS = 3;
 
 /**
- * The read-only prompt of the schedule with Run test (owner CR 2026-10-21 test panel log), as one pinned
- * line (CR-21 option A): the chevron opens the full prompt and the variable chips; a test start closes it.
+ * The read-only prompt of the schedule with Run test, as one pinned
+ * line: the chevron opens the full prompt and the variable chips; a test start closes it.
  * The prompt changes in the form; `onTestRun` saves a changed form first. `running`: a test runs now.
  * `description`: read with Run test by screen readers.
  */

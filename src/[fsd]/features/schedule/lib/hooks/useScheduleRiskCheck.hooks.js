@@ -9,11 +9,11 @@ const IDLE_STATE = { status: RISK_CHECK_STATUS.IDLE, result: null };
 const statusOf = result => (result.blocking?.length ? RISK_CHECK_STATUS.BLOCKED : RISK_CHECK_STATUS.CLEAR);
 
 /**
- * The dry-run risk check of the schedule form (owner CR 2026-10-21). It runs when the entity type, the
+ * The dry-run risk check of the schedule form. It runs when the entity type, the
  * entity or the version changes and when the person returns to the tab. `runCheck()` runs it now
  * and resolves to the findings, or null when the check did not run. `applyFindings(data)` takes the
  * findings of a 409 save answer. On an edit, `scheduleId` makes the server scan as the schedule owner
- * and answer `confirmed` (US-33 R2.6, BUG-36).
+ * and answer `confirmed`.
  */
 export const useScheduleRiskCheck = ({ projectId, entityType, applicationId, versionId, scheduleId }) => {
   const [checkRisk] = useCheckScheduleRiskMutation();

@@ -8,16 +8,6 @@ import { Box, CircularProgress, Grid, Link, Typography } from '@mui/material';
 import { GenerateEntityButton } from '@/[fsd]/entities/generate-entity-with-ai';
 import { useGetScheduleSettingsQuery } from '@/[fsd]/entities/schedule';
 import { VersionSelect, getDefaultVersionId } from '@/[fsd]/entities/version';
-import {
-  getEntityLock,
-  isPromptShown,
-  resetWhatToRun,
-  scheduleFormSchema,
-  syncPromptVariables,
-  toCreateBody,
-  toFieldErrors,
-  toUpdateBody,
-} from '@/[fsd]/features/schedule/lib/helpers';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
@@ -39,6 +29,16 @@ import { StyledGridContainer, TabBarItems } from '@/pages/Common/Components/Styl
 import RouteDefinitions from '@/routes';
 
 import { APPROVAL_RULE, RISK_CHECK_STATUS, RISK_NAME_MISMATCH, RISK_SAVE_ERROR } from '../lib/constants';
+import {
+  getEntityLock,
+  isPromptShown,
+  resetWhatToRun,
+  scheduleFormSchema,
+  syncPromptVariables,
+  toCreateBody,
+  toFieldErrors,
+  toUpdateBody,
+} from '../lib/helpers';
 import { useScheduleRiskCheck } from '../lib/hooks';
 import BuildScheduleWithAiModal from './BuildScheduleWithAiModal';
 import FieldError from './FieldError';
@@ -59,11 +59,19 @@ const APPROVAL_RULE_ITEMS = [
   { value: APPROVAL_RULE.RUN_WITHOUT_ASKING, label: 'Run without asking' },
 ];
 const TYPE_LABEL = Object.fromEntries(TYPE_ITEMS.map(({ value, label }) => [value, label]));
-// Fields with their own message in the form; a 400 for any other field goes to the banner (R6.3)
-const FIELDS_WITH_INPUT = ['name', 'description', 'application_id', 'version_id', 'approval_rule', 'cron', 'expires_at'];
+// Fields with their own message in the form; a 400 for any other field goes to the banner
+const FIELDS_WITH_INPUT = [
+  'name',
+  'description',
+  'application_id',
+  'version_id',
+  'approval_rule',
+  'cron',
+  'expires_at',
+];
 const PROMPT_FIELDS = ['prompt', 'variables'];
 const AGENTS_TYPE = { agent: 'classic', pipeline: 'pipeline' };
-// The risk check states that keep Save disabled (owner CR 2026-10-21)
+// The risk check states that keep Save disabled
 const RISK_STATES_WITHOUT_SAVE = [
   RISK_CHECK_STATUS.CHECKING,
   RISK_CHECK_STATUS.BLOCKED,
@@ -192,7 +200,7 @@ const ScheduleForm = memo(props => {
       const risk = await riskCheck.runCheck();
       if (!risk) return toastError('The risk check did not run. Try again.');
       if (risk.blocking?.length) return;
-      // An edit that keeps the stored "Run without asking" consent saves without a new review (R2.6)
+      // An edit that keeps the stored "Run without asking" consent saves without a new review
       const keepsConsent = risk.confirmed && values.approval_rule === APPROVAL_RULE.RUN_WITHOUT_ASKING;
       if (risk.sensitive?.length && !keepsConsent) setReview({ values, runAfterSave, changed: false });
       else await saveSchedule(values, helpers, runAfterSave);
@@ -255,7 +263,7 @@ const ScheduleForm = memo(props => {
       setTestRunPending(false);
     }
   };
-  // Unsaved changes open the leave dialog (R1.3); a save in progress never does
+  // Unsaved changes open the leave dialog; a save in progress never does
   const blockOptions = useMemo(
     () => ({ blockCondition: formik.dirty && !formik.isSubmitting }),
     [formik.dirty, formik.isSubmitting],
@@ -274,7 +282,7 @@ const ScheduleForm = memo(props => {
     page: list.page,
     params: { query: list.query, agents_type: AGENTS_TYPE[values.type] },
   });
-  // A failed page keeps the loaded items and gives its page back, so the next scroll asks the same offset (R1.4)
+  // A failed page keeps the loaded items and gives its page back, so the next scroll asks the same offset
   useEffect(() => {
     if (isListError && list.page > 0 && listArgs?.page === list.page)
       setList(prev => ({ ...prev, page: prev.page - 1 }));
@@ -290,7 +298,7 @@ const ScheduleForm = memo(props => {
   useEffect(() => {
     if (lockActive && !isDetailsFetching && lock.unavailable) {
       setLockFailed(true);
-      // Clear the entity in the baseline too, so only the user's own edits make the form dirty (R1.3)
+      // Clear the entity in the baseline too, so only the user's own edits make the form dirty
       resetForm({ values: { ...initialValues, application_id: '' } });
       setValues(prev => ({ ...prev, application_id: '' }), false);
     }
@@ -304,9 +312,9 @@ const ScheduleForm = memo(props => {
       String(details.id) === String(values.application_id) &&
       !values.version_id
     ) {
-      // A form nested in an editor keeps the editor's version (R5.3)
+      // A form nested in an editor keeps the editor's version
       const versionId = lockedEntity?.versionId ?? getDefaultVersionId(details);
-      // The preset for the URL entity belongs to the baseline: opening and leaving asks nothing (R1.3)
+      // The preset for the URL entity belongs to the baseline: opening and leaving asks nothing
       if (!formik.dirty && String(values.application_id) === String(initialValues.application_id))
         resetForm({ values: { ...values, version_id: versionId } });
       else setFieldValue('version_id', versionId);
@@ -518,7 +526,7 @@ const ScheduleForm = memo(props => {
     </>
   );
   // A form nested in an editor takes the entity and version from the route: its selectors and WHAT TO RUN
-  // are hidden and the prompt fields move under GENERAL (R5.3, R5.4)
+  // are hidden and the prompt fields move under GENERAL
   const hideWhatToRun = lockActive;
 
   const sections = [

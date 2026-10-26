@@ -18,7 +18,7 @@ import RiskToolCard from './RiskToolCard';
 const NAME_LABEL_ID = 'risk-review-name-label';
 
 /**
- * "Review risks before scheduling", opened on Save when the check finds sensitive tools (owner CR 2026-10-21).
+ * "Review risks before scheduling", opened on Save when the check finds sensitive tools.
  * `onConfirm({ rule, confirmedName })` saves; confirmedName comes only with "Run without asking".
  * `changed` shows the banner of a 409 risk_changed; `nameError` the server text of a 400 risk_name_mismatch;
  * `saving` disables both buttons.

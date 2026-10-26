@@ -1,11 +1,11 @@
-import { compareRunTimestamp, formatRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
-import { fmtCost } from '@/[fsd]/features/settings/lib/helpers/analyticsCommon.helpers';
+import { compareRunTimestamp, formatRunTimestamp } from '@/[fsd]/entities/run-history';
+import { AnalyticCommonHelpers } from '@/[fsd]/features/settings';
 import { ROLES } from '@/common/constants';
 
 const RUN_STARTED_FORMAT = 'd MMM, HH:mm';
 
-// The labels live in the schedule entity, so the run history list can use them too (CR-22)
-export { toRunStatusLabel, toWord } from '@/[fsd]/entities/schedule/lib/helpers';
+// The labels live in the schedule entity, so the run history list can use them too
+export { toRunStatusLabel, toWord } from '@/[fsd]/entities/schedule';
 
 export const formatRunStarted = value => formatRunTimestamp(value, RUN_STARTED_FORMAT);
 
@@ -17,7 +17,7 @@ export const findNewestTestRun = runs =>
       undefined,
     );
 
-// Owner CR 2026-10-21 test panel log: the server polls stop once a run leaves these statuses
+// The server polls stop once a run leaves these statuses
 const ACTIVE_RUN_STATUSES = ['running', 'waiting_for_approval'];
 // The level a log line takes when the server sends none
 const LOG_KIND_LEVELS = { risk_check: 'warning', paused: 'warning', finished: 'success' };
@@ -39,7 +39,7 @@ const MAX_ROUNDED_COST = 0.01;
 
 // The Analytics format, except that a small cost rounds to the nearest 4th decimal (0.00161 reads $0.0016)
 const formatRunCost = costUsd =>
-  costUsd >= MIN_ROUNDED_COST && costUsd < MAX_ROUNDED_COST ? `$${costUsd.toFixed(4)}` : fmtCost(costUsd);
+  costUsd >= MIN_ROUNDED_COST && costUsd < MAX_ROUNDED_COST ? `$${costUsd.toFixed(4)}` : AnalyticCommonHelpers.fmtCost(costUsd);
 
 export const formatRunSummary = summary =>
   [
@@ -54,12 +54,12 @@ export const toLogLevel = event => event.level ?? LOG_KIND_LEVELS[event.kind] ??
 
 // lean: headings, emphasis, code, quotes and links only; use a markdown parser if tables or HTML show up
 // The text of a chat message: the API keeps it in the `text_message` item, as convertChatConversationMessages
-// reads it; an older message has it in `content` (CR-21)
+// reads it; an older message has it in `content`
 const toMessageText = message =>
   message.message_items?.find(item => item.item_type === 'text_message')?.item_details?.content ||
   message.content;
 
-// The text of the last answer with text in a converted conversation; undefined without one (CR-21)
+// The text of the last answer with text in a converted conversation; undefined without one
 export const findRunAnswer = messages =>
   messages
     .filter(message => message.role === ROLES.Assistant)
@@ -72,7 +72,7 @@ export const toPlainText = markdown =>
     .replace(/^>\s?/gm, '')
     .replace(/\[([^\][]*)\]\([^)]*\)/g, '$1')
     .replace(/(\*\*|__|\*|`)/g, '')
-    // A blank line would fill a line of the clamped preview with nothing (CR-21)
+    // A blank line would fill a line of the clamped preview with nothing
     .replace(/\n\s*\n/g, '\n')
     .trim();
 
