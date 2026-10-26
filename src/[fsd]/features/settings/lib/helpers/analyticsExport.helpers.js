@@ -1,8 +1,8 @@
 import { format } from 'date-fns';
 
-import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { ExcelFormats, exportToExcel, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils';
 
+import * as AnalyticsCommonConstants from '../constants/analyticsCommon.constants.js';
 import {
   formatAgentEntityLabel,
   formatAgentModelLabel,
@@ -471,7 +471,7 @@ const buildAgentsSheet = (data, meta) => {
     rows: topAgents.length > 0 ? topAgents : emptyRow(topAgentCols, NO_DATA_MSG),
   });
 
-  // BUG-31 (US-57 R3.1, R3.2): the agents endpoint sends no daily chat counts today, so the section shows
+  // The agents endpoint sends no daily chat counts today, so the section shows
   // only when it has rows, like the Agents tab chart; the Overview card count stays in Summary Metrics
   if (chat_daily.length > 0) {
     sections.push({

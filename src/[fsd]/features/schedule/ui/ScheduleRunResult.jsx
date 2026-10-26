@@ -5,7 +5,7 @@ import { Box, Tooltip, Typography } from '@mui/material';
 import { formatRunSummary, toPlainText } from '../lib/helpers';
 import ScheduleRunStatusChip from './ScheduleRunStatusChip';
 
-// The result card of an ended run (owner CR 2026-10-21 test panel log); `answer` is the last agent message
+// The result card of an ended run; `answer` is the last agent message
 const ScheduleRunResult = memo(props => {
   const { run, answer } = props;
 
@@ -68,7 +68,7 @@ const scheduleRunResultStyles = () => ({
     borderRadius: '0.5rem',
     border: `0.0625rem solid ${palette.border.lines}`,
   }),
-  // CR-21 fit spec: one row, so the card stays 88 px; the stats shrink with an ellipsis, the chip does not
+  // One row, so the card stays 88 px; the stats shrink with an ellipsis, the chip does not
   header: {
     display: 'flex',
     alignItems: 'center',
@@ -83,7 +83,7 @@ const scheduleRunResultStyles = () => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
   },
-  // CR-21 option A: 2 answer lines under a 1000 px window height, so the card fits the right block
+  // 2 answer lines under a 1000 px window height, so the card fits the right block
   answer: {
     whiteSpace: 'pre-line',
     display: '-webkit-box',

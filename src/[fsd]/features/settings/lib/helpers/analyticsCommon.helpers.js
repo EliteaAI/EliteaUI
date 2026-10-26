@@ -71,7 +71,7 @@ export const fmtCost = (usd, belowResolution = false) => {
 // An unrecognised trigger_source still renders as itself rather than disappearing
 export const triggerSourceLabel = source => TRIGGER_SOURCE_LABELS[source] || source || 'Unknown';
 
-// A missing or empty kind (US-56 not deployed) shows a dash
+// A missing or empty kind (older servers do not send it) shows a dash
 export const entityKindLabel = kind => ENTITY_KIND_LABELS[kind] || '-';
 
 export const formatVersionLabel = versionName => versionName || VERSION_UNKNOWN_LABEL;

@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 
 import { Box, ButtonBase, Chip, Typography } from '@mui/material';
 
-import { compareRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
+import { compareRunTimestamp } from '@/[fsd]/entities/run-history';
 
 import { formatRunDuration, formatRunStarted, toRunStatusLabel } from '../lib/helpers';
 import ScheduleRunStatusChip from './ScheduleRunStatusChip';
@@ -43,7 +43,7 @@ const sortsFor = versionNames => ({
 
 const versionOf = (run, versionNames) => versionNames[run.version_id] ?? NO_VALUE;
 
-// The runs of one schedule as two-line rows (US-32 R4, CR-21). A row opens the run in the test panel;
+// The runs of one schedule as two-line rows. A row opens the run in the test panel;
 // a run without a conversation opens too, and shows its log and reason there.
 const ScheduleRunList = memo(props => {
   const { runs, versionNames = {}, selectedRunId, sort = 'newest', onOpen } = props;

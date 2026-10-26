@@ -5,7 +5,7 @@ import { useDispatch } from 'react-redux';
 import { Box, Typography } from '@mui/material';
 
 import { SCHEDULE_RUNS_TAG, scheduleApi } from '@/[fsd]/entities/schedule';
-import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
+import { BaseBtn } from '@/[fsd]/shared/ui/button';
 
 import { formatExpiresIn } from '../lib/helpers';
 import { useWaitingRunDecision } from '../lib/hooks/useWaitingRunDecision.hooks';
@@ -13,7 +13,7 @@ import { useWaitingRunDecision } from '../lib/hooks/useWaitingRunDecision.hooks'
 const EXPIRY_TICK_MS = 60_000;
 
 /**
- * Approve and Reject at the paused line of a waiting run (US-41, owner CR 2026-10-21 test panel log).
+ * Approve and Reject at the paused line of a waiting run.
  * The same owner-only decision call as the Runs table; the server still checks the owner.
  */
 const ScheduleRunApproval = memo(props => {

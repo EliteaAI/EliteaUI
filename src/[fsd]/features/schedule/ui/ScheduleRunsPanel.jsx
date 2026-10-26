@@ -3,10 +3,9 @@ import { forwardRef, memo, useMemo } from 'react';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { Box, Link, Tooltip, Typography } from '@mui/material';
 
-import { formatRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
-import BannerMessage from '@/[fsd]/shared/ui/banner-message/BannerMessage';
-import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import ViewRunHistoryButton from '@/[fsd]/shared/ui/button/ViewRunHistoryButton';
+import { formatRunTimestamp } from '@/[fsd]/entities/run-history';
+import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
+import { BUTTON_VARIANTS, BaseBtn, ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
 
 import { findNewestTestRun, isRunActive } from '../lib/helpers';
 import { useScheduleRun, useScheduleRunConversation } from '../lib/hooks/useScheduleRuns.hooks';
@@ -23,7 +22,7 @@ const VIEWED_RUN_FORMAT = 'd MMM HH:mm';
 const NO_EVENTS = [];
 
 /**
- * The Test schedule panel of the Edit schedule page (owner CR 2026-10-21 test panel log): the live log
+ * The Test schedule panel of the Edit schedule page: the live log
  * of the newest test run, or of `viewedRun` opened from the Runs section. `onTestRun`, `testRunPending`
  * and `testRunError` come from ScheduleForm's `sidePanel`.
  */
@@ -47,9 +46,9 @@ const ScheduleRunsPanel = memo(
     const run = detail ?? row;
     const conversation = useScheduleRunConversation(run);
 
-    // R3.3: without the run action the panel shows the log and the result only
+    // Without the run action the panel shows the log and the result only
     const showTestTools = !viewedRun && !!schedule.allowed_actions?.includes('run');
-    // CR-21 option A: the info box shows before the first test run only; after it the "i" button holds it
+    // The info box shows before the first test run only; after it the "i" button holds it
     const showInfoBox = showTestTools && !newestTestRun;
     const showInfoButton = showTestTools && !!newestTestRun;
     // A starting test hides the previous test, which is still the newest until the list loads again
@@ -206,7 +205,7 @@ ScheduleRunsPanel.displayName = 'ScheduleRunsPanel';
 /** @type {MuiSx} */
 const scheduleRunsPanelStyles = () => ({
   // In the sticky block (xl, a tall window) the card takes the free height and its body scrolls
-  // CR-21 option A: 1 rem on top and no bottom padding, because the pinned prompt line has its own
+  // 1 rem on top and no bottom padding, because the pinned prompt line has its own
   root: ({ palette, breakpoints }) => ({
     display: 'flex',
     flexDirection: 'column',

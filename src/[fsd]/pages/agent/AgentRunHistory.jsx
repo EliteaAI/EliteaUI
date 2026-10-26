@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-import { toExecutionTypeRow } from '@/[fsd]/entities/run-history/lib/helpers';
+import { toExecutionTypeRow } from '@/[fsd]/entities/run-history';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { RunHistoryPage } from '@/[fsd]/widgets/run-history-page';
 import RouteDefinitions from '@/routes';

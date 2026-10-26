@@ -9,7 +9,7 @@ const MENU_BUTTON_PROPS = { 'aria-label': 'More actions' };
 const ICON_SLOT = { sx: ({ palette }) => ({ color: palette.icon.default }) };
 const SLOT_PROPS = { ListItemIcon: ICON_SLOT };
 
-// CR-16, CR-27 (US-43 R4.3 to R4.5): Export of the Edit schedule page header.
+// Export of the Edit schedule page header.
 // The row hook gives onExport only with the schedules.export permission; without it there is no menu.
 const ScheduleDetailMenu = memo(({ schedule }) => {
   const { onExport, isBusy } = useScheduleRowActions(schedule);

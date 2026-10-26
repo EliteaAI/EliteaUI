@@ -19,8 +19,8 @@ const SVG_ICON_STYLE = { width: '1rem', height: '1rem' };
 const MENU_BUTTON_PROPS = { 'aria-label': 'More actions' };
 
 const ScheduleRowActions = memo(props => {
-  // onOpenRunHistory and hideChangeOwner shape the card menu of the editor Schedules section (US-35)
-  // onExport comes from useScheduleRowActions only with the export permission (CR-16)
+  // onOpenRunHistory and hideChangeOwner shape the card menu of the editor Schedules section
+  // onExport comes from useScheduleRowActions only with the export permission
   const {
     row,
     onRun,

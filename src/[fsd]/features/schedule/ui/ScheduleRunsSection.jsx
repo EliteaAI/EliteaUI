@@ -5,8 +5,8 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Box, Link, MenuItem, Select, Typography } from '@mui/material';
 
 import { AccordionConstants, TextLinkConstants } from '@/[fsd]/shared/lib/constants';
-import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
-import BannerMessage from '@/[fsd]/shared/ui/banner-message/BannerMessage';
+import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
+import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
 
 import { VISUALLY_HIDDEN } from '../lib/constants';
 import ScheduleRunList, { RUN_SORT_OPTIONS } from './ScheduleRunList';
@@ -15,7 +15,7 @@ import ScheduleRunList, { RUN_SORT_OPTIONS } from './ScheduleRunList';
 const SCROLL_MARGIN_TOP = '4.5rem';
 
 /**
- * "Runs of this schedule" under the test panel of the Edit schedule page (CR-21): a collapsible card with
+ * "Runs of this schedule" under the test panel of the Edit schedule page: a collapsible card with
  * a Sort select, the two-line run rows, a polite live region for the shown run and the unknown-run note.
  */
 const ScheduleRunsSection = memo(
@@ -108,7 +108,7 @@ const ScheduleRunsSection = memo(
                     />
                   </Box>
                   {fullHistoryLink && (
-                    // CR-22 (US-32 R6.3): all runs of this schedule in the entity History
+                    // All runs of this schedule in the entity History
                     <Link
                       component={RouterLink}
                       to={fullHistoryLink}

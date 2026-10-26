@@ -2,7 +2,7 @@ import { Fragment, memo, useCallback, useLayoutEffect, useRef, useState } from '
 
 import { Box, Link, Typography } from '@mui/material';
 
-import { formatRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
+import { formatRunTimestamp } from '@/[fsd]/entities/run-history';
 
 import { toLogLevel } from '../lib/helpers';
 
@@ -46,7 +46,7 @@ const ToolResult = memo(({ summary }) => {
 ToolResult.displayName = 'ToolResult';
 
 /**
- * The live log of one run (owner CR 2026-10-21 test panel log): one line per server event.
+ * The live log of one run: one line per server event.
  * `pausedAction` shows right under the last paused line; `emptyText` shows without events.
  */
 const ScheduleRunLog = memo(props => {
@@ -125,7 +125,7 @@ ScheduleRunLog.displayName = 'ScheduleRunLog';
 /** @type {MuiSx} */
 const scheduleRunLogStyles = () => ({
   // 16 lines of 1.375 rem (or 40 % of the window height), then it scrolls inside. In the fixed-height right
-  // block (CR-21 option A) it may shrink to 5 lines (5 x 22 px + 28 px padding), never further
+  // block it may shrink to 5 lines (5 x 22 px + 28 px padding), never further
   root: ({ palette }) => ({
     flex: '0 1 auto',
     minHeight: '8.625rem',
