@@ -8,6 +8,8 @@ const CONVERSATION_INFO_TAG = 'CONVERSATION_INFO_TAG';
 
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
+const LIST_TAG = { type: HISTORY_ITEMS_TAG, id: 'LIST' };
+
 const getHistoryEntityName = source => {
   if (source === ParticipantEntityTypes.Toolkit || source === ParticipantEntityTypes.MCP)
     return ParticipantEntityTypes.Toolkit;
@@ -42,7 +44,10 @@ export const runHistoryApi = eliteaApi
             ...params,
           },
         }),
-        providesTags: [HISTORY_ITEMS_TAG],
+        providesTags: result => [
+          LIST_TAG,
+          ...(result?.rows ?? []).map(({ id }) => ({ type: HISTORY_ITEMS_TAG, id })),
+        ],
         transformResponse: (response, _, args) => serializeRunHistoryListResponse(response, args.page > 0),
         forceRefetch({ currentArg, previousArg }) {
           return currentArg !== previousArg;
@@ -65,7 +70,10 @@ export const runHistoryApi = eliteaApi
             is_hidden: true,
           },
         }),
-        invalidatesTags: [HISTORY_ITEMS_TAG],
+        invalidatesTags: (_result, _error, { historyId }) => [
+          { type: HISTORY_ITEMS_TAG, id: historyId },
+          LIST_TAG,
+        ],
       }),
       // action is 'approve' or 'reject'; await_task_timeout -1 returns without waiting for the run.
       decideWaitingRun: build.mutation({
@@ -74,7 +82,7 @@ export const runHistoryApi = eliteaApi
           method: 'POST',
           body: { message_id: messageId, hitl_resume: true, hitl_action: action, await_task_timeout: -1 },
         }),
-        invalidatesTags: [HISTORY_ITEMS_TAG],
+        invalidatesTags: [LIST_TAG],
       }),
     }),
   });
