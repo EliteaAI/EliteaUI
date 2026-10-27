@@ -7,7 +7,8 @@ let sessionExpired = false;
 const dispatch = vi.fn(action => {
   if (action.type === 'settings/setSessionExpired') sessionExpired = action.payload;
 });
-const store = { getState: () => ({ settings: { sessionExpired } }) };
+let isStreaming = false;
+const store = { getState: () => ({ settings: { sessionExpired, navBlocker: { isStreaming } } }) };
 const probeSession = vi.fn();
 let reauthListener = null;
 const stopReauthListener = vi.fn();
@@ -39,6 +40,7 @@ const { useSocketSessionGuard } = await import('../useSocketSessionGuard.hooks')
 
 const createSocket = () => {
   const managerHandlers = {};
+  const socketHandlers = {};
   const socket = {
     io: {
       on: vi.fn((event, handler) => {
@@ -47,9 +49,13 @@ const createSocket = () => {
       off: vi.fn(),
     },
     connect: vi.fn(),
+    on: vi.fn((event, handler) => {
+      socketHandlers[event] = handler;
+    }),
+    off: vi.fn(),
   };
   socket.disconnect = vi.fn(() => socket);
-  return { socket, managerHandlers };
+  return { socket, managerHandlers, socketHandlers };
 };
 
 const expiredAction = { type: 'settings/setSessionExpired', payload: true };
@@ -60,11 +66,19 @@ describe('useSocketSessionGuard', () => {
     vi.clearAllMocks();
     reauthListener = null;
     sessionExpired = false;
+    isStreaming = false;
   });
 
   afterEach(() => {
+    vi.useRealTimers();
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
     cleanup();
   });
+
+  const setVisibility = state => {
+    Object.defineProperty(document, 'visibilityState', { value: state, configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  };
 
   it('does nothing until the socket exists', () => {
     renderHook(() => useSocketSessionGuard(null));
@@ -167,6 +181,78 @@ describe('useSocketSessionGuard', () => {
     await act(async () => document.dispatchEvent(new Event('visibilitychange')));
 
     expect(probeSession).toHaveBeenCalledTimes(2);
+  });
+
+  it('re-handshakes when the tab returns after a long time hidden, even though the session is alive', async () => {
+    vi.useFakeTimers();
+    probeSession.mockResolvedValue('alive');
+    const { socket } = createSocket();
+    renderHook(() => useSocketSessionGuard(socket));
+
+    act(() => setVisibility('hidden'));
+    vi.setSystemTime(Date.now() + 6 * 60 * 1000);
+    await act(async () => setVisibility('visible'));
+
+    expect(socket.disconnect).toHaveBeenCalledTimes(1);
+    expect(socket.connect).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not re-handshake after a short time hidden', async () => {
+    vi.useFakeTimers();
+    probeSession.mockResolvedValue('alive');
+    const { socket } = createSocket();
+    renderHook(() => useSocketSessionGuard(socket));
+
+    act(() => setVisibility('hidden'));
+    vi.setSystemTime(Date.now() + 30 * 1000);
+    await act(async () => setVisibility('visible'));
+
+    expect(socket.disconnect).not.toHaveBeenCalled();
+  });
+
+  it('keeps a streaming run alive across a long hidden period', async () => {
+    vi.useFakeTimers();
+    isStreaming = true;
+    probeSession.mockResolvedValue('alive');
+    const { socket } = createSocket();
+    renderHook(() => useSocketSessionGuard(socket));
+
+    act(() => setVisibility('hidden'));
+    vi.setSystemTime(Date.now() + 6 * 60 * 1000);
+    await act(async () => setVisibility('visible'));
+
+    expect(socket.disconnect).not.toHaveBeenCalled();
+  });
+
+  it('re-handshakes when the server rejects a send from an anonymous socket', async () => {
+    probeSession.mockResolvedValue('alive');
+    const { socket, socketHandlers } = createSocket();
+    renderHook(() => useSocketSessionGuard(socket));
+
+    await act(async () => socketHandlers.socket_validation_error({ code: 'socket_unauthenticated' }));
+
+    expect(socket.disconnect).toHaveBeenCalledTimes(1);
+    expect(socket.connect).toHaveBeenCalledTimes(1);
+  });
+
+  it('asks for a new login instead of re-handshaking when the rejection came from an expired session', async () => {
+    probeSession.mockResolvedValue('expired');
+    const { socket, socketHandlers } = createSocket();
+    renderHook(() => useSocketSessionGuard(socket));
+
+    await act(async () => socketHandlers.socket_validation_error({ code: 'socket_unauthenticated' }));
+
+    expect(dispatch).toHaveBeenCalledWith(expiredAction);
+    expect(socket.disconnect).not.toHaveBeenCalled();
+  });
+
+  it('ignores validation errors without the unauthenticated code', async () => {
+    const { socket, socketHandlers } = createSocket();
+    renderHook(() => useSocketSessionGuard(socket));
+
+    await act(async () => socketHandlers.socket_validation_error({ content: 'bad payload' }));
+
+    expect(probeSession).not.toHaveBeenCalled();
   });
 
   it('unsubscribes on unmount', () => {
