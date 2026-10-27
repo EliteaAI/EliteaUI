@@ -53,7 +53,12 @@ export const useAnalyticsChatsTable = ({ projectId, dateFrom, dateTo, isPersonal
     { skip: !projectId },
   );
 
-  const { total = 0, rows = [] } = data || {};
+  const {
+    total = 0,
+    rows = [],
+    search_unavailable: searchUnavailable = false,
+    search_truncated: searchTruncated = false,
+  } = data || {};
 
   const handleSearchChange = useCallback(event => {
     setSearch(event.target.value);
@@ -85,6 +90,8 @@ export const useAnalyticsChatsTable = ({ projectId, dateFrom, dateTo, isPersonal
     rows,
     total,
     isFetching,
+    searchUnavailable,
+    searchTruncated,
     showAll,
     page,
     rowsPerPage,

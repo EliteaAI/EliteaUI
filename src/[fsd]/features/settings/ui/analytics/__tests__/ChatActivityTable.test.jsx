@@ -186,6 +186,34 @@ describe('ChatActivityTable — loading states', () => {
     expect(getComputedStyle(rowsWrapper()).opacity).not.toBe('0.5');
   });
 
+  it('says the search is unavailable instead of "no chat usage" when the backend could not search', () => {
+    useAnalyticsChatActivityQuery.mockReturnValue({
+      data: { total: 0, rows: [], search_unavailable: true },
+      isFetching: false,
+    });
+    renderTable();
+
+    expect(screen.getByTestId('analytics-chats-search-unavailable')).toBeInTheDocument();
+    expect(screen.queryByText('No chat usage in this period')).not.toBeInTheDocument();
+  });
+
+  it('tells the user when a search matched more chats than were searched', () => {
+    useAnalyticsChatActivityQuery.mockReturnValue(
+      queryResult({ data: { total: 1, rows: [CHAT_A], search_truncated: true } }),
+    );
+    renderTable();
+
+    expect(screen.getByTestId('analytics-chats-search-truncated')).toBeInTheDocument();
+    expect(screen.getAllByTestId('analytics-chats-row')).toHaveLength(1);
+  });
+
+  it('shows no truncation notice for an ordinary result', () => {
+    useAnalyticsChatActivityQuery.mockReturnValue(queryResult());
+    renderTable();
+
+    expect(screen.queryByTestId('analytics-chats-search-truncated')).not.toBeInTheDocument();
+  });
+
   it('shows the empty message only when not fetching and there are no rows', () => {
     useAnalyticsChatActivityQuery.mockReturnValue({ data: { total: 0, rows: [] }, isFetching: false });
     renderTable();
@@ -241,6 +269,7 @@ describe('ChatActivityTable — sorting', () => {
   it('does not render a sort control for non-sortable columns', () => {
     renderTable();
 
+    expect(screen.queryByTestId('analytics-chats-sort-chat_name')).not.toBeInTheDocument();
     expect(screen.queryByTestId('analytics-chats-sort-participants')).not.toBeInTheDocument();
     expect(screen.queryByTestId('analytics-chats-sort-models')).not.toBeInTheDocument();
   });

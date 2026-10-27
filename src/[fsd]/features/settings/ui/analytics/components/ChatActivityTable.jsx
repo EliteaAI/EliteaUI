@@ -59,6 +59,8 @@ const ChatActivityTable = memo(props => {
     rows,
     total,
     isFetching,
+    searchUnavailable,
+    searchTruncated,
     showAll,
     page,
     rowsPerPage,
@@ -225,10 +227,22 @@ const ChatActivityTable = memo(props => {
             <Typography
               variant="bodySmall"
               sx={styles.emptyText}
+              data-testid={searchUnavailable ? 'analytics-chats-search-unavailable' : undefined}
             >
-              No chat usage in this period
+              {searchUnavailable
+                ? 'Chat search is temporarily unavailable. Please try again.'
+                : 'No chat usage in this period'}
             </Typography>
           </Box>
+        )}
+        {!isFetching && searchTruncated && (
+          <Typography
+            variant="bodySmall"
+            sx={styles.emptyText}
+            data-testid="analytics-chats-search-truncated"
+          >
+            Showing results from the most recent matching chats. Narrow the search to see more.
+          </Typography>
         )}
         {rows.length > 0 && (
           <Box sx={isFetching ? styles.rowsFetching : styles.rows}>

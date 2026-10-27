@@ -12,7 +12,7 @@ export const PARTICIPANT_ICON_TYPE = {
 export const PARTICIPANT_TYPE_ORDER = ['model', 'agent', 'pipeline', 'skill'];
 
 export const CHAT_COLUMNS = [
-  { key: 'chat_name', label: 'Chat', width: 200 },
+  { key: 'chat_name', label: 'Chat', sortable: false, width: 200 },
   { key: 'owner', label: 'Owner', teamOnly: true, width: 140 },
   { key: 'participants', label: 'Participants', sortable: false, width: 130 },
   { key: 'responses', label: 'Responses', width: 90 },
