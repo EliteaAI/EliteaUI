@@ -219,12 +219,17 @@ const TriggerTypeSelector = memo(props => {
   );
 
   // Under credential governance an unattended trigger runs only a bound version with a mandate; the backend
-  // keeps the trigger and says so when this version is not bound yet (EL-7213)
-  const warnGovernance = useCallback(
-    result => {
-      if (result?.governance_notice) toastWarning(result.governance_notice);
+  // keeps the trigger and says so when this version is not bound yet. The toast provider shows one toast at
+  // a time, so the warning takes the place of the success message instead of replacing it a tick later.
+  const notifySaved = useCallback(
+    (result, successMessage) => {
+      if (result?.governance_notice) {
+        toastWarning(result.governance_notice);
+      } else {
+        toastSuccess(successMessage);
+      }
     },
-    [toastWarning],
+    [toastSuccess, toastWarning],
   );
 
   const handleScheduleSubmit = useCallback(
@@ -240,13 +245,12 @@ const TriggerTypeSelector = memo(props => {
           cron: cronExpression,
           timezone,
         }).unwrap();
-        toastSuccess('Schedule configured successfully');
-        warnGovernance(result);
+        notifySaved(result, 'Schedule configured successfully');
       } catch (error) {
         toastError(error?.data?.error || 'Failed to configure schedule');
       }
     },
-    [projectId, versionId, updateTrigger, toastSuccess, toastError, warnGovernance],
+    [projectId, versionId, updateTrigger, toastError, notifySaved],
   );
 
   const handleScheduleIconClick = useCallback(() => {
@@ -303,19 +307,18 @@ const TriggerTypeSelector = memo(props => {
 
         const result = await updateTrigger(requestData).unwrap();
 
+        let successMessage = 'Webhook configured successfully';
         if (signingTokenValue) {
-          toastSuccess('Webhook configured with the GitLab signing token');
+          successMessage = 'Webhook configured with the GitLab signing token';
         } else if (secretValue) {
-          toastSuccess('Webhook configured with new secret');
-        } else {
-          toastSuccess('Webhook configured successfully');
+          successMessage = 'Webhook configured with new secret';
         }
-        warnGovernance(result);
+        notifySaved(result, successMessage);
       } catch (error) {
         toastError(error?.data?.error || 'Failed to configure webhook');
       }
     },
-    [projectId, versionId, updateTrigger, toastSuccess, toastError, warnGovernance],
+    [projectId, versionId, updateTrigger, toastError, notifySaved],
   );
 
   const isLoading = isFetching || isUpdating;

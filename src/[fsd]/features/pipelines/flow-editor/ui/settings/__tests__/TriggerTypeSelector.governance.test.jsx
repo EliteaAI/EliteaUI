@@ -6,7 +6,8 @@ import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import TriggerTypeSelector from '../TriggerTypeSelector';
 
 // EL-7213: a schedule or webhook saved on a version that governance has not bound yet is kept, and the
-// backend answers with `governance_notice`; the editor shows it as a warning after the success toast.
+// backend answers with `governance_notice`; the editor shows that warning in place of the success toast
+// (the toast provider holds one toast at a time, so showing both would hide the success).
 
 const toastSuccess = vi.fn();
 const toastError = vi.fn();
@@ -14,6 +15,7 @@ const toastWarning = vi.fn();
 const unwrap = vi.fn();
 const updateTrigger = vi.fn(() => ({ unwrap }));
 let scheduleModalProps = null;
+let webhookModalProps = null;
 
 vi.mock('formik', () => ({
   useFormikContext: () => ({ values: { version_details: { id: 70, instructions: 'nodes: []', tools: [] } } }),
@@ -67,7 +69,12 @@ vi.mock('../PipelineScheduleModal', () => ({
     return null;
   },
 }));
-vi.mock('../PipelineWebhookModal', () => ({ default: () => null }));
+vi.mock('../PipelineWebhookModal', () => ({
+  default: props => {
+    webhookModalProps = props;
+    return null;
+  },
+}));
 
 const NOTICE =
   "Credential governance is on and this version has no active identity binding: runs started by this trigger will be refused until an operator binds the version and approves a mandate for it. The editor's test chat is not affected.";
@@ -77,9 +84,10 @@ describe('TriggerTypeSelector under credential governance (EL-7213)', () => {
     cleanup();
     vi.clearAllMocks();
     scheduleModalProps = null;
+    webhookModalProps = null;
   });
 
-  it('warns after a schedule is saved on a version that is not bound, and keeps the success toast', async () => {
+  it('shows the warning instead of the success toast when a schedule is saved on an unbound version', async () => {
     unwrap.mockResolvedValue({ type: 'schedule', cron: '0 0 * * 6', governance_notice: NOTICE });
     render(<TriggerTypeSelector />);
 
@@ -94,13 +102,36 @@ describe('TriggerTypeSelector under credential governance (EL-7213)', () => {
       type: 'schedule',
       cron: '0 0 * * 6',
     });
-    expect(toastSuccess).toHaveBeenCalledWith('Schedule configured successfully');
+    expect(toastWarning).toHaveBeenCalledTimes(1);
     expect(toastWarning).toHaveBeenCalledWith(NOTICE);
+    expect(toastSuccess).not.toHaveBeenCalled();
     expect(toastError).not.toHaveBeenCalled();
     expect(screen.getByTestId('trigger-select')).toBeTruthy();
   });
 
-  it('shows no warning when the backend sends none (governance off, or the version is bound)', async () => {
+  it('shows the warning instead of the success toast when a webhook is saved on an unbound version', async () => {
+    unwrap.mockResolvedValue({ type: 'webhook', webhook_type: 'github', governance_notice: NOTICE });
+    render(<TriggerTypeSelector />);
+
+    await act(async () => {
+      await webhookModalProps.onSubmit({ webhookType: 'github', secretValue: 'new-secret' });
+    });
+
+    await waitFor(() => expect(updateTrigger).toHaveBeenCalledTimes(1));
+    expect(updateTrigger.mock.calls[0][0]).toMatchObject({
+      projectId: 1,
+      versionId: 70,
+      type: 'webhook',
+      webhook_type: 'github',
+      webhook_secret_value: 'new-secret',
+    });
+    expect(toastWarning).toHaveBeenCalledTimes(1);
+    expect(toastWarning).toHaveBeenCalledWith(NOTICE);
+    expect(toastSuccess).not.toHaveBeenCalled();
+    expect(toastError).not.toHaveBeenCalled();
+  });
+
+  it('shows the success toast and no warning when the backend sends no notice (governance off, or bound)', async () => {
     unwrap.mockResolvedValue({ type: 'schedule', cron: '0 0 * * 6' });
     render(<TriggerTypeSelector />);
 
@@ -109,6 +140,18 @@ describe('TriggerTypeSelector under credential governance (EL-7213)', () => {
     });
 
     expect(toastSuccess).toHaveBeenCalledWith('Schedule configured successfully');
+    expect(toastWarning).not.toHaveBeenCalled();
+  });
+
+  it('keeps the webhook success wording when the backend sends no notice', async () => {
+    unwrap.mockResolvedValue({ type: 'webhook', webhook_type: 'github' });
+    render(<TriggerTypeSelector />);
+
+    await act(async () => {
+      await webhookModalProps.onSubmit({ webhookType: 'github', secretValue: 'new-secret' });
+    });
+
+    expect(toastSuccess).toHaveBeenCalledWith('Webhook configured with new secret');
     expect(toastWarning).not.toHaveBeenCalled();
   });
 });
