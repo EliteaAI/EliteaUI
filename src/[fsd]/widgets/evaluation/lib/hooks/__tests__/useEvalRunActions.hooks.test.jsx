@@ -92,6 +92,23 @@ describe('useEvalRunActions', () => {
     expect(second.result.current.selectedVersionId).toBe(12);
   });
 
+  it('drops the pick on the first render after switching suites', () => {
+    const seen = [];
+    const { result, rerender } = renderHook(
+      props => {
+        const value = useEvalRunActions(props);
+        seen.push([props.editingSuiteId, value.selectedVersionId]);
+        return value;
+      },
+      { initialProps: { ...BASE_PROPS, editingSuiteId: 3 } },
+    );
+    act(() => result.current.handleVersionChange(12));
+    seen.length = 0;
+
+    rerender({ ...BASE_PROPS, editingSuiteId: 5 });
+    expect(seen.filter(([suite]) => suite === 5).every(([, version]) => version === 11)).toBe(true);
+  });
+
   it('does not leak a stored version into another suite or a version that no longer exists', () => {
     window.localStorage.setItem('evaluation:version:1:260:3', '12');
     window.localStorage.setItem('evaluation:version:1:260:4', '99');

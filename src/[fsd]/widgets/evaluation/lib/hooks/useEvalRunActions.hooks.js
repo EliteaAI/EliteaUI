@@ -73,35 +73,22 @@ export const useEvalRunActions = ({
   const [activeRunId, setActiveRunId] = useState(null);
   const [cancelRequested, setCancelRequested] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-  // Only the user's explicit pick is stored; the effective selection is derived below so the
-  // default can never be raced by a second effect writing the same piece of state.
-  const [versionOverride, setVersionOverride] = useState(null);
-  // The pick remembered from before a reload. Kept apart from the override so it can be checked
-  // against the agent's versions (it may have been deleted) without ever discarding a fresh pick
-  // — e.g. a version just forked by Enhance with AI that the version list has not picked up yet.
   const storageKey =
     editingSuiteId == null ? null : versionStorageKey(projectId, applicationId, editingSuiteId);
-  const [storedVersionId, setStoredVersionId] = useState(() =>
-    storageKey ? readStoredVersionId(storageKey) : null,
-  );
+  // Tagged with its suite key so a pick never carries over to another agent or suite.
+  const [versionOverride, setVersionOverride] = useState(null);
+  const storedVersionId = useMemo(() => (storageKey ? readStoredVersionId(storageKey) : null), [storageKey]);
   const terminalNotifiedRef = useRef(null);
   const [runPollingInterval, setRunPollingInterval] = useState(0);
 
-  // Falls back to the agent's default version until the user picks another, so the dropdown is
-  // populated as soon as the details land without an effect having to write it.
+  const currentOverride = versionOverride?.key === storageKey ? versionOverride.id : null;
+  // Restored pick, validated against current versions.
   const restoredVersionId = versions.some(version => version.id === storedVersionId) ? storedVersionId : null;
-  const selectedVersionId = versionOverride ?? restoredVersionId ?? defaultVersionId;
-
-  // Drop the pick when switching agents or suites so a version belonging to a previously viewed
-  // one is never carried over, then pick up what was remembered for the new one.
-  useEffect(() => {
-    setVersionOverride(null);
-    setStoredVersionId(storageKey ? readStoredVersionId(storageKey) : null);
-  }, [storageKey]);
+  const selectedVersionId = currentOverride ?? restoredVersionId ?? defaultVersionId;
 
   const handleVersionChange = useCallback(
     versionId => {
-      setVersionOverride(versionId);
+      setVersionOverride({ key: storageKey, id: versionId });
       if (storageKey) writeStoredVersionId(storageKey, versionId);
     },
     [storageKey],
@@ -177,10 +164,10 @@ export const useEvalRunActions = ({
       // Point the selector at the version being evaluated, otherwise a reload would show the
       // agent's default version next to another version's progress.
       if (inFlightRun.application_version_id != null) {
-        setVersionOverride(inFlightRun.application_version_id);
+        setVersionOverride({ key: storageKey, id: inFlightRun.application_version_id });
       }
     }
-  }, [runs, activeRunId]);
+  }, [runs, activeRunId, storageKey]);
 
   const handleEvaluate = useCallback(async () => {
     if (!editingSuiteId) return;
