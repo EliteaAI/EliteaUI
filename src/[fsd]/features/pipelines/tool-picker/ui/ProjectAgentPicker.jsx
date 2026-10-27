@@ -61,6 +61,7 @@ const ProjectAgentPicker = memo(props => {
       buildApplicationPickerItems({
         rows,
         attachedTools: attachedTools.filter(tool => isPipelineSource(tool) === pipelineGroup),
+        allAttachedTools: attachedTools,
         usedNames,
         query: search,
         excludeId: values?.id,

@@ -72,13 +72,13 @@ describe('groupAttachmentsByKind', () => {
     ],
   });
 
-  it('groups attachments as Toolkits, MCPs, Agents and Pipelines with the nodes using them', () => {
+  it('orders attachments as toolkits, MCPs, agents and pipelines with the nodes using them', () => {
     const groups = groupAttachmentsByKind({ tools, refs, getToolkitName, hiddenToolIds: [5] });
-    expect(groups.map(group => [group.title, group.items.map(item => [item.tool.id, item.usedBy])])).toEqual([
-      ['Toolkits', [[1, ['jira_1']]]],
-      ['MCPs', [[2, []]]],
-      ['Agents', [[3, ['agent_1']]]],
-      ['Pipelines', [[4, []]]],
+    expect(groups.map(group => [group.kind, group.items.map(item => [item.tool.id, item.usedBy])])).toEqual([
+      ['toolkit', [[1, ['jira_1']]]],
+      ['mcp', [[2, []]]],
+      ['agent', [[3, ['agent_1']]]],
+      ['pipeline', [[4, []]]],
     ]);
   });
 
@@ -89,6 +89,6 @@ describe('groupAttachmentsByKind', () => {
       getToolkitName,
       hiddenKinds: ['mcp'],
     });
-    expect(groups.map(group => group.title)).toEqual(['Toolkits']);
+    expect(groups.map(group => group.kind)).toEqual(['toolkit']);
   });
 });

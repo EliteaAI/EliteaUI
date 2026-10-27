@@ -143,6 +143,24 @@ describe('useSaveVersion', () => {
     expect(mocks.saveFn).not.toHaveBeenCalled();
   });
 
+  it('reverts the applied attachments when the version save fails', async () => {
+    const savedTools = [{ id: 99, type: 'application', settings: { application_id: 7 } }];
+    mocks.applyAttachments.mockResolvedValueOnce({ tools: savedTools });
+    mocks.saveFn.mockResolvedValue({ error: { data: { error: 'boom' } } });
+    const { result } = renderSave();
+
+    let saved;
+    await act(async () => {
+      saved = await result.current.onSave();
+    });
+
+    expect(saved).toBe(false);
+    expect(mocks.applyAttachments).toHaveBeenCalledTimes(2);
+    expect(mocks.applyAttachments).toHaveBeenLastCalledWith(
+      expect.objectContaining({ initialTools: savedTools, tools: [] }),
+    );
+  });
+
   it('updates the form and the URL name after a save of the pipeline still on screen', async () => {
     mocks.saveFn.mockResolvedValue(savedResponse(PIPELINE_A));
     const { result } = renderSave();

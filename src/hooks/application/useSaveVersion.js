@@ -138,6 +138,15 @@ const useSaveVersion = ({ isAgent = false } = {}) => {
 
     if (error) {
       toastError(buildErrorMessage(error));
+      if (isFromPipeline) {
+        // Undo the relations applied above, so Discard leaves the backend as it was
+        await applyAttachments({
+          applicationId,
+          versionId: version_details?.id,
+          initialTools: tools,
+          tools: initialValues?.version_details?.tools,
+        });
+      }
       return false;
     }
 

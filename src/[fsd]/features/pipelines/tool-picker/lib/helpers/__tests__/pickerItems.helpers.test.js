@@ -81,4 +81,19 @@ describe('buildApplicationPickerItems', () => {
     const [item] = buildApplicationPickerItems({ rows: [{ id: 9, name: 'Flow', has_interrupt: true }] });
     expect(item.disabledReason).toMatch(/interruptions/);
   });
+
+  it('disables an agent whose name an attached pipeline already has', () => {
+    const items = buildApplicationPickerItems({
+      rows: [
+        { id: 7, name: 'Reviewer' },
+        { id: 12, name: 'Reviewer' },
+      ],
+      attachedTools: [],
+      allAttachedTools: [reviewer],
+    });
+    expect(items.map(item => [item.id, Boolean(item.disabledReason)])).toEqual([
+      [7, false],
+      [12, true],
+    ]);
+  });
 });

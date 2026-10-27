@@ -2,7 +2,7 @@ import {
   APPLICATION_REF_NODE_TYPES,
   APPLICATION_TOOL_TYPE,
   PICKER_KINDS,
-  PIPELINE_TOOL_GROUPS,
+  PIPELINE_TOOL_KIND_ORDER,
   TOOL_REF_KINDS,
 } from '@/[fsd]/features/pipelines/tool-picker/lib/constants/toolPicker.constants';
 
@@ -87,7 +87,7 @@ export const getAttachmentKind = tool => {
 };
 
 /**
- * Attachments grouped as Toolkits / MCPs / Agents / Pipelines, each with the nodes that use it.
+ * Attachments by kind, in toolkits / MCPs / agents / pipelines order, each with the nodes that use it.
  * Empty groups are left out.
  */
 export const groupAttachmentsByKind = ({
@@ -97,15 +97,15 @@ export const groupAttachmentsByKind = ({
   hiddenKinds = [],
   hiddenToolIds = [],
 }) =>
-  PIPELINE_TOOL_GROUPS.filter(group => !hiddenKinds.includes(group.kind))
-    .map(group => ({
-      ...group,
+  PIPELINE_TOOL_KIND_ORDER.filter(kind => !hiddenKinds.includes(kind))
+    .map(kind => ({
+      kind,
       items: tools
-        .filter(tool => getAttachmentKind(tool) === group.kind && !hiddenToolIds.includes(tool.id))
+        .filter(tool => getAttachmentKind(tool) === kind && !hiddenToolIds.includes(tool.id))
         .map(tool => ({
           key: `${getAttachmentRefKey(tool, getToolkitName)}:${tool.id ?? tool.settings?.application_id}`,
           tool,
-          kind: group.kind,
+          kind,
           usedBy: getAttachmentReference(refs, tool, getToolkitName)?.nodeIds || [],
         })),
     }))

@@ -70,17 +70,33 @@ export const buildToolkitPickerItems = ({
   return [...pinned, ...listed];
 };
 
+export const DUPLICATE_APPLICATION_NAME_REASON = name =>
+  `The pipeline already uses another agent or pipeline named "${name}". Nodes bind them by name, so rename one of them to use it.`;
+
 /**
  * Picker items for agents or pipelines; the pipeline being edited and swarm agents are left out.
  * @param {object[]} params.attachedTools attached `application` tools of this kind
+ * @param {object[]} params.allAttachedTools every attached `application` tool, agents and pipelines alike
  */
 export const buildApplicationPickerItems = ({
   rows = [],
   attachedTools = [],
+  allAttachedTools = attachedTools,
   usedNames = new Set(),
   query = '',
   excludeId,
 }) => {
+  const attachedIdByName = new Map(
+    allAttachedTools.filter(isApplicationTool).map(tool => [tool.name, tool.settings?.application_id]),
+  );
+  const getDisabledReason = row => {
+    if (row.has_interrupt) return INTERRUPT_REASON(row.name);
+    const attachedId = attachedIdByName.get(row.name);
+    return attachedId !== undefined && attachedId !== row.id
+      ? DUPLICATE_APPLICATION_NAME_REASON(row.name)
+      : '';
+  };
+
   const pinned = attachedTools
     .filter(tool => isApplicationTool(tool) && usedNames.has(tool.name))
     .map(tool => ({
@@ -110,7 +126,7 @@ export const buildApplicationPickerItems = ({
       source: row,
       isAttached: false,
       inUse: false,
-      disabledReason: row.has_interrupt ? INTERRUPT_REASON(row.name) : '',
+      disabledReason: getDisabledReason(row),
     }));
 
   return [...pinned, ...listed];

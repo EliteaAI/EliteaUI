@@ -32,11 +32,12 @@ export const PICKER_SEARCH_DEBOUNCE = 300;
 // Backend answers for a relation that is already in the requested state
 export const IDEMPOTENT_RELATION_ERRORS = ['Already exists relation', 'Already removed relation'];
 
-export const PIPELINE_TOOL_GROUPS = [
-  { kind: PICKER_KINDS.toolkit, title: 'Toolkits' },
-  { kind: PICKER_KINDS.mcp, title: 'MCPs' },
-  { kind: PICKER_KINDS.agent, title: 'Agents' },
-  { kind: PICKER_KINDS.pipeline, title: 'Pipelines' },
+// Order of the attachments in the Tools section
+export const PIPELINE_TOOL_KIND_ORDER = [
+  PICKER_KINDS.toolkit,
+  PICKER_KINDS.mcp,
+  PICKER_KINDS.agent,
+  PICKER_KINDS.pipeline,
 ];
 
 // Card actions shown on card hover, as on the agent tool card

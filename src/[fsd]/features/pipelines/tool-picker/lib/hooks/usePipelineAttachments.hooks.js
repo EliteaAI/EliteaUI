@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useFormikContext } from 'formik';
 
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks/useGetToolkitNameFromSchema.hooks';
+import { APPLICATION_TOOL_TYPE } from '@/[fsd]/features/pipelines/tool-picker/lib/constants/toolPicker.constants';
 import { getAttachmentKey } from '@/[fsd]/features/pipelines/tool-picker/lib/helpers/attachmentDiff.helpers';
 import {
   buildApplicationAttachment,
@@ -128,7 +129,10 @@ export const usePipelineAttachments = () => {
 
   const setApplicationVersion = useCallback(
     (applicationId, versionDetails) => {
-      const key = getAttachmentKey({ type: 'application', settings: { application_id: applicationId } });
+      const key = getAttachmentKey({
+        type: APPLICATION_TOOL_TYPE,
+        settings: { application_id: applicationId },
+      });
       const attached = findAttached(key);
       if (!attached || attached.settings?.application_version_id === versionDetails?.id) return;
       writeTools(
