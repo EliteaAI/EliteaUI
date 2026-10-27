@@ -24,7 +24,7 @@ const PROMPT_FIELDS = ['prompt', 'variables'];
  */
 export const useScheduleSave = ({ formik, riskCheck, schedule, onSubmit, onSaved, onTestRun }) => {
   const { setFieldValue } = formik;
-  const { toastError } = useToast();
+  const { toastError, toastWarning } = useToast();
   const [banner, setBanner] = useState('');
   const [saved, setSaved] = useState(null);
   const [ruleChanged, setRuleChanged] = useState(false);
@@ -74,6 +74,7 @@ export const useScheduleSave = ({ formik, riskCheck, schedule, onSubmit, onSaved
       return;
     }
     setReview(null);
+    if (answer?.governance_notice) toastWarning(answer.governance_notice);
     const approvalRule = answer?.approval_rule ?? values.approval_rule;
     const hasWarnings = answer?.warnings?.length > 0;
     // The saved values are the new baseline, so the leave-page blocker stays shut
