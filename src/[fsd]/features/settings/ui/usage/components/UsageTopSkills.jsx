@@ -25,10 +25,10 @@ const UsageTopSkills = memo(props => {
     () =>
       topSkills.map((skill, idx) => {
         const key = skill.name || skill.id || String(idx);
-        const uses = skill.uses ?? skill.call_count ?? null;
-        const perUse = uses ? (skill.spend || 0) / uses : 0;
+        const runs = skill.uses ?? skill.call_count ?? null;
+        const perRun = runs ? (skill.spend || 0) / runs : 0;
 
-        return { ...skill, _key: key, _uses: uses, _perUse: perUse };
+        return { ...skill, _key: key, _runs: runs, _perRun: perRun };
       }),
     [topSkills],
   );
@@ -43,12 +43,12 @@ const UsageTopSkills = memo(props => {
 
       let av, bv;
 
-      if (sortKey === 'uses') {
-        av = a._uses ?? -Infinity;
-        bv = b._uses ?? -Infinity;
-      } else if (sortKey === 'perUse') {
-        av = a._perUse;
-        bv = b._perUse;
+      if (sortKey === 'runs') {
+        av = a._runs ?? -Infinity;
+        bv = b._runs ?? -Infinity;
+      } else if (sortKey === 'perRun') {
+        av = a._perRun;
+        bv = b._perRun;
       } else {
         av = a.spend || 0;
         bv = b.spend || 0;
@@ -112,16 +112,16 @@ const UsageTopSkills = memo(props => {
             </Typography>
           </Box>
           <UsageSortHeader
-            label="Uses"
-            keyName="uses"
+            label="Runs"
+            keyName="runs"
             flex={1}
             sortKey={sortKey}
             sortDir={sortDir}
             onSort={handleSort}
           />
           <UsageSortHeader
-            label="Per use"
-            keyName="perUse"
+            label="Per run"
+            keyName="perRun"
             flex={1.2}
             sortKey={sortKey}
             sortDir={sortDir}
@@ -148,7 +148,7 @@ const UsageTopSkills = memo(props => {
               <Box sx={{ flex: 3, minWidth: 0 }}>
                 <Typography sx={styles.name}>{skill.name || skill.id}</Typography>
               </Box>
-              <Typography sx={[styles.value, styles.right, { flex: 1 }]}>{skill._uses ?? '—'}</Typography>
+              <Typography sx={[styles.value, styles.right, { flex: 1 }]}>{skill._runs ?? '—'}</Typography>
               <Typography
                 sx={[
                   styles.value,
@@ -156,7 +156,7 @@ const UsageTopSkills = memo(props => {
                   { flex: 1.2, color: palette.text.metrics || palette.text.disabled },
                 ]}
               >
-                {canSeeAmounts && skill._uses ? UsageHelpers.formatMoney(skill._perUse, currency) : '—'}
+                {canSeeAmounts && skill._runs ? UsageHelpers.formatMoney(skill._perRun, currency) : '—'}
               </Typography>
               <Typography sx={[styles.value, styles.right, { flex: 1.2 }]}>
                 {canSeeAmounts ? UsageHelpers.formatMoney(skill.spend, currency) : `${share.toFixed(1)}%`}

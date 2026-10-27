@@ -501,23 +501,23 @@ export const buildTopAgentsSheet = agents => {
 
 export const buildTopSkillsSheet = skills => {
   const list = skills || [];
-  // Weight by spend when available; fall back to uses for members whose spend is redacted.
+  // Weight by spend when available; fall back to runs for members whose spend is redacted.
   const weight = s => {
     if (!isNullOrUndefined(s.spend)) return s.spend || 0;
-    const uses = s.uses ?? s.call_count ?? null;
-    return uses ?? 0;
+    const runs = s.uses ?? s.call_count ?? null;
+    return runs ?? 0;
   };
   const totalWeight = list.reduce((sum, s) => sum + weight(s), 0);
 
   const rows = [...list]
     .sort((a, b) => weight(b) - weight(a))
     .map(skill => {
-      const uses = skill.uses ?? skill.call_count ?? null;
+      const runs = skill.uses ?? skill.call_count ?? null;
       const spendKnown = !isNullOrUndefined(skill.spend);
       return {
         name: skill.name || skill.id || '',
-        uses: uses ?? '',
-        perUse: uses && spendKnown ? (skill.spend || 0) / uses : '',
+        runs: runs ?? '',
+        perRun: runs && spendKnown ? (skill.spend || 0) / runs : '',
         spend: orBlank(skill.spend),
         share: totalWeight > 0 ? Number(((weight(skill) / totalWeight) * 100).toFixed(2)) : 0,
       };
@@ -527,8 +527,8 @@ export const buildTopSkillsSheet = skills => {
     sheetName: 'Top Skills',
     columns: [
       { header: 'Name', key: 'name' },
-      { header: 'Uses', key: 'uses', numFmt: ExcelFormats.integer },
-      { header: 'Per Use (USD)', key: 'perUse', numFmt: ExcelFormats.currency },
+      { header: 'Runs', key: 'runs', numFmt: ExcelFormats.integer },
+      { header: 'Per Run (USD)', key: 'perRun', numFmt: ExcelFormats.currency },
       { header: 'Spent (USD)', key: 'spend', numFmt: ExcelFormats.currency },
       { header: 'Share (%)', key: 'share', numFmt: ExcelFormats.percent },
     ],

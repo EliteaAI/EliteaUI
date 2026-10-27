@@ -636,22 +636,28 @@ describe('top skills sheet', () => {
     expect(rows[0].name).toBe('Code review');
   });
 
+  it('names the count Runs, as the Analytics Skill Activity table does', () => {
+    const headers = buildTopSkillsSheet(skills).columns.map(c => c.header);
+
+    expect(headers).toEqual(['Name', 'Runs', 'Per Run (USD)', 'Spent (USD)', 'Share (%)']);
+  });
+
   it('falls back to call_count when uses is absent', () => {
     const rows = buildTopSkillsSheet(skills).rows;
 
-    expect(rows[1].uses).toBe(20);
+    expect(rows[1].runs).toBe(20);
   });
 
-  it('computes per-use cost when uses are known', () => {
+  it('computes per-run cost when runs are known', () => {
     const rows = buildTopSkillsSheet(skills).rows;
 
-    expect(rows[0].perUse).toBeCloseTo(0.2, 5);
+    expect(rows[0].perRun).toBeCloseTo(0.2, 5);
   });
 
-  it('leaves per-use empty when uses are null', () => {
+  it('leaves per-run empty when runs are null', () => {
     const rows = buildTopSkillsSheet(skills).rows;
 
-    expect(rows[2].perUse).toBe('');
+    expect(rows[2].perRun).toBe('');
   });
 
   it('sums share percentages to 100', () => {
