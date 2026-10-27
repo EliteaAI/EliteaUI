@@ -3,4 +3,5 @@ export * from './chatTemplateApi';
 export * from './generateProjectContextDraftApi';
 export * from './projectBackupApi';
 export * from './projectInfoApi';
+export * from './projectSkillsSettingsApi';
 export * from './usageApi';
