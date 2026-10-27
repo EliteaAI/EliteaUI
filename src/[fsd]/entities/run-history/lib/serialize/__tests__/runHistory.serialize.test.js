@@ -86,6 +86,22 @@ describe('serializeRunHistory — skill chat runs', () => {
     expect(rows[0].created_at).toBe('2026-10-26T16:36:00Z');
   });
 
+  it('reads the version of the skill own run even inside another entity Run panel', () => {
+    const agentRunPanelChat = {
+      ...skillChatRun,
+      meta: {
+        single_participant: {
+          entity_name: 'application',
+          entity_meta: { id: 111, project_id: 2 },
+          entity_settings: { version_id: 40 },
+        },
+      },
+    };
+    const { rows } = serializeRunHistoryListResponse([agentRunPanelChat], false, SKILL_HISTORY);
+
+    expect(rows[0].version_id).toBe(88);
+  });
+
   it('keeps the skill own Run panel run a Run panel run', () => {
     const { rows } = serializeRunHistoryListResponse([skillRunPanelRun], false, SKILL_HISTORY);
 

@@ -10,8 +10,8 @@ const serializeRunHistory = (conversation, source, entityId) => {
     name: conversation.name,
     duration: conversation.duration,
     version_id:
-      conversation.meta.single_participant?.entity_settings?.version_id ??
       conversation.skill_version_id ??
+      conversation.meta.single_participant?.entity_settings?.version_id ??
       null,
     is_chat_run: isSkillChatRun(conversation, source, entityId),
     index_name: conversation.meta?.index_name ?? null,
