@@ -51,6 +51,10 @@ const PipelineEditorWorkspace = memo(props => {
     setIsTestPanelOpen(false);
   }, []);
 
+  const handleSelectNode = useCallback(nodeId => {
+    editorPanelRef.current?.selectNode?.(nodeId);
+  }, []);
+
   const handleStopRun = useCallback(() => {
     testPanelRef.current?.stopRun();
   }, []);
@@ -66,6 +70,7 @@ const PipelineEditorWorkspace = memo(props => {
         applicationId={applicationId}
         isCreateMode={!isEditMode}
         onCollapsed={fitView}
+        onSelectNode={handleSelectNode}
       />
       <Box
         ref={editorRowRef}

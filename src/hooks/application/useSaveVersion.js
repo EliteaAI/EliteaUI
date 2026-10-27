@@ -8,6 +8,7 @@ import { deepClone } from '@mui/x-data-grid/internals';
 
 import { useSyncChatConfigParticipant } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { useApplyPipelineAttachments } from '@/[fsd]/features/pipelines/tool-picker/lib/hooks/useApplyPipelineAttachments.hooks';
 import {
   useChangeNameInUrlSearchParams,
   useIsFrom,
@@ -38,6 +39,7 @@ const useSaveVersion = ({ isAgent = false } = {}) => {
   const { toastError, toastSuccess } = useToast();
   const [saveFn, { isLoading: isSaving, reset }] = useApplicationEditMutation();
   const { onSaveTools, isSavingToolkit } = useSaveChangedTools();
+  const { applyAttachments, isApplyingAttachments } = useApplyPipelineAttachments();
   const { nodes: flowNodes } = useSelector(state => state.pipelineEditor);
 
   // Fetch models to validate LLM settings against model capabilities
@@ -48,7 +50,7 @@ const useSaveVersion = ({ isAgent = false } = {}) => {
 
   // Get applicationId from URL params - this is always the application ID regardless of version
   // Prefer applicationId from useParams, fallback to Formik state
-  const { values, resetForm } = useFormikContext();
+  const { values, resetForm, initialValues } = useFormikContext();
   const { agentId } = useParams();
   const applicationId = values?.id || parseInt(agentId, 10);
 
@@ -68,7 +70,18 @@ const useSaveVersion = ({ isAgent = false } = {}) => {
     }
     const saveTarget = captureSaveTarget();
 
-    if ((await onSaveTools()) === false) {
+    let tools = version_details?.tools;
+    if (isFromPipeline) {
+      // Pipelines attach what their nodes pick only now, on Save
+      const applied = await applyAttachments({
+        applicationId,
+        versionId: version_details?.id,
+        initialTools: initialValues?.version_details?.tools,
+        tools,
+      });
+      if (!applied) return false;
+      tools = applied.tools;
+    } else if ((await onSaveTools()) === false) {
       return false; // Stop if toolkit save failed
     }
     const { nodes, edges } = isFromPipeline
@@ -104,7 +117,7 @@ const useSaveVersion = ({ isAgent = false } = {}) => {
           version_details.tags?.filter(
             (tag, index, self) => self.findIndex(t => t.name === tag.name) === index,
           ) ?? [],
-        tools: clearTools(version_details?.tools, currentUserId),
+        tools: clearTools(tools, currentUserId),
         conversation_starters: filterEmptyStrings(version_details?.conversation_starters),
         instructions: !isFromPipeline ? version_details.instructions : yamlCode,
         pipeline_settings: isFromPipeline
@@ -134,6 +147,7 @@ const useSaveVersion = ({ isAgent = false } = {}) => {
     // send llm_settings that exactly match what was stored in DB, avoiding the validation mismatch.
     const savedVersionDetails = {
       ...version_details,
+      tools,
       llm_settings: cleanedLlmSettings,
       conversation_starters: filterEmptyStrings(version_details?.conversation_starters),
       instructions: !isFromPipeline ? version_details.instructions : yamlCode,
@@ -191,6 +205,8 @@ const useSaveVersion = ({ isAgent = false } = {}) => {
     return savedVersionDetails;
   }, [
     onSaveTools,
+    applyAttachments,
+    initialValues?.version_details?.tools,
     isFromPipeline,
     yamlCode,
     flowNodes,
@@ -223,7 +239,7 @@ const useSaveVersion = ({ isAgent = false } = {}) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSaving]);
 
-  return { onSave, isSaving: isSaving || isSavingToolkit };
+  return { onSave, isSaving: isSaving || isSavingToolkit || isApplyingAttachments };
 };
 
 export default useSaveVersion;

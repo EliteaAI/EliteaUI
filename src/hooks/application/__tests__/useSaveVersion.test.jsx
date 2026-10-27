@@ -14,6 +14,8 @@ const mocks = vi.hoisted(() => ({
   toastSuccess: vi.fn(),
   handleChangeName: vi.fn(),
   updateQueryData: vi.fn((endpoint, args) => ({ type: 'updateQueryData', endpoint, args })),
+  applyAttachments: vi.fn(),
+  onSaveTools: vi.fn(),
 }));
 
 vi.mock('react-redux', () => ({
@@ -50,7 +52,13 @@ vi.mock('@/[fsd]/features/pipelines/flow-editor/lib/constants', () => ({
   FlowEditorConstants: { LAYOUT_VERSION: '1.0', ORIENTATION: { vertical: 'vertical' } },
 }));
 vi.mock('../useSaveChangedTools', () => ({
-  default: () => ({ onSaveTools: async () => true, isSavingToolkit: false }),
+  default: () => ({ onSaveTools: mocks.onSaveTools, isSavingToolkit: false }),
+}));
+vi.mock('@/[fsd]/features/pipelines/tool-picker/lib/hooks/useApplyPipelineAttachments.hooks', () => ({
+  useApplyPipelineAttachments: () => ({
+    applyAttachments: mocks.applyAttachments,
+    isApplyingAttachments: false,
+  }),
 }));
 
 const pipeline = (id, name, versionId) => ({
@@ -97,7 +105,43 @@ const savedResponse = values => ({
 });
 
 describe('useSaveVersion', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.applyAttachments.mockImplementation(async ({ tools }) => ({ tools }));
+    mocks.onSaveTools.mockResolvedValue(true);
+  });
+
+  it('applies the pipeline attachments before the version and saves the tools they return', async () => {
+    const savedTools = [{ id: 99, type: 'application', settings: { application_id: 7 } }];
+    mocks.applyAttachments.mockResolvedValue({ tools: savedTools });
+    mocks.saveFn.mockResolvedValue(savedResponse(PIPELINE_A));
+    const { result } = renderSave();
+
+    await act(async () => {
+      await result.current.onSave();
+    });
+
+    expect(mocks.applyAttachments).toHaveBeenCalledWith(
+      expect.objectContaining({ applicationId: 545, versionId: 1092, initialTools: [], tools: [] }),
+    );
+    expect(mocks.onSaveTools).not.toHaveBeenCalled();
+    expect(mocks.saveFn).toHaveBeenCalledWith(
+      expect.objectContaining({ version: expect.objectContaining({ tools: savedTools }) }),
+    );
+  });
+
+  it('does not save the version when applying the attachments failed', async () => {
+    mocks.applyAttachments.mockResolvedValue(false);
+    const { result } = renderSave();
+
+    let saved;
+    await act(async () => {
+      saved = await result.current.onSave();
+    });
+
+    expect(saved).toBe(false);
+    expect(mocks.saveFn).not.toHaveBeenCalled();
+  });
 
   it('updates the form and the URL name after a save of the pipeline still on screen', async () => {
     mocks.saveFn.mockResolvedValue(savedResponse(PIPELINE_A));
