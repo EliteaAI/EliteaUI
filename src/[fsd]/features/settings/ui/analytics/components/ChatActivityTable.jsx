@@ -146,6 +146,7 @@ const ChatActivityTable = memo(props => {
       if (column.key === 'participants') return <ChatParticipantChips participants={r.participants} />;
       if (column.key === 'models') return renderModelsCell(r);
       if (column.key === 'last_activity') return renderLastActivityCell(r);
+      if (column.key === 'owner') return r.owner_email || '-';
       if (column.key === 'avg_duration_ms') return AnalyticCommonHelpers.fmtDuration(r.avg_duration_ms);
       if (COST_COLUMN_KEYS.has(column.key)) return AnalyticCommonHelpers.fmtCost(r[column.key]);
       if (NUM_COLUMN_KEYS.has(column.key)) return AnalyticCommonHelpers.fmtNum(r[column.key]);

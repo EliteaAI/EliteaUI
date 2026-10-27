@@ -143,6 +143,37 @@ describe('ChatActivityTable — data source', () => {
   });
 });
 
+describe('ChatActivityTable — owner column', () => {
+  beforeEach(() => vi.clearAllMocks());
+  afterEach(() => cleanup());
+
+  it("shows the owner's email in a team project", () => {
+    useAnalyticsChatActivityQuery.mockReturnValue(
+      queryResult({
+        data: { total: 1, rows: [{ ...CHAT_A, owner_id: 11, owner_email: 'alice@example.com' }] },
+      }),
+    );
+    renderTable({ isPersonalProject: false });
+
+    expect(screen.getByTestId('analytics-chats-row-owner')).toHaveTextContent('alice@example.com');
+  });
+
+  it('shows a dash when the owner is unknown', () => {
+    useAnalyticsChatActivityQuery.mockReturnValue(queryResult({ data: { total: 1, rows: [CHAT_A] } }));
+    renderTable({ isPersonalProject: false });
+
+    expect(screen.getByTestId('analytics-chats-row-owner')).toHaveTextContent('-');
+  });
+
+  it('has no owner column in a personal project', () => {
+    useAnalyticsChatActivityQuery.mockReturnValue(queryResult());
+    renderTable({ isPersonalProject: true });
+
+    expect(screen.queryByTestId('analytics-chats-row-owner')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('analytics-chats-sort-owner')).not.toBeInTheDocument();
+  });
+});
+
 describe('ChatActivityTable — loading states', () => {
   beforeEach(() => vi.clearAllMocks());
   afterEach(() => cleanup());
