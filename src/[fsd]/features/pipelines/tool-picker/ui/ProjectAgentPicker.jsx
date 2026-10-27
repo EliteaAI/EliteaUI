@@ -32,7 +32,14 @@ const isPipelineSource = source =>
  *   `item.source` is an attached tool or a project list row
  */
 const ProjectAgentPicker = memo(props => {
-  const { label = 'Agent', value, onSelect, onClear, disabled = false, 'data-testid': testId } = props;
+  const {
+    label = 'Agents & Pipelines',
+    value,
+    onSelect,
+    onClear,
+    disabled = false,
+    'data-testid': testId,
+  } = props;
 
   const { yamlJsonObject } = useContext(FlowEditorContext);
   const isVersionLocked = useIsVersionLocked();
