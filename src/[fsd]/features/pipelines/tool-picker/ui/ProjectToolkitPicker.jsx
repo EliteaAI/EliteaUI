@@ -153,7 +153,7 @@ const ProjectToolkitPicker = memo(props => {
         onClose={closeMenu}
         searchValue={search}
         onSearchChange={setSearch}
-        searchPlaceholder={`Search ${entityLabel}`}
+        searchPlaceholder={`Search ${entityLabel}...`}
         createActions={createActions}
         groups={groups}
         renderItem={renderItem}

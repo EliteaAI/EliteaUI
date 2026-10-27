@@ -21,7 +21,7 @@ const PickerMenu = memo(props => {
     onClose,
     searchValue,
     onSearchChange,
-    searchPlaceholder = 'Search',
+    searchPlaceholder = 'Search...',
     createActions = [],
     groups = [],
     renderItem,
@@ -59,15 +59,14 @@ const PickerMenu = memo(props => {
       transformOrigin={{ vertical: 'top', horizontal: 'left' }}
       slotProps={{ paper: { sx: styles.paper, 'data-testid': testId } }}
     >
-      <Box sx={styles.search}>
-        <Input.SimpleSearchBar
-          searchQuery={searchValue}
-          onSearchChange={onSearchChange}
-          onSearchClear={handleSearchClear}
-          placeholder={searchPlaceholder}
-          data-testid={testId ? `${testId}-search` : undefined}
-        />
-      </Box>
+      <Input.SimpleSearchBar
+        searchQuery={searchValue}
+        onSearchChange={onSearchChange}
+        onSearchClear={handleSearchClear}
+        placeholder={searchPlaceholder}
+        sx={styles.search}
+        data-testid={testId ? `${testId}-search` : undefined}
+      />
       {createActions.map(action => (
         <MenuItem
           key={action.key}
@@ -160,9 +159,22 @@ const pickerMenuStyles = anchorWidth => ({
     border: `0.0625rem solid ${palette.border.lines}`,
     backgroundColor: palette.background.default.secondary,
   }),
+  // Flat, full-width search, as in the select dropdowns
   search: ({ palette }) => ({
-    padding: '0.5rem 0.75rem',
+    flexShrink: 0,
+    borderRadius: 0,
+    border: 'none',
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
+    backgroundColor: 'transparent',
+    padding: '0.75rem 1rem',
+    height: 'auto',
+    '&:hover': {
+      borderColor: palette.border.lines,
+    },
+    '&:focus-within': {
+      backgroundColor: 'transparent',
+      borderColor: palette.border.lines,
+    },
   }),
   createAction: ({ palette }) => ({
     gap: '0.75rem',

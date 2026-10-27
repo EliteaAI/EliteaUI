@@ -185,7 +185,7 @@ const ProjectToolkitsMultiPicker = memo(props => {
         onClose={closeMenu}
         searchValue={search}
         onSearchChange={setSearch}
-        searchPlaceholder={isMcpVisible ? 'Search toolkits and MCPs' : 'Search toolkits'}
+        searchPlaceholder={isMcpVisible ? 'Search toolkits and MCPs...' : 'Search toolkits...'}
         createActions={createActions}
         groups={groups}
         renderItem={renderItem}

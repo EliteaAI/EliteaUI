@@ -159,7 +159,7 @@ const ProjectAgentPicker = memo(props => {
         onClose={closeMenu}
         searchValue={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Search agents and pipelines"
+        searchPlaceholder="Search agents and pipelines..."
         createActions={createActions}
         groups={groups}
         renderItem={renderItem}
