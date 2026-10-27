@@ -283,42 +283,14 @@ const AnalyticsContainer = memo(() => {
         const selectedChatId = searchParams.get(AnalyticsCommonConstants.ANALYTICS_SEARCH_PARAMS.chatId);
 
         if (selectedChatId) {
-          const [detailResult, { runs, total, truncated }] = await Promise.all([
-            store.dispatch(
-              analyticsApi.endpoints.analyticsChatDetail.initiate({
-                projectId,
-                conversationUuid: selectedChatId,
-                dateFrom: dateFromISO,
-                dateTo: dateToISO,
-              }),
-            ),
-            AnalyticsExportHelpers.fetchAllChatRuns(store.dispatch, analyticsApi.endpoints, {
-              projectId,
-              conversationUuid: selectedChatId,
-              dateFrom: dateFromISO,
-              dateTo: dateToISO,
-            }),
-          ]);
-          await exportToExcel(
-            AnalyticsExportHelpers.buildChatAnalyticsExportFileName({
-              projectName,
-              chatName: detailResult.data?.chat_name,
-              dateFrom: dateFromISO,
-              dateTo: dateToISO,
-            }),
-            [
-              AnalyticsExportHelpers.buildChatDetailSheet(detailResult.data, {
-                runs,
-                runsTotal: total,
-                runsTruncated: truncated,
-                isPersonalProject,
-                projectName,
-                dateFrom: dateFromISO,
-                dateTo: dateToISO,
-                timeZone,
-              }),
-            ],
-          );
+          await AnalyticsExportHelpers.exportChatDetail(store.dispatch, analyticsApi.endpoints, {
+            projectId,
+            conversationUuid: selectedChatId,
+            dateFrom: dateFromISO,
+            dateTo: dateToISO,
+            isPersonalProject,
+            projectName,
+          });
           return;
         }
 

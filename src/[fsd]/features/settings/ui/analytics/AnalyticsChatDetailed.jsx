@@ -16,7 +16,6 @@ import {
   KPICard,
 } from '@/[fsd]/features/settings/ui/analytics';
 import { useClientSort, useSelectedProjectName, useSortedRows } from '@/[fsd]/shared/lib/hooks';
-import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { useAnalyticsChatDetailQuery } from '@/api';
 import DownloadIcon from '@/assets/download.svg?react';
@@ -198,32 +197,15 @@ const AnalyticsChatDetailed = memo(props => {
     setExporting(true);
     setExportError(false);
     try {
-      const { runs, total, truncated } = await AnalyticsExportHelpers.fetchAllChatRuns(
-        store.dispatch,
-        analyticsApi.endpoints,
-        { projectId, conversationUuid, dateFrom, dateTo },
-      );
-      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      await exportToExcel(
-        AnalyticsExportHelpers.buildChatAnalyticsExportFileName({
-          projectName,
-          chatName: data?.chat_name,
-          dateFrom,
-          dateTo,
-        }),
-        [
-          AnalyticsExportHelpers.buildChatDetailSheet(data, {
-            runs,
-            runsTotal: total,
-            runsTruncated: truncated,
-            isPersonalProject,
-            projectName,
-            dateFrom,
-            dateTo,
-            timeZone,
-          }),
-        ],
-      );
+      await AnalyticsExportHelpers.exportChatDetail(store.dispatch, analyticsApi.endpoints, {
+        projectId,
+        conversationUuid,
+        dateFrom,
+        dateTo,
+        chatData: data,
+        isPersonalProject,
+        projectName,
+      });
     } catch {
       setExportError(true);
     } finally {

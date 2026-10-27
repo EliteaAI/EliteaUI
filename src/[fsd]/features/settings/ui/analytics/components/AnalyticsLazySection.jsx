@@ -2,12 +2,13 @@ import { memo } from 'react';
 
 import { Box, CircularProgress, Typography } from '@mui/material';
 
-import { useInViewOnce } from '@/[fsd]/shared/lib/hooks/useInViewOnce.hooks';
+import { useInViewOnce } from '@/[fsd]/shared/lib/hooks';
 
 const AnalyticsLazySection = memo(props => {
   const { children, title } = props;
 
   const { ref, hasBeenVisible } = useInViewOnce();
+  const styles = analyticsLazySectionStyles();
 
   return (
     <Box ref={ref}>
@@ -33,7 +34,7 @@ const AnalyticsLazySection = memo(props => {
 AnalyticsLazySection.displayName = 'AnalyticsLazySection';
 
 /** @type {MuiSx} */
-const styles = {
+const analyticsLazySectionStyles = () => ({
   placeholder: ({ palette }) => ({
     padding: '1rem',
     borderRadius: '0.5rem',
@@ -44,6 +45,6 @@ const styles = {
   }),
   title: ({ palette }) => ({ color: palette.text.secondary }),
   loadingRow: { display: 'flex', justifyContent: 'center', padding: '1.5rem' },
-};
+});
 
 export default AnalyticsLazySection;

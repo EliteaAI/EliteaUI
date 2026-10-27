@@ -1,8 +1,19 @@
 import { memo, useCallback, useMemo } from 'react';
 
-import { Box, CircularProgress, TablePagination, TableSortLabel, Tooltip, Typography } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
+
+import {
+  Box,
+  CircularProgress,
+  Link,
+  TablePagination,
+  TableSortLabel,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 
 import { AnalyticsChatsConstants } from '@/[fsd]/features/settings/lib/constants';
+import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { useAnalyticsChatsTable } from '@/[fsd]/features/settings/lib/hooks';
 import { DeletedChip } from '@/[fsd]/features/settings/ui/analytics';
 import {
@@ -17,6 +28,26 @@ import StyledSearchInput from '@/components/SearchInput';
 import ChatParticipantChips from './ChatParticipantChips';
 
 const { CHAT_ACTIVITY_TOP_N } = AnalyticsChatsConstants;
+
+const NUM_COLUMN_KEYS = new Set([
+  'responses',
+  'users',
+  'total_tokens',
+  'input_tokens',
+  'output_tokens',
+  'cache_read_tokens',
+  'cache_creation_tokens',
+  'errors',
+]);
+
+const COST_COLUMN_KEYS = new Set([
+  'llm_cost',
+  'input_cost',
+  'output_cost',
+  'cache_read_cost',
+  'cache_creation_cost',
+  'avg_cost_per_response',
+]);
 
 const ChatActivityTable = memo(props => {
   const { projectId, dateFrom, dateTo, isPersonalProject, onChatClick } = props;
@@ -55,17 +86,16 @@ const ChatActivityTable = memo(props => {
             title="Open chat"
             placement="top"
           >
-            <Typography
-              component="span"
-              variant="labelSmall"
+            <Link
+              component={RouterLink}
+              to={`/chat/${r.conversation_id}`}
+              target="_blank"
+              rel="noopener noreferrer"
               sx={styles.chatLinkIcon}
-              onClick={event => {
-                event.stopPropagation();
-                window.open(`/chat/${r.conversation_id}`, '_blank');
-              }}
+              onClick={e => e.stopPropagation()}
             >
               ↗
-            </Typography>
+            </Link>
           </Tooltip>
         )}
       </Box>
@@ -114,7 +144,9 @@ const ChatActivityTable = memo(props => {
       if (column.key === 'participants') return <ChatParticipantChips participants={r.participants} />;
       if (column.key === 'models') return renderModelsCell(r);
       if (column.key === 'last_activity') return renderLastActivityCell(r);
-      if (column.render) return column.render(r);
+      if (column.key === 'avg_duration_ms') return AnalyticCommonHelpers.fmtDuration(r.avg_duration_ms);
+      if (COST_COLUMN_KEYS.has(column.key)) return AnalyticCommonHelpers.fmtCost(r[column.key]);
+      if (NUM_COLUMN_KEYS.has(column.key)) return AnalyticCommonHelpers.fmtNum(r[column.key]);
       return r[column.key] ?? '-';
     },
     [renderChatNameCell, renderModelsCell, renderLastActivityCell],

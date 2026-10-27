@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
-import { ExcelFormats, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils';
+import { ExcelFormats, exportToExcel, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils';
 
 import {
   formatAgentEntityLabel,
@@ -1536,3 +1536,33 @@ export const buildRunAnalyticsSheets = ({ costs, tools, health, meta }) => [
   buildToolsSheet(tools, meta, { runScoped: true }),
   buildHealthSheet(health, meta, { runScoped: true }),
 ];
+
+export const exportChatDetail = async (
+  dispatch,
+  endpoints,
+  { projectId, conversationUuid, dateFrom, dateTo, chatData, isPersonalProject, projectName },
+) => {
+  const [detailResult, { runs, total, truncated }] = await Promise.all([
+    chatData
+      ? Promise.resolve({ data: chatData })
+      : dispatch(endpoints.analyticsChatDetail.initiate({ projectId, conversationUuid, dateFrom, dateTo })),
+    fetchAllChatRuns(dispatch, endpoints, { projectId, conversationUuid, dateFrom, dateTo }),
+  ]);
+  const data = detailResult?.data ?? chatData;
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  await exportToExcel(
+    buildChatAnalyticsExportFileName({ projectName, chatName: data?.chat_name, dateFrom, dateTo }),
+    [
+      buildChatDetailSheet(data, {
+        runs,
+        runsTotal: total,
+        runsTruncated: truncated,
+        isPersonalProject,
+        projectName,
+        dateFrom,
+        dateTo,
+        timeZone,
+      }),
+    ],
+  );
+};

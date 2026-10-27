@@ -4,13 +4,14 @@ import { Bar, BarChart, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, X
 
 import { Box, Typography, useTheme } from '@mui/material';
 
+import { AnalyticsChatsConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { useAnalyticsChatsQuery } from '@/api';
 
-const TOP_N = 10;
+const { CHAT_ACTIVITY_TOP_N } = AnalyticsChatsConstants;
 
 const METRIC_BUTTONS = [
   { label: 'Cost', value: 'cost' },
@@ -21,19 +22,20 @@ const METRIC_BUTTONS = [
 const ChatTopChart = memo(props => {
   const { projectId, dateFrom, dateTo, onBarClick } = props;
 
+  const [metric, setMetric] = useState('cost');
+  const sortBy = metric === 'cost' ? 'llm_cost' : metric === 'tokens' ? 'total_tokens' : 'responses';
+
   const { data } = useAnalyticsChatsQuery(
-    { projectId, dateFrom, dateTo, limit: TOP_N, offset: 0, sortBy: 'llm_cost', sortOrder: 'desc' },
+    { projectId, dateFrom, dateTo, limit: CHAT_ACTIVITY_TOP_N, offset: 0, sortBy, sortOrder: 'desc' },
     { skip: !projectId },
   );
-
-  const [metric, setMetric] = useState('cost');
   const { palette } = useTheme();
   const axisStroke = palette.text.primary;
   const axisTickStyle = { fill: axisStroke, fontSize: 11 };
 
   const chartRows = useMemo(
     () =>
-      (data?.rows || []).slice(0, TOP_N).map((r, i) => ({
+      (data?.rows || []).slice(0, CHAT_ACTIVITY_TOP_N).map((r, i) => ({
         name: r.chat_name || 'Private chat',
         llm_cost: r.llm_cost || 0,
         total_tokens: r.total_tokens || 0,
