@@ -36,7 +36,7 @@ const TriggerTypeSelector = memo(props => {
   const { disabled } = props;
 
   const styles = triggerTypeSelectorStyles();
-  const { toastSuccess, toastError } = useToast();
+  const { toastSuccess, toastError, toastWarning } = useToast();
   const selectedProject = useSelectedProject();
   const { values } = useFormikContext();
 
@@ -218,25 +218,39 @@ const TriggerTypeSelector = memo(props => {
     [currentTriggerType, buildWebhookSaveArgs, projectId, versionId, updateTrigger, toastSuccess, toastError],
   );
 
+  // Under credential governance an unattended trigger runs only a bound version with a mandate; the backend
+  // keeps the trigger and says so when this version is not bound yet. The toast provider shows one toast at
+  // a time, so the warning takes the place of the success message instead of replacing it a tick later.
+  const notifySaved = useCallback(
+    (result, successMessage) => {
+      if (result?.governance_notice) {
+        toastWarning(result.governance_notice);
+      } else {
+        toastSuccess(successMessage);
+      }
+    },
+    [toastSuccess, toastWarning],
+  );
+
   const handleScheduleSubmit = useCallback(
     async cronExpression => {
       try {
         // Get user's timezone
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-        await updateTrigger({
+        const result = await updateTrigger({
           projectId,
           versionId,
           type: TRIGGER_TYPES.schedule,
           cron: cronExpression,
           timezone,
         }).unwrap();
-        toastSuccess('Schedule configured successfully');
+        notifySaved(result, 'Schedule configured successfully');
       } catch (error) {
         toastError(error?.data?.error || 'Failed to configure schedule');
       }
     },
-    [projectId, versionId, updateTrigger, toastSuccess, toastError],
+    [projectId, versionId, updateTrigger, toastError, notifySaved],
   );
 
   const handleScheduleIconClick = useCallback(() => {
@@ -291,20 +305,20 @@ const TriggerTypeSelector = memo(props => {
           requestData.webhook_secret_value = secretValue;
         }
 
-        await updateTrigger(requestData).unwrap();
+        const result = await updateTrigger(requestData).unwrap();
 
+        let successMessage = 'Webhook configured successfully';
         if (signingTokenValue) {
-          toastSuccess('Webhook configured with the GitLab signing token');
+          successMessage = 'Webhook configured with the GitLab signing token';
         } else if (secretValue) {
-          toastSuccess('Webhook configured with new secret');
-        } else {
-          toastSuccess('Webhook configured successfully');
+          successMessage = 'Webhook configured with new secret';
         }
+        notifySaved(result, successMessage);
       } catch (error) {
         toastError(error?.data?.error || 'Failed to configure webhook');
       }
     },
-    [projectId, versionId, updateTrigger, toastSuccess, toastError],
+    [projectId, versionId, updateTrigger, toastError, notifySaved],
   );
 
   const isLoading = isFetching || isUpdating;
