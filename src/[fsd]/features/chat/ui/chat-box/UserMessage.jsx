@@ -43,6 +43,7 @@ const UserMessage = memo(
       shouldDisableEdit,
       messageId,
       sentTo,
+      sentToName,
       onClickSentTo,
       markdown = false,
       onRemoveAttachment,
@@ -53,7 +54,8 @@ const UserMessage = memo(
     const [isEditing, setIsEditing] = useState(false);
     const [editAttachments, setEditAttachments] = useState([]);
     const { highLightMe } = useHighlightUserMessage(messageId);
-    const participantName = useParticipantName(sentTo);
+    const defaultParticipantName = useParticipantName(sentTo);
+    const participantName = sentToName || defaultParticipantName;
     // A turn the user interjected into has more than one text item: the original
     // question plus each mid-turn injection, in order_index order.
     const textItems = useMemo(

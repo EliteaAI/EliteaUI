@@ -29,6 +29,7 @@ const ApplicationAnswer = memo(
       message_items,
       created_at,
       participant,
+      participantName,
       onCopy,
       onCopyToMessages,
       onDelete,
@@ -164,6 +165,7 @@ const ApplicationAnswer = memo(
           <ApplicationAnswerHeader
             ref={headerRef}
             participant={participant}
+            participantName={participantName}
             created_at={created_at}
             isSwarmChild={isSwarmChild}
             swarmAgentName={swarmAgentName}
