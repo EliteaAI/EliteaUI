@@ -33,3 +33,15 @@ export const parseRefusalPayload = trace => {
 
   return code ? { message, code } : { message };
 };
+
+/**
+ * A governance refusal only: the payload must carry its `code`. On the toolkit and index paths a code-less
+ * `{error}` stays a failed tool (with the tool name), not a refusal card.
+ *
+ * @param {unknown} trace
+ * @returns {{ message: string, code: string } | undefined}
+ */
+export const parseGovernanceRefusal = trace => {
+  const refusal = parseRefusalPayload(trace);
+  return refusal?.code ? refusal : undefined;
+};

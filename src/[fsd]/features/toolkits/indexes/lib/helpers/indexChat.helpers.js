@@ -7,7 +7,7 @@ import {
   parseIndexEntryJson,
 } from '@/[fsd]/entities/indexing-report';
 import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers';
-import { parseRefusalPayload } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
+import { parseGovernanceRefusal } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
 import {
   IndexStatuses,
   IndexesToolsEnum,
@@ -348,7 +348,7 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
         msg.budgetErrorCode = response_metadata?.budget_error_code;
         // A run the worker refused for governance (C-1009) carries `{code, error}`: with no headline the
         // refusal card shows its text and code
-        const refusal = parseRefusalPayload(message.content);
+        const refusal = parseGovernanceRefusal(message.content);
         if (msg.budgetErrorCode || refusal) msg.content = '';
 
         onFinish(IndexStatuses.fail, refusal ? { refusal } : undefined);

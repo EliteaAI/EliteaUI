@@ -332,6 +332,22 @@ describe('useToolkitChat validation errors', () => {
     expect(JSON.stringify(result.current.chatHistory)).not.toContain('Failed to execute tool');
   });
 
+  it('keeps a code-less {error} as a failed tool that names the tool', async () => {
+    const { result } = await startRun();
+
+    act(() =>
+      validationErrorHandlerRef.current({
+        type: 'error',
+        stream_id: 'conv-7',
+        content: { error: 'Bad input' },
+      }),
+    );
+
+    const last = result.current.chatHistory.at(-1);
+    expect(last.exception).toBeUndefined();
+    expect(last.content).toContain('Failed to execute tool');
+  });
+
   it('hands the refusal of an index run to whoever traces it', async () => {
     createToolkitConversationWithParticipant.mockResolvedValueOnce({ id: 8, uuid: 'conv-8' });
     const traceNewIndex = vi.fn();

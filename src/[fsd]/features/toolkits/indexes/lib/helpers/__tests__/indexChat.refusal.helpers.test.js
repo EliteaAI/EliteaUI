@@ -67,4 +67,20 @@ describe('a toolkit run the worker refused for governance (#7229)', () => {
     expect(msg.content).toBe('🔄 Testing tool...');
     expect(onFinish).toHaveBeenCalledWith(IndexStatuses.fail, undefined);
   });
+
+  it('keeps a code-less {error} as a plain failure: only a governance code makes a refusal card', () => {
+    const onFinish = vi.fn();
+    const [msg] = generateChatMessageBasedOnResponse({
+      message: {
+        message_id: 'msg-1',
+        type: SocketMessageType.AgentException,
+        content: JSON.stringify({ error: 'Connection reset by the remote host' }),
+      },
+      chatHistory: [running()],
+      onFinish,
+    });
+
+    expect(msg.content).toBe('🔄 Testing tool...');
+    expect(onFinish).toHaveBeenCalledWith(IndexStatuses.fail, undefined);
+  });
 });
