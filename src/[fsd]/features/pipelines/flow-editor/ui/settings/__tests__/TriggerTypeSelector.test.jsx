@@ -63,15 +63,17 @@ vi.mock('@/api/applications', () => ({
 vi.mock('@/assets/clock.svg?react', () => ({ default: () => null }));
 vi.mock('@/[fsd]/shared/config/store', () => ({ store: {} }));
 vi.mock('../PipelineWebhookModal', () => ({ default: () => null }));
-vi.mock('@/components/AlertDialog.jsx', () => ({
-  default: ({ open, onConfirm, onCancel, alertContent }) =>
-    open ? (
-      <div data-testid="replace-dialog">
-        <span>{alertContent}</span>
-        <button onClick={onConfirm}>confirm</button>
-        <button onClick={onCancel}>cancel</button>
-      </div>
-    ) : null,
+vi.mock('@/[fsd]/shared/ui', () => ({
+  Modal: {
+    BaseModal: ({ open, onConfirm, onClose, content }) =>
+      open ? (
+        <div data-testid="replace-dialog">
+          <span>{content}</span>
+          <button onClick={onConfirm}>confirm</button>
+          <button onClick={onClose}>cancel</button>
+        </div>
+      ) : null,
+  },
 }));
 
 const HITL_YAML = 'nodes:\n  - id: a\n    type: hitl\n';

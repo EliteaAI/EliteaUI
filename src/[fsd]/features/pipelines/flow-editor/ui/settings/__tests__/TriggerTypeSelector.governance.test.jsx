@@ -32,7 +32,7 @@ vi.mock('@mui/material', async importOriginal => ({
 vi.mock('@/[fsd]/shared/ui/banner-message', () => ({
   BannerMessage: ({ children }) => <div>{children}</div>,
 }));
-vi.mock('@/components/AlertDialog.jsx', () => ({ default: () => null }));
+vi.mock('@/[fsd]/shared/ui', () => ({ Modal: { BaseModal: () => null } }));
 vi.mock('@/[fsd]/features/schedule', () => ({ LegacyScheduleNotice: () => null }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProject: () => ({ id: 1 }),

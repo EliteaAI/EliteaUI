@@ -10,13 +10,13 @@ import Tooltip from '@/ComponentsLib/Tooltip';
 import { FlowEditorConstants, WebhookConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { LegacyScheduleNotice } from '@/[fsd]/features/schedule';
 import { useDelegatedOauthToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
-import { ScheduleSectionConstants } from '@/[fsd]/shared/lib/constants';
+import { ModalConstants, ScheduleSectionConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProject, useToast } from '@/[fsd]/shared/lib/hooks';
+import { Modal } from '@/[fsd]/shared/ui';
 import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
 import { InfoLabelWithTooltip } from '@/[fsd]/shared/ui/label';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useGetPipelineTriggerQuery, useUpdatePipelineTriggerMutation } from '@/api/applications';
-import AlertDialog from '@/components/AlertDialog.jsx';
 
 import PipelineWebhookModal from './PipelineWebhookModal';
 
@@ -396,15 +396,18 @@ const TriggerTypeSelector = memo(props => {
         />
       )}
 
-      <AlertDialog
-        title="Replace schedule"
-        alertContent="The old schedule of this version will be deleted and replaced by the new trigger. Continue?"
+      <Modal.BaseModal
         open={Boolean(pendingTriggerType)}
+        variant={ModalConstants.MODAL_VARIANT.simple}
+        titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
+        title="Replace schedule"
+        content="The old schedule of this version will be deleted and replaced by the new trigger. Continue?"
         onClose={handleCancelReplace}
-        onCancel={handleCancelReplace}
         onConfirm={handleConfirmReplace}
-        alarm
         confirmButtonText="Replace"
+        data-testid="replace-dialog"
+        confirmButtonTestId="replace-dialog-confirm"
+        cancelButtonTestId="replace-dialog-cancel"
       />
 
       <PipelineWebhookModal
