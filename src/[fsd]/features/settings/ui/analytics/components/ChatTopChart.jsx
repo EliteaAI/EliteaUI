@@ -13,20 +13,30 @@ import { useAnalyticsChatsQuery } from '@/api';
 
 const { CHAT_ACTIVITY_TOP_N } = AnalyticsChatsConstants;
 
-const METRIC_BUTTONS = [
-  { label: 'Cost', value: 'cost' },
-  { label: 'Tokens', value: 'tokens' },
-  { label: 'Responses', value: 'responses' },
-];
+const METRIC_CONFIG = {
+  cost: { label: 'Cost', field: 'llm_cost' },
+  tokens: { label: 'Tokens', field: 'total_tokens' },
+  responses: { label: 'Responses', field: 'responses' },
+};
+
+const METRIC_BUTTONS = Object.entries(METRIC_CONFIG).map(([value, { label }]) => ({ label, value }));
 
 const ChatTopChart = memo(props => {
   const { projectId, dateFrom, dateTo, onBarClick } = props;
 
   const [metric, setMetric] = useState('cost');
-  const sortBy = metric === 'cost' ? 'llm_cost' : metric === 'tokens' ? 'total_tokens' : 'responses';
+  const { label: barName, field: dataKey } = METRIC_CONFIG[metric];
 
   const { data } = useAnalyticsChatsQuery(
-    { projectId, dateFrom, dateTo, limit: CHAT_ACTIVITY_TOP_N, offset: 0, sortBy, sortOrder: 'desc' },
+    {
+      projectId,
+      dateFrom,
+      dateTo,
+      limit: CHAT_ACTIVITY_TOP_N,
+      offset: 0,
+      sortBy: dataKey,
+      sortOrder: 'desc',
+    },
     { skip: !projectId },
   );
   const { palette } = useTheme();
@@ -45,9 +55,6 @@ const ChatTopChart = memo(props => {
       })),
     [data?.rows],
   );
-
-  const dataKey = metric === 'cost' ? 'llm_cost' : metric === 'tokens' ? 'total_tokens' : 'responses';
-  const barName = metric === 'cost' ? 'Cost' : metric === 'tokens' ? 'Tokens' : 'Responses';
 
   const handleBarClick = useCallback(
     barData => {
