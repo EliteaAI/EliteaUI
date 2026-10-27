@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { SocketContext } from '@/[fsd]/shared/lib/context';
+import { SocketMessageType } from '@/common/constants';
 import { act, cleanup, render } from '@testing-library/react';
 
 import SkillTestPanel from '../SkillTestPanel';
@@ -18,19 +19,27 @@ const fixture = vi.hoisted(() => ({
   canEditVersionModel: true,
   generateContent: vi.fn(() => ({ unwrap: () => Promise.resolve({ task_id: 't1' }) })),
   values: {},
+  initialValues: {},
+  maxInstructionsLength: 1200,
   inputProps: null,
+  messageListProps: null,
+  onSocketEvent: null,
+  toastError: vi.fn(),
   onSelectVersionModel: vi.fn(),
   onSetVersionLLMSettings: vi.fn(),
 }));
 
 vi.mock('formik', () => ({
-  useFormikContext: () => ({ values: fixture.values }),
+  useFormikContext: () => ({ values: fixture.values, initialValues: fixture.initialValues }),
 }));
 vi.mock('react-redux', () => ({ useSelector: () => ({}) }));
 vi.mock('@/[fsd]/features/chat', () => ({
   BudgetWarningBanner: () => null,
   ChatButton: { ClearChatButton: () => null },
-  ChatMessageList: () => null,
+  ChatMessageList: props => {
+    fixture.messageListProps = props;
+    return null;
+  },
   VoiceMiniPlayer: () => null,
   useBudgetWarning: () => ({ shouldShow: false }),
   useReadAloud: () => ({}),
@@ -40,7 +49,10 @@ vi.mock('@/[fsd]/features/chat/lib/helpers', async importOriginal => ({
   normalizeContinuationError: vi.fn(),
 }));
 vi.mock('@/common/initializeNewMessages', () => ({
-  initializeNewMessages: () => [{ internal_id: 'question' }, { internal_id: 'answer' }],
+  initializeNewMessages: ({ question }) => [
+    { internal_id: 'question', id: 'question', role: 'user', content: question },
+    { internal_id: 'answer', question_id: 'question', role: 'assistant' },
+  ],
 }));
 vi.mock('@/components/Chat/StyledComponents', () => ({ ChatBodyContainer: ({ children }) => children }));
 vi.mock('@/pages/Common/Components/StyledComponents', () => ({
@@ -53,6 +65,7 @@ vi.mock('@/[fsd]/features/chat/ui/chat-input', () => ({
   },
 }));
 vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
+  useSkillInstructionsMaxLength: () => fixture.maxInstructionsLength,
   useSkillModels: () => fixture.skillModels,
   useSkillVersionModel: () => ({
     selectedModel: fixture.versionModel,
@@ -63,7 +76,7 @@ vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: () => 2,
-  useToast: () => ({ toastError: vi.fn(), toastInfo: vi.fn() }),
+  useToast: () => ({ toastError: fixture.toastError, toastInfo: vi.fn() }),
 }));
 vi.mock('@/api/llm', () => ({
   useGenerateContentStreamingMutation: () => [fixture.generateContent],
@@ -71,7 +84,10 @@ vi.mock('@/api/llm', () => ({
 }));
 vi.mock('@/common/utils', () => ({ buildErrorMessage: vi.fn() }));
 vi.mock('@/[fsd]/features/auth/lib/hooks/useSocket.hooks', () => ({
-  useManualSocket: () => ({ subscribe: vi.fn(), unsubscribe: vi.fn() }),
+  useManualSocket: (_event, onEvent) => {
+    fixture.onSocketEvent = onEvent;
+    return { subscribe: vi.fn(), unsubscribe: vi.fn() };
+  },
 }));
 vi.mock('@/components/Chat/FullScreenToggle', () => ({ default: () => null }));
 
@@ -79,14 +95,37 @@ const SAVED_RUN_SETTINGS = { llm_settings: { model_name: 'haiku', model_project_
 
 const SOCKET = { id: 'sid-1' };
 
+const PANEL = (
+  <SocketContext.Provider value={SOCKET}>
+    <SkillTestPanel />
+  </SocketContext.Provider>
+);
+
+// A fresh callback prop gets past memo, as a Formik values change does in the page
+const rerenderedPanel = () => (
+  <SocketContext.Provider value={SOCKET}>
+    <SkillTestPanel setIsFullScreenChat={() => {}} />
+  </SocketContext.Provider>
+);
+
+const finishAnswer = () =>
+  act(async () =>
+    fixture.onSocketEvent({ type: SocketMessageType.AgentResponse, stream_id: 's1', content: 'ok' }),
+  );
+
 const renderPanel = (canEditVersionModel, runSettings = SAVED_RUN_SETTINGS) => {
   fixture.canEditVersionModel = canEditVersionModel;
   fixture.values = { name: 'Reviewer', version_details: { run_settings: runSettings } };
-  return render(
-    <SocketContext.Provider value={SOCKET}>
-      <SkillTestPanel />
-    </SocketContext.Provider>,
-  );
+  return render(PANEL);
+};
+
+const UNDER_LIMIT = 'a'.repeat(1200);
+const OVER_LIMIT = 'a'.repeat(1201);
+
+const withInstructions = (instructions, savedInstructions = UNDER_LIMIT) => {
+  fixture.canEditVersionModel = true;
+  fixture.values = { name: 'Reviewer', version_details: { instructions, run_settings: SAVED_RUN_SETTINGS } };
+  fixture.initialValues = { version_details: { instructions: savedInstructions } };
 };
 
 describe('SkillTestPanel model chip', () => {
@@ -175,5 +214,72 @@ describe('SkillTestPanel model chip', () => {
 
     expect(fixture.inputProps.llmSettings.selection).toBeNull();
     expect(fixture.inputProps.llmSettings.temperature).not.toBeNull();
+  });
+});
+
+describe('SkillTestPanel instructions limit', () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+    fixture.initialValues = {};
+  });
+
+  it('disables sending and says why while the edited instructions are over the limit', async () => {
+    withInstructions(OVER_LIMIT);
+    render(PANEL);
+
+    expect(fixture.inputProps.disabledSend).toBe(true);
+    expect(fixture.inputProps.tooltipOfSendButton).toBe(
+      'Instructions are 1201 characters long. Maximum allowed is 1200 characters.',
+    );
+
+    await act(async () => fixture.inputProps.onSend('run'));
+
+    expect(fixture.generateContent).not.toHaveBeenCalled();
+    expect(fixture.messageListProps.chat_history).toEqual([]);
+  });
+
+  it('blocks regenerate and edit-and-resend over the limit and says why', async () => {
+    withInstructions(UNDER_LIMIT);
+    const { rerender } = render(PANEL);
+    await act(async () => fixture.inputProps.onSend('hello'));
+    await finishAnswer();
+    expect(fixture.generateContent).toHaveBeenCalledTimes(1);
+    expect(fixture.messageListProps.isStreaming).toBe(false);
+    const historyBefore = fixture.messageListProps.chat_history;
+
+    withInstructions(OVER_LIMIT);
+    rerender(rerenderedPanel());
+    await act(async () => fixture.messageListProps.onRegenerateAnswer('answer'));
+    await act(async () => fixture.messageListProps.onSubmitEditedMessage('question', 'edited'));
+
+    expect(fixture.generateContent).toHaveBeenCalledTimes(1);
+    expect(fixture.messageListProps.chat_history).toBe(historyBefore);
+    expect(fixture.toastError.mock.calls).toEqual([
+      ['Instructions are 1201 characters long. Maximum allowed is 1200 characters.'],
+      ['Instructions are 1201 characters long. Maximum allowed is 1200 characters.'],
+    ]);
+  });
+
+  it('sends again as soon as the instructions are back within the limit', async () => {
+    withInstructions(OVER_LIMIT);
+    const { rerender } = render(PANEL);
+
+    withInstructions(UNDER_LIMIT);
+    rerender(rerenderedPanel());
+    await act(async () => fixture.inputProps.onSend('run'));
+
+    expect(fixture.inputProps.disabledSend).toBe(false);
+    expect(fixture.generateContent.mock.calls[0][0].instructions).toBe(UNDER_LIMIT);
+  });
+
+  it('still tests saved instructions that predate a lowered limit, as Save allows them', async () => {
+    withInstructions(OVER_LIMIT, OVER_LIMIT);
+    render(PANEL);
+
+    await act(async () => fixture.inputProps.onSend('run'));
+
+    expect(fixture.inputProps.disabledSend).toBe(false);
+    expect(fixture.generateContent.mock.calls[0][0].instructions).toBe(OVER_LIMIT);
   });
 });

@@ -6,6 +6,9 @@ const SKILL_NAME_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
 export const instructionsTooLongMessage = (length, maxLength) =>
   `Instructions are ${length} characters long. Maximum allowed is ${maxLength} characters.`;
 
+export const isInstructionsOverLimit = (instructions, maxLength, savedInstructions) =>
+  Boolean(instructions?.trim()) && instructions.length > maxLength && instructions !== savedInstructions;
+
 export const validateSkillDraft = (draft, maxInstructionsLength) => {
   const errors = {};
   const name = (draft.name || '').trim();

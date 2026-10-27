@@ -1,6 +1,6 @@
 import * as yup from 'yup';
 
-import { instructionsTooLongMessage } from '@/[fsd]/features/skill/lib/helpers';
+import { instructionsTooLongMessage, isInstructionsOverLimit } from '@/[fsd]/features/skill/lib/helpers';
 import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
 
 // Mirror the backend skill-name rule (elitea_core models/pd/skill.py
@@ -37,8 +37,7 @@ const SkillValidateSchema = (maxInstructionsLength, savedInstructions) =>
         .trim()
         .test('instructions-max-length', (value, context) => {
           const rawValue = context.originalValue ?? '';
-          if (!value || rawValue.length <= maxInstructionsLength || rawValue === savedInstructions)
-            return true;
+          if (!isInstructionsOverLimit(rawValue, maxInstructionsLength, savedInstructions)) return true;
           return context.createError({
             message: instructionsTooLongMessage(rawValue.length, maxInstructionsLength),
           });
