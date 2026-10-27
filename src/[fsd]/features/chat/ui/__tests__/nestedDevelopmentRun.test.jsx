@@ -20,12 +20,12 @@ vi.mock('@/ComponentsLib/Tooltip', () => ({ default: ({ children }) => children 
 vi.mock('@/assets/arrow-right-icon.svg?react', () => ({ default: () => null }));
 vi.mock('@/components/Icons/CopyIcon', () => ({ default: () => null }));
 vi.mock('@/components/Icons/DownloadIcon', () => ({ default: () => null }));
-vi.mock('../ActionView', () => ({
+vi.mock('@/components/Chat/ActionView', () => ({
   default: ({ action }) => <span data-testid="action-chip">{action?.name}</span>,
 }));
 
 const { convertToAIAnswer } = await import('@/common/convertChatConversationMessages');
-const { default: ApplicationThinkView } = await import('../ApplicationThinkView');
+const { default: ApplicationThinkView } = await import('@/components/Chat/ApplicationThinkView');
 const { default: ErrorTrace } = await import('@/[fsd]/features/chat/ui/error-trace/ErrorTrace');
 
 const theme = createTheme({

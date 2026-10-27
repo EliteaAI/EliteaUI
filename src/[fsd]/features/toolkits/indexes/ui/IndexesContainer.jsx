@@ -98,6 +98,7 @@ const IndexesContainer = memo(props => {
           : prev,
       );
       if (metadata.state === IndexStatuses.success) {
+        setReindexRefusal(null);
         toastSuccess('Reindex has completed successfully!');
       } else if (metadata.refusal) {
         setReindexRefusal(metadata.refusal);
@@ -167,7 +168,7 @@ const IndexesContainer = memo(props => {
   const reindexRunningTargetName = reindexTarget?.metadata?.collection || '';
 
   return (
-    <Box sx={reindexRefusal ? styles.wrapperWithRefusal : styles.wrapper}>
+    <Box sx={[styles.wrapper, Boolean(reindexRefusal) && styles.withRefusal]}>
       {reindexRefusal && (
         <ErrorTrace trace={JSON.stringify({ code: reindexRefusal.code, error: reindexRefusal.message })} />
       )}
@@ -235,12 +236,8 @@ const indexesContainerStyles = () => ({
     width: '100%',
     height: 'auto',
   },
-  wrapperWithRefusal: {
-    display: 'flex',
+  withRefusal: {
     flexDirection: 'column',
-    flexGrow: 1,
-    width: '100%',
-    height: 'auto',
   },
 });
 

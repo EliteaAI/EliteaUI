@@ -175,7 +175,7 @@ export const useToolkitChat = props => {
   }, []);
 
   const onRunFinish = useCallback(
-    state => {
+    (state, extra) => {
       if (isTestToolsMode) return setIsRunning(false);
 
       if (runningToolRef.current === IndexesToolsEnum.indexData) {
@@ -188,6 +188,7 @@ export const useToolkitChat = props => {
         if (traceNewIndex)
           traceNewIndex(index?.id ?? null, {
             state,
+            ...extra,
           });
 
         refetchIndexesList();
@@ -289,7 +290,7 @@ export const useToolkitChat = props => {
       // A run refused by governance (C-1009) arrives as `{code, error}`: it renders as the chat's refusal card
       // (readable text and the code), not as a failed tool with the raw payload
       const refusal = parseRefusalPayload(message.content);
-      const refused = Boolean(refusal?.code);
+      const refused = Boolean(refusal);
 
       if (traceNewIndex && pendingRun.indexing)
         traceNewIndex(index?.id ?? null, {

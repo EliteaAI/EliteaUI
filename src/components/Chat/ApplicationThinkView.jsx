@@ -39,7 +39,7 @@ const {
   resolvePendingAgentPaths,
 } = ExecutionHierarchyHelpers;
 
-const isRefusal = exception => Boolean(parseRefusalPayload(exception)?.code);
+const isRefusal = exception => Boolean(parseRefusalPayload(exception));
 
 const SubAgentThinkBlock = memo(props => {
   const {

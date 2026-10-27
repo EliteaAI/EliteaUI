@@ -7,6 +7,7 @@ import {
   parseIndexEntryJson,
 } from '@/[fsd]/entities/indexing-report';
 import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers';
+import { parseRefusalPayload } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
 import {
   IndexStatuses,
   IndexesToolsEnum,
@@ -345,9 +346,12 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
         // Without the scope the headline stays "🔄 Testing tool...", which reads as still
         // running, and the block goes unexplained until the page is reloaded
         msg.budgetErrorCode = response_metadata?.budget_error_code;
-        if (msg.budgetErrorCode) msg.content = '';
+        // A run the worker refused for governance (C-1009) carries `{code, error}`: with no headline the
+        // refusal card shows its text and code
+        const refusal = parseRefusalPayload(message.content);
+        if (msg.budgetErrorCode || refusal) msg.content = '';
 
-        onFinish(IndexStatuses.fail);
+        onFinish(IndexStatuses.fail, refusal ? { refusal } : undefined);
       } else {
         // Add new error message if no existing message found
         const errorMessage = generateMockMessageTemplate(
