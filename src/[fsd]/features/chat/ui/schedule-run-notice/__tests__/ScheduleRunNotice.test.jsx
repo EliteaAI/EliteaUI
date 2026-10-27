@@ -158,6 +158,15 @@ describe('ScheduleRunNotice', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
+  it('renders the dismiss control as a base button with its accessible name', () => {
+    render(ui());
+    emit(event());
+
+    const dismiss = screen.getByRole('button', { name: 'Dismiss notice' });
+    expect(dismiss).toHaveClass('MuiButton-root');
+    expect(dismiss).not.toHaveClass('MuiIconButton-root');
+  });
+
   it('clears the notice when the conversation changes', () => {
     const { rerender } = render(ui(1));
     emit(event());

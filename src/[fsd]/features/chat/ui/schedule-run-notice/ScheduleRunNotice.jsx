@@ -2,19 +2,21 @@ import { memo, useCallback, useEffect, useState } from 'react';
 
 import { Link as RouterLink } from 'react-router-dom';
 
-import { Box, IconButton, Link, Typography } from '@mui/material';
+import { Box, Link, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { useSocket } from '@/[fsd]/features/auth/lib/hooks';
-import { findNoticeAgent } from '../../lib/helpers';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
+import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import FailIcon from '@/assets/fail-icon.svg?react';
 import SuccessIcon from '@/assets/success-icon.svg?react';
 import { ChatParticipantType, SearchParams, sioEvents } from '@/common/constants';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import RouteDefinitions from '@/routes';
+
+import { findNoticeAgent } from '../../lib/helpers';
 
 const STATUSES = {
   success: { label: 'Success', variant: 'info', Icon: SuccessIcon, iconColor: 'success' },
@@ -92,15 +94,14 @@ const ScheduleRunNotice = memo(props => {
         title="Dismiss notice"
         placement="top"
       >
-        <IconButton
-          variant="elitea"
-          color="secondary"
+        <BaseBtn
+          variant={BUTTON_VARIANTS.icon}
           aria-label="Dismiss notice"
           onClick={handleClose}
           sx={styles.closeButton}
         >
           <CloseIcon sx={styles.closeIcon} />
-        </IconButton>
+        </BaseBtn>
       </StyledTooltip>
     </BannerMessage>
   );
