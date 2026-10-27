@@ -64,7 +64,7 @@ const ProjectSkillsSettings = memo(() => {
     },
     [current?.id, projectId, update, create, refreshSettings, toastError],
   );
-  const disabled = !checkPermission(PERMISSIONS.configuration.update) || saving || !isAvailable;
+  const disabled = !checkPermission(PERMISSIONS.configuration.update) || saving;
 
   return (
     <Box

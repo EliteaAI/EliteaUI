@@ -148,14 +148,30 @@ describe('project skills in chat setting', () => {
     expect(projectSetting()).toBeDisabled();
   });
 
-  it('is locked with a hint while platform administrators keep the feature off', () => {
+  it('stays editable with a hint while platform administrators keep the feature off', async () => {
     api.platform = { available: false, project_default: true };
     api.current = { id: 7, elitea_title: 'project_skills', data: { enabled: true } };
     renderSettings();
-    expect(projectSetting()).toBeDisabled();
+    expect(projectSetting()).not.toBeDisabled();
     expect(screen.getByTestId('project-skills-platform-off-hint')).toHaveTextContent(
       'Turned off for the whole environment by platform administrators.',
     );
+    expect(screen.queryByTestId('project-skills-disabled-hint')).not.toBeInTheDocument();
+    await userEvent.click(choiceSelect());
+    await userEvent.click(screen.getByRole('option', { name: 'Disabled', exact: true }));
+    await waitFor(() =>
+      expect(api.update).toHaveBeenCalledWith(
+        expect.objectContaining({ body: expect.objectContaining({ data: { enabled: false } }) }),
+      ),
+    );
+  });
+
+  it('stays editable without hints while the platform settings are loading or failed to load', () => {
+    api.platform = undefined;
+    renderSettings();
+    expect(projectSetting()).not.toBeDisabled();
+    expect(choiceSelect()).toHaveTextContent('Use platform default (Disabled)');
+    expect(screen.queryByTestId('project-skills-platform-off-hint')).not.toBeInTheDocument();
     expect(screen.queryByTestId('project-skills-disabled-hint')).not.toBeInTheDocument();
   });
 
