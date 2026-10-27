@@ -23,6 +23,7 @@ const ResultsPanel = memo(props => {
     runActive,
     cancelRequested,
     versions: applicationVersions = [],
+    handleVersionChange: onVersionChange,
     handleCancelRun: onCancelRun,
     handleOpenHistory: onOpenHistory,
     handleClearResults: onClearResults,
@@ -81,6 +82,7 @@ const ResultsPanel = memo(props => {
               <EnhanceWithAiButton
                 applicationId={applicationId}
                 runId={displayRun?.id}
+                onVersionCreated={onVersionChange}
               />
               <Tooltip
                 title="Export to Excel"

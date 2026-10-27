@@ -399,7 +399,29 @@ const SuiteDetailPanel = memo(props => {
               ),
             },
             {
+              title: 'Dataset',
+              headerContent: <DatasetSectionHeader onManageDatasets={onManageDatasets} />,
+              content: (
+                <DatasetSection
+                  datasets={datasets}
+                  attachedDataset={attachedDataset}
+                  datasetActions={datasetActions}
+                />
+              ),
+            },
+            {
+              title: 'Dimensions',
+              headerContent: <DimensionSectionHeader onManageDimensions={onManageDimensions} />,
+              content: (
+                <DimensionSection
+                  attachedDimensions={attachedDimensions}
+                  dimensionActions={dimensionActions}
+                />
+              ),
+            },
+            {
               title: 'Run limits',
+              defaultExpanded: false,
               content: (
                 <Box
                   sx={styles.formSection}
@@ -534,27 +556,6 @@ const SuiteDetailPanel = memo(props => {
                     </Typography>
                   )}
                 </Box>
-              ),
-            },
-            {
-              title: 'Dataset',
-              headerContent: <DatasetSectionHeader onManageDatasets={onManageDatasets} />,
-              content: (
-                <DatasetSection
-                  datasets={datasets}
-                  attachedDataset={attachedDataset}
-                  datasetActions={datasetActions}
-                />
-              ),
-            },
-            {
-              title: 'Dimensions',
-              headerContent: <DimensionSectionHeader onManageDimensions={onManageDimensions} />,
-              content: (
-                <DimensionSection
-                  attachedDimensions={attachedDimensions}
-                  dimensionActions={dimensionActions}
-                />
               ),
             },
           ]}
