@@ -1,11 +1,11 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { useSkillEditorDetails } from '@/[fsd]/features/chat/lib/hooks/useSkillEditorDetails.hooks';
 import BaseEditor from '@/[fsd]/features/chat/ui/editors/BaseEditor';
 import SkillCanvasModelSelector from '@/[fsd]/features/chat/ui/editors/SkillCanvasModelSelector';
 import SkillEditorCreateButton from '@/[fsd]/features/chat/ui/editors/SkillEditorCreateButton';
 import SkillEditorSaveButton from '@/[fsd]/features/chat/ui/editors/SkillEditorSaveButton';
-import { useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
 import {
   hasSkillChatModelOverride,
   withDefaultSkillModel,
@@ -13,7 +13,6 @@ import {
 } from '@/[fsd]/features/skill/lib/helpers';
 import { useSkillModels, useSkillValidationSchema } from '@/[fsd]/features/skill/lib/hooks';
 import { CreateSkillForm } from '@/[fsd]/features/skill/ui';
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 
 const buildInitialValues = (data, defaultModel) => ({
   id: data?.id ?? null,
@@ -44,16 +43,11 @@ const SkillEditor = memo(props => {
     isCreateMode = false,
     onSkillCreated,
   } = props;
-  const projectId = useSelectedProjectId();
   const skillId = skill?.entity_meta?.id;
-  const versionId = skill?.entity_settings?.version_id;
   const [isDirty, setIsDirty] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
-  const { data, error } = useSkillDetailsQuery(
-    { projectId, skillId, versionId },
-    { skip: !projectId || !skillId },
-  );
+  const { data, error, isPublic } = useSkillEditorDetails(skill);
 
   const { defaultModel, isLoadingModels } = useSkillModels();
   const validationSchema = useSkillValidationSchema(data?.version_details?.instructions);
@@ -85,6 +79,7 @@ const SkillEditor = memo(props => {
       initialValues={initialValues}
       validationSchema={validationSchema}
       error={error}
+      isPublic={isPublic}
       saveButton={
         isCreateMode ? (
           <SkillEditorCreateButton
@@ -108,7 +103,7 @@ const SkillEditor = memo(props => {
       )}
       {!isLoadingModels && (
         <CreateSkillForm
-          disabled={isCreating || isAwaitingSkillDetails}
+          disabled={isPublic || isCreating || isAwaitingSkillDetails}
           isCreateMode={isCreateMode}
         />
       )}
