@@ -16,6 +16,11 @@ import {
   FlowEditorSelect,
   FlowEditorSettings,
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import {
+  AttachmentToolHelpers,
+  ToolPickerUI,
+  usePipelineAttachments,
+} from '@/[fsd]/features/pipelines/tool-picker';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { capitalizeFirstChar } from '@/common/utils';
@@ -71,9 +76,15 @@ const BaseToolNode = memo(props => {
   } = useFunctionInputMapping({ id, isMCP: nodeType === FlowEditorConstants.PipelineNodeTypes.Mcp });
 
   const { getToolkitNameFromSchema, getSelectedTools } = useGetToolkitNameFromSchema();
+  const { attachToolkit } = usePipelineAttachments();
+  const isMcpNode = nodeType === FlowEditorConstants.PipelineNodeTypes.Mcp;
+  const usesProjectPicker = isMcpNode || nodeType === FlowEditorConstants.PipelineNodeTypes.Toolkit;
 
   const functionOptions = useMemo(() => {
-    const explicitSelected = selectedToolkit?.settings?.selected_tools;
+    // The pipeline narrows `selected_tools` to the tools its nodes use, so offer everything the toolkit has
+    const explicitSelected = usesProjectPicker
+      ? AttachmentToolHelpers.getToolkitAvailableTools(selectedToolkit)
+      : selectedToolkit?.settings?.selected_tools;
     const hasExplicitSelection = Array.isArray(explicitSelected) && explicitSelected.length > 0;
     const availableTools = getSelectedTools(selectedToolkit?.type);
     const hasAvailableCheck = Array.isArray(availableTools) && availableTools.length > 0;
@@ -95,7 +106,7 @@ const BaseToolNode = memo(props => {
         value: FlowEditorHelpers.getToolName(item),
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
-  }, [dynamicToolNames, getSelectedTools, selectedToolkit?.settings?.selected_tools, selectedToolkit?.type]);
+  }, [dynamicToolNames, getSelectedTools, selectedToolkit, usesProjectPicker]);
 
   const onSelectToolkit = useCallback(
     newToolkit => {
@@ -128,6 +139,17 @@ const BaseToolNode = memo(props => {
     },
     [getToolkitNameFromSchema, id, setYamlJsonObject, toolkitTypes, yamlJsonObject, yamlNode?.input_mapping],
   );
+
+  // Any project toolkit can be picked; one the pipeline doesn't have yet is attached on Save
+  const onPickProjectToolkit = useCallback(
+    (source, toolkitName) => {
+      onSelectToolkit({ ...source, toolkit_name: toolkitName });
+      attachToolkit(source, { mcp: isMcpNode, toolkitName });
+    },
+    [attachToolkit, isMcpNode, onSelectToolkit],
+  );
+
+  const onClearProjectToolkit = useCallback(() => onSelectToolkit(null), [onSelectToolkit]);
 
   const onClearTool = useCallback(() => {
     onChangeTool(null);
@@ -189,7 +211,17 @@ const BaseToolNode = memo(props => {
         : undefined,
   };
 
-  const toolkitSelect = (
+  const toolkitSelect = usesProjectPicker ? (
+    <ToolPickerUI.ProjectToolkitPicker
+      mcp={isMcpNode}
+      label={isMcpNode ? 'MCP' : 'Toolkit'}
+      value={yamlNode?.toolkit_name}
+      onSelect={onPickProjectToolkit}
+      onClear={onClearProjectToolkit}
+      disabled={isReadOnly}
+      data-testid={testIdPrefix ? `${testIdPrefix}-toolkit-select` : undefined}
+    />
+  ) : (
     <FlowEditorSelect.ToolSelect
       id={id}
       label={nodeType === FlowEditorConstants.PipelineNodeTypes.Mcp ? 'MCP' : 'Toolkit'}

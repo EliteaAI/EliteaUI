@@ -147,14 +147,6 @@ const EditorPanel = forwardRef((props, ref) => {
     flowEditorRef.current?.fitView?.();
   }, []);
 
-  useImperativeHandle(ref, () => ({
-    onRcvAgentEvent,
-    deleteAllRunNodes,
-    fitView,
-    onStopRun: (...args) => flowEditorRef.current?.stopCurrentRun?.(...args),
-    hasRunsInProgress: () => flowEditorRef.current?.hasRunsInProgress?.(),
-  }));
-
   const onSelectChatMode = useCallback(
     e => {
       const newMode = e?.target?.value;
@@ -172,6 +164,19 @@ const EditorPanel = forwardRef((props, ref) => {
     },
     [mode, onParseCodeToJson, setYamlCode, yamlCode, yamlJsonObject],
   );
+
+  useImperativeHandle(ref, () => ({
+    onRcvAgentEvent,
+    deleteAllRunNodes,
+    fitView,
+    onStopRun: (...args) => flowEditorRef.current?.stopCurrentRun?.(...args),
+    hasRunsInProgress: () => flowEditorRef.current?.hasRunsInProgress?.(),
+    selectNode: nodeId => {
+      if (mode !== PipelineEditorMode.Flow) onSelectChatMode({ target: { value: PipelineEditorMode.Flow } });
+      // The canvas re-reads the YAML when leaving the YAML view, so select once that is done
+      setTimeout(() => flowEditorRef.current?.selectNode?.(nodeId), 0);
+    },
+  }));
 
   const onAddNode = useCallback(type => {
     flowEditorRef.current?.onAddNode?.(type);
