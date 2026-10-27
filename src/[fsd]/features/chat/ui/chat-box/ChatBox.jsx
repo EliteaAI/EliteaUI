@@ -70,6 +70,7 @@ import ChatConversationStarters from '@/[fsd]/features/chat/ui/chat-conversation
 import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
 import RecommendationList from '@/[fsd]/features/chat/ui/recommendations/RecommendationList';
 import SearchResultList from '@/[fsd]/features/chat/ui/recommendations/SearchResultList';
+import { ScheduleRunNotice } from '@/[fsd]/features/chat/ui/schedule-run-notice';
 import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { MentionSkillList } from '@/[fsd]/features/skill';
@@ -3165,6 +3166,10 @@ const ChatBox = memo(
               isInterrupt={statusSource?.isInterrupt === true && !isReadOnly}
               participantType={statusParticipant?.entity_name}
               agentType={statusParticipant?.entity_settings?.agent_type}
+            />
+            <ScheduleRunNotice
+              conversationId={activeConversation?.id}
+              participants={activeConversation?.participants}
             />
             <NewChatInput
               fromTheChat={fromTheChat}

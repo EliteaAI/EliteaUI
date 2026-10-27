@@ -17,4 +17,16 @@ describe('unsaved-changes navigation guard', () => {
   it('leaves the AI providers list unguarded', () => {
     expect(isBlockablePath('/settings/ai-providers')).toBe(false);
   });
+
+  it('guards the New schedule form at /settings/schedules/create', () => {
+    expect(isBlockablePath('/settings/schedules/create')).toBe(true);
+  });
+
+  it('guards the Edit schedule form at /settings/schedules/:scheduleId', () => {
+    expect(isBlockablePath('/settings/schedules/9')).toBe(true);
+  });
+
+  it('leaves the schedules list unguarded', () => {
+    expect(isBlockablePath('/settings/schedules')).toBe(false);
+  });
 });

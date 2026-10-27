@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   RUN_ANALYTICS_TIMESTAMP_FORMAT,
+  SCHEDULE_RUN_COLUMNS,
   byNewestRunFirst,
   compareRunDuration,
   compareRunTimestamp,
@@ -9,6 +10,7 @@ import {
   hasRunAnalytics,
   parseRunTimestamp,
   resolveRunHistoryColumns,
+  toExecutionTypeRow,
   toRunISOString,
 } from '../runHistory.helpers';
 
@@ -167,5 +169,69 @@ describe('hasRunAnalytics', () => {
     expect(hasRunAnalytics({})).toBe(false);
     expect(hasRunAnalytics({ created_at: 'nonsense' })).toBe(false);
     expect(hasRunAnalytics(undefined)).toBe(false);
+  });
+});
+
+describe('toExecutionTypeRow', () => {
+  it('labels an older manual run "Manual (legacy)"', () => {
+    expect(toExecutionTypeRow({ id: 1, execution_type: 'manual' })).toEqual({
+      id: 1,
+      execution_type: 'manual',
+      event_label: 'Manual (legacy)',
+    });
+  });
+
+  it.each([
+    ['schedule_manual', 'Run now'],
+    ['chat', 'Chat'],
+    ['api', 'API'],
+    ['mcp', 'MCP'],
+    ['webhook', 'Webhook'],
+  ])('labels the %s trigger source "%s"', (type, label) => {
+    expect(toExecutionTypeRow({ execution_type: type }).event_label).toBe(label);
+  });
+
+  it('labels a scheduled run "Scheduled"', () => {
+    expect(toExecutionTypeRow({ execution_type: 'scheduled' }).event_label).toBe('Scheduled');
+  });
+
+  it('shows "-" for a missing or unknown execution_type and keeps the row fields', () => {
+    expect(toExecutionTypeRow({ id: 2 })).toEqual({ id: 2, event_label: '-' });
+    expect(toExecutionTypeRow({ execution_type: 'bogus' }).event_label).toBe('-');
+    expect(toExecutionTypeRow({ execution_type: null }).event_label).toBe('-');
+  });
+});
+
+describe('schedule runs in Agent and Pipeline Run History', () => {
+  it('a test-trigger schedule run reads Test, also in the Execution type column', () => {
+    const row = { id: 9, execution_type: 'schedule_manual', schedule_run: { trigger: 'test' } };
+    expect(toExecutionTypeRow(row).event_label).toBe('Test');
+    expect(toExecutionTypeRow({ ...row, schedule_run: { trigger: 'manual' } }).event_label).toBe('Run now');
+  });
+
+  it('the Schedule and Status cells read the run record, or "-" without one', () => {
+    const [schedule, status] = SCHEDULE_RUN_COLUMNS;
+    const run = { schedule_run: { schedule_name: 'Daily digest', status: 'waiting_for_approval' } };
+    expect([schedule.label, status.label]).toEqual(['Schedule', 'Status']);
+    expect([schedule.render(run), status.render(run)]).toEqual(['Daily digest', 'Waiting for input']);
+    expect([schedule.render({ schedule_run: null }), status.render({})]).toEqual(['-', '-']);
+  });
+
+  it('D7 extra columns use fixed rem widths after Date; without them the tracks stay fractional', () => {
+    // Execution type and Version fit their header labels with the sort icon (live check at 1536 px)
+    // Review r8, from live measures: a row grid has 736 px (768 px list minus the 2 x 16 px row padding).
+    // The minimum sum is 120 + 120 + 92 + 168 + 112 + 120 = 732 px, and every header label fits.
+    const template = resolveRunHistoryColumns(false, true, SCHEDULE_RUN_COLUMNS);
+    expect(template).toBe('7.5rem 7.5rem 5.75rem 10.5rem 7rem minmax(7.5rem, 1fr)');
+    const minRem = template
+      .split(/[\s(),]+/)
+      .filter(token => token.endsWith('rem'))
+      .map(token => Number.parseFloat(token))
+      .reduce((sum, rem) => sum + rem, 0);
+    expect(minRem * 16).toBeLessThanOrEqual(768 - 32);
+    expect(resolveRunHistoryColumns(true, true, SCHEDULE_RUN_COLUMNS)).toBe(
+      '7.5rem 7.5rem 5.75rem 10.5rem minmax(7.5rem, 1fr)',
+    );
+    expect(resolveRunHistoryColumns(false, true)).toBe('1.5fr 1.5fr 1.5fr 1fr');
   });
 });

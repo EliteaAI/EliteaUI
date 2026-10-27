@@ -3,10 +3,12 @@ import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { PAGE_SIZE } from '@/common/constants';
 
-const HISTORY_ITEMS_TAG = 'HISTORY_ITEMS_TAG';
+export const HISTORY_ITEMS_TAG = 'HISTORY_ITEMS_TAG';
 const CONVERSATION_INFO_TAG = 'CONVERSATION_INFO_TAG';
 
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
+
+const LIST_TAG = { type: HISTORY_ITEMS_TAG, id: 'LIST' };
 
 const getHistoryEntityName = source => {
   if (source === ParticipantEntityTypes.Toolkit || source === ParticipantEntityTypes.MCP)
@@ -15,7 +17,7 @@ const getHistoryEntityName = source => {
   return ParticipantEntityTypes.Application;
 };
 
-const runHistoryApi = eliteaApi
+export const runHistoryApi = eliteaApi
   .enhanceEndpoints({
     addTagTypes: [HISTORY_ITEMS_TAG],
   })
@@ -42,7 +44,10 @@ const runHistoryApi = eliteaApi
             ...params,
           },
         }),
-        providesTags: [HISTORY_ITEMS_TAG],
+        providesTags: result => [
+          LIST_TAG,
+          ...(result?.rows ?? []).map(({ id }) => ({ type: HISTORY_ITEMS_TAG, id })),
+        ],
         transformResponse: (response, _, args) => serializeRunHistoryListResponse(response, args.page > 0),
         forceRefetch({ currentArg, previousArg }) {
           return currentArg !== previousArg;
@@ -65,7 +70,19 @@ const runHistoryApi = eliteaApi
             is_hidden: true,
           },
         }),
-        invalidatesTags: [HISTORY_ITEMS_TAG],
+        invalidatesTags: (_result, _error, { historyId }) => [
+          { type: HISTORY_ITEMS_TAG, id: historyId },
+          LIST_TAG,
+        ],
+      }),
+      // action is 'approve' or 'reject'; await_task_timeout -1 returns without waiting for the run.
+      decideWaitingRun: build.mutation({
+        query: ({ projectId, conversationUuid, messageId, action }) => ({
+          url: `/elitea_core/continue_predict/prompt_lib/${projectId}/${conversationUuid}`,
+          method: 'POST',
+          body: { message_id: messageId, hitl_resume: true, hitl_action: action, await_task_timeout: -1 },
+        }),
+        invalidatesTags: [LIST_TAG],
       }),
     }),
   });
@@ -76,4 +93,5 @@ export const {
   useGetRunHistoryDetailsQuery,
   useLazyGetRunHistoryDetailsQuery,
   useDeleteRunHistoryItemMutation,
+  useDecideWaitingRunMutation,
 } = runHistoryApi;

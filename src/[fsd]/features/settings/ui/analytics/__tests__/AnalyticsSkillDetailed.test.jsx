@@ -128,8 +128,8 @@ describe('AnalyticsSkillDetailed', () => {
     expect(rowsOf('analytics-skill-detail-models')[0]).toContain('GPT X');
     expect(rowsOf('analytics-skill-detail-users')[0]).toContain('ann@example.com');
     expect(rowsOf('analytics-skill-detail-triggers')).toEqual([
-      expect.stringContaining('Manual'),
-      expect.stringContaining('Scheduled Pipelines'),
+      expect.stringContaining('Manual (legacy)'),
+      expect.stringContaining('Scheduled'),
     ]);
   });
 
