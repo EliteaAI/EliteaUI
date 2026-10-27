@@ -20,6 +20,9 @@ vi.mock('@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationAdvan
 vi.mock('@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationEditorNotes', () => ({
   default: stub('notes'),
 }));
+vi.mock('@/[fsd]/features/pipelines/tool-picker/ui/PipelineToolsSection', () => ({
+  default: stub('pipeline-tools'),
+}));
 vi.mock('@/[fsd]/features/skill/ui', () => ({ ApplicationSkills: stub('skills') }));
 vi.mock('@/[fsd]/widgets/entity-schedules-section', () => ({
   EntitySchedulesSection: ({ isChatView }) => <div data-testid="schedules">{String(isChatView)}</div>,
