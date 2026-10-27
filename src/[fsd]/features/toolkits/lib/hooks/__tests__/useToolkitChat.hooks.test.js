@@ -315,6 +315,49 @@ describe('useToolkitChat validation errors', () => {
     expect(result.current.isRunning).toBe(true);
   });
 
+  it('shows a governance refusal as the refusal card, with its reason and code', async () => {
+    const { result } = await startRun();
+    const refusal = {
+      code: 'DENIED_DEVELOPMENT_CREDENTIAL',
+      error: 'This credential needs a grant before a draft can use it.',
+    };
+
+    act(() => validationErrorHandlerRef.current({ type: 'error', stream_id: 'conv-7', content: refusal }));
+
+    expect(result.current.isRunning).toBe(false);
+    const last = result.current.chatHistory.at(-1);
+    // ApplicationAnswer renders `exception` through ErrorTrace, which reads the readable text and the code chip
+    expect(last.content).toBe('');
+    expect(JSON.parse(last.exception)).toEqual(refusal);
+    expect(JSON.stringify(result.current.chatHistory)).not.toContain('Failed to execute tool');
+  });
+
+  it('hands the refusal of an index run to whoever traces it', async () => {
+    createToolkitConversationWithParticipant.mockResolvedValueOnce({ id: 8, uuid: 'conv-8' });
+    const traceNewIndex = vi.fn();
+    const { result } = renderChat({
+      traceNewIndex,
+      index: { id: 5, metadata: { collection: 'docs', index_configuration: { index_name: 'docs' } } },
+      modes: [],
+    });
+
+    act(() => result.current.handleIndexData());
+    await waitFor(() => expect(socketEmit).toHaveBeenCalled());
+    act(() =>
+      validationErrorHandlerRef.current({
+        type: 'error',
+        stream_id: 'conv-8',
+        content: { code: 'DEVELOPMENT_RUNS_DISABLED', error: 'Development runs are switched off.' },
+      }),
+    );
+
+    expect(traceNewIndex).toHaveBeenLastCalledWith(5, {
+      collection: 'docs',
+      state: 'failed',
+      refusal: { code: 'DEVELOPMENT_RUNS_DISABLED', message: 'Development runs are switched off.' },
+    });
+  });
+
   it('ignores rejections once the task has started', async () => {
     const { result } = await startRun();
 

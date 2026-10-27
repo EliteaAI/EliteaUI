@@ -7,6 +7,7 @@ import {
   ExecutionHierarchyHelpers,
   SubAgentGroupingHelpers,
 } from '@/[fsd]/features/chat/lib/helpers';
+import { parseRefusalPayload } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
 import { ContinuationError, ErrorTrace } from '@/[fsd]/features/chat/ui/error-trace';
 import { SubAgentAccordion } from '@/[fsd]/features/chat/ui/sub-agent-section';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
@@ -37,6 +38,8 @@ const {
   resolveAgentPathActivity,
   resolvePendingAgentPaths,
 } = ExecutionHierarchyHelpers;
+
+const isRefusal = exception => Boolean(parseRefusalPayload(exception)?.code);
 
 const SubAgentThinkBlock = memo(props => {
   const {
@@ -118,7 +121,10 @@ const SubAgentThinkBlock = memo(props => {
         ) : (
           <ErrorTrace
             compact
-            headline={childError.headline || childError.exception}
+            // a sub-agent refused by governance (`{code, error}`, C-1009) shows the refusal card, as a whole turn does
+            headline={
+              childError.headline || (isRefusal(childError.exception) ? undefined : childError.exception)
+            }
             trace={childError.exception}
             messageId={messageId}
             onCopy={onCopy}

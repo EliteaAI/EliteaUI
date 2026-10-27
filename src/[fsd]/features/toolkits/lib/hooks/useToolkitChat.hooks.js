@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { useManualSocket, useSocket } from '@/[fsd]/features/auth/lib/hooks';
+import { parseRefusalPayload } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
 import {
   IndexStatuses,
   IndexesToolsEnum,
@@ -285,16 +286,24 @@ export const useToolkitChat = props => {
       setIsRunning(false);
       setIsWaitingForTaskStart(false);
 
+      // A run refused by governance (C-1009) arrives as `{code, error}`: it renders as the chat's refusal card
+      // (readable text and the code), not as a failed tool with the raw payload
+      const refusal = parseRefusalPayload(message.content);
+      const refused = Boolean(refusal?.code);
+
       if (traceNewIndex && pendingRun.indexing)
         traceNewIndex(index?.id ?? null, {
           collection: pendingRun.collection,
           state: IndexStatuses.fail,
+          ...(refused && { refusal }),
         });
 
-      const errorChatMessage = generateMockMessageTemplate(
-        `❌ Failed to execute tool "${pendingRun.tool}"\n\n**Error:** ${convertJsonToString(message.content)}`,
-        'toolkit',
-      );
+      const errorChatMessage = refused
+        ? { ...generateMockMessageTemplate('', 'toolkit'), exception: convertJsonToString(message.content) }
+        : generateMockMessageTemplate(
+            `❌ Failed to execute tool "${pendingRun.tool}"\n\n**Error:** ${convertJsonToString(message.content)}`,
+            'toolkit',
+          );
       setChatHistory(prev => [...prev, errorChatMessage]);
     },
     [traceNewIndex, index?.id],

@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { ErrorTrace } from '@/[fsd]/features/chat/ui/error-trace';
 import { useDeleteIndexItemMutation, useGetIndexScheduleQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import {
@@ -46,6 +47,8 @@ const IndexesContainer = memo(props => {
   const [reindexTarget, setReindexTarget] = useState(null);
   const [reindexConfirmOpen, setReindexConfirmOpen] = useState(false);
   const [reindexRunning, setReindexRunning] = useState(null);
+  // A reindex refused by governance (C-1009): its reason, shown as the chat's refusal card above the list
+  const [reindexRefusal, setReindexRefusal] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteIndexModal, setDeleteIndexModal] = useState(false);
 
@@ -96,6 +99,8 @@ const IndexesContainer = memo(props => {
       );
       if (metadata.state === IndexStatuses.success) {
         toastSuccess('Reindex has completed successfully!');
+      } else if (metadata.refusal) {
+        setReindexRefusal(metadata.refusal);
       } else if (metadata.state === IndexStatuses.fail) {
         toastError('Reindexing has failed!');
       }
@@ -129,6 +134,7 @@ const IndexesContainer = memo(props => {
 
   const confirmReindex = useCallback(() => {
     if (!reindexTarget) return;
+    setReindexRefusal(null);
     setReindexRunning(buildReindexStub(reindexTarget));
     setReindexConfirmOpen(false);
     setReindexTarget(null);
@@ -161,7 +167,10 @@ const IndexesContainer = memo(props => {
   const reindexRunningTargetName = reindexTarget?.metadata?.collection || '';
 
   return (
-    <Box sx={styles.wrapper}>
+    <Box sx={reindexRefusal ? styles.wrapperWithRefusal : styles.wrapper}>
+      {reindexRefusal && (
+        <ErrorTrace trace={JSON.stringify({ code: reindexRefusal.code, error: reindexRefusal.message })} />
+      )}
       <IndexesList
         canIndex={canIndex}
         handleAddIndex={goToCreateIndex}
@@ -222,6 +231,13 @@ IndexesContainer.displayName = 'IndexesContainer';
 const indexesContainerStyles = () => ({
   wrapper: {
     display: 'flex',
+    flexGrow: 1,
+    width: '100%',
+    height: 'auto',
+  },
+  wrapperWithRefusal: {
+    display: 'flex',
+    flexDirection: 'column',
     flexGrow: 1,
     width: '100%',
     height: 'auto',
