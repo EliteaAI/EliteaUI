@@ -142,6 +142,16 @@ describe('project skills in chat setting', () => {
     await waitFor(() => expect(api.toastError).toHaveBeenCalledWith('managed by project admins'));
   });
 
+  it('reports a failed save without a server message', async () => {
+    api.create.mockReturnValue({ unwrap: () => Promise.reject(new Error('network down')) });
+    renderSettings();
+    await userEvent.click(choiceSelect());
+    await userEvent.click(screen.getByRole('option', { name: 'Enabled', exact: true }));
+    await waitFor(() =>
+      expect(api.toastError).toHaveBeenCalledWith('Unable to update project skills in chat'),
+    );
+  });
+
   it('is locked without update permission', () => {
     api.permitted = false;
     renderSettings();
@@ -170,7 +180,7 @@ describe('project skills in chat setting', () => {
     api.platform = undefined;
     renderSettings();
     expect(projectSetting()).not.toBeDisabled();
-    expect(choiceSelect()).toHaveTextContent('Use platform default (Disabled)');
+    expect(choiceSelect().textContent).toBe('Use platform default');
     expect(screen.queryByTestId('project-skills-platform-off-hint')).not.toBeInTheDocument();
     expect(screen.queryByTestId('project-skills-disabled-hint')).not.toBeInTheDocument();
   });
