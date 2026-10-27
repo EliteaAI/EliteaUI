@@ -195,7 +195,13 @@ describe('RunAnalyticsContainer for a root entity', () => {
       data: {
         uuid: '0b7c3a2e-5d4f-4c1a-9e8b-1f2a3b4c5d6e',
         created_at: new Date(2026, 9, 9, 10, 0).getTime() / 1000,
-        meta: { single_participant: { entity_settings: { version_id: 251 } } },
+        meta: {
+          single_participant: {
+            entity_name: 'skill',
+            entity_meta: { id: 174, project_id: 2 },
+            entity_settings: { version_id: 251 },
+          },
+        },
       },
     });
     useApplicationDetailsQuery.mockReturnValue({ data: undefined });
@@ -244,6 +250,23 @@ describe('RunAnalyticsContainer for a root entity', () => {
         uuid: '0b7c3a2e-5d4f-4c1a-9e8b-1f2a3b4c5d6e',
         created_at: new Date(2026, 9, 2, 9, 0).getTime() / 1000,
         meta: {},
+      },
+    });
+    useAnalyticsRunDetailQuery.mockReturnValue({
+      data: { ...RUN_DETAIL, started_at: new Date(2026, 9, 9, 16, 36).toISOString() },
+      isFetching: false,
+    });
+    renderSkillRun();
+
+    expect(viewProps.current.infoLines[0]).toContain('Run: 09 Oct 2026, 04:36 PM');
+  });
+
+  it('dates a run of another entity Run panel by usage, as a chat run of this skill', () => {
+    useGetRunHistoryDetailsQuery.mockReturnValue({
+      data: {
+        uuid: '0b7c3a2e-5d4f-4c1a-9e8b-1f2a3b4c5d6e',
+        created_at: new Date(2026, 9, 2, 9, 0).getTime() / 1000,
+        meta: { single_participant: { entity_name: 'skill', entity_meta: { id: 999, project_id: 2 } } },
       },
     });
     useAnalyticsRunDetailQuery.mockReturnValue({

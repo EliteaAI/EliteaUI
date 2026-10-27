@@ -6,6 +6,7 @@ import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import {
   RUN_ANALYTICS_TIMESTAMP_FORMAT,
   formatRunTimestamp,
+  isSkillChatRun,
   toRunISOString,
 } from '@/[fsd]/entities/run-history/lib/helpers';
 import {
@@ -79,7 +80,7 @@ const RunAnalyticsContainer = memo(props => {
     isError: isRunCostsError,
   } = useAnalyticsCostsQuery(usageQueryArgs, { skip: skipUsageQueries });
 
-  const isEntityChatRun = isEntityScoped && Boolean(runDetails) && !runDetails.meta?.single_participant;
+  const isEntityChatRun = isSkillChatRun(runDetails, rootEntity?.rootEntityType, rootEntity?.rootEntityId);
   const isRunWithoutUsage = runDetailError?.status === 404;
   const isRunDetailUnavailable = Boolean(runDetailError) && !isRunWithoutUsage;
 

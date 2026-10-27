@@ -43,7 +43,8 @@ const runHistoryApi = eliteaApi
           },
         }),
         providesTags: [HISTORY_ITEMS_TAG],
-        transformResponse: (response, _, args) => serializeRunHistoryListResponse(response, args.page > 0),
+        transformResponse: (response, _, args) =>
+          serializeRunHistoryListResponse(response, args.page > 0, args),
         forceRefetch({ currentArg, previousArg }) {
           return currentArg !== previousArg;
         },

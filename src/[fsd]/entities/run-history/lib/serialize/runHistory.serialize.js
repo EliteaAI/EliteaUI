@@ -1,4 +1,6 @@
-const serializeRunHistory = conversation => {
+import { isSkillChatRun } from '@/[fsd]/entities/run-history/lib/helpers';
+
+const serializeRunHistory = (conversation, source, entityId) => {
   if (!conversation) return null;
 
   return {
@@ -11,31 +13,31 @@ const serializeRunHistory = conversation => {
       conversation.meta.single_participant?.entity_settings?.version_id ??
       conversation.skill_version_id ??
       null,
-    is_chat_run: !conversation.meta.single_participant,
+    is_chat_run: isSkillChatRun(conversation, source, entityId),
     index_name: conversation.meta?.index_name ?? null,
     operation_type: conversation.meta?.operation_type ?? null,
   };
 };
 
-const serializeRunHistoryList = history => {
+const serializeRunHistoryList = (history, source, entityId) => {
   if (!Array.isArray(history)) return [];
 
-  return history.map(serializeRunHistory).filter(Boolean);
+  return history.map(conversation => serializeRunHistory(conversation, source, entityId)).filter(Boolean);
 };
 
-export const serializeRunHistoryListResponse = (response, isLoadMore) => {
+export const serializeRunHistoryListResponse = (response, isLoadMore, { source, entityId } = {}) => {
   if (!response) return { rows: [], total: 0, isLoadMore };
 
   if (Array.isArray(response)) {
     return {
-      rows: serializeRunHistoryList(response),
+      rows: serializeRunHistoryList(response, source, entityId),
       total: response.length,
       isLoadMore,
     };
   }
 
   return {
-    rows: serializeRunHistoryList(response.rows || response.conversations || []),
+    rows: serializeRunHistoryList(response.rows || response.conversations || [], source, entityId),
     total: response.total || 0,
     hasMore: response.has_more ?? false,
     nextPage: response.next_page || null,

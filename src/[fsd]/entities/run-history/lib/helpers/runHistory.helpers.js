@@ -1,5 +1,7 @@
 import { format, fromUnixTime } from 'date-fns';
 
+import { ParticipantEntityTypes } from '@/[fsd]/shared/lib/constants/participantEntity.constants';
+
 const RUN_TIMESTAMP_FORMAT = 'dd-MM-yyyy, hh:mm a';
 export const RUN_ANALYTICS_TIMESTAMP_FORMAT = 'dd MMM yyyy, hh:mm a';
 export const RUN_FULL_TIMESTAMP_FORMAT = 'dd-MM-yyyy, hh:mm:ss a';
@@ -80,3 +82,16 @@ export const toRunISOString = value => {
 // unparseable timestamp is NaN, which never passes the cutoff.
 export const hasRunAnalytics = run =>
   parseRunTimestamp(run?.updated_at || run?.created_at) >= RUN_ANALYTICS_AVAILABLE_FROM;
+
+const isRunPanelOf = (conversation, entityName, entityId) => {
+  const runPanelEntity = conversation?.meta?.single_participant;
+
+  return (
+    runPanelEntity?.entity_name === entityName && Number(runPanelEntity?.entity_meta?.id) === Number(entityId)
+  );
+};
+
+export const isSkillChatRun = (conversation, entityName, entityId) =>
+  entityName === ParticipantEntityTypes.Skill &&
+  Boolean(conversation) &&
+  !isRunPanelOf(conversation, entityName, entityId);
