@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ExcelFormats } from '@/[fsd]/shared/lib/utils';
+import { ExcelFormats, exportToExcel } from '@/[fsd]/shared/lib/utils';
 
 import {
   buildAgentAnalyticsExportFileName,
@@ -11,12 +11,18 @@ import {
   buildChatDetailSheet,
   buildChatsSheet,
   buildRunAnalyticsSheets,
+  exportChatDetail,
   fetchAllAgentRuns,
   fetchAllChatRuns,
   fetchRunAnalyticsData,
   fmtRunDateTime,
   runAnalyticsExportFileName,
 } from '../analyticsExport.helpers';
+
+vi.mock('@/[fsd]/shared/lib/utils', async importOriginal => ({
+  ...(await importOriginal()),
+  exportToExcel: vi.fn(() => Promise.resolve()),
+}));
 
 const RUN_META = {
   scopeRows: [
@@ -979,5 +985,98 @@ describe('fetchAllChatRuns', () => {
     await fetchAllChatRuns(dispatch, endpoints, { projectId: 1, conversationUuid: 'uuid-1' });
 
     subscriptions.forEach(s => expect(s.unsubscribe).toHaveBeenCalledTimes(1));
+  });
+});
+
+describe('exportChatDetail', () => {
+  const baseArgs = {
+    projectId: 1,
+    conversationUuid: 'uuid-1',
+    dateFrom: '2026-10-01',
+    dateTo: '2026-10-08',
+    isPersonalProject: false,
+    projectName: 'Team',
+  };
+
+  const makeDeps = ({ detail = CHAT_DETAIL, runs = [CHAT_RUN], total = runs.length } = {}) => {
+    const endpoints = {
+      analyticsChatDetail: { initiate: vi.fn(args => ({ type: 'detail', args })) },
+      analyticsChatRuns: { initiate: vi.fn(args => ({ type: 'runs', args })) },
+    };
+    const dispatch = vi.fn(action => {
+      if (action.type === 'detail') return Promise.resolve({ data: detail });
+      return {
+        unwrap: () => Promise.resolve(action.args.offset === 0 ? { total, rows: runs } : { total, rows: [] }),
+        unsubscribe: vi.fn(),
+      };
+    });
+    return { dispatch, endpoints };
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('fetches the chat detail when none is supplied and exports one Excel file', async () => {
+    const { dispatch, endpoints } = makeDeps();
+
+    await exportChatDetail(dispatch, endpoints, baseArgs);
+
+    expect(endpoints.analyticsChatDetail.initiate).toHaveBeenCalledWith({
+      projectId: 1,
+      conversationUuid: 'uuid-1',
+      dateFrom: '2026-10-01',
+      dateTo: '2026-10-08',
+    });
+    expect(exportToExcel).toHaveBeenCalledTimes(1);
+    const [fileName, sheets] = exportToExcel.mock.calls[0];
+    expect(fileName).toBe(
+      buildChatAnalyticsExportFileName({
+        projectName: 'Team',
+        chatName: 'Review Chat',
+        dateFrom: '2026-10-01',
+        dateTo: '2026-10-08',
+      }),
+    );
+    expect(sheets).toHaveLength(1);
+  });
+
+  it('reuses supplied chat data instead of requesting the detail again', async () => {
+    const { dispatch, endpoints } = makeDeps();
+
+    await exportChatDetail(dispatch, endpoints, { ...baseArgs, chatData: CHAT_DETAIL });
+
+    expect(endpoints.analyticsChatDetail.initiate).not.toHaveBeenCalled();
+    expect(exportToExcel).toHaveBeenCalledTimes(1);
+  });
+
+  it('includes the fetched runs in the exported sheet', async () => {
+    const { dispatch, endpoints } = makeDeps({ runs: [CHAT_RUN] });
+
+    await exportChatDetail(dispatch, endpoints, baseArgs);
+
+    const expected = buildChatDetailSheet(CHAT_DETAIL, {
+      runs: [CHAT_RUN],
+      runsTotal: 1,
+      runsTruncated: false,
+      isPersonalProject: false,
+      projectName: 'Team',
+      dateFrom: '2026-10-01',
+      dateTo: '2026-10-08',
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    });
+    expect(exportToExcel.mock.calls[0][1]).toEqual([expected]);
+  });
+
+  it('rejects when fetching the runs fails so the caller can show an error', async () => {
+    const { endpoints } = makeDeps();
+    const dispatch = vi.fn(action =>
+      action.type === 'detail'
+        ? Promise.resolve({ data: CHAT_DETAIL })
+        : { unwrap: () => Promise.reject(new Error('boom')), unsubscribe: vi.fn() },
+    );
+
+    await expect(exportChatDetail(dispatch, endpoints, baseArgs)).rejects.toThrow('boom');
+    expect(exportToExcel).not.toHaveBeenCalled();
   });
 });

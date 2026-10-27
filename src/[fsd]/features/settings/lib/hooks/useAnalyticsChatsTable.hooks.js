@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useAnalyticsChatsQuery } from '@/api';
+import { useAnalyticsChatActivityQuery } from '@/api';
 
 import {
   CHAT_ACTIVITY_DEBOUNCE_MS,
@@ -39,7 +39,7 @@ export const useAnalyticsChatsTable = ({ projectId, dateFrom, dateTo, isPersonal
   const tableLimit = showAll ? rowsPerPage : CHAT_ACTIVITY_TOP_N;
   const tableOffset = showAll ? page * rowsPerPage : 0;
 
-  const { data, isFetching } = useAnalyticsChatsQuery(
+  const { data, isFetching } = useAnalyticsChatActivityQuery(
     {
       projectId,
       dateFrom,

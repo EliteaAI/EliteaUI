@@ -248,6 +248,33 @@ export const analyticsApi = eliteaApi
         providesTags: [TAG_TYPE_ANALYTICS],
         keepUnusedDataFor: CACHE_LIFETIME,
       }),
+      analyticsChatActivity: build.query({
+        query: ({
+          projectId,
+          dateFrom,
+          dateTo,
+          limit = 10,
+          offset = 0,
+          search = '',
+          sortBy = 'llm_cost',
+          sortOrder = 'desc',
+        }) => {
+          const params = new URLSearchParams();
+          if (dateFrom) params.set('date_from', dateFrom);
+          if (dateTo) params.set('date_to', dateTo);
+          params.set('limit', String(limit));
+          params.set('offset', String(offset));
+          if (search) params.set('search', search);
+          params.set('sort_by', sortBy);
+          params.set('sort_order', sortOrder);
+          return {
+            url: `/usage/analytics_chat_activity/prompt_lib/${projectId}?${params.toString()}`,
+            method: 'GET',
+          };
+        },
+        providesTags: [TAG_TYPE_ANALYTICS],
+        keepUnusedDataFor: CACHE_LIFETIME,
+      }),
       analyticsChatDetail: build.query({
         query: ({ projectId, conversationUuid, dateFrom, dateTo }) => {
           const params = new URLSearchParams();
@@ -399,6 +426,7 @@ export const {
   useAnalyticsActivityQuery,
   useAnalyticsChatsSummaryQuery,
   useAnalyticsChatsQuery,
+  useAnalyticsChatActivityQuery,
   useAnalyticsChatDetailQuery,
   useAnalyticsChatRunsQuery,
 } = analyticsApi;

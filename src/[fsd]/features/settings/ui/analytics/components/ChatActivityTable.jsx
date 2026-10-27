@@ -215,7 +215,7 @@ const ChatActivityTable = memo(props => {
             </Box>
           ))}
         </Box>
-        {isFetching && (
+        {isFetching && rows.length === 0 && (
           <Box sx={styles.loadingState}>
             <CircularProgress size={24} />
           </Box>
@@ -230,29 +230,32 @@ const ChatActivityTable = memo(props => {
             </Typography>
           </Box>
         )}
-        {!isFetching &&
-          rows.map((r, i) => (
-            <Box
-              key={r.conversation_uuid || i}
-              sx={styles.clickableRow}
-              onClick={() => onChatClick(r.conversation_uuid)}
-              data-testid="analytics-chats-row"
-            >
-              {columns.map(column => (
-                <Box
-                  key={column.key}
-                  sx={[
-                    styles.tableCellValue,
-                    { width: column.width, flexShrink: 0 },
-                    column.key === 'errors' && r.errors > 0 && styles.errorValue,
-                  ]}
-                  data-testid={`analytics-chats-row-${column.key}`}
-                >
-                  {renderCell(column, r)}
-                </Box>
-              ))}
-            </Box>
-          ))}
+        {rows.length > 0 && (
+          <Box sx={isFetching ? styles.rowsFetching : styles.rows}>
+            {rows.map((r, i) => (
+              <Box
+                key={r.conversation_uuid || i}
+                sx={styles.clickableRow}
+                onClick={() => onChatClick(r.conversation_uuid)}
+                data-testid="analytics-chats-row"
+              >
+                {columns.map(column => (
+                  <Box
+                    key={column.key}
+                    sx={[
+                      styles.tableCellValue,
+                      { width: column.width, flexShrink: 0 },
+                      column.key === 'errors' && r.errors > 0 && styles.errorValue,
+                    ]}
+                    data-testid={`analytics-chats-row-${column.key}`}
+                  >
+                    {renderCell(column, r)}
+                  </Box>
+                ))}
+              </Box>
+            ))}
+          </Box>
+        )}
       </Box>
       {!showAll && total > CHAT_ACTIVITY_TOP_N && !isFetching && (
         <Box sx={styles.showAllRow}>
@@ -348,6 +351,8 @@ const chatActivityTableStyles = () => ({
     whiteSpace: 'nowrap',
   }),
   errorValue: ({ palette }) => ({ color: palette.status.rejected }),
+  rows: { transition: 'opacity 0.15s ease' },
+  rowsFetching: { opacity: 0.5, pointerEvents: 'none', transition: 'opacity 0.15s ease' },
   loadingState: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem' },
   emptyState: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem' },
   emptyText: ({ palette }) => ({ color: palette.text.metrics || palette.text.disabled }),

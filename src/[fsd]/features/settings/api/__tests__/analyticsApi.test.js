@@ -25,6 +25,7 @@ const {
   useAnalyticsCostsQuery,
   useAnalyticsChatsSummaryQuery,
   useAnalyticsChatsQuery,
+  useAnalyticsChatActivityQuery,
   useAnalyticsChatDetailQuery,
   useAnalyticsChatRunsQuery,
 } = await import('../analyticsApi.js');
@@ -399,6 +400,89 @@ describe('analyticsChats endpoint', () => {
     expect(url.searchParams.get('search')).toBe('review');
     expect(url.searchParams.get('sort_by')).toBe('llm_cost');
     expect(url.searchParams.get('sort_order')).toBe('desc');
+  });
+});
+
+describe('analyticsChatActivity endpoint', () => {
+  let fetchSpy;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }),
+      );
+  });
+
+  it('exposes the generated hook and endpoint', () => {
+    expect(typeof useAnalyticsChatActivityQuery).toBe('function');
+    expect(analyticsApi.endpoints.analyticsChatActivity).toBeDefined();
+  });
+
+  it('issues a GET to its own analytics_chat_activity path, not the analytics_chats path', async () => {
+    const store = makeStore();
+    await store.dispatch(
+      analyticsApi.endpoints.analyticsChatActivity.initiate({
+        projectId: 7,
+        dateFrom: '2026-10-01',
+        dateTo: '2026-10-08',
+      }),
+    );
+
+    const request = requestOf(fetchSpy);
+    const url = new URL(request.url);
+    expect(request.method).toBe('GET');
+    expect(url.pathname).toContain('analytics_chat_activity');
+    expect(url.pathname).not.toContain('analytics_chats');
+    expect(url.pathname).toContain('7');
+    expect(url.searchParams.get('date_from')).toBe('2026-10-01');
+    expect(url.searchParams.get('date_to')).toBe('2026-10-08');
+  });
+
+  it('defaults to the first ten rows sorted by cost descending', async () => {
+    const store = makeStore();
+    await store.dispatch(analyticsApi.endpoints.analyticsChatActivity.initiate({ projectId: 7 }));
+
+    const url = new URL(requestOf(fetchSpy).url);
+    expect(url.searchParams.get('limit')).toBe('10');
+    expect(url.searchParams.get('offset')).toBe('0');
+    expect(url.searchParams.get('sort_by')).toBe('llm_cost');
+    expect(url.searchParams.get('sort_order')).toBe('desc');
+    expect(url.searchParams.has('search')).toBe(false);
+  });
+
+  it('passes pagination, sort and search params', async () => {
+    const store = makeStore();
+    await store.dispatch(
+      analyticsApi.endpoints.analyticsChatActivity.initiate({
+        projectId: 7,
+        limit: 25,
+        offset: 50,
+        search: 'review',
+        sortBy: 'total_tokens',
+        sortOrder: 'asc',
+      }),
+    );
+
+    const url = new URL(requestOf(fetchSpy).url);
+    expect(url.searchParams.get('limit')).toBe('25');
+    expect(url.searchParams.get('offset')).toBe('50');
+    expect(url.searchParams.get('search')).toBe('review');
+    expect(url.searchParams.get('sort_by')).toBe('total_tokens');
+    expect(url.searchParams.get('sort_order')).toBe('asc');
+  });
+
+  it('caches each sort order separately', async () => {
+    const store = makeStore();
+    await store.dispatch(
+      analyticsApi.endpoints.analyticsChatActivity.initiate({ projectId: 7, sortOrder: 'desc' }),
+    );
+    await store.dispatch(
+      analyticsApi.endpoints.analyticsChatActivity.initiate({ projectId: 7, sortOrder: 'asc' }),
+    );
+
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
   });
 });
 

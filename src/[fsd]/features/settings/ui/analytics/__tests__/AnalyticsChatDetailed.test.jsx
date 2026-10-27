@@ -2,7 +2,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { analyticsApi, useAnalyticsChatDetailQuery } from '@/[fsd]/features/settings/api/analyticsApi';
-import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
@@ -13,11 +12,6 @@ vi.hoisted(async () => {
   const { installGlobalStubs } = await import('./_testHelpers');
   installGlobalStubs();
 });
-
-vi.mock('@/[fsd]/shared/lib/utils', async importOriginal => ({
-  ...(await importOriginal()),
-  exportToExcel: vi.fn(() => Promise.resolve()),
-}));
 
 vi.mock('@/[fsd]/features/settings/api/analyticsApi', () => ({
   analyticsApi: {
@@ -63,9 +57,7 @@ vi.mock('@/[fsd]/features/settings/ui/analytics', async () => ({
 
 vi.mock('@/[fsd]/features/settings/lib/helpers', async () => ({
   AnalyticsExportHelpers: {
-    fetchAllChatRuns: vi.fn(() => Promise.resolve({ runs: [], total: 0, truncated: false })),
-    buildChatDetailSheet: vi.fn(() => ({ sheetName: 'Chat Detail', rows: [] })),
-    buildChatAnalyticsExportFileName: vi.fn(() => 'chat-analytics.xlsx'),
+    exportChatDetail: vi.fn(() => Promise.resolve()),
   },
   AnalyticCommonHelpers: {
     ...(await vi.importActual('@/[fsd]/features/settings/lib/helpers/analyticsCommon.helpers.js')),
@@ -390,40 +382,33 @@ describe('AnalyticsChatDetailed — export', () => {
 
   afterEach(() => cleanup());
 
-  it('calls exportToExcel when export button is clicked', async () => {
+  it('delegates the export to exportChatDetail with the current chat data', async () => {
     renderDetail();
 
     fireEvent.click(screen.getByTestId('analytics-chat-detail-export-button'));
 
     await waitFor(() => {
-      expect(exportToExcel).toHaveBeenCalled();
-    });
-  });
-
-  it('calls buildChatDetailSheet with the current data', async () => {
-    renderDetail();
-
-    fireEvent.click(screen.getByTestId('analytics-chat-detail-export-button'));
-
-    await waitFor(() => {
-      expect(AnalyticsExportHelpers.buildChatDetailSheet).toHaveBeenCalledWith(
-        MOCK_DATA,
-        expect.objectContaining({ projectName: 'Test project' }),
-      );
-    });
-  });
-
-  it('passes the analyticsChatRuns endpoint to fetchAllChatRuns', async () => {
-    renderDetail();
-
-    fireEvent.click(screen.getByTestId('analytics-chat-detail-export-button'));
-
-    await waitFor(() => {
-      expect(AnalyticsExportHelpers.fetchAllChatRuns).toHaveBeenCalledWith(
+      expect(AnalyticsExportHelpers.exportChatDetail).toHaveBeenCalledWith(
         expect.any(Function),
         analyticsApi.endpoints,
-        expect.any(Object),
+        expect.objectContaining({
+          projectId: 1,
+          conversationUuid: '00000000-0000-0000-0000-000000000001',
+          dateFrom: '2026-10-01',
+          dateTo: '2026-10-08',
+          chatData: MOCK_DATA,
+          projectName: 'Test project',
+        }),
       );
     });
+  });
+
+  it('shows an error message when the export fails', async () => {
+    AnalyticsExportHelpers.exportChatDetail.mockRejectedValueOnce(new Error('boom'));
+    renderDetail();
+
+    fireEvent.click(screen.getByTestId('analytics-chat-detail-export-button'));
+
+    expect(await screen.findByText('Export failed. Please try again.')).toBeTruthy();
   });
 });
