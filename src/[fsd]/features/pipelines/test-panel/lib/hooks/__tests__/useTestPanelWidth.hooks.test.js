@@ -40,6 +40,23 @@ const drag = (result, fromX, toX) => {
 describe('useTestPanelWidth', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Node 22 experimental Web Storage defines localStorage as undefined when
+    // --localstorage-file is not provided, shadowing jsdom's implementation.
+    vi.stubGlobal('localStorage', {
+      store: {},
+      getItem(key) {
+        return this.store[key] ?? null;
+      },
+      setItem(key, value) {
+        this.store[key] = String(value);
+      },
+      removeItem(key) {
+        delete this.store[key];
+      },
+      clear() {
+        this.store = {};
+      },
+    });
     localStorage.clear();
   });
   afterEach(() => {
@@ -100,10 +117,10 @@ describe('useTestPanelWidth', () => {
   });
 
   it('works when localStorage throws', () => {
-    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+    vi.spyOn(localStorage, 'getItem').mockImplementation(() => {
       throw new Error('blocked');
     });
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+    vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
       throw new Error('blocked');
     });
 

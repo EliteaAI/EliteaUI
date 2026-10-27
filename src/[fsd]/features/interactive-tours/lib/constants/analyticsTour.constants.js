@@ -60,6 +60,20 @@ Below the cards: a **Daily Activity** area chart, a **Top 5 AI Adopters** leader
 The **Agent & Pipeline Activity** table lists all agents and pipelines with total events, distinct users, average latency, and error count. Click any row to open a drill-down with daily usage trends, a per-user breakdown, and the tools called by that agent or pipeline.`,
   },
   {
+    id: 'chats-tab',
+    tabId: ANALYTICS_TAB_IDS.chats,
+    target: ANALYTICS_TOUR_TARGETS.tabSection,
+    placement: 'right',
+    title: 'Chats Tab',
+    content: `The Chats tab shows token usage and estimated cost for conversations on the Chats page.
+
+- **ACTIVE CHATS** — chats with at least one AI response in the range
+- **TOTAL CHAT COST** — estimated USD cost across all chat model calls
+- **AI RESPONSES** — distinct AI replies (regenerate counts as another)
+- **Cost by Participant** — splits cost into Direct model, Agents, Pipelines, Skills
+- **Chat Activity** — per-chat breakdown; click a row to open the chat detail view`,
+  },
+  {
     id: 'skills-tab',
     tabId: ANALYTICS_TAB_IDS.skills,
     requiredPermission: PERMISSIONS.skills.list,

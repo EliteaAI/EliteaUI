@@ -49,6 +49,16 @@ export const ANALYTICS_SEARCH_PARAMS = {
   agentId: 'agent_id',
   skillId: 'skill_id',
   skillProjectId: 'skill_project_id',
+  chatId: 'chat_id',
+};
+
+export const CHAT_DETAIL_EMPTY_MESSAGE = 'No data is available for this chat in the selected date range.';
+
+export const CHAT_PARTICIPANT_TYPE_LABELS = {
+  model: 'Direct model',
+  agent: 'Agents',
+  pipeline: 'Pipelines',
+  skill: 'Skills',
 };
 
 export const TOOLTIP_TEXTS = {
@@ -123,6 +133,33 @@ export const TOOLTIP_TEXTS = {
     MOST_ACTIVE:
       'Shows the Agents and Pipelines with the most runs during the selected date range. Interrupt continuations are counted as additional runs.',
     ACTIVITY_COUNT: 'Number of Agents and Pipelines with recorded activity during the selected date range.',
+  },
+  chats: {
+    ACTIVE_CHATS: 'Number of chats with at least one AI response during the selected date range.',
+    TOTAL_COST:
+      'Estimated USD cost of all model calls made in chats, including input, output, cache read and cache write costs.',
+    TOTAL_TOKENS: 'Combined input, output, cache read and cache write tokens used in chats.',
+    RESPONSES:
+      'Number of AI replies generated in chats. Regenerating or continuing a reply counts as an additional response.',
+    CHAT_USERS:
+      'Distinct project members who received at least one AI response in a chat. Not shown for Private Projects.',
+    SHARE_OF_PROJECT_COST:
+      'Total chat cost as a percentage of the project total estimated cost in the same date range.',
+    ERRORS: 'Responses in which at least one model or tool call failed.',
+    TOP_CHATS:
+      'The chats with the highest cost (or tokens / responses) in the selected date range. Only the top 10 are loaded when the tab opens.',
+    COST_BY_PARTICIPANT:
+      'Splits chat usage into Direct model, Agents, Pipelines and Skills. Usage of an Agent or Pipeline inside a chat is also included on the Agents & Pipelines tab — the two tabs overlap and must not be added together.',
+    DAILY_USAGE: 'Daily cost and tokens of chat usage in the selected date range.',
+    ACTIVITY_COUNT: 'All chats with at least one AI response in the selected date range.',
+  },
+  chatDetail: {
+    RESPONSES: 'Total AI replies generated in this chat in the selected date range.',
+    UNIQUE_USERS: 'Distinct users who received at least one AI response in this chat.',
+    TOTAL_COST: 'Estimated USD cost of all model calls in this chat.',
+    ALL_TIME_COST:
+      "Running total cost since this chat started tracking usage — the same value as Approx. cost in the chat's Context management panel. All other figures cover only the selected date range.",
+    ERRORS: 'Responses in which at least one model or tool call failed.',
   },
   skills: {
     RUNS: 'Skill runs during the selected date range: a skill run on its own or as a chat participant. Each reply the skill generates is one run.',
@@ -432,6 +469,71 @@ export const GUIDE_SECTIONS = [
         name: 'Agent & Pipeline Detail View',
         description:
           'Selecting an Agent or Pipeline opens a detail view with its total runs, unique users, total cost, input-token cost, output-token cost, token usage, evaluation tokens, latency, errors, and daily runs. Below them, Versions and Models show runs, tokens, and cost per executed version and per model (a run that used several models counts once in each model row, and only LLM calls are included); Users, Tools, and Skills show who ran it, which tools it called, and which skills it loaded or mentioned; Trigger Sources shows runs, tokens, and cost per initiating trigger, where runs without a recorded schedule or webhook trigger appear as Manual. Recent Runs lists every run with its user, version, models, tokens, cost, and Error or Success status, sorted and paged across the whole date range. Select a run start time to open that run’s Analytics page; the browser Back button returns to the same detail view and date range. Runs of a Catalog or deleted Agent or Pipeline have no run page and show their start time as plain text. The Export button downloads all of these tables, including every Recent Run with its run URL.',
+      },
+    ],
+  },
+  {
+    tabId: ANALYTICS_TAB_IDS.chats,
+    title: 'Chats Tab',
+    items: [
+      {
+        title: 'About',
+        description:
+          'The Chats tab shows token usage and estimated cost of conversations on the Chats page for the selected project and date range. It counts every model and tool call made in a chat, whether the reply came directly from a model, from an Agent or Pipeline added to the chat, or from a skill participant. Agent and Pipeline Run History runs, index runs and Support Bot conversations are not included.',
+      },
+      {
+        title: 'ACTIVE CHATS',
+        description:
+          'Number of chats with at least one AI response during the selected date range. Calculation: distinct chats among the model and tool calls recorded with a chat id.',
+      },
+      {
+        title: 'TOTAL CHAT COST',
+        description:
+          "Estimated USD cost of all model calls made in chats, including input-token, output-token, cache read and cache write costs. Costs are calculated from the platform's local model-price table when the call is made and may differ from provider invoices.",
+      },
+      {
+        title: 'TOTAL CHAT TOKENS',
+        description:
+          'Combined input, output, cache read and cache write tokens used in chats. Calculation: billable input + output + cache read + cache write tokens.',
+      },
+      {
+        title: 'AI RESPONSES',
+        description:
+          'Number of replies generated in chats. Each reply is one response; regenerating or continuing a reply counts as an additional response.',
+      },
+      {
+        title: 'CHAT USERS',
+        description:
+          'Distinct project members who received at least one AI response in a chat. Not shown for Private Projects.',
+      },
+      {
+        title: 'SHARE OF PROJECT COST',
+        description:
+          "Total chat cost as a percentage of the project's total estimated cost in the same date range.",
+      },
+      {
+        title: 'ERRORS',
+        description: 'Responses in which at least one model or tool call failed.',
+      },
+      {
+        title: 'Top Chats',
+        description:
+          'The chats with the highest cost (or tokens / responses, depending on the selected metric) in the selected date range. Only the top 10 are loaded when the tab opens; use Show all chats to browse the rest.',
+      },
+      {
+        title: 'Cost by Participant',
+        description:
+          'Splits chat usage into Direct model, Agents, Pipelines and Skills. Usage of an Agent or Pipeline inside a chat is also included in that Agent or Pipeline on the Agents & Pipelines tab, so the two tabs overlap and must not be added together.',
+      },
+      {
+        title: 'Chat Activity',
+        description:
+          'Lists chats with Responses, Users and Owner (Team Projects), Total/Input/Output/Cache costs, token counts, Avg Cost per Response, Models, Avg Latency, Errors and Last Activity. In Team Projects private chats of other members are counted but shown as "Private chat". Deleted chats keep their usage and are marked as deleted.',
+      },
+      {
+        title: 'Chat Detail View',
+        description:
+          "Selecting a chat opens its KPIs, usage by day, participants, models, users (Team Projects), tools and every response with its user, participant, model, tokens, cost and status. Select a response start time to open its Run Analytics page. All-time cost shows the running total kept since the chat started tracking usage — the same value as Approx. cost in the chat's Context management panel — whereas all other figures cover only the selected date range.",
       },
     ],
   },

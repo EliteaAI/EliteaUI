@@ -13,6 +13,7 @@ import {
   useProjectAnalyticsQuery,
   useProjectAnalyticsUsageQuery,
 } from '@/[fsd]/features/settings/api/analyticsApi';
+import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import {
   AnalyticCommonHelpers,
   AnalyticsExportHelpers,
@@ -21,6 +22,7 @@ import {
 import {
   AnalyticsActivity,
   AnalyticsAgents,
+  AnalyticsChats,
   AnalyticsCosts,
   AnalyticsGuide,
   AnalyticsHealth,
@@ -71,6 +73,7 @@ const ANALYTICS_TABS = [
   { id: TAB.costs, label: 'Costs', testid: 'analytics-tab-costs' },
   { id: TAB.tokens, label: 'Tokens', testid: 'analytics-tab-tokens' },
   { id: TAB.agents, label: 'Agents & Pipelines', testid: 'analytics-tab-agents-pipelines' },
+  { id: TAB.chats, label: 'Chats', testid: 'analytics-tab-chats' },
   { id: TAB.skills, label: 'Skills', testid: 'analytics-tab-skills' },
   { id: TAB.tools, label: 'Tools', testid: 'analytics-tab-tools' },
   { id: TAB.users, label: 'Users', testid: 'analytics-tab-users' },
@@ -273,17 +276,72 @@ const AnalyticsContainer = memo(() => {
     setExportError(false);
 
     try {
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const meta = { projectName, dateFrom: dateFromISO, dateTo: dateToISO, timeZone };
+
+      if (activeTab === TAB.chats) {
+        const selectedChatId = searchParams.get(AnalyticsCommonConstants.ANALYTICS_SEARCH_PARAMS.chatId);
+
+        if (selectedChatId) {
+          await AnalyticsExportHelpers.exportChatDetail(store.dispatch, analyticsApi.endpoints, {
+            projectId,
+            conversationUuid: selectedChatId,
+            dateFrom: dateFromISO,
+            dateTo: dateToISO,
+            isPersonalProject,
+            projectName,
+          });
+          return;
+        }
+
+        const [summaryResult, listResult] = await Promise.all([
+          store.dispatch(
+            analyticsApi.endpoints.analyticsChatsSummary.initiate({
+              projectId,
+              dateFrom: dateFromISO,
+              dateTo: dateToISO,
+              includeDaily: true,
+            }),
+          ),
+          store.dispatch(
+            analyticsApi.endpoints.analyticsChats.initiate({
+              projectId,
+              dateFrom: dateFromISO,
+              dateTo: dateToISO,
+              limit: 5000,
+              offset: 0,
+              sortBy: 'llm_cost',
+              sortOrder: 'desc',
+            }),
+          ),
+        ]);
+        const chatsData = {
+          summary: summaryResult.data?.kpis || {},
+          by_participant_type: summaryResult.data?.by_participant_type || [],
+          daily: summaryResult.data?.daily || [],
+          rows: listResult.data?.rows || [],
+        };
+        const sheet = AnalyticsExportHelpers.buildChatsSheet(chatsData, meta, isPersonalProject);
+        await exportToExcel(
+          AnalyticsExportHelpers.analyticsExportFileName({
+            projectName,
+            dateFrom: dateFromISO,
+            dateTo: dateToISO,
+          }),
+          [sheet],
+        );
+        return;
+      }
+
       const allData = await AnalyticsExportHelpers.fetchAllAnalyticsData(
         store.dispatch,
         analyticsApi.endpoints,
         { projectId, dateFrom: dateFromISO, dateTo: dateToISO, includeSkills: canViewSkills },
       );
 
-      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
       const sheets = AnalyticsExportHelpers.buildAnalyticsSheets({
         ...allData,
-        meta: { projectName, dateFrom: dateFromISO, dateTo: dateToISO, timeZone },
+        meta,
         isPersonalProject,
         includeSkills: canViewSkills,
       });
@@ -301,7 +359,17 @@ const AnalyticsContainer = memo(() => {
     } finally {
       setExporting(false);
     }
-  }, [store, projectId, projectName, dateFromISO, dateToISO, isPersonalProject, canViewSkills]);
+  }, [
+    store,
+    projectId,
+    projectName,
+    dateFromISO,
+    dateToISO,
+    isPersonalProject,
+    canViewSkills,
+    activeTab,
+    searchParams,
+  ]);
 
   const handleCloseExportError = useCallback(() => setExportError(false), []);
 
@@ -530,6 +598,14 @@ const AnalyticsContainer = memo(() => {
               dateFrom={dateFromISO}
               dateTo={dateToISO}
               canViewSkills={canViewSkills}
+            />
+          )}
+          {activeTab === TAB.chats && (
+            <AnalyticsChats
+              projectId={projectId}
+              dateFrom={dateFromISO}
+              dateTo={dateToISO}
+              isPersonalProject={isPersonalProject}
             />
           )}
           {activeTab === TAB.skills && (
