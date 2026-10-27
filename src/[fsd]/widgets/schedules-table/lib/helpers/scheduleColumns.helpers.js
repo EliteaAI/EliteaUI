@@ -1,4 +1,4 @@
-// All 8 columns show at every width (owner: no hidden columns). The tier comes from the measured table
+// All 8 columns show at every width. The tier comes from the measured table
 // width: 796 px at a 1280 px window, 956 px at 1440, 1116 px at 1600.
 // The regular tier starts at 948 px, a 1280 px window with the main sidebar collapsed (+152 px).
 const REGULAR_MIN_PX = 948;

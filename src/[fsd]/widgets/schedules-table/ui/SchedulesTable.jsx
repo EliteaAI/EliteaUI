@@ -12,9 +12,6 @@ import {
 } from '@/[fsd]/entities/grid-table';
 import { useGetComponentWidth } from '@/[fsd]/shared/lib/hooks';
 
-import ScheduleActionsCell from './ScheduleActionsCell';
-import ScheduleCell from './ScheduleCell';
-import ScheduleNameCell from './ScheduleNameCell';
 import {
   COMPACT_MIN_PX,
   GUTTERS_PX,
@@ -23,7 +20,10 @@ import {
   TABLE_MIN_WIDTH,
   TIER_WIDTHS,
   getTier,
-} from './scheduleColumns.helpers';
+} from '../lib/helpers/scheduleColumns.helpers';
+import ScheduleActionsCell from './ScheduleActionsCell';
+import ScheduleCell from './ScheduleCell';
+import ScheduleNameCell from './ScheduleNameCell';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
