@@ -20,10 +20,16 @@ import { NewChatInput } from '@/[fsd]/features/chat/ui/chat-input';
 import {
   findRunnableModel,
   includesProjectContext,
+  instructionsTooLongMessage,
+  isInstructionsOverLimit,
   testPanelRequestSettings,
   testPanelSettingsFor,
 } from '@/[fsd]/features/skill/lib/helpers';
-import { useSkillModels, useSkillVersionModel } from '@/[fsd]/features/skill/lib/hooks';
+import {
+  useSkillInstructionsMaxLength,
+  useSkillModels,
+  useSkillVersionModel,
+} from '@/[fsd]/features/skill/lib/hooks';
 import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
 import { SocketContext } from '@/[fsd]/shared/lib/context';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
@@ -82,7 +88,7 @@ const SkillTestPanel = memo(props => {
   const projectId = useSelectedProjectId();
   // This panel keeps no persisted conversation, so a dismissal lasts for the panel session
   const budgetWarning = useBudgetWarning({ projectId });
-  const { values } = useFormikContext();
+  const { values, initialValues } = useFormikContext();
   const { toastError, toastInfo } = useToast();
   const socket = useContext(SocketContext);
   const currentUser = useSelector(state => state.user);
@@ -92,6 +98,15 @@ const SkillTestPanel = memo(props => {
   // via a ref so onSend always uses the latest edited instructions).
   const instructionsRef = useRef('');
   instructionsRef.current = values?.version_details?.instructions || '';
+  const maxInstructionsLength = useSkillInstructionsMaxLength();
+  const isOverLimit = isInstructionsOverLimit(
+    instructionsRef.current,
+    maxInstructionsLength,
+    initialValues?.version_details?.instructions,
+  );
+  const overLimitMessage = isOverLimit
+    ? instructionsTooLongMessage(instructionsRef.current.length, maxInstructionsLength)
+    : '';
   const runSettings = values?.version_details?.run_settings;
   const savedLlmSettings = runSettings?.llm_settings;
   const withProjectContext = includesProjectContext(runSettings);
@@ -398,7 +413,7 @@ const SkillTestPanel = memo(props => {
   const onSend = useCallback(
     async question => {
       const trimmed = (question || '').trim();
-      if (!trimmed || isStreaming) return;
+      if (!trimmed || isStreaming || isOverLimit) return;
 
       const priorTurns = messagesToTurns(chat_history);
       const newMessages = buildMessagePair(trimmed);
@@ -409,7 +424,7 @@ const SkillTestPanel = memo(props => {
         priorTurns,
       });
     },
-    [buildMessagePair, chat_history, isStreaming, setChatHistory, streamAnswer],
+    [buildMessagePair, chat_history, isOverLimit, isStreaming, setChatHistory, streamAnswer],
   );
 
   const onStopGeneration = useCallback(() => {
@@ -459,6 +474,10 @@ const SkillTestPanel = memo(props => {
   const onRegenerateAnswer = useCallback(
     async messageId => {
       if (isStreaming) return;
+      if (isOverLimit) {
+        toastError(overLimitMessage);
+        return;
+      }
       const history = activeConversation.chat_history || [];
       const answerIdx = history.findIndex(m => m.id === messageId);
       if (answerIdx === -1) return;
@@ -476,13 +495,25 @@ const SkillTestPanel = memo(props => {
       );
       await streamAnswer({ userInput, assistantInternalId: answer.internal_id, priorTurns });
     },
-    [activeConversation.chat_history, isStreaming, setChatHistory, streamAnswer],
+    [
+      activeConversation.chat_history,
+      isOverLimit,
+      isStreaming,
+      overLimitMessage,
+      setChatHistory,
+      streamAnswer,
+      toastError,
+    ],
   );
 
   // Edit a user message + resend: truncate from that turn and re-run.
   const onSubmitEditedMessage = useCallback(
     async (messageId, updatedItems) => {
       if (isStreaming) return;
+      if (isOverLimit) {
+        toastError(overLimitMessage);
+        return;
+      }
       const history = activeConversation.chat_history || [];
       const idx = history.findIndex(m => m.id === messageId);
       if (idx === -1) return;
@@ -497,7 +528,16 @@ const SkillTestPanel = memo(props => {
         priorTurns,
       });
     },
-    [activeConversation.chat_history, buildMessagePair, isStreaming, setChatHistory, streamAnswer],
+    [
+      activeConversation.chat_history,
+      buildMessagePair,
+      isOverLimit,
+      isStreaming,
+      overLimitMessage,
+      setChatHistory,
+      streamAnswer,
+      toastError,
+    ],
   );
 
   const shouldDisableClear = !chat_history.length || isStreaming;
@@ -556,6 +596,8 @@ const SkillTestPanel = memo(props => {
               hideAttachments
               placeholder="Type your message..."
               onSend={onSend}
+              disabledSend={isOverLimit}
+              tooltipOfSendButton={overLimitMessage}
               isStreaming={isStreaming}
               onStopGeneration={onStopGeneration}
               modelList={modelList}
