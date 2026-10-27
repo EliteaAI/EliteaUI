@@ -79,6 +79,7 @@ const buildOAuthMetadata = (tokenInfo, clientId, clientSecret, projectId, toolki
   toolkit_id: toolkitId || tokenInfo.toolkit_id,
   used_dcr: tokenInfo.used_dcr || undefined,
   oauth_app_id: tokenInfo.oauth_app_id,
+  credential_type: tokenInfo.credential_type,
   authorization_endpoint: tokenInfo.authorization_endpoint,
   revocation_endpoint: tokenInfo.revocation_endpoint,
   registration_endpoint: tokenInfo.registration_endpoint,
@@ -150,6 +151,7 @@ export const triggerProactiveRefresh = serverUrl => {
         client_id: clientId || undefined,
         client_secret: tokenInfo.oauth_app_id ? undefined : clientSecret || undefined,
         oauth_app_id: tokenInfo.oauth_app_id || undefined,
+        credential_type: tokenInfo.oauth_app_id ? tokenInfo.credential_type : undefined,
         toolkit_id: tokenInfo.toolkit_id,
         used_dcr: tokenInfo.used_dcr || undefined,
         resource: tokenInfo.resource,
@@ -203,6 +205,7 @@ export const refreshAccessToken = async options => {
 
   const canonicalServer = McpAuthHelpers.canonicalizeServerUrl(serverUrl);
   const oauthAppId = McpAuthHelpers.getTokenInfo(serverUrl)?.oauth_app_id;
+  const credentialType = McpAuthHelpers.getTokenInfo(serverUrl)?.credential_type;
 
   const requestBody = {
     projectId: projectId || 1,
@@ -212,6 +215,7 @@ export const refreshAccessToken = async options => {
     client_id: clientId || undefined,
     client_secret: oauthAppId ? undefined : clientSecret || undefined,
     oauth_app_id: oauthAppId || undefined,
+    credential_type: oauthAppId ? credentialType : undefined,
     toolkit_id: toolkitId || undefined,
     used_dcr: usedDcr || undefined,
     resource: McpAuthHelpers.getTokenInfo(serverUrl)?.resource,
@@ -250,6 +254,7 @@ export const refreshAccessToken = async options => {
       client_id: clientId,
       client_secret: oauthAppId ? undefined : clientSecret,
       oauth_app_id: oauthAppId,
+      credential_type: oauthAppId ? credentialType : undefined,
       project_id: projectId,
       toolkit_id: toolkitId,
       used_dcr: usedDcr || undefined,
@@ -362,6 +367,7 @@ export const startMcpAuthFlow = async options => {
     toolkitId,
     toolkitType, // Pre-built MCP type (e.g., 'mcp_github') - used as storage key
     oauthAppId, // Default app mode (#7149): the backend resolves this admin app's client and secret
+    credentialType, // teams/outlook/sharepoint: the backend checks the app serves it
   } = options;
 
   let clientId = initialClientId;
@@ -528,6 +534,7 @@ export const startMcpAuthFlow = async options => {
       // When DCR was NOT used: send pre-configured clientSecret (if any).
       client_secret: shouldSendCredentials && !oauthAppId ? effectiveClientSecret || undefined : undefined,
       oauth_app_id: oauthAppId || undefined,
+      credential_type: oauthAppId ? credentialType : undefined,
       code_verifier: usePKCE ? codeVerifier : undefined,
       scope: normalizedScope || undefined,
       toolkit_id: toolkitId || undefined,
@@ -571,6 +578,7 @@ export const startMcpAuthFlow = async options => {
         client_id: clientId,
         client_secret: oauthAppId ? undefined : effectiveClientSecret,
         oauth_app_id: oauthAppId || undefined,
+        credential_type: oauthAppId ? credentialType : undefined,
         project_id: projectId,
         toolkit_id: toolkitId,
         used_dcr: usedDCR || undefined,

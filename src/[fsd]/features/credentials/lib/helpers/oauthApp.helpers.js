@@ -1,6 +1,7 @@
 // Default app / Custom app modes of the Teams, Outlook and SharePoint credentials (#7149).
 export const OAUTH_APP_FIELD = 'oauth_app_id';
-export const OAUTH_APP_SECTION = 'Default app';
+// The Default app subsection is the one keyed by oauth_app_id, never matched by its display name
+export const isOAuthAppSection = subsection => Boolean(subsection?.key_fields?.includes(OAUTH_APP_FIELD));
 // Set on the form by the Default app picker (not stored by the server); cleared when leaving Default app
 export const APP_MIRRORED_FIELDS = ['oauth_discovery_endpoint'];
 
@@ -31,7 +32,7 @@ export const resolveOAuthAppMode = (data, settings) => {
 };
 
 export const filterOAuthAppSubsections = (subsections = [], mode) => {
-  if (mode === OAUTH_APP_MODES.default) return subsections.filter(sub => sub.name === OAUTH_APP_SECTION);
-  if (mode === OAUTH_APP_MODES.custom) return subsections.filter(sub => sub.name !== OAUTH_APP_SECTION);
+  if (mode === OAUTH_APP_MODES.default) return subsections.filter(isOAuthAppSection);
+  if (mode === OAUTH_APP_MODES.custom) return subsections.filter(sub => !isOAuthAppSection(sub));
   return subsections;
 };

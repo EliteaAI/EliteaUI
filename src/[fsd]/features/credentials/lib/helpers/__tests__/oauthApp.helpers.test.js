@@ -3,10 +3,15 @@ import { describe, expect, it } from 'vitest';
 import {
   OAUTH_APP_MODES,
   filterOAuthAppSubsections,
+  isOAuthAppSection,
   resolveOAuthAppMode,
 } from '@/[fsd]/features/credentials/lib/helpers/oauthApp.helpers';
 
-const SUBSECTIONS = [{ name: 'Default app' }, { name: 'Custom app' }, { name: 'App-only' }];
+const SUBSECTIONS = [
+  { name: 'Default app', key_fields: ['oauth_app_id'] },
+  { name: 'Custom app', key_fields: ['client_id'] },
+  { name: 'App-only' },
+];
 const names = list => list.map(sub => sub.name);
 
 describe('oauthApp.helpers', () => {
@@ -35,5 +40,12 @@ describe('oauthApp.helpers', () => {
     expect(resolveOAuthAppMode({ mode: 'default' }, { client_id: 'own' })).toBe(OAUTH_APP_MODES.choice);
     expect(resolveOAuthAppMode({ mode: 'default' }, {})).toBe(OAUTH_APP_MODES.default);
     expect(resolveOAuthAppMode(undefined, {})).toBe(OAUTH_APP_MODES.custom);
+  });
+
+  it('the Default app subsection is found by its oauth_app_id key field, not its display name', () => {
+    expect(isOAuthAppSection({ name: 'Admin app', key_fields: ['oauth_app_id'] })).toBe(true);
+    expect(isOAuthAppSection({ name: 'Default app' })).toBe(false);
+    const renamed = [{ name: 'Admin app', key_fields: ['oauth_app_id'] }, { name: 'Custom app' }];
+    expect(names(filterOAuthAppSubsections(renamed, OAUTH_APP_MODES.default))).toEqual(['Admin app']);
   });
 });

@@ -57,6 +57,8 @@ const McpAuthModal = memo(props => {
     formScopes,
     // Default app mode (#7149): the admin app's secret is resolved server-side from this id
     oauthAppId,
+    // Credential type (teams/outlook/sharepoint) the server checks the app serves
+    oauthAppCredentialType,
     projectId,
     toolkitId,
     toolkitType, // Pre-built MCP type (e.g., 'mcp_github') - used as storage key
@@ -76,6 +78,7 @@ const McpAuthModal = memo(props => {
   const providedSettings = mcpAuthMetadata?.providedSettings;
   // From the credential form, or from the runtime's sign-in prompt for a Default-app credential
   const effectiveOAuthAppId = oauthAppId || providedSettings?.oauth_app_id;
+  const effectiveCredentialType = oauthAppCredentialType || providedSettings?.credential_type;
   const resourceScopes = mcpAuthMetadata?.resourceScopes;
   const protectedResource = mcpAuthMetadata?.protectedResource;
 
@@ -258,6 +261,7 @@ const McpAuthModal = memo(props => {
         projectId,
         toolkitId,
         oauthAppId: effectiveOAuthAppId,
+        credentialType: effectiveCredentialType,
         // Pass toolkitType for pre-built MCPs so tokens are stored under toolkitType key
         toolkitType: isPrebuildMcp ? toolkitType : undefined,
       });
@@ -313,6 +317,7 @@ const McpAuthModal = memo(props => {
     isPrebuildMcp,
     saveCredentials,
     effectiveOAuthAppId,
+    effectiveCredentialType,
   ]);
 
   const onClientIdChange = useCallback(e => {

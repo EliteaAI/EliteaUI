@@ -165,7 +165,7 @@ const ToolSection = memo(props => {
       // 1. Snapshot current (deselected) subsection field values into the cache
       //    before they are nullified so they can be restored later.
       const currentSubsection = subsections.find(sub => sub.name === selectedOption);
-      const leavingAppSection = selectedOption === OAuthAppHelpers.OAUTH_APP_SECTION;
+      const leavingAppSection = OAuthAppHelpers.isOAuthAppSection(currentSubsection);
       if (currentSubsection && selectedOption !== 'none') {
         const snapshot = {};
         (currentSubsection.fields || []).forEach(field => {

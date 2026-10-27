@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useFormikContext } from 'formik';
+import { getIn, useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 
@@ -55,9 +55,22 @@ const CredentialForm = memo(props => {
     resetForm,
     values: formikValues,
     initialValues: formikInitialValues,
+    errors: formikErrors,
+    touched: formikTouched,
+    isSubmitting: formikIsSubmitting,
+    submitCount: formikSubmitCount,
+    status: formikStatus,
   } = useFormikContext();
   const formikStateRef = useRef({});
-  formikStateRef.current = { values: formikValues, initialValues: formikInitialValues };
+  formikStateRef.current = {
+    values: formikValues,
+    initialValues: formikInitialValues,
+    errors: formikErrors,
+    touched: formikTouched,
+    isSubmitting: formikIsSubmitting,
+    submitCount: formikSubmitCount,
+    status: formikStatus,
+  };
 
   const [searchParams] = useSearchParams();
 
@@ -148,11 +161,25 @@ const CredentialForm = memo(props => {
   // it also goes into Formik's baseline, so it never marks the form dirty or blocks leaving after save.
   const setDefaultField = useCallback(
     (field, value) => {
+      const state = formikStateRef.current;
+      const same = current => JSON.stringify(current) === JSON.stringify(value);
+      // Already the baseline and the value: nothing to move (e.g. re-fired after a save)
+      if (same(getIn(state.initialValues, field)) && same(getIn(state.values, field))) return;
       onChangeCredentialDetail(prevState => updateObjectByPath(prevState || {}, field, value));
       // resetForm moves Formik's baseline; the user's own edits stay dirty against it
-      const { values: currentValues, initialValues: baseline } = formikStateRef.current;
-      const values = updateObjectByPath(currentValues || {}, field, value);
-      resetForm({ values: updateObjectByPath(baseline || {}, field, value) });
+      const values = updateObjectByPath(state.values || {}, field, value);
+      const initialValues = updateObjectByPath(state.initialValues || {}, field, value);
+      // A second call in the same tick builds on this one, not on the last render
+      formikStateRef.current = { ...state, values, initialValues };
+      // Keep touched/errors/submit state: only the baseline moves
+      resetForm({
+        values: initialValues,
+        errors: state.errors,
+        touched: state.touched,
+        isSubmitting: state.isSubmitting,
+        submitCount: state.submitCount,
+        status: state.status,
+      });
       // Re-apply the user's own edits on top of the new baseline
       Object.keys(values).forEach(key => setFieldValue(key, values[key], false));
     },
@@ -193,6 +220,7 @@ const CredentialForm = memo(props => {
       client_secret: credentialDetails?.settings?.client_secret,
       scopes: credentialDetails?.settings?.scopes,
       oauth_app_id: credentialDetails?.settings?.oauth_app_id,
+      credential_type: credentialDetails?.type,
     },
   });
 
