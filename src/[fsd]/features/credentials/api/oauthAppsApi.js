@@ -20,4 +20,5 @@ const oauthAppsApi = eliteaApi
     }),
   });
 
-export const { useOAuthAppListQuery } = oauthAppsApi;
+// RTK Query derives hook names from the endpoint name (oauthAppList -> useOauthAppListQuery)
+export const { useOauthAppListQuery: useOAuthAppListQuery } = oauthAppsApi;
