@@ -10,22 +10,22 @@ import Tooltip from '@/ComponentsLib/Tooltip';
 import { FlowEditorConstants, WebhookConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { LegacyScheduleNotice } from '@/[fsd]/features/schedule';
 import { useDelegatedOauthToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
+import { ScheduleSectionConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProject, useToast } from '@/[fsd]/shared/lib/hooks';
 import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
 import { InfoLabelWithTooltip } from '@/[fsd]/shared/ui/label';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useGetPipelineTriggerQuery, useUpdatePipelineTriggerMutation } from '@/api/applications';
+import AlertDialog from '@/components/AlertDialog.jsx';
 
 import PipelineWebhookModal from './PipelineWebhookModal';
 
 const { PipelineNodeTypes } = FlowEditorConstants;
 const { GITLAB_AUTH_METHODS, TRIGGER_TYPES, WEBHOOK_TYPES } = WebhookConstants;
+const { SCHEDULES_SECTION_ID } = ScheduleSectionConstants;
 
 // Node types that require user interaction and thus only support Chat Message trigger
 const INTERACTIVE_NODE_TYPES = [PipelineNodeTypes.Hitl, PipelineNodeTypes.Printer];
-
-// Root element id of the editor Schedules section
-const SCHEDULES_SECTION_ID = 'entity-schedules-section';
 
 const TRIGGER_OPTIONS = [
   { label: 'Chat Message', value: TRIGGER_TYPES.chat_message },
@@ -78,6 +78,7 @@ const TriggerTypeSelector = memo(props => {
 
   // State for webhook modal
   const [isWebhookModalOpen, setIsWebhookModalOpen] = useState(false);
+  const [pendingTriggerType, setPendingTriggerType] = useState(null);
 
   // Fetch current trigger configuration
   const { data: triggerData, isLoading: isFetching } = useGetPipelineTriggerQuery(
@@ -92,7 +93,7 @@ const TriggerTypeSelector = memo(props => {
     [triggerData?.type],
   );
 
-  // Schedule is no longer selectable. A version that still stores one shows it read-only until it is migrated.
+  // Schedule is no longer selectable. A version that still stores one shows it as a disabled option; the user can switch away.
   const isLegacySchedule = currentTriggerType === TRIGGER_TYPES.schedule;
 
   // Unattended triggers stay visible but greyed out so the restriction is discoverable; the Trigger
@@ -184,10 +185,8 @@ const TriggerTypeSelector = memo(props => {
     return args;
   }, [projectId, versionId, currentWebhookType, currentGitlabAuthMethod]);
 
-  const handleTriggerTypeChange = useCallback(
+  const switchTrigger = useCallback(
     async newType => {
-      if (newType === currentTriggerType) return;
-
       if (newType === TRIGGER_TYPES.webhook) {
         // Save webhook trigger first to generate secret, then open modal
         try {
@@ -210,7 +209,7 @@ const TriggerTypeSelector = memo(props => {
         }
       }
     },
-    [currentTriggerType, buildWebhookSaveArgs, projectId, versionId, updateTrigger, toastSuccess, toastError],
+    [buildWebhookSaveArgs, projectId, versionId, updateTrigger, toastSuccess, toastError],
   );
 
   // Under credential governance an unattended trigger runs only a bound version with a mandate; the backend
@@ -226,6 +225,27 @@ const TriggerTypeSelector = memo(props => {
     },
     [toastSuccess, toastWarning],
   );
+
+  // Replacing a stored schedule deletes it, so the user confirms first
+  const handleTriggerTypeChange = useCallback(
+    newType => {
+      if (newType === currentTriggerType) return;
+      if (isLegacySchedule) {
+        setPendingTriggerType(newType);
+        return;
+      }
+      switchTrigger(newType);
+    },
+    [currentTriggerType, isLegacySchedule, switchTrigger],
+  );
+
+  const handleCancelReplace = useCallback(() => setPendingTriggerType(null), []);
+
+  const handleConfirmReplace = useCallback(() => {
+    const newType = pendingTriggerType;
+    setPendingTriggerType(null);
+    switchTrigger(newType);
+  }, [pendingTriggerType, switchTrigger]);
 
   const handleWebhookIconClick = useCallback(async () => {
     if (currentTriggerType === TRIGGER_TYPES.webhook) {
@@ -326,7 +346,7 @@ const TriggerTypeSelector = memo(props => {
           value={currentTriggerType}
           onValueChange={handleTriggerTypeChange}
           options={availableTriggerOptions}
-          disabled={disabled || isLoading || isLegacySchedule}
+          disabled={disabled || isLoading}
           showBorder
           className="nopan nodrag"
           data-testid="pipeline-entry-point-trigger-select"
@@ -375,6 +395,17 @@ const TriggerTypeSelector = memo(props => {
           onOpenSchedules={scrollToSchedules}
         />
       )}
+
+      <AlertDialog
+        title="Replace schedule"
+        alertContent="The old schedule of this version will be deleted and replaced by the new trigger. Continue?"
+        open={Boolean(pendingTriggerType)}
+        onClose={handleCancelReplace}
+        onCancel={handleCancelReplace}
+        onConfirm={handleConfirmReplace}
+        alarm
+        confirmButtonText="Replace"
+      />
 
       <PipelineWebhookModal
         open={isWebhookModalOpen}

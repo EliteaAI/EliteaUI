@@ -11,7 +11,7 @@ import {
   buildSchedulesListLink,
   useEntitySchedules,
 } from '@/[fsd]/entities/schedule';
-import { TextLinkConstants } from '@/[fsd]/shared/lib/constants';
+import { ScheduleSectionConstants, TextLinkConstants } from '@/[fsd]/shared/lib/constants';
 import { Button } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button';
@@ -21,6 +21,8 @@ import { buildErrorMessage } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import EntityScheduleCard from './EntityScheduleCard';
+
+const { SCHEDULES_SECTION_ID } = ScheduleSectionConstants;
 
 const WIDE = '@container (min-width: 30rem)';
 // The name every agent and pipeline gives its first version
@@ -191,7 +193,7 @@ const EntitySchedulesSection = memo(props => {
 
   return (
     // Target of the scroll link in the pipeline Trigger selector hint
-    <Box id="entity-schedules-section">
+    <Box id={SCHEDULES_SECTION_ID}>
       <BasicAccordion
         accordionSX={styles.accordion}
         style={style}

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import TriggerTypeSelector from '../TriggerTypeSelector';
 
@@ -9,6 +9,8 @@ const mocks = vi.hoisted(() => ({
   formValues: {},
   triggerData: undefined,
   updateTrigger: vi.fn(),
+  toastSuccess: vi.fn(),
+  toastError: vi.fn(),
 }));
 
 vi.mock('formik', () => ({ useFormikContext: () => ({ values: mocks.formValues }) }));
@@ -29,13 +31,13 @@ vi.mock('@/[fsd]/features/toolkits/lib/hooks', () => ({
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProject: () => ({ id: 1 }),
-  useToast: () => ({ toastSuccess: vi.fn(), toastError: vi.fn() }),
+  useToast: () => ({ toastSuccess: mocks.toastSuccess, toastError: mocks.toastError }),
 }));
 vi.mock('@/[fsd]/shared/ui/banner-message', () => ({
   BannerMessage: ({ children }) => <div>{children}</div>,
 }));
 vi.mock('@/[fsd]/shared/ui/select', () => ({
-  SingleSelect: ({ value, options, disabled }) => (
+  SingleSelect: ({ value, options, disabled, onValueChange }) => (
     <div
       data-testid="select"
       data-value={value}
@@ -46,6 +48,7 @@ vi.mock('@/[fsd]/shared/ui/select', () => ({
           key={opt.value}
           data-testid={`option-${opt.value}`}
           data-disabled={String(Boolean(opt.disabled))}
+          onClick={() => !opt.disabled && onValueChange?.(opt.value)}
         >
           {opt.label}
         </span>
@@ -60,12 +63,38 @@ vi.mock('@/api/applications', () => ({
 vi.mock('@/assets/clock.svg?react', () => ({ default: () => null }));
 vi.mock('@/[fsd]/shared/config/store', () => ({ store: {} }));
 vi.mock('../PipelineWebhookModal', () => ({ default: () => null }));
+vi.mock('@/components/AlertDialog.jsx', () => ({
+  default: ({ open, onConfirm, onCancel, alertContent }) =>
+    open ? (
+      <div data-testid="replace-dialog">
+        <span>{alertContent}</span>
+        <button onClick={onConfirm}>confirm</button>
+        <button onClick={onCancel}>cancel</button>
+      </div>
+    ) : null,
+}));
 
 const HITL_YAML = 'nodes:\n  - id: a\n    type: hitl\n';
 const PLAIN_YAML = 'nodes:\n  - id: a\n    type: llm\n';
 
 const setForm = instructions => {
   mocks.formValues = { version_details: { id: 7, instructions } };
+};
+
+const renderStoredSchedule = () => {
+  mocks.triggerData = { type: 'schedule', cron: '0 0 * * 6' };
+  render(<TriggerTypeSelector />);
+};
+
+const confirmSwitchTo = option => {
+  fireEvent.click(screen.getByTestId(`option-${option}`));
+  fireEvent.click(screen.getByText('confirm'));
+};
+
+const failSwitchTo = (option, rejection) => {
+  mocks.updateTrigger.mockReturnValue({ unwrap: () => Promise.reject(rejection) });
+  renderStoredSchedule();
+  confirmSwitchTo(option);
 };
 
 describe('TriggerTypeSelector', () => {
@@ -85,15 +114,94 @@ describe('TriggerTypeSelector', () => {
     expect(screen.queryByTestId('option-schedule')).toBeNull();
   });
 
-  it('show a stored schedule as a disabled value in a disabled select', () => {
-    mocks.triggerData = { type: 'schedule', cron: '0 0 * * 6' };
-
-    render(<TriggerTypeSelector />);
+  it('shows a stored schedule as a disabled option in an enabled select', () => {
+    renderStoredSchedule();
 
     expect(screen.getByTestId('select').dataset.value).toBe('schedule');
-    expect(screen.getByTestId('select').dataset.disabled).toBe('true');
+    expect(screen.getByTestId('select').dataset.disabled).toBe('false');
     expect(screen.getByTestId('option-schedule').dataset.disabled).toBe('true');
     expect(screen.getByTestId('option-schedule').textContent).toBe('Schedule');
+  });
+
+  it('asks before replacing a stored schedule with Chat Message', async () => {
+    renderStoredSchedule();
+
+    fireEvent.click(screen.getByTestId('option-chat_message'));
+
+    expect(screen.getByTestId('replace-dialog')).toBeTruthy();
+    expect(mocks.updateTrigger).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByText('confirm'));
+
+    await waitFor(() => expect(mocks.updateTrigger).toHaveBeenCalledTimes(1));
+    expect(mocks.updateTrigger).toHaveBeenCalledWith(expect.objectContaining({ type: 'chat_message' }));
+    expect(screen.queryByTestId('replace-dialog')).toBeNull();
+  });
+
+  it('asks before replacing a stored schedule with Webhook', async () => {
+    renderStoredSchedule();
+
+    confirmSwitchTo('webhook');
+
+    await waitFor(() =>
+      expect(mocks.updateTrigger).toHaveBeenCalledWith(expect.objectContaining({ type: 'webhook' })),
+    );
+  });
+
+  it('shows a success toast after a confirmed switch from a stored schedule to Chat Message', async () => {
+    renderStoredSchedule();
+
+    confirmSwitchTo('chat_message');
+
+    await waitFor(() => expect(mocks.toastSuccess).toHaveBeenCalledWith('Trigger updated to Chat Message'));
+    expect(mocks.toastError).not.toHaveBeenCalled();
+  });
+
+  it('shows the server message in an error toast when the switch to Chat Message fails', async () => {
+    failSwitchTo('chat_message', { data: { error: 'Version is locked' } });
+
+    await waitFor(() => expect(mocks.toastError).toHaveBeenCalledWith('Version is locked'));
+    expect(mocks.toastSuccess).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('replace-dialog')).toBeNull();
+  });
+
+  it('shows a generic error toast when the switch to Chat Message fails without a message', async () => {
+    failSwitchTo('chat_message', new Error('network'));
+
+    await waitFor(() => expect(mocks.toastError).toHaveBeenCalledWith('Failed to update trigger'));
+  });
+
+  it('shows an error toast when the switch from a stored schedule to Webhook fails', async () => {
+    failSwitchTo('webhook', { data: { error: 'Webhook denied' } });
+
+    await waitFor(() => expect(mocks.toastError).toHaveBeenCalledWith('Webhook denied'));
+  });
+
+  it('keeps a stored schedule when the replace dialog is cancelled', () => {
+    renderStoredSchedule();
+
+    fireEvent.click(screen.getByTestId('option-chat_message'));
+    fireEvent.click(screen.getByText('cancel'));
+
+    expect(mocks.updateTrigger).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('replace-dialog')).toBeNull();
+  });
+
+  it('switches without a dialog when no schedule is stored', async () => {
+    render(<TriggerTypeSelector />);
+
+    fireEvent.click(screen.getByTestId('option-webhook'));
+
+    await waitFor(() => expect(mocks.updateTrigger).toHaveBeenCalledTimes(1));
+    expect(screen.queryByTestId('replace-dialog')).toBeNull();
+  });
+
+  it('keeps a stored schedule when the disabled Schedule option is clicked', () => {
+    renderStoredSchedule();
+
+    fireEvent.click(screen.getByTestId('option-schedule'));
+
+    expect(mocks.updateTrigger).not.toHaveBeenCalled();
   });
 
   it('shows the legacy schedule notice only for a stored schedule', () => {
@@ -101,8 +209,7 @@ describe('TriggerTypeSelector', () => {
     expect(screen.queryByText(/no longer editable here/i)).toBeNull();
     unmount();
 
-    mocks.triggerData = { type: 'schedule', cron: '0 0 * * 6' };
-    render(<TriggerTypeSelector />);
+    renderStoredSchedule();
 
     expect(screen.getByText(/no longer editable here/i)).toBeTruthy();
   });
