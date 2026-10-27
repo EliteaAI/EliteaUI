@@ -10,7 +10,7 @@ import { Button } from '@/[fsd]/shared/ui';
 import RouteDefinitions, { getBasename } from '@/routes';
 
 // Warns when the caller's PAT is missing/expired for an internal MCP toolkit; under governance it says no PAT
-// is needed instead (#7214).
+// is needed instead.
 const McpPatBanner = memo(props => {
   const { projectId, toolkitType } = props;
   const styles = mcpPatBannerStyles();
@@ -28,7 +28,7 @@ const McpPatBanner = memo(props => {
         variant="bodySmall"
         color="text.secondary"
         component="p"
-        sx={{ mb: '0.75rem' }}
+        sx={styles.note}
       >
         {PAT_GOVERNED_NOTE}
       </Typography>
@@ -42,7 +42,7 @@ const McpPatBanner = memo(props => {
   return (
     <Alert
       severity="warning"
-      sx={{ mb: '0.75rem' }}
+      sx={styles.alert}
     >
       <Box sx={styles.content}>
         <Typography variant="bodySmall">{copy.content}</Typography>
@@ -67,6 +67,12 @@ McpPatBanner.displayName = 'McpPatBanner';
 
 /** @type {MuiSx} */
 const mcpPatBannerStyles = () => ({
+  note: {
+    mb: '0.75rem',
+  },
+  alert: {
+    mb: '0.75rem',
+  },
   content: {
     display: 'flex',
     flexDirection: 'column',

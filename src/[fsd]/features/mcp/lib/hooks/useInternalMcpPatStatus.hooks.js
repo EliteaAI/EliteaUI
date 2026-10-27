@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 
 import { useInternalMcpPatStatusQuery } from '@/api/toolkits.js';
+import { PAT_STATES } from '@/[fsd]/features/mcp/lib/constants';
 
 export const useInternalMcpPatStatus = props => {
   const { projectId, toolkitType } = props;
@@ -23,9 +24,8 @@ export const useInternalMcpPatStatus = props => {
     };
   }, [skip, refetch]);
 
-  // GOVERNED: governance is on and a run's internal toolkits act with the run's own identity (#7214)
-  const governed = !!(data?.internal && data?.state === 'GOVERNED');
-  const patInvalid = !!(data?.internal && data?.state !== 'VALID' && !governed);
+  const governed = !!(data?.internal && data?.state === PAT_STATES.GOVERNED);
+  const patInvalid = !!(data?.internal && data?.state !== PAT_STATES.VALID && !governed);
 
   return {
     patInvalid,
