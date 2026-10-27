@@ -35,6 +35,7 @@ export { useChatEditors } from './useChatEditors.hooks';
 
 export { useSelectedChatModel } from './useSelectedChatModel.hooks';
 export * from './useSkillChatModel.hooks';
+export * from './useSkillEditorDetails.hooks';
 export { useChatSocketReconnect } from './useChatSocketReconnect.hooks';
 export { useAgentEditorPanelFit } from './useAgentEditorPanelFit.hooks';
 export * from './useFileTypes.hooks';

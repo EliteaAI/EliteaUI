@@ -13,18 +13,22 @@ const captured = vi.hoisted(() => ({
   canvasSkill: null,
   initialValues: null,
   title: null,
+  isPublic: null,
+  error: null,
 }));
 const DEFAULT_MODEL = vi.hoisted(() => ({ name: 'haiku', project_id: 1 }));
 const models = vi.hoisted(() => ({ isLoadingModels: false }));
-const details = vi.hoisted(() => ({ data: undefined }));
+const details = vi.hoisted(() => ({ data: undefined, error: undefined, isPublic: false }));
 
 vi.mock('@/[fsd]/features/chat/ui/editors/BaseEditor', () => ({
-  default: ({ saveButton, children, initialValues, title }) => {
+  default: ({ saveButton, children, initialValues, title, isPublic, error }) => {
     captured.initialValues = initialValues;
     captured.title = title;
+    captured.isPublic = isPublic;
+    captured.error = error;
     return (
       <>
-        {saveButton}
+        {!isPublic && saveButton}
         {children}
       </>
     );
@@ -49,7 +53,9 @@ vi.mock('@/[fsd]/features/chat/ui/editors/SkillCanvasModelSelector', () => ({
     return <div data-testid="skill-canvas-model-selector" />;
   },
 }));
-vi.mock('@/[fsd]/features/skill/api', () => ({ useSkillDetailsQuery: () => ({ data: details.data }) }));
+vi.mock('@/[fsd]/features/chat/lib/hooks/useSkillEditorDetails.hooks', () => ({
+  useSkillEditorDetails: () => ({ data: details.data, error: details.error, isPublic: details.isPublic }),
+}));
 vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
   useSkillModels: () => ({ defaultModel: DEFAULT_MODEL, isLoadingModels: models.isLoadingModels }),
   useSkillValidationSchema: () => undefined,
@@ -60,7 +66,6 @@ vi.mock('@/[fsd]/features/skill/ui', () => ({
     return <div data-testid="skill-form" />;
   },
 }));
-vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));
 
 const skill = llmSettings => ({
   id: 4,
@@ -263,5 +268,76 @@ describe('SkillEditor locks the form across the create-to-edit transition', () =
     );
     expect(captured.formDisabled).toBe(false);
     expect(captured.initialValues.name).toBe('triage');
+  });
+});
+
+describe('SkillEditor for a catalog skill', () => {
+  afterEach(() => {
+    cleanup();
+    details.data = undefined;
+    details.error = undefined;
+    details.isPublic = false;
+  });
+
+  const catalogSkill = {
+    entity_name: 'skill',
+    entity_meta: { id: 178, project_id: 1 },
+    entity_settings: { version_id: 202 },
+  };
+  const publishedDetails = {
+    id: 178,
+    name: 'e2e-7029-skill-pub',
+    version_details: {
+      id: 202,
+      status: 'published',
+      run_settings: { llm_settings: { model_name: 'sonnet', model_project_id: 1, max_tokens: 4096 } },
+    },
+  };
+
+  it('shows the published model settings and keeps the skill itself read-only', () => {
+    details.isPublic = true;
+    details.data = publishedDetails;
+    const { getByTestId } = render(
+      <SkillEditor
+        skill={catalogSkill}
+        isVisible
+      />,
+    );
+
+    expect(captured.isPublic).toBe(true);
+    expect(captured.error).toBeUndefined();
+    expect(captured.formDisabled).toBe(true);
+    expect(captured.initialValues.version_details.run_settings.llm_settings).toMatchObject({
+      model_name: 'sonnet',
+      max_tokens: 4096,
+    });
+    expect(getByTestId('skill-canvas-model-selector')).toBeTruthy();
+  });
+
+  it('offers no save that would write the catalog skill into the selected project', () => {
+    details.isPublic = true;
+    details.data = publishedDetails;
+    captured.onSaved = null;
+    render(
+      <SkillEditor
+        skill={catalogSkill}
+        isVisible
+      />,
+    );
+
+    expect(captured.onSaved).toBeNull();
+  });
+
+  it('keeps an own skill editable once its details arrive', () => {
+    details.data = { id: 174, version_details: { id: 8 } };
+    render(
+      <SkillEditor
+        skill={skill()}
+        isVisible
+      />,
+    );
+
+    expect(captured.isPublic).toBe(false);
+    expect(captured.formDisabled).toBe(false);
   });
 });
