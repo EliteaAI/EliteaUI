@@ -44,6 +44,7 @@ const RunHistoryRowActions = memo(props => {
 
   const hasConversation = item?.hasConversation ?? true;
   const canShare = item?.canShare ?? hasConversation;
+  const canDelete = hasConversation && !item?.is_chat_run;
   const canOpenAnalytics = hasConversation && !!handleOpenAnalytics && hasRunAnalytics(item);
 
   const styles = runHistoryRowActionsStyles(isDeleting);
@@ -123,7 +124,7 @@ const RunHistoryRowActions = memo(props => {
             },
           ]
         : []),
-      ...(hasConversation
+      ...(canDelete
         ? [
             {
               label: 'Delete',
@@ -137,7 +138,7 @@ const RunHistoryRowActions = memo(props => {
             {
               label: 'Restore chat',
               icon: <RestoreIcon />,
-              onClick: () => handleRestoreConversation(item.id),
+              onClick: () => handleRestoreConversation(item.id, item),
               tooltip: `Restores chat history only. ${source?.charAt(0)?.toUpperCase() + source?.slice(1)} configuration, behavior, or settings are not restored and may have changed since then.`,
             },
           ]
@@ -154,6 +155,7 @@ const RunHistoryRowActions = memo(props => {
     ],
     [
       canShare,
+      canDelete,
       hasConversation,
       linkCopied,
       handleCopyLink,
@@ -161,7 +163,7 @@ const RunHistoryRowActions = memo(props => {
       handleRestoreConversation,
       canOpenAnalytics,
       handleOpenAnalytics,
-      item?.id,
+      item,
       source,
       styles.deleteIcon,
     ],

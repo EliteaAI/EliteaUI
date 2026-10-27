@@ -206,6 +206,27 @@ describe('RunHistoryListItem actions', () => {
     expect(screen.queryByTestId('menu-item-Delete')).not.toBeInTheDocument();
   });
 
+  it('does not offer to delete a chat the run happened in', () => {
+    renderItem(
+      { ...CONVERSATION_ROW, is_chat_run: true },
+      { handleRestoreConversation: vi.fn(), source: 'skill' },
+    );
+
+    expect(screen.getByTestId('menu-item-Share link')).toBeInTheDocument();
+    expect(screen.getByTestId('menu-item-Restore chat')).toBeInTheDocument();
+    expect(screen.queryByTestId('menu-item-Delete')).not.toBeInTheDocument();
+  });
+
+  it('tells the page which run it restores', () => {
+    const handleRestoreConversation = vi.fn();
+    const chatRun = { ...CONVERSATION_ROW, is_chat_run: true };
+    renderItem(chatRun, { handleRestoreConversation, source: 'skill' });
+
+    fireEvent.click(screen.getByTestId('menu-item-Restore chat'));
+
+    expect(handleRestoreConversation).toHaveBeenCalledWith(chatRun.id, chatRun);
+  });
+
   it('hides the menu entirely when no action is available', () => {
     renderItem({ ...CONVERSATION_ROW, hasConversation: false });
 

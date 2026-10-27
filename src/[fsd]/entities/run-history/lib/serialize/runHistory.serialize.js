@@ -3,11 +3,15 @@ const serializeRunHistory = conversation => {
 
   return {
     id: conversation.id,
-    created_at: conversation.created_at,
+    created_at: conversation.run_started_at ?? conversation.created_at,
     updated_at: conversation.updated_at,
     name: conversation.name,
     duration: conversation.duration,
-    version_id: conversation.meta.single_participant?.entity_settings?.version_id ?? null,
+    version_id:
+      conversation.meta.single_participant?.entity_settings?.version_id ??
+      conversation.skill_version_id ??
+      null,
+    is_chat_run: !conversation.meta.single_participant,
     index_name: conversation.meta?.index_name ?? null,
     operation_type: conversation.meta?.operation_type ?? null,
   };

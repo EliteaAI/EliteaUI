@@ -79,6 +79,7 @@ const RunAnalyticsContainer = memo(props => {
     isError: isRunCostsError,
   } = useAnalyticsCostsQuery(usageQueryArgs, { skip: skipUsageQueries });
 
+  const isEntityChatRun = isEntityScoped && Boolean(runDetails) && !runDetails.meta?.single_participant;
   const isRunWithoutUsage = runDetailError?.status === 404;
   const isRunDetailUnavailable = Boolean(runDetailError) && !isRunWithoutUsage;
 
@@ -100,12 +101,14 @@ const RunAnalyticsContainer = memo(props => {
       ? 'unavailable'
       : AnalyticCommonHelpers.describeRunModels(runCosts?.by_model);
 
-    const startedAt = isUsageRunScoped ? runDetail?.started_at : runDetails?.created_at;
+    const startedAt = isUsageRunScoped
+      ? runDetail?.started_at
+      : (isEntityChatRun && runDetail?.started_at) || runDetails?.created_at;
 
     return {
       createdAt: startedAt,
       date:
-        isUsageRunScoped && isUsagePending
+        (isUsageRunScoped || isEntityChatRun) && isUsagePending
           ? '…'
           : formatRunTimestamp(startedAt, RUN_ANALYTICS_TIMESTAMP_FORMAT),
       version: isUsagePending ? '…' : runVersion,
@@ -114,6 +117,7 @@ const RunAnalyticsContainer = memo(props => {
   }, [
     readsUsageTrace,
     isUsageRunScoped,
+    isEntityChatRun,
     isUsagePending,
     isRunDetailUnavailable,
     isRunCostsError,

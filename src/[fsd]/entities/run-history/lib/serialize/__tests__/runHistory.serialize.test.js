@@ -44,3 +44,37 @@ describe('serializeRunHistory — index run details', () => {
     expect(rows[1].duration).toBe(4);
   });
 });
+
+describe('serializeRunHistory — skill chat runs', () => {
+  const skillChatRun = {
+    id: 3,
+    created_at: '2026-10-26T16:36:00Z',
+    name: 'chat',
+    duration: 9,
+    skill_version_id: 88,
+    meta: {},
+  };
+
+  it('reads the version of a chat run from the run itself', () => {
+    const { rows } = serializeRunHistoryListResponse([skillChatRun]);
+
+    expect(rows[0].version_id).toBe(88);
+    expect(rows[0].is_chat_run).toBe(true);
+  });
+
+  it('dates a chat run by when the skill first ran in the chat', () => {
+    const { rows } = serializeRunHistoryListResponse([
+      { ...skillChatRun, created_at: '2026-10-19T09:00:00Z', run_started_at: '2026-10-26T16:36:00Z' },
+    ]);
+
+    expect(rows[0].created_at).toBe('2026-10-26T16:36:00Z');
+  });
+
+  it('keeps reading a Run panel version from its pin', () => {
+    const { rows } = serializeRunHistoryListResponse([agentRun]);
+
+    expect(rows[0].version_id).toBe(5);
+    expect(rows[0].is_chat_run).toBe(false);
+    expect(rows[0].created_at).toBe(agentRun.created_at);
+  });
+});

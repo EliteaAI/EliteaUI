@@ -238,6 +238,33 @@ describe('RunAnalyticsContainer for a root entity', () => {
     });
   });
 
+  it('dates a chat run by when the skill started in it, not by when the chat was created', () => {
+    useGetRunHistoryDetailsQuery.mockReturnValue({
+      data: {
+        uuid: '0b7c3a2e-5d4f-4c1a-9e8b-1f2a3b4c5d6e',
+        created_at: new Date(2026, 9, 2, 9, 0).getTime() / 1000,
+        meta: {},
+      },
+    });
+    useAnalyticsRunDetailQuery.mockReturnValue({
+      data: { ...RUN_DETAIL, started_at: new Date(2026, 9, 9, 16, 36).toISOString() },
+      isFetching: false,
+    });
+    renderSkillRun();
+
+    expect(viewProps.current.infoLines[0]).toContain('Run: 09 Oct 2026, 04:36 PM');
+  });
+
+  it('keeps dating a Run panel run by its conversation', () => {
+    useAnalyticsRunDetailQuery.mockReturnValue({
+      data: { ...RUN_DETAIL, started_at: new Date(2026, 9, 9, 16, 36).toISOString() },
+      isFetching: false,
+    });
+    renderSkillRun();
+
+    expect(viewProps.current.infoLines[0]).toContain('Run: 09 Oct 2026, 10:00 AM');
+  });
+
   it('shows placeholders, not the participant version, while the usage data loads', () => {
     useAnalyticsRunDetailQuery.mockReturnValue({ data: undefined, isFetching: true, isError: false });
     renderSkillRun();
