@@ -43,6 +43,9 @@ const ExportConversationModal = memo(props => {
   );
 
   const attachmentsCount = summary?.attachments_count ?? 0;
+  // null when storage could not be fully checked: fall back to references, never assume nothing is missing
+  const availableCount = summary?.available_count ?? attachmentsCount;
+  const missingCount = summary?.missing_count ?? null;
   const totalSize = summary?.total_size;
   // The summary shares the export's access check, so a denial means the export would fail too
   const isAccessDenied = [403, 404].includes(summaryError?.status);
@@ -55,9 +58,11 @@ const ExportConversationModal = memo(props => {
 
   const attachmentsLabel = useMemo(() => {
     if (isSummaryLoading || !attachmentsCount) return 'With attachments';
-    const filesLabel = `${attachmentsCount} ${attachmentsCount === 1 ? 'file' : 'files'}`;
-    return `With attachments (${totalSize ? `${filesLabel} · ${formatFileSize(totalSize)}` : filesLabel})`;
-  }, [attachmentsCount, isSummaryLoading, totalSize]);
+    const filesLabel = `${availableCount} ${availableCount === 1 ? 'file' : 'files'}`;
+    const sizeLabel = totalSize ? ` · ${formatFileSize(totalSize)}` : '';
+    const missingLabel = missingCount ? ` · ${missingCount} unavailable` : '';
+    return `With attachments (${filesLabel}${sizeLabel}${missingLabel})`;
+  }, [attachmentsCount, availableCount, isSummaryLoading, missingCount, totalSize]);
 
   const options = useMemo(
     () => [
@@ -82,9 +87,14 @@ const ExportConversationModal = memo(props => {
   }, [cancelExport, isExporting, onClose]);
 
   const handleExport = useCallback(async () => {
-    const isSuccess = await startExport({ conversation, includeAttachments, streamToDisk });
+    const isSuccess = await startExport({
+      conversation,
+      includeAttachments,
+      streamToDisk,
+      knownMissingCount: missingCount,
+    });
     if (isSuccess) onClose();
-  }, [conversation, includeAttachments, onClose, startExport, streamToDisk]);
+  }, [conversation, includeAttachments, missingCount, onClose, startExport, streamToDisk]);
 
   const styles = exportConversationModalStyles();
 
@@ -146,8 +156,8 @@ const ExportConversationModal = memo(props => {
       {isExporting && includeAttachments && (
         <Box sx={styles.progress}>
           <Typography variant="bodySmall">
-            {attachmentsCount
-              ? `Exporting chat... ${attachmentsCount} ${attachmentsCount === 1 ? 'file' : 'files'}`
+            {availableCount
+              ? `Exporting chat... ${availableCount} ${availableCount === 1 ? 'file' : 'files'}`
               : 'Exporting chat...'}
           </Typography>
           <LinearProgress

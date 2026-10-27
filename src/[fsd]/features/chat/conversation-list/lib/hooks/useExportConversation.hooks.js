@@ -30,7 +30,7 @@ export const useExportConversation = () => {
   useEffect(() => () => abortControllerRef.current?.abort(), []);
 
   const startExport = useCallback(
-    async ({ conversation, includeAttachments, streamToDisk = false }) => {
+    async ({ conversation, includeAttachments, streamToDisk = false, knownMissingCount = null }) => {
       if (abortControllerRef.current) return false;
 
       const fileName = buildExportFileName(conversation.name);
@@ -44,7 +44,10 @@ export const useExportConversation = () => {
       if (streamToDisk && !DEV) {
         // Empty name: the browser takes it from Content-Disposition (the server may add the .enc suffix)
         startBrowserDownload(url, '');
-        toastInfo('Export started. Your browser will download the archive.');
+        // Response headers are not readable here, so rely on the storage check from the summary
+        if (knownMissingCount > 0)
+          toastWarning(`Export started. ${knownMissingCount} file(s) could not be included.`);
+        else toastInfo('Export started. Your browser will download the archive.');
         return true;
       }
 
@@ -64,7 +67,8 @@ export const useExportConversation = () => {
         const blob = await response.blob();
         downloadBlobFile(blob, `${fileName}.${extension}${isEncrypted ? ENCRYPTED_FILE_SUFFIX : ''}`);
 
-        const missingCount = Number(response.headers.get('X-Export-Missing-Files') || 0);
+        const missingHeader = response.headers.get('X-Export-Missing-Files');
+        const missingCount = includeAttachments ? Number(missingHeader ?? knownMissingCount ?? 0) : 0;
         if (missingCount > 0) toastWarning(`Chat exported. ${missingCount} file(s) could not be included.`);
         else toastSuccess('Chat exported successfully');
         return true;
