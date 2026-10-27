@@ -145,7 +145,7 @@ describe('SchedulesFilters', () => {
     expect(screen.queryByTestId('owner-filter')).not.toBeInTheDocument();
   });
 
-  it('TC-US35-18 hides the Type filter while the entity chip shows', () => {
+  it('hides the Type filter while the entity chip shows', () => {
     renderBar({ hideEntityType: true });
     expect(screen.queryByTestId('schedules-filter-type')).not.toBeInTheDocument();
     expect(screen.getByTestId('schedules-filter-status')).toBeInTheDocument();

@@ -4,8 +4,8 @@ import { Box, Typography, debounce } from '@mui/material';
 
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
-import { SingleSelect } from '@/[fsd]/shared/ui/select';
 
+import FilterSelect from './FilterSelect';
 import OwnerFilter from './OwnerFilter';
 
 const SEARCH_DELAY_MS = 300;
@@ -23,28 +23,6 @@ const STATUS_OPTIONS = [
 ];
 // The select keeps string values; the list API takes a boolean
 const ENABLED_OPTIONS = [ALL, { label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }];
-
-// An unset select shows its label as the placeholder; a set select shows the label above the value
-const FilterSelect = memo(({ id, label, width, options, value, onValueChange }) => {
-  const styles = schedulesFiltersStyles();
-  return (
-    <Box
-      sx={[styles.select, { width }]}
-      data-testid={`schedules-filter-${id}`}
-    >
-      <SingleSelect
-        showBorder
-        label={label}
-        options={options}
-        value={value}
-        onValueChange={onValueChange}
-        showEmptyPlaceholder={false}
-        inputProps={{ 'aria-label': label }}
-      />
-    </Box>
-  );
-});
-FilterSelect.displayName = 'FilterSelect';
 
 const SchedulesFilters = memo(({ value, onChange, onClear, hasFilters, isAdmin, hideEntityType = false }) => {
   const styles = schedulesFiltersStyles();
@@ -182,10 +160,6 @@ const schedulesFiltersStyles = () => ({
   search: ({ breakpoints }) => ({
     width: '12.5rem',
     [breakpoints.down(1100)]: { flexBasis: '100%', width: 'auto' },
-  }),
-  select: ({ breakpoints }) => ({
-    [breakpoints.down(1100)]: { flex: '1 1 9rem' },
-    [breakpoints.down('sm')]: { flexBasis: '100%' },
   }),
   // The owner chips stay on one row inside the control, so it keeps the height of the other filters
   owner: ({ breakpoints }) => ({

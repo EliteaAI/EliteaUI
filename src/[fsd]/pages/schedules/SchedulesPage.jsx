@@ -5,17 +5,15 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Chip } from '@mui/material';
 
 import { useGetScheduleListQuery } from '@/[fsd]/entities/schedule';
-import { ScheduleImportExportActions } from '@/[fsd]/features/schedule-import-export';
 import { getPollingInterval } from '@/[fsd]/features/schedule';
+import { ScheduleImportExportActions } from '@/[fsd]/features/schedule-import-export';
 import { DrawerPage, DrawerPageBody, DrawerPageHeader } from '@/[fsd]/features/settings';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { SchedulesFilters, SchedulesTable } from '@/[fsd]/widgets/schedules-table';
 import { PAGE_SIZE, PERMISSIONS, SortOrderOptions } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import RouteDefinitions from '@/routes';
-
-import SchedulesFilters from './SchedulesFilters';
-import SchedulesTable from './SchedulesTable';
 
 const ENTITY_TYPE_LABELS = { agent: 'Agent', pipeline: 'Pipeline' };
 

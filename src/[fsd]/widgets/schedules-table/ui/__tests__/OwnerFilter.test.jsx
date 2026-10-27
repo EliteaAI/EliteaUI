@@ -139,7 +139,7 @@ describe('OwnerFilter', () => {
     ['Backspace', 'ArrowLeft moved the focus into the chip', true],
     ['Delete', 'the chip has the DOM focus', false],
     ['Delete', 'ArrowLeft moved the focus into the chip', true],
-  ])('BUG-40 R2.1 EL-7011 %s removes only that chip when %s', (key, _title, useArrowLeft) => {
+  ])('%s removes only that chip when %s', (key, _title, useArrowLeft) => {
     const onChangeOwners = vi.fn();
     renderFilter({ selectedOwners: OWNERS.slice(0, 2), onChangeOwners });
     const chip = screen.getByTestId('schedules-owner-chip');
@@ -166,7 +166,7 @@ describe('OwnerFilter', () => {
     expect(tooltip).not.toHaveTextContent('Owner 1');
   });
 
-  it('TC-US27-08 sends the typed text as query after 300 ms', () => {
+  it('sends the typed text as query after 300 ms', () => {
     renderFilter();
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'ann' } });
     expect(lastQuery()).toBe('');
@@ -179,7 +179,7 @@ describe('OwnerFilter', () => {
   it.each([
     ['loads the next page at the end of the list', 45, 1],
     ['does not load more when every user is loaded', 2, 0],
-  ])('TC-US27-09 R2.2 %s', (_title, total, loadMoreCalls) => {
+  ])('%s', (_title, total, loadMoreCalls) => {
     setUsers({ data: { rows: USERS, total } });
     renderFilter();
     fireEvent.mouseDown(screen.getByRole('combobox'));
@@ -193,7 +193,7 @@ describe('OwnerFilter', () => {
     expect(mocks.onLoadMoreUsers).toHaveBeenCalledTimes(loadMoreCalls);
   });
 
-  it('TC-US27-10 keeps the loaded users and shows a toast when a request fails', () => {
+  it('keeps the loaded users and shows a toast when a request fails', () => {
     setUsers({ isUsersError: true, usersError: { status: 500 } });
     renderFilter();
     fireEvent.mouseDown(screen.getByRole('combobox'));

@@ -53,8 +53,8 @@ vi.mock('@/[fsd]/features/settings', () => ({
     </div>
   ),
 }));
-vi.mock('../SchedulesFilters', () => ({
-  default: ({ value, onChange, onClear, hasFilters, isAdmin, hideEntityType }) => (
+vi.mock('@/[fsd]/widgets/schedules-table', () => ({
+  SchedulesFilters: ({ value, onChange, onClear, hasFilters, isAdmin, hideEntityType }) => (
     <div
       data-testid="filters"
       data-admin={String(isAdmin)}
@@ -68,9 +68,7 @@ vi.mock('../SchedulesFilters', () => ({
       <button onClick={onClear}>clear all</button>
     </div>
   ),
-}));
-vi.mock('../SchedulesTable', () => ({
-  default: ({
+  SchedulesTable: ({
     toolbar,
     emptyMessage,
     rows,

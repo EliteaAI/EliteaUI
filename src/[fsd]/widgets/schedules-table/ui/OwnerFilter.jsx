@@ -119,6 +119,7 @@ const OwnerFilter = memo(({ selectedOwners, onChangeOwners }) => {
 
   return (
     <Autocomplete.UserSearchSelect
+      data-testid="owner-filter"
       userList={userList}
       selectedUsers={selectedOwners}
       onChangeUsers={onChangeOwners}

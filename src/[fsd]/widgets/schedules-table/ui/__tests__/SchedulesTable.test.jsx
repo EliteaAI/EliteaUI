@@ -8,6 +8,7 @@ import { timeFormatter } from '@/common/utils';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 
+import FilterSelect from '../FilterSelect';
 import SchedulesTable from '../SchedulesTable';
 import { renderWithTheme } from './_testHelpers';
 
@@ -252,7 +253,7 @@ describe('SchedulesTable', () => {
     ['failed', 'Failed'],
     ['skipped', 'Skipped'],
     ['blocked', 'Blocked'],
-  ])('R2.5 shows the reason under a %s last run', (status, label) => {
+  ])('shows the reason under a %s last run', (status, label) => {
     renderTable([makeRow({ last_run_status: status, last_run_reason: `why ${status}` })]);
     const cell = screen.getByTestId('schedule-column-value-last_run');
     expect(within(cell).getByText(label)).toBeInTheDocument();
@@ -262,7 +263,7 @@ describe('SchedulesTable', () => {
   it.each([
     ['running', 'Running'],
     ['waiting_for_approval', 'Waiting for input'], // the owner's label for the approval wait
-  ])('BUG-35 US-28 R2.5 shows %s in the Last run cell from last_run_status', (status, label) => {
+  ])('shows %s in the Last run cell from last_run_status', (status, label) => {
     renderTable([makeRow({ last_run_status: status })]);
     const cell = screen.getByTestId('schedule-column-value-last_run');
     expect(within(cell).getByText(label)).toBeInTheDocument();
@@ -320,8 +321,8 @@ describe('SchedulesTable fits 8 columns at 1280, 1440 and 1600 px', () => {
   const TEXT_COLUMNS = 'minmax(10.25rem, 1.3fr) minmax(7.5rem, 1fr) minmax(7.25rem, 1fr)';
   const TEMPLATES = {
     compact: `${TEXT_COLUMNS} 5.75rem 5.75rem 3.5rem 5.5rem 4.25rem`,
-    regular: `${TEXT_COLUMNS} 7.75rem 7.75rem 6.75rem 5.5rem 4.25rem`, // CR-23 D12; dates like "Nov, 30 23:30" fit
-    comfortable: `${TEXT_COLUMNS} 9.25rem 9.25rem 9.75rem 6rem 6.5625rem`, // CR-23 D12
+    regular: `${TEXT_COLUMNS} 7.75rem 7.75rem 6.75rem 5.5rem 4.25rem`, // dates like "Nov, 30 23:30" fit
+    comfortable: `${TEXT_COLUMNS} 9.25rem 9.25rem 9.75rem 6rem 6.5625rem`,
   };
   const minGridWidthPx = template =>
     template
@@ -337,48 +338,42 @@ describe('SchedulesTable fits 8 columns at 1280, 1440 and 1600 px', () => {
     [1280, 'compact'],
     [1440, 'regular'],
     [1600, 'comfortable'],
-  ])(
-    'AC1-AC3 at %i px shows all 8 headers and cells in the %s tier, lined up, with no overflow',
-    (width, tier) => {
-      setWindowWidth(width);
-      renderTable([makeRow(), makeRow({ id: 2 })]);
-      FIELDS.forEach(field =>
-        expect(screen.getByTestId(`schedule-column-header-${field}`)).toBeInTheDocument(),
-      );
-      DATA_FIELDS.forEach(field =>
-        expect(screen.getAllByTestId(`schedule-column-value-${field}`)).toHaveLength(2),
-      );
-      expect(screen.getAllByTestId('schedule-name')).toHaveLength(2);
-      expect(screen.getByTestId('schedule-1-menu-button')).toBeInTheDocument();
-      expect(screen.getByTestId('schedule-2-menu-button')).toBeInTheDocument();
-      // AC1 and AC2: the columns fit the table box, so the row menu stays in the window
-      expect(headerTemplate()).toBe(TEMPLATES[tier]);
-      expect(minGridWidthPx(headerTemplate())).toBeLessThanOrEqual(width - SIDE_MENUS_PX);
-      // AC3: header and rows share one grid template, so the cell edges line up
-      screen
-        .getAllByTestId('schedule-row')
-        .forEach(row => expect(getComputedStyle(row).gridTemplateColumns).toBe(headerTemplate()));
-    },
-  );
+  ])('at %i px shows all 8 headers and cells in the %s tier, lined up, with no overflow', (width, tier) => {
+    setWindowWidth(width);
+    renderTable([makeRow(), makeRow({ id: 2 })]);
+    FIELDS.forEach(field =>
+      expect(screen.getByTestId(`schedule-column-header-${field}`)).toBeInTheDocument(),
+    );
+    DATA_FIELDS.forEach(field =>
+      expect(screen.getAllByTestId(`schedule-column-value-${field}`)).toHaveLength(2),
+    );
+    expect(screen.getAllByTestId('schedule-name')).toHaveLength(2);
+    expect(screen.getByTestId('schedule-1-menu-button')).toBeInTheDocument();
+    expect(screen.getByTestId('schedule-2-menu-button')).toBeInTheDocument();
+    // The columns fit the table box, so the row menu stays in the window
+    expect(headerTemplate()).toBe(TEMPLATES[tier]);
+    expect(minGridWidthPx(headerTemplate())).toBeLessThanOrEqual(width - SIDE_MENUS_PX);
+    // Header and rows share one grid template, so the cell edges line up
+    screen
+      .getAllByTestId('schedule-row')
+      .forEach(row => expect(getComputedStyle(row).gridTemplateColumns).toBe(headerTemplate()));
+  });
 
-  it.each([1280, 1440, 1600])(
-    'AC5 at %i px keeps the sort test ids and sorts the 5 sortable columns',
-    width => {
-      setWindowWidth(width);
-      const onSort = vi.fn();
-      renderTable([makeRow()], false, onSort);
-      SORTABLE.forEach(field => {
-        expect(screen.getByTestId(`schedule-sort-icon-${field}`)).toBeInTheDocument();
-        fireEvent.click(screen.getByTestId(`schedule-column-header-${field}`));
-        expect(onSort).toHaveBeenLastCalledWith(field);
-      });
-      ['schedule', 'owner', 'actions'].forEach(field =>
-        expect(screen.queryByTestId(`schedule-sort-icon-${field}`)).toBeNull(),
-      );
-    },
-  );
+  it.each([1280, 1440, 1600])('at %i px keeps the sort test ids and sorts the 5 sortable columns', width => {
+    setWindowWidth(width);
+    const onSort = vi.fn();
+    renderTable([makeRow()], false, onSort);
+    SORTABLE.forEach(field => {
+      expect(screen.getByTestId(`schedule-sort-icon-${field}`)).toBeInTheDocument();
+      fireEvent.click(screen.getByTestId(`schedule-column-header-${field}`));
+      expect(onSort).toHaveBeenLastCalledWith(field);
+    });
+    ['schedule', 'owner', 'actions'].forEach(field =>
+      expect(screen.queryByTestId(`schedule-sort-icon-${field}`)).toBeNull(),
+    );
+  });
 
-  it('AC4 at 1280 px shows the owner avatar only, with the full name in a tooltip', () => {
+  it('at 1280 px shows the owner avatar only, with the full name in a tooltip', () => {
     setWindowWidth(1280);
     renderTable([makeRow()]);
     const owner = screen.getByTestId('schedule-column-value-owner');
@@ -387,7 +382,7 @@ describe('SchedulesTable fits 8 columns at 1280, 1440 and 1600 px', () => {
     expect(within(owner).getByLabelText('Ann')).toBeInTheDocument();
   });
 
-  it('AC4 at 1280 px shows the last run date and time on two lines, the status icon after the time, the reason in a tooltip', () => {
+  it('at 1280 px shows the last run date and time on two lines, the status icon after the time, the reason in a tooltip', () => {
     setWindowWidth(1280);
     renderTable([makeRow({ last_run_status: 'failed', last_run_reason: 'Agent is deleted' })]);
     const lastRun = screen.getByTestId('schedule-column-value-last_run');
@@ -402,7 +397,7 @@ describe('SchedulesTable fits 8 columns at 1280, 1440 and 1600 px', () => {
     ).toBeInTheDocument();
   });
 
-  it('AC4 at 1280 px shows Next run on two lines and the rule without the zone, with tooltips', () => {
+  it('at 1280 px shows Next run on two lines and the rule without the zone, with tooltips', () => {
     setWindowWidth(1280);
     renderTable([makeRow()]);
     const nextRun = screen.getByTestId('schedule-column-value-next_run');
@@ -414,7 +409,7 @@ describe('SchedulesTable fits 8 columns at 1280, 1440 and 1600 px', () => {
     expect(within(schedule).getByLabelText('At 00:00 on Saturday (America/New_York)')).toBeInTheDocument();
   });
 
-  it('AC4 at 1280 px uses the compact header and cell padding and centres the row menu', () => {
+  it('at 1280 px uses the compact header and cell padding and centres the row menu', () => {
     setWindowWidth(1280);
     renderTable([makeRow()]);
     expect(getComputedStyle(screen.getByTestId('schedule-column-header-owner')).paddingLeft).toBe('0.5rem');
@@ -424,11 +419,11 @@ describe('SchedulesTable fits 8 columns at 1280, 1440 and 1600 px', () => {
     );
   });
 
-  it('AC4 at 1440 px shows the owner name, the status word with no border and Next run on one line', () => {
+  it('at 1440 px shows the owner name, the status word with no border and Next run on one line', () => {
     setWindowWidth(1440);
     renderTable([makeRow()]);
     expect(screen.getByTestId('schedule-column-value-owner')).toHaveTextContent('Ann');
-    // and D11: line 1 the date and time on one line, line 2 the status icon and word
+    // Line 1 holds the date and time on one line, line 2 the status icon and word
     const lastRun = screen.getByTestId('schedule-column-value-last_run');
     expect(lastRun).toHaveTextContent(`${dateOf(LAST_RUN)} ${timeOf(LAST_RUN)}`);
     expect(within(lastRun).getByRole('img', { name: 'Success' })).toBeInTheDocument();
@@ -443,10 +438,10 @@ describe('SchedulesTable fits 8 columns at 1280, 1440 and 1600 px', () => {
     expect(getComputedStyle(screen.getByTestId('schedule-column-header-owner')).paddingLeft).toBe('0.75rem');
   });
 
-  it('AC4 at 1600 px shows the owner name, the status chip and the calendar icon', () => {
+  it('at 1600 px shows the owner name, the status chip and the calendar icon', () => {
     renderTable([makeRow()]);
     expect(screen.getByTestId('schedule-column-value-owner')).toHaveTextContent('Ann');
-    // and D11: the calendar icon and the date on line 1, the status icon and word on line 2
+    // Line 1 holds the calendar icon and the date on line 1, the status icon and word on line 2
     const lastRun = screen.getByTestId('schedule-column-value-last_run');
     expect(within(lastRun).getByTestId('calendar-icon')).toBeInTheDocument();
     expect(lastRun).toHaveTextContent(`${dateOf(LAST_RUN)} ${timeOf(LAST_RUN)}`);
@@ -493,7 +488,7 @@ describe('SchedulesTable fits 8 columns at 1280, 1440 and 1600 px', () => {
     expect(screen.getByTestId('schedule-1-menu-button')).toHaveAttribute('aria-label', 'More actions');
   });
 
-  it('AC6 at 1000 px scrolls header and rows in one box and pins the Actions column', () => {
+  it('at 1000 px scrolls header and rows in one box and pins the Actions column', () => {
     setWindowWidth(1000);
     renderTable([makeRow()]);
     const header = screen.getByTestId('schedule-column-header-name').parentElement;
@@ -508,13 +503,13 @@ describe('SchedulesTable fits 8 columns at 1280, 1440 and 1600 px', () => {
     expect(getComputedStyle(screen.getByTestId('schedule-column-header-actions')).position).toBe('sticky');
   });
 
-  it('AC6 at 1280 px keeps the Actions column in place when the table fits', () => {
+  it('at 1280 px keeps the Actions column in place when the table fits', () => {
     setWindowWidth(1280);
     renderTable([makeRow()]);
     expect(getComputedStyle(screen.getByTestId('schedule-row').lastElementChild).position).not.toBe('sticky');
   });
 
-  it('AC6 at 1280 px with the main sidebar collapsed switches to the regular tier', () => {
+  it('at 1280 px with the main sidebar collapsed switches to the regular tier', () => {
     setWindowWidth(1280, SIDEBAR_COLLAPSE_PX);
     renderTable([makeRow()]);
     expect(headerTemplate()).toBe(TEMPLATES.regular);
@@ -525,5 +520,23 @@ describe('SchedulesTable fits 8 columns at 1280, 1440 and 1600 px', () => {
     renderTable([makeRow({ id: 1 }), makeRow({ id: 2 }), makeRow({ id: 3 })]);
     expect(iconBoxSx.length).toBeGreaterThanOrEqual(3);
     expect(new Set(iconBoxSx).size).toBe(1);
+  });
+});
+
+describe('FilterSelect', () => {
+  afterEach(cleanup);
+
+  it('wraps the select in a box with the filter test id', () => {
+    renderWithTheme(
+      <FilterSelect
+        id="status"
+        label="Status"
+        width="10rem"
+        options={[{ label: 'All', value: '' }]}
+        value=""
+        onValueChange={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId('schedules-filter-status')).toBeInTheDocument();
   });
 });
