@@ -11,7 +11,10 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import CreateSkillForm from '../CreateSkillForm';
 
 vi.mock('@/[fsd]/features/entity-icon-editor', () => ({ EditableEntityIcon: () => null }));
-vi.mock('@/[fsd]/features/skill/lib/constants', () => ({ SKILL_NAME_MAX_LENGTH: 64 }));
+vi.mock('@/[fsd]/features/skill/lib/constants', () => ({
+  SKILL_NAME_MAX_LENGTH: 64,
+  SPEC_MAX_DESCRIPTION_LENGTH: 1024,
+}));
 vi.mock('@/[fsd]/features/skill/lib/hooks', async () => ({
   ...(await vi.importActual('@/[fsd]/features/skill/lib/hooks/useSkillFrontmatterEditor.hooks')),
   useSkillInstructionsMaxLength: () => 50000,

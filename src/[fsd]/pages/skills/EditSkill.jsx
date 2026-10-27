@@ -167,7 +167,7 @@ const EditSkill = memo(() => {
   );
 
   const { defaultModel, isLoadingModels } = useSkillModels();
-  const validationSchema = useSkillValidationSchema(data?.version_details?.instructions);
+  const validationSchema = useSkillValidationSchema(data);
   const isLoadingForm = isFetching || isLoadingModels;
   const initialValues = useMemo(() => buildInitialValues(data, defaultModel), [data, defaultModel]);
 

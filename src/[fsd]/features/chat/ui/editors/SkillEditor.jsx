@@ -50,7 +50,7 @@ const SkillEditor = memo(props => {
   const { data, error, isPublic } = useSkillEditorDetails(skill);
 
   const { defaultModel, isLoadingModels } = useSkillModels();
-  const validationSchema = useSkillValidationSchema(data?.version_details?.instructions);
+  const validationSchema = useSkillValidationSchema(data);
   const initialValues = useMemo(() => buildInitialValues(data, defaultModel), [data, defaultModel]);
   const isAwaitingSkillDetails = !!skillId && data?.id !== skillId;
 

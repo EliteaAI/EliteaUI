@@ -90,8 +90,11 @@ export const useSkillImport = () => {
       const importProjectId = targetProjectId || projectId;
       try {
         const result = await importSkill({ projectId: importProjectId, file: pending.file }).unwrap();
+        const unusedKeys = result?.unused_frontmatter_keys || [];
         if (result?.notice) {
           toastInfo(result.notice);
+        } else if (unusedKeys.length) {
+          toastInfo(`Skill imported. Kept but not used by ELITEA: ${unusedKeys.join(', ')}.`);
         } else {
           toastSuccess('Skill imported successfully.');
         }

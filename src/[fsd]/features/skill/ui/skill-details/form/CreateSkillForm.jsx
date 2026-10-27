@@ -5,7 +5,7 @@ import { useFormikContext } from 'formik';
 import { Box, Typography, useTheme } from '@mui/material';
 
 import { EditableEntityIcon } from '@/[fsd]/features/entity-icon-editor';
-import { SKILL_NAME_MAX_LENGTH } from '@/[fsd]/features/skill/lib/constants';
+import { SKILL_NAME_MAX_LENGTH, SPEC_MAX_DESCRIPTION_LENGTH } from '@/[fsd]/features/skill/lib/constants';
 import { countSkillBodyLength } from '@/[fsd]/features/skill/lib/helpers';
 import { useSkillFrontmatterEditor, useSkillInstructionsMaxLength } from '@/[fsd]/features/skill/lib/hooks';
 import { GenerateSkillButton } from '@/[fsd]/features/skill/ui/generate-skill-modal';
@@ -108,6 +108,15 @@ const CreateSkillForm = memo(props => {
     [formik],
   );
 
+  const description = formik.values?.description || '';
+  const descriptionError = formik.touched?.description && formik.errors.description;
+  const descriptionHelperText =
+    descriptionError ||
+    (description.length > SPEC_MAX_DESCRIPTION_LENGTH
+      ? `Longer than ${SPEC_MAX_DESCRIPTION_LENGTH} characters: Claude and other Agent Skills tools will reject the exported skill.`
+      : undefined);
+  const license = formik.values?.version_details?.meta?.frontmatter?.license;
+
   const instructions = formik.values?.version_details?.instructions || '';
   const instructionsCharactersLeft = maxInstructionsLength - instructions.length;
   const instructionsCounterLabel =
@@ -206,8 +215,8 @@ const CreateSkillForm = memo(props => {
                     onFocus={() => toggleFieldFocus(PROMPT_PAYLOAD_KEY.description)}
                     onBlur={handleDescriptionBlur}
                     value={formik.values?.description}
-                    error={formik.touched?.description && Boolean(formik.errors.description)}
-                    helperText={formik.touched?.description && formik.errors.description}
+                    error={Boolean(descriptionError)}
+                    helperText={descriptionHelperText}
                     disabled={disabled}
                     // Lands on the real <textarea> — see the analogous comment
                     // on the Name field's inputProps above.
@@ -227,6 +236,16 @@ const CreateSkillForm = memo(props => {
                     />
                   )}
                 </Box>
+
+                {license && (
+                  <Typography
+                    variant="bodySmall"
+                    sx={styles.license}
+                    data-testid="skill-license"
+                  >
+                    License: {license}
+                  </Typography>
+                )}
 
                 <TagEditor
                   id="tags"
@@ -365,6 +384,11 @@ const skillCreateFormStyles = () => ({
     flexDirection: 'column',
     position: 'relative',
   },
+  license: ({ palette }) => ({
+    display: 'block',
+    marginTop: '0.5rem',
+    color: palette.text.secondary,
+  }),
   descriptionCharactersLabel: {
     textAlign: 'right',
     width: '100%',

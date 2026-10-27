@@ -252,3 +252,88 @@ describe('useSkillFrontmatterEditor', () => {
     );
   });
 });
+
+describe('useSkillFrontmatterEditor keys ELITEA does not own', () => {
+  afterEach(() => cleanup());
+
+  const STORED = { 'allowed-tools': 'Read', license: 'MIT', 'disable-model-invocation': true };
+  const withStoredFrontmatter = frontmatter => ({
+    ...VALUES,
+    version_details: { ...VALUES.version_details, meta: { icon_meta: { url: 'i' }, frontmatter } },
+  });
+  const STORED_TEXT =
+    '---\nname: triage\ndescription: Sorts issues\nallowed-tools: Read\nlicense: MIT\ndisable-model-invocation: true\n---\n\nDo it.';
+
+  it('opens with the stored keys after name and description and leaves the form clean', () => {
+    const { result } = renderEditor(withStoredFrontmatter(STORED));
+
+    expect(result.current.editor.editorText).toBe(STORED_TEXT);
+    expect(result.current.formik.dirty).toBe(false);
+  });
+
+  it('copies an edited key to the version meta and keeps the other meta', async () => {
+    const { result } = renderEditor(withStoredFrontmatter(STORED));
+
+    await typeInEditor(result, STORED_TEXT.replace('license: MIT', 'license: Apache-2.0'));
+
+    expect(result.current.formik.values.version_details.meta).toEqual({
+      icon_meta: { url: 'i' },
+      frontmatter: { ...STORED, license: 'Apache-2.0' },
+    });
+    expect(result.current.editor.editorText).toBe(STORED_TEXT.replace('license: MIT', 'license: Apache-2.0'));
+  });
+
+  it('clears a key whose line is deleted', async () => {
+    const { result } = renderEditor(withStoredFrontmatter(STORED));
+
+    await typeInEditor(result, STORED_TEXT.replace('license: MIT\n', ''));
+
+    expect(result.current.formik.values.version_details.meta.frontmatter).toEqual({
+      'allowed-tools': 'Read',
+      'disable-model-invocation': true,
+    });
+  });
+
+  it('stores keys pasted into a new skill', async () => {
+    const { result } = renderEditor({ name: '', description: '', version_details: { instructions: '' } });
+
+    await typeInEditor(
+      result,
+      '---\nname: pdf\ndescription: Reads PDFs\nlicense: Proprietary\n---\n\nUse it.',
+    );
+
+    expect(result.current.formik.values.version_details.meta).toEqual({
+      frontmatter: { license: 'Proprietary' },
+    });
+  });
+
+  it('keeps the stored keys while the YAML is broken', async () => {
+    const { result } = renderEditor(withStoredFrontmatter(STORED));
+
+    await typeInEditor(result, STORED_TEXT.replace('license: MIT', 'license: "MIT'));
+
+    expect(result.current.formik.values.version_details.meta.frontmatter).toEqual(STORED);
+  });
+
+  it('leaves the text alone when the server returns the same keys in another order', async () => {
+    const { result } = renderEditor(withStoredFrontmatter(STORED));
+
+    await setField(result, 'version_details.meta.frontmatter', {
+      license: 'MIT',
+      'disable-model-invocation': true,
+      'allowed-tools': 'Read',
+    });
+
+    expect(result.current.editor.editorText).toBe(STORED_TEXT);
+  });
+
+  it('rebuilds the block when another version with other keys is loaded', async () => {
+    const { result } = renderEditor(withStoredFrontmatter(STORED));
+
+    await setField(result, 'version_details.meta.frontmatter', { compatibility: 'Needs network' });
+
+    expect(result.current.editor.editorText).toBe(
+      '---\nname: triage\ndescription: Sorts issues\ncompatibility: Needs network\n---\n\nDo it.',
+    );
+  });
+});

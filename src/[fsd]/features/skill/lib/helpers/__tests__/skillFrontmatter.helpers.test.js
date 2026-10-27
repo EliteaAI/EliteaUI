@@ -13,6 +13,28 @@ const BODY = '# Steps\n\nDo it.';
 const TEXT = composeSkillEditorText({ ...FIELDS, body: BODY });
 
 describe('composeSkillEditorText', () => {
+  it('writes the other keys after name and description', () => {
+    expect(
+      composeSkillEditorText({
+        name: 'triage',
+        description: 'd',
+        frontmatter: { license: 'MIT', 'disable-model-invocation': true },
+        body: 'body',
+      }),
+    ).toBe('---\nname: triage\ndescription: d\nlicense: MIT\ndisable-model-invocation: true\n---\n\nbody');
+  });
+
+  it('round-trips the other keys through the editor text', () => {
+    const frontmatter = {
+      license: 'MIT',
+      metadata: { author: 'me', version: '2.0' },
+      'argument-hint': '[v]',
+    };
+    const text = composeSkillEditorText({ name: 'triage', description: 'd', frontmatter, body: 'body' });
+
+    expect(parseSkillEditorText(text).extraFrontmatter).toEqual(frontmatter);
+  });
+
   it('puts name and description in a frontmatter block above the body', () => {
     expect(TEXT).toBe('---\nname: triage\ndescription: Sorts issues\n---\n\n# Steps\n\nDo it.');
   });
@@ -44,7 +66,7 @@ describe('composeSkillEditorText', () => {
 
 describe('parseSkillEditorText', () => {
   it('splits the frontmatter fields from the body', () => {
-    expect(parseSkillEditorText(TEXT)).toEqual({ body: BODY, fields: FIELDS });
+    expect(parseSkillEditorText(TEXT)).toEqual({ body: BODY, fields: FIELDS, extraFrontmatter: {} });
   });
 
   it('keeps leading blank lines of the body', () => {
@@ -77,7 +99,11 @@ describe('parseSkillEditorText', () => {
   });
 
   it('accepts an empty block', () => {
-    expect(parseSkillEditorText('---\n---\n\nbody')).toEqual({ body: 'body', fields: {} });
+    expect(parseSkillEditorText('---\n---\n\nbody')).toEqual({
+      body: 'body',
+      fields: {},
+      extraFrontmatter: {},
+    });
   });
 
   it.each([
@@ -95,6 +121,24 @@ describe('parseSkillEditorText', () => {
         '---\nname: triage\ndescription: d\nlicense: MIT\nallowed-tools: Read\n---\n\nbody',
       ).fields,
     ).toEqual({ name: 'triage', description: 'd' });
+  });
+
+  it('returns the other keys with their YAML types', () => {
+    const text =
+      "---\nname: triage\ndescription: d\nlicense: MIT\ndisable-model-invocation: true\nmetadata:\n  version: '2.0'\n---\n\nbody";
+
+    expect(parseSkillEditorText(text).extraFrontmatter).toEqual({
+      license: 'MIT',
+      'disable-model-invocation': true,
+      metadata: { version: '2.0' },
+    });
+  });
+
+  it.each([
+    ['a block without its closing line', '---\nlicense: MIT\nbody'],
+    ['broken YAML', '---\nlicense: "MIT\n---\n\nbody'],
+  ])('reads no other keys for %s', (_case, text) => {
+    expect(parseSkillEditorText(text).extraFrontmatter).toBeUndefined();
   });
 
   it('reads a non-string scalar as its text', () => {
