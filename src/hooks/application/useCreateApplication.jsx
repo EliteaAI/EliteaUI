@@ -14,7 +14,7 @@ import { actions } from '@/slices/pipeline';
 
 import RouteDefinitions from '../../routes';
 
-const { LAYOUT_VERSION, ORIENTATION } = FlowEditorConstants;
+const { LAYOUT_VERSION } = FlowEditorConstants;
 
 const useCreateApplication = (formik, resetBlockNav, options = {}) => {
   const { skipNavigation = false, onSuccess } = options;
@@ -22,12 +22,10 @@ const useCreateApplication = (formik, resetBlockNav, options = {}) => {
   const dispatch = useDispatch();
   const projectId = useSelectedProjectId();
   const [createRequest, { data, error, isLoading, isError }] = useApplicationCreateMutation();
-  const { isFromPipeline, yamlCode } = useSavePipeline();
+  const { isFromPipeline, yamlCode, orientation } = useSavePipeline();
   const { nodes: flowNodes } = useSelector(state => state.pipelineEditor);
   const create = useCallback(async () => {
-    const { nodes, edges } = isFromPipeline
-      ? calculateNodesAndEdges(yamlCode, ORIENTATION.vertical, flowNodes)
-      : {};
+    const { nodes, edges } = isFromPipeline ? calculateNodesAndEdges(yamlCode, orientation, flowNodes) : {};
     await createRequest({
       projectId,
       name: formik.values.name?.trim() || '',
@@ -50,7 +48,7 @@ const useCreateApplication = (formik, resetBlockNav, options = {}) => {
             ? {
                 nodes,
                 edges,
-                orientation: ORIENTATION.vertical,
+                orientation,
                 layout_version: LAYOUT_VERSION,
               }
             : undefined,
@@ -80,6 +78,7 @@ const useCreateApplication = (formik, resetBlockNav, options = {}) => {
     formik.values?.version_details?.meta,
     isFromPipeline,
     yamlCode,
+    orientation,
     flowNodes,
   ]);
 

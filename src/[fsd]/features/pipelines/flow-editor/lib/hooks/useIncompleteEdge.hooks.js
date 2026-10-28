@@ -3,11 +3,18 @@ import { useCallback, useMemo, useState } from 'react';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { addEdge, reconnectEdge, useReactFlow } from '@xyflow/react';
 
-import { PipelineNodeTypes } from '../constants/flowEditor.constants';
+import { ORIENTATION, PipelineNodeTypes } from '../constants/flowEditor.constants';
 
-const ADD_FROM_HANDLE_OFFSET_Y = 120;
+// Gap between the source node and the node created from its Output "+"
+const ADD_FROM_HANDLE_GAP = 120;
 
-export const useIncompleteEdge = ({ onConnect, onNodeCreateAtPosition, yamlJsonObjectRef, disabled }) => {
+export const useIncompleteEdge = ({
+  onConnect,
+  onNodeCreateAtPosition,
+  yamlJsonObjectRef,
+  disabled,
+  orientation = ORIENTATION.vertical,
+}) => {
   const reactFlowInstance = useReactFlow();
   const { setNodes, setEdges, screenToFlowPosition, getInternalNode } = reactFlowInstance;
   const [showConnectionDropdown, setShowConnectionDropdown] = useState(false);
@@ -86,7 +93,8 @@ export const useIncompleteEdge = ({ onConnect, onNodeCreateAtPosition, yamlJsonO
     });
   };
 
-  // "+" under a node's Output: same dropdown, anchored to the "+", new node placed below the source
+  // "+" next to a node's Output: same dropdown, anchored to the "+", new node placed after the source
+  // in the flow direction (below it top to bottom, right of it left to right)
   const openFromHandle = ({ nodeId, handleId, anchorEl }) => {
     if (disabled || showConnectionDropdown) return;
 
@@ -94,12 +102,16 @@ export const useIncompleteEdge = ({ onConnect, onNodeCreateAtPosition, yamlJsonO
     if (!sourceNode) return;
 
     const { x, y } = sourceNode.internals?.positionAbsolute || sourceNode.position;
-    const height = sourceNode.measured?.height || 0;
+    const { width = 0, height = 0 } = sourceNode.measured || {};
+    const flowPosition =
+      orientation === ORIENTATION.horizontal
+        ? { x: x + width + ADD_FROM_HANDLE_GAP, y }
+        : { x, y: y + height + ADD_FROM_HANDLE_GAP };
 
     startIncompleteEdge({
       fromNodeId: nodeId,
       fromHandleId: handleId,
-      flowPosition: { x, y: y + height + ADD_FROM_HANDLE_OFFSET_Y },
+      flowPosition,
       anchor: anchorEl,
     });
   };

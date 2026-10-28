@@ -177,6 +177,8 @@ const useApplicationInitialValues = forPipeline => {
       } catch {
         // YAML parsing failed, parsedYamlJson remains undefined
       }
+      const savedOrientation =
+        applicationData.version_details?.pipeline_settings?.orientation || ORIENTATION.vertical;
       if (
         !applicationData.version_details?.pipeline_settings?.nodes?.length ||
         !applicationData.version_details?.pipeline_settings?.edges?.length ||
@@ -186,13 +188,12 @@ const useApplicationInitialValues = forPipeline => {
       ) {
         const { nodes: parsedNodes, edges: parsedEdges } = ParsePipelineHelpers.parseYaml(
           parsedYamlJson,
-          ORIENTATION.vertical,
+          savedOrientation,
         );
         const { nodes, edges } = LayoutHelpers.doLayout({
           nodes: parsedNodes,
           edges: parsedEdges,
-          orientation:
-            applicationData.version_details?.pipeline_settings?.orientation || ORIENTATION.vertical,
+          orientation: savedOrientation,
           flowNodes: applicationData.version_details?.pipeline_settings?.nodes || [],
         });
         return {
@@ -209,8 +210,7 @@ const useApplicationInitialValues = forPipeline => {
                   ),
                 ),
                 edges,
-                orientation:
-                  applicationData.version_details?.pipeline_settings?.orientation || ORIENTATION.vertical,
+                orientation: savedOrientation,
                 layout_version: applicationData.version_details?.pipeline_settings?.layout_version,
               },
             },
@@ -226,6 +226,7 @@ const useApplicationInitialValues = forPipeline => {
             yamlJsonObject: parsedYamlJson,
             yamlCode: applicationData?.version_details?.instructions,
             layout_version: applicationData.version_details?.pipeline_settings?.layout_version,
+            orientation: savedOrientation,
           },
         };
       } else {
@@ -255,6 +256,7 @@ const useApplicationInitialValues = forPipeline => {
             yamlJsonObject: parsedYamlJson,
             yamlCode: applicationData?.version_details?.instructions,
             layout_version: applicationData.version_details?.pipeline_settings?.layout_version,
+            orientation: savedOrientation,
           },
         };
       }

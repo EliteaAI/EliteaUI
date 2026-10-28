@@ -11,6 +11,7 @@ import { TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import {
   useFormDirtyExcluding,
   useIsFromPipelineDetail,
+  useIsPipelineLayoutDirty,
   useSelectedProjectId,
   useViewMode,
 } from '@/[fsd]/shared/lib/hooks';
@@ -36,6 +37,7 @@ const ApplicationTabBar = memo(props => {
   const styles = applicationTabBarStyles();
 
   const isYamlCodeDirty = useIsPipelineYamlCodeDirty();
+  const isLayoutDirty = useIsPipelineLayoutDirty();
   const isFromApplications = useFromApplications();
   const isFromPipeline = useIsFromPipelineDetail();
   const selectedProjectId = useSelectedProjectId();
@@ -76,7 +78,7 @@ const ApplicationTabBar = memo(props => {
             dataTestId="discard-button"
             modalDataTestId="discard-confirm-modal"
             confirmButtonDataTestId="discard-confirm-button"
-            disabled={!isFormDirtyExcluding && !isYamlCodeDirty}
+            disabled={!isFormDirtyExcluding && !isYamlCodeDirty && !isLayoutDirty}
             onDiscard={discardApplicationChanges}
           />
         </Box>

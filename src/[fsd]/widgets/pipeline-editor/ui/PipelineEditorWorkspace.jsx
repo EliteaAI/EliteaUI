@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useLayoutEffect, useRef, useState } from 'react';
 
 import { useLocation } from 'react-router-dom';
 
@@ -42,6 +42,26 @@ const PipelineEditorWorkspace = memo(props => {
 
   const { isSmallWindow } = useIsSmallWindow(fitView);
 
+  // Working with the nodes collapses the settings column; only its own button expands it again
+  const [isFormCollapsed, setIsFormCollapsed] = useState(false);
+  // Left edge of the canvas row before an auto-collapse; null when no auto-collapse is pending
+  const editorLeftBeforeCollapseRef = useRef(null);
+
+  const handleCanvasNodeInteraction = useCallback(() => {
+    if (isSmallWindow || isFormCollapsed) return;
+    editorLeftBeforeCollapseRef.current = editorRowRef.current?.getBoundingClientRect().left ?? null;
+    setIsFormCollapsed(true);
+  }, [isFormCollapsed, isSmallWindow]);
+
+  // The canvas grows to the left, so move the view by the same distance and the nodes stay in place
+  useLayoutEffect(() => {
+    const leftBefore = editorLeftBeforeCollapseRef.current;
+    if (!isFormCollapsed || leftBefore === null) return;
+    editorLeftBeforeCollapseRef.current = null;
+    const shift = leftBefore - (editorRowRef.current?.getBoundingClientRect().left ?? leftBefore);
+    if (shift) editorPanelRef.current?.panBy?.(shift, 0);
+  }, [isFormCollapsed]);
+
   // Opening or closing the Test panel keeps the canvas zoom and position as they are
   const handleOpenTestPanel = useCallback(() => {
     setIsTestPanelOpen(true);
@@ -71,6 +91,8 @@ const PipelineEditorWorkspace = memo(props => {
         isCreateMode={!isEditMode}
         onCollapsed={fitView}
         onSelectNode={handleSelectNode}
+        collapsed={isFormCollapsed}
+        onCollapsedChange={setIsFormCollapsed}
       />
       <Box
         ref={editorRowRef}
@@ -83,6 +105,7 @@ const PipelineEditorWorkspace = memo(props => {
           onTestPipeline={isEditMode ? handleOpenTestPanel : noop}
           testDisabledReason={isEditMode ? '' : UNSAVED_TEST_REASON}
           isTestPanelOpen={isTestPanelOpen}
+          onCanvasNodeInteraction={handleCanvasNodeInteraction}
           sx={styles.editorPanel}
         />
         {isEditMode && (

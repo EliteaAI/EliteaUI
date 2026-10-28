@@ -11,6 +11,10 @@ import { useEdges } from '@xyflow/react';
 
 import DecisionOutputs, { commonComponentStyles } from './DecisionNodeShared';
 
+// Output handles sit either side of the centre of the output edge
+const NODES_HANDLE_OFFSET = 'calc(50% - 3.125rem)';
+const DEFAULT_OUTPUT_HANDLE_OFFSET = 'calc(50% + 3.125rem)';
+
 const LegacyDecisionNode = memo(props => {
   const { id, data, selected } = props;
   const styles = componentStyles();
@@ -212,7 +216,9 @@ const LegacyDecisionNode = memo(props => {
               isConnectable={!isRunningPipeline && !disabled}
               isRunningPipeline={isRunningPipeline}
               isPerforming={data?.isPerforming}
-              style={styles.nodesHandle}
+              offset={NODES_HANDLE_OFFSET}
+              outputIndex={0}
+              outputCount={2}
             />
             <FlowEditorNodes.CustomHandle
               type="source"
@@ -221,7 +227,9 @@ const LegacyDecisionNode = memo(props => {
               isConnectable={isElseConnectable && !isRunningPipeline && !disabled}
               isRunningPipeline={isRunningPipeline}
               isPerforming={data?.isPerforming}
-              style={styles.defaultOutputHandle}
+              offset={DEFAULT_OUTPUT_HANDLE_OFFSET}
+              outputIndex={1}
+              outputCount={2}
             />
           </>
         );
@@ -277,12 +285,6 @@ LegacyDecisionNode.displayName = 'LegacyDecisionNode';
 /** @type {MuiSx} */
 const componentStyles = () => ({
   ...commonComponentStyles(),
-  nodesHandle: {
-    left: 'calc(50% - 3.125rem)',
-  },
-  defaultOutputHandle: {
-    left: 'calc(50% + 3.125rem)',
-  },
 });
 
 export default LegacyDecisionNode;

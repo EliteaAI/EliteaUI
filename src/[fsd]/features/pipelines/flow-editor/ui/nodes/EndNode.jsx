@@ -1,19 +1,22 @@
-import { memo, useContext, useMemo } from 'react';
+import { memo, useContext } from 'react';
 
 import { Box, Typography, useTheme } from '@mui/material';
 
+import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { NodeCardHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import NodeIconTile from '@/[fsd]/features/pipelines/flow-editor/ui/nodes/base-node/NodeIconTile';
 import { FlowEditorContext, NodeCardContext } from '@/[fsd]/shared/lib/context';
 import FlagIcon from '@/assets/flag-icon.svg?react';
-import { Handle } from '@xyflow/react';
+import { Handle, Position } from '@xyflow/react';
+
+const CARD_CONTEXT_VALUE = { isExpanded: true };
 
 const EndNode = memo(props => {
   const { selected, data } = props;
   const theme = useTheme();
 
-  const { isRunningPipeline, expandAll } = useContext(FlowEditorContext);
-  const cardContextValue = useMemo(() => ({ isExpanded: expandAll }), [expandAll]);
+  const { isRunningPipeline, orientation } = useContext(FlowEditorContext);
+  const isHorizontal = orientation === FlowEditorConstants.ORIENTATION.horizontal;
 
   const cardState = {
     status: NodeCardHelpers.getNodeCardStatus({ isPerforming: data?.isPerforming }),
@@ -27,7 +30,7 @@ const EndNode = memo(props => {
   });
 
   return (
-    <NodeCardContext.Provider value={cardContextValue}>
+    <NodeCardContext.Provider value={CARD_CONTEXT_VALUE}>
       <Box
         sx={styles.container}
         data-testid="pipeline-end-node"
@@ -44,6 +47,7 @@ const EndNode = memo(props => {
         <Handle
           type="target"
           id="target"
+          position={isHorizontal ? Position.Left : Position.Top}
           isConnectable
           selected={selected}
           style={styles.handle}

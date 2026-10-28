@@ -15,4 +15,5 @@ export { useNodeToolNames } from './useNodeToolNames.hooks';
 export { useNodeYamlEditor } from './useNodeYamlEditor.hooks';
 export { useNodeAiAssistantConfig } from './useNodeAiAssistantConfig.hooks';
 export { useStateValidation } from './useStateValidation.hooks';
+export { useCanvasMinimapPref } from './useCanvasMinimapPref.hooks';
 export * from './useGetToolkitNameFromSchema.hooks';

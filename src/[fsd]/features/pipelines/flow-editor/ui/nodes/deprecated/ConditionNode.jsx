@@ -14,6 +14,10 @@ import RemoveIcon from '@/assets/remove-icon.svg?react';
 import StyledChip from '@/components/DataDisplay/StyledChip';
 import { useEdges, useNodes } from '@xyflow/react';
 
+// Output handles sit either side of the centre of the output edge
+const CONDITIONAL_OUTPUT_HANDLE_OFFSET = 'calc(50% - 2.5rem)';
+const DEFAULT_OUTPUT_HANDLE_OFFSET = 'calc(50% + 2.5rem)';
+
 const ConditionNode = memo(props => {
   const { id, data, selected } = props;
 
@@ -224,7 +228,9 @@ const ConditionNode = memo(props => {
               <FlowEditorNodes.CustomHandle
                 type="source"
                 id="conditional_outputs"
-                style={styles.conditionalOutput}
+                offset={CONDITIONAL_OUTPUT_HANDLE_OFFSET}
+                outputIndex={0}
+                outputCount={2}
                 isConnectable={!isRunningPipeline && !disabled}
                 isRunningPipeline={isRunningPipeline}
                 isPerforming={data?.isPerforming}
@@ -232,7 +238,9 @@ const ConditionNode = memo(props => {
               <FlowEditorNodes.CustomHandle
                 type="source"
                 id="default_output"
-                style={styles.defaultOutput}
+                offset={DEFAULT_OUTPUT_HANDLE_OFFSET}
+                outputIndex={1}
+                outputCount={2}
                 label="Default output"
                 isConnectable={isElseConnectable && !isRunningPipeline && !disabled}
                 isRunningPipeline={isRunningPipeline}
@@ -361,12 +369,6 @@ const conditionNodeStyles = () => ({
       },
     },
   }),
-  conditionalOutput: {
-    left: 'calc(50% - 2.5rem)',
-  },
-  defaultOutput: {
-    left: 'calc(50% + 2.5rem)',
-  },
 });
 
 export default ConditionNode;

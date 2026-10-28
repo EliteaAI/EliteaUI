@@ -7,7 +7,16 @@ import { ReactFlowProvider } from '@xyflow/react';
 
 const FlowWrapper = forwardRef(
   (
-    { stopRun, mode, setYamlJsonObject, noBorder = false, disabled, isVisible = true, onNodeIssuesChange },
+    {
+      stopRun,
+      mode,
+      setYamlJsonObject,
+      noBorder = false,
+      disabled,
+      isVisible = true,
+      onNodeIssuesChange,
+      onCanvasNodeInteraction,
+    },
     ref,
   ) => {
     const { isSmallWindow } = useIsSmallWindow();
@@ -24,6 +33,7 @@ const FlowWrapper = forwardRef(
           disabled={disabled}
           isVisible={isVisible}
           onNodeIssuesChange={onNodeIssuesChange}
+          onCanvasNodeInteraction={onCanvasNodeInteraction}
         />
       </ReactFlowProvider>
     );
