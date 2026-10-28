@@ -59,6 +59,7 @@ import {
   useNodesState,
   useReactFlow,
   useStore,
+  useUpdateNodeInternals,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -246,6 +247,17 @@ const FlowEditor = memo(
         if (node.measured) fullNodeSizesRef.current[node.id] = node.measured;
       });
     }, [flowNodes, isMiniZoom]);
+
+    // The handles change sides with the orientation; React Flow keeps the old handle bounds until the
+    // nodes are re-measured, so the edges would still leave from the bottom and enter from the top
+    const updateNodeInternals = useUpdateNodeInternals();
+    const flowNodesRef = useRef(flowNodes);
+    flowNodesRef.current = flowNodes;
+
+    useEffect(() => {
+      updateNodeInternals(flowNodesRef.current.map(node => node.id));
+    }, [orientation, updateNodeInternals]);
+
     const {
       onStopRun,
       deleteRunNode,
