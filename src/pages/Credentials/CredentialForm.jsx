@@ -11,7 +11,11 @@ import {
   ConfigurationTitlesConstants,
   LlmModelFormConstants,
 } from '@/[fsd]/features/credentials/lib/constants';
-import { CredentialProbeHelpers, OAuthAppHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import {
+  CredentialProbeHelpers,
+  OAuthAppHelpers,
+  StoredLoginHelpers,
+} from '@/[fsd]/features/credentials/lib/helpers';
 import { useCredentialPageStoredLogin } from '@/[fsd]/features/credentials/lib/hooks';
 import { CredentialLogoutModal, LlmModelForm } from '@/[fsd]/features/credentials/ui';
 import { CREDENTIALS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
@@ -216,11 +220,16 @@ const CredentialForm = memo(props => {
   // Config OAuth: when check_connection returns requires_authorization, open modal; on success retry test connection
   const onTestConnectionRef = useRef();
   const storedLoginRef = useRef();
+  const isFormDirtyRef = useRef(false);
   const configOAuth = useConfigOAuthModal({
     onSuccess: async () => {
-      await storedLoginRef.current?.saveLogin();
+      await storedLoginRef.current?.saveLogin({ isFormDirty: isFormDirtyRef.current });
       onTestConnectionRef.current?.();
     },
+    // The stored-login save reports the outcome itself
+    showSuccessToast: !(
+      credentialDetails?.id && StoredLoginHelpers.getStoredLoginConfig(credentialDetails?.type)
+    ),
     credentials: {
       client_id: credentialDetails?.settings?.client_id,
       client_secret: credentialDetails?.settings?.client_secret,
@@ -259,6 +268,8 @@ const CredentialForm = memo(props => {
     tokenKey: oauthTokenKey,
   });
   storedLoginRef.current = storedLogin;
+  // A team credential's stored login belongs to the project: members see it, only admins change it
+  const storedLoginLocked = storedLogin.enabled && !storedLogin.canManageLogin;
 
   const onConfirmLogout = useCallback(async () => {
     if (!(await storedLogin.removeLogin())) return;
@@ -276,6 +287,7 @@ const CredentialForm = memo(props => {
   }, []);
   // A saved credential with no unsaved edits is tested by reference; anything else by the typed values
   const isFormDirty = useFormDirtyExcluding();
+  isFormDirtyRef.current = isFormDirty;
   const configurationUuid = CredentialProbeHelpers.getProbeConfigurationUuid(credentialDetails, isFormDirty);
   const { onTestConnection, isTestingConnection } = useCreateConfiguration({
     type: configurationType,
@@ -419,24 +431,37 @@ const CredentialForm = memo(props => {
               </Button.BaseBtn>
             </span>
           </Tooltip>
-          {(isOAuthLoggedIn || storedLogin.hasStoredLogin) && oauthTokenKey && (
-            <Button.BaseBtn
-              variant="elitea"
-              color="secondary"
-              onClick={onLogout}
+          {oauthTokenKey && (
+            <Tooltip
+              title={
+                storedLoginLocked
+                  ? StoredLoginHelpers.getLockedLoginHint(isOAuthLoggedIn || storedLogin.hasStoredLogin)
+                  : ''
+              }
+              placement="bottom"
             >
-              Logout
-            </Button.BaseBtn>
-          )}
-          {!isOAuthLoggedIn && !storedLogin.hasStoredLogin && oauthTokenKey && (
-            <Button.BaseBtn
-              variant="elitea"
-              color="secondary"
-              onClick={onClickTestConnection}
-              disabled={isTestingConnection}
-            >
-              Login
-            </Button.BaseBtn>
+              <span>
+                {isOAuthLoggedIn || storedLogin.hasStoredLogin ? (
+                  <Button.BaseBtn
+                    variant="elitea"
+                    color="secondary"
+                    onClick={onLogout}
+                    disabled={storedLoginLocked}
+                  >
+                    Logout
+                  </Button.BaseBtn>
+                ) : (
+                  <Button.BaseBtn
+                    variant="elitea"
+                    color="secondary"
+                    onClick={onClickTestConnection}
+                    disabled={isTestingConnection || storedLoginLocked}
+                  >
+                    Login
+                  </Button.BaseBtn>
+                )}
+              </span>
+            </Tooltip>
           )}
         </Box>
       )}

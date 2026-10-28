@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
+import { StoredLoginHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { McpAuthHelpers, useConfigOAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import {
@@ -73,10 +74,7 @@ export const useStoredOAuthLogin = ({
 
   const saveRefreshToken = useCallback(
     async refreshToken => {
-      // PUT replaces data wholesale, so leaving the key out is what removes a saved login
-      const nextData = { ...credential.data };
-      delete nextData.refresh_token;
-      const body = { data: refreshToken ? { ...nextData, refresh_token: refreshToken } : nextData };
+      const body = StoredLoginHelpers.buildStoredLoginBody(credential.data, refreshToken);
       return updateConfiguration({ projectId: credProjectId, configId: credential.id, body }).unwrap();
     },
     [credential, credProjectId, updateConfiguration],

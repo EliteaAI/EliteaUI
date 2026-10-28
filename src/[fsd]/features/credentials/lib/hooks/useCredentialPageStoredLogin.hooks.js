@@ -31,10 +31,7 @@ export const useCredentialPageStoredLogin = ({ credential, tokenKey }) => {
 
   const putData = useCallback(
     async refreshToken => {
-      // PUT replaces data wholesale, so leaving the key out is what removes a saved login
-      const nextData = { ...credential.data };
-      delete nextData.refresh_token;
-      const body = { data: refreshToken ? { ...nextData, refresh_token: refreshToken } : nextData };
+      const body = StoredLoginHelpers.buildStoredLoginBody(credential.data, refreshToken);
       return updateConfiguration({
         projectId: credential.project_id,
         configId: credential.id,
@@ -44,34 +41,33 @@ export const useCredentialPageStoredLogin = ({ credential, tokenKey }) => {
     [credential, updateConfiguration],
   );
 
-  const saveLogin = useCallback(async () => {
-    if (!enabled) return;
-    if (!canManageLogin) {
-      toastError(
-        'Signed in for this browser only: only project admins can save the login on a team credential.',
-      );
-      return;
-    }
-    const refreshToken = McpAuthHelpers.getRefreshToken(tokenKey);
-    if (!refreshToken) {
-      toastError('Microsoft did not return a refresh token, so scheduled runs cannot use this login.');
-      return;
-    }
-    try {
-      await putData(refreshToken);
-      toastSuccess('Connected! The login is saved for scheduled runs.');
-    } catch (error) {
-      toastError(error?.data?.error || 'Could not save the login to the credential.');
-    }
-  }, [enabled, canManageLogin, tokenKey, putData, toastError, toastSuccess]);
+  // With unsaved edits the sign-in used the typed client, so the token may belong to another app
+  const saveLogin = useCallback(
+    async ({ isFormDirty = false } = {}) => {
+      if (!enabled || !canManageLogin) return;
+      if (isFormDirty) {
+        toastError('Save the credential first, then log in again: the login must match the saved settings.');
+        return;
+      }
+      const refreshToken = McpAuthHelpers.getRefreshToken(tokenKey);
+      if (!refreshToken) {
+        toastError('Microsoft did not return a refresh token, so scheduled runs cannot use this login.');
+        return;
+      }
+      try {
+        await putData(refreshToken);
+        toastSuccess('Connected! The login is saved for scheduled runs.');
+      } catch (error) {
+        toastError(error?.data?.error || 'Could not save the login to the credential.');
+      }
+    },
+    [enabled, canManageLogin, tokenKey, putData, toastError, toastSuccess],
+  );
 
   // Returns false when the saved login could not be removed, so the caller can keep the dialog open
   const removeLogin = useCallback(async () => {
     if (!hasStoredLogin) return true;
-    if (!canManageLogin) {
-      toastError('Only project admins can log out a team credential.');
-      return false;
-    }
+    if (!canManageLogin) return false;
     try {
       await putData(null);
       return true;

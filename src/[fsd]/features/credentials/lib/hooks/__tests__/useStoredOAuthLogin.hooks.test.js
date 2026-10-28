@@ -19,6 +19,10 @@ const mocks = vi.hoisted(() => ({
   isAdmin: true,
 }));
 
+vi.mock('@/[fsd]/features/credentials/lib/helpers', async () => ({
+  StoredLoginHelpers: await vi.importActual('@/[fsd]/features/credentials/lib/helpers/storedLogin.helpers'),
+}));
+
 vi.mock('@/hooks/useCheckPermission', () => ({
   default: () => ({
     checkPermission: permission => permission === 'configuration.users.users.edit' && mocks.isAdmin,

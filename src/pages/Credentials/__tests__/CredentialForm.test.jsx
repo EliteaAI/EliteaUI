@@ -22,10 +22,18 @@ const mocks = vi.hoisted(() => ({
 vi.mock('formik', () => ({ useFormikContext: () => ({ setFieldValue: vi.fn() }) }));
 vi.mock('react-redux', () => ({ useSelector: () => ({ personal_project_id: 1 }) }));
 vi.mock('react-router-dom', () => ({ useSearchParams: () => [new URLSearchParams()] }));
-vi.mock('@/ComponentsLib/Tooltip', () => ({ default: ({ children }) => children }));
+vi.mock('@/ComponentsLib/Tooltip', () => ({
+  default: ({ children, title }) => <span data-hint={title || undefined}>{children}</span>,
+}));
 vi.mock('@/[fsd]/features/credentials/lib/constants', () => ({
   ConfigurationTitlesConstants: { Create_Personal_Title: 'p', Create_Project_Title: 'q', Manual_Title: 'm' },
   LlmModelFormConstants: { LLM_MODEL_CONFIGURATION_TYPE: 'llm_model' },
+}));
+vi.mock('@/[fsd]/features/credentials/lib/helpers', async importOriginal => ({
+  ...(await importOriginal()),
+  CredentialProbeHelpers: {
+    getProbeConfigurationUuid: (details, dirty) => (dirty ? undefined : details?.uuid),
+  },
 }));
 vi.mock('@/[fsd]/features/credentials/lib/hooks', () => ({
   useCredentialPageStoredLogin: () => mocks.storedLogin,
@@ -59,7 +67,16 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useToast: () => ({ toastSuccess: vi.fn() }),
 }));
 vi.mock('@/[fsd]/shared/ui', async () => ({
-  Button: { BaseBtn: ({ children, onClick }) => <button onClick={onClick}>{children}</button> },
+  Button: {
+    BaseBtn: ({ children, onClick, disabled }) => (
+      <button
+        onClick={onClick}
+        disabled={disabled}
+      >
+        {children}
+      </button>
+    ),
+  },
   Chip: { ErrorCodeChip: (await import('@/[fsd]/shared/ui/chip/ErrorCodeChip')).default },
 }));
 vi.mock('@/[fsd]/shared/ui/tab-group-button', () => ({ FormViewToggle: () => null }));
@@ -152,6 +169,8 @@ describe('CredentialForm stored Microsoft login', () => {
     mocks.isDirty = false;
     mocks.browserLoggedIn = false;
     mocks.storedLogin = {
+      enabled: true,
+      canManageLogin: true,
       hasStoredLogin: false,
       saveLogin: vi.fn().mockResolvedValue(undefined),
       removeLogin: vi.fn().mockResolvedValue(true),
@@ -171,8 +190,56 @@ describe('CredentialForm stored Microsoft login', () => {
 
     await act(async () => mocks.oauthOptions.onSuccess());
 
-    expect(mocks.storedLogin.saveLogin).toHaveBeenCalledTimes(1);
+    expect(mocks.storedLogin.saveLogin).toHaveBeenCalledWith({ isFormDirty: false });
     expect(onTestConnection).toHaveBeenCalledTimes(1);
+  });
+
+  it('tells the save the form has unsaved edits, so a login for another app is not stored', async () => {
+    mocks.isDirty = true;
+    renderForm({ credentialDetails: TEAMS });
+
+    await act(async () => mocks.oauthOptions.onSuccess());
+
+    expect(mocks.storedLogin.saveLogin).toHaveBeenCalledWith({ isFormDirty: true });
+  });
+
+  it('turns off the generic sign-in toast, since the save reports the outcome', () => {
+    renderForm({ credentialDetails: TEAMS });
+    expect(mocks.oauthOptions.showSuccessToast).toBe(false);
+  });
+
+  it('keeps the generic sign-in toast for credentials that do not store a login', () => {
+    renderForm({ credentialDetails: { ...TEAMS, type: 'github' } });
+    expect(mocks.oauthOptions.showSuccessToast).toBe(true);
+  });
+
+  it('a member sees a disabled Logout with who manages the stored login', () => {
+    mocks.storedLogin = { ...mocks.storedLogin, canManageLogin: false, hasStoredLogin: true };
+    renderForm({ credentialDetails: TEAMS });
+
+    const logout = screen.getByText('Logout');
+    expect(logout).toBeDisabled();
+    expect(logout.closest('[data-hint]')).toHaveAttribute('data-hint', 'Login managed by a project admin');
+  });
+
+  it('a member sees a disabled Login asking a project admin when nothing is stored', () => {
+    mocks.storedLogin = { ...mocks.storedLogin, canManageLogin: false, hasStoredLogin: false };
+    renderForm({ credentialDetails: TEAMS });
+
+    const login = screen.getByText('Login');
+    expect(login).toBeDisabled();
+    expect(login.closest('[data-hint]')).toHaveAttribute(
+      'data-hint',
+      'Not connected, ask a project admin to log in',
+    );
+  });
+
+  it('an admin gets enabled buttons and no hint', () => {
+    renderForm({ credentialDetails: TEAMS });
+
+    const login = screen.getByText('Login');
+    expect(login).not.toBeDisabled();
+    expect(login.closest('[data-hint]')).toBeNull();
   });
 
   it('offers Logout when the login is stored on the credential, even with no browser token', () => {

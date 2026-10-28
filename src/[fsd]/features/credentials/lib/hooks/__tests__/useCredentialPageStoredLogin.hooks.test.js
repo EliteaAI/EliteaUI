@@ -25,8 +25,9 @@ vi.mock('react-redux', () => ({ useSelector: selector => selector({ user: { pers
 vi.mock('@/api/configurations', () => ({
   useUpdateConfigurationMutation: () => [mocks.updateConfiguration],
 }));
-vi.mock('@/[fsd]/features/credentials/lib/helpers', () => ({
+vi.mock('@/[fsd]/features/credentials/lib/helpers', async () => ({
   StoredLoginHelpers: {
+    ...(await vi.importActual('@/[fsd]/features/credentials/lib/helpers/storedLogin.helpers')),
     getStoredLoginConfig: type =>
       ['dataverse', 'outlook', 'teams'].includes(type) ? { configurationType: type } : null,
   },
@@ -79,14 +80,24 @@ describe('useCredentialPageStoredLogin', () => {
     expect(mocks.updateConfiguration.mock.calls[0][0].body.data.client_secret).toBe('{{secret.s}}');
   });
 
-  it('a non-admin on a team credential stays signed in in the browser and is told the login is not saved', async () => {
+  it('a member on a team credential saves nothing (the page disables the button for them)', async () => {
     mocks.isAdmin = false;
     const result = render(TEAMS);
 
+    expect(result.current.canManageLogin).toBe(false);
     await act(async () => result.current.saveLogin());
 
     expect(mocks.updateConfiguration).not.toHaveBeenCalled();
-    expect(mocks.toastError.mock.calls[0][0]).toMatch(/only project admins/i);
+  });
+
+  it('never saves a login made with unsaved edits, which may belong to another app', async () => {
+    const result = render(TEAMS);
+
+    await act(async () => result.current.saveLogin({ isFormDirty: true }));
+
+    expect(mocks.getRefreshToken).not.toHaveBeenCalled();
+    expect(mocks.updateConfiguration).not.toHaveBeenCalled();
+    expect(mocks.toastError.mock.calls[0][0]).toMatch(/save the credential first/i);
   });
 
   it('anyone saves the login of their own personal credential', async () => {

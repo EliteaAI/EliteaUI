@@ -32,3 +32,14 @@ const LOGIN_REQUIRED_PATTERN = /sign in|log in|authori[sz]ation|oauth flow/i;
 
 export const isLoginExpired = errorMessage =>
   typeof errorMessage === 'string' && LOGIN_REQUIRED_PATTERN.test(errorMessage);
+
+// Hover hint for a member who cannot change a team credential's login
+export const getLockedLoginHint = isConnected =>
+  isConnected ? 'Login managed by a project admin' : 'Not connected, ask a project admin to log in';
+
+// PUT replaces data wholesale, so leaving refresh_token out is what removes a saved login
+export const buildStoredLoginBody = (data, refreshToken) => {
+  const nextData = { ...data };
+  delete nextData.refresh_token;
+  return { data: refreshToken ? { ...nextData, refresh_token: refreshToken } : nextData };
+};
