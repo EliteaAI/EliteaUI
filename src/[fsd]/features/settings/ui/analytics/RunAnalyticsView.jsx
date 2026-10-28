@@ -9,6 +9,7 @@ import {
   analyticsApi,
   useProjectAnalyticsQuery,
 } from '@/[fsd]/features/settings/api/analyticsApi';
+import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticsExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { useRunAnalyticsFetching } from '@/[fsd]/features/settings/lib/hooks';
 import {
@@ -22,6 +23,7 @@ import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
 import { useSelectedProjectId, useSelectedProjectName } from '@/[fsd]/shared/lib/hooks';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
+import { InfoPopover, infoPopoverTextSx } from '@/[fsd]/shared/ui/info-popover';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import DownloadIcon from '@/assets/download.svg?react';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
@@ -178,6 +180,20 @@ const RunAnalyticsView = memo(props => {
             />
           </Box>
         </Tooltip>
+        {activeTab === TAB.costs && (
+          <InfoPopover
+            label="About cost estimates"
+            storageKey={AnalyticsCommonConstants.LS_ANALYTICS_COSTS_INFO_DISMISSED}
+            testIdPrefix="run-analytics-costs-info"
+          >
+            <Typography
+              variant="bodyMedium"
+              sx={infoPopoverTextSx}
+            >
+              {AnalyticsCommonConstants.COSTS_ESTIMATE_DISCLAIMER}
+            </Typography>
+          </InfoPopover>
+        )}
       </Box>
       <Box
         sx={styles.runInfoBar}

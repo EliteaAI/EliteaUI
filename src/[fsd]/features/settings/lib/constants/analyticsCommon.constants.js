@@ -4,6 +4,11 @@ const { ANALYTICS_TAB_IDS } = AnalyticsTabConstants;
 
 export const TOP_LIST_SIZE = 10;
 
+export const LS_ANALYTICS_COSTS_INFO_DISMISSED = 'analytics:costs-info-popover:dismissed';
+
+export const COSTS_ESTIMATE_DISCLAIMER =
+  'Costs are estimated from a local model-price table; actual provider invoices may differ.';
+
 export const MODEL_CHART_SIZE = 15;
 
 export const ENTITY_DETAIL_TAB = 'all';

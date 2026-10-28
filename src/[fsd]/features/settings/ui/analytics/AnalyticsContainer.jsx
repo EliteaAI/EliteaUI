@@ -43,6 +43,7 @@ import {
   datePickerStyles,
   getDateFieldSlotProps,
 } from '@/[fsd]/shared/ui/date-picker';
+import { InfoPopover, infoPopoverTextSx } from '@/[fsd]/shared/ui/info-popover';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import DownloadIcon from '@/assets/download.svg?react';
@@ -448,6 +449,20 @@ const AnalyticsContainer = memo(() => {
             />
           </Box>
         </Tooltip>
+        {activeTab === TAB.costs && (
+          <InfoPopover
+            label="About cost estimates"
+            storageKey={AnalyticsCommonConstants.LS_ANALYTICS_COSTS_INFO_DISMISSED}
+            testIdPrefix="analytics-costs-info"
+          >
+            <Typography
+              variant="bodyMedium"
+              sx={infoPopoverTextSx}
+            >
+              {AnalyticsCommonConstants.COSTS_ESTIMATE_DISCLAIMER}
+            </Typography>
+          </InfoPopover>
+        )}
       </Box>
       <Box
         sx={styles.filterBar}

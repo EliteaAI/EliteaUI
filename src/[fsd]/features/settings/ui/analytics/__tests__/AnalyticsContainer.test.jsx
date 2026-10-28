@@ -191,6 +191,26 @@ describe('AnalyticsContainer tabs', () => {
     expect(screen.getByTestId('panel-skills')).toBeInTheDocument();
   });
 
+  it('shows the cost-estimate info popover trigger on the Costs tab only', () => {
+    localStorage.clear();
+    renderContainer([]);
+
+    expect(screen.queryByTestId('analytics-costs-info-button')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('analytics-tab-costs'));
+
+    expect(screen.getByTestId('analytics-costs-info-button')).toHaveAttribute(
+      'aria-label',
+      'About cost estimates',
+    );
+    expect(screen.getByText(/estimated from a local model-price table/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('analytics-tab-tokens'));
+
+    expect(screen.queryByTestId('analytics-costs-info-button')).not.toBeInTheDocument();
+    expect(screen.queryByText(/estimated from a local model-price table/i)).not.toBeInTheDocument();
+  });
+
   it('tells the Guide which tabs are visible', () => {
     renderContainer([]);
 

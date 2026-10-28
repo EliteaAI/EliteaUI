@@ -93,6 +93,19 @@ describe('RunAnalyticsView', () => {
     expect(screen.getByTestId('run-analytics-export-button')).toBeInTheDocument();
   });
 
+  it('shows the cost-estimate info popover on the Costs tab only', () => {
+    renderView();
+
+    expect(screen.getByTestId('run-analytics-costs-info-button')).toHaveAttribute(
+      'aria-label',
+      'About cost estimates',
+    );
+
+    fireEvent.click(screen.getByTestId('run-analytics-tab-tokens'));
+
+    expect(screen.queryByTestId('run-analytics-costs-info-button')).not.toBeInTheDocument();
+  });
+
   it('scopes the health request to the run and hides the trend chart', () => {
     useProjectAnalyticsQuery.mockReturnValue({
       data: { health: [{ event_type: 'llm', total: 3 }] },
