@@ -112,9 +112,8 @@ const canvasControlsStyles = () => ({
   root: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.125rem',
-    padding: '0.25rem',
-    borderRadius: '0.5rem',
+    padding: '0.125rem',
+    borderRadius: '0.375rem',
     border: `0.0625rem solid ${palette.border.lines}`,
     backgroundColor: palette.background.paper,
   }),

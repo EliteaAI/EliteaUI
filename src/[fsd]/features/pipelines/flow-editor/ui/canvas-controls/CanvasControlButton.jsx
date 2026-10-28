@@ -45,11 +45,11 @@ const canvasControlButtonStyles = isActive => ({
     display: 'inline-flex',
   },
   button: ({ palette }) => ({
-    width: '2rem',
-    height: '2rem',
-    minWidth: '2rem',
+    width: '1.625rem',
+    height: '1.625rem',
+    minWidth: '1.625rem !important',
     padding: 0,
-    borderRadius: '0.375rem',
+    borderRadius: '0.25rem',
     color: isActive ? palette.icon.secondary : palette.icon.default,
     '&:hover': {
       color: palette.icon.secondary,
@@ -58,8 +58,8 @@ const canvasControlButtonStyles = isActive => ({
       margin: 0,
     },
     '& svg': {
-      width: '1rem',
-      height: '1rem',
+      width: '0.875rem',
+      height: '0.875rem',
     },
   }),
 });
