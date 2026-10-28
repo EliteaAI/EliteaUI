@@ -38,6 +38,7 @@ const StyledTabs = memo(
       rightTabbarSectionSX,
       tabsSX,
       leftPart = null,
+      isCreatePage,
     } = props;
     return (
       <StyledTabsContextProvider>
@@ -53,6 +54,7 @@ const StyledTabs = memo(
           leftTabbarSectionSX={leftTabbarSectionSX}
           rightTabbarSectionSX={rightTabbarSectionSX}
           tabsSX={tabsSX}
+          isCreatePage={isCreatePage}
         />
       </StyledTabsContextProvider>
     );
@@ -140,6 +142,7 @@ const StyledPureTabs = memo(
       leftTabbarSectionSX,
       rightTabbarSectionSX,
       tabsSX,
+      isCreatePage: isCreatePageProp,
     } = props;
 
     const [value, setValue] = useState(defaultTab || 0);
@@ -153,10 +156,12 @@ const StyledPureTabs = memo(
     const location = useLocation();
     const isCredentialsPage = location.pathname.includes('/credentials');
     const shouldShowLabel = forceShowLabel || (isCredentialsPage ? true : !shouldCollapseTabs);
+    // A page that is not one of the known create paths can set the flag itself
     const isCreatePage =
-      location.pathname.includes(RouteDefinitions.CreatePipeline) ||
-      location.pathname.includes(RouteDefinitions.CreateApplication) ||
-      location.pathname.includes(RouteDefinitions.CreateSkill);
+      isCreatePageProp ??
+      (location.pathname.includes(RouteDefinitions.CreatePipeline) ||
+        location.pathname.includes(RouteDefinitions.CreateApplication) ||
+        location.pathname.includes(RouteDefinitions.CreateSkill));
     const styles = styledPureTabsStyles(componentHeight, shouldShowLabel, tabSX, isCreatePage);
 
     const warningMessage = useMemo(() => {

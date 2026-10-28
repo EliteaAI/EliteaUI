@@ -32,6 +32,7 @@ const VALID_TAB_IDS = [
   'environment',
   'project-general',
   'project-context',
+  'schedules',
   'tokens',
   'integrations',
   'secrets',
@@ -69,6 +70,11 @@ const SETTINGS_TABS_CONFIG = [
         label: 'Project Context',
         icon: <BriefcaseIcon />,
         permission: PERMISSIONS.projectContext.view,
+      },
+      {
+        id: 'schedules',
+        label: 'Schedules',
+        permission: PERMISSIONS.schedules.list,
       },
       {
         id: 'prompts',

@@ -5,7 +5,9 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import {
   RUN_ANALYTICS_TIMESTAMP_FORMAT,
+  firstRootEntityReplyAt,
   formatRunTimestamp,
+  isSkillChatRun,
   toRunISOString,
 } from '@/[fsd]/entities/run-history/lib/helpers';
 import {
@@ -79,6 +81,7 @@ const RunAnalyticsContainer = memo(props => {
     isError: isRunCostsError,
   } = useAnalyticsCostsQuery(usageQueryArgs, { skip: skipUsageQueries });
 
+  const isEntityChatRun = isSkillChatRun(runDetails, rootEntity);
   const isRunWithoutUsage = runDetailError?.status === 404;
   const isRunDetailUnavailable = Boolean(runDetailError) && !isRunWithoutUsage;
 
@@ -88,7 +91,7 @@ const RunAnalyticsContainer = memo(props => {
   // The version the run executed with, not the one currently open in the editor
   const { date, version, model, createdAt } = useMemo(() => {
     const usageVersionIds = readsUsageTrace ? runDetail?.root_entity_version_ids : undefined;
-    const versionIds = usageVersionIds?.length ? usageVersionIds : [readRunVersionId(runDetails)];
+    const versionIds = usageVersionIds?.length ? usageVersionIds : [readRunVersionId(runDetails, rootEntity)];
     const runVersion = isRunDetailUnavailable
       ? 'unavailable'
       : AnalyticCommonHelpers.describeRunVersions(
@@ -100,12 +103,17 @@ const RunAnalyticsContainer = memo(props => {
       ? 'unavailable'
       : AnalyticCommonHelpers.describeRunModels(runCosts?.by_model);
 
-    const startedAt = isUsageRunScoped ? runDetail?.started_at : runDetails?.created_at;
+    const chatRunStartedAt = runDetail?.started_at ?? firstRootEntityReplyAt(runDetails, rootEntity);
+    const startedAt = isUsageRunScoped
+      ? runDetail?.started_at
+      : isEntityChatRun
+        ? chatRunStartedAt
+        : runDetails?.created_at;
 
     return {
       createdAt: startedAt,
       date:
-        isUsageRunScoped && isUsagePending
+        (isUsageRunScoped || isEntityChatRun) && isUsagePending
           ? '…'
           : formatRunTimestamp(startedAt, RUN_ANALYTICS_TIMESTAMP_FORMAT),
       version: isUsagePending ? '…' : runVersion,
@@ -114,6 +122,7 @@ const RunAnalyticsContainer = memo(props => {
   }, [
     readsUsageTrace,
     isUsageRunScoped,
+    isEntityChatRun,
     isUsagePending,
     isRunDetailUnavailable,
     isRunCostsError,
@@ -122,6 +131,7 @@ const RunAnalyticsContainer = memo(props => {
     runDetails,
     entityDetails?.versions,
     readRunVersionId,
+    rootEntity,
   ]);
 
   const infoLines = useMemo(

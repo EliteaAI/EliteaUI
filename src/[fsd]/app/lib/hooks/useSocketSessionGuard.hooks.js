@@ -4,9 +4,11 @@ import { useDispatch, useStore } from 'react-redux';
 
 import { SessionConstants } from '@/[fsd]/features/auth/lib/constants';
 import { AuthPopupHelpers, SessionProbeHelpers } from '@/[fsd]/features/auth/lib/helpers';
+import { sioEvents } from '@/common/constants';
 import { actions as settingsActions } from '@/slices/settings.js';
 
 const VISIBILITY_PROBE_THROTTLE_MS = 60 * 1000;
+const { LONG_HIDDEN_THRESHOLD_MS, SOCKET_UNAUTHENTICATED_CODE } = SessionConstants;
 
 /**
  * Keeps the socket bound to a valid session.
@@ -17,13 +19,18 @@ const VISIBILITY_PROBE_THROTTLE_MS = 60 * 1000;
  * - checks the session after every automatic reconnect, and when the tab comes back or goes online,
  *   flagging `sessionExpired` so the next send re-authenticates first;
  * - re-handshakes the socket after any successful re-login, or once the session turns out to be renewed
- *   in another tab, so the server re-reads the fresh session.
+ *   in another tab, so the server re-reads the fresh session;
+ * - re-handshakes the socket when the tab returns after a long time hidden, and when the server rejects
+ *   a send because it holds the socket as anonymous. The cookie can still be valid in both cases: the
+ *   handshake may have happened while the network or the auth service was unavailable, and the server
+ *   then keeps the socket as anonymous for its whole life.
  */
 export const useSocketSessionGuard = socket => {
   const dispatch = useDispatch();
   // Read lazily at check time: subscribing would re-render the app root on every flag change
   const store = useStore();
   const lastProbeAtRef = useRef(0);
+  const hiddenAtRef = useRef(null);
 
   const setSessionExpired = useCallback(
     isExpired => {
@@ -32,19 +39,33 @@ export const useSocketSessionGuard = socket => {
     [dispatch],
   );
 
-  const checkSession = useCallback(async () => {
-    lastProbeAtRef.current = Date.now();
-    const status = await SessionProbeHelpers.probeSession();
-    if (status === SessionConstants.SESSION_STATUS.expired) {
-      setSessionExpired(true);
-    } else if (status === SessionConstants.SESSION_STATUS.alive) {
+  const checkSession = useCallback(
+    async (options = {}) => {
+      const { rehandshake = false, skipWhileStreaming = true } = options;
+      lastProbeAtRef.current = Date.now();
+      const status = await SessionProbeHelpers.probeSession();
+      if (status === SessionConstants.SESSION_STATUS.expired) {
+        setSessionExpired(true);
+        return;
+      }
       const wasExpired = !!store.getState().settings?.sessionExpired;
-      setSessionExpired(false);
+      if (status === SessionConstants.SESSION_STATUS.alive) setSessionExpired(false);
       // The session was renewed elsewhere (another tab), but this socket handshook while it was
       // expired and is still anonymous on the server, so it has to handshake again
-      if (wasExpired) socket?.disconnect().connect();
-    }
-  }, [socket, store, setSessionExpired]);
+      if (status === SessionConstants.SESSION_STATUS.alive && wasExpired) {
+        socket?.disconnect().connect();
+        return;
+      }
+      // A forced re-handshake also covers an inconclusive probe: reconnecting is cheap, and a socket
+      // the server holds as anonymous cannot be told apart from a good one on this side
+      if (rehandshake) {
+        const { navBlocker, runActiveCount } = store.getState().settings ?? {};
+        const isRunInFlight = !!navBlocker?.isStreaming || runActiveCount > 0;
+        if (!(skipWhileStreaming && isRunInFlight)) socket?.disconnect().connect();
+      }
+    },
+    [socket, store, setSessionExpired],
+  );
 
   useEffect(() => {
     if (!socket) return;
@@ -62,6 +83,27 @@ export const useSocketSessionGuard = socket => {
       checkSession();
     };
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        hiddenAtRef.current = Date.now();
+        return;
+      }
+      const hiddenAt = hiddenAtRef.current;
+      hiddenAtRef.current = null;
+      if (hiddenAt && Date.now() - hiddenAt >= LONG_HIDDEN_THRESHOLD_MS) {
+        checkSession({ rehandshake: true });
+        return;
+      }
+      handleThrottledCheck();
+    };
+
+    // The server names a rejected send with this code when it holds the socket as anonymous. The
+    // message itself is shown by the chat error handlers; here the socket is repaired so the retry works.
+    const handleSocketRejection = frame => {
+      if (frame?.code !== SOCKET_UNAUTHENTICATED_CODE) return;
+      checkSession({ rehandshake: true, skipWhileStreaming: false });
+    };
+
     const stopReauthListener = AuthPopupHelpers.onReauthenticated(() => {
       setSessionExpired(false);
       // A fresh handshake makes the server bind this socket to the renewed session
@@ -69,13 +111,15 @@ export const useSocketSessionGuard = socket => {
     });
 
     socket.io.on('reconnect', handleReconnect);
-    document.addEventListener('visibilitychange', handleThrottledCheck);
+    socket.on?.(sioEvents.socket_validation_error, handleSocketRejection);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('online', handleThrottledCheck);
 
     return () => {
       stopReauthListener();
       socket.io.off('reconnect', handleReconnect);
-      document.removeEventListener('visibilitychange', handleThrottledCheck);
+      socket.off?.(sioEvents.socket_validation_error, handleSocketRejection);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('online', handleThrottledCheck);
     };
   }, [socket, checkSession, setSessionExpired]);

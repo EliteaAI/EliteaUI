@@ -43,11 +43,17 @@ const ExportConversationModal = memo(props => {
   );
 
   const attachmentsCount = summary?.attachments_count ?? 0;
+  // null when storage could not be fully checked
+  const availableCount = summary?.available_count ?? null;
+  const isAvailabilityUnknown = availableCount == null;
+  const filesCount = availableCount ?? attachmentsCount;
+  const missingCount = summary?.missing_count ?? null;
   const totalSize = summary?.total_size;
   // The summary shares the export's access check, so a denial means the export would fail too
   const isAccessDenied = [403, 404].includes(summaryError?.status);
   const includeAttachments = selectedOption === EXPORT_OPTIONS.with;
   const hasNoAttachments = !isSummaryLoading && !isSummaryError && attachmentsCount === 0;
+  const allUnavailable = !isSummaryLoading && attachmentsCount > 0 && availableCount === 0;
   const streamToDisk =
     includeAttachments &&
     !isAccessDenied &&
@@ -55,9 +61,12 @@ const ExportConversationModal = memo(props => {
 
   const attachmentsLabel = useMemo(() => {
     if (isSummaryLoading || !attachmentsCount) return 'With attachments';
-    const filesLabel = `${attachmentsCount} ${attachmentsCount === 1 ? 'file' : 'files'}`;
-    return `With attachments (${totalSize ? `${filesLabel} · ${formatFileSize(totalSize)}` : filesLabel})`;
-  }, [attachmentsCount, isSummaryLoading, totalSize]);
+    const filesLabel = `${filesCount} ${filesCount === 1 ? 'file' : 'files'}`;
+    const sizeLabel = totalSize ? ` · ${formatFileSize(totalSize)}` : '';
+    const missingLabel = missingCount ? ` · ${missingCount} unavailable` : '';
+    const unknownLabel = isAvailabilityUnknown ? ' · availability unknown' : '';
+    return `With attachments (${filesLabel}${sizeLabel}${missingLabel}${unknownLabel})`;
+  }, [attachmentsCount, filesCount, isAvailabilityUnknown, isSummaryLoading, missingCount, totalSize]);
 
   const options = useMemo(
     () => [
@@ -69,11 +78,15 @@ const ExportConversationModal = memo(props => {
       {
         value: EXPORT_OPTIONS.with,
         label: attachmentsLabel,
-        disabled: isExporting || isSummaryLoading || hasNoAttachments || isAccessDenied,
-        info: hasNoAttachments ? 'This chat has no attachments' : undefined,
+        disabled: isExporting || isSummaryLoading || hasNoAttachments || allUnavailable || isAccessDenied,
+        info: hasNoAttachments
+          ? 'This chat has no attachments'
+          : allUnavailable
+            ? 'All attachments are unavailable'
+            : undefined,
       },
     ],
-    [attachmentsLabel, hasNoAttachments, isAccessDenied, isExporting, isSummaryLoading],
+    [allUnavailable, attachmentsLabel, hasNoAttachments, isAccessDenied, isExporting, isSummaryLoading],
   );
 
   const handleClose = useCallback(() => {
@@ -82,9 +95,14 @@ const ExportConversationModal = memo(props => {
   }, [cancelExport, isExporting, onClose]);
 
   const handleExport = useCallback(async () => {
-    const isSuccess = await startExport({ conversation, includeAttachments, streamToDisk });
+    const isSuccess = await startExport({
+      conversation,
+      includeAttachments,
+      streamToDisk,
+      knownMissingCount: missingCount,
+    });
     if (isSuccess) onClose();
-  }, [conversation, includeAttachments, onClose, startExport, streamToDisk]);
+  }, [conversation, includeAttachments, missingCount, onClose, startExport, streamToDisk]);
 
   const styles = exportConversationModalStyles();
 
@@ -146,8 +164,8 @@ const ExportConversationModal = memo(props => {
       {isExporting && includeAttachments && (
         <Box sx={styles.progress}>
           <Typography variant="bodySmall">
-            {attachmentsCount
-              ? `Exporting chat... ${attachmentsCount} ${attachmentsCount === 1 ? 'file' : 'files'}`
+            {filesCount
+              ? `Exporting chat... ${filesCount} ${filesCount === 1 ? 'file' : 'files'}`
               : 'Exporting chat...'}
           </Typography>
           <LinearProgress

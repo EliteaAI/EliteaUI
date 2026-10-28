@@ -1,16 +1,13 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { Box, MenuItem, Typography } from '@mui/material';
 
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useProjectConfigRecord } from '@/[fsd]/features/settings/lib/hooks';
+import { projectConfigCardStyles } from '@/[fsd]/features/settings/ui/project-general/chat-configuration/projectConfigCard.styles';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Input, Select } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
-import {
-  useCreateConfigurationMutation,
-  useGetConfigurationsListQuery,
-  useListModelsQuery,
-  useUpdateConfigurationMutation,
-} from '@/api/configurations';
+import { useListModelsQuery } from '@/api/configurations';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
@@ -44,21 +41,22 @@ const toOption = model => ({
 });
 
 const AutoRoutingSettings = memo(() => {
-  const styles = autoRoutingSettingsStyles();
   const projectId = useSelectedProjectId();
   const { checkPermission } = useCheckPermission();
-  const { toastError } = useToast();
   const { data: models, refetch } = useListModelsQuery(
     { projectId, include_shared: true },
     { skip: !projectId },
   );
-  const { data, refetch: refreshSettings } = useGetConfigurationsListQuery(
-    { projectId, type: 'auto_routing', includeShared: false },
-    { skip: !projectId },
-  );
-  const [create] = useCreateConfigurationMutation();
-  const [update] = useUpdateConfigurationMutation();
-  const current = data?.items?.find(item => item.elitea_title === 'auto_routing');
+  const {
+    record: current,
+    saveRecord: persist,
+    saving,
+  } = useProjectConfigRecord({
+    type: 'auto_routing',
+    label: 'Auto model selection',
+    errorMessage: 'Unable to update Auto model selection',
+    onSaved: refetch,
+  });
   const value = current?.data?.enabled == null ? 'default' : String(current.data.enabled);
   const classifier = current?.data?.classifier ?? null;
   const readiness = models?.auto_routing?.readiness;
@@ -86,30 +84,6 @@ const AutoRoutingSettings = memo(() => {
     return { classifierOptions: options, showAllHint: !!models && chat.length > 0 && !lowTier.length };
   }, [models, classifier, readiness]);
 
-  const [saving, setSaving] = useState(false);
-  const persist = useCallback(
-    async nextData => {
-      setSaving(true);
-      try {
-        const body = {
-          elitea_title: 'auto_routing',
-          label: 'Auto model selection',
-          type: 'auto_routing',
-          shared: false,
-          data: nextData,
-        };
-        if (current?.id) await update({ projectId, configId: current.id, body }).unwrap();
-        else await create({ projectId, body }).unwrap();
-        refetch();
-        await refreshSettings();
-      } catch (error) {
-        toastError(error?.data?.error || 'Unable to update Auto model selection');
-      } finally {
-        setSaving(false);
-      }
-    },
-    [current?.id, projectId, update, create, refreshSettings, refetch, toastError],
-  );
   const saveEnabled = useCallback(
     event =>
       persist({
@@ -128,7 +102,6 @@ const AutoRoutingSettings = memo(() => {
     },
     [persist, current?.data?.enabled],
   );
-  // Stay locked until the saved row is re-read, so a quick second change never builds on stale data.
   const disabled = !checkPermission(PERMISSIONS.configuration.update) || saving;
 
   return (
@@ -214,43 +187,14 @@ const AutoRoutingSettings = memo(() => {
 
 AutoRoutingSettings.displayName = 'AutoRoutingSettings';
 
-/** @type {MuiSx} */
-const autoRoutingSettingsStyles = () => ({
-  card: ({ palette }) => ({
-    display: 'flex',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '1rem 1.5rem',
-    borderRadius: '0.75rem',
-    backgroundColor: palette.background.surface.interactive.default,
-    gap: '1rem',
-  }),
-  // The text grows much faster than the dropdown, so on one line the dropdown stays at its
-  // 15rem basis; once the card is too narrow it wraps below and stretches to full width.
-  text: {
-    flex: '999 1 20rem',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-  },
-  titleGroup: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.25rem',
-  },
-  description: ({ palette }) => ({
-    color: palette.text.primary,
-  }),
-  select: {
-    flex: '1 1 15rem',
-  },
+const styles = {
+  ...projectConfigCardStyles,
   classifierRow: {
     flex: '1 1 100%',
     display: 'flex',
     flexDirection: 'column',
     gap: '0.25rem',
   },
-});
+};
 
 export default AutoRoutingSettings;

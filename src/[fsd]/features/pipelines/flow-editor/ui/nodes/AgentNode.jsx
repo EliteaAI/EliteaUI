@@ -1,4 +1,4 @@
-import { memo, useCallback, useContext, useMemo } from 'react';
+import { memo, useCallback, useContext, useMemo, useRef } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -10,16 +10,14 @@ import {
   NodePanelConstants,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
-import {
-  useFunctionInputMapping,
-  useGetToolkitNameFromSchema,
-} from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
+import { useFunctionInputMapping } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import {
   FlowEditorNodePanel,
   FlowEditorNodes,
   FlowEditorSelect,
   FlowEditorSettings,
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import { ToolPickerUI, usePipelineAttachments } from '@/[fsd]/features/pipelines/tool-picker';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 import { useEdges } from '@xyflow/react';
@@ -84,33 +82,46 @@ const AgentNode = memo(props => {
     typeTestIdPrefix: `${AGENT_NODE_TESTID_PREFIX}-input-mapping-type`,
   };
 
-  const { getToolkitNameFromSchema } = useGetToolkitNameFromSchema();
-  const onSelectToolkit = useCallback(
-    newToolkit => {
-      if (!newToolkit) {
-        FlowEditorHelpers.batchUpdateYamlNode(
-          id,
-          { toolkit_name: undefined, tool: undefined, input_mapping: undefined },
-          yamlJsonObject,
-          setYamlJsonObject,
-        );
-        return;
-      }
+  const { addTool, prepareApplicationAttachment, getAttachedApplication } = usePipelineAttachments();
+  const attachedTool = useMemo(
+    () => (yamlNode?.tool ? getAttachedApplication(yamlNode.tool) : undefined),
+    [getAttachedApplication, yamlNode?.tool],
+  );
+
+  // Attaching waits for the agent details, so the YAML write must use the YAML as it is by then
+  const yamlJsonObjectRef = useRef(yamlJsonObject);
+  yamlJsonObjectRef.current = yamlJsonObject;
+
+  const setAgentName = useCallback(
+    name => {
       FlowEditorHelpers.batchUpdateYamlNode(
         id,
-        {
-          toolkit_name:
-            newToolkit.type !== ToolTypes.application.value
-              ? newToolkit.toolkit_name || getToolkitNameFromSchema(newToolkit)
-              : undefined,
-          tool: newToolkit.type === ToolTypes.application.value ? newToolkit.name : undefined,
-        },
-        yamlJsonObject,
+        name
+          ? { toolkit_name: undefined, tool: name }
+          : { toolkit_name: undefined, tool: undefined, input_mapping: undefined },
+        yamlJsonObjectRef.current,
         setYamlJsonObject,
       );
     },
-    [id, yamlJsonObject, setYamlJsonObject, getToolkitNameFromSchema],
+    [id, setYamlJsonObject],
   );
+
+  // Any project agent or pipeline can be picked; one the pipeline doesn't have yet is attached on Save
+  const onPickAgent = useCallback(
+    async item => {
+      if (item.isAttached) {
+        setAgentName(item.name);
+        return;
+      }
+      const tool = await prepareApplicationAttachment(item.source);
+      if (!tool) return;
+      // Same tick, so reconcile never sees the attachment without the node that uses it
+      setAgentName(addTool(tool).name);
+    },
+    [addTool, prepareApplicationAttachment, setAgentName],
+  );
+
+  const onClearAgent = useCallback(() => setAgentName(null), [setAgentName]);
 
   return (
     <>
@@ -152,15 +163,20 @@ const AgentNode = memo(props => {
               </Typography>
             </Box>
           )}
-          <FlowEditorSelect.ToolSelect
-            id={id}
-            label={'Agent'}
-            onSelectTool={onSelectToolkit}
-            selectedToolkit={yamlNode?.tool}
+          <ToolPickerUI.ProjectAgentPicker
+            value={yamlNode?.tool}
+            onSelect={onPickAgent}
+            onClear={onClearAgent}
             disabled={isRunningPipeline || disabled}
-            filterTypes={toolkitFilter}
             data-testid={`${AGENT_NODE_TESTID_PREFIX}-agent-select`}
           />
+          {attachedTool && (
+            <ToolPickerUI.AgentVersionSelect
+              tool={attachedTool}
+              disabled={isRunningPipeline || disabled}
+              data-testid={`${AGENT_NODE_TESTID_PREFIX}-version-select`}
+            />
+          )}
           {!isOrphan && (
             <FlowEditorSettings.InputMappingFields
               keys={BASIC_MAPPING_KEYS}

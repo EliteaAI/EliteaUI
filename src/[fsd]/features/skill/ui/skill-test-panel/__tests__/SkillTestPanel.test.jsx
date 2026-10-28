@@ -83,6 +83,7 @@ vi.mock('@/api/llm', () => ({
   useStopLlmTaskMutation: () => [vi.fn()],
 }));
 vi.mock('@/common/utils', () => ({ buildErrorMessage: vi.fn() }));
+vi.mock('@/[fsd]/features/auth/lib/hooks/useRunActiveSignal.hooks', () => ({ useRunActiveSignal: vi.fn() }));
 vi.mock('@/[fsd]/features/auth/lib/hooks/useSocket.hooks', () => ({
   useManualSocket: (_event, onEvent) => {
     fixture.onSocketEvent = onEvent;

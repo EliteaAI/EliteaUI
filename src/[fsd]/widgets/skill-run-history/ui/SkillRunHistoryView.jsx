@@ -45,6 +45,12 @@ const SkillRunHistoryView = memo(props => {
     [navigate, search, skillId, tab],
   );
 
+  const restoreConversation = useCallback(
+    (conversationId, isChatRun) =>
+      isCatalogSkill || isChatRun ? openInChat(conversationId) : restoreIntoRunPanel(conversationId),
+    [isCatalogSkill, openInChat, restoreIntoRunPanel],
+  );
+
   const handleOpenAnalytics = useCallback(
     conversationId => {
       const params = new URLSearchParams(search);
@@ -69,7 +75,7 @@ const SkillRunHistoryView = memo(props => {
           entityProjectId={entityProjectId}
           source={ParticipantEntityTypes.Skill}
           versions={versions}
-          handleRestoreConversation={isCatalogSkill ? openInChat : restoreIntoRunPanel}
+          handleRestoreConversation={restoreConversation}
           handleOpenAnalytics={handleOpenAnalytics}
           ChatMessageListComponent={ChatMessageList}
           shareOpensHistoryTab
