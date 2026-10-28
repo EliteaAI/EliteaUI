@@ -73,9 +73,9 @@ export const prepareMessageForRegeneration = (message, createdAt = Date.now()) =
   created_at: createdAt,
 });
 
-export const applyMessageRegenerationError = (message, error) => ({
+export const applyMessageRegenerationError = (message, error, code) => ({
   ...message,
-  exception: error,
+  exception: JSON.stringify({ code, error }, null, 2),
   continuationError: undefined,
   isRegenerating: false,
 });

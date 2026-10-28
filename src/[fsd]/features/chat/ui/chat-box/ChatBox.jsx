@@ -1462,7 +1462,11 @@ const ChatBox = memo(
             return prevMessages.map(message =>
               message.id !== uuid
                 ? message
-                : ChatHelpers.applyMessageRegenerationError(message, errorMessage),
+                : ChatHelpers.applyMessageRegenerationError(
+                    message,
+                    errorMessage,
+                    regenerateError.data?.code,
+                  ),
             );
           });
         }
