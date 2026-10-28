@@ -4,3 +4,4 @@ export * from './generateProjectContextDraftApi';
 export * from './projectBackupApi';
 export * from './projectInfoApi';
 export * from './usageApi';
+export * from './projectDataDeleteApi';

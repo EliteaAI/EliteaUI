@@ -1,14 +1,17 @@
-import { memo } from 'react';
+import { memo, useCallback, useRef } from 'react';
 
 import { Box } from '@mui/material';
 
+import { useCanDeleteProjectData } from '@/[fsd]/features/settings/lib/hooks';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import DefaultModulesSettings from '@/[fsd]/features/settings/ui/project-general/DefaultModulesSettings';
 import WebSearchSettings from '@/[fsd]/features/settings/ui/project-general/WebSearchSettings';
 import { ProjectBackupRestore } from '@/[fsd]/features/settings/ui/project-general/backup-restore';
+import { ProjectDataDelete } from '@/[fsd]/features/settings/ui/project-general/delete-project-data';
 import { ProjectParamsHeader } from '@/[fsd]/features/settings/ui/project-general/general';
 import { ProjectAIConfigurations } from '@/[fsd]/features/settings/ui/project-general/project-ai-configurations';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import { useSelectedProjectName } from '@/[fsd]/shared/lib/hooks';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
@@ -23,6 +26,13 @@ const ProjectGeneralContent = memo(() => {
   const canViewProjectContext = checkPermission(PERMISSIONS.projectContext.view);
   const isBackupRestoreAvailable =
     checkPermission(PERMISSIONS.projectBackup.download) || checkPermission(PERMISSIONS.projectBackup.restore);
+  const canDeleteProjectData = useCanDeleteProjectData();
+  const projectName = useSelectedProjectName();
+
+  const backupSectionRef = useRef(null);
+  const handleOpenBackup = useCallback(() => {
+    backupSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
 
   return (
     <Box sx={styles.root}>
@@ -103,16 +113,38 @@ const ProjectGeneralContent = memo(() => {
             ]}
           />
           {isBackupRestoreAvailable && (
+            <Box ref={backupSectionRef}>
+              <BasicAccordion
+                data-testid="project-backup-restore-section"
+                showMode={AccordionConstants.AccordionShowMode.LeftMode}
+                accordionSX={styles.accordionStyles}
+                items={[
+                  {
+                    title: 'Back Up & Restore',
+                    content: (
+                      <Box sx={styles.containerStyles}>
+                        <ProjectBackupRestore />
+                      </Box>
+                    ),
+                  },
+                ]}
+              />
+            </Box>
+          )}
+          {canDeleteProjectData && (
             <BasicAccordion
-              data-testid="project-backup-restore-section"
+              data-testid="project-data-delete-section"
               showMode={AccordionConstants.AccordionShowMode.LeftMode}
               accordionSX={styles.accordionStyles}
               items={[
                 {
-                  title: 'Back Up & Restore',
+                  title: 'Delete Project Data',
                   content: (
                     <Box sx={styles.containerStyles}>
-                      <ProjectBackupRestore />
+                      <ProjectDataDelete
+                        projectName={projectName}
+                        onOpenBackup={handleOpenBackup}
+                      />
                     </Box>
                   ),
                 },
