@@ -4,31 +4,31 @@ import { useFormikContext } from 'formik';
 import YAML from 'js-yaml';
 
 import LinkIcon from '@mui/icons-material/Link';
-import { Box, IconButton } from '@mui/material';
+import { Box, IconButton, Link, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { PipelineNodeTypes } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
-import {
-  GITLAB_AUTH_METHODS,
-  TRIGGER_TYPES,
-  WEBHOOK_TYPES,
-} from '@/[fsd]/features/pipelines/flow-editor/lib/constants/webhook.constants';
+import { FlowEditorConstants, WebhookConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { LegacyScheduleNotice } from '@/[fsd]/features/schedule';
 import { useDelegatedOauthToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
+import { ModalConstants, ScheduleSectionConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProject, useToast } from '@/[fsd]/shared/lib/hooks';
+import { Modal } from '@/[fsd]/shared/ui';
+import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
 import { InfoLabelWithTooltip } from '@/[fsd]/shared/ui/label';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useGetPipelineTriggerQuery, useUpdatePipelineTriggerMutation } from '@/api/applications';
-import ClockIcon from '@/assets/clock.svg?react';
 
-import PipelineScheduleModal from './PipelineScheduleModal';
 import PipelineWebhookModal from './PipelineWebhookModal';
+
+const { PipelineNodeTypes } = FlowEditorConstants;
+const { GITLAB_AUTH_METHODS, TRIGGER_TYPES, WEBHOOK_TYPES } = WebhookConstants;
+const { SCHEDULES_SECTION_ID } = ScheduleSectionConstants;
 
 // Node types that require user interaction and thus only support Chat Message trigger
 const INTERACTIVE_NODE_TYPES = [PipelineNodeTypes.Hitl, PipelineNodeTypes.Printer];
 
 const TRIGGER_OPTIONS = [
   { label: 'Chat Message', value: TRIGGER_TYPES.chat_message },
-  { label: 'Schedule', value: TRIGGER_TYPES.schedule },
   { label: 'Webhook', value: TRIGGER_TYPES.webhook },
 ];
 
@@ -36,7 +36,7 @@ const TriggerTypeSelector = memo(props => {
   const { disabled } = props;
 
   const styles = triggerTypeSelectorStyles();
-  const { toastSuccess, toastError } = useToast();
+  const { toastSuccess, toastError, toastWarning } = useToast();
   const selectedProject = useSelectedProject();
   const { values } = useFormikContext();
 
@@ -76,20 +76,9 @@ const TriggerTypeSelector = memo(props => {
 
   const restrictedToChatMessage = hasInteractiveElements || hasDelegatedOauthToolkit;
 
-  // Unattended triggers stay visible but greyed out so the restriction is discoverable; the Trigger
-  // label tooltip explains why.
-  const availableTriggerOptions = useMemo(() => {
-    if (!restrictedToChatMessage) return TRIGGER_OPTIONS;
-    return TRIGGER_OPTIONS.map(opt =>
-      opt.value === TRIGGER_TYPES.chat_message ? opt : { ...opt, disabled: true },
-    );
-  }, [restrictedToChatMessage]);
-
-  // State for schedule modal
-  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-
   // State for webhook modal
   const [isWebhookModalOpen, setIsWebhookModalOpen] = useState(false);
+  const [pendingTriggerType, setPendingTriggerType] = useState(null);
 
   // Fetch current trigger configuration
   const { data: triggerData, isLoading: isFetching } = useGetPipelineTriggerQuery(
@@ -104,6 +93,22 @@ const TriggerTypeSelector = memo(props => {
     [triggerData?.type],
   );
 
+  // Schedule is no longer selectable. A version that still stores one shows it as a disabled option; the user can switch away.
+  const isLegacySchedule = currentTriggerType === TRIGGER_TYPES.schedule;
+
+  // Unattended triggers stay visible but greyed out so the restriction is discoverable; the Trigger
+  // label tooltip explains why.
+  const availableTriggerOptions = useMemo(() => {
+    const options = restrictedToChatMessage
+      ? TRIGGER_OPTIONS.map(opt =>
+          opt.value === TRIGGER_TYPES.chat_message ? opt : { ...opt, disabled: true },
+        )
+      : TRIGGER_OPTIONS;
+    return isLegacySchedule
+      ? [...options, { label: 'Schedule', value: TRIGGER_TYPES.schedule, disabled: true }]
+      : options;
+  }, [restrictedToChatMessage, isLegacySchedule]);
+
   // Previous restriction state, used to detect a change from false to true. Stays `null` until the
   // credentials behind it have resolved: those queries settle after mount, so the pre-resolution `false`
   // is not a real state and treating it as one would reset a trigger the user never touched.
@@ -114,8 +119,7 @@ const TriggerTypeSelector = memo(props => {
     if (isResolvingCredentials) return;
 
     const wasNotRestricted = prevRestrictedRef.current === false;
-    const hasIncompatibleTrigger =
-      currentTriggerType === TRIGGER_TYPES.schedule || currentTriggerType === TRIGGER_TYPES.webhook;
+    const hasIncompatibleTrigger = currentTriggerType === TRIGGER_TYPES.webhook;
 
     // Only reset if: became restricted AND has incompatible trigger AND we can make the API call
     if (wasNotRestricted && restrictedToChatMessage && hasIncompatibleTrigger && projectId && versionId) {
@@ -149,11 +153,6 @@ const TriggerTypeSelector = memo(props => {
     toastError,
   ]);
 
-  const currentCron = useMemo(() => triggerData?.cron || '0 0 * * 6', [triggerData?.cron]);
-
-  // Timezone the schedule was configured in; the modal converts the cron into the viewer's own.
-  const currentScheduleTimezone = useMemo(() => triggerData?.timezone, [triggerData?.timezone]);
-
   const currentWebhookType = useMemo(
     () => triggerData?.webhook_type || WEBHOOK_TYPES.github,
     [triggerData?.webhook_type],
@@ -186,14 +185,9 @@ const TriggerTypeSelector = memo(props => {
     return args;
   }, [projectId, versionId, currentWebhookType, currentGitlabAuthMethod]);
 
-  const handleTriggerTypeChange = useCallback(
+  const switchTrigger = useCallback(
     async newType => {
-      if (newType === currentTriggerType) return;
-
-      if (newType === TRIGGER_TYPES.schedule) {
-        // Open modal to configure schedule
-        setIsScheduleModalOpen(true);
-      } else if (newType === TRIGGER_TYPES.webhook) {
+      if (newType === TRIGGER_TYPES.webhook) {
         // Save webhook trigger first to generate secret, then open modal
         try {
           await updateTrigger(buildWebhookSaveArgs()).unwrap();
@@ -215,35 +209,43 @@ const TriggerTypeSelector = memo(props => {
         }
       }
     },
-    [currentTriggerType, buildWebhookSaveArgs, projectId, versionId, updateTrigger, toastSuccess, toastError],
+    [buildWebhookSaveArgs, projectId, versionId, updateTrigger, toastSuccess, toastError],
   );
 
-  const handleScheduleSubmit = useCallback(
-    async cronExpression => {
-      try {
-        // Get user's timezone
-        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-        await updateTrigger({
-          projectId,
-          versionId,
-          type: TRIGGER_TYPES.schedule,
-          cron: cronExpression,
-          timezone,
-        }).unwrap();
-        toastSuccess('Schedule configured successfully');
-      } catch (error) {
-        toastError(error?.data?.error || 'Failed to configure schedule');
+  // Under credential governance an unattended trigger runs only a bound version with a mandate; the backend
+  // keeps the trigger and says so when this version is not bound yet. The toast provider shows one toast at
+  // a time, so the warning takes the place of the success message instead of replacing it a tick later.
+  const notifySaved = useCallback(
+    (result, successMessage) => {
+      if (result?.governance_notice) {
+        toastWarning(result.governance_notice);
+      } else {
+        toastSuccess(successMessage);
       }
     },
-    [projectId, versionId, updateTrigger, toastSuccess, toastError],
+    [toastSuccess, toastWarning],
   );
 
-  const handleScheduleIconClick = useCallback(() => {
-    if (currentTriggerType === TRIGGER_TYPES.schedule) {
-      setIsScheduleModalOpen(true);
-    }
-  }, [currentTriggerType]);
+  // Replacing a stored schedule deletes it, so the user confirms first
+  const handleTriggerTypeChange = useCallback(
+    newType => {
+      if (newType === currentTriggerType) return;
+      if (isLegacySchedule) {
+        setPendingTriggerType(newType);
+        return;
+      }
+      switchTrigger(newType);
+    },
+    [currentTriggerType, isLegacySchedule, switchTrigger],
+  );
+
+  const handleCancelReplace = useCallback(() => setPendingTriggerType(null), []);
+
+  const handleConfirmReplace = useCallback(() => {
+    const newType = pendingTriggerType;
+    setPendingTriggerType(null);
+    switchTrigger(newType);
+  }, [pendingTriggerType, switchTrigger]);
 
   const handleWebhookIconClick = useCallback(async () => {
     if (currentTriggerType === TRIGGER_TYPES.webhook) {
@@ -291,27 +293,31 @@ const TriggerTypeSelector = memo(props => {
           requestData.webhook_secret_value = secretValue;
         }
 
-        await updateTrigger(requestData).unwrap();
+        const result = await updateTrigger(requestData).unwrap();
 
+        let successMessage = 'Webhook configured successfully';
         if (signingTokenValue) {
-          toastSuccess('Webhook configured with the GitLab signing token');
+          successMessage = 'Webhook configured with the GitLab signing token';
         } else if (secretValue) {
-          toastSuccess('Webhook configured with new secret');
-        } else {
-          toastSuccess('Webhook configured successfully');
+          successMessage = 'Webhook configured with new secret';
         }
+        notifySaved(result, successMessage);
       } catch (error) {
         toastError(error?.data?.error || 'Failed to configure webhook');
       }
     },
-    [projectId, versionId, updateTrigger, toastSuccess, toastError],
+    [projectId, versionId, updateTrigger, toastError, notifySaved],
   );
 
   const isLoading = isFetching || isUpdating;
 
+  const scrollToSchedules = useCallback(() => {
+    document.getElementById(SCHEDULES_SECTION_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
   const triggerTooltip = useMemo(() => {
     const baseTooltip =
-      'Choose how this pipeline is triggered.\n• Chat Message (default) requires user input.\n• Schedule runs automatically based on a cron expression.\n• Webhook allows external systems to trigger the pipeline via HTTP POST.';
+      'Choose how this pipeline is triggered.\n• Chat Message (default) requires user input.\n• Webhook allows external systems to trigger the pipeline via HTTP POST.';
 
     if (hasInteractiveElements) {
       return `${baseTooltip}\n\nNote: This pipeline contains HITL, Printer nodes, or interrupts that require user interaction. Only Chat Message trigger is available.`;
@@ -346,24 +352,6 @@ const TriggerTypeSelector = memo(props => {
           data-testid="pipeline-entry-point-trigger-select"
         />
 
-        {currentTriggerType === TRIGGER_TYPES.schedule && (
-          <Tooltip
-            title="Edit schedule"
-            placement="top"
-          >
-            <IconButton
-              variant="elitea"
-              color="tertiary"
-              sx={styles.scheduleButton}
-              onClick={handleScheduleIconClick}
-              disabled={disabled || isLoading}
-              data-testid="pipeline-entry-point-trigger-schedule-edit-button"
-            >
-              <ClockIcon style={styles.iconStyle} />
-            </IconButton>
-          </Tooltip>
-        )}
-
         {currentTriggerType === TRIGGER_TYPES.webhook && (
           <Tooltip
             title="Edit webhook settings"
@@ -372,7 +360,7 @@ const TriggerTypeSelector = memo(props => {
             <IconButton
               variant="elitea"
               color="tertiary"
-              sx={styles.scheduleButton}
+              sx={styles.webhookButton}
               onClick={handleWebhookIconClick}
               disabled={disabled || isLoading}
             >
@@ -382,13 +370,44 @@ const TriggerTypeSelector = memo(props => {
         )}
       </Box>
 
-      <PipelineScheduleModal
-        open={isScheduleModalOpen}
-        onClose={() => setIsScheduleModalOpen(false)}
-        onSubmit={handleScheduleSubmit}
-        cron={currentCron}
-        timezone={currentScheduleTimezone}
-        isLoading={isUpdating}
+      <BannerMessage
+        variant="info"
+        containerSx={styles.hint}
+      >
+        <Typography variant="bodySmall">
+          To run this pipeline on a timer, use the{' '}
+          <Link
+            component="button"
+            className="nopan nodrag"
+            type="button"
+            variant="bodySmall"
+            onClick={scrollToSchedules}
+          >
+            Schedules section
+          </Link>
+          .
+        </Typography>
+      </BannerMessage>
+
+      {isLegacySchedule && (
+        <LegacyScheduleNotice
+          cron={triggerData?.cron}
+          onOpenSchedules={scrollToSchedules}
+        />
+      )}
+
+      <Modal.BaseModal
+        open={Boolean(pendingTriggerType)}
+        variant={ModalConstants.MODAL_VARIANT.simple}
+        titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
+        title="Replace schedule"
+        content="The old schedule of this version will be deleted and replaced by the new trigger. Continue?"
+        onClose={handleCancelReplace}
+        onConfirm={handleConfirmReplace}
+        confirmButtonText="Replace"
+        data-testid="replace-dialog"
+        confirmButtonTestId="replace-dialog-confirm"
+        cancelButtonTestId="replace-dialog-cancel"
       />
 
       <PipelineWebhookModal
@@ -436,13 +455,16 @@ const triggerTypeSelectorStyles = () => ({
     flex: 1,
     marginBottom: '0',
   },
-  scheduleButton: ({ palette }) => ({
+  webhookButton: ({ palette }) => ({
     padding: '0.25rem',
     color: palette.icon.secondary,
     '&:hover': {
       color: palette.primary.main,
     },
   }),
+  hint: {
+    marginTop: '0.25rem',
+  },
   iconStyle: {
     width: '1rem',
     height: '1rem',

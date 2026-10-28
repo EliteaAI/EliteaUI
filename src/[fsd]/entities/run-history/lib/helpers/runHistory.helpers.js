@@ -1,12 +1,37 @@
 import { format, fromUnixTime } from 'date-fns';
 
+import { toRunStatusLabel } from '@/[fsd]/entities/schedule/lib/helpers';
+
 const RUN_TIMESTAMP_FORMAT = 'dd-MM-yyyy, hh:mm a';
 export const RUN_ANALYTICS_TIMESTAMP_FORMAT = 'dd MMM yyyy, hh:mm a';
 export const RUN_FULL_TIMESTAMP_FORMAT = 'dd-MM-yyyy, hh:mm:ss a';
 // Usage is tagged with `run_id` / `eval_run_id` only from this date; older runs have nothing to show
 const RUN_ANALYTICS_AVAILABLE_FROM = Date.UTC(2026, 8, 30);
 
-export const resolveRunHistoryColumns = (noVersions, hasEvent) => {
+// With extra columns the tracks are fixed rem widths: Date, extras, Execution type, Version, Duration.
+// From live measures at 16 px per rem: a row grid has 736 px (a 768 px list minus 2 x 16 px of row
+// padding; the row menu is absolute and takes no track). A sortable header needs its label plus 57 px (padding,
+// sort icon, gap, border) and a plain one its label plus 33 px: Date 91, Schedule 99, Status 78, Execution type
+// 163, Version 110 and Duration 119 px. The minimum sum is 732 px. Dates up to 145 px stay cut, with a tooltip.
+const FIXED_TRACKS = {
+  date: '7.5rem',
+  event: '10.5rem',
+  version: '7rem',
+  duration: 'minmax(7.5rem, 1fr)',
+};
+
+export const resolveRunHistoryColumns = (noVersions, hasEvent, extraColumns = []) => {
+  if (extraColumns.length) {
+    const { date, event, version, duration } = FIXED_TRACKS;
+    return [
+      date,
+      ...extraColumns.map(column => column.width),
+      ...(hasEvent ? [event] : []),
+      ...(noVersions ? [] : [version]),
+      duration,
+    ].join(' ');
+  }
+
   const date = '1.5fr';
   const event = hasEvent ? ['1.5fr'] : [];
   const version = noVersions ? [] : ['1.5fr'];
@@ -80,3 +105,38 @@ export const toRunISOString = value => {
 // unparseable timestamp is NaN, which never passes the cutoff.
 export const hasRunAnalytics = run =>
   parseRunTimestamp(run?.updated_at || run?.created_at) >= RUN_ANALYTICS_AVAILABLE_FROM;
+
+// One label per trigger source of the shared run enum; `manual` stays for older runs
+const EXECUTION_TYPE_LABELS = new Map([
+  ['manual', 'Manual (legacy)'],
+  ['scheduled', 'Scheduled'],
+  ['schedule_manual', 'Run now'],
+  ['chat', 'Chat'],
+  ['api', 'API'],
+  ['mcp', 'MCP'],
+  ['webhook', 'Webhook'],
+]);
+
+// A missing or unknown type (older runs) renders "-" and the row stays selectable. Run now and Test run both store
+// schedule_manual, so the run record's trigger tells a test apart
+export const toExecutionTypeRow = row => ({
+  ...row,
+  event_label:
+    row.schedule_run?.trigger === 'test' ? 'Test' : (EXECUTION_TYPE_LABELS.get(row.execution_type) ?? '-'),
+});
+
+// The Schedule and Status columns of Agent and Pipeline Run History; '-' without a run record
+export const SCHEDULE_RUN_COLUMNS = [
+  {
+    id: 'schedule',
+    label: 'Schedule',
+    width: '7.5rem',
+    render: row => row.schedule_run?.schedule_name ?? '-',
+  },
+  {
+    id: 'status',
+    label: 'Status',
+    width: '5.75rem',
+    render: row => (row.schedule_run ? toRunStatusLabel(row.schedule_run.status) : '-'),
+  },
+];

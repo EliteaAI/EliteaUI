@@ -10,14 +10,20 @@ const RunHistorySortableHeader = memo(props => {
   const styles = runHistorySortableHeaderStyles(gridTemplateColumns);
 
   return (
-    <Box sx={styles.header}>
+    <Box
+      data-testid="run-history-header"
+      sx={styles.header}
+    >
       {headerItems.map((headerItem, index) => (
         <Box
           key={`header-${index}`}
-          onClick={() => onSort(headerItem.type)}
-          sx={styles.sortableHeader(sortConfig.type === headerItem.type, sortConfig.direction === 'desc')}
+          onClick={headerItem.sortable === false ? undefined : () => onSort(headerItem.type)}
+          sx={[
+            styles.sortableHeader(sortConfig.type === headerItem.type, sortConfig.direction === 'desc'),
+            headerItem.sortable === false && styles.plainHeader,
+          ]}
         >
-          <SortArrows />
+          {headerItem.sortable !== false && <SortArrows />}
           <Typography
             variant="labelMedium"
             color="text.secondary"
@@ -44,6 +50,9 @@ const runHistorySortableHeaderStyles = gridTemplateColumns => ({
     width: '100%',
     backgroundColor: palette.background.surface.interactive.default,
     border: '0.0625rem solid ' + palette.border.lines,
+    // 1 px border + 15 px padding = the 16 px row padding, so header and value columns start at the same x
+    padding: '0 0.9375rem',
+    boxSizing: 'border-box',
     borderRadius: '0.5rem',
     marginBottom: '.5rem',
 
@@ -74,6 +83,12 @@ const runHistorySortableHeaderStyles = gridTemplateColumns => ({
       transition: 'transform 0.2s ease',
     },
   }),
+  // An extra column has no sort, so no pointer and full strength
+  plainHeader: {
+    opacity: 1,
+    // '&&' beats the header's `div` rule, which sets the pointer on every cell
+    '&&': { cursor: 'default' },
+  },
 });
 
 export default RunHistorySortableHeader;

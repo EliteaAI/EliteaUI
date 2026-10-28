@@ -34,7 +34,7 @@ const UNVERSIONED_DATASET_MESSAGE =
   'Dataset changes are saved to the evaluation setup immediately — they will be updated without versioning.';
 
 const EnhanceWithAiDialog = memo(props => {
-  const { open, onClose, applicationId, runId } = props;
+  const { open, onClose, applicationId, runId, onVersionCreated } = props;
 
   const projectId = useSelectedProjectId();
   const { toastSuccess, toastError, toastWarning } = useToast();
@@ -262,6 +262,9 @@ const EnhanceWithAiDialog = memo(props => {
 
       await applyEvalFixes();
 
+      // The evaluation page keeps evaluating the version it had selected; point it at the new one.
+      if (forkResult?.id != null) onVersionCreated?.(forkResult.id);
+
       setShowVersionModal(false);
       setVersionName('');
       onClose();
@@ -279,6 +282,7 @@ const EnhanceWithAiDialog = memo(props => {
     versionId,
     proposal,
     applyEvalFixes,
+    onVersionCreated,
     onClose,
     toastSuccess,
     toastError,

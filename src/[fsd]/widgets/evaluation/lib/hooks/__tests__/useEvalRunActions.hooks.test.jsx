@@ -25,7 +25,7 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
 
 vi.mock('@/api/applications', () => ({
   useApplicationDetailsQuery: () => ({
-    data: { versions: [{ id: 11 }], version_details: { id: 11 } },
+    data: { versions: [{ id: 11 }, { id: 12 }], version_details: { id: 11 } },
     isLoading: false,
   }),
 }));
@@ -72,7 +72,57 @@ describe('useEvalRunActions', () => {
     startEvalRun.mockReturnValue({ unwrap: () => Promise.resolve({ id: 42 }) });
   });
 
-  afterEach(() => cleanup());
+  afterEach(() => {
+    cleanup();
+    window.localStorage.clear();
+  });
+
+  it('keeps a chosen version across a remount of the same suite', () => {
+    const first = renderHook(props => useEvalRunActions(props), {
+      initialProps: { ...BASE_PROPS, editingSuiteId: 3 },
+    });
+    expect(first.result.current.selectedVersionId).toBe(11);
+    act(() => first.result.current.handleVersionChange(12));
+    expect(first.result.current.selectedVersionId).toBe(12);
+    first.unmount();
+
+    const second = renderHook(props => useEvalRunActions(props), {
+      initialProps: { ...BASE_PROPS, editingSuiteId: 3 },
+    });
+    expect(second.result.current.selectedVersionId).toBe(12);
+  });
+
+  it('drops the pick on the first render after switching suites', () => {
+    const seen = [];
+    const { result, rerender } = renderHook(
+      props => {
+        const value = useEvalRunActions(props);
+        seen.push([props.editingSuiteId, value.selectedVersionId]);
+        return value;
+      },
+      { initialProps: { ...BASE_PROPS, editingSuiteId: 3 } },
+    );
+    act(() => result.current.handleVersionChange(12));
+    seen.length = 0;
+
+    rerender({ ...BASE_PROPS, editingSuiteId: 5 });
+    expect(seen.filter(([suite]) => suite === 5).every(([, version]) => version === 11)).toBe(true);
+  });
+
+  it('does not leak a stored version into another suite or a version that no longer exists', () => {
+    window.localStorage.setItem('evaluation:version:1:260:3', '12');
+    window.localStorage.setItem('evaluation:version:1:260:4', '99');
+
+    const other = renderHook(props => useEvalRunActions(props), {
+      initialProps: { ...BASE_PROPS, editingSuiteId: 5 },
+    });
+    expect(other.result.current.selectedVersionId).toBe(11);
+
+    const stale = renderHook(props => useEvalRunActions(props), {
+      initialProps: { ...BASE_PROPS, editingSuiteId: 4 },
+    });
+    expect(stale.result.current.selectedVersionId).toBe(11);
+  });
 
   it('refetches the runs list once when the active run finishes', async () => {
     const { result } = renderHook(props => useEvalRunActions(props), {

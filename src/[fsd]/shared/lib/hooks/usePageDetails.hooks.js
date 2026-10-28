@@ -73,6 +73,13 @@ export const usePageDetails = () => {
 
   const isSkillPage = isSkillDetailPage || isSkillVersionDetailPage;
 
+  const isScheduleCreatePage = useMatch({ path: RouteDefinitions.CreateSchedule });
+  const isScheduleDetailPage = useMatch({ path: RouteDefinitions.ScheduleDetail });
+  const isAgentScheduleCreatePage = useMatch({ path: RouteDefinitions.ApplicationsCreateSchedule });
+  const isAgentScheduleDetailPage = useMatch({ path: RouteDefinitions.ApplicationsScheduleDetail });
+  const isPipelineScheduleCreatePage = useMatch({ path: RouteDefinitions.PipelineCreateSchedule });
+  const isPipelineScheduleDetailPage = useMatch({ path: RouteDefinitions.PipelineScheduleDetail });
+
   const isChatPage = useMatch({ path: RouteDefinitions.Chat });
   const isChatConversationPage = useMatch({ path: RouteDefinitions.ChatConversation });
 
@@ -229,6 +236,15 @@ export const usePageDetails = () => {
           }),
       search,
     };
+  } else if (
+    isScheduleCreatePage ||
+    isScheduleDetailPage ||
+    isAgentScheduleCreatePage ||
+    isAgentScheduleDetailPage ||
+    isPipelineScheduleCreatePage ||
+    isPipelineScheduleDetailPage
+  ) {
+    pageType = 'ScheduleDetails';
   } else if (isChatPage || isChatConversationPage) {
     pageType = 'Chat';
     matchParams = isChatConversationPage?.params || {};

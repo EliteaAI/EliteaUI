@@ -44,3 +44,17 @@ describe('serializeRunHistory — index run details', () => {
     expect(rows[1].duration).toBe(4);
   });
 });
+
+describe('serializeRunHistory — execution type', () => {
+  it('keeps the top-level execution_type on the row', () => {
+    const { rows } = serializeRunHistoryListResponse([{ ...agentRun, execution_type: 'schedule' }]);
+
+    expect(rows[0].execution_type).toBe('schedule');
+  });
+
+  it('defaults execution_type to null when the server omits it', () => {
+    const { rows } = serializeRunHistoryListResponse([agentRun]);
+
+    expect(rows[0].execution_type).toBeNull();
+  });
+});

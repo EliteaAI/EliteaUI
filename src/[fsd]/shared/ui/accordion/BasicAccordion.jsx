@@ -35,49 +35,51 @@ const BasicAccordion = memo(props => {
       sx={style}
       data-testid={dataTestId}
     >
-      {items.map(({ title, content, summaryAction, headerContent, testId }, index) => (
-        <Box
-          key={index}
-          sx={styles.accordionWrapper}
-        >
-          <StyledAccordion
-            sx={accordionSX}
-            showMode={showMode}
-            card={card}
-            defaultExpanded={defaultExpanded}
-            expanded={expanded}
-            onChange={onChange}
-            slotProps={slotProps}
+      {items.map(
+        ({ title, content, summaryAction, headerContent, testId, defaultExpanded: itemExpanded }, index) => (
+          <Box
+            key={index}
+            sx={styles.accordionWrapper}
           >
-            <StyledAccordionSummary
-              expandIcon={<StyledExpandMoreIcon sx={styles.expandIcon} />}
-              aria-controls={`panel-content-${index}`}
+            <StyledAccordion
+              sx={accordionSX}
               showMode={showMode}
               card={card}
-              sx={summarySX}
-              data-testid={testId}
+              defaultExpanded={itemExpanded ?? defaultExpanded}
+              expanded={expanded}
+              onChange={onChange}
+              slotProps={slotProps}
             >
-              <Typography sx={[styles.title, titleSX]}>{title}</Typography>
-              {headerContent && <Box sx={styles.headerContent}>{headerContent}</Box>}
-            </StyledAccordionSummary>
-            <StyledAccordionDetails
-              card={card}
-              sx={accordionDetailsSX}
-            >
-              {content}
-            </StyledAccordionDetails>
-          </StyledAccordion>
-          {summaryAction && (
-            <Box
-              sx={styles.summaryAction}
-              onClick={e => e.stopPropagation()}
-              onMouseDown={e => e.stopPropagation()}
-            >
-              {summaryAction}
-            </Box>
-          )}
-        </Box>
-      ))}
+              <StyledAccordionSummary
+                expandIcon={<StyledExpandMoreIcon sx={styles.expandIcon} />}
+                aria-controls={`panel-content-${index}`}
+                showMode={showMode}
+                card={card}
+                sx={summarySX}
+                data-testid={testId}
+              >
+                <Typography sx={[styles.title, titleSX]}>{title}</Typography>
+                {headerContent && <Box sx={styles.headerContent}>{headerContent}</Box>}
+              </StyledAccordionSummary>
+              <StyledAccordionDetails
+                card={card}
+                sx={accordionDetailsSX}
+              >
+                {content}
+              </StyledAccordionDetails>
+            </StyledAccordion>
+            {summaryAction && (
+              <Box
+                sx={styles.summaryAction}
+                onClick={e => e.stopPropagation()}
+                onMouseDown={e => e.stopPropagation()}
+              >
+                {summaryAction}
+              </Box>
+            )}
+          </Box>
+        ),
+      )}
     </Box>
   );
 });

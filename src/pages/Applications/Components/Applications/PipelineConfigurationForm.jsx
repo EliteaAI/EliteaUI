@@ -1,14 +1,20 @@
 import { memo, useMemo } from 'react';
 
+import { useFormikContext } from 'formik';
+
 import { Box } from '@mui/material';
 
-import { AgentInput, ApplicationTools } from '@/[fsd]/features/agent/ui/agent-details/configurations';
+import { AgentInput } from '@/[fsd]/features/agent/ui/agent-details/configurations';
 import ApplicationAdvanceSettings from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationAdvanceSettings';
 import ApplicationEditorNotes from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationEditorNotes';
+import PipelineToolsSection from '@/[fsd]/features/pipelines/tool-picker/ui/PipelineToolsSection';
+import { EntitySchedulesSection } from '@/[fsd]/widgets/entity-schedules-section';
 import { ViewMode } from '@/common/constants.js';
 import ConversationStarters from '@/components/ConversationStarters';
 import ApplicationEditForm from '@/pages/Applications/Components/Applications/ApplicationEditForm';
 import ApplicationInformation from '@/pages/Applications/Components/Applications/ApplicationInformation';
+
+// PipelineToolsSection by file: the tool-picker barrel also exports the node pickers, which reach this form back
 
 const PipelineConfigurationForm = memo(props => {
   const {
@@ -16,11 +22,11 @@ const PipelineConfigurationForm = memo(props => {
     viewMode,
     containerStyle = {},
     isChatView = false,
-    hidePythonSandbox,
-    onAttachmentToolChange,
-    entityProjectId,
     isCreateMode = false,
+    onSelectNode,
   } = props;
+  // The saved name, not an unsaved edit, names the entity chip on the Schedules page
+  const { initialValues, values } = useFormikContext();
   const isDisabled = viewMode !== ViewMode.Owner;
 
   const styles = useMemo(() => pipelineConfigurationFormStyles(isChatView), [isChatView]);
@@ -28,14 +34,10 @@ const PipelineConfigurationForm = memo(props => {
   return (
     <Box sx={containerStyle}>
       {!isChatView && <ApplicationEditForm />}
-      <ApplicationTools
+      <PipelineToolsSection
         style={styles.applicationTools}
-        applicationId={applicationId}
-        isPipeline
         disabled={isDisabled}
-        hidePythonSandbox={hidePythonSandbox}
-        onAttachmentToolChange={onAttachmentToolChange}
-        entityProjectId={entityProjectId}
+        onSelectNode={onSelectNode}
       />
       {!isDisabled && (
         <>
@@ -46,6 +48,15 @@ const PipelineConfigurationForm = memo(props => {
           />
         </>
       )}
+      <EntitySchedulesSection
+        style={styles.information}
+        entityType="pipeline"
+        entityId={applicationId}
+        entityName={initialValues?.name}
+        versionId={values?.version_details?.id}
+        versionName={values?.version_details?.name}
+        isChatView={isChatView}
+      />
       <ApplicationAdvanceSettings
         style={styles.advanceSettings}
         disabled={isDisabled}

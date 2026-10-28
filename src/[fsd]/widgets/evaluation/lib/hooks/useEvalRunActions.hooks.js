@@ -19,6 +19,28 @@ import { useEvalRoutes } from './useEvalRoutes.hooks';
 import { useEvalRunLiveProgress } from './useEvalRunLiveProgress.hooks';
 import { useEvaluationExport } from './useEvaluationExport.hooks';
 
+const versionStorageKey = (projectId, applicationId, suiteId) =>
+  `evaluation:version:${projectId}:${applicationId}:${suiteId}`;
+
+const readStoredVersionId = key => {
+  try {
+    const raw = window.localStorage.getItem(key);
+    const parsed = raw == null ? NaN : parseInt(raw, 10);
+    return Number.isNaN(parsed) ? null : parsed;
+  } catch {
+    return null;
+  }
+};
+
+const writeStoredVersionId = (key, versionId) => {
+  try {
+    if (versionId == null) window.localStorage.removeItem(key);
+    else window.localStorage.setItem(key, String(versionId));
+  } catch {
+    // Storage can be blocked or full; the selection then only lasts until a reload.
+  }
+};
+
 export const useEvalRunActions = ({
   projectId,
   editingSuiteId,
@@ -51,25 +73,26 @@ export const useEvalRunActions = ({
   const [activeRunId, setActiveRunId] = useState(null);
   const [cancelRequested, setCancelRequested] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-  // Only the user's explicit pick is stored; the effective selection is derived below so the
-  // default can never be raced by a second effect writing the same piece of state.
+  const storageKey =
+    editingSuiteId == null ? null : versionStorageKey(projectId, applicationId, editingSuiteId);
+  // Tagged with its suite key so a pick never carries over to another agent or suite.
   const [versionOverride, setVersionOverride] = useState(null);
+  const storedVersionId = useMemo(() => (storageKey ? readStoredVersionId(storageKey) : null), [storageKey]);
   const terminalNotifiedRef = useRef(null);
   const [runPollingInterval, setRunPollingInterval] = useState(0);
 
-  // Falls back to the agent's default version until the user picks another, so the dropdown is
-  // populated as soon as the details land without an effect having to write it.
-  const selectedVersionId = versionOverride ?? defaultVersionId;
+  const currentOverride = versionOverride?.key === storageKey ? versionOverride.id : null;
+  // Restored pick, validated against current versions.
+  const restoredVersionId = versions.some(version => version.id === storedVersionId) ? storedVersionId : null;
+  const selectedVersionId = currentOverride ?? restoredVersionId ?? defaultVersionId;
 
-  // Drop the pick when switching agents so a version belonging to a previously viewed agent is
-  // never carried over.
-  useEffect(() => {
-    setVersionOverride(null);
-  }, [applicationId]);
-
-  const handleVersionChange = useCallback(versionId => {
-    setVersionOverride(versionId);
-  }, []);
+  const handleVersionChange = useCallback(
+    versionId => {
+      setVersionOverride({ key: storageKey, id: versionId });
+      if (storageKey) writeStoredVersionId(storageKey, versionId);
+    },
+    [storageKey],
+  );
 
   // Fetch runs history from API (persists across page refresh)
   const skipRunsQuery = !projectId || !applicationId || editingSuiteId == null;
@@ -141,10 +164,10 @@ export const useEvalRunActions = ({
       // Point the selector at the version being evaluated, otherwise a reload would show the
       // agent's default version next to another version's progress.
       if (inFlightRun.application_version_id != null) {
-        setVersionOverride(inFlightRun.application_version_id);
+        setVersionOverride({ key: storageKey, id: inFlightRun.application_version_id });
       }
     }
-  }, [runs, activeRunId]);
+  }, [runs, activeRunId, storageKey]);
 
   const handleEvaluate = useCallback(async () => {
     if (!editingSuiteId) return;

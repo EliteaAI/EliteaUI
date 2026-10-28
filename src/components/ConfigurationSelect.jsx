@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { Typography, debounce, useTheme } from '@mui/material';
+import { Typography, useTheme } from '@mui/material';
 
 import { ConfigurationTitlesConstants } from '@/[fsd]/features/credentials/lib/constants';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -13,9 +13,6 @@ import FolderIcon from './Icons/FolderIcon';
 import Person from './Icons/Person';
 
 const { Create_Personal_Title, Create_Project_Title, Manual_Title } = ConfigurationTitlesConstants;
-
-const SCROLL_LOAD_MORE_THRESHOLD = 10;
-const DEBOUNCE_DELAY_MS = 300;
 
 export default function ConfigurationSelect({
   label = 'Configuration',
@@ -134,26 +131,6 @@ export default function ConfigurationSelect({
     );
   }, [configurations, isCreationAllowed, personal_project_id, projectId]);
 
-  const loadMoreOnScroll = useMemo(
-    () =>
-      debounce(e => {
-        const containerDom = e.target || {};
-        const clientHeight = containerDom.clientHeight;
-        const scrollHeight = containerDom.scrollHeight;
-        const scrollTop = containerDom.scrollTop;
-        const isReachBottom = scrollTop + clientHeight > scrollHeight - SCROLL_LOAD_MORE_THRESHOLD;
-        if (isReachBottom && !isFetching) onLoadMore();
-      }, DEBOUNCE_DELAY_MS),
-    [isFetching, onLoadMore],
-  );
-
-  useEffect(
-    () => () => {
-      loadMoreOnScroll.clear();
-    },
-    [loadMoreOnScroll],
-  );
-
   const mapOptionToConfig = useCallback(
     option => {
       const config = {
@@ -201,18 +178,16 @@ export default function ConfigurationSelect({
   );
 
   return (
-    <Select.SingleSelect
+    <Select.LazySelect
       required={required}
       label={label}
       value={selectedConfiguration}
       onValueChange={handleSelectValueChange}
-      withSearch
-      searchFilterMode="remote"
       searchString={query}
       onSearch={setQuery}
       options={options}
-      isListFetching={isFetching}
-      onScroll={loadMoreOnScroll}
+      isFetching={isFetching}
+      onLoadMore={onLoadMore}
       error={error}
       helperText={helperText}
       displayEmpty
