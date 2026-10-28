@@ -69,4 +69,31 @@ describe('RunPerformanceDiff', () => {
     expect(screen.getByTestId('evaluation-perf-row-p50_latency_ms')).toHaveTextContent('+800% · Worse');
     expect(screen.getByTestId('evaluation-perf-timeouts')).toHaveTextContent('Newly timed out: #3, #8');
   });
+
+  // #7261
+  it('shows the case coverage and withholds latency on a small overlap', () => {
+    withTheme(
+      <RunPerformanceDiff
+        compare={compare({
+          not_comparable: ['few_matched_cases'],
+          coverage: { matched: 3, run_cases: 30, min_matched: { cases: 5, share: 0.5 } },
+          metrics: {
+            p50_latency_ms: metric({
+              run: 30000,
+              delta_pct: 200,
+              verdict: null,
+              not_comparable: 'few_matched_cases',
+            }),
+          },
+        })}
+      />,
+    );
+
+    expect(screen.getByTestId('evaluation-run-performance-coverage')).toHaveTextContent(
+      'Compared on 3 of 30 cases',
+    );
+    expect(screen.getByTestId('evaluation-perf-row-p50_latency_ms')).toHaveTextContent('Not comparable');
+    expect(screen.getByText(/too few to judge latency/)).toBeInTheDocument();
+    expect(screen.queryByTestId('evaluation-run-slower-badge')).not.toBeInTheDocument();
+  });
 });
