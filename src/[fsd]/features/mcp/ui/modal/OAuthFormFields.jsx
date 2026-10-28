@@ -21,6 +21,7 @@ const OAuthFormFields = memo(props => {
     saveCredentials = false,
     onSaveCredentialsChange,
     showSaveCredentials = false,
+    scopeLocked = false,
   } = props;
   const styles = getStyles({ scope });
   return (
@@ -57,8 +58,14 @@ const OAuthFormFields = memo(props => {
             color="text.primary"
             sx={styles.labelWithIcon}
           >
-            Scope (optional)
-            {availableScopes.length > 0 && (
+            {scopeLocked ? 'Scope' : 'Scope (optional)'}
+            {scopeLocked && (
+              <InfoTooltip
+                infoTooltip="Set by your administrator for the default app."
+                sx={styles.infoIconWrapper}
+              />
+            )}
+            {!scopeLocked && availableScopes.length > 0 && (
               <InfoTooltip
                 infoTooltip={`MCP server supports: ${availableScopes.join(', ')}.`}
                 sx={styles.infoIconWrapper}
@@ -70,6 +77,8 @@ const OAuthFormFields = memo(props => {
         value={scope}
         placeholder="Enter OAuth scopes (space-separated)"
         enableAutoBlur={false}
+        disabled={scopeLocked}
+        data-testid="oauth-scope-input"
       />
       {showSaveCredentials && (
         <FormControlLabel

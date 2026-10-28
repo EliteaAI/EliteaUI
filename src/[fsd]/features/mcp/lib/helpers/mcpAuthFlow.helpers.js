@@ -78,6 +78,8 @@ const buildOAuthMetadata = (tokenInfo, clientId, clientSecret, projectId, toolki
   project_id: projectId || tokenInfo.project_id,
   toolkit_id: toolkitId || tokenInfo.toolkit_id,
   used_dcr: tokenInfo.used_dcr || undefined,
+  oauth_app_id: tokenInfo.oauth_app_id,
+  credential_type: tokenInfo.credential_type,
   authorization_endpoint: tokenInfo.authorization_endpoint,
   revocation_endpoint: tokenInfo.revocation_endpoint,
   registration_endpoint: tokenInfo.registration_endpoint,
@@ -147,7 +149,9 @@ export const triggerProactiveRefresh = serverUrl => {
         refresh_token: tokenInfo.refresh_token,
         token_endpoint: tokenEndpoint,
         client_id: clientId || undefined,
-        client_secret: clientSecret || undefined,
+        client_secret: tokenInfo.oauth_app_id ? undefined : clientSecret || undefined,
+        oauth_app_id: tokenInfo.oauth_app_id || undefined,
+        credential_type: tokenInfo.oauth_app_id ? tokenInfo.credential_type : undefined,
         toolkit_id: tokenInfo.toolkit_id,
         used_dcr: tokenInfo.used_dcr || undefined,
         resource: tokenInfo.resource,
@@ -200,6 +204,11 @@ export const refreshAccessToken = async options => {
   }
 
   const canonicalServer = McpAuthHelpers.canonicalizeServerUrl(serverUrl);
+  const {
+    oauth_app_id: oauthAppId,
+    credential_type: credentialType,
+    resource,
+  } = McpAuthHelpers.getTokenInfo(serverUrl) || {};
 
   const requestBody = {
     projectId: projectId || 1,
@@ -207,10 +216,12 @@ export const refreshAccessToken = async options => {
     grant_type: 'refresh_token',
     refresh_token: refreshToken,
     client_id: clientId || undefined,
-    client_secret: clientSecret || undefined,
+    client_secret: oauthAppId ? undefined : clientSecret || undefined,
+    oauth_app_id: oauthAppId || undefined,
+    credential_type: oauthAppId ? credentialType : undefined,
     toolkit_id: toolkitId || undefined,
     used_dcr: usedDcr || undefined,
-    resource: McpAuthHelpers.getTokenInfo(serverUrl)?.resource,
+    resource,
   };
 
   const tokenResult = await store.dispatch(mcpOAuthApi.endpoints.refreshMcpOAuthToken.initiate(requestBody));
@@ -244,7 +255,9 @@ export const refreshAccessToken = async options => {
     {
       token_endpoint: tokenEndpoint,
       client_id: clientId,
-      client_secret: clientSecret,
+      client_secret: oauthAppId ? undefined : clientSecret,
+      oauth_app_id: oauthAppId,
+      credential_type: oauthAppId ? credentialType : undefined,
       project_id: projectId,
       toolkit_id: toolkitId,
       used_dcr: usedDcr || undefined,
@@ -363,6 +376,8 @@ export const startMcpAuthFlow = async options => {
     projectId,
     toolkitId,
     toolkitType, // Pre-built MCP type (e.g., 'mcp_github') - used as storage key
+    oauthAppId, // Default app mode (#7149): the backend resolves this admin app's client and secret
+    credentialType, // teams/outlook/sharepoint: the backend checks the app serves it
   } = options;
 
   let clientId = initialClientId;
@@ -518,7 +533,9 @@ export const startMcpAuthFlow = async options => {
       client_id: shouldSendCredentials ? clientId || undefined : undefined,
       // When DCR was used: send the secret issued during DCR (null for true public clients).
       // When DCR was NOT used: send pre-configured clientSecret (if any).
-      client_secret: shouldSendCredentials ? effectiveClientSecret || undefined : undefined,
+      client_secret: shouldSendCredentials && !oauthAppId ? effectiveClientSecret || undefined : undefined,
+      oauth_app_id: oauthAppId || undefined,
+      credential_type: oauthAppId ? credentialType : undefined,
       code_verifier: usePKCE ? codeVerifier : undefined,
       scope: normalizedScope || undefined,
       toolkit_id: toolkitId || undefined,
@@ -560,7 +577,9 @@ export const startMcpAuthFlow = async options => {
         // Core fields for token refresh
         token_endpoint: tokenEndpoint,
         client_id: clientId,
-        client_secret: effectiveClientSecret,
+        client_secret: oauthAppId ? undefined : effectiveClientSecret,
+        oauth_app_id: oauthAppId || undefined,
+        credential_type: oauthAppId ? credentialType : undefined,
         project_id: projectId,
         toolkit_id: toolkitId,
         used_dcr: usedDCR || undefined,

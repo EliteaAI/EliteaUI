@@ -8,3 +8,4 @@ export { useLlmModelTargetProjectId } from './useLlmModelTargetProjectId.hooks.j
 export { useLlmModelCheckConnection } from './useLlmModelCheckConnection.hooks.js';
 export { useGetCurrentConfigurationAsSchemas } from './useGetCurrentConfigurationAsSchemas.hooks.js';
 export { useStoredOAuthLogin } from './useStoredOAuthLogin.hooks.js';
+export * from './useOAuthAppSubsections.hooks';

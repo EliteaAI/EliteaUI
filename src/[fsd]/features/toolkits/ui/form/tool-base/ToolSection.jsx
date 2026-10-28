@@ -2,6 +2,8 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Typography, useTheme } from '@mui/material';
 
+import { OAuthAppHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import { useOAuthAppSubsections } from '@/[fsd]/features/credentials/lib/hooks';
 import { ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { Checkbox } from '@/[fsd]/shared/ui';
@@ -10,13 +12,14 @@ import { capitalizeFirstChar, isNullOrUndefined } from '@/common/utils';
 const ToolSection = memo(props => {
   const {
     sectionKey,
-    subsections,
+    subsections: schemaSubsections,
     required,
     schema = { properties: {} },
     showValidation,
     toolErrors,
     settings,
     editField,
+    setDefaultField,
     handleInputChange,
     setToolErrors,
     setEditToolDetail,
@@ -28,10 +31,17 @@ const ToolSection = memo(props => {
     validationErrorMessages,
     checkboxAsteriskRequired = true,
     onCredentialReload,
+    credentialType,
   } = props;
 
   const styles = sectionStyles();
   const theme = useTheme();
+  // Teams/Outlook/SharePoint: which of Default app / Custom app is offered depends on the admin's apps
+  const { subsections, isResolving } = useOAuthAppSubsections({
+    credentialType,
+    subsections: schemaSubsections,
+    settings,
+  });
   const sectionOptions = useMemo(
     () =>
       (subsections || []).reduce(
@@ -59,6 +69,14 @@ const ToolSection = memo(props => {
     // Pick the subsection with the most matching (non-null) fields so that subsections
     // sharing common fields (e.g. OAuth Delegated and OAuth Client Credentials both have
     // client_id/client_secret) resolve to the correct one rather than always the first.
+    // When subsections declare key_fields (Default app: oauth_app_id, Custom app: client_id), the
+    // one whose key field is set wins; with none set (a new credential) the first one is used.
+    if (subsections.some(subsection => subsection.key_fields?.length)) {
+      const keyed = subsections.find(subsection =>
+        subsection.key_fields?.some(field => !isNullOrUndefined(settings[field]) && settings[field] !== ''),
+      );
+      return (keyed || subsections[0]).name;
+    }
     let best = null;
     let bestCount = 0;
     for (const subsection of subsections) {
@@ -75,12 +93,14 @@ const ToolSection = memo(props => {
     () => subsections.find(subsection => subsection.name === selectedOption) || { fields: [] },
     [selectedOption, subsections],
   );
+  // Fields the selected subsection shares with others (e.g. scopes) stay selected
   const notSelectedFields = useMemo(
     () =>
       subsections
         .filter(subsection => subsection.name !== selectedOption)
-        .reduce((acc, subsection) => [...acc, ...(subsection.fields || [])], []),
-    [selectedOption, subsections],
+        .reduce((acc, subsection) => [...acc, ...(subsection.fields || [])], [])
+        .filter(field => !fields.includes(field)),
+    [fields, selectedOption, subsections],
   );
 
   useEffect(() => {
@@ -97,6 +117,14 @@ const ToolSection = memo(props => {
       setSelectedOption(sectionOptions[0].value);
     }
   }, [sectionOptions, selectedOption]);
+
+  // Once the admin's apps are known, start on the subsection that matches the credential
+  const resolvedOnce = useRef(false);
+  useEffect(() => {
+    if (isResolving || resolvedOnce.current) return;
+    resolvedOnce.current = true;
+    if (defaultOption && defaultOption !== selectedOption) setSelectedOption(defaultOption);
+  }, [defaultOption, isResolving, selectedOption]);
 
   const sectionProps = useMemo(() => {
     // When in disabled configuration mode, only include fields marked with configuration=true
@@ -137,6 +165,7 @@ const ToolSection = memo(props => {
       // 1. Snapshot current (deselected) subsection field values into the cache
       //    before they are nullified so they can be restored later.
       const currentSubsection = subsections.find(sub => sub.name === selectedOption);
+      const leavingAppSection = OAuthAppHelpers.isOAuthAppSection(currentSubsection);
       if (currentSubsection && selectedOption !== 'none') {
         const snapshot = {};
         (currentSubsection.fields || []).forEach(field => {
@@ -160,13 +189,21 @@ const ToolSection = memo(props => {
 
       // 2. Build the update: nullify all fields from deselected subsections,
       //    then overlay any cached values for the newly selected subsection.
+      const newFields = subsections.find(subsection => subsection.name === newOption)?.fields || [];
       const unselectedSettings = {};
       subsections
         .filter(subsection => subsection.name !== newOption)
         .reduce((acc, subsection) => [...acc, ...(subsection.fields || [])], [])
+        .filter(field => !newFields.includes(field))
         .forEach(field => {
           unselectedSettings[field] = null;
         });
+      // The Default app picker's mirrored authority must not prefill the user's own app
+      if (leavingAppSection) {
+        OAuthAppHelpers.APP_MIRRORED_FIELDS.forEach(field => {
+          unselectedSettings[field] = null;
+        });
+      }
 
       const restoredSettings = sectionValuesCache.current[newOption] || {};
 
@@ -214,6 +251,8 @@ const ToolSection = memo(props => {
     }
   }, [setToolErrors, settings, required, fields, notSelectedFields, selectedOption, schema?.properties]);
 
+  if (isResolving) return null;
+
   // For disabled fields (especially for auth section), handle differently
   if (disableConfigFields) {
     // Filter fields into configuration and regular fields
@@ -257,6 +296,7 @@ const ToolSection = memo(props => {
                 toolErrors={toolErrors}
                 settings={settings}
                 editField={editField}
+                setDefaultField={setDefaultField}
                 handleInputChange={handleInputChange}
                 required={false}
                 specifiedProjectId={specifiedProjectId}
@@ -264,6 +304,7 @@ const ToolSection = memo(props => {
                 disabled={disabled && v.type !== 'configuration'} // Disable non-configuration fields if overall disabled
                 validationErrorMessages={validationErrorMessages}
                 onCredentialReload={onCredentialReload}
+                credentialType={credentialType}
               />
             );
           })}
@@ -307,6 +348,7 @@ const ToolSection = memo(props => {
             toolErrors={toolErrors}
             settings={settings}
             editField={editField}
+            setDefaultField={setDefaultField}
             handleInputChange={handleInputChange}
             required={isRequired}
             specifiedProjectId={specifiedProjectId}
@@ -314,6 +356,7 @@ const ToolSection = memo(props => {
             disabled={disabled && v.type !== 'configuration'}
             validationErrorMessages={validationErrorMessages}
             onCredentialReload={onCredentialReload}
+            credentialType={credentialType}
           />
         );
       })}
