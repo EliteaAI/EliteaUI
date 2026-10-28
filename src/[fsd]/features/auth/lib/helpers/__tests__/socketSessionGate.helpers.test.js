@@ -193,7 +193,7 @@ describe('emitWithSessionGate response watchdog', () => {
     expect(socket.offAny).toHaveBeenCalledTimes(1);
   });
 
-  it('gives up on a healthy socket after the longer limit, so the placeholder cannot spin forever', () => {
+  it('gives up on a healthy socket after the longer limit and leaves the socket alone', () => {
     const errorListener = vi.fn();
     const { socket } = createWatchedSocket(errorListener, { connected: true });
 
@@ -202,8 +202,11 @@ describe('emitWithSessionGate response watchdog', () => {
     expect(errorListener).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1);
 
+    // The placeholder is settled so it cannot spin forever, but a new handshake would drop the rooms of
+    // every other run on this socket, and a healthy socket has nothing a new handshake would fix
     expect(errorListener).toHaveBeenCalledWith(expectedFailure);
-    expect(socket.disconnect).toHaveBeenCalledTimes(1);
+    expect(socket.disconnect).not.toHaveBeenCalled();
+    expect(socket.connect).not.toHaveBeenCalled();
   });
 
   it('reports a socket that was healthy at first but dropped while it waited', () => {

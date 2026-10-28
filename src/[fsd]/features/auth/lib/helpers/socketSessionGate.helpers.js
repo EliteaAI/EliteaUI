@@ -54,9 +54,9 @@ const discardBufferedSend = (socket, event, payload) => {
  * one keeps waiting, because a slow start is not a failure and reconnecting would drop the room of a run
  * that is working. It is reported at SEND_RESPONSE_GIVE_UP_MS at the latest.
  *
- * Reporting settles the placeholder through the existing `socket_validation_error` listeners, discards
- * the send if it is still waiting in the socket's buffer, and re-handshakes the socket so the next send
- * goes out on a fresh connection.
+ * Reporting settles the placeholder through the existing `socket_validation_error` listeners and discards
+ * the send if it is still waiting in the socket's buffer. A socket that has lost its connection is also
+ * re-handshaken so the next send goes out on a fresh one; a healthy socket is not touched.
  *
  * Frames are matched on `stream_id` only: a frame of another run in the same conversation also
  * stops the wait, which at worst leaves the spinner in the rare case this guards against.
@@ -84,11 +84,15 @@ const watchForResponse = ({ socket, event, payload }) => {
       timer = setTimeout(handleTimeout, SEND_RESPONSE_GIVE_UP_MS - SEND_RESPONSE_TIMEOUT_MS);
       return;
     }
+    // A healthy socket is left alone: a new handshake changes the socket id and drops the rooms of every
+    // other run using it. An anonymous socket no longer needs this, because the server now answers a send
+    // it refuses and the session guard repairs the socket on that answer.
+    // `active` is false after a deliberate disconnect (the app tore the socket down); never revive that
+    const shouldRehandshake = socket.active !== false && !isSocketHealthy(socket);
     stop();
     discardBufferedSend(socket, event, payload);
     notifySendFailure(socket, event, payload, SEND_NO_RESPONSE_MESSAGE, SEND_NO_RESPONSE_CODE);
-    // `active` is false after a deliberate disconnect (the app tore the socket down); never revive that
-    if (socket.active !== false) socket.disconnect().connect();
+    if (shouldRehandshake) socket.disconnect().connect();
   };
 
   socket.onAny(handleFrame);

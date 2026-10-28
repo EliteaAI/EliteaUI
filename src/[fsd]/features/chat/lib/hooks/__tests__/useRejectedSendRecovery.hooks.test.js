@@ -23,8 +23,13 @@ const createInput = (content = '') => ({
 const setup = input => {
   const toastError = vi.fn();
   const chatInput = { current: input };
-  const { result } = renderHook(() => useRejectedSendRecovery({ chatInput, toastError }));
-  return { toastError, rememberSend: result.current.rememberSend };
+  const activeConversationRef = { current: { uuid: 'conv-a' } };
+  const { result } = renderHook(() =>
+    useRejectedSendRecovery({ chatInput, toastError, activeConversationRef }),
+  );
+  const rememberSend = (questionId, text, conversationUuid = 'conv-a') =>
+    result.current.rememberSend(questionId, text, conversationUuid);
+  return { toastError, rememberSend, activeConversationRef };
 };
 
 describe('useRejectedSendRecovery', () => {
@@ -106,6 +111,42 @@ describe('useRejectedSendRecovery', () => {
     // The message might still arrive, so the user is not nudged to resend
     expect(input.setValue).toHaveBeenCalledWith('hello there');
     expect(input.focus).not.toHaveBeenCalled();
+  });
+
+  it('does not put the text into another conversation the user switched to', () => {
+    const input = createInput();
+    const { toastError, rememberSend, activeConversationRef } = setup(input);
+    rememberSend('q1', 'hello there', 'conv-a');
+    activeConversationRef.current = { uuid: 'conv-b' };
+
+    act(() => errorHandler({ code: 'send_no_response', message_id: 'q1', content: 'No response' }));
+
+    // the user still hears about it, because this instance did send the message
+    expect(toastError).toHaveBeenCalledWith('No response');
+    expect(input.setValue).not.toHaveBeenCalled();
+    expect(input.focus).not.toHaveBeenCalled();
+  });
+
+  it('does not restore into a conversation that was left and is no longer open', () => {
+    const input = createInput();
+    const { rememberSend, activeConversationRef } = setup(input);
+    rememberSend('q1', 'hello there', 'conv-a');
+    activeConversationRef.current = null;
+
+    act(() => errorHandler({ code: 'socket_unauthenticated', message_id: 'q1', content: 'x' }));
+
+    expect(input.setValue).not.toHaveBeenCalled();
+  });
+
+  it('still restores when the send created the conversation that is now on screen', () => {
+    const input = createInput();
+    const { rememberSend, activeConversationRef } = setup(input);
+    rememberSend('q1', 'first message', 'new-conv');
+    activeConversationRef.current = { uuid: 'new-conv' };
+
+    act(() => errorHandler({ code: 'socket_unauthenticated', message_id: 'q1', content: 'x' }));
+
+    expect(input.setValue).toHaveBeenCalledWith('first message');
   });
 
   it('restores a rejected text only once', () => {

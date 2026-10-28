@@ -31,13 +31,13 @@ const MAX_REMEMBERED_SENDS = 10;
  *   message of the toast says so.
  */
 export const useRejectedSendRecovery = props => {
-  const { chatInput, toastError } = props;
+  const { chatInput, toastError, activeConversationRef } = props;
   const sentQuestionsRef = useRef(new Map());
 
-  const rememberSend = useCallback((questionId, text) => {
+  const rememberSend = useCallback((questionId, text, conversationUuid) => {
     if (!questionId || !text) return;
     const sentQuestions = sentQuestionsRef.current;
-    sentQuestions.set(questionId, text);
+    sentQuestions.set(questionId, { text, conversationUuid });
     if (sentQuestions.size > MAX_REMEMBERED_SENDS) sentQuestions.delete(sentQuestions.keys().next().value);
   }, []);
 
@@ -48,18 +48,22 @@ export const useRejectedSendRecovery = props => {
       const sentQuestions = sentQuestionsRef.current;
       if (!sentQuestions.has(frame.message_id)) return;
 
-      const text = sentQuestions.get(frame.message_id);
+      const { text, conversationUuid } = sentQuestions.get(frame.message_id);
       sentQuestions.delete(frame.message_id);
 
+      // This instance did send it, so the user is told. The text goes back only when the conversation it
+      // was sent to is still the one on screen: one instance and one input serve every conversation, so
+      // after a switch it would land in an unrelated chat, one Enter away from being sent there.
       toastError(frame.content);
 
+      const isSentFromActiveConversation = conversationUuid === activeConversationRef.current?.uuid;
       const input = chatInput.current;
-      if (text && input && !input.getInputContent()) {
+      if (isSentFromActiveConversation && input && !input.getInputContent()) {
         input.setValue(text);
         if (frame.code === SOCKET_UNAUTHENTICATED_CODE) input.focus();
       }
     },
-    [chatInput, toastError],
+    [chatInput, toastError, activeConversationRef],
   );
 
   useSocket(sioEvents.socket_validation_error, handleRejection);
