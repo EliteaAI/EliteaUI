@@ -204,8 +204,11 @@ export const refreshAccessToken = async options => {
   }
 
   const canonicalServer = McpAuthHelpers.canonicalizeServerUrl(serverUrl);
-  const oauthAppId = McpAuthHelpers.getTokenInfo(serverUrl)?.oauth_app_id;
-  const credentialType = McpAuthHelpers.getTokenInfo(serverUrl)?.credential_type;
+  const {
+    oauth_app_id: oauthAppId,
+    credential_type: credentialType,
+    resource,
+  } = McpAuthHelpers.getTokenInfo(serverUrl) || {};
 
   const requestBody = {
     projectId: projectId || 1,
@@ -218,7 +221,7 @@ export const refreshAccessToken = async options => {
     credential_type: oauthAppId ? credentialType : undefined,
     toolkit_id: toolkitId || undefined,
     used_dcr: usedDcr || undefined,
-    resource: McpAuthHelpers.getTokenInfo(serverUrl)?.resource,
+    resource,
   };
 
   const tokenResult = await store.dispatch(mcpOAuthApi.endpoints.refreshMcpOAuthToken.initiate(requestBody));

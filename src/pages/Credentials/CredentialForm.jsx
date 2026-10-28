@@ -52,6 +52,7 @@ const CredentialForm = memo(props => {
   const [view, setView] = useState(ToolkitViewOptions.Form);
   const {
     setFieldValue,
+    setValues,
     resetForm,
     values: formikValues,
     initialValues: formikInitialValues,
@@ -180,10 +181,10 @@ const CredentialForm = memo(props => {
         submitCount: state.submitCount,
         status: state.status,
       });
-      // Re-apply the user's own edits on top of the new baseline
-      Object.keys(values).forEach(key => setFieldValue(key, values[key], false));
+      // Re-apply the user's own edits on top of the new baseline, in one update
+      setValues(values, false);
     },
-    [onChangeCredentialDetail, resetForm, setFieldValue],
+    [onChangeCredentialDetail, resetForm, setValues],
   );
 
   const onSaveConfiguration = useCallback(
