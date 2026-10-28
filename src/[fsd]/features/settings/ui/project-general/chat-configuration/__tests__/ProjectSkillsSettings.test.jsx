@@ -12,7 +12,7 @@ import ProjectSkillsSettings from '../ProjectSkillsSettings';
 
 const api = vi.hoisted(() => ({
   current: undefined,
-  platform: { available: true, project_default: false },
+  platform: { available: true },
   create: vi.fn(),
   update: vi.fn(),
   refresh: vi.fn(),
@@ -51,7 +51,7 @@ const projectSetting = () => screen.getByTestId('project-skills-project-setting'
 beforeEach(() => {
   vi.clearAllMocks();
   api.current = undefined;
-  api.platform = { available: true, project_default: false };
+  api.platform = { available: true };
   api.permitted = true;
   api.refresh.mockReturnValue(undefined);
   api.create.mockReturnValue({ unwrap: () => Promise.resolve() });
@@ -72,8 +72,8 @@ describe('project skills in chat setting', () => {
   it.each([
     [false, 'Use platform default (Disabled)'],
     [true, 'Use platform default (Enabled)'],
-  ])('names the platform default in the default option (project_default=%s)', (projectDefault, label) => {
-    api.platform = { available: true, project_default: projectDefault };
+  ])('names the platform switch in the default option (available=%s)', (available, label) => {
+    api.platform = { available };
     renderSettings();
     expect(choiceSelect()).toHaveTextContent(label);
   });
@@ -159,7 +159,7 @@ describe('project skills in chat setting', () => {
   });
 
   it('stays editable with a hint while platform administrators keep the feature off', async () => {
-    api.platform = { available: false, project_default: true };
+    api.platform = { available: false };
     api.current = { id: 7, elitea_title: 'project_skills', data: { enabled: true } };
     renderSettings();
     expect(projectSetting()).not.toBeDisabled();
@@ -186,14 +186,14 @@ describe('project skills in chat setting', () => {
   });
 
   it.each([
-    ['the platform default is off and the project has no choice', undefined, false, true],
-    ['the project turned it off', { enabled: false }, true, true],
-    ['the platform default is on', undefined, true, false],
-    ['the project turned it on', { enabled: true }, false, false],
+    ['the project turned it off', { enabled: false }, true],
+    ['the project has no choice', undefined, false],
+    ['the project follows the platform', { enabled: null }, false],
+    ['the project turned it on', { enabled: true }, false],
   ])(
-    'shows the disabled hint only when it is off for this project: %s',
-    (_case, data, projectDefault, hinted) => {
-      api.platform = { available: true, project_default: projectDefault };
+    'with the platform switch on, shows the disabled hint only when the project turned it off: %s',
+    (_case, data, hinted) => {
+      api.platform = { available: true };
       api.current = data ? { id: 7, elitea_title: 'project_skills', data } : undefined;
       renderSettings();
       expect(screen.queryByTestId('project-skills-disabled-hint') !== null).toBe(hinted);
