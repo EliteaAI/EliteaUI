@@ -32,7 +32,9 @@ describe('schedule export query', () => {
     const [url] = requestedUrls(fetchSpy);
     expect(url.pathname).toBe('/elitea_core/schedules/prompt_lib/5/export');
     expect(url.searchParams.has('ids')).toBe(false);
-    expect(result.data.blob).toBeInstanceOf(Blob);
+    // Node's Response.blob() isn't jsdom's Blob, so check the content rather than the class
+    expect(result.data.blob.type).toBe('application/x-yaml');
+    expect(await result.data.blob.text()).toBe('schedules: []');
   });
 
   it('sends ids=7 when one schedule is exported', async () => {
