@@ -17,6 +17,7 @@ import AutoRoutingSettings from './AutoRoutingSettings';
 import ChatTemplateEditor from './ChatTemplateEditor';
 import ChatTemplateList from './ChatTemplateList';
 import MidturnInjection from './MidturnInjection';
+import ProjectSkillsSettings from './ProjectSkillsSettings';
 
 const ChatConfigurationSection = memo(() => {
   const styles = chatConfigurationSectionStyles();
@@ -114,6 +115,8 @@ const ChatConfigurationSection = memo(() => {
       {isMidturnAvailable && <SettingsFormProvider FormContent={MidturnInjection} />}
 
       <AutoRoutingSettings />
+
+      <ProjectSkillsSettings />
 
       <Modal.BaseModal
         open={!!templateToDelete}
