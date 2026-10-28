@@ -76,17 +76,18 @@ const ErrorTrace = memo(props => {
               testId="error-code-chip"
             />
           )}
-          {refusal?.supportRef && (
-            <Typography
-              component="span"
-              variant="bodySmall"
-              data-testid="error-support-ref"
-              sx={styles.supportRef}
-            >
-              Reference {refusal.supportRef}
-            </Typography>
-          )}
         </Box>
+      )}
+
+      {refusal?.supportRef && (
+        <Typography
+          component="div"
+          variant="bodySmall"
+          data-testid="error-support-ref"
+          sx={styles.supportRef}
+        >
+          Reference {refusal.supportRef}
+        </Typography>
       )}
 
       {afterHeadline}
@@ -169,9 +170,9 @@ const errorTraceStyles = (isExpanded, compact) => ({
     marginBottom: '0.5rem',
   },
   supportRef: {
-    marginLeft: '.75rem',
+    marginTop: '-0.25rem',
+    marginBottom: '0.5rem',
     color: ({ palette }) => palette.text.secondary,
-    whiteSpace: 'nowrap',
     userSelect: 'all',
   },
   errorStackTrace: {
