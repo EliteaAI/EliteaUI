@@ -162,4 +162,16 @@ describe('buildPerformanceDiff', () => {
     expect(view.timeouts).toEqual({ newly: '#4', noLonger: null });
     expect(view.isSlower).toBe(false);
   });
+
+  it('falls back to a static note when the overlap counts are missing', () => {
+    const view = buildPerformanceDiff({
+      ...COMPARE,
+      diff: { ...COMPARE.diff, not_comparable: ['few_matched_cases'], coverage: {} },
+    });
+
+    expect(view.notes).toEqual([
+      'Too few cases match the reference to judge latency, so latency is not compared.',
+    ]);
+    expect(view.coverageLabel).toBeNull();
+  });
 });

@@ -22,8 +22,12 @@ const NOT_COMPARABLE_NOTE = {
 // Reasons that withhold a metric's verdict while its figures stay shown.
 const WITHHELD_REASONS = new Set(['time_limit_changed', 'few_matched_cases']);
 
-// #7261: few_matched_cases has no entry above, because its note needs the counts.
+const FEW_MATCHED_FALLBACK_NOTE =
+  'Too few cases match the reference to judge latency, so latency is not compared.';
+
+// few_matched_cases has no entry above, because its note needs the counts.
 const fewMatchedNote = coverage => {
+  if (typeof coverage.matched !== 'number' || !coverage.run_cases) return FEW_MATCHED_FALLBACK_NOTE;
   const min = coverage.min_matched ?? {};
   const rule = [
     min.cases ? `at least ${plural(min.cases, 'case')}` : null,
@@ -145,7 +149,6 @@ export const buildPerformanceDiff = compare => {
   return {
     referenceRunId: reference.id,
     referenceLabel: `Run #${reference.id} (${REFERENCE_SOURCE_LABEL[reference.source] ?? 'reference'})`,
-    // #7261: how many of this run's cases the comparison rests on.
     coverageLabel:
       typeof coverage.matched === 'number' && coverage.run_cases
         ? `Compared on ${coverage.matched} of ${plural(coverage.run_cases, 'case')}`
