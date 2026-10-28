@@ -11,6 +11,8 @@ export { useSaveNodesAndEdges } from './useSaveNodeAndEdges.hooks';
 export { useGetToolkitNameFromSchema } from './useGetToolkitNameFromSchema.hooks';
 export { useNodeCardContext } from './useNodeCardContext.hooks';
 export { useNodeRename } from './useNodeRename.hooks';
+export { useNodeToolNames } from './useNodeToolNames.hooks';
+export { useNodeYamlEditor } from './useNodeYamlEditor.hooks';
 export { useNodeAiAssistantConfig } from './useNodeAiAssistantConfig.hooks';
 export { useStateValidation } from './useStateValidation.hooks';
 export * from './useGetToolkitNameFromSchema.hooks';

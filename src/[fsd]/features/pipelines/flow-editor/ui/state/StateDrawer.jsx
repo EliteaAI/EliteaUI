@@ -10,7 +10,7 @@ import ClipboardIcon from '@/assets/clipboard-icon.svg?react';
 import CloseIcon from '@/components/Icons/CloseIcon';
 
 const StateDrawer = memo(props => {
-  const { isOpen, onClose, setYamlJsonObject, yamlJsonObject, disabled } = props;
+  const { isOpen, onClose, setYamlJsonObject, yamlJsonObject, disabled, rightOffset = 0 } = props;
   const theme = useTheme();
 
   const { containerRef, drawerWidth, isResizing, isHoveringHandle, setIsHoveringHandle, handleResizeStart } =
@@ -79,7 +79,7 @@ const StateDrawer = memo(props => {
     [setYamlJsonObject, yamlJsonObject],
   );
 
-  const styles = stateDrawerStyles(drawerWidth, isResizing, isHoveringHandle);
+  const styles = stateDrawerStyles(drawerWidth, isResizing, isHoveringHandle, rightOffset);
 
   if (!isOpen) return null;
 
@@ -140,11 +140,12 @@ const StateDrawer = memo(props => {
 StateDrawer.displayName = 'StateDrawer';
 
 /** @type {MuiSx} */
-const stateDrawerStyles = (width, isResizing, isHovering) => ({
+const stateDrawerStyles = (width, isResizing, isHovering, rightOffset) => ({
   container: ({ palette }) => ({
     position: 'absolute',
     top: 0,
-    right: 0,
+    // Sits left of the node panel while it is open
+    right: `${rightOffset / 16}rem`,
     width: `${width}px`,
     height: '100%',
     display: 'flex',
@@ -152,7 +153,7 @@ const stateDrawerStyles = (width, isResizing, isHovering) => ({
     borderLeft: `.0625rem solid ${isResizing ? palette.components.userMessageEditor.border : isHovering ? palette.components.flowEditor.node.border : palette.border.lines}`,
     background: palette.background.default.secondary,
     zIndex: 10,
-    transition: isResizing ? 'none' : 'border-color 0.2s ease',
+    transition: isResizing ? 'none' : 'border-color 0.2s ease, right 0.2s ease',
   }),
   resizeHandle: {
     position: 'absolute',

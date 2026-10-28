@@ -1,6 +1,4 @@
-import { useCallback, useContext, useMemo } from 'react';
-
-import { useFormikContext } from 'formik';
+import { useCallback, useContext } from 'react';
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import {
@@ -11,12 +9,13 @@ import {
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/nodeRename.helpers';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 
+import { useNodeToolNames } from './useNodeToolNames.hooks';
+
 // `isLocked` blocks renaming nodes whose shown name isn't their YAML id (legacy inline decisions)
 export const useNodeRename = ({ name, type, onRenamed, isLocked = false }) => {
   const { yamlJsonObject, setYamlJsonObject, setFlowNodes, setFlowEdges, isRunningPipeline, disabled } =
     useContext(FlowEditorContext);
-  const { values: { version_details: { tools = [] } = {} } = {} } = useFormikContext();
-  const toolNames = useMemo(() => tools?.map(tool => tool.toolkit_name || tool.name) || [], [tools]);
+  const toolNames = useNodeToolNames();
 
   const canRename =
     type !== FlowEditorConstants.PipelineNodeTypes.Condition && !isLocked && !isRunningPipeline && !disabled;

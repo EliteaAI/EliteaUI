@@ -9,7 +9,6 @@ import FormIcon from '@/assets/form-icon.svg?react';
 
 const { NODE_CONFIG_VIEWS } = NodePanelConstants;
 
-// The YAML view of a single node is delivered separately (#7158), so it stays disabled here
 const NodeConfigViewToggle = memo(props => {
   const { value = NODE_CONFIG_VIEWS.flow, onChange } = props;
 
@@ -24,12 +23,8 @@ const NodeConfigViewToggle = memo(props => {
       {
         value: NODE_CONFIG_VIEWS.yaml,
         icon: <CodeIcon fill="currentColor" />,
-        tooltip: 'YAML view is coming soon',
-        buttonProps: {
-          disabled: true,
-          'data-testid': 'pipeline-node-panel-view-yaml',
-          'aria-label': 'YAML view',
-        },
+        tooltip: 'YAML view',
+        buttonProps: { 'data-testid': 'pipeline-node-panel-view-yaml', 'aria-label': 'YAML view' },
       },
     ],
     [],
