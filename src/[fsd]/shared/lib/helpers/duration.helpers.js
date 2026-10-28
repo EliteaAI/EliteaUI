@@ -1,7 +1,6 @@
 import { ToolActionStatus } from '@/common/constants';
 
-// Compact elapsed-time label: "850ms", "2.4s", "1m 05s", "1h 02m". Missing data renders as an
-// em-dash so tables keep their column alignment.
+// Compact elapsed-time label: "850ms", "2.4s", "1m 05s", "1h 02m"; "-" when unknown.
 export const formatDurationMs = ms => {
   if (ms == null || Number.isNaN(ms)) return '-';
   if (Math.round(ms) < 1000) return `${Math.round(ms)}ms`;
@@ -16,15 +15,15 @@ export const formatDurationMs = ms => {
   return `${minutes}m ${String(seconds).padStart(2, '0')}s`;
 };
 
+export const formatDurationTooltip = (ms, includesWait = false) =>
+  `Took ${(ms / 1000).toFixed(3)}s${includesWait ? ' (includes time waiting for approval)' : ''}`;
+
 const toMs = value => {
   if (value == null || value === '') return NaN;
   return typeof value === 'number' ? value : new Date(value).getTime();
 };
 
-// #7264 P1: wall-clock span of one chat action, from the backend-stamped startedAt/finishedAt only
-// (never the client-side created_at/ended_at fallbacks). A start that equals the finish is what the
-// backend and the synthetic-action path stamp when the start event was missed, so it is unknown,
-// not zero — return null and render nothing rather than a misleading "0ms".
+// Backend startedAt/finishedAt only; start === finish means the start was missed, so unknown.
 export const getActionDurationMs = action => {
   const start = toMs(action?.startedAt);
   const finish = toMs(action?.finishedAt);
@@ -32,8 +31,12 @@ export const getActionDurationMs = action => {
   return finish - start;
 };
 
-// #7264 P1: span of a sub-agent invocation = earliest real start → latest real finish across its
-// actions (the parent's wrapper call and every folded resume round included).
+// A chip's final duration: none while running, or while a deferred wrapper waits for approval
+// (it ends with status complete and a finish stamp mid-pause).
+export const getSettledActionDurationMs = action =>
+  action?.status === ToolActionStatus.processing || action?.hitlDeferred ? null : getActionDurationMs(action);
+
+// Earliest real start to latest real finish across the block's actions.
 export const getBlockDurationMs = actions => {
   let minStart = Infinity;
   let maxFinish = -Infinity;
@@ -45,8 +48,7 @@ export const getBlockDurationMs = actions => {
   return maxFinish > minStart ? maxFinish - minStart : null;
 };
 
-// #7264 P1: a HITL-paused action's wall-clock span covers the time the run sat waiting for the user.
-// approvalWaited is sticky: the live deferred flag is cleared on resume, and history drops it.
+// approvalWaited is sticky: the live deferred flag is cleared on resume and history drops it.
 export const includesApprovalWait = action =>
   action?.status === ToolActionStatus.actionRequired ||
   !!action?.approvalWaited ||

@@ -36,10 +36,9 @@ const SubAgentAccordion = memo(props => {
   const onChange = useCallback((_, value) => setExpanded(value), []);
 
   const shimmer = running && !paused;
-  // #7264 P1: the invocation's wall-clock span, shown once it has settled.
   const showDuration = !running && durationMs != null;
   const durationTooltip = showDuration
-    ? `Took ${(durationMs / 1000).toFixed(3)}s${includesApprovalWait ? ' (includes time waiting for approval)' : ''}`
+    ? DurationHelpers.formatDurationTooltip(durationMs, includesApprovalWait)
     : '';
 
   return (

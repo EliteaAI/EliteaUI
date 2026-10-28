@@ -218,7 +218,6 @@ describe('input guardrail history conversion (#6886)', () => {
   });
 });
 
-// #7264 P1: chip durations read only the trace-row stamps, never the message-time fallbacks.
 describe('history action duration stamps', () => {
   const group = {
     id: 5,

@@ -137,7 +137,6 @@ describe('the editor chat of a two-level development run (#7227)', () => {
     expect(screen.getAllByText(codeLess).length).toBeGreaterThan(0);
   });
 
-  // #7264 P1: history passes no live signals; a settled accordion must still show its span.
   it('shows the invocation duration on reloaded sub-agent headers', () => {
     const { toolActions } = answer();
     renderTree({ actions: toolActions, originalActions: toolActions });

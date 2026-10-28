@@ -293,7 +293,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
         created_at: timestamp_start || timestamp_finish || convertTime(created_at),
         ended_at: timestamp_finish || convertTime(created_at),
         timestamp: timestamp_finish || convertTime(created_at),
-        // #7264 P1: trace-row stamps only; the message-time fallbacks above are not durations.
+        // Trace-row stamps only, for durations.
         startedAt: timestamp_start,
         finishedAt: timestamp_finish,
         content: text,
@@ -354,7 +354,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
         timestamp: step.timestamp_finish || convertTime(created_at),
         startedAt: step.timestamp_start,
         finishedAt: step.timestamp_finish,
-        // #7264 P1: tooltip-only marker; hitl_deferred itself must not be restored (it drives the shimmer).
+        // Tooltip-only; hitl_deferred itself is not restored (it drives the shimmer).
         approvalWaited: !!(step.metadata?.hitl_deferred || step.tool_meta?.metadata?.hitl_deferred),
         content: step.content || '',
         type: TOOL_ACTION_TYPES.Tool,

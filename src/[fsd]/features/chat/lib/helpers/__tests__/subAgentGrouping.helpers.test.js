@@ -245,7 +245,6 @@ describe('partitionActionsIntoBlocks — ordering', () => {
     expect(subs[0].actions).toHaveLength(3);
   });
 
-  // #7264 P1: the duration tooltip still mentions the approval wait once the resume clears the pause.
   it('keeps wasPaused after the resume round un-pauses the block', () => {
     const [paused] = subBlocks(run([wrap('p1', 'error'), wrap('p2', 'complete')]));
     expect(paused).toMatchObject({ pausedForResume: false, wasPaused: true });

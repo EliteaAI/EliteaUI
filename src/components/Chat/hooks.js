@@ -951,7 +951,7 @@ export const useChatSocket = ({
               toolOutputs: message.response_metadata?.tool_outputs,
               toolMeta: { ...toolMeta, ...hierarchy },
               created_at: message.response_metadata?.timestamp_start || message.created_at,
-              // #7264 P1: backend-only stamps for the chip duration (no client-clock fallback).
+              // Backend stamp only; no client-clock fallback.
               startedAt: message.response_metadata?.timestamp_start,
               type:
                 socketMessageType === SocketMessageType.AgentLlmStart
@@ -1099,7 +1099,7 @@ export const useChatSocket = ({
             const hitlDeferred = Boolean(metadata?.hitl_deferred);
             t.hitlDeferred = hitlDeferred;
             t.toolMeta.hitl_deferred = hitlDeferred;
-            // #7264 P1: remember the pause for the duration tooltip after the resume clears the flag.
+            // Sticky, for the duration tooltip after resume clears the flag.
             t.approvalWaited = !!t.approvalWaited || hitlDeferred;
 
             Object.assign(t, {

@@ -91,8 +91,7 @@ const SubAgentThinkBlock = memo(props => {
       agentType={subEntry?.agentType}
       running={running}
       paused={paused}
-      // #7264 P1: only a settled invocation; paused or waiting on a nested child is not final.
-      // History passes no live signals, so there a block that is neither running nor paused is settled.
+      // History has no live signals: there, not running and not paused means settled.
       durationMs={done || (!streaming && !running && !paused) ? subEntry?.durationMs : null}
       includesApprovalWait={!!subEntry?.includesApprovalWait}
     >
@@ -636,8 +635,6 @@ const ApplicationThinkView = memo(props => {
           // dropping the breadcrumb even though later actions carry the chain.
           agentPath: selectRichestAgentPath(block.actions.map(deriveSubAgentPath)),
           groups: groupActions(block.actions).groups,
-          // #7264 P1: earliest real start → latest real finish over the wrapper and every folded
-          // resume round; a block that ever paused for HITL counts the approval wait too.
           durationMs: DurationHelpers.getBlockDurationMs(block.actions),
           includesApprovalWait: !!block.wasPaused || block.actions.some(DurationHelpers.includesApprovalWait),
         };

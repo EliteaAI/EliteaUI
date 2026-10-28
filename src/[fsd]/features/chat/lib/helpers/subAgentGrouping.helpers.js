@@ -113,7 +113,7 @@ export const partitionActionsIntoBlocks = (
     // (3) update the block's resume-pause state from the wrapper's latest state.
     if (phase === 'paused') {
       block.pausedForResume = true;
-      block.wasPaused = true; // #7264 P1: sticky, for the duration's approval-wait note
+      block.wasPaused = true; // sticky, for the duration tooltip
     } else if (phase === 'active') block.pausedForResume = false;
   });
 

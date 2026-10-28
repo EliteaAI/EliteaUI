@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   formatDurationMs,
+  formatDurationTooltip,
   getActionDurationMs,
   getBlockDurationMs,
+  getSettledActionDurationMs,
   includesApprovalWait,
 } from '../duration.helpers';
 
@@ -104,5 +106,36 @@ describe('includesApprovalWait', () => {
     expect(includesApprovalWait({ status: 'complete', approvalWaited: true })).toBe(true);
     expect(includesApprovalWait({ status: 'complete' })).toBe(false);
     expect(includesApprovalWait(undefined)).toBe(false);
+  });
+});
+
+describe('getSettledActionDurationMs', () => {
+  const stamps = { startedAt: 1000, finishedAt: 3500 };
+
+  it('measures a finished action', () => {
+    expect(getSettledActionDurationMs({ ...stamps, status: 'complete' })).toBe(2500);
+  });
+
+  it('withholds a running action and a deferred wrapper still waiting for approval', () => {
+    expect(getSettledActionDurationMs({ ...stamps, status: 'processing' })).toBe(null);
+    expect(getSettledActionDurationMs({ ...stamps, status: 'complete', hitlDeferred: true })).toBe(null);
+  });
+
+  it('measures the wrapper once the resume clears the deferred flag', () => {
+    expect(
+      getSettledActionDurationMs({
+        ...stamps,
+        status: 'complete',
+        hitlDeferred: false,
+        approvalWaited: true,
+      }),
+    ).toBe(2500);
+  });
+});
+
+describe('formatDurationTooltip', () => {
+  it('shows milliseconds precision and the approval-wait note', () => {
+    expect(formatDurationTooltip(2350)).toBe('Took 2.350s');
+    expect(formatDurationTooltip(2350, true)).toBe('Took 2.350s (includes time waiting for approval)');
   });
 });

@@ -154,18 +154,12 @@ const ActionView = memo(props => {
     [action.status, action?.toolMeta?.server_url],
   );
 
-  // #7264 P1: real backend-stamped duration only; null (render nothing) while running or when the
-  // stamps are missing/fake. Not memoized: socket handlers mutate the action in place.
-  const durationMs =
-    showProgress || action.status === ToolActionStatus.processing
-      ? null
-      : DurationHelpers.getActionDurationMs(action);
+  // Not memoized: socket handlers mutate the action in place.
+  const durationMs = showProgress ? null : DurationHelpers.getSettledActionDurationMs(action);
   const durationTooltip =
     durationMs == null
       ? ''
-      : `Took ${(durationMs / 1000).toFixed(3)}s${
-          DurationHelpers.includesApprovalWait(action) ? ' (includes time waiting for approval)' : ''
-        }`;
+      : DurationHelpers.formatDurationTooltip(durationMs, DurationHelpers.includesApprovalWait(action));
 
   // Check if this is a named LLM action (pipeline node like Start, Chat) vs generic "Thinking step"
   const isNamedLlmAction = useMemo(

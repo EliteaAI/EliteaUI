@@ -23,7 +23,6 @@ const renderAccordion = props =>
     </ThemeProvider>,
   );
 
-// #7264 P1
 describe('SubAgentAccordion duration', () => {
   afterEach(() => cleanup());
 
