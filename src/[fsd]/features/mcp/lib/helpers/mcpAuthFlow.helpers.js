@@ -291,6 +291,13 @@ export const getValidAccessToken = async options => {
   return accessToken;
 };
 
+// OIDC: re-consent so tokens carry current permissions. Entra: consent shows non-admins the admin screen,
+// so offer the account picker instead (otherwise the browser's Microsoft session is reused silently)
+export const getAuthorizationPrompt = (authorizationEndpoint, isOIDC) => {
+  if (isMicrosoftEntraEndpoint(authorizationEndpoint)) return 'select_account';
+  return isOIDC ? 'consent' : undefined;
+};
+
 const buildAuthorizationUrl = options => {
   const {
     authorizationEndpoint,
@@ -472,16 +479,7 @@ export const startMcpAuthFlow = async options => {
       usePKCE,
       scope: normalizedScope,
       isOIDC,
-      // Force re-consent on OIDC servers so the token reflects the app's current permissions.
-      // Without this, the auth server silently reuses the cached consent grant
-      // and issues a token with old scopes even after app permissions are updated.
-      // Only set for OIDC servers — non-OIDC OAuth servers (GitHub, GitLab, etc.)
-      // don't define the prompt parameter and may reject it.
-      // Exception: skip on Microsoft Entra (SharePoint, MS Graph, etc.) because
-      // prompt=consent triggers the admin-approval screen for non-admin users
-      // even when tenant-wide admin consent already exists. Entra natively
-      // re-prompts on scope drift, so forced re-consent is redundant there.
-      prompt: isOIDC && !isMicrosoftEntraEndpoint(authorizationEndpoint) ? 'consent' : undefined,
+      prompt: getAuthorizationPrompt(authorizationEndpoint, isOIDC),
       resource,
     };
     // Build authorization URL
