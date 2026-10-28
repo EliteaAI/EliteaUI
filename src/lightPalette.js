@@ -697,6 +697,7 @@ const lightPalette = {
         status: { running: magentaDefault, error: dangerRed, needsConfiguration: dangerRed },
         badge: { entrypoint: { background: hoverBlue, text: white } },
       },
+      minimap: { node: { default: light20, selected: magentaDefault } },
       panel: {
         background: white,
         border: light30,

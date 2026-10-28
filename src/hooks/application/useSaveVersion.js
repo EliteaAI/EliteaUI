@@ -28,7 +28,7 @@ import { actions as appActions } from '@/slices/applications';
 
 import useSaveChangedTools from './useSaveChangedTools';
 
-const { LAYOUT_VERSION, ORIENTATION } = FlowEditorConstants;
+const { LAYOUT_VERSION } = FlowEditorConstants;
 
 const useSaveVersion = ({ isAgent = false } = {}) => {
   const dispatch = useDispatch();
@@ -57,7 +57,7 @@ const useSaveVersion = ({ isAgent = false } = {}) => {
   const {
     values: { version_details = { tools: [] }, name, description, owner_id, webhook_secret },
   } = useFormikContext();
-  const { isFromPipeline: checkedFromPipelineViaPath, yamlCode } = useSavePipeline();
+  const { isFromPipeline: checkedFromPipelineViaPath, yamlCode, orientation } = useSavePipeline();
   const isFromPipeline = !isAgent && checkedFromPipelineViaPath;
   const { id: currentUserId } = useSelector(state => state.user);
   const { captureSaveTarget, isSaveTargetCurrent } = useStaleSaveGuard(values?.id);
@@ -84,9 +84,7 @@ const useSaveVersion = ({ isAgent = false } = {}) => {
     } else if ((await onSaveTools()) === false) {
       return false; // Stop if toolkit save failed
     }
-    const { nodes, edges } = isFromPipeline
-      ? calculateNodesAndEdges(yamlCode, ORIENTATION.vertical, flowNodes)
-      : {};
+    const { nodes, edges } = isFromPipeline ? calculateNodesAndEdges(yamlCode, orientation, flowNodes) : {};
 
     // Clean LLM settings based on model capabilities
     const llmSettings = version_details.llm_settings;
@@ -124,7 +122,7 @@ const useSaveVersion = ({ isAgent = false } = {}) => {
           ? {
               nodes,
               edges,
-              orientation: ORIENTATION.vertical,
+              orientation,
               layout_version: LAYOUT_VERSION,
             }
           : undefined,
@@ -164,7 +162,7 @@ const useSaveVersion = ({ isAgent = false } = {}) => {
         pipeline_settings: {
           nodes,
           edges,
-          orientation: ORIENTATION.vertical,
+          orientation,
           layout_version: LAYOUT_VERSION,
         },
       }),
@@ -218,6 +216,7 @@ const useSaveVersion = ({ isAgent = false } = {}) => {
     initialValues?.version_details?.tools,
     isFromPipeline,
     yamlCode,
+    orientation,
     flowNodes,
     version_details,
     saveFn,

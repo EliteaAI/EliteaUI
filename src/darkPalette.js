@@ -731,6 +731,7 @@ const darkPalette = {
         status: { running: cyanPressed, error: dangerRed, needsConfiguration: dangerRed },
         badge: { entrypoint: { background: hoverBlue, text: white } },
       },
+      minimap: { node: { default: gray20, selected: cyanPressed } },
       panel: {
         background: gray50,
         border: gray30,

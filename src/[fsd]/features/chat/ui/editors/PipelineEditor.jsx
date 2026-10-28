@@ -282,7 +282,8 @@ const PipelineEditor = memo(
         // Skipping this when wasEverVisibleRef is false avoids storing an empty
         // snapshot on initial mount (Canvas renders all editors at once, so inactive
         // tabs see isVisible=false before they have ever loaded any data).
-        const { yamlCode, yamlJsonObject, layout_version, nodes, edges } = latestPipelineStateRef.current;
+        const { yamlCode, yamlJsonObject, layout_version, orientation, nodes, edges } =
+          latestPipelineStateRef.current;
         // Shallow-copy nodes/edges — ReactFlow node data may contain non-serializable
         // values (functions, DOM refs); structuredClone would throw on those.
         savedPipelineStateRef.current = {
@@ -291,6 +292,7 @@ const PipelineEditor = memo(
           yamlJsonObject: structuredClone(yamlJsonObject),
           yamlCode,
           layout_version,
+          orientation,
           initState: structuredClone(ownInitStateRef.current),
           isDirty: isDirtyRef.current,
         };
@@ -474,16 +476,23 @@ const PipelineEditor = memo(
         return;
       }
 
-      const { nodes: parsedNodes, edges: parsedEdges } = ParsePipelineHelpers.parseYaml(parsedYamlJson);
-      // Use saved nodes with measured heights to prevent layout fallback to undersized defaults
+      const pipelineSettings =
+        versionDetails.version_details?.pipeline_settings || versionDetails.pipeline_settings;
+      const orientation = pipelineSettings?.orientation || FlowEditorConstants.ORIENTATION.vertical;
+      const { nodes: parsedNodes, edges: parsedEdges } = ParsePipelineHelpers.parseYaml(
+        parsedYamlJson,
+        orientation,
+      );
+      // Keep the saved layout, so a Save from here doesn't overwrite it; only unplaced nodes get arranged
       const savedNodes =
         versionDetails.version_details?.pipeline_settings?.nodes ||
         versionDetails.pipeline_settings?.nodes ||
         [];
-      const { nodes, edges } = LayoutHelpers.doLayout({
+      const { nodes, edges } = LayoutHelpers.mergeCanvasPositions({
         nodes: parsedNodes,
         edges: parsedEdges,
         flowNodes: savedNodes,
+        orientation,
       });
 
       // initThePipeline sets resetFlag, triggering FlowEditor to sync its local state
@@ -496,6 +505,7 @@ const PipelineEditor = memo(
         yamlJsonObject: parsedYamlJson,
         yamlCode: instructions,
         layout_version,
+        orientation,
       };
 
       // Keep our own baseline in sync so the snapshot always uses THIS pipeline's

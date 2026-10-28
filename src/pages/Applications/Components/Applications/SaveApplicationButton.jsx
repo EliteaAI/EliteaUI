@@ -3,7 +3,12 @@ import { useCallback, useMemo } from 'react';
 import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 
-import { useFormDirtyExcluding, useIsFrom, useIsFromPipelineDetail } from '@/[fsd]/shared/lib/hooks';
+import {
+  useFormDirtyExcluding,
+  useIsFrom,
+  useIsFromPipelineDetail,
+  useIsPipelineLayoutDirty,
+} from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useSaveVersion from '@/hooks/application/useSaveVersion';
@@ -13,6 +18,7 @@ import { selectActivePipeline } from '@/slices/pipeline';
 
 export default function SaveApplicationButton({ onSuccess, isAgent }) {
   const isYamlCodeDirty = useIsPipelineYamlCodeDirty();
+  const isLayoutDirty = useIsPipelineLayoutDirty();
   const { values } = useFormikContext();
   const isFromChat = useIsFrom(RouteDefinitions.Chat);
   const isFromPipeline = useIsFromPipelineDetail();
@@ -37,7 +43,7 @@ export default function SaveApplicationButton({ onSuccess, isAgent }) {
   }, [stateValidationErrors]);
 
   const isButtonDisabled = useMemo(() => {
-    const hasNoChanges = !isFormDirtyExcluding && !isYamlCodeDirty;
+    const hasNoChanges = !isFormDirtyExcluding && !isYamlCodeDirty && !isLayoutDirty;
 
     // In chat context (edit mode), skip field validation since version data comes without description
     if (isFromChat && !!values?.id) {
@@ -50,6 +56,7 @@ export default function SaveApplicationButton({ onSuccess, isAgent }) {
   }, [
     isFormDirtyExcluding,
     isYamlCodeDirty,
+    isLayoutDirty,
     values?.name,
     values?.description,
     values?.id,

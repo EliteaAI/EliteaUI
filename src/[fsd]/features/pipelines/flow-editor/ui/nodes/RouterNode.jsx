@@ -17,6 +17,10 @@ import { Chip } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useEdges } from '@xyflow/react';
 
+// Output handles sit either side of the centre of the output edge
+const ROUTES_HANDLE_OFFSET = 'calc(50% - 3.125rem)';
+const DEFAULT_OUTPUT_HANDLE_OFFSET = 'calc(50% + 3.125rem)';
+
 const RouterNode = memo(props => {
   const { id, data, selected, nodeType = FlowEditorConstants.PipelineNodeTypes.Router } = props;
 
@@ -125,7 +129,9 @@ const RouterNode = memo(props => {
                 isConnectable={!isRunningPipeline && !disabled}
                 isRunningPipeline={isRunningPipeline}
                 isPerforming={data?.isPerforming}
-                style={styles.routesHandle}
+                offset={ROUTES_HANDLE_OFFSET}
+                outputIndex={0}
+                outputCount={2}
               />
               <FlowEditorNodes.CustomHandle
                 type="source"
@@ -134,7 +140,9 @@ const RouterNode = memo(props => {
                 isConnectable={!isRunningPipeline && isDefaultConnectable && !disabled}
                 isRunningPipeline={isRunningPipeline}
                 isPerforming={data?.isPerforming}
-                style={styles.defaultOutputHandle}
+                offset={DEFAULT_OUTPUT_HANDLE_OFFSET}
+                outputIndex={1}
+                outputCount={2}
               />
             </>
           );
@@ -205,13 +213,6 @@ RouterNode.displayName = 'RouterNode';
 
 /** @type {MuiSx} */
 const routerNodeStyles = () => ({
-  // CustomHandle wraps react-flow's Handle, which only accepts `style`.
-  routesHandle: {
-    left: 'calc(50% - 3.125rem)',
-  },
-  defaultOutputHandle: {
-    left: 'calc(50% + 3.125rem)',
-  },
   defaultOutputSelect: {
     marginBottom: '0rem',
   },

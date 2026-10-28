@@ -24,11 +24,11 @@ const selectIsMiniCard = state => NodeCardHelpers.isMiniCardZoom(state.transform
 const NodeCard = memo(props => {
   const { name, isEntrypoint, children, selected, handles, isPerforming, type, id, requiredInputs } = props;
   const theme = useTheme();
-  const { isRunningPipeline, expandAll, yamlJsonObject, reportNodeIssues } = useContext(FlowEditorContext);
+  const { isRunningPipeline, yamlJsonObject, reportNodeIssues } = useContext(FlowEditorContext);
   const panelContext = useContext(NodeConfigPanelContext);
   const isPanel = Boolean(panelContext);
   const isMiniCard = useStore(selectIsMiniCard);
-  const isExpanded = expandAll && !isMiniCard;
+  const isExpanded = !isMiniCard;
 
   const yamlNode = useMemo(
     () => yamlJsonObject?.nodes?.find(node => node.id === id),

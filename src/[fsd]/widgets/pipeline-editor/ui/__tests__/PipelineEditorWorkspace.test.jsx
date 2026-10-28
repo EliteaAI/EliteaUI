@@ -11,7 +11,9 @@ import '@testing-library/jest-dom/vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 const fitView = vi.fn();
+const panBy = vi.fn();
 const stopRun = vi.fn();
+let isSmallWindow = false;
 
 vi.mock('@/[fsd]/features/interactive-tours/lib/constants', () => ({
   PIPELINE_TOUR_TARGET_IDS: { workspace: 'workspace' },
@@ -22,21 +24,27 @@ vi.mock('@/[fsd]/features/pipelines/lib/hooks', () => ({
 }));
 
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
-  useIsSmallWindow: () => ({ isSmallWindow: false }),
+  useIsSmallWindow: () => ({ isSmallWindow }),
 }));
 
 vi.mock('@/pages/Pipelines/Components/GeneralFormPanel', () => ({
-  default: ({ isCreateMode }) => (
+  default: ({ isCreateMode, collapsed, onCollapsedChange }) => (
     <div
       data-testid="general-form"
       data-create={String(isCreateMode)}
-    />
+      data-collapsed={String(collapsed)}
+    >
+      <button
+        data-testid="toggle-form"
+        onClick={() => onCollapsedChange(!collapsed)}
+      />
+    </div>
   ),
 }));
 
 vi.mock('@/pages/Pipelines/Components/EditorPanel', () => {
   const EditorPanelMock = forwardRef((props, ref) => {
-    useImperativeHandle(ref, () => ({ fitView }));
+    useImperativeHandle(ref, () => ({ fitView, panBy }));
     return (
       <div
         data-testid="editor-panel"
@@ -50,6 +58,10 @@ vi.mock('@/pages/Pipelines/Components/EditorPanel', () => {
         <button
           data-testid="stop-run"
           onClick={props.stopRun}
+        />
+        <button
+          data-testid="node-interaction"
+          onClick={props.onCanvasNodeInteraction}
         />
       </div>
     );
@@ -94,6 +106,7 @@ describe('PipelineEditorWorkspace', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
+    isSmallWindow = false;
   });
   afterEach(() => {
     cleanup();
@@ -154,5 +167,60 @@ describe('PipelineEditorWorkspace', () => {
 
     fireEvent.click(screen.getByTestId('stop-run'));
     expect(stopRun).toHaveBeenCalledTimes(1);
+  });
+
+  describe('settings column auto-collapse', () => {
+    // The canvas row starts at 352px and at 60px once the column collapses
+    beforeEach(() => {
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(() => {
+        const isCollapsed =
+          document.querySelector('[data-testid="general-form"]')?.dataset.collapsed === 'true';
+        return { left: isCollapsed ? 60 : 352, top: 0, width: 0, height: 0, right: 0, bottom: 0 };
+      });
+    });
+    afterEach(() => vi.restoreAllMocks());
+
+    it('collapses on a node interaction and keeps the nodes in place', () => {
+      renderWorkspace({ applicationId: 3 });
+      expect(screen.getByTestId('general-form')).toHaveAttribute('data-collapsed', 'false');
+
+      fireEvent.click(screen.getByTestId('node-interaction'));
+
+      expect(screen.getByTestId('general-form')).toHaveAttribute('data-collapsed', 'true');
+      expect(panBy).toHaveBeenCalledTimes(1);
+      expect(panBy).toHaveBeenCalledWith(292, 0);
+    });
+
+    it('does nothing more while already collapsed', () => {
+      renderWorkspace({ applicationId: 3 });
+
+      fireEvent.click(screen.getByTestId('node-interaction'));
+      fireEvent.click(screen.getByTestId('node-interaction'));
+
+      expect(panBy).toHaveBeenCalledTimes(1);
+    });
+
+    it('stays expanded after a manual expand until the next node interaction', () => {
+      renderWorkspace({ applicationId: 3 });
+      fireEvent.click(screen.getByTestId('node-interaction'));
+
+      fireEvent.click(screen.getByTestId('toggle-form'));
+      expect(screen.getByTestId('general-form')).toHaveAttribute('data-collapsed', 'false');
+      expect(panBy).toHaveBeenCalledTimes(1);
+
+      fireEvent.click(screen.getByTestId('node-interaction'));
+      expect(screen.getByTestId('general-form')).toHaveAttribute('data-collapsed', 'true');
+      expect(panBy).toHaveBeenCalledTimes(2);
+    });
+
+    it('never auto-collapses on a small window', () => {
+      isSmallWindow = true;
+      renderWorkspace({ applicationId: 3 });
+
+      fireEvent.click(screen.getByTestId('node-interaction'));
+
+      expect(screen.getByTestId('general-form')).toHaveAttribute('data-collapsed', 'false');
+      expect(panBy).not.toHaveBeenCalled();
+    });
   });
 });
