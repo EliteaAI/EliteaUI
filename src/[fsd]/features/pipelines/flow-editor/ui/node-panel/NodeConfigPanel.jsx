@@ -14,6 +14,7 @@ import NodeConfigPanelHeader from './NodeConfigPanelHeader';
 import NodeConfigViewToggle from './NodeConfigViewToggle';
 import NodeDeprecationBanner from './NodeDeprecationBanner';
 import NodeNameField from './NodeNameField';
+import NodeYamlView from './NodeYamlView';
 
 /**
  * Right-side configuration of the selected node. It renders the node's own component in panel mode,
@@ -22,8 +23,9 @@ import NodeNameField from './NodeNameField';
 const NodeConfigPanel = memo(props => {
   const { flowNode, NodeComponent, onClose, onRenamed } = props;
   const flowEditorContext = useContext(FlowEditorContext);
-  const { yamlJsonObject, isRunningPipeline, disabled } = flowEditorContext;
+  const { yamlJsonObject, isRunningPipeline, disabled, requestNodeLeave } = flowEditorContext;
   const [view, setView] = useState(NodePanelConstants.NODE_CONFIG_VIEWS.flow);
+  const isYamlView = view === NodePanelConstants.NODE_CONFIG_VIEWS.yaml;
 
   const { id, type, data } = flowNode;
   const isEntrypoint = yamlJsonObject?.entry_point === id;
@@ -42,6 +44,16 @@ const NodeConfigPanel = memo(props => {
     type === FlowEditorConstants.PipelineNodeTypes.Condition;
 
   const handleRenamed = useCallback(newId => onRenamed?.(id, newId), [id, onRenamed]);
+
+  // Leaving the YAML view with a draft that can't be applied asks to fix or discard it first
+  const onViewChange = useCallback(
+    newView => {
+      const switchView = () => setView(newView);
+      if (isYamlView && requestNodeLeave) requestNodeLeave(switchView);
+      else switchView();
+    },
+    [isYamlView, requestNodeLeave],
+  );
 
   // Deprecated nodes are edited only in the YAML view: their form fields render disabled
   const formContextValue = useMemo(
@@ -68,7 +80,7 @@ const NodeConfigPanel = memo(props => {
         <Box>
           <NodeConfigViewToggle
             value={view}
-            onChange={setView}
+            onChange={onViewChange}
           />
         </Box>
         <NodeNameField
@@ -78,19 +90,27 @@ const NodeConfigPanel = memo(props => {
           isLocked={isLegacyDecision || isDeprecated}
         />
         {isDeprecated && <NodeDeprecationBanner type={type} />}
-        <FlowEditorContext.Provider value={formContextValue}>
-          <NodeConfigPanelContext.Provider value={panelContextValue}>
-            {NodeComponent && (
-              <NodeComponent
-                key={id}
-                id={id}
-                type={type}
-                data={data}
-                selected={false}
-              />
-            )}
-          </NodeConfigPanelContext.Provider>
-        </FlowEditorContext.Provider>
+        {isYamlView ? (
+          <NodeYamlView
+            flowNodeId={id}
+            onRenamed={handleRenamed}
+            isReadOnly={isReadOnly}
+          />
+        ) : (
+          <FlowEditorContext.Provider value={formContextValue}>
+            <NodeConfigPanelContext.Provider value={panelContextValue}>
+              {NodeComponent && (
+                <NodeComponent
+                  key={id}
+                  id={id}
+                  type={type}
+                  data={data}
+                  selected={false}
+                />
+              )}
+            </NodeConfigPanelContext.Provider>
+          </FlowEditorContext.Provider>
+        )}
       </Box>
       {!isReadOnly && (
         <NodeConfigFooter

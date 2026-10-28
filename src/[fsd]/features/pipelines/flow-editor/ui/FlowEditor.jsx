@@ -139,6 +139,27 @@ const FlowEditor = memo(
     const [nodeIssuesById, setNodeIssuesById] = useState({});
     const isDraggingNodeRef = useRef(false);
 
+    // The node YAML view registers a guard, so an invalid draft isn't left behind silently
+    const nodeLeaveGuardRef = useRef(null);
+    const pendingNodeLeaveRef = useRef(null);
+    const [isNodeLeavePromptOpen, setIsNodeLeavePromptOpen] = useState(false);
+
+    const registerNodeLeaveGuard = useCallback(guard => {
+      nodeLeaveGuardRef.current = guard;
+      return () => {
+        if (nodeLeaveGuardRef.current === guard) nodeLeaveGuardRef.current = null;
+      };
+    }, []);
+
+    const requestNodeLeave = useCallback(action => {
+      if (nodeLeaveGuardRef.current?.shouldBlock()) {
+        pendingNodeLeaveRef.current = action;
+        setIsNodeLeavePromptOpen(true);
+        return;
+      }
+      action();
+    }, []);
+
     const { setNodes, setEdges } = useSaveNodesAndEdges();
 
     const {
@@ -352,11 +373,11 @@ const FlowEditor = memo(
         trackEvent(GA_EVENT_NAMES.PIPELINE_NODE_CREATED, {
           [GA_EVENT_PARAMS.NODE_TYPE]: type,
         });
-        setSelectedNodeId(newNode.id);
+        requestNodeLeave(() => setSelectedNodeId(newNode.id));
 
         return newFlowNode;
       },
-      [flowNodes, setFlowNodes, setYamlJsonObject, trackEvent],
+      [flowNodes, requestNodeLeave, setFlowNodes, setYamlJsonObject, trackEvent],
     );
 
     const onAddNode = useCallback(
@@ -480,16 +501,17 @@ const FlowEditor = memo(
         hasRunsInProgress: () =>
           pipelineRunNodes.some(node => node.data?.status === PipelineStatus.InProgress),
         // Selects a node from outside the canvas (the Tools section "Used by") and opens its panel
-        selectNode: nodeId => {
-          setFlowNodes(prevNodes =>
-            prevNodes.map(node =>
-              Boolean(node.selected) === (node.id === nodeId)
-                ? node
-                : { ...node, selected: node.id === nodeId },
-            ),
-          );
-          setSelectedNodeId(nodeId);
-        },
+        selectNode: nodeId =>
+          requestNodeLeave(() => {
+            setFlowNodes(prevNodes =>
+              prevNodes.map(node =>
+                Boolean(node.selected) === (node.id === nodeId)
+                  ? node
+                  : { ...node, selected: node.id === nodeId },
+              ),
+            );
+            setSelectedNodeId(nodeId);
+          }),
       }),
       [
         fitView,
@@ -503,6 +525,7 @@ const FlowEditor = memo(
         expandAll,
         onStopRun,
         pipelineRunNodes,
+        requestNodeLeave,
       ],
     );
 
@@ -577,14 +600,49 @@ const FlowEditor = memo(
       );
     }, [setFlowNodes]);
 
-    const onNodeClick = useCallback((_event, node) => {
-      if (isDraggingNodeRef.current) return;
-      if (NON_CONFIGURABLE_NODE_TYPES.includes(node.type)) {
-        setSelectedNodeId(null);
-        return;
-      }
-      setSelectedNodeId(node.id);
+    const onFixNodeYaml = useCallback(() => {
+      pendingNodeLeaveRef.current = null;
+      setIsNodeLeavePromptOpen(false);
+      // A blocked click on another node already selected it on the canvas
+      setFlowNodes(prevNodes =>
+        prevNodes.map(node =>
+          Boolean(node.selected) === (node.id === selectedNodeId)
+            ? node
+            : { ...node, selected: node.id === selectedNodeId },
+        ),
+      );
+    }, [selectedNodeId, setFlowNodes]);
+
+    const onDiscardNodeYaml = useCallback(() => {
+      nodeLeaveGuardRef.current?.discard();
+      const action = pendingNodeLeaveRef.current;
+      pendingNodeLeaveRef.current = null;
+      setIsNodeLeavePromptOpen(false);
+      action?.();
     }, []);
+
+    const onCloseNodePanel = useCallback(
+      () => requestNodeLeave(closeNodePanel),
+      [closeNodePanel, requestNodeLeave],
+    );
+
+    const resyncFlowFromYaml = useCallback(
+      yaml => calculateLayoutNodes(yaml, false, false, expandAll),
+      [calculateLayoutNodes, expandAll],
+    );
+
+    const onNodeClick = useCallback(
+      (_event, node) => {
+        if (isDraggingNodeRef.current) return;
+        if (NON_CONFIGURABLE_NODE_TYPES.includes(node.type)) {
+          requestNodeLeave(() => setSelectedNodeId(null));
+          return;
+        }
+        if (node.id === selectedNodeId) return;
+        requestNodeLeave(() => setSelectedNodeId(node.id));
+      },
+      [requestNodeLeave, selectedNodeId],
+    );
 
     const onNodeDragStart = useCallback(() => {
       isDraggingNodeRef.current = true;
@@ -598,8 +656,8 @@ const FlowEditor = memo(
     }, []);
 
     const onPaneClick = useCallback(() => {
-      setSelectedNodeId(null);
-    }, []);
+      requestNodeLeave(() => setSelectedNodeId(null));
+    }, [requestNodeLeave]);
 
     const onNodeRenamed = useCallback((previousId, newId) => {
       setSelectedNodeId(prevId => (prevId === previousId ? newId : prevId));
@@ -657,11 +715,11 @@ const FlowEditor = memo(
       const onKeyDown = event => {
         if (event.key !== 'Escape' || event.defaultPrevented || isEscapeHandledElsewhere(event.target))
           return;
-        closeNodePanel();
+        onCloseNodePanel();
       };
       document.addEventListener('keydown', onKeyDown);
       return () => document.removeEventListener('keydown', onKeyDown);
-    }, [closeNodePanel, isVisible, selectedNodeId]);
+    }, [onCloseNodePanel, isVisible, selectedNodeId]);
 
     const onReLayout = specifiedExpandAll => {
       calculateLayoutNodes(yamlJsonObject, true, true, specifiedExpandAll || expandAll);
@@ -766,6 +824,9 @@ const FlowEditor = memo(
           disabled={disabled}
           reportNodeIssues={reportNodeIssues}
           onConnectNodes={onConnect}
+          resyncFlowFromYaml={resyncFlowFromYaml}
+          registerNodeLeaveGuard={registerNodeLeaveGuard}
+          requestNodeLeave={requestNodeLeave}
         >
           <Box
             sx={styles.container(isViewportReady)}
@@ -903,7 +964,7 @@ const FlowEditor = memo(
                 <FlowEditorNodePanel.NodeConfigPanel
                   flowNode={panelFlowNode}
                   NodeComponent={nodeTypes[panelFlowNode.type]}
-                  onClose={closeNodePanel}
+                  onClose={onCloseNodePanel}
                   onRenamed={onNodeRenamed}
                 />
               )}
@@ -914,6 +975,11 @@ const FlowEditor = memo(
               onConfirm={onConfirmDelete}
               name={nodesToDelete[0]?.data?.label || nodesToDelete[0]?.id || ''}
               inlineExtraContent=" node? It can't be restored."
+            />
+            <FlowEditorNodePanel.NodeYamlLeaveModal
+              open={isNodeLeavePromptOpen}
+              onFix={onFixNodeYaml}
+              onDiscard={onDiscardNodeYaml}
             />
 
             {/* Connection dropdown for incomplete edges */}

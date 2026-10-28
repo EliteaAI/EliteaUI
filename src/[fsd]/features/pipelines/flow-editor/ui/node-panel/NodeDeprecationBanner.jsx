@@ -5,7 +5,7 @@ import { Box, Typography } from '@mui/material';
 import { DeprecatedConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { Banner, Text } from '@/[fsd]/shared/ui';
 
-const READ_ONLY_HINT = 'These fields are read-only. Edit this node in the Yaml tab.';
+const READ_ONLY_HINT = 'These fields are read-only. Edit this node in the YAML view.';
 
 const NodeDeprecationBanner = memo(props => {
   const { type } = props;
