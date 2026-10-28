@@ -19,6 +19,25 @@ const NOT_COMPARABLE_NOTE = {
   different_dataset: 'The runs used different datasets; only the cases they share are compared.',
 };
 
+// Reasons that withhold a metric's verdict while its figures stay shown.
+const WITHHELD_REASONS = new Set(['time_limit_changed', 'few_matched_cases']);
+
+const FEW_MATCHED_FALLBACK_NOTE =
+  'Too few cases match the reference to judge latency, so latency is not compared.';
+
+// few_matched_cases has no entry above, because its note needs the counts.
+const fewMatchedNote = coverage => {
+  if (typeof coverage.matched !== 'number' || !coverage.run_cases) return FEW_MATCHED_FALLBACK_NOTE;
+  const min = coverage.min_matched ?? {};
+  const rule = [
+    min.cases ? `at least ${plural(min.cases, 'case')}` : null,
+    min.share ? `${min.share === 0.5 ? 'half' : `${Math.round(min.share * 100)}%`} of the run` : null,
+  ]
+    .filter(Boolean)
+    .join(' and ');
+  return `Only ${coverage.matched} of ${plural(coverage.run_cases, 'case')} match the reference, too few to judge latency${rule ? ` (needs ${rule})` : ''}.`;
+};
+
 export const PERFORMANCE_VERDICT = {
   better: 'better',
   worse: 'worse',
@@ -65,6 +84,7 @@ const caseList = ids => (ids?.length ? ids.map(id => `#${id}`).join(', ') : null
  *   rows: Array<{ key: string, label: string, run: string, reference: string, change: string | null,
  *     verdict: string | null, verdictLabel: string | null, coverage: string | null }>,
  *   notes: string[],
+ *   coverageLabel: string | null,
  *   timeouts: { newly: string | null, noLonger: string | null } | null,
  *   isSlower: boolean,
  * } | null} null when the run has no reference to compare with
@@ -77,7 +97,7 @@ export const buildPerformanceDiff = compare => {
   const rows = METRIC_ROWS.map(({ key, label, format }) => {
     const metric = diff.metrics?.[key];
     if (!metric) return null;
-    const withheld = metric.not_comparable === 'time_limit_changed';
+    const withheld = WITHHELD_REASONS.has(metric.not_comparable);
     const coverage = metric.cases
       ? `${plural(metric.cases, 'case')}${metric.excluded ? `, ${metric.excluded} left out` : ''}`
       : null;
@@ -93,8 +113,10 @@ export const buildPerformanceDiff = compare => {
     };
   }).filter(Boolean);
 
-  const notes = (diff.not_comparable ?? []).map(reason => NOT_COMPARABLE_NOTE[reason]).filter(Boolean);
   const coverage = diff.coverage ?? {};
+  const notes = (diff.not_comparable ?? [])
+    .map(reason => (reason === 'few_matched_cases' ? fewMatchedNote(coverage) : NOT_COMPARABLE_NOTE[reason]))
+    .filter(Boolean);
   if (coverage.changed?.length)
     notes.push(
       `${plural(coverage.changed.length, 'case')} changed input since the reference and ${coverage.changed.length === 1 ? 'is' : 'are'} left out.`,
@@ -127,6 +149,10 @@ export const buildPerformanceDiff = compare => {
   return {
     referenceRunId: reference.id,
     referenceLabel: `Run #${reference.id} (${REFERENCE_SOURCE_LABEL[reference.source] ?? 'reference'})`,
+    coverageLabel:
+      typeof coverage.matched === 'number' && coverage.run_cases
+        ? `Compared on ${coverage.matched} of ${plural(coverage.run_cases, 'case')}`
+        : null,
     rows,
     notes,
     noise,

@@ -41,6 +41,15 @@ const RunPerformanceDiff = memo(props => {
             Slower than reference
           </Box>
         )}
+        {view.coverageLabel && (
+          <Typography
+            variant="bodySmall"
+            sx={styles.muted}
+            data-testid="evaluation-run-performance-coverage"
+          >
+            {view.coverageLabel}
+          </Typography>
+        )}
       </Box>
 
       <Table
