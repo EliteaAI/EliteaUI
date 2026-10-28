@@ -12,7 +12,7 @@ import ProjectSkillsSettings from '../ProjectSkillsSettings';
 
 const api = vi.hoisted(() => ({
   current: undefined,
-  platform: { available: true, project_default: false },
+  platform: { available: true },
   create: vi.fn(),
   update: vi.fn(),
   refresh: vi.fn(),
@@ -51,7 +51,7 @@ const projectSetting = () => screen.getByTestId('project-skills-project-setting'
 beforeEach(() => {
   vi.clearAllMocks();
   api.current = undefined;
-  api.platform = { available: true, project_default: false };
+  api.platform = { available: true };
   api.permitted = true;
   api.refresh.mockReturnValue(undefined);
   api.create.mockReturnValue({ unwrap: () => Promise.resolve() });
@@ -72,8 +72,8 @@ describe('project skills in chat setting', () => {
   it.each([
     [false, 'Use platform default (Disabled)'],
     [true, 'Use platform default (Enabled)'],
-  ])('names the platform default in the default option (project_default=%s)', (projectDefault, label) => {
-    api.platform = { available: true, project_default: projectDefault };
+  ])('names the platform switch in the default option (available=%s)', (available, label) => {
+    api.platform = { available };
     renderSettings();
     expect(choiceSelect()).toHaveTextContent(label);
   });
@@ -159,14 +159,13 @@ describe('project skills in chat setting', () => {
   });
 
   it('stays editable with a hint while platform administrators keep the feature off', async () => {
-    api.platform = { available: false, project_default: true };
+    api.platform = { available: false };
     api.current = { id: 7, elitea_title: 'project_skills', data: { enabled: true } };
     renderSettings();
     expect(projectSetting()).not.toBeDisabled();
     expect(screen.getByTestId('project-skills-platform-off-hint')).toHaveTextContent(
       'Turned off for the whole environment by platform administrators.',
     );
-    expect(screen.queryByTestId('project-skills-disabled-hint')).not.toBeInTheDocument();
     await userEvent.click(choiceSelect());
     await userEvent.click(screen.getByRole('option', { name: 'Disabled', exact: true }));
     await waitFor(() =>
@@ -182,22 +181,24 @@ describe('project skills in chat setting', () => {
     expect(projectSetting()).not.toBeDisabled();
     expect(choiceSelect().textContent).toBe('Use platform default');
     expect(screen.queryByTestId('project-skills-platform-off-hint')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('project-skills-disabled-hint')).not.toBeInTheDocument();
   });
 
   it.each([
-    ['the platform default is off and the project has no choice', undefined, false, true],
-    ['the project turned it off', { enabled: false }, true, true],
-    ['the platform default is on', undefined, true, false],
-    ['the project turned it on', { enabled: true }, false, false],
-  ])(
-    'shows the disabled hint only when it is off for this project: %s',
-    (_case, data, projectDefault, hinted) => {
-      api.platform = { available: true, project_default: projectDefault };
-      api.current = data ? { id: 7, elitea_title: 'project_skills', data } : undefined;
-      renderSettings();
-      expect(screen.queryByTestId('project-skills-disabled-hint') !== null).toBe(hinted);
-      expect(screen.queryByTestId('project-skills-platform-off-hint')).not.toBeInTheDocument();
-    },
-  );
+    ['no choice', undefined],
+    ['follows the platform', { enabled: null }],
+    ['turned it on', { enabled: true }],
+    ['turned it off', { enabled: false }],
+  ])('shows no hint while the platform switch is on and the project %s', (_case, data) => {
+    api.current = data ? { id: 7, elitea_title: 'project_skills', data } : undefined;
+    renderSettings();
+    expect(screen.queryByTestId('project-skills-platform-off-hint')).not.toBeInTheDocument();
+  });
+
+  it('keeps the platform-off hint when the project also chose Disabled', () => {
+    api.platform = { available: false };
+    api.current = { id: 7, elitea_title: 'project_skills', data: { enabled: false } };
+    renderSettings();
+    expect(screen.getAllByTestId('project-skills-platform-off-hint')).toHaveLength(1);
+    expect(projectSetting()).toHaveValue('false');
+  });
 });

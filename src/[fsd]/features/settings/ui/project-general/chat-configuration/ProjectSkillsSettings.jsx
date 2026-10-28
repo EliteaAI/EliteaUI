@@ -29,9 +29,8 @@ const ProjectSkillsSettings = memo(() => {
   const projectChoice = record?.data?.enabled ?? null;
   const value = projectChoice === null ? 'default' : String(projectChoice);
   const isAvailable = platformSettings?.available === true;
-  const isEffectivelyOn = isAvailable && (projectChoice ?? platformSettings?.project_default === true);
   const platformDefaultLabel = platformSettings
-    ? `Use platform default (${platformSettings.project_default ? 'Enabled' : 'Disabled'})`
+    ? `Use platform default (${isAvailable ? 'Enabled' : 'Disabled'})`
     : 'Use platform default';
 
   const saveChoice = useCallback(
@@ -71,15 +70,6 @@ const ProjectSkillsSettings = memo(() => {
             data-testid="project-skills-platform-off-hint"
           >
             Turned off for the whole environment by platform administrators.
-          </Typography>
-        )}
-        {isAvailable && !isEffectivelyOn && (
-          <Typography
-            variant="bodySmall"
-            color="text.secondary"
-            data-testid="project-skills-disabled-hint"
-          >
-            Currently disabled for this project.
           </Typography>
         )}
       </Box>
