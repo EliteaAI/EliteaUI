@@ -10,6 +10,7 @@ import CredentialForm from '../CredentialForm';
 
 const mocks = vi.hoisted(() => ({
   useCreateConfiguration: vi.fn(),
+  handleConfigAuthRequired: vi.fn(),
   isDirty: false,
   oauthOptions: null,
   browserLoggedIn: false,
@@ -52,7 +53,7 @@ vi.mock('@/[fsd]/features/mcp/lib/helpers', () => ({
 vi.mock('@/[fsd]/features/mcp/lib/hooks', () => ({
   useConfigOAuthModal: options => {
     mocks.oauthOptions = options;
-    return { handleConfigAuthRequired: vi.fn(), getModalProps: () => ({}) };
+    return { handleConfigAuthRequired: mocks.handleConfigAuthRequired, getModalProps: () => ({}) };
   },
   useMcpTokenChange: () => ({ isLoggedIn: mocks.browserLoggedIn }),
 }));
@@ -232,6 +233,47 @@ describe('CredentialForm stored Microsoft login', () => {
       'data-hint',
       'Not connected, ask a project admin to log in',
     );
+  });
+
+  // A member's Test connection on a team credential with no stored login used to open the Microsoft
+  // sign-in anyway; the login then stayed in their browser only, with no feedback.
+  it("a member's Test connection asks for an admin instead of opening the sign-in", () => {
+    const setApiError = vi.fn();
+    mocks.storedLogin = { ...mocks.storedLogin, canManageLogin: false, hasStoredLogin: false };
+    renderForm({ credentialDetails: TEAMS, setApiError });
+
+    const { onConfigAuthRequired } = mocks.useCreateConfiguration.mock.calls.at(-1)[0];
+    act(() => onConfigAuthRequired({ requires_authorization: true }, 'https://x', 'uuid-17:https://x'));
+
+    expect(mocks.handleConfigAuthRequired).not.toHaveBeenCalled();
+    expect(setApiError).toHaveBeenCalledWith('Not connected, ask a project admin to log in');
+  });
+
+  it('an admin still gets the sign-in from Test connection', () => {
+    renderForm({ credentialDetails: TEAMS });
+
+    const { onConfigAuthRequired } = mocks.useCreateConfiguration.mock.calls.at(-1)[0];
+    act(() => onConfigAuthRequired({ requires_authorization: true }, 'https://x', 'uuid-17:https://x'));
+
+    expect(mocks.handleConfigAuthRequired).toHaveBeenCalledWith(
+      { requires_authorization: true },
+      'https://x',
+      'uuid-17:https://x',
+    );
+  });
+
+  it("a member's leftover browser token does not show as the project's login", () => {
+    mocks.browserLoggedIn = true;
+    mocks.storedLogin = { ...mocks.storedLogin, canManageLogin: false, hasStoredLogin: false };
+    renderForm({ credentialDetails: TEAMS });
+
+    const login = screen.getByText('Login');
+    expect(login).toBeDisabled();
+    expect(login.closest('[data-hint]')).toHaveAttribute(
+      'data-hint',
+      'Not connected, ask a project admin to log in',
+    );
+    expect(screen.queryByText('Logout')).toBeNull();
   });
 
   it('an admin gets enabled buttons and no hint', () => {

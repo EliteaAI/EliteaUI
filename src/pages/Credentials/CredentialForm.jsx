@@ -270,6 +270,21 @@ const CredentialForm = memo(props => {
   storedLoginRef.current = storedLogin;
   // A team credential's stored login belongs to the project: members see it, only admins change it
   const storedLoginLocked = storedLogin.enabled && !storedLogin.canManageLogin;
+  // For members only the stored login counts; a leftover browser token is not the project's login
+  const showsLoggedIn = storedLoginLocked
+    ? storedLogin.hasStoredLogin
+    : isOAuthLoggedIn || storedLogin.hasStoredLogin;
+  // Members never sign in on a team credential: the login would stay in their browser only
+  const onConfigAuthRequired = useCallback(
+    (...args) => {
+      if (storedLoginLocked) {
+        setApiError(StoredLoginHelpers.getLockedLoginHint(false));
+        return;
+      }
+      configOAuth.handleConfigAuthRequired(...args);
+    },
+    [storedLoginLocked, setApiError, configOAuth],
+  );
 
   const onConfirmLogout = useCallback(async () => {
     if (!(await storedLogin.removeLogin())) return;
@@ -301,7 +316,7 @@ const CredentialForm = memo(props => {
     setValidationErrorMessages,
     setShowValidation,
     setTestConnectionError: setApiError,
-    onConfigAuthRequired: configOAuth.handleConfigAuthRequired,
+    onConfigAuthRequired,
     // Pass the credential-scoped token key so the correct token is fetched/stored
     oauthTokenKey,
     configurationUuid,
@@ -434,14 +449,12 @@ const CredentialForm = memo(props => {
           {oauthTokenKey && (
             <Tooltip
               title={
-                storedLoginLocked
-                  ? StoredLoginHelpers.getLockedLoginHint(isOAuthLoggedIn || storedLogin.hasStoredLogin)
-                  : ''
+                storedLoginLocked ? StoredLoginHelpers.getLockedLoginHint(storedLogin.hasStoredLogin) : ''
               }
               placement="bottom"
             >
               <span>
-                {isOAuthLoggedIn || storedLogin.hasStoredLogin ? (
+                {showsLoggedIn ? (
                   <Button.BaseBtn
                     variant="elitea"
                     color="secondary"
