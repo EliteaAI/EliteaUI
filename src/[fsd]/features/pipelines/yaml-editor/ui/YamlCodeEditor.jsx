@@ -85,23 +85,6 @@ const YamlCodeEditor = memo(props => {
 
   return (
     <Box sx={styles.root}>
-      <Box
-        sx={styles.container}
-        data-testid={dataTestId}
-      >
-        <Field.CodeMirrorEditor
-          className="nopan nodrag nowheel"
-          value={code}
-          extensions={extensions}
-          height="100%"
-          minHeight={minHeight}
-          notifyChange={onChangeCode}
-          onBlur={onBlur}
-          ref={editorRef}
-          readOnly={disabled}
-          contentTestId={contentTestId}
-        />
-      </Box>
       <Box sx={styles.actions}>
         <Tooltip
           title="Copy YAML"
@@ -132,6 +115,23 @@ const YamlCodeEditor = memo(props => {
           </Box>
         </Tooltip>
       </Box>
+      <Box
+        sx={styles.container}
+        data-testid={dataTestId}
+      >
+        <Field.CodeMirrorEditor
+          className="nopan nodrag nowheel"
+          value={code}
+          extensions={extensions}
+          height="100%"
+          minHeight={minHeight}
+          notifyChange={onChangeCode}
+          onBlur={onBlur}
+          ref={editorRef}
+          readOnly={disabled}
+          contentTestId={contentTestId}
+        />
+      </Box>
       {isFullScreen && (
         <StyledInputModal
           open={isFullScreen}
@@ -157,14 +157,16 @@ YamlCodeEditor.displayName = 'YamlCodeEditor';
 /** @type {MuiSx} */
 const yamlCodeEditorStyles = () => ({
   root: {
-    position: 'relative',
+    display: 'flex',
+    flexDirection: 'column',
     width: '100%',
     height: '100%',
   },
   container: ({ palette }) => ({
     width: '100%',
     maxWidth: '100%',
-    height: '100%',
+    flex: 1,
+    minHeight: 0,
     display: 'flex',
     flexDirection: 'column',
     overflow: 'auto',
@@ -173,15 +175,15 @@ const yamlCodeEditorStyles = () => ({
       background: palette.alert.error.background,
     },
   }),
-  // Same place as the copy and full screen actions of the configuration inputs
-  actions: {
-    position: 'absolute',
-    top: '0.25rem',
-    right: '0.25rem',
-    zIndex: 1,
+  // Its own row above the code, as in the configuration inputs, so long lines never run under it
+  actions: ({ palette }) => ({
     display: 'flex',
+    justifyContent: 'flex-end',
     gap: '0.25rem',
-  },
+    padding: '0.25rem',
+    flexShrink: 0,
+    backgroundColor: palette.background.default.primary,
+  }),
   actionIcon: {
     fontSize: '1rem',
   },
