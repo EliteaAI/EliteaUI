@@ -4,11 +4,14 @@ import { SessionConstants } from '@/[fsd]/features/auth/lib/constants';
 import { useSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { sioEvents } from '@/common/constants';
 
-const { SOCKET_UNAUTHENTICATED_CODE, SEND_NO_RESPONSE_CODE } = SessionConstants;
+const { SOCKET_UNAUTHENTICATED_CODE, SEND_NO_RESPONSE_CODE, SESSION_EXPIRED_CODE } = SessionConstants;
 
 // What the user gets back after a failed send. Only the text is remembered: mentions, attachments
 // and the chosen participant are cleared when a message is sent, and are not restored.
-const RECOVERABLE_CODES = new Set([SOCKET_UNAUTHENTICATED_CODE, SEND_NO_RESPONSE_CODE]);
+const RECOVERABLE_CODES = new Set([SOCKET_UNAUTHENTICATED_CODE, SEND_NO_RESPONSE_CODE, SESSION_EXPIRED_CODE]);
+
+// Failures where the message is known not to have been processed, so the user can send the text again at once
+const NOT_PROCESSED_CODES = new Set([SOCKET_UNAUTHENTICATED_CODE, SESSION_EXPIRED_CODE]);
 
 const MAX_REMEMBERED_SENDS = 10;
 
@@ -24,8 +27,9 @@ const MAX_REMEMBERED_SENDS = 10;
  * toast again here.
  *
  * Whether it is safe to send the same text again depends on the failure:
- * - `socket_unauthenticated`: the server refused the message, so it was not processed. The input is
- *   focused so the user can resend straight away.
+ * - `socket_unauthenticated`: the server refused the message, so it was not processed.
+ * - `session_expired`: the send waited for a new login that was abandoned, so it never left the browser.
+ *   In both cases the input is focused so the user can resend straight away.
  * - `send_no_response`: nothing came back, which also happens when the server is slow or a frame was
  *   lost, so the message might still arrive. The text is restored without taking focus, and the
  *   message of the toast says so.
@@ -60,7 +64,7 @@ export const useRejectedSendRecovery = props => {
       const input = chatInput.current;
       if (isSentFromActiveConversation && input && !input.getInputContent()) {
         input.setValue(text);
-        if (frame.code === SOCKET_UNAUTHENTICATED_CODE) input.focus();
+        if (NOT_PROCESSED_CODES.has(frame.code)) input.focus();
       }
     },
     [chatInput, toastError, activeConversationRef],
