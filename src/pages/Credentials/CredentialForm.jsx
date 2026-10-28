@@ -12,6 +12,7 @@ import {
   LlmModelFormConstants,
 } from '@/[fsd]/features/credentials/lib/constants';
 import { CredentialProbeHelpers, OAuthAppHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import { useCredentialPageStoredLogin } from '@/[fsd]/features/credentials/lib/hooks';
 import { CredentialLogoutModal, LlmModelForm } from '@/[fsd]/features/credentials/ui';
 import { CREDENTIALS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthFlowHelpers, McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
@@ -214,8 +215,12 @@ const CredentialForm = memo(props => {
 
   // Config OAuth: when check_connection returns requires_authorization, open modal; on success retry test connection
   const onTestConnectionRef = useRef();
+  const storedLoginRef = useRef();
   const configOAuth = useConfigOAuthModal({
-    onSuccess: () => onTestConnectionRef.current?.(),
+    onSuccess: async () => {
+      await storedLoginRef.current?.saveLogin();
+      onTestConnectionRef.current?.();
+    },
     credentials: {
       client_id: credentialDetails?.settings?.client_id,
       client_secret: credentialDetails?.settings?.client_secret,
@@ -248,11 +253,19 @@ const CredentialForm = memo(props => {
   );
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const onConfirmLogout = useCallback(() => {
+  // `data` is the credential as saved (the form edits `settings`), so saving the login keeps it as stored
+  const storedLogin = useCredentialPageStoredLogin({
+    credential: credentialDetails?.id ? credentialDetails : null,
+    tokenKey: oauthTokenKey,
+  });
+  storedLoginRef.current = storedLogin;
+
+  const onConfirmLogout = useCallback(async () => {
+    if (!(await storedLogin.removeLogin())) return;
     McpAuthHelpers.logout(oauthTokenKey);
     setShowLogoutModal(false);
     toastSuccess('You have successfully logged out!');
-  }, [oauthTokenKey, toastSuccess]);
+  }, [oauthTokenKey, storedLogin, toastSuccess]);
 
   const onLogout = useCallback(() => {
     setShowLogoutModal(true);
@@ -406,7 +419,7 @@ const CredentialForm = memo(props => {
               </Button.BaseBtn>
             </span>
           </Tooltip>
-          {isOAuthLoggedIn && oauthTokenKey && (
+          {(isOAuthLoggedIn || storedLogin.hasStoredLogin) && oauthTokenKey && (
             <Button.BaseBtn
               variant="elitea"
               color="secondary"
@@ -415,7 +428,7 @@ const CredentialForm = memo(props => {
               Logout
             </Button.BaseBtn>
           )}
-          {!isOAuthLoggedIn && oauthTokenKey && (
+          {!isOAuthLoggedIn && !storedLogin.hasStoredLogin && oauthTokenKey && (
             <Button.BaseBtn
               variant="elitea"
               color="secondary"
