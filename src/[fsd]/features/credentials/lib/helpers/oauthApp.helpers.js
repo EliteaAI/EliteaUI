@@ -18,10 +18,11 @@ export const usesOAuthApp = settings => Boolean(settings?.[OAUTH_APP_FIELD]);
 // Form modes returned with the project's app list (see the configurations plugin's credential_mode)
 export const OAUTH_APP_MODES = { default: 'default', choice: 'choice', custom: 'custom' };
 
-// Existing credentials keep what they were saved with, whatever the admin changes later:
+// The server already moves a credential to a Default app that applies (it then reads as a Default app
+// credential), except SharePoint App-only. What is left for the form:
 // - one that references an app keeps the Default app tab even when the app is gone, so its error
 //   shows and the user can switch to Custom app;
-// - one saved with its own app (client_id) stays Custom: a default app must never silently replace it.
+// - one still read with its own app (client_id) where a Default applies is App-only: it keeps the switcher.
 export const hasOwnApp = settings => Boolean(settings?.client_id) && !usesOAuthApp(settings);
 
 export const resolveOAuthAppMode = (data, settings) => {
