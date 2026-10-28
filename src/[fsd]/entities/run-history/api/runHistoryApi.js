@@ -48,8 +48,7 @@ export const runHistoryApi = eliteaApi
           LIST_TAG,
           ...(result?.rows ?? []).map(({ id }) => ({ type: HISTORY_ITEMS_TAG, id })),
         ],
-        transformResponse: (response, _, args) =>
-          serializeRunHistoryListResponse(response, args.page > 0, args),
+        transformResponse: (response, _, args) => serializeRunHistoryListResponse(response, args.page > 0),
         forceRefetch({ currentArg, previousArg }) {
           return currentArg !== previousArg;
         },

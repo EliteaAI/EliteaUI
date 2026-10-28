@@ -224,7 +224,7 @@ describe('RunHistoryListItem actions', () => {
 
     fireEvent.click(screen.getByTestId('menu-item-Restore chat'));
 
-    expect(handleRestoreConversation).toHaveBeenCalledWith(chatRun.id, chatRun);
+    expect(handleRestoreConversation).toHaveBeenCalledWith(chatRun.id, true);
   });
 
   it('hides the menu entirely when no action is available', () => {

@@ -46,8 +46,8 @@ const SkillRunHistoryView = memo(props => {
   );
 
   const restoreConversation = useCallback(
-    (conversationId, run) =>
-      isCatalogSkill || run?.is_chat_run ? openInChat(conversationId) : restoreIntoRunPanel(conversationId),
+    (conversationId, isChatRun) =>
+      isCatalogSkill || isChatRun ? openInChat(conversationId) : restoreIntoRunPanel(conversationId),
     [isCatalogSkill, openInChat, restoreIntoRunPanel],
   );
 

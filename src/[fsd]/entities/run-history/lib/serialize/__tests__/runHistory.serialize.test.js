@@ -46,12 +46,12 @@ describe('serializeRunHistory — index run details', () => {
 });
 
 describe('serializeRunHistory — skill chat runs', () => {
-  const SKILL_HISTORY = { source: 'skill', entityId: '629' };
   const skillChatRun = {
     id: 3,
     created_at: '2026-10-26T16:36:00Z',
     name: 'chat',
     duration: 9,
+    is_chat_run: true,
     skill_version_id: 88,
     meta: {},
   };
@@ -69,19 +69,22 @@ describe('serializeRunHistory — skill chat runs', () => {
     },
   };
 
+  it('marks a row a chat run only when the server says so', () => {
+    const { rows } = serializeRunHistoryListResponse([skillChatRun, skillRunPanelRun, indexRun]);
+
+    expect(rows.map(row => row.is_chat_run)).toEqual([true, false, false]);
+  });
+
   it('reads the version of a chat run from the run itself', () => {
-    const { rows } = serializeRunHistoryListResponse([skillChatRun], false, SKILL_HISTORY);
+    const { rows } = serializeRunHistoryListResponse([skillChatRun]);
 
     expect(rows[0].version_id).toBe(88);
-    expect(rows[0].is_chat_run).toBe(true);
   });
 
   it('dates a chat run by when the skill first ran in the chat', () => {
-    const { rows } = serializeRunHistoryListResponse(
-      [{ ...skillChatRun, created_at: '2026-10-19T09:00:00Z', run_started_at: '2026-10-26T16:36:00Z' }],
-      false,
-      SKILL_HISTORY,
-    );
+    const { rows } = serializeRunHistoryListResponse([
+      { ...skillChatRun, created_at: '2026-10-19T09:00:00Z', run_started_at: '2026-10-26T16:36:00Z' },
+    ]);
 
     expect(rows[0].created_at).toBe('2026-10-26T16:36:00Z');
   });
@@ -97,49 +100,26 @@ describe('serializeRunHistory — skill chat runs', () => {
         },
       },
     };
-    const { rows } = serializeRunHistoryListResponse([agentRunPanelChat], false, SKILL_HISTORY);
+    const { rows } = serializeRunHistoryListResponse([agentRunPanelChat]);
 
     expect(rows[0].version_id).toBe(88);
   });
 
-  it('tells a catalog skill from a local skill with the same id', () => {
-    const localRunPanelRun = skillRunPanelRun;
-
-    const catalogRows = serializeRunHistoryListResponse([localRunPanelRun], false, {
-      ...SKILL_HISTORY,
-      entityProjectId: 5,
-    }).rows;
-    const localRows = serializeRunHistoryListResponse([localRunPanelRun], false, {
-      ...SKILL_HISTORY,
-      entityProjectId: 2,
-    }).rows;
-
-    expect(catalogRows[0].is_chat_run).toBe(true);
-    expect(localRows[0].is_chat_run).toBe(false);
-  });
-
   it('keeps the skill own Run panel run a Run panel run', () => {
-    const { rows } = serializeRunHistoryListResponse([skillRunPanelRun], false, SKILL_HISTORY);
+    const { rows } = serializeRunHistoryListResponse([skillRunPanelRun]);
 
     expect(rows[0].is_chat_run).toBe(false);
     expect(rows[0].version_id).toBe(732);
     expect(rows[0].created_at).toBe(skillRunPanelRun.created_at);
   });
 
-  it('never marks a toolkit history row as a chat run, even one without a Run panel pin', () => {
-    const { rows } = serializeRunHistoryListResponse([indexRun, agentRun], false, {
-      source: 'toolkit',
-      entityId: '56',
-    });
+  it('lists a row that has no meta instead of failing the whole history', () => {
+    const { rows } = serializeRunHistoryListResponse([{ ...skillRunPanelRun, meta: null }, skillChatRun]);
 
-    expect(rows.map(row => row.is_chat_run)).toEqual([false, false]);
-  });
-
-  it('never marks a row as a chat run outside a skill history', () => {
-    const { rows } = serializeRunHistoryListResponse([skillChatRun, agentRun]);
-
-    expect(rows.map(row => row.is_chat_run)).toEqual([false, false]);
-    expect(rows[1].version_id).toBe(5);
+    expect(rows.map(row => [row.id, row.version_id])).toEqual([
+      [4, null],
+      [3, 88],
+    ]);
   });
 });
 

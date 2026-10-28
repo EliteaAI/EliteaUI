@@ -111,24 +111,43 @@ const isSameEntity = (entityMeta, entityId, entityProjectId) =>
   Number(entityMeta?.id) === Number(entityId) &&
   (entityProjectId == null || Number(entityMeta?.project_id) === Number(entityProjectId));
 
-const isRunPanelOf = (conversation, entityName, entityId, entityProjectId) => {
+const isRootEntity = (entityName, entityMeta, rootEntity) =>
+  entityName === rootEntity?.rootEntityType &&
+  isSameEntity(entityMeta, rootEntity.rootEntityId, rootEntity.rootEntityProjectId);
+
+export const isSkillChatRun = (conversation, rootEntity) => {
+  const { ParticipantEntityTypes } = ParticipantEntityConstants;
   const runPanelEntity = conversation?.meta?.single_participant;
 
   return (
-    runPanelEntity?.entity_name === entityName &&
-    isSameEntity(runPanelEntity?.entity_meta, entityId, entityProjectId)
-  );
-};
-
-export const isSkillChatRun = (conversation, entityName, entityId, entityProjectId) => {
-  const { ParticipantEntityTypes } = ParticipantEntityConstants;
-
-  return (
-    entityName === ParticipantEntityTypes.Skill &&
+    rootEntity?.rootEntityType === ParticipantEntityTypes.Skill &&
     Boolean(conversation) &&
-    !isRunPanelOf(conversation, entityName, entityId, entityProjectId)
+    !isRootEntity(runPanelEntity?.entity_name, runPanelEntity?.entity_meta, rootEntity)
   );
 };
+
+const findRootEntityParticipant = (conversation, rootEntity) =>
+  conversation?.participants?.find(participant =>
+    isRootEntity(participant.entity_name, participant.entity_meta, rootEntity),
+  );
+
+const rootEntityRepliesByTime = (conversation, rootEntity) => {
+  const participant = findRootEntityParticipant(conversation, rootEntity);
+  if (!participant) return [];
+
+  return (conversation.message_groups ?? [])
+    .filter(group => group.author_participant_id === participant.id)
+    .sort((a, b) => compareRunTimestamp(a.created_at, b.created_at));
+};
+
+export const firstRootEntityReplyAt = (conversation, rootEntity) =>
+  rootEntityRepliesByTime(conversation, rootEntity)[0]?.created_at;
+
+export const latestSkillRunVersionId = (conversation, rootEntity) =>
+  rootEntityRepliesByTime(conversation, rootEntity)
+    .map(group => group.meta?.skill_run?.skill_version_id)
+    .findLast(versionId => versionId != null) ??
+  findRootEntityParticipant(conversation, rootEntity)?.entity_settings?.version_id;
 
 // One label per trigger source of the shared run enum; `manual` stays for older runs
 const EXECUTION_TYPE_LABELS = new Map([

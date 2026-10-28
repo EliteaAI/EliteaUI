@@ -2,6 +2,7 @@
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { latestSkillRunVersionId } from '@/[fsd]/entities/run-history/lib/helpers';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 
@@ -278,6 +279,46 @@ describe('RunAnalyticsContainer for a root entity', () => {
     expect(viewProps.current.infoLines[0]).toContain('Run: —');
     expect(viewProps.current.infoLines[0]).not.toContain('02 Oct 2026');
     expect(Object.fromEntries(viewProps.current.exportMeta.scopeRows)['Run Date/Time']).toBe('—');
+  });
+
+  it('dates and versions a chat run without usage by the skill own replies in the transcript', () => {
+    useGetRunHistoryDetailsQuery.mockReturnValue({
+      data: {
+        uuid: '0b7c3a2e-5d4f-4c1a-9e8b-1f2a3b4c5d6e',
+        created_at: new Date(2026, 9, 2, 9, 0).getTime() / 1000,
+        meta: {},
+        participants: [
+          { id: 7, entity_name: 'skill', entity_meta: { id: 174, project_id: 2 }, entity_settings: {} },
+          { id: 8, entity_name: 'skill', entity_meta: { id: 900, project_id: 2 }, entity_settings: {} },
+        ],
+        message_groups: [
+          {
+            author_participant_id: 8,
+            created_at: new Date(2026, 9, 5, 8, 0).toISOString(),
+            meta: { skill_run: { skill_version_id: 999 } },
+          },
+          {
+            author_participant_id: 7,
+            created_at: new Date(2026, 9, 9, 10, 36).toISOString(),
+            meta: { skill_run: { skill_version_id: 251 } },
+          },
+          {
+            author_participant_id: 7,
+            created_at: new Date(2026, 9, 10, 10, 36).toISOString(),
+            meta: { skill_run: { skill_version_id: 252 } },
+          },
+        ],
+      },
+    });
+    useAnalyticsRunDetailQuery.mockReturnValue({
+      data: undefined,
+      isFetching: false,
+      error: { status: 404 },
+    });
+    useAnalyticsCostsQuery.mockReturnValue({ data: undefined, isFetching: false, isError: false });
+    renderSkillRun({ readRunVersionId: latestSkillRunVersionId });
+
+    expect(viewProps.current.infoLines[0]).toContain('Run: 09 Oct 2026, 10:36 AM · Version: v2');
   });
 
   it('treats the same skill id from another project as a different skill', () => {
