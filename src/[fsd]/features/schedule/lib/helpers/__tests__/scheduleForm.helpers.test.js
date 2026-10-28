@@ -412,6 +412,18 @@ describe('update body', () => {
     });
     expect(toUpdateBody(values)).toEqual(toCreateBody(values));
   });
+
+  it.each([
+    ['a chat delivery', { mode: 'chat', conversation_uuid: 'c-1', participant_id: 4 }],
+    ['a run history delivery', { mode: 'run_history' }],
+    ['a null delivery', null],
+    ['no delivery', undefined],
+  ])('sends no delivery key for %s in the form values', (_, delivery) => {
+    const { values } = buildEditValues(saved, undefined);
+    const body = toUpdateBody({ ...values, delivery, delivery_status: 'target_missing' });
+    expect(body).not.toHaveProperty('delivery');
+    expect(body).not.toHaveProperty('delivery_status');
+  });
 });
 
 describe('risk review blocking findings', () => {

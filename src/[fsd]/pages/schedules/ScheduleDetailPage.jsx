@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { Box, CircularProgress } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
 
 import {
   buildScheduleHistoryLink,
@@ -170,6 +170,15 @@ const ScheduleDetailPage = memo(props => {
     >
       {({ values: formValues, setFieldValue, fieldError }) => (
         <>
+          {schedule.delivery?.mode === 'conversation' && (
+            <Typography
+              variant="bodyMedium"
+              data-testid="schedule-delivery-target-text"
+              sx={styles.deliveryText}
+            >
+              Delivers to chat: {schedule.delivery.conversation_name || 'unavailable'}
+            </Typography>
+          )}
           <ScheduleSettingsSection
             value={convertCronTimezone(formValues.cron, formValues.timezone, browserTimezone)}
             onChange={cron => {
@@ -199,6 +208,7 @@ export default ScheduleDetailPage;
 /** @type {MuiSx} */
 const styles = {
   loader: { display: 'flex', justifyContent: 'center', padding: '3rem' },
+  deliveryText: ({ palette }) => ({ color: palette.text.secondary }),
   // The panel and the Runs section stacked. From xl, in a window at least 46 rem (736 px) high, the
   // block stays in view: 100dvh minus the page header, its top margin and the bottom margin (6 rem). A fixed
   // height, so the runs card takes 40 % of the window and the test panel fills the rest and scrolls inside.
