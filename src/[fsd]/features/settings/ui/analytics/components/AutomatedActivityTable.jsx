@@ -17,6 +17,15 @@ const COLUMNS = [
   { key: 'llm_cost', label: 'Cost', format: AnalyticCommonHelpers.fmtCost },
 ];
 
+const { TRIGGER_SOURCE_LABELS } = AnalyticsCommonConstants;
+
+const subtitleSources = [
+  TRIGGER_SOURCE_LABELS.webhook,
+  TRIGGER_SOURCE_LABELS.scheduled,
+  TRIGGER_SOURCE_LABELS.schedule_manual,
+  TRIGGER_SOURCE_LABELS.index,
+].join(', ');
+
 const AutomatedActivityTable = memo(props => {
   const { items = [] } = props;
 
@@ -24,7 +33,8 @@ const AutomatedActivityTable = memo(props => {
 
   const { sort: activitySort, handleSort: handleActivitySort } = useClientSort('runs');
   const getActivityValue = useCallback((row, key) => {
-    if (key === 'trigger_source') return AnalyticCommonHelpers.triggerSourceLabel(row.trigger_source);
+    if (key === 'trigger_source') return AnalyticCommonHelpers.formatTriggerLabel(row.trigger_source);
+    if (key === 'entity_kind') return AnalyticCommonHelpers.entityKindLabel(row.entity_kind);
     return row[key];
   }, []);
   const sortedItems = useSortedRows(items, activitySort, getActivityValue);
@@ -58,7 +68,7 @@ const AutomatedActivityTable = memo(props => {
           variant="bodySmall"
           sx={styles.chartSubtitle}
         >
-          Scheduled, webhook and index runs — included in project totals, not counted as user activity
+          {subtitleSources} — included in project totals, not counted as user activity
         </Typography>
         <InfoTooltip
           infoTooltip={{
@@ -79,6 +89,16 @@ const AutomatedActivityTable = memo(props => {
               Trigger Source
             </TableSortLabel>
           </Box>
+          <Box sx={[styles.tableCell, styles.entityCol]}>
+            <TableSortLabel
+              active={activitySort.sortBy === 'entity_kind'}
+              direction={activitySort.sortBy === 'entity_kind' ? activitySort.sortOrder : 'desc'}
+              onClick={() => handleActivitySort('entity_kind')}
+              sx={analyticsTableSortLabelSx}
+            >
+              Entity type
+            </TableSortLabel>
+          </Box>
           {COLUMNS.map(({ key, label }) => (
             <Box
               key={key}
@@ -97,7 +117,7 @@ const AutomatedActivityTable = memo(props => {
         </Box>
         {sortedItems.map((item, index) => (
           <Box
-            key={item.trigger_source || index}
+            key={`${item.trigger_source}-${item.entity_kind ?? 'none'}`}
             sx={styles.tableRow}
             data-testid={`analytics-automated-row-${item.trigger_source}`}
           >
@@ -107,9 +127,12 @@ const AutomatedActivityTable = memo(props => {
                 variant="bodySmall"
                 noWrap
               >
-                {AnalyticCommonHelpers.triggerSourceLabel(item.trigger_source)}
+                {AnalyticCommonHelpers.formatTriggerLabel(item.trigger_source)}
               </Typography>
             </Box>
+            <Typography sx={[styles.tableCellValue, styles.entityCol]}>
+              {AnalyticCommonHelpers.entityKindLabel(item.entity_kind)}
+            </Typography>
             {COLUMNS.map(({ key, format }) => (
               <Typography
                 key={key}
@@ -123,6 +146,7 @@ const AutomatedActivityTable = memo(props => {
         {items.length > 1 && (
           <Box sx={[styles.tableRow, styles.totalRow]}>
             <Typography sx={[styles.tableCellValue, styles.sourceCol, styles.totalText]}>Total</Typography>
+            <Box sx={styles.entityCol} />
             {COLUMNS.map(({ key, format }) => (
               <Typography
                 key={key}
@@ -148,6 +172,7 @@ const automatedActivityTableStyles = () => ({
   totalRow: { borderBottom: 'none' },
   totalText: { fontWeight: 600 },
   sourceCol: { flex: 3 },
+  entityCol: { flex: 1.5 },
   sourceCell: { display: 'flex', alignItems: 'center', gap: '0.5rem' },
   valueCol: { flex: 1, textAlign: 'right' },
 });

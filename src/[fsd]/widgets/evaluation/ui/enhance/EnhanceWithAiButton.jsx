@@ -6,7 +6,7 @@ import { PERMISSIONS } from '@/common/constants';
 import EnhanceWithAiDialog from './EnhanceWithAiDialog';
 
 const EnhanceWithAiButton = memo(props => {
-  const { applicationId, runId } = props;
+  const { applicationId, runId, onVersionCreated } = props;
 
   return (
     <EditEntityButton
@@ -19,6 +19,7 @@ const EnhanceWithAiButton = memo(props => {
           onClose={onClose}
           applicationId={applicationId}
           runId={runId}
+          onVersionCreated={onVersionCreated}
         />
       )}
     />

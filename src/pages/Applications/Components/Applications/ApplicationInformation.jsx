@@ -5,7 +5,6 @@ import { useFormikContext } from 'formik';
 import { Box, Typography } from '@mui/material';
 
 import { ConfigurationModal } from '@/[fsd]/features/agent/ui/agent-details/configurations/index.js';
-import { ScheduleInfoDisplay } from '@/[fsd]/features/pipelines/flow-editor/ui/settings';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProject } from '@/[fsd]/shared/lib/hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
@@ -106,14 +105,6 @@ const ApplicationInformation = memo(props => {
                 </Typography>
               </Box>
             )}
-            {isPipeline && triggerData?.type === 'schedule' && (
-              <ScheduleInfoDisplay
-                cron={triggerData.cron}
-                timezone={triggerData.timezone}
-                lastRun={triggerData.last_run}
-                sx={styles.scheduleInfo}
-              />
-            )}
             {isPipeline && triggerData?.type === 'webhook' && triggerData?.webhook_type && (
               <Box sx={styles.pipelineLink}>
                 <Typography variant="bodyMedium">Webhook type:</Typography>
@@ -164,14 +155,10 @@ const ApplicationInformation = memo(props => {
       showPipeline,
       isPipeline,
       triggerData?.type,
-      triggerData?.cron,
-      triggerData?.timezone,
-      triggerData?.last_run,
       triggerData?.webhook_type,
       styles.contentContainer,
       styles.pipelineLink,
       styles.showLink,
-      styles.scheduleInfo,
       onShowPipelineModal,
       entityTitle,
     ],
@@ -223,11 +210,6 @@ const applicationInformationStyles = () => ({
     cursor: 'pointer',
     color: palette.text.showMore,
   }),
-  scheduleInfo: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-  },
 });
 
 export default ApplicationInformation;

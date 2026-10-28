@@ -207,6 +207,115 @@ export const analyticsApi = eliteaApi
         providesTags: [TAG_TYPE_ANALYTICS],
         keepUnusedDataFor: CACHE_LIFETIME,
       }),
+      analyticsChatsSummary: build.query({
+        query: ({ projectId, dateFrom, dateTo, includeDaily = false }) => {
+          const params = new URLSearchParams();
+          if (dateFrom) params.set('date_from', dateFrom);
+          if (dateTo) params.set('date_to', dateTo);
+          if (includeDaily) params.set('include_daily', 'true');
+          return {
+            url: `/usage/analytics_chats_summary/prompt_lib/${projectId}?${params.toString()}`,
+            method: 'GET',
+          };
+        },
+        providesTags: [TAG_TYPE_ANALYTICS],
+        keepUnusedDataFor: CACHE_LIFETIME,
+      }),
+      analyticsChats: build.query({
+        query: ({
+          projectId,
+          dateFrom,
+          dateTo,
+          limit = 10,
+          offset = 0,
+          search = '',
+          sortBy = 'llm_cost',
+          sortOrder = 'desc',
+        }) => {
+          const params = new URLSearchParams();
+          if (dateFrom) params.set('date_from', dateFrom);
+          if (dateTo) params.set('date_to', dateTo);
+          params.set('limit', String(limit));
+          params.set('offset', String(offset));
+          if (search) params.set('search', search);
+          params.set('sort_by', sortBy);
+          params.set('sort_order', sortOrder);
+          return {
+            url: `/usage/analytics_chats/prompt_lib/${projectId}?${params.toString()}`,
+            method: 'GET',
+          };
+        },
+        providesTags: [TAG_TYPE_ANALYTICS],
+        keepUnusedDataFor: CACHE_LIFETIME,
+      }),
+      analyticsChatActivity: build.query({
+        query: ({
+          projectId,
+          dateFrom,
+          dateTo,
+          limit = 10,
+          offset = 0,
+          search = '',
+          sortBy = 'llm_cost',
+          sortOrder = 'desc',
+        }) => {
+          const params = new URLSearchParams();
+          if (dateFrom) params.set('date_from', dateFrom);
+          if (dateTo) params.set('date_to', dateTo);
+          params.set('limit', String(limit));
+          params.set('offset', String(offset));
+          if (search) params.set('search', search);
+          params.set('sort_by', sortBy);
+          params.set('sort_order', sortOrder);
+          return {
+            url: `/usage/analytics_chat_activity/prompt_lib/${projectId}?${params.toString()}`,
+            method: 'GET',
+          };
+        },
+        providesTags: [TAG_TYPE_ANALYTICS],
+        keepUnusedDataFor: CACHE_LIFETIME,
+      }),
+      analyticsChatDetail: build.query({
+        query: ({ projectId, conversationUuid, dateFrom, dateTo }) => {
+          const params = new URLSearchParams();
+          params.set('conversation_uuid', conversationUuid);
+          if (dateFrom) params.set('date_from', dateFrom);
+          if (dateTo) params.set('date_to', dateTo);
+          return {
+            url: `/usage/analytics_chat_detail/prompt_lib/${projectId}?${params.toString()}`,
+            method: 'GET',
+          };
+        },
+        providesTags: [TAG_TYPE_ANALYTICS],
+        keepUnusedDataFor: CACHE_LIFETIME,
+      }),
+      analyticsChatRuns: build.query({
+        query: ({
+          projectId,
+          conversationUuid,
+          dateFrom,
+          dateTo,
+          limit = 20,
+          offset = 0,
+          sortBy = 'started_at',
+          sortOrder = 'desc',
+        }) => {
+          const params = new URLSearchParams();
+          params.set('conversation_uuid', conversationUuid);
+          if (dateFrom) params.set('date_from', dateFrom);
+          if (dateTo) params.set('date_to', dateTo);
+          params.set('limit', String(limit));
+          params.set('offset', String(offset));
+          params.set('sort_by', sortBy);
+          params.set('sort_order', sortOrder);
+          return {
+            url: `/usage/analytics_chat_runs/prompt_lib/${projectId}?${params.toString()}`,
+            method: 'GET',
+          };
+        },
+        providesTags: [TAG_TYPE_ANALYTICS],
+        keepUnusedDataFor: CACHE_LIFETIME,
+      }),
       analyticsSkills: build.query({
         query: ({
           projectId,
@@ -315,4 +424,9 @@ export const {
   useAnalyticsCostsQuery,
   useAnalyticsRunDetailQuery,
   useAnalyticsActivityQuery,
+  useAnalyticsChatsSummaryQuery,
+  useAnalyticsChatsQuery,
+  useAnalyticsChatActivityQuery,
+  useAnalyticsChatDetailQuery,
+  useAnalyticsChatRunsQuery,
 } = analyticsApi;

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 
 import { CHAT_TAG_TYPES, PROJECT_ENTITY_TAG_TYPES } from '../../constants/projectBackup.constants.js';

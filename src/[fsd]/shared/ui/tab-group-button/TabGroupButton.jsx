@@ -101,7 +101,8 @@ const TabGroupButton = memo(
 );
 
 const tabGroupButtonStyle = () => ({
-  toggleButtonGroup: { ml: 0, zIndex: 2000 },
+  // Above the page content, below drawers, menus and dialogs
+  toggleButtonGroup: { ml: 0, zIndex: ({ zIndex }) => zIndex.appBar },
 });
 
 export const colorTabGroupButtonStyle = theme => ({

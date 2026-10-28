@@ -19,8 +19,16 @@ vi.mock('@/api', () => {
 });
 
 const { configureStore } = await import('@reduxjs/toolkit');
-const { analyticsApi, useAnalyticsActivityQuery, useAnalyticsCostsQuery } =
-  await import('../analyticsApi.js');
+const {
+  analyticsApi,
+  useAnalyticsActivityQuery,
+  useAnalyticsCostsQuery,
+  useAnalyticsChatsSummaryQuery,
+  useAnalyticsChatsQuery,
+  useAnalyticsChatActivityQuery,
+  useAnalyticsChatDetailQuery,
+  useAnalyticsChatRunsQuery,
+} = await import('../analyticsApi.js');
 
 const makeStore = () =>
   configureStore({
@@ -270,4 +278,306 @@ describe('evaluation-run-scoped analytics (eval_run_id)', () => {
       expect(new URL(requestOf(fetchSpy).url).searchParams.has('eval_run_id')).toBe(false);
     },
   );
+});
+
+// ─── Chat endpoints ───────────────────────────────────────────────────────────
+
+describe('analyticsChatsSummary endpoint', () => {
+  let fetchSpy;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }),
+      );
+  });
+
+  it('exposes the generated hook and endpoint', () => {
+    expect(typeof useAnalyticsChatsSummaryQuery).toBe('function');
+    expect(analyticsApi.endpoints.analyticsChatsSummary).toBeDefined();
+  });
+
+  it('issues a GET to the analytics_chats_summary path with project id and date params', async () => {
+    const store = makeStore();
+    await store.dispatch(
+      analyticsApi.endpoints.analyticsChatsSummary.initiate({
+        projectId: 7,
+        dateFrom: '2026-10-01',
+        dateTo: '2026-10-08',
+      }),
+    );
+
+    const url = new URL(requestOf(fetchSpy).url);
+    expect(url.pathname).toContain('analytics_chats_summary');
+    expect(url.pathname).toContain('7');
+    expect(url.searchParams.get('date_from')).toBe('2026-10-01');
+    expect(url.searchParams.get('date_to')).toBe('2026-10-08');
+  });
+
+  it('passes include_daily param when provided', async () => {
+    const store = makeStore();
+    await store.dispatch(
+      analyticsApi.endpoints.analyticsChatsSummary.initiate({
+        projectId: 7,
+        dateFrom: '2026-10-01',
+        dateTo: '2026-10-08',
+        includeDaily: true,
+      }),
+    );
+
+    const url = new URL(requestOf(fetchSpy).url);
+    expect(url.searchParams.get('include_daily')).toBe('true');
+  });
+});
+
+describe('analyticsChats endpoint', () => {
+  let fetchSpy;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }),
+      );
+  });
+
+  it('exposes the generated hook and endpoint', () => {
+    expect(typeof useAnalyticsChatsQuery).toBe('function');
+    expect(analyticsApi.endpoints.analyticsChats).toBeDefined();
+  });
+
+  it('issues a GET to the analytics_chats path with project id and date params', async () => {
+    const store = makeStore();
+    await store.dispatch(
+      analyticsApi.endpoints.analyticsChats.initiate({
+        projectId: 7,
+        dateFrom: '2026-10-01',
+        dateTo: '2026-10-08',
+      }),
+    );
+
+    const url = new URL(requestOf(fetchSpy).url);
+    expect(url.pathname).toContain('analytics_chats');
+    expect(url.pathname).toContain('7');
+    expect(url.searchParams.get('date_from')).toBe('2026-10-01');
+    expect(url.searchParams.get('date_to')).toBe('2026-10-08');
+  });
+
+  it('passes pagination params', async () => {
+    const store = makeStore();
+    await store.dispatch(
+      analyticsApi.endpoints.analyticsChats.initiate({
+        projectId: 7,
+        dateFrom: '2026-10-01',
+        dateTo: '2026-10-08',
+        limit: 25,
+        offset: 50,
+      }),
+    );
+
+    const url = new URL(requestOf(fetchSpy).url);
+    expect(url.searchParams.get('limit')).toBe('25');
+    expect(url.searchParams.get('offset')).toBe('50');
+  });
+
+  it('passes sort and search params', async () => {
+    const store = makeStore();
+    await store.dispatch(
+      analyticsApi.endpoints.analyticsChats.initiate({
+        projectId: 7,
+        dateFrom: '2026-10-01',
+        dateTo: '2026-10-08',
+        search: 'review',
+        sortBy: 'llm_cost',
+        sortOrder: 'desc',
+      }),
+    );
+
+    const url = new URL(requestOf(fetchSpy).url);
+    expect(url.searchParams.get('search')).toBe('review');
+    expect(url.searchParams.get('sort_by')).toBe('llm_cost');
+    expect(url.searchParams.get('sort_order')).toBe('desc');
+  });
+});
+
+describe('analyticsChatActivity endpoint', () => {
+  let fetchSpy;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }),
+      );
+  });
+
+  it('exposes the generated hook and endpoint', () => {
+    expect(typeof useAnalyticsChatActivityQuery).toBe('function');
+    expect(analyticsApi.endpoints.analyticsChatActivity).toBeDefined();
+  });
+
+  it('issues a GET to its own analytics_chat_activity path, not the analytics_chats path', async () => {
+    const store = makeStore();
+    await store.dispatch(
+      analyticsApi.endpoints.analyticsChatActivity.initiate({
+        projectId: 7,
+        dateFrom: '2026-10-01',
+        dateTo: '2026-10-08',
+      }),
+    );
+
+    const request = requestOf(fetchSpy);
+    const url = new URL(request.url);
+    expect(request.method).toBe('GET');
+    expect(url.pathname).toContain('analytics_chat_activity');
+    expect(url.pathname).not.toContain('analytics_chats');
+    expect(url.pathname).toContain('7');
+    expect(url.searchParams.get('date_from')).toBe('2026-10-01');
+    expect(url.searchParams.get('date_to')).toBe('2026-10-08');
+  });
+
+  it('defaults to the first ten rows sorted by cost descending', async () => {
+    const store = makeStore();
+    await store.dispatch(analyticsApi.endpoints.analyticsChatActivity.initiate({ projectId: 7 }));
+
+    const url = new URL(requestOf(fetchSpy).url);
+    expect(url.searchParams.get('limit')).toBe('10');
+    expect(url.searchParams.get('offset')).toBe('0');
+    expect(url.searchParams.get('sort_by')).toBe('llm_cost');
+    expect(url.searchParams.get('sort_order')).toBe('desc');
+    expect(url.searchParams.has('search')).toBe(false);
+  });
+
+  it('passes pagination, sort and search params', async () => {
+    const store = makeStore();
+    await store.dispatch(
+      analyticsApi.endpoints.analyticsChatActivity.initiate({
+        projectId: 7,
+        limit: 25,
+        offset: 50,
+        search: 'review',
+        sortBy: 'total_tokens',
+        sortOrder: 'asc',
+      }),
+    );
+
+    const url = new URL(requestOf(fetchSpy).url);
+    expect(url.searchParams.get('limit')).toBe('25');
+    expect(url.searchParams.get('offset')).toBe('50');
+    expect(url.searchParams.get('search')).toBe('review');
+    expect(url.searchParams.get('sort_by')).toBe('total_tokens');
+    expect(url.searchParams.get('sort_order')).toBe('asc');
+  });
+
+  it('caches each sort order separately', async () => {
+    const store = makeStore();
+    await store.dispatch(
+      analyticsApi.endpoints.analyticsChatActivity.initiate({ projectId: 7, sortOrder: 'desc' }),
+    );
+    await store.dispatch(
+      analyticsApi.endpoints.analyticsChatActivity.initiate({ projectId: 7, sortOrder: 'asc' }),
+    );
+
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('analyticsChatDetail endpoint', () => {
+  let fetchSpy;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }),
+      );
+  });
+
+  it('exposes the generated hook and endpoint', () => {
+    expect(typeof useAnalyticsChatDetailQuery).toBe('function');
+    expect(analyticsApi.endpoints.analyticsChatDetail).toBeDefined();
+  });
+
+  it('issues a GET to the analytics_chat_detail path with project id and conversation uuid', async () => {
+    const store = makeStore();
+    await store.dispatch(
+      analyticsApi.endpoints.analyticsChatDetail.initiate({
+        projectId: 7,
+        conversationUuid: 'uuid-abc',
+        dateFrom: '2026-10-01',
+        dateTo: '2026-10-08',
+      }),
+    );
+
+    const url = new URL(requestOf(fetchSpy).url);
+    expect(url.pathname).toContain('analytics_chat_detail');
+    expect(url.pathname).toContain('7');
+    expect(url.searchParams.get('conversation_uuid')).toBe('uuid-abc');
+    expect(url.searchParams.get('date_from')).toBe('2026-10-01');
+    expect(url.searchParams.get('date_to')).toBe('2026-10-08');
+  });
+});
+
+describe('analyticsChatRuns endpoint', () => {
+  let fetchSpy;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }),
+      );
+  });
+
+  it('exposes the generated hook and endpoint', () => {
+    expect(typeof useAnalyticsChatRunsQuery).toBe('function');
+    expect(analyticsApi.endpoints.analyticsChatRuns).toBeDefined();
+  });
+
+  it('issues a GET to the analytics_chat_runs path with project id, uuid and date params', async () => {
+    const store = makeStore();
+    await store.dispatch(
+      analyticsApi.endpoints.analyticsChatRuns.initiate({
+        projectId: 7,
+        conversationUuid: 'uuid-abc',
+        dateFrom: '2026-10-01',
+        dateTo: '2026-10-08',
+      }),
+    );
+
+    const url = new URL(requestOf(fetchSpy).url);
+    expect(url.pathname).toContain('analytics_chat_runs');
+    expect(url.pathname).toContain('7');
+    expect(url.searchParams.get('conversation_uuid')).toBe('uuid-abc');
+    expect(url.searchParams.get('date_from')).toBe('2026-10-01');
+    expect(url.searchParams.get('date_to')).toBe('2026-10-08');
+  });
+
+  it('passes pagination and sort params', async () => {
+    const store = makeStore();
+    await store.dispatch(
+      analyticsApi.endpoints.analyticsChatRuns.initiate({
+        projectId: 7,
+        conversationUuid: 'uuid-abc',
+        dateFrom: '2026-10-01',
+        dateTo: '2026-10-08',
+        limit: 100,
+        offset: 200,
+        sortBy: 'started_at',
+        sortOrder: 'asc',
+      }),
+    );
+
+    const url = new URL(requestOf(fetchSpy).url);
+    expect(url.searchParams.get('limit')).toBe('100');
+    expect(url.searchParams.get('offset')).toBe('200');
+    expect(url.searchParams.get('sort_by')).toBe('started_at');
+    expect(url.searchParams.get('sort_order')).toBe('asc');
+  });
 });

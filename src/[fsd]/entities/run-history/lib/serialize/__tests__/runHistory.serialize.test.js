@@ -102,6 +102,22 @@ describe('serializeRunHistory — skill chat runs', () => {
     expect(rows[0].version_id).toBe(88);
   });
 
+  it('tells a catalog skill from a local skill with the same id', () => {
+    const localRunPanelRun = skillRunPanelRun;
+
+    const catalogRows = serializeRunHistoryListResponse([localRunPanelRun], false, {
+      ...SKILL_HISTORY,
+      entityProjectId: 5,
+    }).rows;
+    const localRows = serializeRunHistoryListResponse([localRunPanelRun], false, {
+      ...SKILL_HISTORY,
+      entityProjectId: 2,
+    }).rows;
+
+    expect(catalogRows[0].is_chat_run).toBe(true);
+    expect(localRows[0].is_chat_run).toBe(false);
+  });
+
   it('keeps the skill own Run panel run a Run panel run', () => {
     const { rows } = serializeRunHistoryListResponse([skillRunPanelRun], false, SKILL_HISTORY);
 
@@ -124,5 +140,19 @@ describe('serializeRunHistory — skill chat runs', () => {
 
     expect(rows.map(row => row.is_chat_run)).toEqual([false, false]);
     expect(rows[1].version_id).toBe(5);
+  });
+});
+
+describe('serializeRunHistory — execution type', () => {
+  it('keeps the top-level execution_type on the row', () => {
+    const { rows } = serializeRunHistoryListResponse([{ ...agentRun, execution_type: 'schedule' }]);
+
+    expect(rows[0].execution_type).toBe('schedule');
+  });
+
+  it('defaults execution_type to null when the server omits it', () => {
+    const { rows } = serializeRunHistoryListResponse([agentRun]);
+
+    expect(rows[0].execution_type).toBeNull();
   });
 });

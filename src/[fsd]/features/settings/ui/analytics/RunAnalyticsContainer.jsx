@@ -80,7 +80,12 @@ const RunAnalyticsContainer = memo(props => {
     isError: isRunCostsError,
   } = useAnalyticsCostsQuery(usageQueryArgs, { skip: skipUsageQueries });
 
-  const isEntityChatRun = isSkillChatRun(runDetails, rootEntity?.rootEntityType, rootEntity?.rootEntityId);
+  const isEntityChatRun = isSkillChatRun(
+    runDetails,
+    rootEntity?.rootEntityType,
+    rootEntity?.rootEntityId,
+    rootEntity?.rootEntityProjectId,
+  );
   const isRunWithoutUsage = runDetailError?.status === 404;
   const isRunDetailUnavailable = Boolean(runDetailError) && !isRunWithoutUsage;
 
@@ -102,9 +107,7 @@ const RunAnalyticsContainer = memo(props => {
       ? 'unavailable'
       : AnalyticCommonHelpers.describeRunModels(runCosts?.by_model);
 
-    const startedAt = isUsageRunScoped
-      ? runDetail?.started_at
-      : (isEntityChatRun && runDetail?.started_at) || runDetails?.created_at;
+    const startedAt = isUsageRunScoped || isEntityChatRun ? runDetail?.started_at : runDetails?.created_at;
 
     return {
       createdAt: startedAt,

@@ -1,4 +1,4 @@
-import { memo, useContext, useMemo } from 'react';
+import { memo, useCallback, useContext, useMemo, useRef } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -6,6 +6,7 @@ import {
   FlowEditorConstants,
   NodePanelConstants,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import {
   useGetToolkitNameFromSchema,
   useNodeAiAssistantConfig,
@@ -16,6 +17,11 @@ import {
   FlowEditorSelect,
   FlowEditorSettings,
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import {
+  AttachmentToolHelpers,
+  ToolPickerUI,
+  usePipelineAttachments,
+} from '@/[fsd]/features/pipelines/tool-picker';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import useLLMInputMapping from '@/hooks/pipeline/useLLMInputMapping';
 import { useEdges } from '@xyflow/react';
@@ -45,7 +51,7 @@ const ADVANCED_INPUT_KEYS = ['chat_history'];
 const LLMNode = memo(props => {
   const { id, data, selected } = props;
 
-  const { yamlJsonObject, isRunningPipeline, disabled } = useContext(FlowEditorContext);
+  const { yamlJsonObject, setYamlJsonObject, isRunningPipeline, disabled } = useContext(FlowEditorContext);
   const { values } = useFormikContext();
   const { getToolkitNameFromSchema, getSelectedTools } = useGetToolkitNameFromSchema();
   const pipelineLLMConfig = useNodeAiAssistantConfig();
@@ -67,6 +73,57 @@ const LLMNode = memo(props => {
   const allToolkits = useMemo(() => values?.version_details?.tools || [], [values?.version_details?.tools]);
 
   const { inputMappings, onChangeMapping, defaultValues } = useLLMInputMapping({ id });
+
+  const { addTool, prepareToolkitAttachment } = usePipelineAttachments();
+  const selectedToolkitNames = useMemo(() => Object.keys(yamlNode?.tool_names || {}), [yamlNode?.tool_names]);
+
+  // Attaching may wait for the toolkit details, so YAML writes must use the YAML as it is by then
+  const yamlJsonObjectRef = useRef(yamlJsonObject);
+  yamlJsonObjectRef.current = yamlJsonObject;
+
+  const setToolNames = useCallback(
+    getNextToolNames => {
+      const currentNode = yamlJsonObjectRef.current.nodes?.find(node => node.id === id);
+      FlowEditorHelpers.updateYamlNode(
+        id,
+        'tool_names',
+        getNextToolNames(currentNode?.tool_names || {}),
+        yamlJsonObjectRef.current,
+        setYamlJsonObject,
+      );
+    },
+    [id, setYamlJsonObject],
+  );
+
+  // Any project toolkit or MCP can be added; one the pipeline doesn't have yet is attached on Save
+  const onAddToolkit = useCallback(
+    async (source, toolkitName, mcp) => {
+      const prepared = await prepareToolkitAttachment(source, { mcp, toolkitName });
+      if (!prepared) return;
+      // Same tick as the `tool_names` write, so reconcile never sees the attachment without its node
+      const attached = addTool(prepared);
+      const availableTools = getSelectedTools(attached.type);
+      const toolkitTools = AttachmentToolHelpers.getToolkitAvailableTools(attached).map(tool =>
+        typeof tool === 'string' ? tool : tool.name,
+      );
+      const tools =
+        availableTools.length > 0 ? toolkitTools.filter(tool => availableTools.includes(tool)) : toolkitTools;
+      setToolNames(toolNames =>
+        toolNames[toolkitName] ? toolNames : { ...toolNames, [toolkitName]: tools },
+      );
+    },
+    [addTool, getSelectedTools, prepareToolkitAttachment, setToolNames],
+  );
+
+  const onRemoveToolkit = useCallback(
+    toolkitName =>
+      setToolNames(toolNames =>
+        Object.fromEntries(Object.entries(toolNames).filter(([name]) => name !== toolkitName)),
+      ),
+    [setToolNames],
+  );
+
+  const onClearToolkits = useCallback(() => setToolNames(() => ({})), [setToolNames]);
 
   return (
     <FlowEditorNodes.NodeCard
@@ -98,8 +155,11 @@ const LLMNode = memo(props => {
       }}
     >
       <FlowEditorNodePanel.NodeConfigSection>
-        <FlowEditorSelect.ToolkitsSelect
-          id={id}
+        <ToolPickerUI.ProjectToolkitsMultiPicker
+          value={selectedToolkitNames}
+          onAdd={onAddToolkit}
+          onRemove={onRemoveToolkit}
+          onClear={onClearToolkits}
           disabled={isRunningPipeline || disabled}
           data-testid="pipeline-llm-node-toolkits-select"
         />
@@ -107,9 +167,11 @@ const LLMNode = memo(props => {
           const toolkitObj = allToolkits.find(
             tk => (tk.toolkit_name || getToolkitNameFromSchema(tk)) === toolkitName,
           );
-          const allTools = (toolkitObj?.tools || toolkitObj?.settings?.selected_tools || []).map(tool =>
-            typeof tool === 'string' ? tool : tool.name,
-          );
+          // The pipeline narrows `selected_tools` to the tools its nodes use, so offer everything the toolkit has
+          const allTools = (
+            toolkitObj?.tools ||
+            (toolkitObj ? AttachmentToolHelpers.getToolkitAvailableTools(toolkitObj) : [])
+          ).map(tool => (typeof tool === 'string' ? tool : tool.name));
           const availableTools = getSelectedTools(toolkitObj?.type);
           const tools =
             Array.isArray(availableTools) && availableTools.length > 0

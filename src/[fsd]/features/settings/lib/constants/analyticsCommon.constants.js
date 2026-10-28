@@ -18,11 +18,16 @@ export const ENTITY_KIND_LABELS = {
   pipeline: 'Pipeline',
 };
 
-// usage_event.trigger_source of automated runs (#6881); manual runs carry no value
+// usage_event.trigger_source of every run; `manual` is the legacy value of runs recorded before sources existed
 export const TRIGGER_SOURCE_LABELS = {
-  scheduled: 'Scheduled Pipelines',
-  webhook: 'Webhook Triggers',
-  index: 'Index Runs',
+  chat: 'Chat',
+  api: 'API',
+  mcp: 'MCP',
+  webhook: 'Webhook',
+  scheduled: 'Scheduled',
+  schedule_manual: 'Schedule run now',
+  index: 'Index runs',
+  manual: 'Manual (legacy)',
 };
 
 // Embedding calls are metered as llm events, so every token, call and cost figure covers both (#6878)
@@ -49,13 +54,23 @@ export const ANALYTICS_SEARCH_PARAMS = {
   agentId: 'agent_id',
   skillId: 'skill_id',
   skillProjectId: 'skill_project_id',
+  chatId: 'chat_id',
+};
+
+export const CHAT_DETAIL_EMPTY_MESSAGE = 'No data is available for this chat in the selected date range.';
+
+export const CHAT_PARTICIPANT_TYPE_LABELS = {
+  model: 'Direct model',
+  agent: 'Agents',
+  pipeline: 'Pipelines',
+  skill: 'Skills',
 };
 
 export const TOOLTIP_TEXTS = {
   overview: {
-    TEAM: 'Shows active project members out of all project members. Active members performed at least one tracked action during the selected date range. Scheduled, webhook-triggered, and index runs are not counted as member activity.',
+    TEAM: 'Shows active project members out of all project members. Active members performed at least one tracked action during the selected date range. Runs from Webhook, Scheduled, Schedule run now, and Index runs are not counted as member activity.',
     AI_ACTIVE:
-      'Number of members who used AI features during the selected date range, including LLM calls, tool runs, or Agent and Pipeline runs. Automated runs (scheduled, webhook, index) do not make a member AI active.',
+      'Number of members who used AI features during the selected date range, including LLM calls, tool runs, or Agent and Pipeline runs. Automated runs (Webhook, Scheduled, Schedule run now, Index runs) do not make a member AI active.',
     LLM_CALLS: `Total ${MODEL_REQUESTS} during the selected date range.`,
     TOOL_RUNS:
       'Total tool executions during the selected date range. This includes tools, sub-agents, and sub-pipelines invoked by Agents or Pipelines.',
@@ -68,11 +83,11 @@ export const TOOLTIP_TEXTS = {
     TOKENS: `Total input and output tokens used by ${MODEL_REQUESTS} during the selected date range.`,
     COST: `Estimated USD cost of ${MODEL_REQUESTS} during the selected date range. Costs are calculated from the platform's local model-price table and may differ from provider invoices.`,
     LEADERBOARD:
-      'Ranks users by combined LLM calls, tool runs, and Agent & Pipeline runs during the selected date range. Only manually started activity (UI or API) is ranked.',
+      'Ranks users by combined LLM calls, tool runs, and Agent & Pipeline runs during the selected date range. Only manually started activity (Chat, API, or MCP) is ranked. Webhook, Scheduled, Schedule run now, and Index runs are not ranked.',
     LEADERBOARD_SKILL_RUNS:
       'Model and tool calls made by skill runs count toward the score; the Skill figure shows how many skill runs they came from.',
     AUTOMATED_ACTIVITY:
-      'Runs started automatically by a schedule, a webhook, or indexing during the selected date range. They are included in project totals and cost, but are not counted as activity of the user who configured them.',
+      'Runs started automatically by Webhook, Scheduled, Schedule run now, or Index runs during the selected date range. They are included in project totals and cost, but are not counted as activity of the user who configured them.',
     MODEL_USAGE:
       "Shows LLM usage by model, including calls/runs, unique users for Team Projects, and each model's share of total LLM usage.",
     MODEL_USAGE_PRIVATE:
@@ -124,6 +139,33 @@ export const TOOLTIP_TEXTS = {
       'Shows the Agents and Pipelines with the most runs during the selected date range. Interrupt continuations are counted as additional runs.',
     ACTIVITY_COUNT: 'Number of Agents and Pipelines with recorded activity during the selected date range.',
   },
+  chats: {
+    ACTIVE_CHATS: 'Number of chats with at least one AI response during the selected date range.',
+    TOTAL_COST:
+      'Estimated USD cost of all model calls made in chats, including input, output, cache read and cache write costs.',
+    TOTAL_TOKENS: 'Combined input, output, cache read and cache write tokens used in chats.',
+    RESPONSES:
+      'Number of AI replies generated in chats. Regenerating or continuing a reply counts as an additional response.',
+    CHAT_USERS:
+      'Distinct project members who received at least one AI response in a chat. Not shown for Private Projects.',
+    SHARE_OF_PROJECT_COST:
+      'Total chat cost as a percentage of the project total estimated cost in the same date range.',
+    ERRORS: 'Responses in which at least one model or tool call failed.',
+    TOP_CHATS:
+      'The chats with the highest cost (or tokens / responses) in the selected date range. Only the top 10 are loaded when the tab opens.',
+    COST_BY_PARTICIPANT:
+      'Splits chat usage into Direct model, Agents, Pipelines and Skills. Usage of an Agent or Pipeline inside a chat is also included on the Agents & Pipelines tab — the two tabs overlap and must not be added together.',
+    DAILY_USAGE: 'Daily cost and tokens of chat usage in the selected date range.',
+    ACTIVITY_COUNT: 'All chats with at least one AI response in the selected date range.',
+  },
+  chatDetail: {
+    RESPONSES: 'Total AI replies generated in this chat in the selected date range.',
+    UNIQUE_USERS: 'Distinct users who received at least one AI response in this chat.',
+    TOTAL_COST: 'Estimated USD cost of all model calls in this chat.',
+    ALL_TIME_COST:
+      "Running total cost since this chat started tracking usage — the same value as Approx. cost in the chat's Context management panel. All other figures cover only the selected date range.",
+    ERRORS: 'Responses in which at least one model or tool call failed.',
+  },
   skills: {
     RUNS: 'Skill runs during the selected date range: a skill run on its own or as a chat participant. Each reply the skill generates is one run.',
     SKILLS_USED: 'Number of skills that ran or were used by an agent during the selected date range.',
@@ -148,7 +190,8 @@ export const TOOLTIP_TEXTS = {
       'Runs and in-agent uses per skill version. Unknown version means the agent did not record which version it used.',
     MODELS: 'Model calls made by this skill’s runs, per model.',
     USERS: 'Users who ran this skill or used it through an agent.',
-    TRIGGERS: 'How the runs and uses started: manually, or by a schedule, webhook, or index run.',
+    TRIGGERS:
+      'How the runs and uses started: Chat, API, MCP, Webhook, Scheduled, Schedule run now, or Index runs.',
     AGENTS: 'Agents and Pipelines that loaded or mentioned this skill, by number of uses.',
     SOURCES: 'How agents activated this skill: loaded on demand (load_skill) or mentioned in the message.',
     RECENT_RUNS: 'The latest runs of this skill. Open a run to see its own analytics.',
@@ -184,7 +227,7 @@ export const TOOLTIP_TEXTS = {
     MODELS_SECTION:
       'Shows models used during execution, including distinct runs, LLM calls, token usage, and estimated cost. A run using multiple models is counted in each applicable model row. Only LLM calls are included, so tool calls add no tokens or cost here.',
     TRIGGERS_SECTION:
-      'Shows how runs were initiated, with their token usage and estimated cost. Runs without a recorded schedule or webhook trigger appear as Manual.',
+      'Shows how runs were initiated (Chat, API, MCP, Webhook, Scheduled, Schedule run now, or Index runs), with their token usage and estimated cost. Runs recorded before sources existed appear as Manual (legacy).',
     RECENT_RUNS_SECTION:
       'Shows individual runs during the selected period. Select a start time to open that run’s Analytics page.',
   },
@@ -297,9 +340,9 @@ export const GUIDE_SECTIONS = [
       {
         name: 'Automated Activity',
         description:
-          'Shows runs that were started automatically rather than by a person: Scheduled Pipelines, Webhook Triggers, and Index Runs. Each source lists its runs, LLM calls, tool runs, and estimated cost. These runs are part of the project totals and cost, and are still billed to the user who configured them, but they are excluded from TEAM, AI ACTIVE, active users, Top 5 AI Adopters, and the Users and Activity tabs.',
+          'Shows runs that were started automatically rather than by a person: Webhook, Scheduled, Schedule run now, and Index runs. Each source lists its runs, LLM calls, tool runs, and estimated cost. These runs are part of the project totals and cost, and are still billed to the user who configured them, but they are excluded from TEAM, AI ACTIVE, active users, Top 5 AI Adopters, and the Users and Activity tabs.',
         calculation:
-          'Grouped by trigger source. Index runs recorded before this tracking existed count as manual.',
+          'Rows are grouped by trigger source and entity type (Agent or Pipeline). The Entity type column shows a dash when a run has no entity type. Runs recorded before trigger sources existed show as Manual (legacy).',
       },
     ],
   },
@@ -431,7 +474,72 @@ export const GUIDE_SECTIONS = [
       {
         name: 'Agent & Pipeline Detail View',
         description:
-          'Selecting an Agent or Pipeline opens a detail view with its total runs, unique users, total cost, input-token cost, output-token cost, token usage, evaluation tokens, latency, errors, and daily runs. Below them, Versions and Models show runs, tokens, and cost per executed version and per model (a run that used several models counts once in each model row, and only LLM calls are included); Users, Tools, and Skills show who ran it, which tools it called, and which skills it loaded or mentioned; Trigger Sources shows runs, tokens, and cost per initiating trigger, where runs without a recorded schedule or webhook trigger appear as Manual. Recent Runs lists every run with its user, version, models, tokens, cost, and Error or Success status, sorted and paged across the whole date range. Select a run start time to open that run’s Analytics page; the browser Back button returns to the same detail view and date range. Runs of a Catalog or deleted Agent or Pipeline have no run page and show their start time as plain text. The Export button downloads all of these tables, including every Recent Run with its run URL.',
+          'Selecting an Agent or Pipeline opens a detail view with its total runs, unique users, total cost, input-token cost, output-token cost, token usage, evaluation tokens, latency, errors, and daily runs. Below them, Versions and Models show runs, tokens, and cost per executed version and per model (a run that used several models counts once in each model row, and only LLM calls are included); Users, Tools, and Skills show who ran it, which tools it called, and which skills it loaded or mentioned; Trigger Sources shows runs, tokens, and cost per initiating trigger, where the source is Chat, API, MCP, Webhook, Scheduled, Schedule run now, or Index runs, and older runs recorded before sources existed show as Manual (legacy). Recent Runs lists every run with its user, version, models, tokens, cost, and Error or Success status, sorted and paged across the whole date range. Select a run start time to open that run’s Analytics page; the browser Back button returns to the same detail view and date range. Runs of a Catalog or deleted Agent or Pipeline have no run page and show their start time as plain text. The Export button downloads all of these tables, including every Recent Run with its run URL.',
+      },
+    ],
+  },
+  {
+    tabId: ANALYTICS_TAB_IDS.chats,
+    title: 'Chats Tab',
+    items: [
+      {
+        title: 'About',
+        description:
+          'The Chats tab shows token usage and estimated cost of conversations on the Chats page for the selected project and date range. It counts every model and tool call made in a chat, whether the reply came directly from a model, from an Agent or Pipeline added to the chat, or from a skill participant. Agent and Pipeline Run History runs, index runs and Support Bot conversations are not included.',
+      },
+      {
+        title: 'ACTIVE CHATS',
+        description:
+          'Number of chats with at least one AI response during the selected date range. Calculation: distinct chats among the model and tool calls recorded with a chat id.',
+      },
+      {
+        title: 'TOTAL CHAT COST',
+        description:
+          "Estimated USD cost of all model calls made in chats, including input-token, output-token, cache read and cache write costs. Costs are calculated from the platform's local model-price table when the call is made and may differ from provider invoices.",
+      },
+      {
+        title: 'TOTAL CHAT TOKENS',
+        description:
+          'Combined input, output, cache read and cache write tokens used in chats. Calculation: billable input + output + cache read + cache write tokens.',
+      },
+      {
+        title: 'AI RESPONSES',
+        description:
+          'Number of replies generated in chats. Each reply is one response; regenerating or continuing a reply counts as an additional response.',
+      },
+      {
+        title: 'CHAT USERS',
+        description:
+          'Distinct project members who received at least one AI response in a chat. Not shown for Private Projects.',
+      },
+      {
+        title: 'SHARE OF PROJECT COST',
+        description:
+          "Total chat cost as a percentage of the project's total estimated cost in the same date range.",
+      },
+      {
+        title: 'ERRORS',
+        description: 'Responses in which at least one model or tool call failed.',
+      },
+      {
+        title: 'Top Chats',
+        description:
+          'The chats with the highest cost (or tokens / responses, depending on the selected metric) in the selected date range. Only the top 10 are loaded when the tab opens; use Show all chats to browse the rest.',
+      },
+      {
+        title: 'Cost by Participant',
+        description:
+          'Splits chat usage into Direct model, Agents, Pipelines and Skills. Usage of an Agent or Pipeline inside a chat is also included in that Agent or Pipeline on the Agents & Pipelines tab, so the two tabs overlap and must not be added together.',
+      },
+      {
+        title: 'Chat Activity',
+        description:
+          'Lists chats with Responses, Users and Owner (Team Projects), Total/Input/Output/Cache costs, token counts, Avg Cost per Response, Models, Avg Latency, Errors and Last Activity. In Team Projects private chats of other members are counted but shown as "Private chat". Deleted chats keep their usage and are marked as deleted.',
+      },
+      {
+        title: 'Chat Detail View',
+        description:
+          "Selecting a chat opens its KPIs, usage by day, participants, models, users (Team Projects), tools and every response with its user, participant, model, tokens, cost and status. Select a response start time to open its Run Analytics page. All-time cost shows the running total kept since the chat started tracking usage — the same value as Approx. cost in the chat's Context management panel — whereas all other figures cover only the selected date range.",
       },
     ],
   },

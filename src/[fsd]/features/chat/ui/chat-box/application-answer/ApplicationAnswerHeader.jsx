@@ -13,6 +13,7 @@ const ApplicationAnswerHeader = memo(
   forwardRef((props, ref) => {
     const {
       participant,
+      participantName: participantNameOverride,
       created_at,
       isSwarmChild,
       swarmAgentName,
@@ -23,7 +24,8 @@ const ApplicationAnswerHeader = memo(
     } = props;
     const headerStyles = applicationAnswerHeaderStyles();
 
-    const participantName = useParticipantName(participant);
+    const defaultParticipantName = useParticipantName(participant);
+    const participantName = participantNameOverride || defaultParticipantName;
     const entityIcon = useParticipantEntityIcon(participant);
 
     if (isSwarmChild && swarmAgentName) {

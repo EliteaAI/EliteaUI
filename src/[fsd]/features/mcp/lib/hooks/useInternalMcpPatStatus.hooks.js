@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 
 import { useInternalMcpPatStatusQuery } from '@/api/toolkits.js';
+import { PAT_STATES } from '@/[fsd]/features/mcp/lib/constants';
 
 export const useInternalMcpPatStatus = props => {
   const { projectId, toolkitType } = props;
@@ -23,11 +24,13 @@ export const useInternalMcpPatStatus = props => {
     };
   }, [skip, refetch]);
 
-  const patInvalid = !!(data?.internal && data?.state !== 'VALID');
+  const governed = !!(data?.internal && data?.state === PAT_STATES.GOVERNED);
+  const patInvalid = !!(data?.internal && data?.state !== PAT_STATES.VALID && !governed);
 
   return {
     patInvalid,
     patState: patInvalid ? data.state : null,
+    governed,
     isLoading,
   };
 };

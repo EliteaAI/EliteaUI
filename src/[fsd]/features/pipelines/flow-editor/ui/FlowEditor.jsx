@@ -39,6 +39,7 @@ import {
   FlowEditorSettings,
   FlowEditorState,
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import { useReconcilePipelineAttachments } from '@/[fsd]/features/pipelines/tool-picker';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { FlowEditorProvider } from '@/[fsd]/shared/lib/context';
 import { Button, Modal } from '@/[fsd]/shared/ui';
@@ -149,6 +150,9 @@ const FlowEditor = memo(
       resetVersion,
     } = useSelector(selectActivePipeline);
     const yamlJsonObjectRef = useRef(yamlJsonObject);
+
+    // Nodes pick their toolkits, MCPs and agents; drop the ones no node uses any more
+    useReconcilePipelineAttachments({ yamlJsonObject, enabled: isVisible && !disabled });
     const { nodes: cachedNodes, edges: cachedEdges } = useSelector(state => state.pipelineEditor);
     const theme = useTheme();
     const editorRef = useRef();
@@ -475,6 +479,17 @@ const FlowEditor = memo(
         stopCurrentRun: () => onStopRun(pipelineRunNodes[pipelineRunNodes.length - 1]?.id || ''), // stop the last run node
         hasRunsInProgress: () =>
           pipelineRunNodes.some(node => node.data?.status === PipelineStatus.InProgress),
+        // Selects a node from outside the canvas (the Tools section "Used by") and opens its panel
+        selectNode: nodeId => {
+          setFlowNodes(prevNodes =>
+            prevNodes.map(node =>
+              Boolean(node.selected) === (node.id === nodeId)
+                ? node
+                : { ...node, selected: node.id === nodeId },
+            ),
+          );
+          setSelectedNodeId(nodeId);
+        },
       }),
       [
         fitView,

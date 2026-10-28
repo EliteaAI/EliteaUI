@@ -154,7 +154,8 @@ const useSaveNewVersion = ({
           step_limit: versionDetails?.meta?.step_limit || 25,
         },
       });
-      if ((await onSaveTools(result?.data?.id)) === false) {
+      // A new pipeline version is created with the tools its nodes picked, so they need no extra requests
+      if (!isFromPipeline && (await onSaveTools(result?.data?.id)) === false) {
         return; // Stop if toolkit save failed
       }
       onSuccessHandler(result?.data, saveTarget);

@@ -1,15 +1,15 @@
 import { format } from 'date-fns';
 
-import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
-import { ExcelFormats, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils';
+import { ExcelFormats, exportToExcel, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils';
 
+import * as AnalyticsCommonConstants from '../constants/analyticsCommon.constants.js';
 import {
   formatAgentEntityLabel,
   formatAgentModelLabel,
   formatAgentRunModels,
   formatAgentUserLabel,
 } from './agentAnalytics.helpers.js';
-import { formatTriggerLabel, formatVersionLabel, triggerSourceLabel } from './analyticsCommon.helpers.js';
+import { entityKindLabel, formatTriggerLabel, formatVersionLabel } from './analyticsCommon.helpers.js';
 import { tokenStats } from './analyticsToken.helpers.js';
 import { skillDisplayName, skillSourceLabel } from './skillAnalytics.helpers.js';
 
@@ -143,6 +143,7 @@ const buildOverviewSheet = (data, meta, isPersonalProject = false, includeSkills
 
   const automatedCols = [
     { header: 'Trigger Source', key: 'trigger_source' },
+    { header: 'Entity type', key: 'entity_kind' },
     { header: 'Runs', key: 'runs', numFmt: ExcelFormats.integer },
     { header: 'LLM Calls', key: 'llm_calls', numFmt: ExcelFormats.integer },
     { header: 'Tool Runs', key: 'tool_runs', numFmt: ExcelFormats.integer },
@@ -153,7 +154,11 @@ const buildOverviewSheet = (data, meta, isPersonalProject = false, includeSkills
     columns: automatedCols,
     rows:
       automated.length > 0
-        ? automated.map(a => ({ ...a, trigger_source: triggerSourceLabel(a.trigger_source) }))
+        ? automated.map(a => ({
+            ...a,
+            trigger_source: formatTriggerLabel(a.trigger_source),
+            entity_kind: entityKindLabel(a.entity_kind),
+          }))
         : emptyRow(automatedCols, NO_DATA_MSG),
   });
 
@@ -466,15 +471,18 @@ const buildAgentsSheet = (data, meta) => {
     rows: topAgents.length > 0 ? topAgents : emptyRow(topAgentCols, NO_DATA_MSG),
   });
 
-  const dailyCols = [
-    { header: 'Date', key: 'date' },
-    { header: 'Chat Messages', key: 'messages', numFmt: ExcelFormats.integer },
-  ];
-  sections.push({
-    title: 'Chat Messages',
-    columns: dailyCols,
-    rows: chat_daily.length > 0 ? chat_daily : emptyRow(dailyCols, NO_DATA_MSG),
-  });
+  // The agents endpoint sends no daily chat counts today, so the section shows
+  // only when it has rows, like the Agents tab chart; the Overview card count stays in Summary Metrics
+  if (chat_daily.length > 0) {
+    sections.push({
+      title: 'Chat Messages',
+      columns: [
+        { header: 'Date', key: 'date' },
+        { header: 'Chat Messages', key: 'messages', numFmt: ExcelFormats.integer },
+      ],
+      rows: chat_daily,
+    });
+  }
 
   const agentCols = [
     { header: 'Agent / Pipeline', key: 'entity_name' },
@@ -1060,6 +1068,334 @@ const fetchSkillsData = async (dispatch, endpoints, { projectId, dateFrom, dateT
   return result.data;
 };
 
+const CHAT_EXPORT_LIMIT = 5_000;
+const CHAT_RUNS_EXPORT_LIMIT = 2_000;
+
+const PARTICIPANT_TYPE_LABELS = {
+  model: 'Direct model',
+  agent: 'Agents',
+  pipeline: 'Pipelines',
+  skill: 'Skills',
+};
+
+export const buildChatsSheet = (data, meta, isPersonalProject = false) => {
+  const { rows = [], summary = {}, by_participant_type = [], daily = [] } = data || {};
+
+  const summaryCols = [
+    { header: 'Metric', key: 'metric' },
+    { header: 'Value', key: 'value' },
+  ];
+  const summaryRows = [
+    { metric: 'Active Chats', value: summary.active_chats ?? 0 },
+    { metric: 'AI Responses', value: summary.responses ?? 0 },
+    { metric: 'Total Chat Cost (USD)', value: summary.llm_cost ?? 0 },
+    { metric: 'Total Chat Tokens', value: summary.total_tokens ?? 0 },
+    { metric: 'Avg Cost / Chat (USD)', value: summary.avg_cost_per_chat ?? 0 },
+    { metric: 'Avg Cost / Response (USD)', value: summary.avg_cost_per_response ?? 0 },
+    ...(isPersonalProject ? [] : [{ metric: 'Chat Users', value: summary.users ?? 0 }]),
+    {
+      metric: 'Share of Project Cost (%)',
+      value:
+        summary.share_of_project_cost != null ? Number((summary.share_of_project_cost * 100).toFixed(2)) : 0,
+    },
+    { metric: 'Errors', value: summary.errors ?? 0 },
+  ];
+
+  const participantCols = [
+    { header: 'Participant Type', key: 'participant_type_label' },
+    { header: 'Chats', key: 'chats', numFmt: ExcelFormats.integer },
+    { header: 'Responses', key: 'responses', numFmt: ExcelFormats.integer },
+    { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cost (USD)', key: 'llm_cost', numFmt: ExcelFormats.currency },
+  ];
+  const participantRows = by_participant_type.map(r => ({
+    ...r,
+    participant_type_label: PARTICIPANT_TYPE_LABELS[r.participant_type] || r.participant_type || '-',
+  }));
+
+  const dailyCols = [
+    { header: 'Date', key: 'date' },
+    { header: 'Responses', key: 'responses', numFmt: ExcelFormats.integer },
+    { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cost (USD)', key: 'llm_cost', numFmt: ExcelFormats.currency },
+  ];
+
+  const activityCols = [
+    { header: 'Chat', key: 'chat_name' },
+    ...(isPersonalProject ? [] : [{ header: 'Owner', key: 'owner_email' }]),
+    { header: 'Participants', key: 'participants' },
+    { header: 'Responses', key: 'responses', numFmt: ExcelFormats.integer },
+    ...(isPersonalProject ? [] : [{ header: 'Users', key: 'users', numFmt: ExcelFormats.integer }]),
+    { header: 'Total Cost (USD)', key: 'llm_cost', numFmt: ExcelFormats.currency },
+    { header: 'Input Token Cost (USD)', key: 'input_cost', numFmt: ExcelFormats.currency },
+    { header: 'Output Token Cost (USD)', key: 'output_cost', numFmt: ExcelFormats.currency },
+    { header: 'Cache Read Cost (USD)', key: 'cache_read_cost', numFmt: ExcelFormats.currency },
+    { header: 'Cache Write Cost (USD)', key: 'cache_creation_cost', numFmt: ExcelFormats.currency },
+    { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Input Tokens', key: 'input_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Output Tokens', key: 'output_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cache Read Tokens', key: 'cache_read_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cache Write Tokens', key: 'cache_creation_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Avg Cost / Response (USD)', key: 'avg_cost_per_response', numFmt: ExcelFormats.currency },
+    { header: 'Avg Latency (ms)', key: 'avg_duration_ms', numFmt: ExcelFormats.integer },
+    { header: 'Errors', key: 'errors', numFmt: ExcelFormats.integer },
+    { header: 'Last Activity', key: 'last_activity' },
+  ];
+
+  const activityRows = rows.map(r => ({
+    ...r,
+    participants:
+      (r.participants || [])
+        .map(p => p?.type || '')
+        .filter(Boolean)
+        .join(', ') || '-',
+    last_activity: fmtISODateTime(r.last_activity),
+  }));
+
+  return {
+    sheetName: 'Chats',
+    metadata: buildMetadata('Chats', meta),
+    sections: [
+      {
+        title: 'Summary',
+        columns: summaryCols,
+        rows: summaryRows.length ? summaryRows : emptyRow(summaryCols, NO_DATA_MSG),
+      },
+      {
+        title: 'Chats by Participant Type',
+        columns: participantCols,
+        rows: participantRows.length > 0 ? participantRows : emptyRow(participantCols, NO_DATA_MSG),
+      },
+      {
+        title: 'Daily Chat Usage',
+        columns: dailyCols,
+        rows: daily.length > 0 ? daily : emptyRow(dailyCols, NO_DATA_MSG),
+      },
+      {
+        title: 'Chat Activity',
+        columns: activityCols,
+        rows: activityRows.length > 0 ? activityRows : emptyRow(activityCols, NO_DATA_MSG),
+      },
+    ],
+  };
+};
+
+export const buildChatDetailSheet = (
+  detail,
+  { runs = [], runsTotal = runs.length, runsTruncated = false, isPersonalProject = false, ...meta },
+) => {
+  const {
+    chat_name = '',
+    kpis = {},
+    daily_usage = [],
+    by_participant = [],
+    by_model = [],
+    by_user = [],
+    tools = [],
+  } = detail || {};
+
+  const kpiCols = [
+    { header: 'Metric', key: 'metric' },
+    { header: 'Value', key: 'value' },
+  ];
+  const kpiRows = [
+    { metric: 'AI Responses', value: kpis.responses ?? 0 },
+    ...(isPersonalProject ? [] : [{ metric: 'Unique Users', value: kpis.users ?? 0 }]),
+    { metric: 'Total Cost (USD)', value: kpis.llm_cost ?? 0 },
+    { metric: 'Input Token Cost (USD)', value: kpis.input_cost ?? 0 },
+    { metric: 'Output Token Cost (USD)', value: kpis.output_cost ?? 0 },
+    { metric: 'Cache Read Cost (USD)', value: kpis.cache_read_cost ?? 0 },
+    { metric: 'Cache Write Cost (USD)', value: kpis.cache_creation_cost ?? 0 },
+    { metric: 'Total Tokens', value: kpis.total_tokens ?? 0 },
+    { metric: 'Input Tokens', value: kpis.input_tokens ?? 0 },
+    { metric: 'Output Tokens', value: kpis.output_tokens ?? 0 },
+    { metric: 'Cache Read Tokens', value: kpis.cache_read_tokens ?? 0 },
+    { metric: 'Cache Write Tokens', value: kpis.cache_creation_tokens ?? 0 },
+    { metric: 'LLM Calls', value: kpis.llm_calls ?? 0 },
+    { metric: 'Tool Calls', value: kpis.tool_calls ?? 0 },
+    { metric: 'Avg Cost / Response (USD)', value: kpis.avg_cost_per_response ?? 0 },
+    { metric: 'Avg Latency (ms)', value: kpis.avg_duration_ms ?? 0 },
+    { metric: 'Errors', value: kpis.errors ?? 0 },
+    { metric: 'First Activity', value: fmtISODateTime(kpis.first_activity) },
+    { metric: 'Last Activity', value: fmtISODateTime(kpis.last_activity) },
+  ];
+
+  const dailyCols = [
+    { header: 'Date', key: 'date' },
+    { header: 'Responses', key: 'responses', numFmt: ExcelFormats.integer },
+    { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cost (USD)', key: 'llm_cost', numFmt: ExcelFormats.currency },
+  ];
+
+  const participantCols = [
+    { header: 'Participant Type', key: 'participant_type' },
+    { header: 'Responses', key: 'responses', numFmt: ExcelFormats.integer },
+    { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cost (USD)', key: 'llm_cost', numFmt: ExcelFormats.currency },
+    { header: 'Errors', key: 'errors', numFmt: ExcelFormats.integer },
+  ];
+
+  const modelCols = [
+    { header: 'Model', key: 'model_name' },
+    { header: 'LLM Calls', key: 'calls', numFmt: ExcelFormats.integer },
+    { header: 'Responses', key: 'responses', numFmt: ExcelFormats.integer },
+    { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cost (USD)', key: 'llm_cost', numFmt: ExcelFormats.currency },
+  ];
+
+  const userCols = [
+    { header: 'User', key: 'user_email' },
+    { header: 'Responses', key: 'responses', numFmt: ExcelFormats.integer },
+    { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cost (USD)', key: 'llm_cost', numFmt: ExcelFormats.currency },
+  ];
+
+  const toolCols = [
+    { header: 'Tool', key: 'tool_name' },
+    { header: 'Calls', key: 'calls', numFmt: ExcelFormats.integer },
+    { header: 'Errors', key: 'errors', numFmt: ExcelFormats.integer },
+  ];
+
+  const runCols = [
+    { header: 'Started', key: 'started_at' },
+    ...(isPersonalProject ? [] : [{ header: 'User', key: 'user_email' }]),
+    { header: 'Participant', key: 'participant' },
+    { header: 'Models', key: 'models' },
+    { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cost (USD)', key: 'cost', numFmt: ExcelFormats.currency },
+    { header: 'Status', key: 'is_error' },
+  ];
+
+  const runRows = runs.map(r => ({
+    ...r,
+    started_at: fmtISODateTime(r.started_at),
+    participant: PARTICIPANT_TYPE_LABELS[r.participant_type] || r.participant_type || '-',
+    models: Array.isArray(r.models)
+      ? r.models
+          .map(m => (typeof m === 'object' ? m.display_name || m.model_name || '' : m))
+          .filter(Boolean)
+          .join(', ') || '-'
+      : r.models || '-',
+    is_error: r.is_error ? 'Error' : 'Success',
+  }));
+
+  const runsTitle = runsTruncated
+    ? `Recent Responses (first ${runs.length.toLocaleString()} of ${runsTotal.toLocaleString()}, cap reached)`
+    : `Recent Responses (${runs.length.toLocaleString()})`;
+
+  const sections = [
+    { title: 'KPIs', columns: kpiCols, rows: kpiRows },
+    {
+      title: 'Usage by Day',
+      columns: dailyCols,
+      rows: daily_usage.length > 0 ? daily_usage : emptyRow(dailyCols, NO_DATA_MSG),
+    },
+    {
+      title: 'Participants',
+      columns: participantCols,
+      rows:
+        by_participant.length > 0
+          ? by_participant.map(r => ({
+              ...r,
+              participant_type: PARTICIPANT_TYPE_LABELS[r.participant_type] || r.participant_type || '-',
+            }))
+          : emptyRow(participantCols, NO_DATA_MSG),
+    },
+    {
+      title: 'Models',
+      columns: modelCols,
+      rows: by_model.length > 0 ? by_model : emptyRow(modelCols, NO_DATA_MSG),
+    },
+    ...(isPersonalProject
+      ? []
+      : [
+          {
+            title: 'Users',
+            columns: userCols,
+            rows: by_user.length > 0 ? by_user : emptyRow(userCols, NO_DATA_MSG),
+          },
+        ]),
+    { title: 'Tools', columns: toolCols, rows: tools.length > 0 ? tools : emptyRow(toolCols, NO_DATA_MSG) },
+    {
+      title: runsTitle,
+      columns: runCols,
+      rows: runRows.length > 0 ? runRows : emptyRow(runCols, NO_DATA_MSG),
+    },
+  ];
+
+  return {
+    sheetName: 'Chat Detail',
+    metadata: [['Chat', chat_name], ...buildMetadata('Chats', meta)],
+    sections,
+  };
+};
+
+export const buildChatAnalyticsExportFileName = ({ projectName, chatName, dateFrom, dateTo }) =>
+  `${sanitizeFileNamePart(projectName)}_chat_${sanitizeFileNamePart(chatName || 'unknown')}_${fmtLocalDate(dateFrom)}-${fmtLocalDate(dateTo)}.xlsx`;
+
+const fetchChatRunsPage = async (dispatch, endpoints, args) => {
+  const subscription = dispatch(endpoints.analyticsChatRuns.initiate(args));
+  try {
+    return await subscription.unwrap();
+  } finally {
+    subscription.unsubscribe();
+  }
+};
+
+export const fetchAllChatRuns = async (
+  dispatch,
+  endpoints,
+  { projectId, conversationUuid, dateFrom, dateTo },
+) => {
+  const runs = [];
+  let offset = 0;
+  let total = Infinity;
+
+  while (offset < total && runs.length < CHAT_RUNS_EXPORT_LIMIT) {
+    const page = await fetchChatRunsPage(dispatch, endpoints, {
+      projectId,
+      conversationUuid,
+      dateFrom,
+      dateTo,
+      limit: 100,
+      offset,
+      sortBy: 'started_at',
+      sortOrder: 'desc',
+    });
+    const pageRows = page?.rows || [];
+    if (!pageRows.length) break;
+    runs.push(...pageRows);
+    total = page?.total ?? runs.length;
+    offset += pageRows.length;
+  }
+
+  const truncated = runs.length >= CHAT_RUNS_EXPORT_LIMIT && runs.length < total;
+  return { runs, total, truncated };
+};
+
+const fetchChatsData = async (dispatch, endpoints, { projectId, dateFrom, dateTo }) => {
+  const [summaryResult, listResult] = await Promise.all([
+    dispatch(endpoints.analyticsChatsSummary.initiate({ projectId, dateFrom, dateTo, includeDaily: true })),
+    dispatch(
+      endpoints.analyticsChats.initiate({
+        projectId,
+        dateFrom,
+        dateTo,
+        limit: CHAT_EXPORT_LIMIT,
+        offset: 0,
+        sortBy: 'llm_cost',
+        sortOrder: 'desc',
+      }),
+    ),
+  ]);
+  return {
+    summary: summaryResult.data?.kpis || {},
+    by_participant_type: summaryResult.data?.by_participant_type || [],
+    daily: summaryResult.data?.daily || [],
+    rows: listResult.data?.rows || [],
+  };
+};
+
 export const fetchAllAnalyticsData = async (
   dispatch,
   endpoints,
@@ -1074,6 +1410,7 @@ export const fetchAllAnalyticsData = async (
     usersResult,
     activityResult,
     skills,
+    chats,
   ] = await Promise.all([
     // Overview is served by two endpoints — tracing for chat/health, usage for the AI half
     dispatch(endpoints.projectAnalytics.initiate({ projectId, dateFrom, dateTo })),
@@ -1121,6 +1458,7 @@ export const fetchAllAnalyticsData = async (
       }),
     ),
     fetchSkillsData(dispatch, endpoints, { projectId, dateFrom, dateTo, includeSkills }),
+    fetchChatsData(dispatch, endpoints, { projectId, dateFrom, dateTo }),
   ]);
 
   return {
@@ -1132,6 +1470,7 @@ export const fetchAllAnalyticsData = async (
     users: usersResult.data,
     activity: activityResult.data,
     skills,
+    chats,
   };
 };
 
@@ -1144,6 +1483,7 @@ export const buildAnalyticsSheets = ({
   users,
   activity,
   skills,
+  chats,
   meta,
   isPersonalProject,
   includeSkills = false,
@@ -1160,6 +1500,7 @@ export const buildAnalyticsSheets = ({
   buildTokensSheet(costs, meta, { includeSkills }),
   buildAgentsSheet(agents, meta),
   ...(includeSkills ? [buildSkillsSheet(skills, meta)] : []),
+  buildChatsSheet(chats, meta, isPersonalProject),
   buildToolsSheet(tools, meta),
   buildUsersSheet(users, meta, includeSkills),
   buildActivitySheet(activity, meta, isPersonalProject),
@@ -1203,3 +1544,33 @@ export const buildRunAnalyticsSheets = ({ costs, tools, health, meta }) => [
   buildToolsSheet(tools, meta, { runScoped: true }),
   buildHealthSheet(health, meta, { runScoped: true }),
 ];
+
+export const exportChatDetail = async (
+  dispatch,
+  endpoints,
+  { projectId, conversationUuid, dateFrom, dateTo, chatData, isPersonalProject, projectName },
+) => {
+  const [detailResult, { runs, total, truncated }] = await Promise.all([
+    chatData
+      ? Promise.resolve({ data: chatData })
+      : dispatch(endpoints.analyticsChatDetail.initiate({ projectId, conversationUuid, dateFrom, dateTo })),
+    fetchAllChatRuns(dispatch, endpoints, { projectId, conversationUuid, dateFrom, dateTo }),
+  ]);
+  const data = detailResult?.data ?? chatData;
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  await exportToExcel(
+    buildChatAnalyticsExportFileName({ projectName, chatName: data?.chat_name, dateFrom, dateTo }),
+    [
+      buildChatDetailSheet(data, {
+        runs,
+        runsTotal: total,
+        runsTruncated: truncated,
+        isPersonalProject,
+        projectName,
+        dateFrom,
+        dateTo,
+        timeZone,
+      }),
+    ],
+  );
+};

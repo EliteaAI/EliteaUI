@@ -5,7 +5,7 @@ import { filterActivePipelineHitlPromptItems } from '@/[fsd]/features/chat/lib/h
 import { hasPendingAuthRequiredAction } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
 import { isParticipantStillActive } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { ApplicationAnswer, UserMessage } from '@/[fsd]/features/chat/ui/chat-box';
-import { ROLES, WELCOME_MESSAGE_ID } from '@/common/constants';
+import { ChatParticipantType, ROLES, WELCOME_MESSAGE_ID } from '@/common/constants';
 
 const ChatMessageWrapper = memo(props => {
   const {
@@ -66,6 +66,12 @@ const ChatMessageWrapper = memo(props => {
     [activeConversation, message.participant_id, message.role],
   );
 
+  // Imported chats map agents missing in this project to the default participant; keep their original names
+  const importedParticipantName =
+    messageParticipant?.entity_name === ChatParticipantType.Dummy ? message.importedAuthorName : undefined;
+  const importedSentToName =
+    message.sentTo?.entity_name === ChatParticipantType.Dummy ? message.importedSentToName : undefined;
+
   const shouldDisableRegenerate = useMemo(
     () =>
       isLoading ||
@@ -119,6 +125,7 @@ const ChatMessageWrapper = memo(props => {
         message_items={message.message_items}
         created_at={message.created_at}
         sentTo={message.sentTo}
+        sentToName={importedSentToName}
         onClickSentTo={onSendToClick}
         onCopy={onCopyToClipboard ? onCopy : undefined}
         onDelete={
@@ -141,6 +148,7 @@ const ChatMessageWrapper = memo(props => {
       message_items={displayMessageItems}
       created_at={message.created_at}
       participant={messageParticipant}
+      participantName={importedParticipantName}
       onClickReplyTo={onReplyTo}
       onCopy={onCopyToClipboard ? onCopy : undefined}
       onDelete={

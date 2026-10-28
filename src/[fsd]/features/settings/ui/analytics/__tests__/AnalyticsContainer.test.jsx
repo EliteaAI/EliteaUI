@@ -128,6 +128,7 @@ const ALL_TABS = [
   'Costs',
   'Tokens',
   'Agents & Pipelines',
+  'Chats',
   'Skills',
   'Tools',
   'Users',

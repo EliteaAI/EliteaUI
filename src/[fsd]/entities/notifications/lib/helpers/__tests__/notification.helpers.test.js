@@ -148,3 +148,67 @@ describe('parseMessage on budget copy', () => {
     expect(segments[segments.length - 1]).toEqual({ text: 'View my usage', isLink: true });
   });
 });
+
+// schedule notices link to the schedule subpage or the list
+describe('resolveHref for schedule notifications', () => {
+  const runTypes = [
+    NotificationType.ScheduleRunFailed,
+    NotificationType.ScheduleRunSucceeded,
+    NotificationType.ScheduleApprovalNeeded,
+    NotificationType.ScheduleApprovalExpired,
+  ];
+  const subpageTypes = [
+    NotificationType.ScheduleExpired,
+    NotificationType.ScheduleDisabled,
+    NotificationType.ScheduleEditedByAdmin,
+  ];
+  const allTypes = [...runTypes, ...subpageTypes, NotificationType.ScheduleOwnerChanged];
+
+  it('registers the eight schedule types with the wire names', () => {
+    expect(allTypes).toEqual([
+      'schedule_run_failed',
+      'schedule_run_succeeded',
+      'schedule_approval_needed',
+      'schedule_approval_expired',
+      'schedule_expired',
+      'schedule_disabled',
+      'schedule_edited_by_admin',
+      'schedule_owner_changed',
+    ]);
+  });
+
+  it('opens the subpage with the run selected for a run event with a conversation', () => {
+    for (const type of runTypes) {
+      expect(resolveHref(type, { schedule_id: 12, conversation_id: 345 }, 5)).toBe(
+        `${BASE}/5/settings/schedules/12?history_run_id=345`,
+      );
+    }
+  });
+
+  it('opens the subpage without a run when a run event has no conversation', () => {
+    for (const type of runTypes) {
+      expect(resolveHref(type, { schedule_id: 12 }, 5)).toBe(`${BASE}/5/settings/schedules/12`);
+    }
+  });
+
+  it('opens the subpage for an expired, disabled or admin-edit notice', () => {
+    for (const type of subpageTypes) {
+      expect(resolveHref(type, { schedule_id: 12, conversation_id: 345 }, 5)).toBe(
+        `${BASE}/5/settings/schedules/12`,
+      );
+    }
+  });
+
+  it('opens the list for an owner-changed notice', () => {
+    expect(resolveHref(NotificationType.ScheduleOwnerChanged, { schedule_id: 12 }, 5)).toBe(
+      `${BASE}/5/settings/schedules`,
+    );
+  });
+
+  it('shows no link when a schedule notice has no schedule_id', () => {
+    for (const type of [...runTypes, ...subpageTypes]) {
+      expect(resolveHref(type, {}, 5)).toBeNull();
+    }
+    expect(resolveHref(NotificationType.ScheduleRunFailed, undefined, 5)).toBeNull();
+  });
+});

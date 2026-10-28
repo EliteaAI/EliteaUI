@@ -1,17 +1,28 @@
-import { describe, expect, it, vi } from 'vitest';
+// @vitest-environment jsdom
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ExcelFormats } from '@/[fsd]/shared/lib/utils';
+import { ExcelFormats, exportToExcel } from '@/[fsd]/shared/lib/utils';
 
 import {
   buildAgentAnalyticsExportFileName,
   buildAgentDetailSheet,
   buildAnalyticsSheets,
+  buildChatAnalyticsExportFileName,
+  buildChatDetailSheet,
+  buildChatsSheet,
   buildRunAnalyticsSheets,
+  exportChatDetail,
   fetchAllAgentRuns,
+  fetchAllChatRuns,
   fetchRunAnalyticsData,
   fmtRunDateTime,
   runAnalyticsExportFileName,
 } from '../analyticsExport.helpers';
+
+vi.mock('@/[fsd]/shared/lib/utils', async importOriginal => ({
+  ...(await importOriginal()),
+  exportToExcel: vi.fn(() => Promise.resolve()),
+}));
 
 const RUN_META = {
   scopeRows: [
@@ -467,7 +478,7 @@ describe('buildAgentDetailSheet', () => {
 
     expect(sectionOf(sheet, 'Versions').rows[0].version_name).toBe('Unknown version');
     expect(sectionOf(sheet, 'Models').rows[0].display_name).toBe('gpt-4o');
-    expect(sectionOf(sheet, 'Trigger Sources').rows[0].trigger_source).toBe('Manual');
+    expect(sectionOf(sheet, 'Trigger Sources').rows[0].trigger_source).toBe('Manual (legacy)');
     expect(sectionOf(sheet, 'Users').rows[0].user_email).toBe('User 11');
   });
 
@@ -645,5 +656,505 @@ describe('buildAgentAnalyticsExportFileName', () => {
         dateTo: '2026-10-10T12:00:00',
       }),
     ).toBe('Team_pipeline_Reviewer_2026-10-01-2026-10-10.xlsx');
+  });
+});
+
+// ─── Chat export helpers ─────────────────────────────────────────────────────
+
+const CHAT_META = { projectName: 'Team', dateFrom: '2026-10-01', dateTo: '2026-10-08', timeZone: 'UTC' };
+
+const CHATS_DATA = {
+  summary: {
+    active_chats: 4,
+    responses: 20,
+    users: 3,
+    llm_cost: 0.008,
+    total_tokens: 12000,
+    avg_cost_per_chat: 0.002,
+    avg_cost_per_response: 0.0004,
+    share_of_project_cost: 0.25,
+    errors: 1,
+  },
+  by_participant_type: [
+    { participant_type: 'model', responses: 15, total_tokens: 9000, llm_cost: 0.006 },
+    { participant_type: 'agent', responses: 5, total_tokens: 3000, llm_cost: 0.002 },
+  ],
+  daily: [{ date: '2026-10-01', responses: 5, total_tokens: 3000, llm_cost: 0.002 }],
+  rows: [
+    {
+      chat_name: 'Review Chat',
+      owner_email: 'alice@example.com',
+      participants: [{ type: 'model' }, { type: 'agent' }],
+      responses: 10,
+      users: 2,
+      llm_cost: 0.004,
+      input_cost: 0.002,
+      output_cost: 0.002,
+      cache_read_cost: 0,
+      cache_creation_cost: 0,
+      total_tokens: 6000,
+      input_tokens: 3000,
+      output_tokens: 3000,
+      cache_read_tokens: 0,
+      cache_creation_tokens: 0,
+      avg_cost_per_response: 0.0004,
+      avg_duration_ms: 900,
+      errors: 0,
+      last_activity: '2026-10-08T10:00:00',
+    },
+  ],
+};
+
+const CHAT_DETAIL = {
+  chat_name: 'Review Chat',
+  kpis: {
+    responses: 10,
+    users: 2,
+    errors: 1,
+    llm_cost: 0.004,
+    input_cost: 0.002,
+    output_cost: 0.002,
+    cache_read_cost: 0,
+    cache_creation_cost: 0,
+    total_tokens: 6000,
+    input_tokens: 3000,
+    output_tokens: 3000,
+    cache_read_tokens: 0,
+    cache_creation_tokens: 0,
+    llm_calls: 12,
+    tool_calls: 2,
+    avg_cost_per_response: 0.0004,
+    avg_duration_ms: 900,
+    first_activity: '2026-10-01T09:00:00',
+    last_activity: '2026-10-08T10:00:00',
+  },
+  daily_usage: [{ date: '2026-10-01', responses: 10, total_tokens: 6000, llm_cost: 0.004 }],
+  by_participant: [
+    { participant_type: 'model', responses: 8, total_tokens: 5000, llm_cost: 0.003, errors: 0 },
+    { participant_type: 'agent', responses: 2, total_tokens: 1000, llm_cost: 0.001, errors: 1 },
+  ],
+  by_model: [
+    {
+      model_name: 'gpt-4o',
+      display_name: 'GPT-4o',
+      calls: 12,
+      responses: 10,
+      total_tokens: 6000,
+      llm_cost: 0.004,
+    },
+  ],
+  by_user: [
+    { user_id: 11, user_email: 'alice@example.com', responses: 7, total_tokens: 4000, llm_cost: 0.003 },
+  ],
+  tools: [{ tool_name: 'search', calls: 2, errors: 0 }],
+};
+
+const CHAT_RUN = {
+  run_id: 'cr1',
+  started_at: '2026-10-01T09:12:03+00:00',
+  user_email: 'alice@example.com',
+  participant_type: 'agent',
+  models: [{ model_name: 'gpt-4o', display_name: 'GPT-4o' }],
+  total_tokens: 600,
+  cost: 0.0004,
+  is_error: false,
+};
+
+const chatSection = (sheet, title) => sheet.sections.find(s => s.title === title);
+
+describe('buildChatsSheet — structure', () => {
+  it('returns a sheet named "Chats" with four sections in order', () => {
+    const sheet = buildChatsSheet(CHATS_DATA, CHAT_META);
+
+    expect(sheet.sheetName).toBe('Chats');
+    expect(sheet.sections.map(s => s.title)).toEqual([
+      'Summary',
+      'Chats by Participant Type',
+      'Daily Chat Usage',
+      'Chat Activity',
+    ]);
+  });
+
+  it('includes Chat Users in summary for team projects', () => {
+    const sheet = buildChatsSheet(CHATS_DATA, CHAT_META, false);
+    const metrics = chatSection(sheet, 'Summary').rows.map(r => r.metric);
+
+    expect(metrics).toContain('Chat Users');
+  });
+
+  it('omits Chat Users in summary for personal projects', () => {
+    const sheet = buildChatsSheet(CHATS_DATA, CHAT_META, true);
+    const metrics = chatSection(sheet, 'Summary').rows.map(r => r.metric);
+
+    expect(metrics).not.toContain('Chat Users');
+  });
+
+  it('converts share_of_project_cost fraction to a percentage', () => {
+    const sheet = buildChatsSheet(CHATS_DATA, CHAT_META);
+    const share = chatSection(sheet, 'Summary').rows.find(r => r.metric === 'Share of Project Cost (%)');
+
+    expect(share.value).toBe(25);
+  });
+
+  it('maps participant type to a human-readable label', () => {
+    const sheet = buildChatsSheet(CHATS_DATA, CHAT_META);
+    const labels = chatSection(sheet, 'Chats by Participant Type').rows.map(r => r.participant_type_label);
+
+    expect(labels).toContain('Direct model');
+    expect(labels).toContain('Agents');
+  });
+
+  it('includes Owner and Users columns for team projects, omits them for personal', () => {
+    const team = buildChatsSheet(CHATS_DATA, CHAT_META, false);
+    const personal = buildChatsSheet(CHATS_DATA, CHAT_META, true);
+    const teamHeaders = chatSection(team, 'Chat Activity').columns.map(c => c.header);
+    const personalHeaders = chatSection(personal, 'Chat Activity').columns.map(c => c.header);
+
+    expect(teamHeaders).toContain('Owner');
+    expect(teamHeaders).toContain('Users');
+    expect(personalHeaders).not.toContain('Owner');
+    expect(personalHeaders).not.toContain('Users');
+  });
+
+  it('joins participants array into a comma-separated string', () => {
+    const sheet = buildChatsSheet(CHATS_DATA, CHAT_META);
+    const activityRows = chatSection(sheet, 'Chat Activity').rows;
+
+    expect(activityRows[0].participants).toBe('model, agent');
+  });
+
+  it('fills tabular sections with the no-data message when data is empty', () => {
+    const emptySheet = buildChatsSheet({}, CHAT_META);
+    const tabularSections = emptySheet.sections.filter(s => s.title !== 'Summary');
+
+    for (const section of tabularSections) {
+      expect(section.rows[0][section.columns[0].key]).toBe('No data available for the selected date range.');
+    }
+  });
+});
+
+describe('buildChatDetailSheet — structure', () => {
+  it('returns a sheet named "Chat Detail" with sections in page order', () => {
+    const sheet = buildChatDetailSheet(CHAT_DETAIL, { ...CHAT_META, runs: [CHAT_RUN] });
+
+    expect(sheet.sheetName).toBe('Chat Detail');
+    expect(sheet.sections.map(s => s.title)).toEqual([
+      'KPIs',
+      'Usage by Day',
+      'Participants',
+      'Models',
+      'Users',
+      'Tools',
+      `Recent Responses (1)`,
+    ]);
+  });
+
+  it('omits Users section for personal projects', () => {
+    const sheet = buildChatDetailSheet(CHAT_DETAIL, { ...CHAT_META, runs: [], isPersonalProject: true });
+    const titles = sheet.sections.map(s => s.title);
+
+    expect(titles).not.toContain('Users');
+  });
+
+  it('maps participant_type to a human-readable label', () => {
+    const sheet = buildChatDetailSheet(CHAT_DETAIL, { ...CHAT_META, runs: [] });
+    const labels = chatSection(sheet, 'Participants').rows.map(r => r.participant_type);
+
+    expect(labels).toContain('Direct model');
+    expect(labels).toContain('Agents');
+  });
+
+  it('formats runs with participant label, joined models and status', () => {
+    const sheet = buildChatDetailSheet(CHAT_DETAIL, { ...CHAT_META, runs: [CHAT_RUN] });
+    const run = chatSection(sheet, 'Recent Responses (1)').rows[0];
+
+    expect(run.participant).toBe('Agents');
+    expect(run.models).toBe('GPT-4o');
+    expect(run.is_error).toBe('Success');
+  });
+
+  it('names the truncated runs section with the count and total correctly', () => {
+    const manyRuns = Array.from({ length: 50 }, (_, i) => ({ ...CHAT_RUN, run_id: `r${i}` }));
+    const sheet = buildChatDetailSheet(CHAT_DETAIL, {
+      ...CHAT_META,
+      runs: manyRuns,
+      runsTotal: 5000,
+      runsTruncated: true,
+    });
+
+    expect(sheet.sections.at(-1).title).toBe('Recent Responses (first 50 of 5,000, cap reached)');
+  });
+
+  it('uses plain count title when the list is not truncated', () => {
+    const sheet = buildChatDetailSheet(CHAT_DETAIL, {
+      ...CHAT_META,
+      runs: [CHAT_RUN],
+      runsTotal: 1,
+      runsTruncated: false,
+    });
+
+    expect(sheet.sections.at(-1).title).toBe('Recent Responses (1)');
+  });
+
+  it('omits User column from runs for personal projects', () => {
+    const sheet = buildChatDetailSheet(CHAT_DETAIL, {
+      ...CHAT_META,
+      runs: [CHAT_RUN],
+      isPersonalProject: true,
+    });
+    const runColumns = sheet.sections.at(-1).columns.map(c => c.header);
+
+    expect(runColumns).not.toContain('User');
+  });
+
+  it('prefixes metadata with the chat name', () => {
+    const sheet = buildChatDetailSheet(CHAT_DETAIL, { ...CHAT_META, runs: [] });
+
+    expect(sheet.metadata[0]).toEqual(['Chat', 'Review Chat']);
+  });
+});
+
+describe('buildChatAnalyticsExportFileName', () => {
+  it('names the file after project, chat name and date range', () => {
+    expect(
+      buildChatAnalyticsExportFileName({
+        projectName: 'Team',
+        chatName: 'Review Chat',
+        dateFrom: '2026-10-01',
+        dateTo: '2026-10-08',
+      }),
+    ).toBe('Team_chat_Review_Chat_2026-10-01-2026-10-08.xlsx');
+  });
+
+  it('falls back to "unknown" when chat name is absent', () => {
+    expect(
+      buildChatAnalyticsExportFileName({ projectName: 'Team', dateFrom: '2026-10-01', dateTo: '2026-10-08' }),
+    ).toBe('Team_chat_unknown_2026-10-01-2026-10-08.xlsx');
+  });
+});
+
+describe('fetchAllChatRuns', () => {
+  const makeDispatch = pages => {
+    const subscriptions = [];
+    const dispatch = vi.fn(args => {
+      const subscription = {
+        unwrap: () => Promise.resolve(pages[args.offset] ?? { total: 0, rows: [] }),
+        unsubscribe: vi.fn(),
+      };
+      subscriptions.push(subscription);
+      return subscription;
+    });
+    return { dispatch, subscriptions };
+  };
+
+  const endpoints = { analyticsChatRuns: { initiate: vi.fn(args => args) } };
+
+  it('collects runs across multiple pages', async () => {
+    const { dispatch } = makeDispatch({
+      0: { total: 3, rows: [{ run_id: 'a' }, { run_id: 'b' }] },
+      2: { total: 3, rows: [{ run_id: 'c' }] },
+    });
+
+    const { runs, truncated } = await fetchAllChatRuns(dispatch, endpoints, {
+      projectId: 1,
+      conversationUuid: 'uuid-1',
+    });
+
+    expect(runs.map(r => r.run_id)).toEqual(['a', 'b', 'c']);
+    expect(truncated).toBe(false);
+  });
+
+  it('stops on an empty page', async () => {
+    const { dispatch } = makeDispatch({ 0: { total: 5, rows: [] } });
+
+    const { runs } = await fetchAllChatRuns(dispatch, endpoints, {
+      projectId: 1,
+      conversationUuid: 'uuid-1',
+    });
+
+    expect(runs).toHaveLength(0);
+    expect(dispatch).toHaveBeenCalledTimes(1);
+  });
+
+  it('releases every page subscription', async () => {
+    const { dispatch, subscriptions } = makeDispatch({
+      0: { total: 2, rows: [{ run_id: 'a' }, { run_id: 'b' }] },
+      2: { total: 2, rows: [] },
+    });
+
+    await fetchAllChatRuns(dispatch, endpoints, { projectId: 1, conversationUuid: 'uuid-1' });
+
+    subscriptions.forEach(s => expect(s.unsubscribe).toHaveBeenCalledTimes(1));
+  });
+});
+
+describe('exportChatDetail', () => {
+  const baseArgs = {
+    projectId: 1,
+    conversationUuid: 'uuid-1',
+    dateFrom: '2026-10-01',
+    dateTo: '2026-10-08',
+    isPersonalProject: false,
+    projectName: 'Team',
+  };
+
+  const makeDeps = ({ detail = CHAT_DETAIL, runs = [CHAT_RUN], total = runs.length } = {}) => {
+    const endpoints = {
+      analyticsChatDetail: { initiate: vi.fn(args => ({ type: 'detail', args })) },
+      analyticsChatRuns: { initiate: vi.fn(args => ({ type: 'runs', args })) },
+    };
+    const dispatch = vi.fn(action => {
+      if (action.type === 'detail') return Promise.resolve({ data: detail });
+      return {
+        unwrap: () => Promise.resolve(action.args.offset === 0 ? { total, rows: runs } : { total, rows: [] }),
+        unsubscribe: vi.fn(),
+      };
+    });
+    return { dispatch, endpoints };
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('fetches the chat detail when none is supplied and exports one Excel file', async () => {
+    const { dispatch, endpoints } = makeDeps();
+
+    await exportChatDetail(dispatch, endpoints, baseArgs);
+
+    expect(endpoints.analyticsChatDetail.initiate).toHaveBeenCalledWith({
+      projectId: 1,
+      conversationUuid: 'uuid-1',
+      dateFrom: '2026-10-01',
+      dateTo: '2026-10-08',
+    });
+    expect(exportToExcel).toHaveBeenCalledTimes(1);
+    const [fileName, sheets] = exportToExcel.mock.calls[0];
+    expect(fileName).toBe(
+      buildChatAnalyticsExportFileName({
+        projectName: 'Team',
+        chatName: 'Review Chat',
+        dateFrom: '2026-10-01',
+        dateTo: '2026-10-08',
+      }),
+    );
+    expect(sheets).toHaveLength(1);
+  });
+
+  it('reuses supplied chat data instead of requesting the detail again', async () => {
+    const { dispatch, endpoints } = makeDeps();
+
+    await exportChatDetail(dispatch, endpoints, { ...baseArgs, chatData: CHAT_DETAIL });
+
+    expect(endpoints.analyticsChatDetail.initiate).not.toHaveBeenCalled();
+    expect(exportToExcel).toHaveBeenCalledTimes(1);
+  });
+
+  it('includes the fetched runs in the exported sheet', async () => {
+    const { dispatch, endpoints } = makeDeps({ runs: [CHAT_RUN] });
+
+    await exportChatDetail(dispatch, endpoints, baseArgs);
+
+    const expected = buildChatDetailSheet(CHAT_DETAIL, {
+      runs: [CHAT_RUN],
+      runsTotal: 1,
+      runsTruncated: false,
+      isPersonalProject: false,
+      projectName: 'Team',
+      dateFrom: '2026-10-01',
+      dateTo: '2026-10-08',
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    });
+    expect(exportToExcel.mock.calls[0][1]).toEqual([expected]);
+  });
+
+  it('rejects when fetching the runs fails so the caller can show an error', async () => {
+    const { endpoints } = makeDeps();
+    const dispatch = vi.fn(action =>
+      action.type === 'detail'
+        ? Promise.resolve({ data: CHAT_DETAIL })
+        : { unwrap: () => Promise.reject(new Error('boom')), unsubscribe: vi.fn() },
+    );
+
+    await expect(exportChatDetail(dispatch, endpoints, baseArgs)).rejects.toThrow('boom');
+    expect(exportToExcel).not.toHaveBeenCalled();
+  });
+});
+
+describe('Automated Activity export', () => {
+  const SEPT_META = { projectName: 'Team', dateFrom: '2026-09-01', dateTo: '2026-09-30', timeZone: 'UTC' };
+  const automated = [
+    { trigger_source: 'schedule_manual', entity_kind: 'agent', runs: 2 },
+    { trigger_source: 'scheduled', entity_kind: 'pipeline', runs: 3 },
+    { trigger_source: 'index', runs: 1 },
+  ];
+  let sec;
+
+  beforeAll(() => {
+    const [overview] = buildAnalyticsSheets({
+      overview: { automated },
+      overviewUsage: {},
+      costs: {},
+      users: {},
+      skills: {},
+      meta: SEPT_META,
+    });
+    sec = overview.sections.find(s => s.title === 'Automated Activity');
+  });
+
+  it('adds an Entity type column after Trigger Source', () => {
+    expect(sec.columns.map(c => c.header).slice(0, 2)).toEqual(['Trigger Source', 'Entity type']);
+  });
+
+  it('writes source labels, entity labels and "-" when kind is missing', () => {
+    expect(sec.rows.map(r => [r.trigger_source, r.entity_kind])).toEqual([
+      ['Schedule run now', 'Agent'],
+      ['Scheduled', 'Pipeline'],
+      ['Index runs', '-'],
+    ]);
+  });
+});
+
+describe('Chat Messages export section', () => {
+  const AGENT_ROW = { entity_id: 3, entity_name: 'Reviewer', events: 4 };
+  const sheetsWith = ({ agents, overview = {}, overviewUsage = {} }) =>
+    buildAnalyticsSheets({ overview, overviewUsage, costs: {}, users: {}, skills: {}, agents, meta: META });
+  const sheet = (sheets, name) => sheets.find(s => s.sheetName === name);
+
+  it('leaves the Chat Messages section out when chat_daily is empty', () => {
+    const agentsSheet = sheet(
+      sheetsWith({ agents: { rows: [AGENT_ROW], chat_daily: [] } }),
+      'Agents & Pipelines',
+    );
+
+    expect(sectionTitles(agentsSheet)).not.toContain('Chat Messages');
+  });
+
+  it('writes one Chat Messages row per day when chat_daily has rows', () => {
+    const agentsSheet = sheet(
+      sheetsWith({ agents: { rows: [AGENT_ROW], chat_daily: [{ date: '2026-09-02', messages: 2 }] } }),
+      'Agents & Pipelines',
+    );
+    const chat = agentsSheet.sections.find(s => s.title === 'Chat Messages');
+
+    expect(chat.rows).toEqual([{ date: '2026-09-02', messages: 2 }]);
+  });
+
+  it('still writes the Overview card Chat Messages count in Summary Metrics', () => {
+    const sheets = sheetsWith({
+      agents: { rows: [], chat_daily: [] },
+      overview: { kpis: { chat_msgs: 2 } },
+      overviewUsage: { kpis: { agent_runs: 1 } },
+    });
+    const metrics = sheet(sheets, 'Overview').sections.find(s => s.title === 'Summary Metrics').rows;
+
+    expect(metrics.find(r => r.metric === 'Chat Messages').value).toBe(2);
+  });
+
+  it('still shows "No data available" in the agents sections when the list is empty', () => {
+    const agentsSheet = sheet(sheetsWith({ agents: { rows: [], chat_daily: [] } }), 'Agents & Pipelines');
+    const top = agentsSheet.sections.find(s => s.title === 'Most Active Agents & Pipelines');
+
+    expect(JSON.stringify(top.rows)).toContain('No data available for the selected date range.');
   });
 });

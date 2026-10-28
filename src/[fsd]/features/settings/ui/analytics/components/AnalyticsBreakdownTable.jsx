@@ -33,21 +33,13 @@ const AnalyticsBreakdownTable = memo(props => {
       sx={styles.chartCard}
       data-testid={testId}
     >
-      <Typography
-        variant="labelMedium"
-        sx={styles.chartTitle}
-      >
-        {title}
-      </Typography>
-      <Box sx={styles.subtitleRow}>
-        {subtitle && (
-          <Typography
-            variant="bodySmall"
-            sx={styles.chartSubtitle}
-          >
-            {subtitle}
-          </Typography>
-        )}
+      <Box sx={tableStyles.titleRow}>
+        <Typography
+          variant="labelMedium"
+          sx={[styles.chartTitle, { marginBottom: 0 }]}
+        >
+          {title}
+        </Typography>
         {tooltip && (
           <InfoTooltip
             infoTooltip={{
@@ -57,6 +49,16 @@ const AnalyticsBreakdownTable = memo(props => {
           />
         )}
       </Box>
+      {subtitle && (
+        <Box sx={styles.subtitleRow}>
+          <Typography
+            variant="bodySmall"
+            sx={styles.chartSubtitle}
+          >
+            {subtitle}
+          </Typography>
+        </Box>
+      )}
       <Box sx={styles.tableWrapper}>
         <Box sx={styles.tableHeader}>
           {columns.map(column =>
@@ -131,6 +133,7 @@ AnalyticsBreakdownTable.displayName = 'AnalyticsBreakdownTable';
 
 /** @type {MuiSx} */
 const analyticsBreakdownTableStyles = () => ({
+  titleRow: { display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.25rem' },
   scrollList: { maxHeight: '18.75rem', overflowY: 'auto', overflowX: 'hidden' },
   emptyText: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,

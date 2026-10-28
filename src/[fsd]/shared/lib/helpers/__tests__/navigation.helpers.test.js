@@ -1,10 +1,15 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
 
-import { buildAbsoluteAppUrl, buildRoute, stripProjectSegment } from '../navigation.helpers';
+import {
+  buildAbsoluteAppUrl,
+  buildRoute,
+  getListRouteByPageType,
+  stripProjectSegment,
+} from '../navigation.helpers';
 
 vi.mock('@/routes', () => ({
-  default: {},
+  default: { Schedules: '/settings/schedules' },
   getBasename: () => '/app',
 }));
 
@@ -62,5 +67,11 @@ describe('stripProjectSegment', () => {
 
   it('returns the root when nothing follows the project segment', () => {
     expect(stripProjectSegment('/app/591', 591)).toBe('/app/');
+  });
+});
+
+describe('getListRouteByPageType', () => {
+  it('maps the ScheduleDetails page type to the schedules list', () => {
+    expect(getListRouteByPageType('ScheduleDetails')).toBe('/settings/schedules');
   });
 });

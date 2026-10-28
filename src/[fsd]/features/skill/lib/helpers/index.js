@@ -1,6 +1,10 @@
 export { filterAttachedSkills } from './attachedSkills.helpers';
 export { normalizeTagsForSave } from './tags.helpers';
-export { instructionsTooLongMessage, validateSkillDraft } from './skillDraftValidation.helpers';
+export {
+  instructionsTooLongMessage,
+  isInstructionsOverLimit,
+  validateSkillDraft,
+} from './skillDraftValidation.helpers';
 export * as SkillAIEditionStepsHelpers from './skillAIEditionSteps.helpers';
 export {
   findRunnableModel,
