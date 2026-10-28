@@ -7,6 +7,7 @@ const {
   SESSION_EXPIRED_MESSAGE,
   SESSION_GATED_EVENTS,
   SEND_RESPONSE_TIMEOUT_MS,
+  SEND_RESPONSE_GIVE_UP_MS,
   SEND_NO_RESPONSE_MESSAGE,
   SEND_NO_RESPONSE_CODE,
 } = SessionConstants;
@@ -27,14 +28,35 @@ const notifySendFailure = (socket, event, payload, content, code) => {
 
 const getStreamKey = payload => payload?.conversation_uuid ?? payload?.stream_id ?? payload?.message_id;
 
+// socket.io itself treats a connected socket whose ping has expired as offline when it emits
+const isSocketHealthy = socket => !!socket?.connected && !socket.io?.engine?._hasPingExpired?.();
+
+// An emit made while the socket was not healthy waits in socket.io's send buffer and is delivered after
+// the next reconnect. A send the user has been told failed must not arrive behind their back, so only
+// this send's own packet is dropped (matched on the payload object it was emitted with).
+const discardBufferedSend = (socket, event, payload) => {
+  const buffer = socket.sendBuffer;
+  if (!Array.isArray(buffer)) return;
+  for (let index = buffer.length - 1; index >= 0; index -= 1) {
+    const data = buffer[index]?.data;
+    if (data?.[0] === event && data[1] === payload) buffer.splice(index, 1);
+  }
+};
+
 /**
- * Give up waiting for a send that the server never answers.
+ * Stop waiting for a send that the server never answers.
  *
- * The server can drop a send without a reply (a socket it holds as anonymous, a handler that died),
- * and the reply placeholder is only cleared by an incoming frame, so it would spin forever. Any frame
- * for the same stream, including an error, proves the server saw the send and stops the wait. When
- * none arrives in time, the placeholder is settled with a message and the socket is re-handshaken,
- * so the next send goes out on a connection the server binds to the current session again.
+ * The server can drop a send without a reply (a handler that died, a lost frame), and the reply
+ * placeholder is only cleared by an incoming frame, so it would spin forever. Any frame for the same
+ * stream, including an error, proves the server saw the send and ends the wait.
+ *
+ * After SEND_RESPONSE_TIMEOUT_MS a socket that has lost its connection is reported at once. A healthy
+ * one keeps waiting, because a slow start is not a failure and reconnecting would drop the room of a run
+ * that is working. It is reported at SEND_RESPONSE_GIVE_UP_MS at the latest.
+ *
+ * Reporting settles the placeholder through the existing `socket_validation_error` listeners, discards
+ * the send if it is still waiting in the socket's buffer, and re-handshakes the socket so the next send
+ * goes out on a fresh connection.
  *
  * Frames are matched on `stream_id` only: a frame of another run in the same conversation also
  * stops the wait, which at worst leaves the spinner in the rare case this guards against.
@@ -44,8 +66,9 @@ const watchForResponse = ({ socket, event, payload }) => {
   if (!socket?.onAny || !streamKey || !SESSION_GATED_EVENTS.has(event)) return;
 
   let timer = null;
+  let isFinalCheck = false;
 
-  // Both are only called after the other one exists, so the mutual reference is safe
+  // These reference each other, but only after all of them exist
   const stop = () => {
     clearTimeout(timer);
     socket.offAny(handleFrame);
@@ -55,13 +78,21 @@ const watchForResponse = ({ socket, event, payload }) => {
     if (String(frame?.stream_id) === String(streamKey)) stop();
   };
 
-  socket.onAny(handleFrame);
-  timer = setTimeout(() => {
+  const handleTimeout = () => {
+    if (!isFinalCheck && isSocketHealthy(socket)) {
+      isFinalCheck = true;
+      timer = setTimeout(handleTimeout, SEND_RESPONSE_GIVE_UP_MS - SEND_RESPONSE_TIMEOUT_MS);
+      return;
+    }
     stop();
+    discardBufferedSend(socket, event, payload);
     notifySendFailure(socket, event, payload, SEND_NO_RESPONSE_MESSAGE, SEND_NO_RESPONSE_CODE);
     // `active` is false after a deliberate disconnect (the app tore the socket down); never revive that
     if (socket.active !== false) socket.disconnect().connect();
-  }, SEND_RESPONSE_TIMEOUT_MS);
+  };
+
+  socket.onAny(handleFrame);
+  timer = setTimeout(handleTimeout, SEND_RESPONSE_TIMEOUT_MS);
 };
 
 /**

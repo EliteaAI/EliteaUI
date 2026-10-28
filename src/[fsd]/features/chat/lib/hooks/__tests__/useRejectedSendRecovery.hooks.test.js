@@ -82,7 +82,7 @@ describe('useRejectedSendRecovery', () => {
     expect(input.setValue).not.toHaveBeenCalled();
   });
 
-  it('still shows the error when the rejected send is unknown', () => {
+  it('ignores a failure of a send that another chat instance made', () => {
     const input = createInput();
     const { toastError } = setup(input);
 
@@ -90,8 +90,22 @@ describe('useRejectedSendRecovery', () => {
       errorHandler({ code: 'socket_unauthenticated', message_id: 'other', content: 'Not authorized' }),
     );
 
-    expect(toastError).toHaveBeenCalledTimes(1);
+    // Every mounted chat listens on the shared socket; only the one that sent it may react
+    expect(toastError).not.toHaveBeenCalled();
     expect(input.setValue).not.toHaveBeenCalled();
+    expect(input.focus).not.toHaveBeenCalled();
+  });
+
+  it('puts the text back without taking focus when the send got no response', () => {
+    const input = createInput();
+    const { rememberSend } = setup(input);
+    rememberSend('q1', 'hello there');
+
+    act(() => errorHandler({ code: 'send_no_response', message_id: 'q1', content: 'No response' }));
+
+    // The message might still arrive, so the user is not nudged to resend
+    expect(input.setValue).toHaveBeenCalledWith('hello there');
+    expect(input.focus).not.toHaveBeenCalled();
   });
 
   it('restores a rejected text only once', () => {

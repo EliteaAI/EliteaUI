@@ -6,17 +6,29 @@ import { sioEvents } from '@/common/constants';
 
 const { SOCKET_UNAUTHENTICATED_CODE, SEND_NO_RESPONSE_CODE } = SessionConstants;
 
-// Failures where the message never reached a run, so sending the same text again is safe
+// What the user gets back after a failed send. Only the text is remembered: mentions, attachments
+// and the chosen participant are cleared when a message is sent, and are not restored.
 const RECOVERABLE_CODES = new Set([SOCKET_UNAUTHENTICATED_CODE, SEND_NO_RESPONSE_CODE]);
 
 const MAX_REMEMBERED_SENDS = 10;
 
 /**
- * Keeps a user's text when a send fails before any run started.
+ * Keeps a user's text when a send fails before it was answered.
  *
  * The socket is repaired after such a failure and the conversation is reloaded from the server, which
- * has never stored the message, so the message would vanish with the failure. This tells the user what
- * happened and puts the text back in the input, unless they have already typed something new there.
+ * may never have stored the message, so the message would vanish with the failure. This tells the user
+ * what happened and puts the text back in the input, unless they have already typed something new there.
+ *
+ * Only a send made by this instance is handled. Every mounted chat listens on the same shared socket
+ * (the pipeline test panel stays mounted while closed), so a failure of another chat's send must not
+ * toast again here.
+ *
+ * Whether it is safe to send the same text again depends on the failure:
+ * - `socket_unauthenticated`: the server refused the message, so it was not processed. The input is
+ *   focused so the user can resend straight away.
+ * - `send_no_response`: nothing came back, which also happens when the server is slow or a frame was
+ *   lost, so the message might still arrive. The text is restored without taking focus, and the
+ *   message of the toast says so.
  */
 export const useRejectedSendRecovery = props => {
   const { chatInput, toastError } = props;
@@ -33,15 +45,18 @@ export const useRejectedSendRecovery = props => {
     frame => {
       if (!RECOVERABLE_CODES.has(frame?.code)) return;
 
-      const text = sentQuestionsRef.current.get(frame.message_id);
-      sentQuestionsRef.current.delete(frame.message_id);
+      const sentQuestions = sentQuestionsRef.current;
+      if (!sentQuestions.has(frame.message_id)) return;
+
+      const text = sentQuestions.get(frame.message_id);
+      sentQuestions.delete(frame.message_id);
 
       toastError(frame.content);
 
       const input = chatInput.current;
       if (text && input && !input.getInputContent()) {
         input.setValue(text);
-        input.focus();
+        if (frame.code === SOCKET_UNAUTHENTICATED_CODE) input.focus();
       }
     },
     [chatInput, toastError],

@@ -59,8 +59,9 @@ export const useSocketSessionGuard = socket => {
       // A forced re-handshake also covers an inconclusive probe: reconnecting is cheap, and a socket
       // the server holds as anonymous cannot be told apart from a good one on this side
       if (rehandshake) {
-        const isStreaming = !!store.getState().settings?.navBlocker?.isStreaming;
-        if (!(skipWhileStreaming && isStreaming)) socket?.disconnect().connect();
+        const { navBlocker, runActiveCount } = store.getState().settings ?? {};
+        const isRunInFlight = !!navBlocker?.isStreaming || runActiveCount > 0;
+        if (!(skipWhileStreaming && isRunInFlight)) socket?.disconnect().connect();
       }
     },
     [socket, store, setSessionExpired],

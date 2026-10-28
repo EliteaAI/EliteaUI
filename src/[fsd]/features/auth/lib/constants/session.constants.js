@@ -25,13 +25,18 @@ export const SOCKET_UNAUTHENTICATED_CODE = 'socket_unauthenticated';
 // Set by the client itself on the failure it raises when a send got no answer at all
 export const SEND_NO_RESPONSE_CODE = 'send_no_response';
 
-// A send that gets no frame back at all (neither a run frame nor an error) is reported after this
-// long. The first frame of a run is emitted right after dispatch, before the agent initializes,
-// so a slow agent does not count; only a server that never saw or never answered the message does.
+// A send that gets no frame back at all (neither a run frame nor an error) is checked after this long.
+// The first frame of a run is emitted right after dispatch, before the agent initializes, but that is a
+// property of the server queue, not a guarantee. So a socket that is still healthy keeps waiting, and
+// only one that has lost its connection is reported at this point.
 export const SEND_RESPONSE_TIMEOUT_MS = 45 * 1000;
 
+// The latest a send may stay unanswered on a socket that looks healthy before it is reported anyway,
+// so the reply placeholder cannot spin forever when a frame was lost
+export const SEND_RESPONSE_GIVE_UP_MS = 3 * 60 * 1000;
+
 export const SEND_NO_RESPONSE_MESSAGE =
-  'No response from the server yet. The connection was refreshed; if nothing appears, please resend your message.';
+  'No response from the server. Your message may still arrive; if nothing appears shortly, please resend it.';
 
 // A tab hidden for longer than this re-handshakes its socket when it comes back, because the
 // server's view of the session may have been lost while the connection was flapping
