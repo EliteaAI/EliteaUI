@@ -7,6 +7,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { act, cleanup, renderHook } from '@testing-library/react';
 
+// jsdom does not always provide a usable localStorage (it depends on the Node version), so the test brings its own
+vi.hoisted(() => {
+  const entries = new Map();
+  const storage = {
+    getItem: key => entries.get(key) ?? null,
+    setItem: (key, value) => entries.set(key, String(value)),
+    removeItem: key => entries.delete(key),
+    clear: () => entries.clear(),
+  };
+  globalThis.localStorage = storage;
+  globalThis.window = Object.assign(globalThis.window ?? globalThis, { localStorage: storage });
+});
+
 const refetchRuns = vi.fn();
 const startEvalRun = vi.fn();
 

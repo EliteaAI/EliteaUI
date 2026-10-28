@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Box } from '@mui/material';
 
 import { useManualSocket } from '@/[fsd]/features/auth/lib/hooks';
+import { useRunActiveSignal } from '@/[fsd]/features/auth/lib/hooks/useRunActiveSignal.hooks';
 import {
   BudgetWarningBanner,
   ChatButton,
@@ -147,6 +148,7 @@ const SkillTestPanel = memo(props => {
   }, []);
 
   const [isStreaming, setIsStreaming] = useState(false);
+  useRunActiveSignal(isStreaming);
   const activeStreamIdRef = useRef(null);
   const activeTaskIdRef = useRef(null);
   const activeMessageIdRef = useRef(null);

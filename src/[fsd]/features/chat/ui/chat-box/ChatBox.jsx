@@ -50,6 +50,7 @@ import {
   useNewInputKeyDownHandler,
   useNextInputSuggestion,
   useReadAloud,
+  useRejectedSendRecovery,
   useSelectedChatModel,
   useSlashMention,
 } from '@/[fsd]/features/chat/lib/hooks';
@@ -243,6 +244,7 @@ const ChatBox = memo(
 
     const dispatch = useDispatch();
     const { toastError, toastInfo } = useToast();
+    const { rememberSend } = useRejectedSendRecovery({ chatInput, toastError, activeConversationRef });
 
     // Sockets
     const socket = useContext(SocketContext);
@@ -1277,6 +1279,7 @@ const ChatBox = memo(
             sendResult?.createdConversation?.uuid ||
             activeConversation?.uuid;
           if (conversationUuid) {
+            rememberSend(question_id, question, conversationUuid);
             emit({
               ...eventPayload,
               conversation_uuid: conversationUuid,
@@ -1329,6 +1332,7 @@ const ChatBox = memo(
         isAgentsPage,
         isSendingToUser,
         name,
+        rememberSend,
         onClearActiveParticipant,
         onClearAttachments,
         onSend,
