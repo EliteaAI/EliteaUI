@@ -6,6 +6,7 @@ import { Box, Collapse, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { useSelectedChatModelContext } from '@/[fsd]/features/chat/lib/context/SelectedChatModelContext';
 import { resolveModelChipLabel } from '@/[fsd]/features/chat/lib/helpers/modelChip.helpers';
+import { DurationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useGetComponentWidth, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -152,6 +153,19 @@ const ActionView = memo(props => {
     () => action.status === ToolActionStatus.actionRequired && !!action?.toolMeta?.server_url,
     [action.status, action?.toolMeta?.server_url],
   );
+
+  // #7264 P1: real backend-stamped duration only; null (render nothing) while running or when the
+  // stamps are missing/fake. Not memoized: socket handlers mutate the action in place.
+  const durationMs =
+    showProgress || action.status === ToolActionStatus.processing
+      ? null
+      : DurationHelpers.getActionDurationMs(action);
+  const durationTooltip =
+    durationMs == null
+      ? ''
+      : `Took ${(durationMs / 1000).toFixed(3)}s${
+          DurationHelpers.includesApprovalWait(action) ? ' (includes time waiting for approval)' : ''
+        }`;
 
   // Check if this is a named LLM action (pipeline node like Start, Chat) vs generic "Thinking step"
   const isNamedLlmAction = useMemo(
@@ -424,6 +438,20 @@ const ActionView = memo(props => {
               >
                 {displayTitle}
               </Typography>
+              {durationMs != null && (
+                <Tooltip
+                  title={durationTooltip}
+                  placement="top"
+                >
+                  <Typography
+                    variant="bodySmall2"
+                    sx={styles.duration}
+                    data-testid="chat-answer-chip-duration"
+                  >
+                    · {DurationHelpers.formatDurationMs(durationMs)}
+                  </Typography>
+                </Tooltip>
+              )}
             </Box>
             {needAuthAction && onAuth && (
               <Button.BaseBtn
@@ -624,6 +652,11 @@ const actionViewStyles = () => ({
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   },
+  duration: ({ palette }) => ({
+    color: palette.text.metrics,
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
+  }),
   progressContainer: {
     width: '1rem',
     height: '1rem',

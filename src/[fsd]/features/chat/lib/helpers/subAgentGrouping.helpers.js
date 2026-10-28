@@ -42,7 +42,7 @@
  *        'paused'  → this action is the invocation wrapper, errored & awaiting a sequential HITL resume
  *        'active'  → this action is the wrapper in any other state (processing / completed / deferred)
  *        null      → not the wrapper; leave the block's pause state unchanged
- * @returns {Array} ordered blocks: {kind:'coord', actions} | {kind:'sub', instanceKey, name, actions, pausedForResume}
+ * @returns {Array} ordered blocks: {kind:'coord', actions} | {kind:'sub', instanceKey, name, actions, pausedForResume, wasPaused}
  */
 export const partitionActionsIntoBlocks = (
   actionsList,
@@ -101,6 +101,7 @@ export const partitionActionsIntoBlocks = (
         name,
         actions: [action],
         pausedForResume: false,
+        wasPaused: false,
         siblingOrdinal,
         aliasKeys: [instanceKey],
       };
@@ -110,8 +111,10 @@ export const partitionActionsIntoBlocks = (
     }
 
     // (3) update the block's resume-pause state from the wrapper's latest state.
-    if (phase === 'paused') block.pausedForResume = true;
-    else if (phase === 'active') block.pausedForResume = false;
+    if (phase === 'paused') {
+      block.pausedForResume = true;
+      block.wasPaused = true; // #7264 P1: sticky, for the duration's approval-wait note
+    } else if (phase === 'active') block.pausedForResume = false;
   });
 
   flushCoord();

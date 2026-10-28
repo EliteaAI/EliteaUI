@@ -1,8 +1,9 @@
 import { memo, useCallback, useState } from 'react';
 
-import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
+import { Box, CircularProgress, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import { DurationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { StyledAccordion, StyledAccordionDetails, StyledAccordionSummary } from '@/[fsd]/shared/ui/accordion';
 import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
 
@@ -22,6 +23,8 @@ const SubAgentAccordion = memo(props => {
     agentType,
     running = false,
     paused = false,
+    durationMs = null,
+    includesApprovalWait = false,
     defaultExpanded = false,
     transparent = false,
     children,
@@ -33,6 +36,11 @@ const SubAgentAccordion = memo(props => {
   const onChange = useCallback((_, value) => setExpanded(value), []);
 
   const shimmer = running && !paused;
+  // #7264 P1: the invocation's wall-clock span, shown once it has settled.
+  const showDuration = !running && durationMs != null;
+  const durationTooltip = showDuration
+    ? `Took ${(durationMs / 1000).toFixed(3)}s${includesApprovalWait ? ' (includes time waiting for approval)' : ''}`
+    : '';
 
   return (
     <StyledAccordion
@@ -56,6 +64,20 @@ const SubAgentAccordion = memo(props => {
           >
             {label || name}
           </Typography>
+          {showDuration && (
+            <Tooltip
+              title={durationTooltip}
+              placement="top"
+            >
+              <Typography
+                variant="bodySmall2"
+                sx={subAgentAccordionStyles.duration}
+                data-testid="chat-answer-subagent-duration"
+              >
+                · {DurationHelpers.formatDurationMs(durationMs)}
+              </Typography>
+            </Tooltip>
+          )}
           {shimmer && (
             <CircularProgress
               size={12}
@@ -128,6 +150,11 @@ const subAgentAccordionStyles = {
     color: palette.text.secondary,
     fontWeight: 600,
     whiteSpace: 'nowrap',
+  }),
+  duration: ({ palette }) => ({
+    color: palette.text.metrics,
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
   }),
   spinner: ({ palette }) => ({
     color: palette.text.secondary,
