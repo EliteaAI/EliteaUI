@@ -363,6 +363,7 @@ describe('useToolkitChat validation errors', () => {
       validationErrorHandlerRef.current({
         type: 'error',
         stream_id: 'conv-8',
+        message_id: 'msg-8',
         content: { code: 'DEVELOPMENT_RUNS_DISABLED', error: 'Development runs are switched off.' },
       }),
     );
@@ -370,7 +371,17 @@ describe('useToolkitChat validation errors', () => {
     expect(traceNewIndex).toHaveBeenLastCalledWith(5, {
       collection: 'docs',
       state: 'failed',
-      refusal: { code: 'DEVELOPMENT_RUNS_DISABLED', message: 'Development runs are switched off.' },
+      // with the payload as received and the message it belongs to, for the card's debugging info
+      refusal: {
+        code: 'DEVELOPMENT_RUNS_DISABLED',
+        message: 'Development runs are switched off.',
+        trace: JSON.stringify(
+          { code: 'DEVELOPMENT_RUNS_DISABLED', error: 'Development runs are switched off.' },
+          null,
+          2,
+        ),
+        messageId: 'msg-8',
+      },
     });
   });
 

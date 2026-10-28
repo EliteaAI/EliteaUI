@@ -45,3 +45,22 @@ export const parseGovernanceRefusal = trace => {
   const refusal = parseRefusalPayload(trace);
   return refusal?.code ? refusal : undefined;
 };
+
+/**
+ * A governance refusal of a toolkit or index run, kept with the payload it was read from and the message it
+ * belongs to, so the card's "Error debugging info" shows what the worker sent and names its download.
+ *
+ * @param {unknown} content the exception content as received
+ * @param {string} [messageId]
+ * @returns {{ message: string, code: string, trace: string, messageId?: string } | undefined}
+ */
+export const parseRunRefusal = (content, messageId) => {
+  const refusal = parseGovernanceRefusal(content);
+  if (!refusal) return undefined;
+
+  return {
+    ...refusal,
+    trace: typeof content === 'string' ? content : JSON.stringify(content, null, 2),
+    messageId,
+  };
+};

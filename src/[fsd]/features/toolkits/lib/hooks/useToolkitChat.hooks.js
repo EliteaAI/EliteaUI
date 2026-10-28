@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { useManualSocket, useSocket } from '@/[fsd]/features/auth/lib/hooks';
-import { parseGovernanceRefusal } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
+import { parseRunRefusal } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
 import {
   IndexStatuses,
   IndexesToolsEnum,
@@ -289,7 +289,7 @@ export const useToolkitChat = props => {
 
       // A run refused by governance (C-1009) arrives as `{code, error}`: it renders as the chat's refusal card
       // (readable text and the code), not as a failed tool with the raw payload
-      const refusal = parseGovernanceRefusal(message.content);
+      const refusal = parseRunRefusal(message.content, message.message_id);
       const refused = Boolean(refusal);
 
       if (traceNewIndex && pendingRun.indexing)

@@ -25,6 +25,10 @@ import { Modal } from '@/[fsd]/shared/ui';
 // session.
 const REINDEX_STUB_STALE_GRACE_MS = 120_000;
 
+// A refusal is shown once the run settles, and the run's own final list refetch starts right after it. A fetch
+// that starts later than this is a fresh read of the list (focus, poll, live refresh), so the card is stale.
+const REFUSAL_OWN_REFETCH_GRACE_MS = 3000;
+
 const IndexesContainer = memo(props => {
   const { toolkitId, canIndex = true } = props;
 
@@ -57,6 +61,13 @@ const IndexesContainer = memo(props => {
     projectId,
     forcePoll: Boolean(reindexRunning),
   });
+
+  // The list was read again after the refusal appeared: the reason may no longer hold (a grant fixed elsewhere)
+  useEffect(() => {
+    if (!reindexRefusal || !startedTimeStamp || !fulfilledTimeStamp || fulfilledTimeStamp < startedTimeStamp)
+      return;
+    if (startedTimeStamp > reindexRefusal.shownAt + REFUSAL_OWN_REFETCH_GRACE_MS) setReindexRefusal(null);
+  }, [reindexRefusal, startedTimeStamp, fulfilledTimeStamp]);
 
   const { indexes: indexesList, isLoading } = useToolkitIndexes(toolkitId);
 
@@ -101,7 +112,7 @@ const IndexesContainer = memo(props => {
         setReindexRefusal(null);
         toastSuccess('Reindex has completed successfully!');
       } else if (metadata.refusal) {
-        setReindexRefusal(metadata.refusal);
+        setReindexRefusal({ ...metadata.refusal, shownAt: Date.now() });
       } else if (metadata.state === IndexStatuses.fail) {
         toastError('Reindexing has failed!');
       }
@@ -170,7 +181,10 @@ const IndexesContainer = memo(props => {
   return (
     <Box sx={[styles.wrapper, Boolean(reindexRefusal) && styles.withRefusal]}>
       {reindexRefusal && (
-        <ErrorTrace trace={JSON.stringify({ code: reindexRefusal.code, error: reindexRefusal.message })} />
+        <ErrorTrace
+          trace={reindexRefusal.trace}
+          messageId={reindexRefusal.messageId}
+        />
       )}
       <IndexesList
         canIndex={canIndex}

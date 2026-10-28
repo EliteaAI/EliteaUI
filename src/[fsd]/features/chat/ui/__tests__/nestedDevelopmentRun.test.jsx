@@ -123,6 +123,20 @@ describe('the editor chat of a two-level development run (#7227)', () => {
     expect(screen.getAllByText('Tool execution failed: timeout').length).toBeGreaterThan(0);
   });
 
+  it('keeps a child error without a governance code as its own text, with no card and no chip', () => {
+    const { toolActions } = answer();
+    const codeLess = JSON.stringify({ error: 'Connection reset by the remote host' });
+    renderTree({
+      actions: toolActions,
+      originalActions: toolActions,
+      subAgentErrors: { [CHILD]: { name: CHILD, exception: codeLess } },
+    });
+    fireEvent.click(screen.getAllByText(CHILD)[0]);
+
+    expect(screen.queryByTestId('error-code-chip')).not.toBeInTheDocument();
+    expect(screen.getAllByText(codeLess).length).toBeGreaterThan(0);
+  });
+
   it('shows the turn refused before it started (a child decision of the draft) as one card with its code', () => {
     // components/Chat/hooks.js stores a socket_validation_error as the message exception, stringified
     render(

@@ -8,6 +8,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 
 const runner = vi.hoisted(() => ({ props: null }));
 const toast = vi.hoisted(() => ({ toastSuccess: vi.fn(), toastError: vi.fn() }));
+const polling = vi.hoisted(() => ({ startedTimeStamp: 0, fulfilledTimeStamp: 0 }));
 
 vi.mock('@/[fsd]/features/toolkits/indexes/api', () => ({
   useDeleteIndexItemMutation: () => [vi.fn(), { isLoading: false }],
@@ -15,7 +16,7 @@ vi.mock('@/[fsd]/features/toolkits/indexes/api', () => ({
 }));
 vi.mock('@/[fsd]/features/toolkits/indexes/lib/hooks', () => ({
   useIndexNavigation: () => ({ goToCreateIndex: vi.fn(), goToIndex: vi.fn(), openIndexInNewTab: vi.fn() }),
-  useIndexesListPolling: () => ({ refetch: vi.fn(), startedTimeStamp: 0, fulfilledTimeStamp: 0 }),
+  useIndexesListPolling: () => ({ refetch: vi.fn(), ...polling }),
   useToolkitIndexes: () => ({
     indexes: [{ id: 5, metadata: { collection: 'docs', state: 'success' } }],
     isLoading: false,
@@ -54,26 +55,43 @@ const theme = createTheme({
   },
 });
 
-const REFUSAL = {
+// What the worker sent, and what the run hands over: the readable text, the code, the payload and its message
+const PAYLOAD = {
   code: 'DENIED_DEVELOPMENT_CREDENTIAL',
-  message: 'This credential needs a grant before a draft can use it.',
+  error: 'This credential needs a grant before a draft can use it.',
+};
+const REFUSAL = {
+  code: PAYLOAD.code,
+  message: PAYLOAD.error,
+  trace: JSON.stringify(PAYLOAD),
+  messageId: 'msg-42',
 };
 
+// the container is memoized: a changing prop makes a rerender read the polling state again
+const ui = (renderCount = 0) => (
+  <ThemeProvider theme={theme}>
+    <IndexesContainer
+      toolkitId={3}
+      canIndex={renderCount % 2 === 0}
+    />
+  </ThemeProvider>
+);
+
 const startReindex = () => {
-  render(
-    <ThemeProvider theme={theme}>
-      <IndexesContainer toolkitId={3} />
-    </ThemeProvider>,
-  );
+  const view = render(ui());
   fireEvent.click(screen.getByText('reindex'));
   fireEvent.click(screen.getByText('Reindex'));
   expect(runner.props).not.toBeNull();
+  return view;
 };
 
 describe('IndexesContainer — a reindex refused by governance', () => {
   afterEach(() => {
     cleanup();
     runner.props = null;
+    polling.startedTimeStamp = 0;
+    polling.fulfilledTimeStamp = 0;
+    vi.restoreAllMocks();
     vi.clearAllMocks();
   });
 
@@ -85,6 +103,47 @@ describe('IndexesContainer — a reindex refused by governance', () => {
     expect(screen.getByText(REFUSAL.message)).toBeInTheDocument();
     expect(screen.getByText(REFUSAL.code)).toBeInTheDocument();
     expect(toast.toastError).not.toHaveBeenCalled();
+  });
+
+  it('keeps what the worker sent as the debugging info and names the download after the message', () => {
+    const created = [];
+    URL.createObjectURL = vi.fn(blob => (created.push(blob), 'blob:x'));
+    URL.revokeObjectURL = vi.fn();
+    let downloadName;
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function click() {
+      downloadName = this.download;
+    });
+    startReindex();
+    act(() => runner.props.traceNewIndex(5, { collection: 'docs', state: 'failed', refusal: REFUSAL }));
+
+    fireEvent.click(screen.getByText('Error debugging info'));
+    expect(screen.getByText(REFUSAL.trace, { selector: 'pre' })).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole('button').find(button => !button.textContent));
+
+    expect(downloadName).toMatch(/^error-trace-msg-42-/);
+    expect(created).toHaveLength(1);
+  });
+
+  it("clears the card when the list is read again after the run settled, not for the run's own refetch", () => {
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1_000_000);
+    const view = startReindex();
+    act(() => runner.props.traceNewIndex(5, { collection: 'docs', state: 'failed', refusal: REFUSAL }));
+
+    // the run's own refetch starts with the refusal
+    polling.startedTimeStamp = 1_000_050;
+    polling.fulfilledTimeStamp = 1_000_300;
+    view.rerender(ui(1));
+    expect(screen.getByText(REFUSAL.message)).toBeInTheDocument();
+
+    // a read that is still in flight does not clear it
+    polling.startedTimeStamp = 1_060_000;
+    view.rerender(ui(2));
+    expect(screen.getByText(REFUSAL.message)).toBeInTheDocument();
+
+    polling.fulfilledTimeStamp = 1_060_400;
+    now.mockReturnValue(1_060_400);
+    view.rerender(ui(3));
+    expect(screen.queryByText(REFUSAL.message)).not.toBeInTheDocument();
   });
 
   it('keeps the failure toast for any other failed reindex', () => {

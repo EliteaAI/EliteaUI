@@ -47,9 +47,79 @@ describe('a toolkit run the worker refused for governance (#7229)', () => {
 
     expect(msg.content).toBe('');
     expect(JSON.parse(msg.exception)).toEqual(REFUSAL);
+    // the refusal keeps the payload the worker sent and the message it belongs to
     expect(onFinish).toHaveBeenCalledWith(IndexStatuses.fail, {
-      refusal: { code: REFUSAL.code, message: REFUSAL.error },
+      refusal: {
+        code: REFUSAL.code,
+        message: REFUSAL.error,
+        trace: JSON.stringify(REFUSAL),
+        messageId: 'msg-1',
+      },
     });
+  });
+
+  it('is the refusal card too when it arrives before the first frame of the run: nothing to update yet', () => {
+    const onFinish = vi.fn();
+    const history = generateChatMessageBasedOnResponse({
+      message: {
+        message_id: 'msg-1',
+        type: SocketMessageType.AgentException,
+        content: JSON.stringify(REFUSAL),
+      },
+      chatHistory: [],
+      onFinish,
+    });
+
+    expect(history).toHaveLength(1);
+    expect(history[0]).toMatchObject({ id: 'msg-1', content: '' });
+    expect(JSON.parse(history[0].exception)).toEqual(REFUSAL);
+    expect(onFinish).toHaveBeenCalledWith(IndexStatuses.fail, {
+      refusal: {
+        code: REFUSAL.code,
+        message: REFUSAL.error,
+        trace: JSON.stringify(REFUSAL),
+        messageId: 'msg-1',
+      },
+    });
+  });
+
+  it('keeps one message when the first frame of the run is delivered after its refusal', () => {
+    const refused = generateChatMessageBasedOnResponse({
+      message: {
+        message_id: 'msg-1',
+        type: SocketMessageType.AgentException,
+        content: JSON.stringify(REFUSAL),
+      },
+      chatHistory: [],
+      onFinish: vi.fn(),
+    });
+
+    const history = generateChatMessageBasedOnResponse({
+      message: { message_id: 'msg-1', type: SocketMessageType.StartTask, content: { task_id: 't-1' } },
+      chatHistory: refused,
+      onFinish: vi.fn(),
+    });
+
+    expect(history).toHaveLength(1);
+    expect(history[0].isLoading).toBeUndefined();
+  });
+
+  it('still shows a code-less {error} that arrives before the first frame as the old failure text, with no refusal', () => {
+    const onFinish = vi.fn();
+    const history = generateChatMessageBasedOnResponse({
+      message: {
+        message_id: 'msg-1',
+        type: SocketMessageType.AgentException,
+        content: JSON.stringify({ error: 'Connection reset by the remote host' }),
+      },
+      chatHistory: [],
+      onFinish,
+    });
+
+    expect(history).toHaveLength(1);
+    expect(history[0].content).toContain('Error occurred during tool testing');
+    expect(history[0].exception).toBeUndefined();
+    expect(onFinish).not.toHaveBeenCalled();
   });
 
   it('keeps the headline and a plain failure for any other exception', () => {

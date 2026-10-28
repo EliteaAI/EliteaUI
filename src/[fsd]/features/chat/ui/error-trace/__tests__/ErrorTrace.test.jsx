@@ -29,7 +29,10 @@ const renderTrace = props =>
     </ThemeProvider>,
   );
 
-const DENIED = { code: 'DENIED_GRANT', error: 'This agent is not allowed to use one of its credentials for you.' };
+const DENIED = {
+  code: 'DENIED_GRANT',
+  error: 'This agent is not allowed to use one of its credentials for you.',
+};
 
 describe('ErrorTrace', () => {
   afterEach(() => cleanup());
@@ -44,6 +47,13 @@ describe('ErrorTrace', () => {
 
     fireEvent.click(screen.getByText('Error debugging info'));
     expect(screen.getByText((_, el) => el?.tagName === 'PRE' && el.textContent === trace)).toBeTruthy();
+  });
+
+  it('shows the refusal a caller already parsed, without reading the trace again', () => {
+    renderTrace({ trace: 'opaque', refusal: { message: 'Not allowed here', code: 'DENIED_GRANT' } });
+
+    expect(screen.getByText('Not allowed here')).toBeTruthy();
+    expect(screen.getByTestId('error-code-chip').textContent).toBe('DENIED_GRANT');
   });
 
   it('keeps the generic text when the payload has no error string', () => {
