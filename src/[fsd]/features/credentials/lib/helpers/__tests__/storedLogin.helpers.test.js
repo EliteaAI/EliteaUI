@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { getStoredLoginConfig, isLoginExpired } from '../storedLogin.helpers';
 
 describe('storedLogin helpers', () => {
-  it('knows the four toolkit types that keep a Microsoft login on the credential', () => {
+  it('knows the toolkit types that keep a Microsoft login on the credential', () => {
     expect(getStoredLoginConfig('dataverse')).toMatchObject({
       settingsKey: 'dataverse_configuration',
       keepBrowserToken: false,
@@ -14,6 +14,11 @@ describe('storedLogin helpers', () => {
     });
     expect(getStoredLoginConfig('teams')).toMatchObject({
       settingsKey: 'teams_configuration',
+      keepBrowserToken: true,
+    });
+    expect(getStoredLoginConfig('ms_graph')).toMatchObject({
+      configurationType: 'ms_graph',
+      settingsKey: 'ms_graph_configuration',
       keepBrowserToken: true,
     });
     expect(getStoredLoginConfig('jira')).toBeNull();

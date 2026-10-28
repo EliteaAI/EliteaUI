@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   OAUTH_APP_MODES,
   filterOAuthAppSubsections,
+  isOAuthAppCredentialType,
   isOAuthAppSection,
   resolveOAuthAppMode,
 } from '@/[fsd]/features/credentials/lib/helpers/oauthApp.helpers';
@@ -47,5 +48,14 @@ describe('oauthApp.helpers', () => {
     expect(isOAuthAppSection({ name: 'Default app' })).toBe(false);
     const renamed = [{ name: 'Admin app', key_fields: ['oauth_app_id'] }, { name: 'Custom app' }];
     expect(names(filterOAuthAppSubsections(renamed, OAUTH_APP_MODES.default))).toEqual(['Admin app']);
+  });
+});
+
+describe('isOAuthAppCredentialType', () => {
+  it('covers every Microsoft Entra credential type, Microsoft Graph included', () => {
+    ['teams', 'outlook', 'sharepoint', 'ms_graph'].forEach(type =>
+      expect(isOAuthAppCredentialType(type)).toBe(true),
+    );
+    expect(isOAuthAppCredentialType('jira')).toBe(false);
   });
 });
