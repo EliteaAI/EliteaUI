@@ -262,7 +262,7 @@ describe('useSkillFrontmatterEditor keys ELITEA does not own', () => {
     version_details: { ...VALUES.version_details, meta: { icon_meta: { url: 'i' }, frontmatter } },
   });
   const STORED_TEXT =
-    '---\nname: triage\ndescription: Sorts issues\nallowed-tools: Read\nlicense: MIT\ndisable-model-invocation: true\n---\n\nDo it.';
+    '---\nname: triage\ndescription: Sorts issues\nlicense: MIT\nallowed-tools: Read\ndisable-model-invocation: true\n---\n\nDo it.';
 
   it('opens with the stored keys after name and description and leaves the form clean', () => {
     const { result } = renderEditor(withStoredFrontmatter(STORED));
@@ -334,6 +334,189 @@ describe('useSkillFrontmatterEditor keys ELITEA does not own', () => {
 
     expect(result.current.editor.editorText).toBe(
       '---\nname: triage\ndescription: Sorts issues\ncompatibility: Needs network\n---\n\nDo it.',
+    );
+  });
+});
+
+describe('useSkillFrontmatterEditor ELITEA fields mirrored from the export', () => {
+  afterEach(() => cleanup());
+
+  const MODELS = [
+    { name: 'gpt-4.1', project_id: 2 },
+    { name: 'o3', project_id: 2, supports_reasoning: true },
+  ];
+  const EXPORT_VALUES = {
+    ...VALUES,
+    version_details: {
+      ...VALUES.version_details,
+      name: 'v2',
+      tags: [{ id: 4, name: 'python' }],
+      run_settings: {
+        llm_settings: { model_name: 'gpt-4.1', model_project_id: 2, temperature: 0.2, max_tokens: 4000 },
+        ignore_project_context: false,
+      },
+      meta: { frontmatter: { license: 'MIT' } },
+    },
+  };
+  const metadataBlock = lines => `metadata:\n${lines.map(line => `  ${line}`).join('\n')}\n`;
+  const exportText = lines =>
+    `---\nname: triage\ndescription: Sorts issues\nlicense: MIT\n${metadataBlock(lines)}---\n\nDo it.`;
+  const EXPORT_LINES = [
+    `elitea-tags: '["python"]'`,
+    'elitea-version: v2',
+    'elitea-model: gpt-4.1',
+    `elitea-temperature: '0.2'`,
+    `elitea-max-tokens: '4000'`,
+  ];
+
+  const renderExportEditor = () =>
+    renderHook(
+      () => ({ editor: useSkillFrontmatterEditor({ models: MODELS }), formik: useFormikContext() }),
+      {
+        wrapper: ({ children }) => (
+          <Formik
+            initialValues={EXPORT_VALUES}
+            onSubmit={() => {}}
+          >
+            {children}
+          </Formik>
+        ),
+      },
+    );
+
+  it('opens with the same frontmatter the export writes and leaves the form clean', () => {
+    const { result } = renderExportEditor();
+
+    expect(result.current.editor.editorText).toBe(exportText(EXPORT_LINES));
+    expect(result.current.formik.dirty).toBe(false);
+  });
+
+  it('rewrites the metadata block when the Tags field changes', async () => {
+    const { result } = renderExportEditor();
+
+    await setField(result, 'version_details.tags', [{ id: 4, name: 'python' }, { name: 'rust' }]);
+
+    expect(result.current.editor.editorText).toBe(
+      exportText([`elitea-tags: '["python", "rust"]'`, ...EXPORT_LINES.slice(1)]),
+    );
+  });
+
+  it('copies edited tags to the Tags field', async () => {
+    const { result } = renderExportEditor();
+
+    await typeInEditor(result, exportText([`elitea-tags: '["python", "go"]'`, ...EXPORT_LINES.slice(1)]));
+
+    expect(result.current.formik.values.version_details.tags).toEqual([
+      { id: 4, name: 'python' },
+      { name: 'go' },
+    ]);
+  });
+
+  it('keeps tags typed in another JSON spacing as typed', async () => {
+    const { result } = renderExportEditor();
+    const typed = exportText([`elitea-tags: '["python","go"]'`, ...EXPORT_LINES.slice(1)]);
+
+    await typeInEditor(result, typed);
+
+    expect(result.current.formik.values.version_details.tags).toEqual([
+      { id: 4, name: 'python' },
+      { name: 'go' },
+    ]);
+    expect(result.current.editor.editorText).toBe(typed);
+  });
+
+  it('copies an edited temperature to the run settings without rewriting what was typed', async () => {
+    const { result } = renderExportEditor();
+    const typed = exportText([...EXPORT_LINES.slice(0, 3), 'elitea-temperature: 0.', EXPORT_LINES[4]]);
+
+    await typeInEditor(result, typed);
+
+    expect(result.current.formik.values.version_details.run_settings.llm_settings.temperature).toBe(0);
+    expect(result.current.editor.editorText).toBe(typed);
+  });
+
+  it('switches the model when the model line names another known model', async () => {
+    const { result } = renderExportEditor();
+
+    await typeInEditor(
+      result,
+      exportText([...EXPORT_LINES.slice(0, 2), 'elitea-model: o3', ...EXPORT_LINES.slice(3)]),
+    );
+
+    expect(result.current.formik.values.version_details.run_settings.llm_settings).toMatchObject({
+      model_name: 'o3',
+      model_project_id: 2,
+    });
+  });
+
+  it('shows an error and keeps the run settings for an unknown model', async () => {
+    const { result } = renderExportEditor();
+
+    await typeInEditor(
+      result,
+      exportText([...EXPORT_LINES.slice(0, 2), 'elitea-model: gpt-9', ...EXPORT_LINES.slice(3)]),
+    );
+
+    expect(result.current.editor.frontmatterErrors).toEqual([
+      '"metadata.elitea-model" names an unknown model: gpt-9',
+    ]);
+    expect(result.current.formik.values.version_details.run_settings.llm_settings.model_name).toBe('gpt-4.1');
+  });
+
+  it('clears the error once the line is valid again', async () => {
+    const { result } = renderExportEditor();
+    await typeInEditor(
+      result,
+      exportText([...EXPORT_LINES.slice(0, 3), 'elitea-temperature: hot', EXPORT_LINES[4]]),
+    );
+
+    await typeInEditor(result, exportText(EXPORT_LINES));
+
+    expect(result.current.editor.frontmatterErrors).toEqual([]);
+  });
+
+  it('keeps ELITEA keys out of the stored frontmatter', async () => {
+    const { result } = renderExportEditor();
+
+    await typeInEditor(
+      result,
+      exportText(EXPORT_LINES).replace(
+        'license: MIT\nmetadata:\n',
+        'license: MIT\nmetadata:\n  author: me\n',
+      ),
+    );
+
+    expect(result.current.formik.values.version_details.meta.frontmatter).toEqual({
+      license: 'MIT',
+      metadata: { author: 'me' },
+    });
+  });
+
+  it('clears the tags and the model when the metadata block is deleted', async () => {
+    const { result } = renderExportEditor();
+
+    await typeInEditor(result, '---\nname: triage\ndescription: Sorts issues\nlicense: MIT\n---\n\nDo it.');
+
+    expect(result.current.formik.values.version_details.tags).toEqual([]);
+    expect(result.current.formik.values.version_details.run_settings.llm_settings).toMatchObject({
+      model_name: null,
+      temperature: null,
+      max_tokens: null,
+    });
+  });
+
+  it('removes the metadata block when the last ELITEA field is cleared outside the editor', async () => {
+    const { result } = renderExportEditor();
+
+    await setField(result, 'version_details', {
+      ...EXPORT_VALUES.version_details,
+      name: 'base',
+      tags: [],
+      run_settings: null,
+    });
+
+    expect(result.current.editor.editorText).toBe(
+      '---\nname: triage\ndescription: Sorts issues\nlicense: MIT\n---\n\nDo it.',
     );
   });
 });

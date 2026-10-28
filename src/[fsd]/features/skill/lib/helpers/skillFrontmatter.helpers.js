@@ -39,19 +39,27 @@ const formatExtraFrontmatter = frontmatter =>
     ? yaml.dump(frontmatter, { lineWidth: -1, schema: yaml.CORE_SCHEMA })
     : '';
 
-const formatFrontmatterEntry = (key, value) =>
-  value ? yaml.dump({ [key]: value }, { lineWidth: -1 }).replace(FINAL_LINE_BREAK, '') : `${key}:`;
+const isEmptyFrontmatterValue = value =>
+  !value || (typeof value === 'object' && !Array.isArray(value) && !Object.keys(value).length);
+
+const formatFrontmatterEntry = (key, value) => {
+  if (!isEmptyFrontmatterValue(value)) {
+    return yaml.dump({ [key]: value }, { lineWidth: -1 }).replace(FINAL_LINE_BREAK, '');
+  }
+  return SKILL_FRONTMATTER_KEYS.includes(key) ? `${key}:` : null;
+};
 
 const replaceFrontmatterEntry = (lines, key, entry) => {
   const keyLine = new RegExp(`^${key}[ \\t]*:`);
   const start = lines.findIndex(line => keyLine.test(line));
-  if (start === -1) return [...lines, entry];
+  if (start === -1) return entry === null ? lines : [...lines, entry];
 
   const nextTopLevelLine = lines.findIndex((line, index) => index > start && TOP_LEVEL_LINE.test(line));
   const end = nextTopLevelLine === -1 ? lines.length : nextTopLevelLine;
   const valueLines = lines.slice(start + 1, end);
   const trailingBlankLineCount = valueLines.length - (valueLines.findLastIndex(line => line.trim()) + 1);
-  return [...lines.slice(0, start), entry, ...lines.slice(end - trailingBlankLineCount)];
+  const entryLines = entry === null ? [] : [entry];
+  return [...lines.slice(0, start), ...entryLines, ...lines.slice(end - trailingBlankLineCount)];
 };
 
 export const composeSkillEditorText = ({ name, description, frontmatter, body }) =>

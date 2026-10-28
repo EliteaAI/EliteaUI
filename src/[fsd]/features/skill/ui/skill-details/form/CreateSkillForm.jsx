@@ -7,7 +7,11 @@ import { Box, Typography, useTheme } from '@mui/material';
 import { EditableEntityIcon } from '@/[fsd]/features/entity-icon-editor';
 import { SKILL_NAME_MAX_LENGTH, SPEC_MAX_DESCRIPTION_LENGTH } from '@/[fsd]/features/skill/lib/constants';
 import { countSkillBodyLength } from '@/[fsd]/features/skill/lib/helpers';
-import { useSkillFrontmatterEditor, useSkillInstructionsMaxLength } from '@/[fsd]/features/skill/lib/hooks';
+import {
+  useSkillFrontmatterEditor,
+  useSkillInstructionsMaxLength,
+  useSkillModels,
+} from '@/[fsd]/features/skill/lib/hooks';
 import { GenerateSkillButton } from '@/[fsd]/features/skill/ui/generate-skill-modal';
 import { AccordionConstants, MarkdownConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -50,7 +54,8 @@ const CreateSkillForm = memo(props => {
   );
   const styles = skillCreateFormStyles();
   const { toggleFieldFocus, isFocused } = useFieldFocus();
-  const { editorText, onEditorChange } = useSkillFrontmatterEditor();
+  const { models } = useSkillModels();
+  const { editorText, onEditorChange, frontmatterErrors } = useSkillFrontmatterEditor({ models });
   const maxInstructionsLength = useSkillInstructionsMaxLength();
 
   const markdownExtensions = useMemo(() => [markdown()], []);
@@ -238,13 +243,16 @@ const CreateSkillForm = memo(props => {
                 </Box>
 
                 {license && (
-                  <Typography
-                    variant="bodySmall"
-                    sx={styles.license}
+                  <Input.StyledInputEnhancer
+                    autoComplete="off"
+                    id="license"
+                    label="License"
                     data-testid="skill-license"
-                  >
-                    License: {license}
-                  </Typography>
+                    value={license}
+                    inputProps={{ readOnly: true, 'data-testid': 'skill-license-input-field' }}
+                    multiline
+                    maxRows={5}
+                  />
                 )}
 
                 <TagEditor
@@ -313,6 +321,15 @@ const CreateSkillForm = memo(props => {
                     </Box>
                     <Box sx={styles.charCounterWrapper}>
                       {instructionsErrorNode}
+                      {frontmatterErrors.length > 0 && (
+                        <Typography
+                          variant="bodySmall"
+                          sx={styles.instructionsError}
+                          data-testid="skill-frontmatter-error"
+                        >
+                          {frontmatterErrors.join(' ')}
+                        </Typography>
+                      )}
                       <Typography
                         variant="bodySmall"
                         sx={styles.charCounter}
@@ -384,11 +401,6 @@ const skillCreateFormStyles = () => ({
     flexDirection: 'column',
     position: 'relative',
   },
-  license: ({ palette }) => ({
-    display: 'block',
-    marginTop: '0.5rem',
-    color: palette.text.secondary,
-  }),
   descriptionCharactersLabel: {
     textAlign: 'right',
     width: '100%',

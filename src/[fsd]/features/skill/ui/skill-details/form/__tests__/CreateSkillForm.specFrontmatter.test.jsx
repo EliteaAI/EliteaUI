@@ -18,6 +18,7 @@ vi.mock('@/[fsd]/features/skill/lib/constants', () => ({
 vi.mock('@/[fsd]/features/skill/lib/hooks', async () => ({
   ...(await vi.importActual('@/[fsd]/features/skill/lib/hooks/useSkillFrontmatterEditor.hooks')),
   useSkillInstructionsMaxLength: () => 50000,
+  useSkillModels: () => ({ models: [] }),
 }));
 vi.mock('@/[fsd]/features/skill/ui/generate-skill-modal', () => ({ GenerateSkillButton: () => null }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
@@ -27,8 +28,13 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
 vi.mock('@/[fsd]/shared/ui', () => ({
   Field: { CodeMirrorEditor: () => <div data-testid="codemirror-editor" /> },
   Input: {
-    StyledInputEnhancer: ({ helperText, 'data-testid': testId }) => (
-      <div data-testid={testId}>{helperText}</div>
+    StyledInputEnhancer: ({ helperText, value, 'data-testid': testId }) => (
+      <div
+        data-testid={testId}
+        data-value={value}
+      >
+        {helperText}
+      </div>
     ),
   },
   Markdown: ({ children }) => <div data-testid="instructions-markdown">{children}</div>,
@@ -69,8 +75,9 @@ describe('CreateSkillForm Agent Skills spec fields', () => {
   it('shows the licence kept from the frontmatter', () => {
     renderForm({ meta: { frontmatter: { license: 'Proprietary. LICENSE.txt has complete terms' } } });
 
-    expect(screen.getByTestId('skill-license')).toHaveTextContent(
-      'License: Proprietary. LICENSE.txt has complete terms',
+    expect(screen.getByTestId('skill-license')).toHaveAttribute(
+      'data-value',
+      'Proprietary. LICENSE.txt has complete terms',
     );
   });
 
