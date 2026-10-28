@@ -58,6 +58,24 @@ describe('DeleteProjectDataDialog', () => {
     expect(screen.getByTestId('project-data-delete-type-pipelines')).not.toHaveTextContent('skipped');
   });
 
+  it('tells which credentials are kept', () => {
+    renderDialog({
+      selectedTypes: [
+        {
+          key: 'credentials',
+          label: 'Credentials',
+          count: 5,
+          blocked: 2,
+          skipReason: { note: 'created by ELITEA for internal use (e.g. S3 access keys) will be kept' },
+        },
+      ],
+    });
+
+    expect(screen.getByTestId('project-data-delete-type-credentials')).toHaveTextContent(
+      '2 created by ELITEA for internal use (e.g. S3 access keys) will be kept',
+    );
+  });
+
   it('warns that toolkits stop working when credentials go without them', () => {
     renderDialog({ selectedTypes: [{ key: 'credentials', label: 'Credentials', count: 3 }] });
 

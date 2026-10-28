@@ -44,7 +44,7 @@ beforeEach(() => {
       skills: { count: 4, blocked: 1 },
       toolkits: { count: 6, blocked: 0 },
       mcps: { count: 2, blocked: 0 },
-      credentials: { count: 7, blocked: 0 },
+      credentials: { count: 7, blocked: 2 },
     },
     isCountsLoading: false,
     isDeleting: false,
@@ -147,7 +147,8 @@ describe('ProjectDataDelete', () => {
     expect(selectAll()).not.toBeChecked();
   });
 
-  it('shows the credentials tooltip', async () => {
+  it('always shows the credentials tooltip', async () => {
+    hookState.current.counts = { ...hookState.current.counts, credentials: { count: 7, blocked: 0 } };
     renderSection();
 
     fireEvent.mouseOver(screen.getByTestId('project-data-type-credentials-info'));
@@ -158,16 +159,23 @@ describe('ProjectDataDelete', () => {
     ).toBeInTheDocument();
   });
 
-  it('hints how many published items will be skipped', () => {
+  it('shows how many published items will be skipped in the info tooltip', async () => {
     renderSection();
 
-    expect(screen.getByTestId('project-data-type-agents-blocked')).toHaveTextContent(
-      '2 published, will be skipped',
-    );
-    expect(screen.getByTestId('project-data-type-skills-blocked')).toHaveTextContent(
-      '1 published, will be skipped',
-    );
-    expect(screen.queryByTestId('project-data-type-pipelines-blocked')).not.toBeInTheDocument();
+    fireEvent.mouseOver(screen.getByTestId('project-data-type-agents-info'));
+    expect(await screen.findByText('2 published, will be skipped')).toBeInTheDocument();
+    expect(screen.queryByTestId('project-data-type-pipelines-info')).not.toBeInTheDocument();
+  });
+
+  it('appends the kept ELITEA credentials to the credentials tooltip', async () => {
+    renderSection();
+
+    fireEvent.mouseOver(screen.getByTestId('project-data-type-credentials-info'));
+    expect(
+      await screen.findByText(
+        'Credentials, tokens, and other secrets are excluded from project backups and cannot be restored from them. Ensure you can recreate required credentials before deleting them. 2 will be skipped',
+      ),
+    ).toBeInTheDocument();
   });
 
   it('deletes every selected type in display order', async () => {

@@ -6,59 +6,51 @@ import { ProjectDataDeleteConstants } from '@/[fsd]/features/settings/lib/consta
 import { Checkbox } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 
-const { COUNT_UNAVAILABLE } = ProjectDataDeleteConstants;
+const { COUNT_UNAVAILABLE, SKIP_REASON } = ProjectDataDeleteConstants;
 
 const ProjectDataTypeOption = memo(props => {
   const { type, summary, isLoading, checked, disabled, onChange } = props;
 
   const blocked = summary?.blocked || 0;
   const count = isLoading ? '...' : (summary?.count ?? COUNT_UNAVAILABLE);
+  const skipHint =
+    !isLoading && blocked > 0 ? `${blocked} ${type.skipReason?.hint || SKIP_REASON.published.hint}` : '';
+  // The type's own tooltip, followed by how many items will be skipped
+  const tooltip = [type.tooltip, skipHint].filter(Boolean).join(' ');
 
   const styles = projectDataTypeOptionStyles();
 
   return (
-    <Box sx={styles.root}>
-      <Box sx={styles.row}>
-        <FormControlLabel
-          data-testid={`project-data-type-${type.key}`}
-          sx={styles.label}
-          control={
-            <Checkbox.BaseCheckbox
-              checked={checked}
-              onChange={onChange}
-              disabled={disabled}
-            />
-          }
-          label={
-            <Typography variant="bodyMedium">
-              {type.label}
-              <Typography
-                component="span"
-                variant="bodySmall"
-                color="text.secondary"
-                sx={styles.count}
-              >
-                {count}
-              </Typography>
-            </Typography>
-          }
-        />
-        {type.tooltip && (
-          <InfoTooltip
-            infoTooltip={type.tooltip}
-            testId={`project-data-type-${type.key}-info`}
+    <Box sx={styles.row}>
+      <FormControlLabel
+        data-testid={`project-data-type-${type.key}`}
+        sx={styles.label}
+        control={
+          <Checkbox.BaseCheckbox
+            checked={checked}
+            onChange={onChange}
+            disabled={disabled}
           />
-        )}
-      </Box>
-      {!isLoading && blocked > 0 && (
-        <Typography
-          variant="bodySmall2"
-          color="text.secondary"
-          sx={styles.blocked}
-          data-testid={`project-data-type-${type.key}-blocked`}
-        >
-          {blocked} published, will be skipped
-        </Typography>
+        }
+        label={
+          <Typography variant="bodyMedium">
+            {type.label}
+            <Typography
+              component="span"
+              variant="bodySmall"
+              color="text.secondary"
+              sx={styles.count}
+            >
+              {count}
+            </Typography>
+          </Typography>
+        }
+      />
+      {tooltip && (
+        <InfoTooltip
+          infoTooltip={tooltip}
+          testId={`project-data-type-${type.key}-info`}
+        />
       )}
     </Box>
   );
@@ -68,10 +60,6 @@ ProjectDataTypeOption.displayName = 'ProjectDataTypeOption';
 
 /** @type {MuiSx} */
 const projectDataTypeOptionStyles = () => ({
-  root: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
   row: {
     display: 'flex',
     alignItems: 'center',
@@ -82,9 +70,6 @@ const projectDataTypeOptionStyles = () => ({
   },
   count: {
     marginLeft: '0.5rem',
-  },
-  blocked: {
-    paddingLeft: '2rem',
   },
 });
 

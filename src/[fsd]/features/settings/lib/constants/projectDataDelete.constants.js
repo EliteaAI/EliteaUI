@@ -11,15 +11,31 @@ export const PROJECT_DATA_TYPE = {
 export const CREDENTIALS_TOOLTIP =
   'Credentials, tokens, and other secrets are excluded from project backups and cannot be restored from them. Ensure you can recreate required credentials before deleting them.';
 
+export const SKIP_REASON = {
+  published: {
+    hint: 'published, will be skipped',
+    note: 'published or embedded will be skipped; unpublish them first',
+  },
+  internal: {
+    hint: 'will be skipped',
+    note: 'created by ELITEA for internal use (e.g. S3 access keys) will be kept',
+  },
+};
+
 // Types the section offers, in display order (also the order the backend deletes them in)
 export const PROJECT_DATA_TYPES = [
   { key: PROJECT_DATA_TYPE.chats, label: 'Chats' },
-  { key: PROJECT_DATA_TYPE.agents, label: 'Agents' },
-  { key: PROJECT_DATA_TYPE.pipelines, label: 'Pipelines' },
-  { key: PROJECT_DATA_TYPE.skills, label: 'Skills' },
+  { key: PROJECT_DATA_TYPE.agents, label: 'Agents', skipReason: SKIP_REASON.published },
+  { key: PROJECT_DATA_TYPE.pipelines, label: 'Pipelines', skipReason: SKIP_REASON.published },
+  { key: PROJECT_DATA_TYPE.skills, label: 'Skills', skipReason: SKIP_REASON.published },
   { key: PROJECT_DATA_TYPE.toolkits, label: 'Toolkits' },
   { key: PROJECT_DATA_TYPE.mcps, label: 'MCPs' },
-  { key: PROJECT_DATA_TYPE.credentials, label: 'Credentials', tooltip: CREDENTIALS_TOOLTIP },
+  {
+    key: PROJECT_DATA_TYPE.credentials,
+    label: 'Credentials',
+    tooltip: CREDENTIALS_TOOLTIP,
+    skipReason: SKIP_REASON.internal,
+  },
 ];
 
 export const CONFIRMATION_VALUE = 'DELETE';

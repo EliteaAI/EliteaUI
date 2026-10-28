@@ -9,7 +9,8 @@ import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn
 
 import BackupAlert from '../backup-restore/BackupAlert';
 
-const { CONFIRMATION_VALUE, CREDENTIALS_WARNING, PROJECT_DATA_TYPE } = ProjectDataDeleteConstants;
+const { CONFIRMATION_VALUE, CREDENTIALS_WARNING, PROJECT_DATA_TYPE, SKIP_REASON } =
+  ProjectDataDeleteConstants;
 
 const DeleteProjectDataDialog = memo(props => {
   const { open, projectName, selectedTypes = [], isDeleting, onClose, onConfirm } = props;
@@ -67,7 +68,7 @@ const DeleteProjectDataDialog = memo(props => {
                 variant="bodySmall"
                 color="text.secondary"
               >
-                {type.blocked} published or embedded will be skipped; unpublish them first
+                {type.blocked} {type.skipReason?.note || SKIP_REASON.published.note}
               </Typography>
             )}
           </ListItem>

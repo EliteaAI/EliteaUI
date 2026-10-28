@@ -46,7 +46,9 @@ export const useProjectDataDelete = () => {
           }),
           { deleted: 0, failed: 0, skipped: 0 },
         );
-        const skippedNote = totals.skipped ? ` ${totals.skipped} published item(s) were skipped.` : '';
+        const skippedNote = totals.skipped
+          ? ` ${totals.skipped} item(s) were skipped (published, or created by ELITEA).`
+          : '';
         if (result.status === 'success' && !totals.skipped) {
           toastInfo(`Deleted ${totals.deleted} item(s).`);
         } else if (result.status === 'success') {
