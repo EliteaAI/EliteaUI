@@ -52,11 +52,13 @@ export const analyticsTestTheme = createTheme({
     },
     border: { table: '#eee', divider: '#ddd' },
     action: { hover: '#eee' },
+    alert: { info: { background: '#e3f2fd', border: '#90caf9', text: '#0d47a1' } },
     components: { button: { text: { primary: '#fff' } } },
     // The shared icon components read palette.icon.<variant> inside their sx
     // functions, so every variant an analytics screen can render needs a value here.
     icon: {
       main: '#888',
+      indexResult: { info: '#1976d2' },
       fill: {
         default: '#888',
         primary: '#888',

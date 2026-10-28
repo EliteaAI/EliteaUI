@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import RunAnalyticsView from '../RunAnalyticsView';
 import { AnalyticsTestWrapper, installGlobalStubs } from './_testHelpers';
@@ -91,6 +91,38 @@ describe('RunAnalyticsView', () => {
     expect(screen.queryByTestId('analytics-date-from-input')).not.toBeInTheDocument();
     expect(screen.getByTestId('run-analytics-refresh-button')).toBeInTheDocument();
     expect(screen.getByTestId('run-analytics-export-button')).toBeInTheDocument();
+  });
+
+  it('shows the cost-estimate info popover on the Costs tab only', () => {
+    renderView();
+
+    expect(screen.getByTestId('run-analytics-costs-info-button')).toHaveAttribute(
+      'aria-label',
+      'About cost estimates',
+    );
+
+    fireEvent.click(screen.getByTestId('run-analytics-tab-tokens'));
+
+    expect(screen.queryByTestId('run-analytics-costs-info-button')).not.toBeInTheDocument();
+  });
+
+  it('auto-opens the cost-estimate popover once, not on every return to the Costs tab', async () => {
+    localStorage.clear();
+    renderView();
+
+    expect(screen.getByTestId('run-analytics-costs-info-close-button')).toBeInTheDocument();
+
+    // ClickAwayListener only starts listening after a macrotask following mount.
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+    fireEvent.click(document.body);
+    expect(screen.queryByTestId('run-analytics-costs-info-close-button')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('run-analytics-tab-tokens'));
+    fireEvent.click(screen.getByTestId('run-analytics-tab-costs'));
+
+    expect(screen.queryByTestId('run-analytics-costs-info-close-button')).not.toBeInTheDocument();
   });
 
   it('scopes the health request to the run and hides the trend chart', () => {

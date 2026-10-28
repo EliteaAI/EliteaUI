@@ -7,7 +7,6 @@ export { default as ModelUsageTable } from './components/ModelUsageTable';
 export { default as AutomatedActivityTable } from './components/AutomatedActivityTable';
 export { default as RunFailedCallsTable } from './components/RunFailedCallsTable';
 export { default as CostTable } from './components/CostTable';
-export { default as InfoBanner, infoBannerTextSx } from './components/InfoBanner';
 export { default as DeletedChip } from './components/DeletedChip';
 export { default as AnalyticsBreakdownTable } from './components/AnalyticsBreakdownTable';
 export { default as AgentRecentRunsTable } from './components/AgentRecentRunsTable';

@@ -6,7 +6,7 @@ import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
 
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers, SkillAnalyticsHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { ChartTooltip, InfoBanner, KPICard, infoBannerTextSx } from '@/[fsd]/features/settings/ui/analytics';
+import { ChartTooltip, KPICard } from '@/[fsd]/features/settings/ui/analytics';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { useClientSort, useSortedRows } from '@/[fsd]/shared/lib/hooks';
 import { useAnalyticsCostsQuery } from '@/api';
@@ -155,14 +155,6 @@ const AnalyticsCosts = memo(props => {
 
   return (
     <Box sx={styles.container}>
-      <InfoBanner>
-        <Typography
-          variant="bodyMedium"
-          sx={infoBannerTextSx}
-        >
-          Costs are estimated from a local model-price table; actual provider invoices may differ.
-        </Typography>
-      </InfoBanner>
       <Box sx={styles.kpiRow}>
         <KPICard
           label="TOTAL COST"

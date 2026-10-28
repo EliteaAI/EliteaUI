@@ -43,6 +43,7 @@ import {
   datePickerStyles,
   getDateFieldSlotProps,
 } from '@/[fsd]/shared/ui/date-picker';
+import { InfoPopover, infoPopoverTextSx } from '@/[fsd]/shared/ui/info-popover';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import DownloadIcon from '@/assets/download.svg?react';
@@ -127,6 +128,8 @@ const AnalyticsContainer = memo(() => {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [costsInfoAutoOpened, setCostsInfoAutoOpened] = useState(false);
+  const handleCostsInfoAutoOpen = useCallback(() => setCostsInfoAutoOpened(true), []);
 
   // A cleared field (actionBar "clear" action) sets its date to null, which is a valid
   // "no bound" state, not an invalid range — only flag an actual From > To mismatch.
@@ -448,6 +451,22 @@ const AnalyticsContainer = memo(() => {
             />
           </Box>
         </Tooltip>
+        {activeTab === TAB.costs && (
+          <InfoPopover
+            label="About cost estimates"
+            storageKey={AnalyticsCommonConstants.LS_ANALYTICS_COSTS_INFO_DISMISSED}
+            testIdPrefix="analytics-costs-info"
+            autoOpen={!costsInfoAutoOpened}
+            onAutoOpen={handleCostsInfoAutoOpen}
+          >
+            <Typography
+              variant="bodyMedium"
+              sx={infoPopoverTextSx}
+            >
+              {AnalyticsCommonConstants.COSTS_ESTIMATE_DISCLAIMER}
+            </Typography>
+          </InfoPopover>
+        )}
       </Box>
       <Box
         sx={styles.filterBar}
