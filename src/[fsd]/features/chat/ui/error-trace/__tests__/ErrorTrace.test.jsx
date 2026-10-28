@@ -56,6 +56,13 @@ describe('ErrorTrace', () => {
     expect(screen.getByTestId('error-code-chip').textContent).toBe('DENIED_GRANT');
   });
 
+  it('shows the support reference of a worker refusal next to its code', () => {
+    renderTrace({ trace: JSON.stringify({ ...DENIED, ref: 'ref-1234' }) });
+
+    expect(screen.getByTestId('error-code-chip').textContent).toBe('DENIED_GRANT');
+    expect(screen.getByTestId('error-support-ref').textContent).toBe('Reference ref-1234');
+  });
+
   it('keeps the generic text when the payload has no error string', () => {
     renderTrace({ headline: '', trace: JSON.stringify({ code: 'DENIED_GRANT' }) });
 
