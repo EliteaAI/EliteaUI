@@ -2,6 +2,7 @@
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { latestSkillRunVersionId } from '@/[fsd]/entities/run-history/lib/helpers';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 
@@ -195,7 +196,13 @@ describe('RunAnalyticsContainer for a root entity', () => {
       data: {
         uuid: '0b7c3a2e-5d4f-4c1a-9e8b-1f2a3b4c5d6e',
         created_at: new Date(2026, 9, 9, 10, 0).getTime() / 1000,
-        meta: { single_participant: { entity_settings: { version_id: 251 } } },
+        meta: {
+          single_participant: {
+            entity_name: 'skill',
+            entity_meta: { id: 174, project_id: 2 },
+            entity_settings: { version_id: 251 },
+          },
+        },
       },
     });
     useApplicationDetailsQuery.mockReturnValue({ data: undefined });
@@ -236,6 +243,126 @@ describe('RunAnalyticsContainer for a root entity', () => {
       Version: 'v2',
       Model: 'Claude Sonnet 4.6',
     });
+  });
+
+  it('dates a chat run by when the skill started in it, not by when the chat was created', () => {
+    useGetRunHistoryDetailsQuery.mockReturnValue({
+      data: {
+        uuid: '0b7c3a2e-5d4f-4c1a-9e8b-1f2a3b4c5d6e',
+        created_at: new Date(2026, 9, 2, 9, 0).getTime() / 1000,
+        meta: {},
+      },
+    });
+    useAnalyticsRunDetailQuery.mockReturnValue({
+      data: { ...RUN_DETAIL, started_at: new Date(2026, 9, 9, 16, 36).toISOString() },
+      isFetching: false,
+    });
+    renderSkillRun();
+
+    expect(viewProps.current.infoLines[0]).toContain('Run: 09 Oct 2026, 04:36 PM');
+  });
+
+  it.each([
+    ['has no usage rows', { status: 404 }],
+    ['cannot load its usage', { status: 500 }],
+  ])('shows no date, not the chat creation date, for a chat run that %s', (_, error) => {
+    useGetRunHistoryDetailsQuery.mockReturnValue({
+      data: {
+        uuid: '0b7c3a2e-5d4f-4c1a-9e8b-1f2a3b4c5d6e',
+        created_at: new Date(2026, 9, 2, 9, 0).getTime() / 1000,
+        meta: {},
+      },
+    });
+    useAnalyticsRunDetailQuery.mockReturnValue({ data: undefined, isFetching: false, error });
+    renderSkillRun();
+
+    expect(viewProps.current.infoLines[0]).toContain('Run: —');
+    expect(viewProps.current.infoLines[0]).not.toContain('02 Oct 2026');
+    expect(Object.fromEntries(viewProps.current.exportMeta.scopeRows)['Run Date/Time']).toBe('—');
+  });
+
+  it('dates and versions a chat run without usage by the skill own replies in the transcript', () => {
+    useGetRunHistoryDetailsQuery.mockReturnValue({
+      data: {
+        uuid: '0b7c3a2e-5d4f-4c1a-9e8b-1f2a3b4c5d6e',
+        created_at: new Date(2026, 9, 2, 9, 0).getTime() / 1000,
+        meta: {},
+        participants: [
+          { id: 7, entity_name: 'skill', entity_meta: { id: 174, project_id: 2 }, entity_settings: {} },
+          { id: 8, entity_name: 'skill', entity_meta: { id: 900, project_id: 2 }, entity_settings: {} },
+        ],
+        message_groups: [
+          {
+            author_participant_id: 8,
+            created_at: new Date(2026, 9, 5, 8, 0).toISOString(),
+            meta: { skill_run: { skill_version_id: 999 } },
+          },
+          {
+            author_participant_id: 7,
+            created_at: new Date(2026, 9, 9, 10, 36).toISOString(),
+            meta: { skill_run: { skill_version_id: 251 } },
+          },
+          {
+            author_participant_id: 7,
+            created_at: new Date(2026, 9, 10, 10, 36).toISOString(),
+            meta: { skill_run: { skill_version_id: 252 } },
+          },
+        ],
+      },
+    });
+    useAnalyticsRunDetailQuery.mockReturnValue({
+      data: undefined,
+      isFetching: false,
+      error: { status: 404 },
+    });
+    useAnalyticsCostsQuery.mockReturnValue({ data: undefined, isFetching: false, isError: false });
+    renderSkillRun({ readRunVersionId: latestSkillRunVersionId });
+
+    expect(viewProps.current.infoLines[0]).toContain('Run: 09 Oct 2026, 10:36 AM · Version: v2');
+  });
+
+  it('treats the same skill id from another project as a different skill', () => {
+    useGetRunHistoryDetailsQuery.mockReturnValue({
+      data: {
+        uuid: '0b7c3a2e-5d4f-4c1a-9e8b-1f2a3b4c5d6e',
+        created_at: new Date(2026, 9, 2, 9, 0).getTime() / 1000,
+        meta: { single_participant: { entity_name: 'skill', entity_meta: { id: 174, project_id: 5 } } },
+      },
+    });
+    useAnalyticsRunDetailQuery.mockReturnValue({
+      data: { ...RUN_DETAIL, started_at: new Date(2026, 9, 9, 16, 36).toISOString() },
+      isFetching: false,
+    });
+    renderSkillRun();
+
+    expect(viewProps.current.infoLines[0]).toContain('Run: 09 Oct 2026, 04:36 PM');
+  });
+
+  it('dates a run of another entity Run panel by usage, as a chat run of this skill', () => {
+    useGetRunHistoryDetailsQuery.mockReturnValue({
+      data: {
+        uuid: '0b7c3a2e-5d4f-4c1a-9e8b-1f2a3b4c5d6e',
+        created_at: new Date(2026, 9, 2, 9, 0).getTime() / 1000,
+        meta: { single_participant: { entity_name: 'skill', entity_meta: { id: 999, project_id: 2 } } },
+      },
+    });
+    useAnalyticsRunDetailQuery.mockReturnValue({
+      data: { ...RUN_DETAIL, started_at: new Date(2026, 9, 9, 16, 36).toISOString() },
+      isFetching: false,
+    });
+    renderSkillRun();
+
+    expect(viewProps.current.infoLines[0]).toContain('Run: 09 Oct 2026, 04:36 PM');
+  });
+
+  it('keeps dating a Run panel run by its conversation', () => {
+    useAnalyticsRunDetailQuery.mockReturnValue({
+      data: { ...RUN_DETAIL, started_at: new Date(2026, 9, 9, 16, 36).toISOString() },
+      isFetching: false,
+    });
+    renderSkillRun();
+
+    expect(viewProps.current.infoLines[0]).toContain('Run: 09 Oct 2026, 10:00 AM');
   });
 
   it('shows placeholders, not the participant version, while the usage data loads', () => {

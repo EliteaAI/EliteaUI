@@ -45,6 +45,84 @@ describe('serializeRunHistory — index run details', () => {
   });
 });
 
+describe('serializeRunHistory — skill chat runs', () => {
+  const skillChatRun = {
+    id: 3,
+    created_at: '2026-10-26T16:36:00Z',
+    name: 'chat',
+    duration: 9,
+    is_chat_run: true,
+    skill_version_id: 88,
+    meta: {},
+  };
+  const skillRunPanelRun = {
+    id: 4,
+    created_at: '2026-10-26T15:00:00Z',
+    name: 'run',
+    duration: 3,
+    meta: {
+      single_participant: {
+        entity_name: 'skill',
+        entity_meta: { id: 629, project_id: 2 },
+        entity_settings: { version_id: 732 },
+      },
+    },
+  };
+
+  it('marks a row a chat run only when the server says so', () => {
+    const { rows } = serializeRunHistoryListResponse([skillChatRun, skillRunPanelRun, indexRun]);
+
+    expect(rows.map(row => row.is_chat_run)).toEqual([true, false, false]);
+  });
+
+  it('reads the version of a chat run from the run itself', () => {
+    const { rows } = serializeRunHistoryListResponse([skillChatRun]);
+
+    expect(rows[0].version_id).toBe(88);
+  });
+
+  it('dates a chat run by when the skill first ran in the chat', () => {
+    const { rows } = serializeRunHistoryListResponse([
+      { ...skillChatRun, created_at: '2026-10-19T09:00:00Z', run_started_at: '2026-10-26T16:36:00Z' },
+    ]);
+
+    expect(rows[0].created_at).toBe('2026-10-26T16:36:00Z');
+  });
+
+  it('reads the version of the skill own run even inside another entity Run panel', () => {
+    const agentRunPanelChat = {
+      ...skillChatRun,
+      meta: {
+        single_participant: {
+          entity_name: 'application',
+          entity_meta: { id: 111, project_id: 2 },
+          entity_settings: { version_id: 40 },
+        },
+      },
+    };
+    const { rows } = serializeRunHistoryListResponse([agentRunPanelChat]);
+
+    expect(rows[0].version_id).toBe(88);
+  });
+
+  it('keeps the skill own Run panel run a Run panel run', () => {
+    const { rows } = serializeRunHistoryListResponse([skillRunPanelRun]);
+
+    expect(rows[0].is_chat_run).toBe(false);
+    expect(rows[0].version_id).toBe(732);
+    expect(rows[0].created_at).toBe(skillRunPanelRun.created_at);
+  });
+
+  it('lists a row that has no meta instead of failing the whole history', () => {
+    const { rows } = serializeRunHistoryListResponse([{ ...skillRunPanelRun, meta: null }, skillChatRun]);
+
+    expect(rows.map(row => [row.id, row.version_id])).toEqual([
+      [4, null],
+      [3, 88],
+    ]);
+  });
+});
+
 describe('serializeRunHistory — execution type', () => {
   it('keeps the top-level execution_type on the row', () => {
     const { rows } = serializeRunHistoryListResponse([{ ...agentRun, execution_type: 'schedule' }]);
