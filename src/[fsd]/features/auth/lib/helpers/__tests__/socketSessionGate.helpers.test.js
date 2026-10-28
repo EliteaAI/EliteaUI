@@ -93,6 +93,7 @@ describe('emitWithSessionGate', () => {
       content: SESSION_EXPIRED_MESSAGE,
       stream_id: 'conv-1',
       message_id: 'q1',
+      code: 'session_expired',
     });
   });
 

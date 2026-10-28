@@ -101,6 +101,34 @@ describe('useRejectedSendRecovery', () => {
     expect(input.focus).not.toHaveBeenCalled();
   });
 
+  it('puts the text back and focuses the input when a login was abandoned, because the send never left the browser', () => {
+    const input = createInput();
+    const { toastError, rememberSend } = setup(input);
+    rememberSend('q1', 'hello there');
+
+    act(() =>
+      errorHandler({ code: 'session_expired', message_id: 'q1', content: 'Your session has expired.' }),
+    );
+
+    expect(toastError).toHaveBeenCalledWith('Your session has expired.');
+    expect(input.setValue).toHaveBeenCalledWith('hello there');
+    expect(input.focus).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not restore an abandoned login into a conversation the user switched to', () => {
+    const input = createInput();
+    const { toastError, rememberSend, activeConversationRef } = setup(input);
+    rememberSend('q1', 'hello there', 'conv-a');
+    activeConversationRef.current = { uuid: 'conv-b' };
+
+    act(() =>
+      errorHandler({ code: 'session_expired', message_id: 'q1', content: 'Your session has expired.' }),
+    );
+
+    expect(toastError).toHaveBeenCalledTimes(1);
+    expect(input.setValue).not.toHaveBeenCalled();
+  });
+
   it('puts the text back without taking focus when the send got no response', () => {
     const input = createInput();
     const { rememberSend } = setup(input);

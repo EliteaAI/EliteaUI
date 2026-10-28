@@ -25,6 +25,10 @@ export const SOCKET_UNAUTHENTICATED_CODE = 'socket_unauthenticated';
 // Set by the client itself on the failure it raises when a send got no answer at all
 export const SEND_NO_RESPONSE_CODE = 'send_no_response';
 
+// Set by the client itself when a send had to wait for a new login and the login was abandoned. The message
+// never left the browser, so it is safe to send the same text again.
+export const SESSION_EXPIRED_CODE = 'session_expired';
+
 // A send that gets no frame back at all (neither a run frame nor an error) is checked after this long.
 // The first frame of a run is emitted right after dispatch, before the agent initializes, but that is a
 // property of the server queue, not a guarantee. So a socket that is still healthy keeps waiting, and

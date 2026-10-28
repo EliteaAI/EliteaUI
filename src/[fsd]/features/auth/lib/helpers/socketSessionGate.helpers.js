@@ -5,6 +5,7 @@ import { openAuthPopup } from './authPopup.helpers';
 
 const {
   SESSION_EXPIRED_MESSAGE,
+  SESSION_EXPIRED_CODE,
   SESSION_GATED_EVENTS,
   SEND_RESPONSE_TIMEOUT_MS,
   SEND_RESPONSE_GIVE_UP_MS,
@@ -122,7 +123,7 @@ export const emitWithSessionGate = ({ socket, event, payload, isSessionExpired }
       socket?.emit(event, payload);
     })
     .catch(() => {
-      notifySendFailure(socket, event, payload, SESSION_EXPIRED_MESSAGE);
+      notifySendFailure(socket, event, payload, SESSION_EXPIRED_MESSAGE, SESSION_EXPIRED_CODE);
     });
   return false;
 };
