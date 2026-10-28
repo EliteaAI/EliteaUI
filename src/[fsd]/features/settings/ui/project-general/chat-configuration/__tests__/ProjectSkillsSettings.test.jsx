@@ -166,7 +166,6 @@ describe('project skills in chat setting', () => {
     expect(screen.getByTestId('project-skills-platform-off-hint')).toHaveTextContent(
       'Turned off for the whole environment by platform administrators.',
     );
-    expect(screen.queryByTestId('project-skills-disabled-hint')).not.toBeInTheDocument();
     await userEvent.click(choiceSelect());
     await userEvent.click(screen.getByRole('option', { name: 'Disabled', exact: true }));
     await waitFor(() =>
@@ -182,22 +181,24 @@ describe('project skills in chat setting', () => {
     expect(projectSetting()).not.toBeDisabled();
     expect(choiceSelect().textContent).toBe('Use platform default');
     expect(screen.queryByTestId('project-skills-platform-off-hint')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('project-skills-disabled-hint')).not.toBeInTheDocument();
   });
 
   it.each([
-    ['the project turned it off', { enabled: false }, true],
-    ['the project has no choice', undefined, false],
-    ['the project follows the platform', { enabled: null }, false],
-    ['the project turned it on', { enabled: true }, false],
-  ])(
-    'with the platform switch on, shows the disabled hint only when the project turned it off: %s',
-    (_case, data, hinted) => {
-      api.platform = { available: true };
-      api.current = data ? { id: 7, elitea_title: 'project_skills', data } : undefined;
-      renderSettings();
-      expect(screen.queryByTestId('project-skills-disabled-hint') !== null).toBe(hinted);
-      expect(screen.queryByTestId('project-skills-platform-off-hint')).not.toBeInTheDocument();
-    },
-  );
+    ['no choice', undefined],
+    ['follows the platform', { enabled: null }],
+    ['turned it on', { enabled: true }],
+    ['turned it off', { enabled: false }],
+  ])('shows no hint while the platform switch is on and the project %s', (_case, data) => {
+    api.current = data ? { id: 7, elitea_title: 'project_skills', data } : undefined;
+    renderSettings();
+    expect(screen.queryByTestId('project-skills-platform-off-hint')).not.toBeInTheDocument();
+  });
+
+  it('keeps the platform-off hint when the project also chose Disabled', () => {
+    api.platform = { available: false };
+    api.current = { id: 7, elitea_title: 'project_skills', data: { enabled: false } };
+    renderSettings();
+    expect(screen.getAllByTestId('project-skills-platform-off-hint')).toHaveLength(1);
+    expect(projectSetting()).toHaveValue('false');
+  });
 });

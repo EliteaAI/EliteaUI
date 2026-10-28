@@ -72,15 +72,6 @@ const ProjectSkillsSettings = memo(() => {
             Turned off for the whole environment by platform administrators.
           </Typography>
         )}
-        {isAvailable && projectChoice === false && (
-          <Typography
-            variant="bodySmall"
-            color="text.secondary"
-            data-testid="project-skills-disabled-hint"
-          >
-            Currently disabled for this project.
-          </Typography>
-        )}
       </Box>
       <Input.InputBase
         select
