@@ -11,7 +11,12 @@ import {
   ConfigurationTitlesConstants,
   LlmModelFormConstants,
 } from '@/[fsd]/features/credentials/lib/constants';
-import { CredentialProbeHelpers, OAuthAppHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import {
+  CredentialProbeHelpers,
+  OAuthAppHelpers,
+  StoredLoginHelpers,
+} from '@/[fsd]/features/credentials/lib/helpers';
+import { useCredentialPageStoredLogin } from '@/[fsd]/features/credentials/lib/hooks';
 import { CredentialLogoutModal, LlmModelForm } from '@/[fsd]/features/credentials/ui';
 import { CREDENTIALS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthFlowHelpers, McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
@@ -214,8 +219,17 @@ const CredentialForm = memo(props => {
 
   // Config OAuth: when check_connection returns requires_authorization, open modal; on success retry test connection
   const onTestConnectionRef = useRef();
+  const storedLoginRef = useRef();
+  const isFormDirtyRef = useRef(false);
   const configOAuth = useConfigOAuthModal({
-    onSuccess: () => onTestConnectionRef.current?.(),
+    onSuccess: async () => {
+      await storedLoginRef.current?.saveLogin({ isFormDirty: isFormDirtyRef.current });
+      onTestConnectionRef.current?.();
+    },
+    // The stored-login save reports the outcome itself
+    showSuccessToast: !(
+      credentialDetails?.id && StoredLoginHelpers.getStoredLoginConfig(credentialDetails?.type)
+    ),
     credentials: {
       client_id: credentialDetails?.settings?.client_id,
       client_secret: credentialDetails?.settings?.client_secret,
@@ -248,11 +262,36 @@ const CredentialForm = memo(props => {
   );
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const onConfirmLogout = useCallback(() => {
+  // `data` is the credential as saved (the form edits `settings`), so saving the login keeps it as stored
+  const storedLogin = useCredentialPageStoredLogin({
+    credential: credentialDetails?.id ? credentialDetails : null,
+    tokenKey: oauthTokenKey,
+  });
+  storedLoginRef.current = storedLogin;
+  // A team credential's stored login belongs to the project: members see it, only admins change it
+  const storedLoginLocked = storedLogin.enabled && !storedLogin.canManageLogin;
+  // For members only the stored login counts; a leftover browser token is not the project's login
+  const showsLoggedIn = storedLoginLocked
+    ? storedLogin.hasStoredLogin
+    : isOAuthLoggedIn || storedLogin.hasStoredLogin;
+  // Members never sign in on a team credential: the login would stay in their browser only
+  const onConfigAuthRequired = useCallback(
+    (...args) => {
+      if (storedLoginLocked) {
+        setApiError(StoredLoginHelpers.getLockedLoginHint(false));
+        return;
+      }
+      configOAuth.handleConfigAuthRequired(...args);
+    },
+    [storedLoginLocked, setApiError, configOAuth],
+  );
+
+  const onConfirmLogout = useCallback(async () => {
+    if (!(await storedLogin.removeLogin())) return;
     McpAuthHelpers.logout(oauthTokenKey);
     setShowLogoutModal(false);
     toastSuccess('You have successfully logged out!');
-  }, [oauthTokenKey, toastSuccess]);
+  }, [oauthTokenKey, storedLogin, toastSuccess]);
 
   const onLogout = useCallback(() => {
     setShowLogoutModal(true);
@@ -263,6 +302,7 @@ const CredentialForm = memo(props => {
   }, []);
   // A saved credential with no unsaved edits is tested by reference; anything else by the typed values
   const isFormDirty = useFormDirtyExcluding();
+  isFormDirtyRef.current = isFormDirty;
   const configurationUuid = CredentialProbeHelpers.getProbeConfigurationUuid(credentialDetails, isFormDirty);
   const { onTestConnection, isTestingConnection } = useCreateConfiguration({
     type: configurationType,
@@ -276,7 +316,7 @@ const CredentialForm = memo(props => {
     setValidationErrorMessages,
     setShowValidation,
     setTestConnectionError: setApiError,
-    onConfigAuthRequired: configOAuth.handleConfigAuthRequired,
+    onConfigAuthRequired,
     // Pass the credential-scoped token key so the correct token is fetched/stored
     oauthTokenKey,
     configurationUuid,
@@ -406,24 +446,35 @@ const CredentialForm = memo(props => {
               </Button.BaseBtn>
             </span>
           </Tooltip>
-          {isOAuthLoggedIn && oauthTokenKey && (
-            <Button.BaseBtn
-              variant="elitea"
-              color="secondary"
-              onClick={onLogout}
+          {oauthTokenKey && (
+            <Tooltip
+              title={
+                storedLoginLocked ? StoredLoginHelpers.getLockedLoginHint(storedLogin.hasStoredLogin) : ''
+              }
+              placement="bottom"
             >
-              Logout
-            </Button.BaseBtn>
-          )}
-          {!isOAuthLoggedIn && oauthTokenKey && (
-            <Button.BaseBtn
-              variant="elitea"
-              color="secondary"
-              onClick={onClickTestConnection}
-              disabled={isTestingConnection}
-            >
-              Login
-            </Button.BaseBtn>
+              <span>
+                {showsLoggedIn ? (
+                  <Button.BaseBtn
+                    variant="elitea"
+                    color="secondary"
+                    onClick={onLogout}
+                    disabled={storedLoginLocked}
+                  >
+                    Logout
+                  </Button.BaseBtn>
+                ) : (
+                  <Button.BaseBtn
+                    variant="elitea"
+                    color="secondary"
+                    onClick={onClickTestConnection}
+                    disabled={isTestingConnection || storedLoginLocked}
+                  >
+                    Login
+                  </Button.BaseBtn>
+                )}
+              </span>
+            </Tooltip>
           )}
         </Box>
       )}
