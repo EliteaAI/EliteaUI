@@ -88,6 +88,7 @@ import {
   isAutoSelection,
   isLLMSettingsFamilyConflict,
   modelsWithAuto,
+  readRefusal,
   resetLLMSettingsForModel,
   resolveModelSurface,
   selectionFields,
@@ -1456,13 +1457,14 @@ const ChatBox = memo(
           return;
         }
         if (regenerateError) {
-          const errorMessage = buildErrorMessage(regenerateError) || 'Regeneration Failed. Please try again.';
-          toastError(errorMessage);
+          const reason = ChatHelpers.toRegenerationReason(buildErrorMessage(regenerateError));
+          const code = readRefusal(regenerateError)?.code;
+          toastError(reason);
           setChatHistory(prevMessages => {
             return prevMessages.map(message =>
               message.id !== uuid
                 ? message
-                : ChatHelpers.applyMessageRegenerationError(message, errorMessage),
+                : ChatHelpers.applyMessageRegenerationError(message, reason, code),
             );
           });
         }
