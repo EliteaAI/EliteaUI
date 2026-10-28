@@ -1,31 +1,32 @@
-import { memo, useCallback } from 'react';
+import { memo, useState } from 'react';
 
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { useNodeYamlEditor } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { YamlCodeEditor } from '@/[fsd]/features/pipelines/yaml-editor/ui';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
-import { Button } from '@/[fsd]/shared/ui';
-import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import { handleCopy } from '@/common/utils';
-import CopyIcon from '@/components/Icons/CopyIcon';
 
 const NodeYamlView = memo(props => {
   const { flowNodeId, onRenamed, isReadOnly } = props;
-  const { toastInfo } = useToast();
 
   const { draft, error, onChangeCode, onEditorBlur } = useNodeYamlEditor({
     flowNodeId,
     onRenamed,
     isReadOnly,
   });
-
-  const onCopy = useCallback(() => {
-    handleCopy(draft);
-    toastInfo('Copied');
-  }, [draft, toastInfo]);
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
   const styles = nodeYamlViewStyles();
+
+  // Shown under the editor in the panel, or under the full screen editor while it is open
+  const errorText = error ? (
+    <Typography
+      variant="bodySmall"
+      sx={styles.error}
+      data-testid="pipeline-node-panel-yaml-error"
+    >
+      {error}
+    </Typography>
+  ) : null;
 
   return (
     <Box
@@ -42,34 +43,15 @@ const NodeYamlView = memo(props => {
           minHeight="100%"
           data-testid="pipeline-node-panel-yaml-editor"
           contentTestId="pipeline-node-panel-yaml-content"
+          copyMessage="Copied"
+          copyButtonTestId="pipeline-node-panel-yaml-copy"
+          fullScreenButtonTestId="pipeline-node-panel-yaml-full-screen"
+          fullScreenModalTestId="pipeline-node-panel-yaml-full-screen-modal"
+          fullScreenAfterContent={errorText}
+          onFullScreenChange={setIsFullScreen}
         />
-        <Tooltip
-          title="Copy YAML"
-          placement="top"
-        >
-          <Box
-            component="span"
-            sx={styles.copy}
-          >
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.tertiary}
-              startIcon={<CopyIcon sx={styles.copyIcon} />}
-              onClick={onCopy}
-              aria-label="Copy YAML"
-              data-testid="pipeline-node-panel-yaml-copy"
-            />
-          </Box>
-        </Tooltip>
       </Box>
-      {error && (
-        <Typography
-          variant="bodySmall"
-          sx={styles.error}
-          data-testid="pipeline-node-panel-yaml-error"
-        >
-          {error}
-        </Typography>
-      )}
+      {!isFullScreen && errorText}
     </Box>
   );
 });
@@ -86,22 +68,12 @@ const nodeYamlViewStyles = () => ({
     minHeight: '20rem',
   },
   editor: ({ palette }) => ({
-    position: 'relative',
     flex: 1,
     minHeight: 0,
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
     overflow: 'hidden',
   }),
-  copy: {
-    position: 'absolute',
-    top: '0.25rem',
-    right: '0.25rem',
-    zIndex: 1,
-  },
-  copyIcon: {
-    fontSize: '1rem',
-  },
   error: ({ palette }) => ({
     color: palette.text.error,
   }),

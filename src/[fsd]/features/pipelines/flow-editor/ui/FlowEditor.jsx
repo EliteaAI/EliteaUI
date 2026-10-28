@@ -696,6 +696,7 @@ const FlowEditor = memo(
     // to measure. After deselection the last node stays until the close animation ends; a deleted node
     // has no flow node left, so the panel closes empty.
     const isNodePanelOpen = Boolean(selectedFlowNode);
+    const stateRightOffset = isNodePanelOpen ? FlowEditorConstants.NODE_PANEL_WIDTH : 0;
     const panelFlowNode = useMemo(
       () => selectedFlowNode || (panelNodeId ? flowNodes.find(node => node.id === panelNodeId) : null),
       [flowNodes, panelNodeId, selectedFlowNode],
@@ -845,7 +846,7 @@ const FlowEditor = memo(
             </Box>
             {!isStateDrawerOpen && (
               <Box
-                sx={styles.stateButton(theme)}
+                sx={styles.stateButton(theme, stateRightOffset)}
                 data-tour={PIPELINE_TOUR_TARGET_IDS.state}
               >
                 <Button.BaseBtn
@@ -951,6 +952,7 @@ const FlowEditor = memo(
             <FlowEditorState.StateDrawer
               isOpen={isStateDrawerOpen}
               onClose={onToggleStateDrawer}
+              rightOffset={stateRightOffset}
               setYamlJsonObject={setYamlJsonObject}
               yamlJsonObject={yamlJsonObject}
               disabled={disabled}
@@ -1008,11 +1010,13 @@ const flowEditorStyles = () => ({
     display: isHidden ? 'none' : 'flex',
     minWidth: 0,
   }),
-  stateButton: theme => ({
+  // The State button and drawer move left of the node panel while it is open, so it doesn't cover them
+  stateButton: (theme, rightOffset) => ({
     position: 'absolute',
     top: theme.spacing(2.5),
-    right: theme.spacing(2.5),
+    right: `calc(${theme.spacing(2.5)} + ${rightOffset / 16}rem)`,
     zIndex: 100,
+    transition: 'right 0.2s ease',
   }),
   // Only the nodes and edges layer fades in; the dotted background and controls stay visible
   container: isViewportReady => ({

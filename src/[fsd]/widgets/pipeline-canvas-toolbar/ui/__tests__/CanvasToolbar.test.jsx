@@ -19,7 +19,6 @@ const renderToolbar = (props = {}) =>
         mode={PipelineEditorMode.Flow}
         onModeChange={vi.fn()}
         onAddNode={vi.fn()}
-        onCopyYaml={vi.fn()}
         {...props}
       />
     </ThemeProvider>,
@@ -33,16 +32,13 @@ describe('CanvasToolbar', () => {
     renderToolbar();
 
     expect(screen.getByTestId('pipeline-add-node-button')).toBeInTheDocument();
-    expect(screen.queryByTestId('pipeline-yaml-copy-button')).toBeNull();
   });
 
-  it('shows the copy button instead of + Node in Yaml mode', () => {
-    const onCopyYaml = vi.fn();
-    renderToolbar({ mode: PipelineEditorMode.Yaml, onCopyYaml });
+  it('hides + Node in Yaml mode; copy lives in the YAML editor', () => {
+    renderToolbar({ mode: PipelineEditorMode.Yaml });
 
     expect(screen.queryByTestId('pipeline-add-node-button')).toBeNull();
-    fireEvent.click(screen.getByTestId('pipeline-yaml-copy-button'));
-    expect(onCopyYaml).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId('pipeline-yaml-copy-button')).toBeNull();
   });
 
   it('opens the node type selector and adds the chosen node', () => {

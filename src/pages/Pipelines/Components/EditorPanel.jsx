@@ -23,13 +23,12 @@ import {
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { YamlCodeEditor } from '@/[fsd]/features/pipelines/yaml-editor/ui';
 import { ChunkHelpers, FunctionHelpers } from '@/[fsd]/shared/lib/helpers';
-import { useIsFrom, useIsSmallWindow, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useIsFrom, useIsSmallWindow } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { CanvasToolbar } from '@/[fsd]/widgets/pipeline-canvas-toolbar';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import { PipelineEditorMode } from '@/common/constants.js';
-import { handleCopy } from '@/common/utils.jsx';
 import { ContentContainer } from '@/pages/Common/index.js';
 import RouteDefinitions from '@/routes.js';
 import { actions, selectActivePipeline } from '@/slices/pipeline.js';
@@ -65,7 +64,6 @@ const EditorPanel = forwardRef((props, ref) => {
     isTestPanelOpen = false,
   } = props;
   const dispatch = useDispatch();
-  const { toastInfo } = useToast();
   const { isSmallWindow } = useIsSmallWindow();
   const theme = useTheme();
   const isFromChat = useIsFrom(RouteDefinitions.Chat);
@@ -182,11 +180,6 @@ const EditorPanel = forwardRef((props, ref) => {
     flowEditorRef.current?.onAddNode?.(type);
   }, []);
 
-  const onCopy = useCallback(() => {
-    handleCopy(yamlCode);
-    toastInfo('The code has been copied to the clipboard.');
-  }, [toastInfo, yamlCode]);
-
   useEffect(() => {
     if (yamlJsonObject.nodes?.find(node => node.decision)) {
       onParseCodeToJson(DumpYamlHelpers.dumpYaml(yamlJsonObject));
@@ -208,7 +201,6 @@ const EditorPanel = forwardRef((props, ref) => {
         onAddNode={onAddNode}
         onTestPipeline={isTestPanelOpen ? undefined : onTestPipeline}
         testDisabledReason={testDisabledReason || flowTestDisabledReason}
-        onCopyYaml={onCopy}
         disabled={disabled}
         isCompact={isFromChat}
       />

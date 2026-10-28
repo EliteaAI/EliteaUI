@@ -1,13 +1,10 @@
 import { memo, useMemo } from 'react';
 
-import { Box, Tooltip } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { FlowEditorAddNode, FlowEditorTestPipeline } from '@/[fsd]/features/pipelines/flow-editor/ui';
-import { Button } from '@/[fsd]/shared/ui';
-import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { PipelineEditorMode } from '@/common/constants';
 import GroupedButton from '@/components/GroupedButton';
-import CopyIcon from '@/components/Icons/CopyIcon';
 
 const CanvasToolbar = memo(props => {
   const {
@@ -16,7 +13,6 @@ const CanvasToolbar = memo(props => {
     onAddNode,
     onTestPipeline,
     testDisabledReason,
-    onCopyYaml,
     disabled,
     isCompact = false,
   } = props;
@@ -42,22 +38,6 @@ const CanvasToolbar = memo(props => {
             onAddNode={onAddNode}
             disabled={disabled}
           />
-        )}
-        {!isFlowMode && (
-          <Tooltip
-            title="Copy yaml code to clipboard"
-            placement="top"
-          >
-            <Box component="span">
-              <Button.BaseBtn
-                variant={BUTTON_VARIANTS.tertiary}
-                startIcon={<CopyIcon sx={styles.copyIcon} />}
-                onClick={onCopyYaml}
-                aria-label="Copy yaml code to clipboard"
-                data-testid="pipeline-yaml-copy-button"
-              />
-            </Box>
-          </Tooltip>
         )}
         {onTestPipeline && (
           <FlowEditorTestPipeline.TestPipelineButton
@@ -86,9 +66,6 @@ const canvasToolbarStyles = isCompact => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-  },
-  copyIcon: {
-    fontSize: '1rem',
   },
 });
 

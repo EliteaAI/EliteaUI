@@ -83,13 +83,6 @@ const NodeConfigPanel = memo(props => {
             onChange={onViewChange}
           />
         </Box>
-        <NodeNameField
-          name={usesLabelAsName ? data?.label || id : id}
-          type={type}
-          onRenamed={handleRenamed}
-          isLocked={isLegacyDecision || isDeprecated}
-        />
-        {isDeprecated && <NodeDeprecationBanner type={type} />}
         {isYamlView ? (
           <NodeYamlView
             flowNodeId={id}
@@ -97,19 +90,28 @@ const NodeConfigPanel = memo(props => {
             isReadOnly={isReadOnly}
           />
         ) : (
-          <FlowEditorContext.Provider value={formContextValue}>
-            <NodeConfigPanelContext.Provider value={panelContextValue}>
-              {NodeComponent && (
-                <NodeComponent
-                  key={id}
-                  id={id}
-                  type={type}
-                  data={data}
-                  selected={false}
-                />
-              )}
-            </NodeConfigPanelContext.Provider>
-          </FlowEditorContext.Provider>
+          <>
+            <NodeNameField
+              name={usesLabelAsName ? data?.label || id : id}
+              type={type}
+              onRenamed={handleRenamed}
+              isLocked={isLegacyDecision || isDeprecated}
+            />
+            {isDeprecated && <NodeDeprecationBanner type={type} />}
+            <FlowEditorContext.Provider value={formContextValue}>
+              <NodeConfigPanelContext.Provider value={panelContextValue}>
+                {NodeComponent && (
+                  <NodeComponent
+                    key={id}
+                    id={id}
+                    type={type}
+                    data={data}
+                    selected={false}
+                  />
+                )}
+              </NodeConfigPanelContext.Provider>
+            </FlowEditorContext.Provider>
+          </>
         )}
       </Box>
       {!isReadOnly && (

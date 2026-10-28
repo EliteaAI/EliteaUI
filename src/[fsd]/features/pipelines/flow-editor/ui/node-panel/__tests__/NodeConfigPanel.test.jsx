@@ -244,7 +244,16 @@ describe('NodeConfigPanel', () => {
       fireEvent.click(screen.getByTestId('pipeline-node-panel-view-yaml'));
 
       expect(screen.queryByTestId('node-fields-stub')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('pipeline-node-panel-name-input')).not.toBeInTheDocument();
       expect(screen.getByTestId('node-yaml-editor-stub')).toHaveValue('- id: router_1\n  type: router\n');
+    });
+
+    it('hides the deprecation banner of a deprecated node', () => {
+      renderPanel({ flowNode: { id: 'loop_1', type: PipelineNodeTypes.Loop, data: {} } });
+
+      fireEvent.click(screen.getByTestId('pipeline-node-panel-view-yaml'));
+
+      expect(screen.queryByTestId('pipeline-node-panel-deprecation-banner')).not.toBeInTheDocument();
     });
 
     it('asks the editor before going back to Flow', () => {
@@ -268,7 +277,6 @@ describe('NodeConfigPanel', () => {
       fireEvent.click(screen.getByTestId('pipeline-node-panel-view-yaml'));
 
       expect(screen.getByTestId('node-yaml-editor-stub')).toHaveAttribute('readonly');
-      expect(screen.getByTestId('pipeline-node-panel-yaml-copy')).toBeEnabled();
     });
   });
 });
