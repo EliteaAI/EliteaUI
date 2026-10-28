@@ -77,6 +77,30 @@ describe('InfoPopover', () => {
     expect(screen.getByText('Popover body text')).toBeInTheDocument();
   });
 
+  it('does not open automatically when autoOpen is false, but can be opened manually', () => {
+    renderPopover({ autoOpen: false });
+
+    expect(screen.queryByText('Popover body text')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('thing-info-button'));
+
+    expect(screen.getByText('Popover body text')).toBeInTheDocument();
+  });
+
+  it('calls onAutoOpen only when it actually opens automatically', () => {
+    const onAutoOpen = vi.fn();
+    renderPopover({ onAutoOpen });
+
+    expect(onAutoOpen).toHaveBeenCalledTimes(1);
+
+    cleanup();
+    localStorage.setItem(STORAGE_KEY, 'true');
+    const onAutoOpenDismissed = vi.fn();
+    renderPopover({ onAutoOpen: onAutoOpenDismissed });
+
+    expect(onAutoOpenDismissed).not.toHaveBeenCalled();
+  });
+
   it('toggles closed when the trigger is clicked while open', () => {
     renderPopover();
 

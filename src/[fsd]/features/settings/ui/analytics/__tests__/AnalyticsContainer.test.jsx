@@ -8,7 +8,7 @@ import { ThemeProvider } from '@mui/material';
 import { useInteractiveTour } from '@/[fsd]/shared/lib/context';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import AnalyticsContainer from '../AnalyticsContainer';
 import { RouterHistoryProbe, analyticsTestTheme } from './_testHelpers';
@@ -209,6 +209,30 @@ describe('AnalyticsContainer tabs', () => {
 
     expect(screen.queryByTestId('analytics-costs-info-button')).not.toBeInTheDocument();
     expect(screen.queryByText(/estimated from a local model-price table/i)).not.toBeInTheDocument();
+  });
+
+  it('auto-opens the cost-estimate popover once, not on every return to the Costs tab', async () => {
+    localStorage.clear();
+    renderContainer([]);
+
+    fireEvent.click(screen.getByTestId('analytics-tab-costs'));
+    expect(screen.getByTestId('analytics-costs-info-close-button')).toBeInTheDocument();
+
+    // ClickAwayListener only starts listening after a macrotask following mount.
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+    fireEvent.click(document.body);
+    expect(screen.queryByTestId('analytics-costs-info-close-button')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('analytics-tab-tokens'));
+    fireEvent.click(screen.getByTestId('analytics-tab-costs'));
+
+    expect(screen.queryByTestId('analytics-costs-info-close-button')).not.toBeInTheDocument();
+
+    // Still reachable manually.
+    fireEvent.click(screen.getByTestId('analytics-costs-info-button'));
+    expect(screen.getByTestId('analytics-costs-info-close-button')).toBeInTheDocument();
   });
 
   it('tells the Guide which tabs are visible', () => {

@@ -128,6 +128,8 @@ const AnalyticsContainer = memo(() => {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [costsInfoAutoOpened, setCostsInfoAutoOpened] = useState(false);
+  const handleCostsInfoAutoOpen = useCallback(() => setCostsInfoAutoOpened(true), []);
 
   // A cleared field (actionBar "clear" action) sets its date to null, which is a valid
   // "no bound" state, not an invalid range — only flag an actual From > To mismatch.
@@ -454,6 +456,8 @@ const AnalyticsContainer = memo(() => {
             label="About cost estimates"
             storageKey={AnalyticsCommonConstants.LS_ANALYTICS_COSTS_INFO_DISMISSED}
             testIdPrefix="analytics-costs-info"
+            autoOpen={!costsInfoAutoOpened}
+            onAutoOpen={handleCostsInfoAutoOpen}
           >
             <Typography
               variant="bodyMedium"

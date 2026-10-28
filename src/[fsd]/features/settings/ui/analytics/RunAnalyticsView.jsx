@@ -72,6 +72,8 @@ const RunAnalyticsView = memo(props => {
   const styles = runAnalyticsViewStyles();
 
   const [selectedTab, setSelectedTab] = useState(TAB.costs);
+  const [costsInfoAutoOpened, setCostsInfoAutoOpened] = useState(false);
+  const handleCostsInfoAutoOpen = useCallback(() => setCostsInfoAutoOpened(true), []);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(false);
 
@@ -185,6 +187,8 @@ const RunAnalyticsView = memo(props => {
             label="About cost estimates"
             storageKey={AnalyticsCommonConstants.LS_ANALYTICS_COSTS_INFO_DISMISSED}
             testIdPrefix="run-analytics-costs-info"
+            autoOpen={!costsInfoAutoOpened}
+            onAutoOpen={handleCostsInfoAutoOpen}
           >
             <Typography
               variant="bodyMedium"

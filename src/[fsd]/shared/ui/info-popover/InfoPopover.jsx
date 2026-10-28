@@ -7,23 +7,25 @@ import { Box, ClickAwayListener, Paper, Popper, Tooltip, Typography } from '@mui
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 
 const InfoPopover = memo(props => {
-  const { label, storageKey, testIdPrefix, title = 'Note', children } = props;
+  const { label, storageKey, testIdPrefix, title = 'Note', autoOpen = true, onAutoOpen, children } = props;
 
   const [open, setOpen] = useState(false);
   const anchorRef = useRef(null);
 
   // First visit: open automatically until the user dismisses it with the X button.
   useEffect(() => {
+    if (!autoOpen) return;
     try {
       const dismissed = localStorage.getItem(storageKey) === 'true';
 
       if (!dismissed) {
         setOpen(true);
+        onAutoOpen?.();
       }
     } catch {
       // storage blocked — leave closed
     }
-  }, [storageKey]);
+  }, [autoOpen, onAutoOpen, storageKey]);
 
   // Escape closes without persisting and returns focus to the trigger.
   useEffect(() => {
