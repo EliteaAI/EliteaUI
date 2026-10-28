@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { useManualSocket, useSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { useRunActiveSignal } from '@/[fsd]/features/auth/lib/hooks/useRunActiveSignal.hooks';
+import { parseRunRefusal } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
 import {
   IndexStatuses,
   IndexesToolsEnum,
@@ -178,7 +179,7 @@ export const useToolkitChat = props => {
   }, []);
 
   const onRunFinish = useCallback(
-    state => {
+    (state, extra) => {
       if (isTestToolsMode) return setIsRunning(false);
 
       if (runningToolRef.current === IndexesToolsEnum.indexData) {
@@ -191,6 +192,7 @@ export const useToolkitChat = props => {
         if (traceNewIndex)
           traceNewIndex(index?.id ?? null, {
             state,
+            ...extra,
           });
 
         refetchIndexesList();
@@ -289,16 +291,24 @@ export const useToolkitChat = props => {
       setIsRunning(false);
       setIsWaitingForTaskStart(false);
 
+      // A run refused by governance (C-1009) arrives as `{code, error}`: it renders as the chat's refusal card
+      // (readable text and the code), not as a failed tool with the raw payload
+      const refusal = parseRunRefusal(message.content, message.message_id);
+      const refused = Boolean(refusal);
+
       if (traceNewIndex && pendingRun.indexing)
         traceNewIndex(index?.id ?? null, {
           collection: pendingRun.collection,
           state: IndexStatuses.fail,
+          ...(refused && { refusal }),
         });
 
-      const errorChatMessage = generateMockMessageTemplate(
-        `❌ Failed to execute tool "${pendingRun.tool}"\n\n**Error:** ${convertJsonToString(message.content)}`,
-        'toolkit',
-      );
+      const errorChatMessage = refused
+        ? { ...generateMockMessageTemplate('', 'toolkit'), exception: convertJsonToString(message.content) }
+        : generateMockMessageTemplate(
+            `❌ Failed to execute tool "${pendingRun.tool}"\n\n**Error:** ${convertJsonToString(message.content)}`,
+            'toolkit',
+          );
       setChatHistory(prev => [...prev, errorChatMessage]);
     },
     [traceNewIndex, index?.id],
