@@ -93,9 +93,18 @@ export const doLayout = ({ nodes, edges, flowNodes, orientation = ORIENTATION.ve
   };
 };
 
+const getRect = node => ({ ...node.position, ...getNodeSize(node) });
+
+const isOverlapping = (a, b, gap) =>
+  a.x < b.x + b.width + gap &&
+  b.x < a.x + a.width + gap &&
+  a.y < b.y + b.height + gap &&
+  b.y < a.y + a.height + gap;
+
 /**
- * Keeps the canvas positions and sizes of the parsed nodes. Only nodes the canvas doesn't know get a
- * position from an auto-arrange; with no canvas positions at all the whole pipeline is arranged.
+ * Keeps the canvas positions and sizes of the parsed nodes. A node the canvas doesn't know keeps its
+ * arranged offset from a placed neighbour, then moves along the flow until it overlaps no card; with no
+ * canvas positions at all the whole pipeline is arranged.
  */
 export const mergeCanvasPositions = ({
   nodes,
@@ -115,18 +124,69 @@ export const mergeCanvasPositions = ({
     return doLayout({ nodes, edges, flowNodes, orientation });
   }
 
-  const arranged = nodes.every(isPlaced) ? null : doLayout({ nodes, edges, flowNodes, orientation });
+  const positionedById = new Map(
+    nodes.filter(isPlaced).map(node => {
+      const flowNode = flowNodeById.get(node.id);
+      return [
+        node.id,
+        {
+          ...node,
+          position: { ...flowNode.position },
+          ...(flowNode.measured && { measured: { ...flowNode.measured } }),
+        },
+      ];
+    }),
+  );
+
+  if (positionedById.size < nodes.length) {
+    const isHorizontal = orientation === ORIENTATION.horizontal;
+    const { nodesep } =
+      FlowEditorConstants.LAYOUT_SPACING[isHorizontal ? ORIENTATION.horizontal : ORIENTATION.vertical];
+    const arrangedById = new Map(
+      doLayout({ nodes, edges, flowNodes, orientation }).nodes.map(node => [node.id, node]),
+    );
+    const getOffset = anchorId => {
+      const anchor = positionedById.get(anchorId);
+      const arrangedAnchor = arrangedById.get(anchorId);
+      if (!anchor || !arrangedAnchor) return null;
+      return {
+        x: anchor.position.x - arrangedAnchor.position.x,
+        y: anchor.position.y - arrangedAnchor.position.y,
+      };
+    };
+
+    nodes
+      .filter(node => !isPlaced(node))
+      .forEach(node => {
+        const arrangedNode = arrangedById.get(node.id) || node;
+        const anchorEdge =
+          edges.find(edge => edge.target === node.id && positionedById.has(edge.source)) ||
+          edges.find(edge => edge.source === node.id && positionedById.has(edge.target));
+        const offset = (anchorEdge &&
+          getOffset(anchorEdge.target === node.id ? anchorEdge.source : anchorEdge.target)) || { x: 0, y: 0 };
+        const candidate = {
+          ...arrangedNode,
+          position: { x: arrangedNode.position.x + offset.x, y: arrangedNode.position.y + offset.y },
+        };
+
+        let blocker = [...positionedById.values()].find(placed =>
+          isOverlapping(getRect(candidate), getRect(placed), nodesep),
+        );
+        while (blocker) {
+          const blockerRect = getRect(blocker);
+          candidate.position = isHorizontal
+            ? { ...candidate.position, x: blockerRect.x + blockerRect.width + nodesep }
+            : { ...candidate.position, y: blockerRect.y + blockerRect.height + nodesep };
+          blocker = [...positionedById.values()].find(placed =>
+            isOverlapping(getRect(candidate), getRect(placed), nodesep),
+          );
+        }
+        positionedById.set(node.id, candidate);
+      });
+  }
 
   return {
-    nodes: nodes.map(node => {
-      if (!isPlaced(node)) return arranged.nodes.find(arrangedNode => arrangedNode.id === node.id) || node;
-      const flowNode = flowNodeById.get(node.id);
-      return {
-        ...node,
-        position: { ...flowNode.position },
-        ...(flowNode.measured && { measured: { ...flowNode.measured } }),
-      };
-    }),
+    nodes: nodes.map(node => positionedById.get(node.id) || node),
     edges,
   };
 };

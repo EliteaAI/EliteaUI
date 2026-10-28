@@ -107,15 +107,36 @@ describe('mergeCanvasPositions', () => {
     });
   });
 
-  it('arranges only the nodes the canvas has not placed', () => {
+  it('places a node the canvas has not placed next to its placed neighbour', () => {
     const withoutFallback = canvasNodes.filter(node => node.id !== 'fallback');
     const { nodes } = mergeCanvasPositions({ ...parsed, flowNodes: withoutFallback });
+    const arrangedFallback = byId(arrange(ORIENTATION.vertical), 'fallback').position;
 
     expect(byId(nodes, 'start').position).toEqual(byId(canvasNodes, 'start').position);
-    expect(byId(nodes, 'fallback').position).toEqual(
-      byId(arrange(ORIENTATION.vertical), 'fallback').position,
-    );
+    expect(byId(nodes, 'fallback').position).toEqual({
+      x: arrangedFallback.x + 37,
+      y: arrangedFallback.y - 11,
+    });
   });
+
+  it.each([ORIENTATION.vertical, ORIENTATION.horizontal])(
+    'moves a new node off the cards the user moved (%s)',
+    orientation => {
+      const orientedParsed = parseYaml(PIPELINE, orientation);
+      const arranged = arrange(orientation);
+      const fallback = byId(arranged, 'fallback');
+      // "third" was dragged to where the new "fallback" would land
+      const moved = arranged
+        .filter(node => node.id !== 'fallback')
+        .map(node => (node.id === 'third' ? { ...node, position: { ...fallback.position } } : node));
+      const { nodes } = mergeCanvasPositions({ ...orientedParsed, flowNodes: moved, orientation });
+
+      const newRect = getRect(byId(nodes, 'fallback'));
+      nodes
+        .filter(node => node.id !== 'fallback')
+        .forEach(node => expect(overlaps(newRect, getRect(node))).toBe(false));
+    },
+  );
 
   it('arranges the whole pipeline when the canvas has no positions', () => {
     const { nodes } = mergeCanvasPositions({ ...parsed, flowNodes: [] });
@@ -126,9 +147,12 @@ describe('mergeCanvasPositions', () => {
   });
 
   it('ignores a canvas node of another type with the same id', () => {
-    const renamedType = canvasNodes.map(node => (node.id === 'start' ? { ...node, type: 'code' } : node));
+    const stalePosition = { x: 5000, y: 5000 };
+    const renamedType = canvasNodes.map(node =>
+      node.id === 'start' ? { ...node, type: 'code', position: stalePosition } : node,
+    );
     const { nodes } = mergeCanvasPositions({ ...parsed, flowNodes: renamedType });
 
-    expect(byId(nodes, 'start').position).not.toEqual(byId(canvasNodes, 'start').position);
+    expect(byId(nodes, 'start').position).not.toEqual(stalePosition);
   });
 });

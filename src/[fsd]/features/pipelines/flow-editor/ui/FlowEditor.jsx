@@ -467,7 +467,9 @@ const FlowEditor = memo(
           const measuredNodes = NodeCardHelpers.isMiniCardZoom(zoom)
             ? NodeCardHelpers.withFullNodeSizes(flowNodes, fullNodeSizesRef.current)
             : FlowEditorHelpers.measureNodes(flowNodes, zoom, editorRef);
-          const { nodes: layoutNodes, edges: layoutEdges } = LayoutHelpers.doLayout({
+          // Arrange moves every node; otherwise only the new ones get a place next to the canvas layout
+          const layout = layoutAll ? LayoutHelpers.doLayout : LayoutHelpers.mergeCanvasPositions;
+          const { nodes: layoutNodes, edges: layoutEdges } = layout({
             nodes,
             edges,
             flowNodes: measuredNodes,
@@ -506,11 +508,13 @@ const FlowEditor = memo(
       [flowNodes, getZoom, orientation, setFlowEdges, setFlowNodes],
     );
 
+    const canFitNodes = hasNodesToFit(flowNodes);
+
     useImperativeHandle(
       ref,
       () => ({
         fitView: () => {
-          if (flowNodes.length > 1) {
+          if (canFitNodes) {
             setTimeout(() => {
               fitView(FlowEditorConstants.FIT_VIEW_OPTIONS);
             }, 100);
@@ -546,7 +550,7 @@ const FlowEditor = memo(
       }),
       [
         fitView,
-        flowNodes.length,
+        canFitNodes,
         onAddNode,
         onRcvAgentEvent,
         setFlowEdges,

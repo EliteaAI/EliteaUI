@@ -121,7 +121,7 @@ const EditorPanel = forwardRef((props, ref) => {
       }
       if (parsedYamlJson && !areYamlObjectsEqual(parsedYamlJson, yamlJsonObject)) {
         setYamlJsonObject(parsedYamlJson);
-        flowEditorRef.current?.calculateLayoutNodes?.(parsedYamlJson, true, true);
+        flowEditorRef.current?.calculateLayoutNodes?.(parsedYamlJson, true, false);
       }
     },
     [setYamlJsonObject, yamlJsonObject],
