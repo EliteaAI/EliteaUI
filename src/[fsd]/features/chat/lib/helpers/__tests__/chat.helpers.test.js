@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { applyMessageRegenerationError, prepareMessageForRegeneration } from '../chat.helpers';
+import {
+  applyMessageRegenerationError,
+  prepareMessageForRegeneration,
+  toRegenerationReason,
+} from '../chat.helpers';
 import { parseRefusalPayload } from '../refusal.helpers';
 
 describe('prepareMessageForRegeneration', () => {
@@ -56,7 +60,7 @@ describe('prepareMessageForRegeneration', () => {
       content: '',
       message_items: [],
       references: [],
-      exception: JSON.stringify({ error: 'current regeneration failure' }, null, 2),
+      exception: JSON.stringify({ error: 'current regeneration failure' }),
       continuationError: undefined,
       toolActions: [],
       isRegenerating: false,
@@ -82,4 +86,25 @@ describe('prepareMessageForRegeneration', () => {
       code: 'SKILL_INVOCATION_LIMIT',
     });
   });
+
+  it('keeps an over-long failure reason readable on the reply card', () => {
+    const reason = 'x'.repeat(5000);
+
+    const { exception } = applyMessageRegenerationError({ id: 'answer-1' }, reason);
+
+    expect(parseRefusalPayload(exception).message).toBe(`${'x'.repeat(1000)}…`);
+  });
+});
+
+describe('toRegenerationReason', () => {
+  it('keeps a readable server reason', () => {
+    expect(toRegenerationReason('Internal Server Error')).toBe('Internal Server Error');
+  });
+
+  it.each([[{ detail: { field: 'invalid' } }], [undefined], ['']])(
+    'falls back to the generic reason for %j',
+    reason => {
+      expect(toRegenerationReason(reason)).toBe('Regeneration Failed. Please try again.');
+    },
+  );
 });
