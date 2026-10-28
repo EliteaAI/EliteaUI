@@ -9,6 +9,11 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 
 import ProjectDataDelete from '../ProjectDataDelete';
 
+// InputBase reports copy actions through toasts, whose provider these tests do not mount
+vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
+  useToast: () => ({ toastError: vi.fn(), toastInfo: vi.fn(), toastWarning: vi.fn(), toastSuccess: vi.fn() }),
+}));
+
 const hookState = vi.hoisted(() => ({ current: {} }));
 
 vi.mock('@/[fsd]/features/settings/lib/hooks', () => ({
@@ -89,6 +94,15 @@ describe('ProjectDataDelete', () => {
     ).toBeInTheDocument();
   });
 
+  it('hides the Back Up & Restore link when that section is not available', () => {
+    renderSection({ onOpenBackup: undefined });
+
+    expect(screen.queryByTestId('project-data-delete-backup-link')).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/We strongly recommend creating and verifying a backup before deleting project data/),
+    ).toBeInTheDocument();
+  });
+
   it('links the warning to Back Up & Restore', () => {
     const onOpenBackup = vi.fn();
     renderSection({ onOpenBackup });
@@ -163,7 +177,9 @@ describe('ProjectDataDelete', () => {
     renderSection();
 
     fireEvent.mouseOver(screen.getByTestId('project-data-type-agents-info'));
-    expect(await screen.findByText('2 published, will be skipped')).toBeInTheDocument();
+    expect(
+      await screen.findByText('2 published or embedded, will be skipped (unpublish them first)'),
+    ).toBeInTheDocument();
     expect(screen.queryByTestId('project-data-type-pipelines-info')).not.toBeInTheDocument();
   });
 
@@ -173,7 +189,7 @@ describe('ProjectDataDelete', () => {
     fireEvent.mouseOver(screen.getByTestId('project-data-type-credentials-info'));
     expect(
       await screen.findByText(
-        'Credentials, tokens, and other secrets are excluded from project backups and cannot be restored from them. Ensure you can recreate required credentials before deleting them. 2 will be skipped',
+        'Credentials, tokens, and other secrets are excluded from project backups and cannot be restored from them. Ensure you can recreate required credentials before deleting them. 2 created by ELITEA for internal use (e.g. S3 access keys), will be skipped',
       ),
     ).toBeInTheDocument();
   });

@@ -87,14 +87,16 @@ const ProjectDataDelete = memo(props => {
       <BackupAlert severity="warning">
         We strongly recommend creating and verifying a backup before deleting project data. This action cannot
         be undone.{' '}
-        <Link
-          component="button"
-          variant="bodySmall"
-          onClick={onOpenBackup}
-          data-testid="project-data-delete-backup-link"
-        >
-          Go to Back Up &amp; Restore
-        </Link>
+        {onOpenBackup && (
+          <Link
+            component="button"
+            variant="bodySmall"
+            onClick={onOpenBackup}
+            data-testid="project-data-delete-backup-link"
+          >
+            Go to Back Up &amp; Restore
+          </Link>
+        )}
         <Box
           component="span"
           sx={styles.note}

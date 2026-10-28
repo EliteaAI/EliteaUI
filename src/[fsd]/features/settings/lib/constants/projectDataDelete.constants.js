@@ -11,15 +11,10 @@ export const PROJECT_DATA_TYPE = {
 export const CREDENTIALS_TOOLTIP =
   'Credentials, tokens, and other secrets are excluded from project backups and cannot be restored from them. Ensure you can recreate required credentials before deleting them.';
 
+// Shown after the skipped count, both in the section tooltip and in the confirmation dialog
 export const SKIP_REASON = {
-  published: {
-    hint: 'published, will be skipped',
-    note: 'published or embedded will be skipped; unpublish them first',
-  },
-  internal: {
-    hint: 'will be skipped',
-    note: 'created by ELITEA for internal use (e.g. S3 access keys) will be kept',
-  },
+  published: { text: 'published or embedded, will be skipped (unpublish them first)' },
+  internal: { text: 'created by ELITEA for internal use (e.g. S3 access keys), will be skipped' },
 };
 
 // Types the section offers, in display order (also the order the backend deletes them in)

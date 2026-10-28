@@ -14,7 +14,7 @@ const ProjectDataTypeOption = memo(props => {
   const blocked = summary?.blocked || 0;
   const count = isLoading ? '...' : (summary?.count ?? COUNT_UNAVAILABLE);
   const skipHint =
-    !isLoading && blocked > 0 ? `${blocked} ${type.skipReason?.hint || SKIP_REASON.published.hint}` : '';
+    !isLoading && blocked > 0 ? `${blocked} ${(type.skipReason || SKIP_REASON.published).text}` : '';
   // The type's own tooltip, followed by how many items will be skipped
   const tooltip = [type.tooltip, skipHint].filter(Boolean).join(' ');
 

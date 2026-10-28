@@ -1,15 +1,15 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 
-import { Box, List, ListItem, TextField, Typography } from '@mui/material';
+import { Box, List, ListItem, Typography } from '@mui/material';
 
 import { ProjectDataDeleteConstants } from '@/[fsd]/features/settings/lib/constants';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
-import { Button, Modal } from '@/[fsd]/shared/ui';
+import { Button, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
 import BackupAlert from '../backup-restore/BackupAlert';
 
-const { CONFIRMATION_VALUE, CREDENTIALS_WARNING, PROJECT_DATA_TYPE, SKIP_REASON } =
+const { CONFIRMATION_VALUE, COUNT_UNAVAILABLE, CREDENTIALS_WARNING, PROJECT_DATA_TYPE, SKIP_REASON } =
   ProjectDataDeleteConstants;
 
 const DeleteProjectDataDialog = memo(props => {
@@ -61,14 +61,14 @@ const DeleteProjectDataDialog = memo(props => {
             data-testid={`project-data-delete-type-${type.key}`}
           >
             <Typography variant="labelMedium">
-              {type.label} ({type.count ?? 0})
+              {type.label} ({type.count ?? COUNT_UNAVAILABLE})
             </Typography>
             {type.blocked > 0 && (
               <Typography
                 variant="bodySmall"
                 color="text.secondary"
               >
-                {type.blocked} {type.skipReason?.note || SKIP_REASON.published.note}
+                {type.blocked} {(type.skipReason || SKIP_REASON.published).text}
               </Typography>
             )}
           </ListItem>
@@ -89,15 +89,14 @@ const DeleteProjectDataDialog = memo(props => {
           {CREDENTIALS_WARNING}
         </BackupAlert>
       )}
-      <TextField
+      <Input.InputBase
         data-testid="project-data-delete-confirm-input"
-        fullWidth
         autoComplete="off"
-        variant="standard"
         label={`Type ${CONFIRMATION_VALUE} to confirm`}
         value={confirmation}
         onChange={handleChange}
         disabled={isDeleting}
+        enableAutoBlur={false}
       />
     </Box>
   );

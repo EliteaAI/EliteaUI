@@ -143,7 +143,7 @@ const ProjectGeneralContent = memo(() => {
                     <Box sx={styles.containerStyles}>
                       <ProjectDataDelete
                         projectName={projectName}
-                        onOpenBackup={handleOpenBackup}
+                        onOpenBackup={isBackupRestoreAvailable ? handleOpenBackup : undefined}
                       />
                     </Box>
                   ),

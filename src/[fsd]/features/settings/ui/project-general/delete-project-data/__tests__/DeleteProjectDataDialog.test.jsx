@@ -9,6 +9,11 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import DeleteProjectDataDialog from '../DeleteProjectDataDialog';
 
+// InputBase reports copy actions through toasts, whose provider these tests do not mount
+vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
+  useToast: () => ({ toastError: vi.fn(), toastInfo: vi.fn(), toastWarning: vi.fn(), toastSuccess: vi.fn() }),
+}));
+
 const theme = createTheme({ palette: lightPalette });
 
 const renderDialog = props =>
@@ -53,7 +58,7 @@ describe('DeleteProjectDataDialog', () => {
 
     expect(screen.getByTestId('project-data-delete-type-agents')).toHaveTextContent('Agents (5)');
     expect(screen.getByTestId('project-data-delete-type-agents')).toHaveTextContent(
-      '2 published or embedded will be skipped; unpublish them first',
+      '2 published or embedded, will be skipped (unpublish them first)',
     );
     expect(screen.getByTestId('project-data-delete-type-pipelines')).not.toHaveTextContent('skipped');
   });
@@ -66,13 +71,13 @@ describe('DeleteProjectDataDialog', () => {
           label: 'Credentials',
           count: 5,
           blocked: 2,
-          skipReason: { note: 'created by ELITEA for internal use (e.g. S3 access keys) will be kept' },
+          skipReason: { text: 'created by ELITEA for internal use (e.g. S3 access keys), will be skipped' },
         },
       ],
     });
 
     expect(screen.getByTestId('project-data-delete-type-credentials')).toHaveTextContent(
-      '2 created by ELITEA for internal use (e.g. S3 access keys) will be kept',
+      '2 created by ELITEA for internal use (e.g. S3 access keys), will be skipped',
     );
   });
 
@@ -94,6 +99,12 @@ describe('DeleteProjectDataDialog', () => {
     });
 
     expect(screen.queryByTestId('project-data-delete-credentials-warning')).not.toBeInTheDocument();
+  });
+
+  it('shows a dash instead of 0 when a count is unavailable', () => {
+    renderDialog({ selectedTypes: [{ key: 'skills', label: 'Skills', count: null }] });
+
+    expect(screen.getByTestId('project-data-delete-type-skills')).toHaveTextContent('Skills (–)');
   });
 
   it.each(['', 'delete', 'Delete', 'DELETE ', ' DELETE', 'DELET'])(
