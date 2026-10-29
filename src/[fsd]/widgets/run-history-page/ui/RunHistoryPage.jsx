@@ -15,7 +15,7 @@ import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useApplicationDetailsQuery } from '@/api/applications';
-import { SearchParams } from '@/common/constants';
+import { SearchParams, ViewMode } from '@/common/constants';
 
 const DEFAULT_TAB = 'all';
 const SCHEDULE_ID_PARAM = 'schedule_id';
@@ -88,7 +88,16 @@ const RunHistoryPage = memo(props => {
         // The theme link, so the name reads well in dark and light
         <Link
           component={RouterLink}
-          to={buildScheduleFormLink({ entityType: scheduleEntityType, entityId: agentId, tab, scheduleId })}
+          to={{
+            pathname: buildScheduleFormLink({
+              entityType: scheduleEntityType,
+              entityId: agentId,
+              tab,
+              scheduleId,
+            }),
+            // Without the owner view mode the editor falls back to the public mode and fails to load
+            search: `?${SearchParams.ViewMode}=${ViewMode.Owner}`,
+          }}
           onClick={event => event.stopPropagation()}
           // A cut name shows in full on hover
           title={name}

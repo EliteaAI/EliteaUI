@@ -23,6 +23,7 @@ export const TabGroupButton = props => (
       <button
         key={item.value}
         type="button"
+        disabled={item.buttonProps?.disabled}
         onClick={event => props.onChange(event, item.value)}
       >
         {item.label}

@@ -75,4 +75,23 @@ describe('Breadcrumbs', () => {
     expect(screen.queryByTestId('breadcrumb-menu-trigger')).not.toBeInTheDocument();
     expect(screen.getByTestId('breadcrumb-current')).toHaveTextContent('Evaluation (Beta)');
   });
+
+  it('keeps the search in a crumb link', () => {
+    trail.current = [
+      { ...crumb('/agents/:tab/:agentId', 'Agent', false), to: '/agents/all/1' },
+      crumb('/agents/:tab/:agentId/history', 'Run History', true),
+    ];
+    render(
+      <ThemeProvider theme={theme}>
+        <MemoryRouter initialEntries={['/agents/all/1/history?schedule_id=4&viewMode=owner']}>
+          <Breadcrumbs menus={{}} />
+        </MemoryRouter>
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByRole('link', { name: 'Agent' })).toHaveAttribute(
+      'href',
+      '/agents/all/1?schedule_id=4&viewMode=owner',
+    );
+  });
 });

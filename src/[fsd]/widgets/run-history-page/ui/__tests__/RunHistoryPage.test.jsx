@@ -190,7 +190,7 @@ describe('RunHistoryPage schedule filter and links', () => {
     );
     expect(screen.getByRole('link', { name: 'Daily digest' })).toHaveAttribute(
       'href',
-      '/agents/all/127/schedules/4',
+      '/agents/all/127/schedules/4?viewMode=owner',
     );
     // a cut name shows in full on hover
     expect(screen.getByRole('link', { name: 'Daily digest' })).toHaveAttribute('title', 'Daily digest');

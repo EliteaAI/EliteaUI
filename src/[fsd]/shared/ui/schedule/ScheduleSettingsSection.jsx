@@ -1,4 +1,4 @@
-import { memo, useId, useMemo, useState } from 'react';
+import { memo, useEffect, useId, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
@@ -15,8 +15,11 @@ const { canConvertCronTimezone, getBrowserTimezone, getNextCronRun, validateCron
   ScheduleHelpers;
 const { canBuildCron } = CronBuilderHelpers;
 
-const viewButtons = [
-  { value: 'builder', label: 'Builder' },
+const BUILDER_BLOCKED_HINT =
+  'The Builder cannot show this expression. Edit it as text, or enter a daily time.';
+
+const getViewButtons = builderBlocked => [
+  { value: 'builder', label: 'Builder', buttonProps: { disabled: builderBlocked } },
   { value: 'cron', label: 'Cron expression' },
 ];
 
@@ -33,6 +36,15 @@ const ScheduleSettingsSection = memo(props => {
 
   // A saved cron the Builder cannot show opens as text, so the form never shows another schedule
   const [cronType, setCronType] = useState(() => (!value || canBuildCron(value) ? 'builder' : 'cron'));
+
+  // The Builder would show a made-up default for an expression it cannot read
+  const builderBlocked = Boolean(value) && !canBuildCron(value);
+
+  useEffect(() => {
+    if (builderBlocked) setCronType('cron');
+  }, [builderBlocked]);
+
+  const viewButtons = useMemo(() => getViewButtons(builderBlocked), [builderBlocked]);
 
   const errorId = useId();
 
@@ -89,13 +101,23 @@ const ScheduleSettingsSection = memo(props => {
         <Tab.TabGroupButton
           data-testid={`${testIdPrefix}-mode-tabs`}
           arrayBtn={viewButtons}
-          value={cronType}
+          value={builderBlocked ? 'cron' : cronType}
           onChange={(_, newValue) => setCronType(newValue)}
           disableTooltip
         />
       </Box>
 
-      {cronType === 'builder' ? (
+      {builderBlocked && (
+        <Typography
+          data-testid={`${testIdPrefix}-builder-blocked-hint`}
+          variant="labelSmall"
+          sx={styles.builderBlockedHint}
+        >
+          {BUILDER_BLOCKED_HINT}
+        </Typography>
+      )}
+
+      {!builderBlocked && cronType === 'builder' ? (
         <Box sx={styles.cronWrapper}>
           <CronBuilder
             value={value}
@@ -199,6 +221,10 @@ const scheduleSettingsSectionStyles = () => ({
     display: 'flex',
     justifyContent: 'center',
   },
+  builderBlockedHint: ({ palette }) => ({
+    textAlign: 'center',
+    color: palette.text.secondary,
+  }),
   previewBox: {
     padding: '1rem',
     borderRadius: '0.5rem',

@@ -94,7 +94,7 @@ describe('ScheduleModal timezone handling', () => {
   it('warns instead of converting when the expression cannot be shifted', () => {
     renderModal({ cron: '*/30 * * * *', timezone: FOREIGN_TIMEZONE });
 
-    expect(screen.getByTestId('cron-builder-value')).toHaveTextContent('*/30 * * * *');
+    expect(screen.getByTestId('pipeline-schedule-cron-input')).toHaveValue('*/30 * * * *');
     expect(screen.getByTestId('schedule-timezone-notice')).toHaveTextContent(
       'cannot be converted automatically',
     );

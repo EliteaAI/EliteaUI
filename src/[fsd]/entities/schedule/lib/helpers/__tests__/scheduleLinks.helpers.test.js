@@ -50,6 +50,7 @@ describe('scheduleLinks.helpers', () => {
   it('Open run history opens the edit form nested in the entity on its Runs section', () => {
     expect(buildScheduleRunsLink({ entityType: 'pipeline', entityId: 9, tab: 'my', scheduleId: 4 })).toEqual({
       pathname: '/pipelines/my/9/schedules/4',
+      search: '?viewMode=owner',
       hash: '#runs',
     });
   });
@@ -71,10 +72,10 @@ describe('scheduleLinks.helpers', () => {
 describe('buildScheduleHistoryLink', () => {
   it('buildScheduleHistoryLink builds the pipeline history URL with schedule_id', () => {
     expect(buildScheduleHistoryLink({ id: 4, entity_type: 'pipeline', application_id: 80 })).toBe(
-      '/pipelines/all/80/history?schedule_id=4',
+      '/pipelines/all/80/history?schedule_id=4&viewMode=owner',
     );
     expect(buildScheduleHistoryLink({ id: 5, entity_type: 'agent', application_id: 7 })).toBe(
-      '/agents/all/7/history?schedule_id=5',
+      '/agents/all/7/history?schedule_id=5&viewMode=owner',
     );
   });
 });

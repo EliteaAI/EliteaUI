@@ -12,7 +12,7 @@ import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import FailIcon from '@/assets/fail-icon.svg?react';
 import SuccessIcon from '@/assets/success-icon.svg?react';
-import { ChatParticipantType, SearchParams, sioEvents } from '@/common/constants';
+import { ChatParticipantType, SearchParams, ViewMode, sioEvents } from '@/common/constants';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import RouteDefinitions from '@/routes';
 
@@ -24,7 +24,7 @@ const STATUSES = {
 };
 
 const buildRunPath = ({ entity_id, conversation_id, isPipeline }) =>
-  `${NavigationHelpers.buildRoute(isPipeline ? RouteDefinitions.PipelineRunHistory : RouteDefinitions.ApplicationsRunHistory, { tab: 'all', agentId: entity_id })}?${new URLSearchParams({ [SearchParams.HistoryRunId]: String(conversation_id) })}`;
+  `${NavigationHelpers.buildRoute(isPipeline ? RouteDefinitions.PipelineRunHistory : RouteDefinitions.ApplicationsRunHistory, { tab: 'all', agentId: entity_id })}?${new URLSearchParams({ [SearchParams.HistoryRunId]: String(conversation_id), [SearchParams.ViewMode]: ViewMode.Owner })}`;
 
 /**
  * Shows the result of a scheduled run of an agent that is a participant of the open chat.
