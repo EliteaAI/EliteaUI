@@ -37,6 +37,15 @@ const Users = memo(() => {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [openInviteDialog, setOpenInviteDialog] = useState(false);
   const [emailCount, setEmailCount] = useState(0);
+  const [pagedQuery, setPagedQuery] = useState(query);
+  const queryChanged = pagedQuery !== query;
+  if (queryChanged) {
+    setPagedQuery(query);
+    setPage(0);
+    setUiPage(0);
+  }
+  const requestPage = queryChanged ? 0 : page;
+  const visiblePage = queryChanged ? 0 : uiPage;
   const shouldInvite = useMemo(() => {
     return searchParams.get('inviteUsers') === '1';
   }, [searchParams]);
@@ -54,7 +63,7 @@ const Users = memo(() => {
   const { data, isFetching, isError, error } = useUserListQuery(
     {
       projectId,
-      page,
+      page: requestPage,
       pageSize,
       params: { query, match_roles: true },
     },
@@ -83,8 +92,8 @@ const Users = memo(() => {
   const { rows: users = [], total } = data || {};
 
   const visibleRows = useMemo(
-    () => users.slice(uiPage * pageSize, uiPage * pageSize + pageSize),
-    [users, uiPage, pageSize],
+    () => users.slice(visiblePage * pageSize, visiblePage * pageSize + pageSize),
+    [users, visiblePage, pageSize],
   );
 
   const [inviteUsers, { isError: isInviteError, error: inviteError, reset, isSuccess: isInviteSuccess }] =
@@ -92,8 +101,6 @@ const Users = memo(() => {
 
   const handleChange = useCallback(value => {
     setSearch(value);
-    setPage(0);
-    setUiPage(0);
   }, []);
 
   const onChangePage = useCallback(
@@ -244,7 +251,7 @@ const Users = memo(() => {
                 users={isError ? [] : visibleRows}
                 total={total}
                 rowsPerPage={pageSize}
-                page={uiPage}
+                page={visiblePage}
                 onChangePageSize={onChangePageSize}
                 onPageChange={onChangePage}
                 selectedUsers={selectedUsers}

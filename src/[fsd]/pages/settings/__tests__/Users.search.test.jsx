@@ -117,6 +117,20 @@ describe('Settings → Users search', () => {
     expect(screen.queryByText('Member 01')).toBeNull();
   });
 
+  it('sends one request for a new search made past the first page', async () => {
+    await search('member');
+    fireEvent.click(screen.getByText('next'));
+    const sentBefore = server.requests.length;
+
+    await search('member 2');
+
+    const sent = server.requests.slice(sentBefore);
+    expect(sent.filter(request => request.query === 'member' && request.page === 0)).toEqual([]);
+    expect(sent.filter(request => request.query === 'member 2' && request.page !== 0)).toEqual([]);
+    expect(sent.at(-1)).toEqual({ page: 0, pageSize: 20, query: 'member 2', match_roles: true });
+    expect(screen.getByText('Member 20')).toBeInTheDocument();
+  });
+
   it('restores the full list when the search is cleared', async () => {
     await search('member 24');
     await search('');
