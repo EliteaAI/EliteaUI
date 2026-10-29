@@ -105,23 +105,12 @@ describe('IndexesContainer — a reindex refused by governance', () => {
     expect(toast.toastError).not.toHaveBeenCalled();
   });
 
-  it('keeps what the worker sent as the debugging info and names the download after the message', () => {
-    const created = [];
-    URL.createObjectURL = vi.fn(blob => (created.push(blob), 'blob:x'));
-    URL.revokeObjectURL = vi.fn();
-    let downloadName;
-    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function click() {
-      downloadName = this.download;
-    });
+  it('shows no debugging expander for the refusal: it is a decision, not a failure to debug', () => {
     startReindex();
     act(() => runner.props.traceNewIndex(5, { collection: 'docs', state: 'failed', refusal: REFUSAL }));
 
-    fireEvent.click(screen.getByText('Error debugging info'));
-    expect(screen.getByText(REFUSAL.trace, { selector: 'pre' })).toBeInTheDocument();
-    fireEvent.click(screen.getAllByRole('button').find(button => !button.textContent));
-
-    expect(downloadName).toMatch(/^error-trace-msg-42-/);
-    expect(created).toHaveLength(1);
+    expect(screen.getByText(REFUSAL.message)).toBeInTheDocument();
+    expect(screen.queryByText('Error debugging info')).not.toBeInTheDocument();
   });
 
   it("clears the card when the list is read again after the run settled, not for the run's own refetch", () => {
