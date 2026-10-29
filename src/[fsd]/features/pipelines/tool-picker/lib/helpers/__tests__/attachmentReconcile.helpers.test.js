@@ -52,6 +52,21 @@ describe('reconcileAttachments', () => {
     expect(reconcile({ tools, yamlJsonObject: initialYaml, initialYamlJsonObject: initialYaml })).toBe(tools);
   });
 
+  it('adds no attachment for a duplicated node that uses the same toolkit or agent', () => {
+    const initialYaml = yaml(toolkitNode('jira_1', 'jira', 'search'), {
+      id: 'a',
+      type: 'agent',
+      tool: 'Reviewer',
+    });
+    const withCopies = yaml(...initialYaml.nodes, toolkitNode('jira_1_copy', 'jira', 'search'), {
+      id: 'a_copy',
+      type: 'agent',
+      tool: 'Reviewer',
+    });
+    const tools = [jira, reviewer];
+    expect(reconcile({ tools, yamlJsonObject: withCopies, initialYamlJsonObject: initialYaml })).toBe(tools);
+  });
+
   it('keeps legacy attachments that no node ever used', () => {
     const tools = [legacy];
     expect(reconcile({ tools, yamlJsonObject: yaml(), initialYamlJsonObject: yaml() })).toBe(tools);

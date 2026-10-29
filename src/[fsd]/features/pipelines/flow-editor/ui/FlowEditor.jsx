@@ -22,6 +22,7 @@ import {
   FlowEditorHelpers,
   LayoutHelpers,
   NodeCardHelpers,
+  NodeOperationsHelpers,
   ParsePipelineHelpers,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import {
@@ -44,6 +45,7 @@ import {
 import { useReconcilePipelineAttachments } from '@/[fsd]/features/pipelines/tool-picker';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { FlowEditorProvider } from '@/[fsd]/shared/lib/context';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ClipboardIcon from '@/assets/clipboard-icon.svg?react';
@@ -167,6 +169,7 @@ const FlowEditor = memo(
     }, []);
 
     const { setNodes, setEdges } = useSaveNodesAndEdges();
+    const { toastSuccess } = useToast();
 
     const {
       yamlJsonObject,
@@ -422,18 +425,43 @@ const FlowEditor = memo(
       [flowNodes, isHorizontal, requestNodeLeave, setFlowNodes, setYamlJsonObject, trackEvent],
     );
 
+    // The part of the canvas a new node may land in (flow coordinates): left of the overlaying node panel
+    const getVisibleFlowRect = useCallback(() => {
+      const viewPort = getViewport();
+      const viewSize = getViewSize();
+      const width = Math.max(
+        viewSize.width - FlowEditorConstants.NODE_PANEL_WIDTH,
+        FlowEditorConstants.NODE_CARD_WIDTH,
+      );
+      return {
+        x: -viewPort.x / viewPort.zoom,
+        y: -viewPort.y / viewPort.zoom,
+        width: width / viewPort.zoom,
+        height: viewSize.height / viewPort.zoom,
+      };
+    }, [getViewSize, getViewport]);
+
+    // Mini cards must not make the occupied areas look smaller than the full cards
+    const getFullSizeFlowNodes = useCallback(
+      () =>
+        NodeCardHelpers.isMiniCardZoom(getZoom())
+          ? NodeCardHelpers.withFullNodeSizes(flowNodes, fullNodeSizesRef.current)
+          : flowNodes,
+      [flowNodes, getZoom],
+    );
+
+    const centerOnNode = useCallback(
+      (position, size) =>
+        setCenter(position.x + size.width / 2, position.y + size.height / 2, {
+          zoom: getZoom(),
+          duration: 300,
+        }),
+      [getZoom, setCenter],
+    );
+
     const onAddNode = useCallback(
       type => {
         notifyNodeInteraction();
-        const viewPort = getViewport();
-        // The new node opens the overlaying node panel, so it must land left of it
-        const viewSize = {
-          ...getViewSize(),
-          width: Math.max(
-            getViewSize().width - FlowEditorConstants.NODE_PANEL_WIDTH,
-            FlowEditorConstants.NODE_CARD_WIDTH,
-          ),
-        };
         const size = {
           width: FlowEditorConstants.NODE_CARD_WIDTH,
           height:
@@ -441,32 +469,111 @@ const FlowEditor = memo(
             FlowEditorConstants.NodeHeightMap[FlowEditorConstants.PipelineNodeTypes.Default],
         };
         const isEmpty = !yamlJsonObjectRef.current?.nodes?.filter(Boolean).length;
-        const sizedNodes = NodeCardHelpers.isMiniCardZoom(viewPort.zoom)
-          ? NodeCardHelpers.withFullNodeSizes(flowNodes, fullNodeSizesRef.current)
-          : flowNodes;
+        const sizedNodes = getFullSizeFlowNodes();
         // While the pipeline is empty End is hidden, so it must not block the new node
         const occupiedNodes = isEmpty
           ? sizedNodes.filter(node => node.type !== FlowEditorConstants.PipelineNodeTypes.End)
           : sizedNodes;
         const { x, y, isInView } = FlowEditorHelpers.findFreeNodePosition({
-          viewRect: {
-            x: -viewPort.x / viewPort.zoom,
-            y: -viewPort.y / viewPort.zoom,
-            width: viewSize.width / viewPort.zoom,
-            height: viewSize.height / viewPort.zoom,
-          },
+          viewRect: getVisibleFlowRect(),
           nodes: occupiedNodes,
           size,
         });
 
         const newNode = onNodeCreateAtPosition(type, { x, y });
-        if (!isInView) {
-          setCenter(x + size.width / 2, y + size.height / 2, { zoom: viewPort.zoom, duration: 300 });
-        }
+        if (!isInView) centerOnNode({ x, y }, size);
         return newNode;
       },
-      [getViewSize, getViewport, flowNodes, notifyNodeInteraction, onNodeCreateAtPosition, setCenter],
+      [centerOnNode, getFullSizeFlowNodes, getVisibleFlowRect, notifyNodeInteraction, onNodeCreateAtPosition],
     );
+
+    // Copies the node's configuration, without its connections, next to it and selects the copy
+    const onDuplicateNode = useCallback(
+      (nodeId, toolNames = []) =>
+        requestNodeLeave(() => {
+          const yamlNode = NodeOperationsHelpers.findYamlNodeById(yamlJsonObjectRef.current || {}, nodeId);
+          const originalFlowNode = flowNodes.find(node => node.id === nodeId);
+          if (!yamlNode || !originalFlowNode || !NodeOperationsHelpers.canDuplicateNodeType(yamlNode.type))
+            return;
+
+          const newId = NodeOperationsHelpers.getDuplicateNodeId({
+            name: nodeId,
+            nodes: [...(yamlJsonObjectRef.current?.nodes || []).filter(Boolean), ...flowNodes],
+            toolNames,
+          });
+          const copy = NodeOperationsHelpers.duplicateYamlNode(yamlNode, newId);
+          setYamlJsonObject(prevValue => ({
+            ...(prevValue || {}),
+            nodes: [...(prevValue?.nodes || []), copy],
+          }));
+
+          const size = {
+            width:
+              fullNodeSizesRef.current[nodeId]?.width ??
+              originalFlowNode.measured?.width ??
+              FlowEditorConstants.NODE_CARD_WIDTH,
+            height:
+              fullNodeSizesRef.current[nodeId]?.height ??
+              originalFlowNode.measured?.height ??
+              FlowEditorConstants.NodeHeightMap[yamlNode.type] ??
+              FlowEditorConstants.NodeHeightMap[FlowEditorConstants.PipelineNodeTypes.Default],
+          };
+          const position = FlowEditorHelpers.findFreeOffsetPosition({
+            origin: originalFlowNode.position,
+            nodes: getFullSizeFlowNodes().filter(node => node.id !== nodeId),
+            size,
+          });
+
+          setFlowNodes(prevNodes => [
+            ...prevNodes.map(node => (node.selected ? { ...node, selected: false } : node)),
+            {
+              id: newId,
+              type: originalFlowNode.type,
+              data: {
+                label: newId,
+                ...(originalFlowNode.type === FlowEditorConstants.PipelineNodeTypes.Decision
+                  ? { decision: {} }
+                  : {}),
+              },
+              position,
+              selected: true,
+            },
+          ]);
+          setSelectedNodeId(newId);
+          notifyNodeInteraction();
+
+          const viewRect = getVisibleFlowRect();
+          const isInView =
+            position.x >= viewRect.x &&
+            position.y >= viewRect.y &&
+            position.x + size.width <= viewRect.x + viewRect.width &&
+            position.y + size.height <= viewRect.y + viewRect.height;
+          if (!isInView) centerOnNode(position, size);
+
+          toastSuccess(`${nodeId} duplicated as ${newId}`);
+        }),
+      [
+        centerOnNode,
+        flowNodes,
+        getFullSizeFlowNodes,
+        getVisibleFlowRect,
+        notifyNodeInteraction,
+        requestNodeLeave,
+        setFlowNodes,
+        setYamlJsonObject,
+        toastSuccess,
+      ],
+    );
+
+    const handleDuplicateNodeRef = useRef(onDuplicateNode);
+
+    useEffect(() => {
+      handleDuplicateNodeRef.current = onDuplicateNode;
+    }, [onDuplicateNode]);
+
+    const handleDuplicateNode = useCallback((nodeId, toolNames) => {
+      handleDuplicateNodeRef.current(nodeId, toolNames);
+    }, []);
 
     // Returns the parsed nodes (with their arranged positions when shouldDoLayout is set)
     const calculateLayoutNodes = useCallback(
@@ -893,6 +1000,7 @@ const FlowEditor = memo(
           deleteRunNode={deleteRunNode}
           isRunningPipeline={isRunningPipeline}
           handleDeleteNode={onDeleteNode}
+          handleDuplicateNode={disabled ? undefined : handleDuplicateNode}
           onAddFromHandle={disabled || isCanvasLocked ? undefined : onAddFromHandle}
           orientation={orientation}
           isCanvasLocked={isCanvasLocked}

@@ -468,19 +468,23 @@ const getNodeRect = node => ({
  * that keeps `gap` clear of every existing node. Candidates closest to the view centre win.
  * Falls back to below the lowest node when the view has no free slot.
  */
-export const findFreeNodePosition = ({ viewRect, nodes = [], size, gap = 40 }) => {
-  const rects = nodes
+const getOccupiedRects = nodes =>
+  nodes
     .filter(node => node.type !== FlowEditorConstants.PipelineNodeTypes.Ghost && !node.hidden)
     .map(getNodeRect);
 
-  const overlaps = (x, y) =>
-    rects.some(
-      rect =>
-        x < rect.x + rect.width + gap &&
-        x + size.width + gap > rect.x &&
-        y < rect.y + rect.height + gap &&
-        y + size.height + gap > rect.y,
-    );
+const overlapsAny = (rects, x, y, size, gap) =>
+  rects.some(
+    rect =>
+      x < rect.x + rect.width + gap &&
+      x + size.width + gap > rect.x &&
+      y < rect.y + rect.height + gap &&
+      y + size.height + gap > rect.y,
+  );
+
+export const findFreeNodePosition = ({ viewRect, nodes = [], size, gap = 40 }) => {
+  const rects = getOccupiedRects(nodes);
+  const overlaps = (x, y) => overlapsAny(rects, x, y, size, gap);
 
   const centre = {
     x: viewRect.x + (viewRect.width - size.width) / 2,
@@ -505,6 +509,21 @@ export const findFreeNodePosition = ({ viewRect, nodes = [], size, gap = 40 }) =
 
   const bottom = rects.reduce((max, rect) => Math.max(max, rect.y + rect.height), -Infinity);
   return { x: centre.x, y: bottom + gap, isInView: false };
+};
+
+/**
+ * Finds a top-left position for a node of `size` next to `origin`, stepping `offset` down and right
+ * until it keeps `gap` clear of every node in `nodes`. Falls back to the last step tried.
+ * `nodes` must not include the node at `origin`: the new card cascades over it.
+ */
+export const findFreeOffsetPosition = ({ origin, nodes = [], size, offset = 40, gap = 0 }) => {
+  const rects = getOccupiedRects(nodes);
+  let candidate = origin;
+  for (let step = 1; step <= FREE_POSITION_MAX_STEPS; step++) {
+    candidate = { x: origin.x + offset * step, y: origin.y + offset * step };
+    if (!overlapsAny(rects, candidate.x, candidate.y, size, gap)) return candidate;
+  }
+  return candidate;
 };
 
 const getNormalInitialNodeId = (type, nodes = []) => {

@@ -1,20 +1,33 @@
 import { memo, useCallback, useContext } from 'react';
 
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { useNodeToolNames } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import SparkleIcon from '@/assets/ai-sparkle-icon.svg?react';
+import DuplicateNodeIcon from '@/assets/duplicate-node-icon.svg?react';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 
 const { PipelineNodeTypes } = FlowEditorConstants;
 
+const DEPRECATED_DUPLICATE_TOOLTIP = "Deprecated nodes can't be duplicated";
+
 const NodeConfigFooter = memo(props => {
-  const { id, type, isEntrypoint, canMakeEntrypoint: canMakeEntrypointProp = true } = props;
-  const { setYamlJsonObject, handleDeleteNode } = useContext(FlowEditorContext);
+  const {
+    id,
+    type,
+    isEntrypoint,
+    canMakeEntrypoint: canMakeEntrypointProp = true,
+    canDuplicate = true,
+  } = props;
+  const { setYamlJsonObject, handleDeleteNode, handleDuplicateNode } = useContext(FlowEditorContext);
   const { toastSuccess } = useToast();
+  const toolNames = useNodeToolNames();
+  const { palette } = useTheme();
 
   const canBeEntrypoint =
     canMakeEntrypointProp && type !== PipelineNodeTypes.Condition && type !== PipelineNodeTypes.Decision;
@@ -27,6 +40,10 @@ const NodeConfigFooter = memo(props => {
   const onDelete = useCallback(() => {
     handleDeleteNode(id);
   }, [handleDeleteNode, id]);
+
+  const onDuplicate = useCallback(() => {
+    handleDuplicateNode?.(id, toolNames);
+  }, [handleDuplicateNode, id, toolNames]);
 
   const styles = nodeConfigFooterStyles();
 
@@ -59,20 +76,66 @@ const NodeConfigFooter = memo(props => {
           </Button.BaseBtn>
         )}
       </Box>
-      <Tooltip
-        title="Delete"
-        placement="top"
-      >
-        <Box component="span">
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.secondary}
-            startIcon={<DeleteIcon sx={styles.icon} />}
-            onClick={onDelete}
-            aria-label="Delete node"
-            data-testid="pipeline-node-panel-delete"
-          />
-        </Box>
-      </Tooltip>
+      <Box sx={styles.actions}>
+        <Tooltip
+          title="Coming soon"
+          placement="top"
+        >
+          <Box component="span">
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.special}
+              startIcon={<SparkleIcon />}
+              disabled
+              sx={styles.buildWithAi}
+              aria-label="Build with AI"
+              data-testid="pipeline-node-panel-build-with-ai"
+            />
+          </Box>
+        </Tooltip>
+        {handleDuplicateNode && (
+          <Tooltip
+            title={canDuplicate ? 'Duplicate node' : DEPRECATED_DUPLICATE_TOOLTIP}
+            placement="top"
+          >
+            <Box component="span">
+              <Button.BaseBtn
+                variant={BUTTON_VARIANTS.secondary}
+                startIcon={
+                  <Box
+                    component="span"
+                    sx={styles.duplicateIcon(canDuplicate)}
+                  >
+                    <DuplicateNodeIcon />
+                  </Box>
+                }
+                onClick={onDuplicate}
+                disabled={!canDuplicate}
+                aria-label="Duplicate node"
+                data-testid="pipeline-node-panel-duplicate"
+              />
+            </Box>
+          </Tooltip>
+        )}
+        <Tooltip
+          title="Delete"
+          placement="top"
+        >
+          <Box component="span">
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.secondary}
+              startIcon={
+                <DeleteIcon
+                  sx={styles.icon}
+                  fill={palette.icon.secondary}
+                />
+              }
+              onClick={onDelete}
+              aria-label="Delete node"
+              data-testid="pipeline-node-panel-delete"
+            />
+          </Box>
+        </Tooltip>
+      </Box>
     </Box>
   );
 });
@@ -99,9 +162,36 @@ const nodeConfigFooterStyles = () => ({
     border: `0.0625rem solid ${palette.border.lines}`,
     cursor: 'default',
   }),
+  actions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
   icon: {
     fontSize: '1rem',
   },
+  // Disabled until the feature ships, but keeps the Build with AI look
+  buildWithAi: ({ palette }) => ({
+    '&.Mui-disabled': {
+      backgroundColor: palette.components.button.background.split.default,
+      color: palette.components.split.text.default,
+    },
+  }),
+  // SVGR icons don't take sx: the wrapper sizes the 14px glyph in a 16px box and colours it
+  duplicateIcon:
+    isEnabled =>
+    ({ palette }) => ({
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '1rem',
+      height: '1rem',
+      color: isEnabled ? palette.icon.secondary : palette.icon.disabled,
+      '& svg': {
+        width: '0.875rem',
+        height: '0.875rem',
+      },
+    }),
 });
 
 export default NodeConfigFooter;
