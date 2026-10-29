@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { useManualSocket, useSocket } from '@/[fsd]/features/auth/lib/hooks';
-import { useRunActiveSignal } from '@/[fsd]/features/auth/lib/hooks/useRunActiveSignal.hooks';
 import { parseRunRefusal } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
 import {
   IndexStatuses,
@@ -106,8 +105,6 @@ export const useToolkitChat = props => {
   const [isRunning, setIsRunning] = useState(false);
   const runGenerationRef = useRef(0);
 
-  // This chat does not use navBlocker.isStreaming, which would also make navigating away prompt
-  useRunActiveSignal(isRunning);
   const [activeTaskId, setActiveTaskId] = useState(index?.metadata?.task_id ?? null);
   const seededIndexIdRef = useRef(index?.id ?? null);
   const [isWaitingForTaskStart, setIsWaitingForTaskStart] = useState(false);

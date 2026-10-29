@@ -41,7 +41,3 @@ export const SEND_RESPONSE_GIVE_UP_MS = 3 * 60 * 1000;
 
 export const SEND_NO_RESPONSE_MESSAGE =
   'No response from the server. Your message may still arrive; if nothing appears shortly, please resend it.';
-
-// A tab hidden for longer than this re-handshakes its socket when it comes back, because the
-// server's view of the session may have been lost while the connection was flapping
-export const LONG_HIDDEN_THRESHOLD_MS = 5 * 60 * 1000;
