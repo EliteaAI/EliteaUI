@@ -12,6 +12,7 @@ import { ProjectBackupHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Checkbox, Modal } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import { actions as chatActions } from '@/slices/chat';
 
 import BackupAlert from './BackupAlert';
@@ -237,13 +238,34 @@ const RestoreProjectDialog = memo(props => {
         >
           Choose a backup file
         </BaseBtn>
-        <Typography
-          variant="bodySmall2"
-          color="text.secondary"
-          sx={styles.fileName}
-        >
-          {file ? `${file.name} (${formatSize(file.size)})` : 'No files selected'}
-        </Typography>
+        {file ? (
+          <Box sx={styles.fileInfo}>
+            <TypographyWithConditionalTooltip
+              title={file.name}
+              placement="top"
+              variant="bodySmall2"
+              color="text.secondary"
+              sx={styles.fileName}
+              data-testid="project-restore-file-name"
+            >
+              {file.name}
+            </TypographyWithConditionalTooltip>
+            <Typography
+              variant="bodySmall2"
+              color="text.secondary"
+              sx={styles.fileSize}
+            >
+              ({formatSize(file.size)})
+            </Typography>
+          </Box>
+        ) : (
+          <Typography
+            variant="bodySmall2"
+            color="text.secondary"
+          >
+            No files selected
+          </Typography>
+        )}
         <Box
           component="input"
           ref={inputRef}
@@ -484,10 +506,17 @@ const restoreProjectDialogStyles = () => ({
     flexShrink: 0,
     whiteSpace: 'nowrap',
   },
+  fileInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    minWidth: 0,
+  },
   fileName: {
     minWidth: 0,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
+  },
+  fileSize: {
+    flexShrink: 0,
     whiteSpace: 'nowrap',
   },
   hiddenInput: {
