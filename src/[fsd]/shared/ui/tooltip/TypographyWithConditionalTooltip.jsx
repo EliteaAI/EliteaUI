@@ -11,7 +11,15 @@ import { useTextOverflow } from '@/[fsd]/shared/lib/hooks';
 
 const TypographyWithConditionalTooltip = memo(
   forwardRef((props, ref) => {
-    const { title, placement = 'right', children, sx, enterDelay = 100, ...typographyProps } = props;
+    const {
+      title,
+      placement = 'right',
+      children,
+      sx,
+      popperSx,
+      enterDelay = 100,
+      ...typographyProps
+    } = props;
     const { textRef, isOverflowing } = useTextOverflow(title);
     const styles = typographyWithConditionalTooltipStyles();
 
@@ -36,7 +44,7 @@ const TypographyWithConditionalTooltip = memo(
         slotProps={{
           tooltip: { sx: styles.tooltip },
           popper: {
-            sx: styles.popper,
+            sx: [styles.popper, popperSx],
             modifiers: [
               {
                 name: 'offset',

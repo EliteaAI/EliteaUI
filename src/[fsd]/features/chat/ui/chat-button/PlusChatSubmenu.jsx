@@ -148,6 +148,7 @@ const PlusChatSubmenu = memo(props => {
                 <TypographyWithConditionalTooltip
                   title={item.label}
                   placement="right"
+                  popperSx={styles.tooltipPopper}
                   variant="bodyMedium"
                   color="text.secondary"
                 >
@@ -240,6 +241,10 @@ const submenuStyles = theme => ({
         opacity: 1,
       },
     },
+  },
+  tooltipPopper: {
+    // Must sit above the submenu Popper (zIndex 9999 in PlusChatButton)
+    zIndex: 10000,
   },
   scrollableContent: {
     maxHeight: '20.3125rem',
