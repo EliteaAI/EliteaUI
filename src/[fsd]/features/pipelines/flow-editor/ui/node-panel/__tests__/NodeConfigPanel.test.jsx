@@ -66,6 +66,7 @@ const renderPanel = ({
     setFlowNodes: vi.fn(),
     setFlowEdges: vi.fn(),
     handleDeleteNode: vi.fn(),
+    handleDuplicateNode: vi.fn(),
     isRunningPipeline: false,
     disabled: false,
     ...context,
@@ -189,6 +190,41 @@ describe('NodeConfigPanel', () => {
     expect(contextValue.handleDeleteNode).toHaveBeenCalledWith('router_1');
   });
 
+  it('duplicates through the editor with the toolkit names a copy must not take', async () => {
+    const { contextValue } = renderPanel();
+    const button = screen.getByTestId('pipeline-node-panel-duplicate');
+
+    expect(button).toHaveAttribute('aria-label', 'Duplicate node');
+    expect(button).not.toBeDisabled();
+    fireEvent.mouseOver(button);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Duplicate node');
+
+    fireEvent.click(button);
+
+    expect(contextValue.handleDuplicateNode).toHaveBeenCalledWith('router_1', []);
+  });
+
+  it.each([
+    ['a deprecated type', { id: 'loop_1', type: PipelineNodeTypes.Loop, data: {} }],
+    [
+      'a legacy inline decision',
+      {
+        id: `review_decision${FlowEditorConstants.DECISION_NODE_ID_SUFFIX}`,
+        type: PipelineNodeTypes.Decision,
+        data: { label: 'Decision(deprecated inline decision)' },
+      },
+    ],
+  ])('disables Duplicate for %s and explains why', async (_label, flowNode) => {
+    const { contextValue } = renderPanel({ flowNode });
+    const button = screen.getByTestId('pipeline-node-panel-duplicate');
+
+    expect(button).toBeDisabled();
+    fireEvent.mouseOver(button.parentElement);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent("Deprecated nodes can't be duplicated");
+    fireEvent.click(button);
+    expect(contextValue.handleDuplicateNode).not.toHaveBeenCalled();
+  });
+
   it('hides the footer and disables the name in read-only mode and while running', () => {
     renderPanel({ context: { disabled: true } });
     expect(screen.queryByTestId('pipeline-node-panel-footer')).toBeNull();
@@ -197,6 +233,7 @@ describe('NodeConfigPanel', () => {
     cleanup();
     renderPanel({ context: { isRunningPipeline: true } });
     expect(screen.queryByTestId('pipeline-node-panel-footer')).toBeNull();
+    expect(screen.queryByTestId('pipeline-node-panel-duplicate')).toBeNull();
   });
 
   it('renames on blur and reports the new id', () => {

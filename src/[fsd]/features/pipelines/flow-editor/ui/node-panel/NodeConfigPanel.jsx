@@ -120,6 +120,7 @@ const NodeConfigPanel = memo(props => {
           type={type}
           isEntrypoint={isEntrypoint}
           canMakeEntrypoint={!isDeprecated}
+          canDuplicate={!isDeprecated && !isLegacyDecision}
         />
       )}
     </Box>

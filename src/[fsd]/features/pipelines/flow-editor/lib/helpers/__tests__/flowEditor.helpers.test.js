@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 
-import { findFreeNodePosition } from '../flowEditor.helpers';
+import { findFreeNodePosition, findFreeOffsetPosition } from '../flowEditor.helpers';
 
 const { PipelineNodeTypes } = FlowEditorConstants;
 
@@ -65,5 +65,31 @@ describe('findFreeNodePosition', () => {
         position.y >= 450 + FlowEditorConstants.NodeHeightMap[PipelineNodeTypes.LLM] + 40 ||
         position.y + size.height + 40 <= 450,
     ).toBe(true);
+  });
+});
+
+describe('findFreeOffsetPosition', () => {
+  const origin = { x: 100, y: 100 };
+
+  it('places the node 40 down and right of the origin when that spot is free', () => {
+    expect(findFreeOffsetPosition({ origin, nodes: [], size })).toEqual({ x: 140, y: 140 });
+  });
+
+  it('steps further down and right past a card in the way', () => {
+    const blocker = makeNode('other', 200, 200);
+    const position = findFreeOffsetPosition({ origin, nodes: [blocker], size });
+
+    expect(position.x - origin.x).toBe(position.y - origin.y);
+    expect(position.x).toBeGreaterThan(140);
+    expect(intersects(position, blocker, 0)).toBe(false);
+  });
+
+  it('ignores ghost and hidden nodes', () => {
+    const nodes = [
+      makeNode('ghost', 140, 140, 400, 300, PipelineNodeTypes.Ghost),
+      { ...makeNode('hidden', 140, 140), hidden: true },
+    ];
+
+    expect(findFreeOffsetPosition({ origin, nodes, size })).toEqual({ x: 140, y: 140 });
   });
 });
