@@ -6,6 +6,7 @@ import { Box, Collapse, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { useSelectedChatModelContext } from '@/[fsd]/features/chat/lib/context/SelectedChatModelContext';
 import { resolveModelChipLabel } from '@/[fsd]/features/chat/lib/helpers/modelChip.helpers';
+import { DurationLabel } from '@/[fsd]/features/chat/ui/duration-label';
 import { DurationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useGetComponentWidth, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
@@ -156,10 +157,6 @@ const ActionView = memo(props => {
 
   // Not memoized: socket handlers mutate the action in place.
   const durationMs = showProgress ? null : DurationHelpers.getSettledActionDurationMs(action);
-  const durationTooltip =
-    durationMs == null
-      ? ''
-      : DurationHelpers.formatDurationTooltip(durationMs, DurationHelpers.includesApprovalWait(action));
 
   // Check if this is a named LLM action (pipeline node like Start, Chat) vs generic "Thinking step"
   const isNamedLlmAction = useMemo(
@@ -432,20 +429,11 @@ const ActionView = memo(props => {
               >
                 {displayTitle}
               </Typography>
-              {durationMs != null && (
-                <Tooltip
-                  title={durationTooltip}
-                  placement="top"
-                >
-                  <Typography
-                    variant="bodySmall2"
-                    sx={styles.duration}
-                    data-testid="chat-answer-chip-duration"
-                  >
-                    · {DurationHelpers.formatDurationMs(durationMs)}
-                  </Typography>
-                </Tooltip>
-              )}
+              <DurationLabel
+                durationMs={durationMs}
+                includesApprovalWait={durationMs != null && DurationHelpers.includesApprovalWait(action)}
+                testId="chat-answer-chip-duration"
+              />
             </Box>
             {needAuthAction && onAuth && (
               <Button.BaseBtn
@@ -646,11 +634,6 @@ const actionViewStyles = () => ({
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   },
-  duration: ({ palette }) => ({
-    color: palette.text.metrics,
-    whiteSpace: 'nowrap',
-    flexShrink: 0,
-  }),
   progressContainer: {
     width: '1rem',
     height: '1rem',

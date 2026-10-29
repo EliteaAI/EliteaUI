@@ -9,6 +9,7 @@ export { ChatWelcomeMessage } from './chat-welcome-message';
 export { ChatParticipantsWelcome } from './chat-participants-welcome';
 export { AskUserAnswerSummary, ChatHitlActions } from './chat-hitl-actions';
 export { SubAgentAccordion } from './sub-agent-section';
+export { DurationLabel } from './duration-label';
 export { SlashSuggestionList } from './slash-suggestion-list';
 export { VoiceMiniPlayer } from './voice-mini-player';
 export { VoiceConfigControls, VoiceConfigDialog, VoicePersonalizationSection } from '../voice-config';

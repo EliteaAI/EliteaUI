@@ -1,15 +1,15 @@
 import { memo, useCallback, useState } from 'react';
 
-import { Box, CircularProgress, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
 
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
-import { DurationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { StyledAccordion, StyledAccordionDetails, StyledAccordionSummary } from '@/[fsd]/shared/ui/accordion';
 import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
 
 // Imported directly rather than through the barrel: it reaches @/components and @/common/toolkitUtils,
 // which would pull the redux store into every consumer of the chat helpers barrel
 import { resolveSubAgentIcon } from '../../lib/helpers/subAgentIcon.helpers';
+import { DurationLabel } from '../duration-label';
 
 // VS Code-style collapsible group for one sub-agent's activity. Collapsed by
 // default with a left-to-right shimmer sweeping the name while the sub-agent is
@@ -36,10 +36,6 @@ const SubAgentAccordion = memo(props => {
   const onChange = useCallback((_, value) => setExpanded(value), []);
 
   const shimmer = running && !paused;
-  const showDuration = !running && durationMs != null;
-  const durationTooltip = showDuration
-    ? DurationHelpers.formatDurationTooltip(durationMs, includesApprovalWait)
-    : '';
 
   return (
     <StyledAccordion
@@ -63,19 +59,12 @@ const SubAgentAccordion = memo(props => {
           >
             {label || name}
           </Typography>
-          {showDuration && (
-            <Tooltip
-              title={durationTooltip}
-              placement="top"
-            >
-              <Typography
-                variant="bodySmall2"
-                sx={subAgentAccordionStyles.duration}
-                data-testid="chat-answer-subagent-duration"
-              >
-                · {DurationHelpers.formatDurationMs(durationMs)}
-              </Typography>
-            </Tooltip>
+          {!running && (
+            <DurationLabel
+              durationMs={durationMs}
+              includesApprovalWait={includesApprovalWait}
+              testId="chat-answer-subagent-duration"
+            />
           )}
           {shimmer && (
             <CircularProgress
@@ -149,11 +138,6 @@ const subAgentAccordionStyles = {
     color: palette.text.secondary,
     fontWeight: 600,
     whiteSpace: 'nowrap',
-  }),
-  duration: ({ palette }) => ({
-    color: palette.text.metrics,
-    whiteSpace: 'nowrap',
-    flexShrink: 0,
   }),
   spinner: ({ palette }) => ({
     color: palette.text.secondary,
