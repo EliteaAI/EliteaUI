@@ -12,12 +12,14 @@ import {
   EditUsersButton,
   UsersTable,
 } from '@/[fsd]/features/settings';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useDebounceValue, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useRoleListQuery, useUserCreateMutation, useUserListQuery } from '@/api/admin';
 import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import InviteUserDialog from '@/components/InviteUserDialog';
 import useCheckPermission from '@/hooks/useCheckPermission';
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 const Users = memo(() => {
   const styles = projectsStyles();
@@ -28,12 +30,22 @@ const Users = memo(() => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [search, setSearch] = useState('');
+  const query = useDebounceValue(search.trim(), SEARCH_DEBOUNCE_MS);
   const [page, setPage] = useState(0);
   const [uiPage, setUiPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [openInviteDialog, setOpenInviteDialog] = useState(false);
   const [emailCount, setEmailCount] = useState(0);
+  const [pagedQuery, setPagedQuery] = useState(query);
+  const queryChanged = pagedQuery !== query;
+  if (queryChanged) {
+    setPagedQuery(query);
+    setPage(0);
+    setUiPage(0);
+  }
+  const requestPage = queryChanged ? 0 : page;
+  const visiblePage = queryChanged ? 0 : uiPage;
   const shouldInvite = useMemo(() => {
     return searchParams.get('inviteUsers') === '1';
   }, [searchParams]);
@@ -51,8 +63,9 @@ const Users = memo(() => {
   const { data, isFetching, isError, error } = useUserListQuery(
     {
       projectId,
-      page,
+      page: requestPage,
       pageSize,
+      params: { query, match_roles: true },
     },
     {
       skip: !projectId || !checkPermission(PERMISSIONS.users.view),
@@ -78,21 +91,9 @@ const Users = memo(() => {
   const rolesOptions = useMemo(() => roles.map(({ name }) => ({ label: name, value: name })), [roles]);
   const { rows: users = [], total } = data || {};
 
-  const filteredUsers = useMemo(() => {
-    if (!search) return users;
-
-    const searchLower = search.toLowerCase();
-    return users.filter(user => {
-      const emailMatch = (user.email ?? '').toLowerCase().includes(searchLower);
-      const nameMatch = (user.name ?? '').toLowerCase().includes(searchLower);
-      const rolesMatch = user.roles.join(',').toLowerCase().includes(searchLower);
-      return emailMatch || nameMatch || rolesMatch;
-    });
-  }, [search, users]);
-
   const visibleRows = useMemo(
-    () => filteredUsers.slice(uiPage * pageSize, uiPage * pageSize + pageSize),
-    [filteredUsers, uiPage, pageSize],
+    () => users.slice(visiblePage * pageSize, visiblePage * pageSize + pageSize),
+    [users, visiblePage, pageSize],
   );
 
   const [inviteUsers, { isError: isInviteError, error: inviteError, reset, isSuccess: isInviteSuccess }] =
@@ -100,19 +101,17 @@ const Users = memo(() => {
 
   const handleChange = useCallback(value => {
     setSearch(value);
-    setPage(0);
-    setUiPage(0);
   }, []);
 
   const onChangePage = useCallback(
     (_, newPage) => {
       const loadLimit = (newPage + 1) * pageSize;
-      if (filteredUsers.length !== total && filteredUsers.length < loadLimit) {
+      if (users.length !== total && users.length < loadLimit) {
         setPage(newPage);
       }
       setUiPage(newPage);
     },
-    [pageSize, total, filteredUsers.length],
+    [pageSize, total, users.length],
   );
 
   const onChangePageSize = useCallback(event => {
@@ -250,9 +249,9 @@ const Users = memo(() => {
             >
               <UsersTable
                 users={isError ? [] : visibleRows}
-                total={!search ? total : filteredUsers.length}
+                total={total}
                 rowsPerPage={pageSize}
-                page={uiPage}
+                page={visiblePage}
                 onChangePageSize={onChangePageSize}
                 onPageChange={onChangePage}
                 selectedUsers={selectedUsers}
