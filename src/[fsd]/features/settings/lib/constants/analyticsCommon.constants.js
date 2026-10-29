@@ -41,7 +41,7 @@ const EMBEDDING_OUTPUT_NOTE = 'Embedding model requests produce no output tokens
 const SKILL_AGENT_CHAT_USES =
   'Times a skill was used inside an agent or chat during the selected date range, because it was mentioned in a message or the model loaded it. Counted once per skill per reply for each way it was used. Uses add no tokens or cost here; that cost is on the agent or chat.';
 const SKILL_AGENTS_USING =
-  'Distinct Agents and Pipelines that used this skill. An Agent that runs inside a Pipeline counts as that Pipeline. Chats with only a model are not counted. One Agent using it 10 times counts as 1.';
+  'Distinct agents that used this skill. Chats with only a model are not counted. One agent using it 10 times counts as 1.';
 const SKILL_USERS = 'Distinct users who ran this skill or used it in an agent or chat.';
 
 export const SKILL_SOURCE_LABELS = {
