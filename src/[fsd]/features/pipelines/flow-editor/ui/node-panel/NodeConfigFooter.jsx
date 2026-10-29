@@ -1,6 +1,6 @@
 import { memo, useCallback, useContext } from 'react';
 
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { useNodeToolNames } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
@@ -8,7 +8,7 @@ import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import CopyIcon from '@/components/Icons/CopyIcon';
+import DuplicateNodeIcon from '@/assets/duplicate-node-icon.svg?react';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 
 const { PipelineNodeTypes } = FlowEditorConstants;
@@ -26,6 +26,7 @@ const NodeConfigFooter = memo(props => {
   const { setYamlJsonObject, handleDeleteNode, handleDuplicateNode } = useContext(FlowEditorContext);
   const { toastSuccess } = useToast();
   const toolNames = useNodeToolNames();
+  const { palette } = useTheme();
 
   const canBeEntrypoint =
     canMakeEntrypointProp && type !== PipelineNodeTypes.Condition && type !== PipelineNodeTypes.Decision;
@@ -83,7 +84,14 @@ const NodeConfigFooter = memo(props => {
             <Box component="span">
               <Button.BaseBtn
                 variant={BUTTON_VARIANTS.secondary}
-                startIcon={<CopyIcon sx={styles.icon} />}
+                startIcon={
+                  <Box
+                    component="span"
+                    sx={styles.duplicateIcon(canDuplicate)}
+                  >
+                    <DuplicateNodeIcon />
+                  </Box>
+                }
                 onClick={onDuplicate}
                 disabled={!canDuplicate}
                 aria-label="Duplicate node"
@@ -99,7 +107,12 @@ const NodeConfigFooter = memo(props => {
           <Box component="span">
             <Button.BaseBtn
               variant={BUTTON_VARIANTS.secondary}
-              startIcon={<DeleteIcon sx={styles.icon} />}
+              startIcon={
+                <DeleteIcon
+                  sx={styles.icon}
+                  fill={palette.icon.secondary}
+                />
+              }
               onClick={onDelete}
               aria-label="Delete node"
               data-testid="pipeline-node-panel-delete"
@@ -141,6 +154,21 @@ const nodeConfigFooterStyles = () => ({
   icon: {
     fontSize: '1rem',
   },
+  // SVGR icons don't take sx: the wrapper sizes the 14px glyph in a 16px box and colours it
+  duplicateIcon:
+    isEnabled =>
+    ({ palette }) => ({
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '1rem',
+      height: '1rem',
+      color: isEnabled ? palette.icon.secondary : palette.icon.disabled,
+      '& svg': {
+        width: '0.875rem',
+        height: '0.875rem',
+      },
+    }),
 });
 
 export default NodeConfigFooter;
