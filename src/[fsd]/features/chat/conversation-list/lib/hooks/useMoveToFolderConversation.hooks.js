@@ -1,8 +1,11 @@
 import { useCallback, useEffect } from 'react';
 
+import { useDispatch } from 'react-redux';
+
 import { sortConversations } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useSortQueryParamsFromUrl } from '@/[fsd]/shared/lib/hooks';
 import { useConversationEditMutation, useFolderCreateMutation } from '@/api';
+import { eliteaApi } from '@/api/eliteaApi';
 import { DefaultFolderName, dummyConversation } from '@/common/constants.js';
 import { buildErrorMessage } from '@/common/utils';
 
@@ -18,9 +21,15 @@ export const useMoveToFolderConversation = props => {
     folders = [],
   } = props;
 
+  const dispatch = useDispatch();
   const projectId = useSelectedProjectId();
   const [editConversation, { isError: isEditError, error: editError }] = useConversationEditMutation();
   const [createFolder, { isError: isCreateError, error: createError }] = useFolderCreateMutation();
+
+  const { sort_by: sortBy, sort_order: sortOrder } = useSortQueryParamsFromUrl({
+    defaultSortOrder: 'desc',
+    defaultSortBy: 'updated_at',
+  });
 
   // Helper function to check if there are playback conversations for this original conversation
   const hasPlaybackConversations = useCallback(
@@ -47,6 +56,45 @@ export const useMoveToFolderConversation = props => {
       return false;
     },
     [conversations, folders],
+  );
+
+  const patchFoldersCache = useCallback(
+    (conversation, targetFolder) => {
+      const cacheArgs = {
+        projectId,
+        params: { sort_by: sortBy, sort_order: sortOrder },
+      };
+
+      dispatch(
+        eliteaApi.util.updateQueryData('foldersList', cacheArgs, draft => {
+          if (!draft?.folders) return;
+
+          const targetFolderId = targetFolder?.id ?? null;
+
+          draft.folders = draft.folders.map(folder => {
+            if (folder.id === conversation.folder_id) {
+              return {
+                ...folder,
+                conversations: (folder.conversations || []).filter(c => c.id !== conversation.id),
+              };
+            }
+            if (targetFolderId && folder.id === targetFolderId) {
+              const already = (folder.conversations || []).some(c => c.id === conversation.id);
+              if (already) return folder;
+              return {
+                ...folder,
+                conversations: [
+                  { ...conversation, folder_id: targetFolderId, updated_at: new Date().toISOString() },
+                  ...(folder.conversations || []),
+                ],
+              };
+            }
+            return folder;
+          });
+        }),
+      );
+    },
+    [dispatch, projectId, sortBy, sortOrder],
   );
 
   const moveConversationToFolder = useCallback(
@@ -181,6 +229,7 @@ export const useMoveToFolderConversation = props => {
 
       if (!result.error) {
         moveConversationToFolder(conversation, targetFolder);
+        patchFoldersCache(conversation, targetFolder);
 
         // Show success notification
         if (toastSuccess) {
@@ -201,6 +250,7 @@ export const useMoveToFolderConversation = props => {
       editConversation,
       projectId,
       moveConversationToFolder,
+      patchFoldersCache,
       toastSuccess,
     ],
   );
