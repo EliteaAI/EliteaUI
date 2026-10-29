@@ -7,9 +7,8 @@ let sessionExpired = false;
 const dispatch = vi.fn(action => {
   if (action.type === 'settings/setSessionExpired') sessionExpired = action.payload;
 });
-let isStreaming = false;
 const store = {
-  getState: () => ({ settings: { sessionExpired, navBlocker: { isStreaming } } }),
+  getState: () => ({ settings: { sessionExpired } }),
 };
 const probeSession = vi.fn();
 let reauthListener = null;
@@ -68,7 +67,6 @@ describe('useSocketSessionGuard', () => {
     vi.clearAllMocks();
     reauthListener = null;
     sessionExpired = false;
-    isStreaming = false;
   });
 
   afterEach(() => {
@@ -185,7 +183,7 @@ describe('useSocketSessionGuard', () => {
     expect(probeSession).toHaveBeenCalledTimes(2);
   });
 
-  it('re-handshakes when the tab returns after a long time hidden, even though the session is alive', async () => {
+  it('keeps the socket when the tab returns after a long time hidden and the session is alive', async () => {
     vi.useFakeTimers();
     probeSession.mockResolvedValue('alive');
     const { socket } = createSocket();
@@ -195,34 +193,7 @@ describe('useSocketSessionGuard', () => {
     vi.setSystemTime(Date.now() + 6 * 60 * 1000);
     await act(async () => setVisibility('visible'));
 
-    expect(socket.disconnect).toHaveBeenCalledTimes(1);
-    expect(socket.connect).toHaveBeenCalledTimes(1);
-  });
-
-  it('does not re-handshake after a short time hidden', async () => {
-    vi.useFakeTimers();
-    probeSession.mockResolvedValue('alive');
-    const { socket } = createSocket();
-    renderHook(() => useSocketSessionGuard(socket));
-
-    act(() => setVisibility('hidden'));
-    vi.setSystemTime(Date.now() + 30 * 1000);
-    await act(async () => setVisibility('visible'));
-
-    expect(socket.disconnect).not.toHaveBeenCalled();
-  });
-
-  it('keeps a streaming run alive across a long hidden period', async () => {
-    vi.useFakeTimers();
-    isStreaming = true;
-    probeSession.mockResolvedValue('alive');
-    const { socket } = createSocket();
-    renderHook(() => useSocketSessionGuard(socket));
-
-    act(() => setVisibility('hidden'));
-    vi.setSystemTime(Date.now() + 6 * 60 * 1000);
-    await act(async () => setVisibility('visible'));
-
+    expect(probeSession).toHaveBeenCalledTimes(1);
     expect(socket.disconnect).not.toHaveBeenCalled();
   });
 

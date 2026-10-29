@@ -8,7 +8,7 @@ import { sioEvents } from '@/common/constants';
 import { actions as settingsActions } from '@/slices/settings.js';
 
 const VISIBILITY_PROBE_THROTTLE_MS = 60 * 1000;
-const { LONG_HIDDEN_THRESHOLD_MS, SOCKET_UNAUTHENTICATED_CODE } = SessionConstants;
+const { SOCKET_UNAUTHENTICATED_CODE } = SessionConstants;
 
 /**
  * Keeps the socket bound to a valid session.
@@ -20,17 +20,13 @@ const { LONG_HIDDEN_THRESHOLD_MS, SOCKET_UNAUTHENTICATED_CODE } = SessionConstan
  *   flagging `sessionExpired` so the next send re-authenticates first;
  * - re-handshakes the socket after any successful re-login, or once the session turns out to be renewed
  *   in another tab, so the server re-reads the fresh session;
- * - re-handshakes the socket when the tab returns after a long time hidden, and when the server rejects
- *   a send because it holds the socket as anonymous. The cookie can still be valid in both cases: the
- *   handshake may have happened while the network or the auth service was unavailable, and the server
- *   then keeps the socket as anonymous for its whole life.
+ * - re-handshakes the socket when the server rejects a send because it holds the socket as anonymous.
  */
 export const useSocketSessionGuard = socket => {
   const dispatch = useDispatch();
   // Read lazily at check time: subscribing would re-render the app root on every flag change
   const store = useStore();
   const lastProbeAtRef = useRef(0);
-  const hiddenAtRef = useRef(null);
 
   const setSessionExpired = useCallback(
     isExpired => {
@@ -41,7 +37,7 @@ export const useSocketSessionGuard = socket => {
 
   const checkSession = useCallback(
     async (options = {}) => {
-      const { rehandshake = false, skipWhileStreaming = true } = options;
+      const { rehandshake = false } = options;
       lastProbeAtRef.current = Date.now();
       const status = await SessionProbeHelpers.probeSession();
       if (status === SessionConstants.SESSION_STATUS.expired) {
@@ -58,11 +54,7 @@ export const useSocketSessionGuard = socket => {
       }
       // A forced re-handshake also covers an inconclusive probe: reconnecting is cheap, and a socket
       // the server holds as anonymous cannot be told apart from a good one on this side
-      if (rehandshake) {
-        const { navBlocker } = store.getState().settings ?? {};
-        const isRunInFlight = !!navBlocker?.isStreaming;
-        if (!(skipWhileStreaming && isRunInFlight)) socket?.disconnect().connect();
-      }
+      if (rehandshake) socket?.disconnect().connect();
     },
     [socket, store, setSessionExpired],
   );
@@ -83,25 +75,11 @@ export const useSocketSessionGuard = socket => {
       checkSession();
     };
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        hiddenAtRef.current = Date.now();
-        return;
-      }
-      const hiddenAt = hiddenAtRef.current;
-      hiddenAtRef.current = null;
-      if (hiddenAt && Date.now() - hiddenAt >= LONG_HIDDEN_THRESHOLD_MS) {
-        checkSession({ rehandshake: true });
-        return;
-      }
-      handleThrottledCheck();
-    };
-
     // The server names a rejected send with this code when it holds the socket as anonymous. The
     // message itself is shown by the chat error handlers; here the socket is repaired so the retry works.
     const handleSocketRejection = frame => {
       if (frame?.code !== SOCKET_UNAUTHENTICATED_CODE) return;
-      checkSession({ rehandshake: true, skipWhileStreaming: false });
+      checkSession({ rehandshake: true });
     };
 
     const stopReauthListener = AuthPopupHelpers.onReauthenticated(() => {
@@ -112,14 +90,14 @@ export const useSocketSessionGuard = socket => {
 
     socket.io.on('reconnect', handleReconnect);
     socket.on?.(sioEvents.socket_validation_error, handleSocketRejection);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('visibilitychange', handleThrottledCheck);
     window.addEventListener('online', handleThrottledCheck);
 
     return () => {
       stopReauthListener();
       socket.io.off('reconnect', handleReconnect);
       socket.off?.(sioEvents.socket_validation_error, handleSocketRejection);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('visibilitychange', handleThrottledCheck);
       window.removeEventListener('online', handleThrottledCheck);
     };
   }, [socket, checkSession, setSessionExpired]);
