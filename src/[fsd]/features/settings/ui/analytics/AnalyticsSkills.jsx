@@ -37,25 +37,51 @@ const CHART_SIZE = 20;
 const DEFAULT_SORT = { sortBy: 'runs', sortOrder: 'desc' };
 
 const { ANALYTICS_SEARCH_PARAMS } = AnalyticsCommonConstants;
+const tt = AnalyticsCommonConstants.TOOLTIP_TEXTS.skills;
+const NOT_APPLICABLE = '—';
+
+const renderForRuns = format => r => (r.runs === 0 ? NOT_APPLICABLE : format(r));
 
 const SKILL_COLUMNS = [
   { key: 'skill_name', label: 'Skill', flex: 3 },
-  { key: 'runs', label: 'Runs', render: r => AnalyticCommonHelpers.fmtNum(r.runs) },
+  {
+    key: 'runs',
+    label: 'Runs',
+    tooltip: tt.RUNS,
+    render: r => AnalyticCommonHelpers.fmtNum(r.runs),
+  },
   {
     key: 'in_agent_uses',
-    label: 'In-Agent Uses',
+    label: 'Agent & Chat Uses',
+    flex: 1.2,
+    tooltip: tt.IN_AGENT_USES,
     render: r => AnalyticCommonHelpers.fmtNum(r.in_agent_uses),
   },
-  { key: 'users', label: 'Users', teamOnly: true, render: r => AnalyticCommonHelpers.fmtNum(r.users) },
-  { key: 'agents_using', label: 'Agents Using', render: r => AnalyticCommonHelpers.fmtNum(r.agents_using) },
+  {
+    key: 'users',
+    label: 'Users',
+    teamOnly: true,
+    tooltip: tt.USERS,
+    render: r => AnalyticCommonHelpers.fmtNum(r.users),
+  },
+  {
+    key: 'agents_using',
+    label: 'Agents Using',
+    tooltip: tt.AGENTS_USING,
+    render: r => AnalyticCommonHelpers.fmtNum(r.agents_using),
+  },
   {
     key: 'avg_duration_ms',
     label: 'Avg Latency',
-    render: r => AnalyticCommonHelpers.fmtDuration(r.avg_duration_ms),
+    render: renderForRuns(r => AnalyticCommonHelpers.fmtDuration(r.avg_duration_ms)),
   },
-  { key: 'errors', label: 'Errors', render: r => r.errors },
-  { key: 'total_tokens', label: 'Tokens', render: r => AnalyticCommonHelpers.fmtNum(r.total_tokens) },
-  { key: 'cost', label: 'Cost', render: r => AnalyticCommonHelpers.fmtCost(r.cost) },
+  { key: 'errors', label: 'Errors', render: renderForRuns(r => r.errors) },
+  {
+    key: 'total_tokens',
+    label: 'Tokens',
+    render: renderForRuns(r => AnalyticCommonHelpers.fmtNum(r.total_tokens)),
+  },
+  { key: 'cost', label: 'Cost', render: renderForRuns(r => AnalyticCommonHelpers.fmtCost(r.cost)) },
   {
     key: 'last_used',
     label: 'Last Used',
@@ -161,7 +187,6 @@ const AnalyticsSkills = memo(props => {
     );
   }
 
-  const tt = AnalyticsCommonConstants.TOOLTIP_TEXTS.skills;
   const hasUsage = Boolean(summary.skills_used);
   const showsTable = hasUsage || Boolean(search) || isError;
   const showsRows = !isFetching && !isError;
@@ -185,7 +210,7 @@ const AnalyticsSkills = memo(props => {
             valueTestId="analytics-skills-kpi-skills-used-value"
           />
           <KPICard
-            label="IN-AGENT USES"
+            label="AGENT & CHAT USES"
             value={AnalyticCommonHelpers.fmtNum(summary.in_agent_uses)}
             tooltip={tt.IN_AGENT_USES}
             testId="analytics-skills-kpi-in-agent-uses"
@@ -225,7 +250,7 @@ const AnalyticsSkills = memo(props => {
               variant="bodySmall"
               sx={analyticsTableStyles.chartSubtitle}
             >
-              Runs and in-agent uses on this page
+              Runs and agent & chat uses on this page
             </Typography>
             <InfoTooltip infoTooltip={{ title: tt.MOST_USED, icon: { width: 12, height: 12 } }} />
           </Box>
@@ -281,7 +306,7 @@ const AnalyticsSkills = memo(props => {
                 />
                 <Bar
                   dataKey="uses"
-                  name="In-agent uses"
+                  name="Agent & chat uses"
                   stackId="usage"
                   fill={palette.text.accent}
                   radius={[4, 4, 0, 0]}
@@ -329,7 +354,11 @@ const AnalyticsSkills = memo(props => {
               {columns.map(column => (
                 <Box
                   key={column.key}
-                  sx={[analyticsTableStyles.tableCell, { flex: column.flex ?? 1 }]}
+                  sx={[
+                    analyticsTableStyles.tableCell,
+                    { flex: column.flex ?? 1 },
+                    column.tooltip && styles.headerWithTooltip,
+                  ]}
                 >
                   <TableSortLabel
                     active={sort.sortBy === column.key}
@@ -340,6 +369,12 @@ const AnalyticsSkills = memo(props => {
                   >
                     {column.label}
                   </TableSortLabel>
+                  {column.tooltip && (
+                    <InfoTooltip
+                      infoTooltip={{ title: column.tooltip, icon: { width: 12, height: 12 } }}
+                      testId={`analytics-skills-header-tooltip-${column.key}`}
+                    />
+                  )}
                 </Box>
               ))}
             </Box>
@@ -453,6 +488,7 @@ const analyticsSkillsStyles = () => ({
     borderBottom: '0rem',
     padding: '0.375rem 0.75rem',
   },
+  headerWithTooltip: { display: 'flex', alignItems: 'center', gap: '0.25rem' },
   sortLabel: {
     color: 'inherit',
     '&.Mui-active': { color: 'inherit' },

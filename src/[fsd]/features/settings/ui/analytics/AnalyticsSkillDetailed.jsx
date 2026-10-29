@@ -53,7 +53,7 @@ const fmtCost = AnalyticCommonHelpers.fmtCost;
 
 const USAGE_COLUMNS = [
   { key: 'runs', label: 'Runs', render: r => fmtNum(r.runs) },
-  { key: 'in_agent_uses', label: 'In-Agent Uses', render: r => fmtNum(r.in_agent_uses) },
+  { key: 'in_agent_uses', label: 'Agent & Chat Uses', render: r => fmtNum(r.in_agent_uses) },
   { key: 'total_tokens', label: 'Tokens', render: r => fmtNum(r.total_tokens) },
   { key: 'cost', label: 'Cost', render: r => fmtCost(r.cost) },
 ];
@@ -337,7 +337,7 @@ const AnalyticsSkillDetailed = memo(props => {
           valueTestId="analytics-skill-detail-kpi-runs-value"
         />
         <KPICard
-          label="IN-AGENT USES"
+          label="AGENT & CHAT USES"
           value={fmtNum(kpis.in_agent_uses)}
           tooltip={tt.IN_AGENT_USES}
           testId="analytics-skill-detail-kpi-in-agent-uses"
@@ -456,7 +456,7 @@ const AnalyticsSkillDetailed = memo(props => {
                   yAxisId="count"
                   type="monotone"
                   dataKey="in_agent_uses"
-                  name="In-agent uses"
+                  name="Agent & chat uses"
                   stroke={palette.text.accent}
                   fill={palette.text.accent}
                   fillOpacity={0.1}
@@ -541,7 +541,7 @@ const AnalyticsSkillDetailed = memo(props => {
           }
           columns={SOURCE_COLUMNS}
           rows={sortedSources}
-          emptyText="No in-agent uses in the selected period"
+          emptyText="No agent & chat uses in the selected period"
           testId="analytics-skill-detail-sources"
           sortBy={sourceSort.sortBy}
           sortOrder={sourceSort.sortOrder}

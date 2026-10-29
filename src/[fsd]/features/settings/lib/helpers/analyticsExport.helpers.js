@@ -516,7 +516,7 @@ const buildAgentsSheet = (data, meta) => {
 
 const SKILL_TOTAL_COLUMNS = [
   { header: 'Runs', key: 'runs', numFmt: ExcelFormats.integer },
-  { header: 'In-Agent Uses', key: 'in_agent_uses', numFmt: ExcelFormats.integer },
+  { header: 'Agent & Chat Uses', key: 'in_agent_uses', numFmt: ExcelFormats.integer },
   { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
   { header: 'Cost (USD)', key: 'cost', numFmt: ExcelFormats.currency },
 ];
@@ -554,7 +554,7 @@ const buildSkillsSheet = (data, meta) => {
         rows: [
           { metric: 'Skill Runs', value: summary.runs ?? 0 },
           { metric: 'Skills Used', value: summary.skills_used ?? 0 },
-          { metric: 'In-Agent Uses', value: summary.in_agent_uses ?? 0 },
+          { metric: 'Agent & Chat Uses', value: summary.in_agent_uses ?? 0 },
           { metric: 'Skill Run Cost (USD)', value: summary.cost ?? 0 },
         ],
       },
@@ -632,7 +632,7 @@ export const buildSkillDetailSheet = (detail, meta) => {
         ],
         rows: [
           { metric: 'Runs', value: kpis.runs ?? 0 },
-          { metric: 'In-Agent Uses', value: kpis.in_agent_uses ?? 0 },
+          { metric: 'Agent & Chat Uses', value: kpis.in_agent_uses ?? 0 },
           { metric: 'Users', value: kpis.users ?? 0 },
           { metric: 'Agents Using', value: kpis.agents_using ?? 0 },
           { metric: 'Total Tokens', value: kpis.total_tokens ?? 0 },
