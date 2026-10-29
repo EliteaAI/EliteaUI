@@ -81,6 +81,7 @@ const SingleSelect = memo(props => {
     infoIconDescription,
     infoTooltipTestId,
     infoTooltipContentTestId,
+    infoIconPinnable = false,
     shrinkLabel = false,
     valueItemSX,
     'data-testid': dataTestId,
@@ -145,6 +146,7 @@ const SingleSelect = memo(props => {
         effectiveMultiple,
         required,
         hasInfoTooltip: Boolean(infoIconDescription),
+        hasPinnableInfoTooltip: Boolean(infoIconDescription) && infoIconPinnable,
       }),
     [
       theme,
@@ -154,6 +156,7 @@ const SingleSelect = memo(props => {
       effectiveMultiple,
       required,
       infoIconDescription,
+      infoIconPinnable,
     ],
   );
 
@@ -659,6 +662,7 @@ const SingleSelect = memo(props => {
                   sx={styles.infoTooltip}
                   testId={infoTooltipTestId}
                   contentTestId={infoTooltipContentTestId}
+                  pinnable={infoIconPinnable}
                 />
               )}
             </InputLabel>
@@ -715,6 +719,7 @@ const SingleSelect = memo(props => {
             sx={styles.infoTooltip}
             testId={infoTooltipTestId}
             contentTestId={infoTooltipContentTestId}
+            pinnable={infoIconPinnable}
           />
         </Box>
       )}
@@ -739,6 +744,7 @@ const singleSelectStyles = (
     effectiveMultiple,
     required,
     hasInfoTooltip,
+    hasPinnableInfoTooltip,
   } = {},
 ) => ({
   chipsRow: {
@@ -838,6 +844,13 @@ const singleSelectStyles = (
     ...(hasInfoTooltip && {
       overflow: 'visible',
       maxWidth: 'none',
+    }),
+    // Above the select, so the icon can be hovered and clicked while the label sits inside an empty field;
+    // the label text still lets clicks through to the select
+    ...(hasPinnableInfoTooltip && {
+      zIndex: 1,
+      pointerEvents: 'none',
+      '& [data-info-tooltip][role="button"]': { pointerEvents: 'auto' },
     }),
     '& [data-info-tooltip]': {
       transform: 'scale(1.3334)',

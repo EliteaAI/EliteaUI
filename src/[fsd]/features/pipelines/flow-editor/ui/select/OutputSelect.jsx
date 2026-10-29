@@ -1,12 +1,12 @@
 import { memo, useCallback, useContext, useMemo } from 'react';
 
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { FlowEditorHelpers, NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useInputOptions } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { Select } from '@/[fsd]/shared/ui';
 
 const OutputSelect = memo(props => {
-  const { id, label = 'Output', outputFieldName = 'output', disabled, dataTestId } = props;
+  const { id, label = 'Output', outputFieldName = 'output', disabled, dataTestId, tooltip } = props;
 
   const { setYamlJsonObject, yamlJsonObject, isRunningPipeline } = useContext(FlowEditorContext);
 
@@ -61,6 +61,8 @@ const OutputSelect = memo(props => {
   return (
     <Select.SingleSelect
       label={label}
+      infoIconDescription={tooltip ?? NodeFieldInfoHelpers.getNodeFieldInfo(yamlNode?.type, outputFieldName)}
+      infoIconPinnable
       value={selectedValue}
       onValueChange={onChangeInput}
       options={realInputOptions}

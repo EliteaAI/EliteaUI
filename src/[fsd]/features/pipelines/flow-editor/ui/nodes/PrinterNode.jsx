@@ -1,8 +1,11 @@
 import { memo, useCallback, useContext, useMemo } from 'react';
 
 import { AIAssistantInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import {
+  FlowEditorConstants,
+  NodeFieldInfoConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { FlowEditorHelpers, NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useNodeAiAssistantConfig } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import {
   FlowEditorNodePanel,
@@ -105,6 +108,7 @@ const PrinterNode = memo(props => {
           enableAIAssistant={true}
           modelConfig={pipelineLLMConfig}
           testIdsByKey={PRINTER_NODE_INPUT_TEST_IDS}
+          nodeType={FlowEditorConstants.PipelineNodeTypes.Printer}
         />
         <AIAssistantInput
           multiline
@@ -118,6 +122,11 @@ const PrinterNode = memo(props => {
           variant="standard"
           name="final_message"
           label="Final message"
+          tooltipDescription={NodeFieldInfoHelpers.getNodeFieldInfo(
+            FlowEditorConstants.PipelineNodeTypes.Printer,
+            NodeFieldInfoConstants.NODE_FIELD_KEYS.finalMessage,
+          )}
+          tooltipPinnable
           placeholder=""
           value={finalMessageValue}
           onInput={handleFinalMessageChange}

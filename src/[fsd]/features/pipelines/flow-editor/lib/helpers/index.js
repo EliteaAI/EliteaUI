@@ -23,3 +23,4 @@ export * as NodeSummaryHelpers from './nodeSummary.helpers';
 export * as NodeRenameHelpers from './nodeRename.helpers';
 export * as NodeYamlHelpers from './nodeYaml.helpers';
 export * as InputMappingHelpers from './inputMapping.helpers';
+export * as NodeFieldInfoHelpers from './nodeFieldInfo.helpers';

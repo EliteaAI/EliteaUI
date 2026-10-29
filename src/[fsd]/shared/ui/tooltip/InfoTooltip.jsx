@@ -1,6 +1,6 @@
-import { isValidElement, memo, useCallback, useMemo } from 'react';
+import { isValidElement, memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Box, Tooltip } from '@mui/material';
+import { Box, ClickAwayListener, Tooltip } from '@mui/material';
 
 import TooltipMarkdownContent from '@/[fsd]/shared/ui/tooltip/TooltipMarkdownContent';
 import InfoIcon from '@/components/Icons/InfoIcon';
@@ -24,8 +24,84 @@ const InfoTooltip = memo(props => {
     titleComponentProps,
     testId,
     contentTestId,
+    // Opens on hover or focus; click, Enter or Space pins it until Esc or a click outside
+    pinnable = false,
   } = props;
   const styles = infoTooltipStyles();
+
+  const [isHovered, setIsHovered] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
+  // Closed by Esc or an unpin click while the icon is still hovered or focused; a new hover or focus clears it
+  const [isDismissed, setIsDismissed] = useState(false);
+
+  const isOpen = isPinned || (!isDismissed && (isHovered || isFocused));
+
+  const dismiss = useCallback(() => {
+    setIsPinned(false);
+    setIsDismissed(true);
+  }, []);
+
+  useEffect(() => {
+    if (!pinnable || !isOpen) return undefined;
+    // Capture phase and preventDefault: Esc closes only the tooltip, not the panel or dialog it sits in
+    const handleKeyDown = event => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      dismiss();
+    };
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
+  }, [pinnable, isOpen, dismiss]);
+
+  // The icon often sits inside a select label or a switch label: keep the click from opening or toggling them
+  const togglePinned = useCallback(
+    event => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (isPinned) {
+        dismiss();
+      } else {
+        setIsPinned(true);
+        setIsDismissed(false);
+      }
+    },
+    [isPinned, dismiss],
+  );
+
+  const handleKeyDown = useCallback(
+    event => {
+      if (event.key === 'Enter' || event.key === ' ') togglePinned(event);
+    },
+    [togglePinned],
+  );
+
+  const pinnableHandlers = useMemo(
+    () =>
+      pinnable
+        ? {
+            tabIndex: 0,
+            role: 'button',
+            'aria-label': 'More info',
+            onClick: togglePinned,
+            onMouseDown: event => event.stopPropagation(),
+            onKeyDown: handleKeyDown,
+            onMouseEnter: () => {
+              setIsHovered(true);
+              setIsDismissed(false);
+            },
+            onMouseLeave: () => setIsHovered(false),
+            onFocus: () => {
+              setIsFocused(true);
+              setIsDismissed(false);
+            },
+            onBlur: () => setIsFocused(false),
+          }
+        : {},
+    [pinnable, togglePinned, handleKeyDown],
+  );
+
+  const unpin = useCallback(() => setIsPinned(false), []);
 
   const parseInfoTooltip = useCallback((tooltip, sProps) => {
     if (!tooltip) return null;
@@ -76,9 +152,10 @@ const InfoTooltip = memo(props => {
     <Box
       data-info-tooltip
       data-testid={testId}
-      sx={[styles.iconContainer, sx]}
+      sx={[styles.iconContainer, pinnable && styles.pinnableIcon, sx]}
       component="span"
       {...boxProps}
+      {...pinnableHandlers}
     >
       <InfoIcon
         width={tooltipConfig.icon.width}
@@ -100,10 +177,17 @@ const InfoTooltip = memo(props => {
     titleContent = <TooltipMarkdownContent>{tooltipConfig.title}</TooltipMarkdownContent>;
   }
 
-  return (
+  const tooltip = (
     <Tooltip
       title={titleContent}
       placement={tooltipConfig.placement}
+      {...(pinnable && {
+        open: isOpen,
+        describeChild: true,
+        disableHoverListener: true,
+        disableFocusListener: true,
+        disableTouchListener: true,
+      })}
       slotProps={{
         popper: {
           sx: {
@@ -114,11 +198,23 @@ const InfoTooltip = memo(props => {
         // element that already exists), NOT on a new wrapper node — so the
         // popper DOM is byte-identical for every InfoTooltip instance,
         // whether or not a caller opts in. `undefined` renders no attribute.
-        tooltip: { 'data-testid': contentTestId },
+        tooltip: { 'data-testid': contentTestId, ...(pinnable && { sx: styles.pinnableTooltip }) },
       }}
     >
       {iconElement}
     </Tooltip>
+  );
+
+  if (!pinnable) return tooltip;
+
+  return (
+    <ClickAwayListener
+      onClickAway={unpin}
+      mouseEvent={isPinned ? 'onClick' : false}
+      touchEvent={isPinned ? 'onTouchEnd' : false}
+    >
+      {tooltip}
+    </ClickAwayListener>
   );
 });
 
@@ -135,6 +231,20 @@ const infoTooltipStyles = () => ({
     cursor: 'pointer',
     overflow: 'visible',
     '& :hover': { opacity: 0.8 },
+  },
+  pinnableTooltip: {
+    maxWidth: '20rem',
+  },
+  // A shrunk input label is scaled to 0.75: scale the icon back to its size and keep the same 0.5rem
+  // gap to the label as outside of input labels
+  pinnableIcon: {
+    '.MuiFormLabel-root.MuiInputLabel-shrink &&': {
+      transform: 'translateX(0.3333rem) scale(1.3334)',
+      transformOrigin: 'center',
+    },
+    '.MuiFormLabel-root:not(.MuiInputLabel-shrink) &&': {
+      transform: 'none',
+    },
   },
 });
 

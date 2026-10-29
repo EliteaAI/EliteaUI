@@ -4,9 +4,10 @@ import { useFormikContext } from 'formik';
 
 import {
   FlowEditorConstants,
+  NodeFieldInfoConstants,
   NodePanelConstants,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { FlowEditorHelpers, NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import {
   useGetToolkitNameFromSchema,
   useNodeAiAssistantConfig,
@@ -156,6 +157,10 @@ const LLMNode = memo(props => {
     >
       <FlowEditorNodePanel.NodeConfigSection>
         <ToolPickerUI.ProjectToolkitsMultiPicker
+          tooltip={NodeFieldInfoHelpers.getNodeFieldInfo(
+            FlowEditorConstants.PipelineNodeTypes.LLM,
+            NodeFieldInfoConstants.NODE_FIELD_KEYS.toolkits,
+          )}
           value={selectedToolkitNames}
           onAdd={onAddToolkit}
           onRemove={onRemoveToolkit}

@@ -2,9 +2,10 @@ import { memo, useCallback, useContext, useEffect, useMemo, useState } from 'rea
 
 import {
   FlowEditorConstants,
+  NodeFieldInfoConstants,
   NodePanelConstants,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { FlowEditorHelpers, NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { getDefaultInputMappingOfTool } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/flowEditor.helpers';
 import {
   useFunctionInputMapping,
@@ -36,6 +37,8 @@ const TEST_ID_PREFIX_BY_NODE_TYPE = {
   [FlowEditorConstants.PipelineNodeTypes.Mcp]: 'pipeline-mcp-node',
   [FlowEditorConstants.PipelineNodeTypes.Toolkit]: 'pipeline-toolkit-node',
 };
+
+const { NODE_FIELD_KEYS } = NodeFieldInfoConstants;
 
 const BaseToolNode = memo(props => {
   const {
@@ -78,6 +81,10 @@ const BaseToolNode = memo(props => {
   const { getToolkitNameFromSchema, getSelectedTools } = useGetToolkitNameFromSchema();
   const { attachToolkit } = usePipelineAttachments();
   const isMcpNode = nodeType === FlowEditorConstants.PipelineNodeTypes.Mcp;
+  const toolkitInfo = NodeFieldInfoHelpers.getNodeFieldInfo(
+    nodeType,
+    isMcpNode ? NODE_FIELD_KEYS.mcp : NODE_FIELD_KEYS.toolkit,
+  );
   const usesProjectPicker = isMcpNode || nodeType === FlowEditorConstants.PipelineNodeTypes.Toolkit;
 
   const functionOptions = useMemo(() => {
@@ -203,6 +210,7 @@ const BaseToolNode = memo(props => {
     values: yamlNode?.input_mapping || {},
     onChangeMapping,
     disabled: isReadOnly,
+    nodeType,
     valueTestIdPrefix: testIdPrefix ? `${testIdPrefix}-input-mapping-value` : undefined,
     // Toolkit-only (ELITEA-2010), same as the accordion below
     typeTestIdPrefix:
@@ -215,6 +223,7 @@ const BaseToolNode = memo(props => {
     <ToolPickerUI.ProjectToolkitPicker
       mcp={isMcpNode}
       label={isMcpNode ? 'MCP' : 'Toolkit'}
+      tooltip={toolkitInfo}
       value={yamlNode?.toolkit_name}
       onSelect={onPickProjectToolkit}
       onClear={onClearProjectToolkit}
@@ -225,6 +234,7 @@ const BaseToolNode = memo(props => {
     <FlowEditorSelect.ToolSelect
       id={id}
       label={nodeType === FlowEditorConstants.PipelineNodeTypes.Mcp ? 'MCP' : 'Toolkit'}
+      tooltip={toolkitInfo}
       onSelectTool={onSelectToolkit}
       selectedToolkit={toolkit}
       disabled={isReadOnly}
@@ -236,6 +246,8 @@ const BaseToolNode = memo(props => {
     <SingleSelect
       sx={styles.toolSelect}
       label={'Tool'}
+      infoIconDescription={NodeFieldInfoHelpers.getNodeFieldInfo(nodeType, NODE_FIELD_KEYS.tool)}
+      infoIconPinnable
       value={selectedTool}
       onValueChange={onChangeTool}
       options={functionOptions}
@@ -316,6 +328,7 @@ const BaseToolNode = memo(props => {
             values={yamlNode?.input_mapping || {}}
             onChangeMapping={onChangeMapping}
             disabled={isReadOnly}
+            nodeType={nodeType}
             valueTestIdPrefix={testIdPrefix ? `${testIdPrefix}-input-mapping-value` : undefined}
             // Toolkit-only (ELITEA-2010): the Input-mapping Type select is exercised only by
             // the Toolkit node's test. The MCP node's equivalent select is untouched by any
@@ -357,6 +370,7 @@ const BaseToolNode = memo(props => {
             <FlowEditorSettings.AddOptionalParameterButton
               options={addableOptionalParameters}
               onAdd={onRevealOptionalParameter}
+              tooltip={NodeFieldInfoHelpers.getNodeFieldInfo(nodeType, NODE_FIELD_KEYS.addOptionalParameter)}
               disabled={isReadOnly}
               testIdPrefix={testIdPrefix}
             />

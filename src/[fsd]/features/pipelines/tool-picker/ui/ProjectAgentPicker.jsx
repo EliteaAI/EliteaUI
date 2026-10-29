@@ -34,6 +34,7 @@ const isPipelineSource = source =>
 const ProjectAgentPicker = memo(props => {
   const {
     label = 'Agents & Pipelines',
+    tooltip,
     value,
     onSelect,
     onClear,
@@ -144,6 +145,7 @@ const ProjectAgentPicker = memo(props => {
   return (
     <>
       <PickerTrigger
+        tooltip={tooltip}
         label={label}
         hasValue={Boolean(value)}
         isOpen={isOpen}

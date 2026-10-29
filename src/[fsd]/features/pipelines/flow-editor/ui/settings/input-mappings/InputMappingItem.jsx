@@ -2,13 +2,17 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import {
+  FlowEditorConstants,
+  NodeFieldInfoConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { FlowEditorHelpers, NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useInputOptions } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
+import NodeFieldHeading from '@/[fsd]/features/pipelines/flow-editor/ui/settings/NodeFieldHeading';
 import { LabelWithTooltip } from '@/[fsd]/features/pipelines/flow-editor/ui/settings/input-mappings';
 import BooleanField from '@/[fsd]/features/pipelines/flow-editor/ui/settings/input-mappings/BooleanField';
 import TextInputField from '@/[fsd]/features/pipelines/flow-editor/ui/settings/input-mappings/TextInputField';
-import { Chip, Select } from '@/[fsd]/shared/ui';
+import { Select } from '@/[fsd]/shared/ui';
 
 const DATA_TYPE_CONFIG = {
   boolean: { placeholder: '' },
@@ -18,6 +22,9 @@ const DATA_TYPE_CONFIG = {
   array: { placeholder: '[]' },
   string: { placeholder: '' },
 };
+
+const { COMMON_NODE_FIELD_INFO, NODE_FIELD_KEYS } = NodeFieldInfoConstants;
+const { getValueDataTypeInfo } = NodeFieldInfoHelpers;
 
 const InputMappingItem = memo(props => {
   const {
@@ -129,7 +136,7 @@ const InputMappingItem = memo(props => {
           value={value}
           onChange={onBooleanChange}
           disabled={disabled}
-          tooltip={`Value of ${dataType} type is expected`}
+          tooltip={getValueDataTypeInfo(dataType)}
         />
       );
     }
@@ -140,7 +147,7 @@ const InputMappingItem = memo(props => {
           value={'' + value}
           onInput={onNumberInput}
           disabled={disabled}
-          tooltip={`Value of ${dataType} type is expected`}
+          tooltip={getValueDataTypeInfo(dataType)}
           placeholder={config.placeholder}
           inputType={config.inputType}
           dataTestId={valueTestId}
@@ -160,7 +167,7 @@ const InputMappingItem = memo(props => {
         }
         onInput={onInput}
         disabled={disabled}
-        tooltip={`Value of ${dataType} type is expected`}
+        tooltip={getValueDataTypeInfo(dataType)}
         placeholder={config.placeholder}
         showTitle={showTitle}
         language={dataType === 'object' || dataType === 'array' ? 'json' : undefined}
@@ -191,20 +198,17 @@ const InputMappingItem = memo(props => {
 
   return (
     <Box sx={styles.container}>
-      <Box sx={styles.labelRow}>
-        <Chip.HeadingChip label={variableName} />
-        {tooltip && (
-          <LabelWithTooltip
-            tooltip={tooltip}
-            title=""
-          />
-        )}
-      </Box>
+      <NodeFieldHeading
+        label={variableName}
+        tooltip={tooltip}
+      />
       <Box sx={styles.fieldRow}>
         <Box sx={styles.typeSelectWrapper}>
           <Select.SingleSelect
             sx={styles.select}
             label="Type"
+            infoIconDescription={COMMON_NODE_FIELD_INFO[NODE_FIELD_KEYS.type]}
+            infoIconPinnable
             value={type}
             onValueChange={onChangeType}
             options={typeOptions}
@@ -219,7 +223,7 @@ const InputMappingItem = memo(props => {
             dataType !== 'array' || type === 'variable' ? (
               <Select.SingleSelect
                 sx={styles.select}
-                label={<LabelWithTooltip tooltip="Select one option" />}
+                label={<LabelWithTooltip tooltip={getValueDataTypeInfo(dataType)} />}
                 value={value}
                 onValueChange={onChangeValue}
                 options={enumOptions}
@@ -230,7 +234,7 @@ const InputMappingItem = memo(props => {
               />
             ) : (
               <Select.SingleSelect
-                label={<LabelWithTooltip tooltip="Select options" />}
+                label={<LabelWithTooltip tooltip={getValueDataTypeInfo(dataType)} />}
                 onValueChange={onChangeValue}
                 value={value}
                 options={enumOptions}
@@ -245,7 +249,7 @@ const InputMappingItem = memo(props => {
           ) : (
             <Select.SingleSelect
               sx={styles.select}
-              label={<LabelWithTooltip tooltip="Select one option" />}
+              label={<LabelWithTooltip tooltip={getValueDataTypeInfo(dataType)} />}
               value={value}
               onValueChange={onChangeValue}
               options={inputOptions}
@@ -270,11 +274,6 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'flex-start',
     paddingTop: '1rem',
-  },
-  labelRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '.5rem',
   },
   fieldRow: {
     marginTop: '1rem',

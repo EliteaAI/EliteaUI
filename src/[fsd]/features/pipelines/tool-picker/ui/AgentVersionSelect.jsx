@@ -20,7 +20,7 @@ const formatVersionLabel = version => {
 
 /** Version of the agent or pipeline an Agent node runs. Changing it is applied on Save. */
 const AgentVersionSelect = memo(props => {
-  const { tool, disabled = false, 'data-testid': testId } = props;
+  const { tool, tooltip, disabled = false, 'data-testid': testId } = props;
 
   const projectId = useSelectedProjectId();
   const isVersionLocked = useIsVersionLocked();
@@ -61,6 +61,8 @@ const AgentVersionSelect = memo(props => {
   return (
     <SingleSelect
       label="Version"
+      infoIconDescription={tooltip}
+      infoIconPinnable
       value={versionId}
       options={options}
       onValueChange={handleChange}

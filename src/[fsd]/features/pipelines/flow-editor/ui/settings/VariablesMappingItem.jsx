@@ -2,7 +2,11 @@ import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Box, Typography, useTheme } from '@mui/material';
 
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import {
+  FlowEditorConstants,
+  NodeFieldInfoConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useInputOptions } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { FlowEditorSettings } from '@/[fsd]/features/pipelines/flow-editor/ui';
 import { Input } from '@/[fsd]/shared/ui';
@@ -19,6 +23,9 @@ const variableSourceOptions = [
     value: 'tool',
   },
 ];
+
+const { COMMON_NODE_FIELD_INFO, NODE_FIELD_KEYS } = NodeFieldInfoConstants;
+const { getValueDataTypeInfo } = NodeFieldInfoHelpers;
 
 const VariablesMappingItem = memo(props => {
   const { fieldLabel, fieldName, fieldValue, onChangeMapping, disabled } = props;
@@ -95,6 +102,8 @@ const VariablesMappingItem = memo(props => {
           <SingleSelect
             sx={{ marginBottom: '0rem' }}
             label="Type"
+            infoIconDescription={COMMON_NODE_FIELD_INFO[NODE_FIELD_KEYS.type]}
+            infoIconPinnable
             value={fieldValue.type}
             onValueChange={onChange('type')}
             options={FlowEditorConstants.agentTaskTypeOptions}
@@ -127,7 +136,7 @@ const VariablesMappingItem = memo(props => {
               fullWidth
               name="value"
               // id='value'
-              label={<FlowEditorSettings.LabelWithTooltip tooltip="not tooltips here" />}
+              label={<FlowEditorSettings.LabelWithTooltip tooltip={getValueDataTypeInfo()} />}
               placeholder=""
               value={
                 typeof fieldValue.value !== 'string' ? JSON.stringify(fieldValue.value) : fieldValue.value
@@ -148,7 +157,7 @@ const VariablesMappingItem = memo(props => {
           {!showInput && fieldValue.type === 'variable' && (
             <SingleSelect
               sx={{ marginBottom: '0rem' }}
-              label={<FlowEditorSettings.LabelWithTooltip tooltip="no tooltips here" />}
+              label={<FlowEditorSettings.LabelWithTooltip tooltip={getValueDataTypeInfo()} />}
               value={fieldValue.value}
               onValueChange={onChange('value')}
               options={inputOptions}

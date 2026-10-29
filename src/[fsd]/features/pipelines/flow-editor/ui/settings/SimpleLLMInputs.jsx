@@ -11,6 +11,7 @@ const SimpleLLMInputs = memo(props => {
     onChangeMapping,
     defaultValues,
     disabled,
+    nodeType,
     // AI Assistant props
     enableAIAssistant = false,
     modelConfig = null,
@@ -37,6 +38,7 @@ const SimpleLLMInputs = memo(props => {
             key={key}
             variableName={key}
             variable={key}
+            nodeType={nodeType}
             type={(values[key] || inputMappings[key])?.type || 'fixed'}
             value={(values[key] || inputMappings[key])?.value || defaultValues[key] || ''}
             defaultValue={defaultValues[key] || ''}

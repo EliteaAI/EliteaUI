@@ -15,6 +15,7 @@ const RouteSelect = memo(props => {
     addEndNode,
     disabled,
     dataTestId,
+    tooltip,
   } = props;
 
   const { setFlowEdges, setYamlJsonObject, yamlJsonObject } = useContext(FlowEditorContext);
@@ -97,6 +98,8 @@ const RouteSelect = memo(props => {
   return (
     <Select.SingleSelect
       label={label}
+      infoIconDescription={tooltip}
+      infoIconPinnable
       value={yamlNode ? yamlNode[fieldName] || [] : []}
       onValueChange={onChangeInput}
       options={realNodeOptions}

@@ -1,6 +1,7 @@
 import { capitalizeFirstChar } from '@/common/utils';
 
 import { getEnumList } from './flowEditor.helpers';
+import { getInputMappingFieldInfo } from './nodeFieldInfo.helpers';
 
 const getMappingValue = (key, values, mappingInfo, dataType) => {
   if (values[key]?.value !== undefined) {
@@ -15,7 +16,7 @@ const getMappingValue = (key, values, mappingInfo, dataType) => {
 // Props of one InputMappingItem, shared by the accordion (InputMapping) and the panel fields (InputMappingFields)
 export const getInputMappingItemProps = (
   key,
-  { inputMapping = {}, values = {}, mappingInfo = {}, inputOptions },
+  { inputMapping = {}, values = {}, mappingInfo = {}, inputOptions, nodeType },
 ) => {
   const mapping = inputMapping[key];
   const type = values[key]?.type || mappingInfo[key]?.type || mapping?.type;
@@ -28,6 +29,6 @@ export const getInputMappingItemProps = (
     dataType,
     value: getMappingValue(key, values, mappingInfo, dataType),
     enumList: getEnumList(type, mappingInfo[key]?.enum, inputOptions),
-    tooltip: mappingInfo[key]?.tooltip,
+    tooltip: getInputMappingFieldInfo(nodeType, key, mappingInfo[key]?.tooltip),
   };
 };

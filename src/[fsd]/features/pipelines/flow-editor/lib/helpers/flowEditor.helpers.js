@@ -125,7 +125,7 @@ const createApplicationMapping = (existingMapping, selectedToolkit) => {
     },
     mappingInfo: {
       task: {
-        tooltip: 'Task for agent.',
+        tooltip: '',
         type: 'fstring',
         value: '',
         data_type: 'string',
@@ -133,7 +133,7 @@ const createApplicationMapping = (existingMapping, selectedToolkit) => {
       ...(selectedToolkit?.variables?.reduce((result, variable) => {
         return {
           [variable.name]: {
-            tooltip: 'This is a variable from the agent',
+            tooltip: variable.description || '',
             type: 'fixed',
             value: variable.value,
           },

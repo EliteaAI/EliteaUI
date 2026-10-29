@@ -1,11 +1,20 @@
 import { memo, useCallback, useContext } from 'react';
 
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import {
+  FlowEditorConstants,
+  NodeFieldInfoConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useNodeOptions } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { Select } from '@/[fsd]/shared/ui';
 
 const { PipelineNodeTypes } = FlowEditorConstants;
+
+const DECISION_OUTPUTS_INFO = NodeFieldInfoHelpers.getNodeFieldInfo(
+  PipelineNodeTypes.Decision,
+  NodeFieldInfoConstants.NODE_FIELD_KEYS.decisionOutputs,
+);
 
 /**
  * Decision outputs as a multi-select. Adding an output goes through the canvas connect logic and removing one
@@ -40,6 +49,8 @@ const DecisionOutputsSelect = memo(props => {
   return (
     <Select.SingleSelect
       label="Decision outputs"
+      infoIconDescription={DECISION_OUTPUTS_INFO}
+      infoIconPinnable
       value={decisionOutput}
       onValueChange={onValueChange}
       options={nodeOptions}

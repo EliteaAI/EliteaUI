@@ -38,6 +38,7 @@ const ProjectToolkitPicker = memo(props => {
   const {
     mcp = false,
     label = mcp ? 'MCP' : 'Toolkit',
+    tooltip,
     value,
     onSelect,
     onClear,
@@ -131,6 +132,7 @@ const ProjectToolkitPicker = memo(props => {
   return (
     <>
       <PickerTrigger
+        tooltip={tooltip}
         label={label}
         hasValue={Boolean(value)}
         isOpen={isOpen}

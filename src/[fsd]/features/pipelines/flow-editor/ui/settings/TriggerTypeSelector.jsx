@@ -7,7 +7,11 @@ import LinkIcon from '@mui/icons-material/Link';
 import { Box, IconButton, Link, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { FlowEditorConstants, WebhookConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import {
+  FlowEditorConstants,
+  NodeFieldInfoConstants,
+  WebhookConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { LegacyScheduleNotice } from '@/[fsd]/features/schedule';
 import { useDelegatedOauthToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ModalConstants, ScheduleSectionConstants } from '@/[fsd]/shared/lib/constants';
@@ -317,7 +321,7 @@ const TriggerTypeSelector = memo(props => {
 
   const triggerTooltip = useMemo(() => {
     const baseTooltip =
-      'Choose how this pipeline is triggered.\n• Chat Message (default) requires user input.\n• Webhook allows external systems to trigger the pipeline via HTTP POST.';
+      NodeFieldInfoConstants.COMMON_NODE_FIELD_INFO[NodeFieldInfoConstants.NODE_FIELD_KEYS.trigger];
 
     if (hasInteractiveElements) {
       return `${baseTooltip}\n\nNote: This pipeline contains HITL, Printer nodes, or interrupts that require user interaction. Only Chat Message trigger is available.`;
@@ -335,9 +339,9 @@ const TriggerTypeSelector = memo(props => {
       <InfoLabelWithTooltip
         label="Trigger"
         tooltip={triggerTooltip}
+        pinnable
         variant="labelSmall"
         sx={styles.labelWrapper}
-        iconSize={14}
       />
 
       <Box sx={styles.selectWrapper}>
@@ -443,7 +447,7 @@ const triggerTypeSelectorStyles = () => ({
   labelWrapper: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.25rem',
+    gap: '0.5rem',
     paddingLeft: '0.75rem',
   },
   selectWrapper: {

@@ -1,8 +1,11 @@
 import { memo, useCallback, useContext, useMemo } from 'react';
 
 import { AIAssistantInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import {
+  FlowEditorConstants,
+  NodeFieldInfoConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { FlowEditorHelpers, NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useInputOptions, useNodeAiAssistantConfig } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { FlowEditorNodes } from '@/[fsd]/features/pipelines/flow-editor/ui';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
@@ -14,6 +17,12 @@ import DecisionOutputs, { commonComponentStyles } from './DecisionNodeShared';
 // Output handles sit either side of the centre of the output edge
 const NODES_HANDLE_OFFSET = 'calc(50% - 3.125rem)';
 const DEFAULT_OUTPUT_HANDLE_OFFSET = 'calc(50% + 3.125rem)';
+
+const { NODE_FIELD_KEYS } = NodeFieldInfoConstants;
+
+const getDecisionFieldInfo = NodeFieldInfoHelpers.getNodeFieldInfoOf(
+  FlowEditorConstants.PipelineNodeTypes.Decision,
+);
 
 const LegacyDecisionNode = memo(props => {
   const { id, data, selected } = props;
@@ -240,6 +249,8 @@ const LegacyDecisionNode = memo(props => {
     >
       <Select.SingleSelect
         label="Decision input"
+        infoIconDescription={getDecisionFieldInfo(NODE_FIELD_KEYS.input)}
+        infoIconPinnable
         value={decisionInput}
         onValueChange={onChangeInput}
         options={realInputOptions}
@@ -260,6 +271,8 @@ const LegacyDecisionNode = memo(props => {
         name="Description"
         id="description"
         label="Description"
+        tooltipDescription={getDecisionFieldInfo(NODE_FIELD_KEYS.decisionCriteria)}
+        tooltipPinnable
         placeholder=""
         value={description}
         onInput={onChangeDecisionDescription}

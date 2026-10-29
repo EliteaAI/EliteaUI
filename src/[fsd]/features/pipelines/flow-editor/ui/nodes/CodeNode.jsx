@@ -94,6 +94,7 @@ const CodeNode = memo(props => {
           disabled={isRunningPipeline || disabled}
           modelConfig={pipelineLLMConfig}
           testIdsByKey={CODE_NODE_INPUT_TEST_IDS}
+          nodeType={FlowEditorConstants.PipelineNodeTypes.Code}
         />
       </FlowEditorNodePanel.NodeConfigSection>
       <FlowEditorNodePanel.NodeConfigSection section={NodePanelConstants.NODE_CONFIG_SECTIONS.advanced}>

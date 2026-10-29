@@ -98,6 +98,7 @@ const InputBase = memo(props => {
     tooltipDescription,
     tooltipTestId,
     tooltipContentTestId,
+    tooltipPinnable = false,
     helperTextTestId,
     forceShowActionsToolbar = false,
     fullScreenButtonProps = {},
@@ -205,6 +206,7 @@ const InputBase = memo(props => {
           tooltip: tooltipDescription,
           tooltipTestId,
           tooltipContentTestId,
+          pinnable: tooltipPinnable,
           ...(!isOutlined && { labelTextPointerEventsNone: true }),
         })}
       />

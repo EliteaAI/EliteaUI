@@ -3,8 +3,15 @@ import { memo } from 'react';
 import { Box } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { DecisionOutputHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
-import { Chip } from '@/[fsd]/shared/ui';
+import {
+  FlowEditorConstants,
+  NodeFieldInfoConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import {
+  DecisionOutputHelpers,
+  NodeFieldInfoHelpers,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import NodeFieldHeading from '@/[fsd]/features/pipelines/flow-editor/ui/settings/NodeFieldHeading';
 import RemoveIcon from '@/assets/remove-icon.svg?react';
 import StyledChip from '@/components/DataDisplay/StyledChip';
 import { useEdges, useNodes } from '@xyflow/react';
@@ -17,7 +24,13 @@ export const DecisionOutputs = memo(props => {
 
   return (
     <Box sx={styles.decisionOutputsContainer}>
-      <Chip.HeadingChip label="Decision outputs" />
+      <NodeFieldHeading
+        label="Decision outputs"
+        tooltip={NodeFieldInfoHelpers.getNodeFieldInfo(
+          FlowEditorConstants.PipelineNodeTypes.Decision,
+          NodeFieldInfoConstants.NODE_FIELD_KEYS.decisionOutputs,
+        )}
+      />
 
       <Box
         sx={styles.outputsBorderContainer}

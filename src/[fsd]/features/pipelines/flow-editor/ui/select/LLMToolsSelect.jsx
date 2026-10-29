@@ -1,10 +1,19 @@
 import { memo, useCallback, useContext, useMemo } from 'react';
 
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import {
+  FlowEditorConstants,
+  NodeFieldInfoConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { FlowEditorHelpers, NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { Select } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion.jsx';
+
+const TOOLS_INFO = NodeFieldInfoHelpers.getNodeFieldInfo(
+  FlowEditorConstants.PipelineNodeTypes.LLM,
+  NodeFieldInfoConstants.NODE_FIELD_KEYS.tools,
+);
 
 export const LLMToolsSelect = memo(props => {
   const { toolkitName, id, tools = [], disabled } = props;
@@ -56,6 +65,8 @@ export const LLMToolsSelect = memo(props => {
             value={selectedTools}
             onValueChange={handleToolsChange}
             label="Tools"
+            infoIconDescription={TOOLS_INFO}
+            infoIconPinnable
             showBorder
             multiple
             className="nopan nodrag nowheel"

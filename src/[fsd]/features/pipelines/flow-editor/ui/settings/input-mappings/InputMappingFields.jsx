@@ -14,6 +14,7 @@ const InputMappingFields = memo(props => {
     values = {},
     onChangeMapping,
     disabled,
+    nodeType,
     valueTestIdPrefix,
     typeTestIdPrefix,
   } = props;
@@ -29,6 +30,7 @@ const InputMappingFields = memo(props => {
           values,
           mappingInfo,
           inputOptions,
+          nodeType,
         })}
         onChangeMapping={onChangeMapping}
         disabled={disabled}

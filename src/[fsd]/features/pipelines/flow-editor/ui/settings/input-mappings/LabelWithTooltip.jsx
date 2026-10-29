@@ -17,6 +17,7 @@ const LabelWithTooltip = memo(props => {
         <InfoTooltip
           infoTooltip={{ title: tooltip, icon: { fill } }}
           sx={styles.iconWrapper}
+          pinnable
         />
       )}
     </Box>
@@ -30,7 +31,7 @@ const styles = {
   container: {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '.25rem',
+    gap: '.5rem',
     zIndex: 999,
   },
   iconWrapper: {

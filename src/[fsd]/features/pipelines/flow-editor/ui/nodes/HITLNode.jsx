@@ -5,9 +5,10 @@ import { Box, Typography } from '@mui/material';
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import {
   FlowEditorConstants,
+  NodeFieldInfoConstants,
   NodePanelConstants,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { FlowEditorHelpers, NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import {
   useInputOptions,
   useNodeAiAssistantConfig,
@@ -20,7 +21,6 @@ import {
   FlowEditorSettings,
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
-import { Chip } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useEdges } from '@xyflow/react';
 
@@ -29,6 +29,10 @@ const HITL_ACTIONS = [
   { label: 'Edit', chipLabel: 'EDIT', value: 'edit' },
   { label: 'Reject', chipLabel: 'REJECT', value: 'reject' },
 ];
+
+const { NODE_FIELD_KEYS } = NodeFieldInfoConstants;
+
+const getHitlFieldInfo = NodeFieldInfoHelpers.getNodeFieldInfoOf(FlowEditorConstants.PipelineNodeTypes.Hitl);
 
 const INPUT_SELECT_TOOLTIP =
   'Select state variables to reference in the User message. Available only when the User message type is set to F-String.';
@@ -190,6 +194,7 @@ const HITLNode = memo(props => {
         <FlowEditorSettings.SimpleLLMInputItem
           variableName="user_message"
           variable="user_message"
+          nodeType={FlowEditorConstants.PipelineNodeTypes.Hitl}
           type={userMessageType}
           value={userMessageValue}
           defaultValue=""
@@ -207,7 +212,10 @@ const HITLNode = memo(props => {
           {HITL_ACTIONS.map(action => (
             <Fragment key={action.value}>
               <Box sx={styles.controlGroup}>
-                <Chip.HeadingChip label={action.chipLabel} />
+                <FlowEditorSettings.NodeFieldHeading
+                  label={action.chipLabel}
+                  tooltip={getHitlFieldInfo(action.value)}
+                />
                 <SingleSelect
                   sx={styles.routeSelect}
                   label="Route"
@@ -227,7 +235,10 @@ const HITLNode = memo(props => {
               </Box>
               {action.value === 'edit' && (
                 <Box sx={styles.controlGroup}>
-                  <Chip.HeadingChip label="Edit state key" />
+                  <FlowEditorSettings.NodeFieldHeading
+                    label="Edit state key"
+                    tooltip={getHitlFieldInfo(NODE_FIELD_KEYS.editStateKey)}
+                  />
                   <SingleSelect
                     sx={styles.routeSelect}
                     label="Value"
@@ -266,12 +277,7 @@ const HITLNode = memo(props => {
           >
             <FlowEditorSelect.InputSelect
               id={id}
-              label={
-                <FlowEditorSettings.LabelWithTooltip
-                  title="Input"
-                  tooltip={INPUT_SELECT_TOOLTIP}
-                />
-              }
+              label="Input"
               inputFieldName="input"
               disabled={isInputSelectDisabled}
               dataTestId="pipeline-hitl-node-input-select"

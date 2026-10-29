@@ -1,10 +1,11 @@
 import { memo, useCallback, useContext, useMemo } from 'react';
 
-import { Box, FormControlLabel, Typography } from '@mui/material';
+import { Box, FormControlLabel } from '@mui/material';
 
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { NodeFieldInfoConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { FlowEditorHelpers, NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
-import { Switch } from '@/[fsd]/shared/ui';
+import { Label, Switch } from '@/[fsd]/shared/ui';
 
 const CommonNodeSettings = memo(props => {
   const { id, type, disabled, structuredOutputTestId } = props;
@@ -42,12 +43,16 @@ const CommonNodeSettings = memo(props => {
           />
         }
         label={
-          <Typography
+          <Label.InfoLabelWithTooltip
+            label="Structured output"
+            tooltip={NodeFieldInfoHelpers.getNodeFieldInfo(
+              type,
+              NodeFieldInfoConstants.NODE_FIELD_KEYS.structuredOutput,
+            )}
+            pinnable
             variant="labelSmall"
-            color="text.secondary"
-          >
-            Structured output
-          </Typography>
+            labelSx={styles.label}
+          />
         }
         labelPlacement="end"
       />
@@ -76,6 +81,9 @@ const commonNodeSettingsStyles = () => ({
     justifyContent: 'flex-start',
     gap: '0.5rem',
     background: palette.background.surface.interactive.default,
+  }),
+  label: ({ palette }) => ({
+    color: palette.text.secondary,
   }),
 });
 

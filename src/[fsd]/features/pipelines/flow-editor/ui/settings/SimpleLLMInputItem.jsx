@@ -2,17 +2,24 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import {
+  FlowEditorConstants,
+  NodeFieldInfoConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useInputOptions } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
+import NodeFieldHeading from '@/[fsd]/features/pipelines/flow-editor/ui/settings/NodeFieldHeading';
 import NodeFieldInput from '@/[fsd]/features/pipelines/flow-editor/ui/settings/NodeFieldInput';
-import { Chip } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { capitalizeFirstChar } from '@/common/utils.jsx';
+
+const { COMMON_NODE_FIELD_INFO, NODE_FIELD_KEYS } = NodeFieldInfoConstants;
 
 const SimpleLLMInputItem = memo(props => {
   const {
     variableName,
     variable,
+    nodeType,
     type,
     value,
     defaultValue,
@@ -88,13 +95,18 @@ const SimpleLLMInputItem = memo(props => {
 
   return (
     <Box sx={styles.container}>
-      <Chip.HeadingChip label={capitalizeFirstChar(variableName.replaceAll('_', ' '))} />
+      <NodeFieldHeading
+        label={capitalizeFirstChar(variableName.replaceAll('_', ' '))}
+        tooltip={NodeFieldInfoHelpers.getNodeFieldInfo(nodeType, variableName)}
+      />
 
       <Box sx={styles.fieldRow}>
         <Box sx={styles.typeSelectWrapper}>
           <SingleSelect
             sx={styles.select}
             label="Type"
+            infoIconDescription={COMMON_NODE_FIELD_INFO[NODE_FIELD_KEYS.type]}
+            infoIconPinnable
             value={type}
             onValueChange={newValue => onChange('type', newValue)}
             options={typeOptions}

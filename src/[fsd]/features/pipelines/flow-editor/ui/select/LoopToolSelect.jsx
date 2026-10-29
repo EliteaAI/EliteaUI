@@ -20,6 +20,7 @@ const LoopToolSelect = memo(props => {
     toolField = 'tool',
     onChangeToolkit = () => {},
     onChangeTool = () => {},
+    tooltip,
   } = props;
   const styles = useMemo(() => loopToolSelectStyles(), []);
 
@@ -141,6 +142,8 @@ const LoopToolSelect = memo(props => {
         <SingleSelect
           sx={{ marginBottom: '0rem' }}
           label={toolField === 'tool' ? 'Tool' : 'Loop tool'}
+          infoIconDescription={tooltip}
+          infoIconPinnable
           value={selectedTool}
           onValueChange={onChangeTool}
           options={functionOptions}

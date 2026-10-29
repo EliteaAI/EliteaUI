@@ -3,9 +3,10 @@ import { memo, useCallback, useContext, useMemo } from 'react';
 import { AIAssistantInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
 import {
   FlowEditorConstants,
+  NodeFieldInfoConstants,
   NodePanelConstants,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { FlowEditorHelpers, NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useNodeAiAssistantConfig } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import {
   FlowEditorNodePanel,
@@ -84,6 +85,11 @@ const StateModifierNode = memo(props => {
           variant="standard"
           name="template"
           label="Jinja Template"
+          tooltipDescription={NodeFieldInfoHelpers.getNodeFieldInfo(
+            FlowEditorConstants.PipelineNodeTypes.StateModifier,
+            NodeFieldInfoConstants.NODE_FIELD_KEYS.jinjaTemplate,
+          )}
+          tooltipPinnable
           placeholder=""
           value={templateValue}
           onInput={handleTemplateFilling}

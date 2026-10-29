@@ -3,9 +3,10 @@ import { memo, useCallback, useContext, useMemo } from 'react';
 import { AIAssistantInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
 import {
   FlowEditorConstants,
+  NodeFieldInfoConstants,
   NodePanelConstants,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { FlowEditorHelpers, NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useNodeAiAssistantConfig } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import {
   FlowEditorNodePanel,
@@ -130,6 +131,11 @@ const NormalDecisionNode = memo(props => {
           name="Description"
           id="description"
           label="Decision criteria"
+          tooltipDescription={NodeFieldInfoHelpers.getNodeFieldInfo(
+            FlowEditorConstants.PipelineNodeTypes.Decision,
+            NodeFieldInfoConstants.NODE_FIELD_KEYS.decisionCriteria,
+          )}
+          tooltipPinnable
           placeholder=""
           value={description}
           onInput={onChangeDecisionDescription}
