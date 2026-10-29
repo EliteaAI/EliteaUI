@@ -119,7 +119,7 @@ export const INTERNAL_TOOLS_LIST = [
     title: 'Web Search',
     icon: 'GlobeIcon',
     infoTooltip: {
-      text: 'Let the model search the web and read pages, and cite its sources.',
+      text: 'Allow the LLM to search the Internet, read web pages, and cite its sources.',
     },
     // Shown only when platform_settings.tool_spend.web_search.available
     requiresWebSearch: true,

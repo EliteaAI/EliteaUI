@@ -26,7 +26,8 @@ export const projectConfigCardStyles = {
   description: ({ palette }) => ({
     color: palette.text.primary,
   }),
-  select: {
+  select: ({ typography }) => ({
     flex: '1 1 15rem',
-  },
+    '& .MuiSelect-select': { ...typography.labelMedium },
+  }),
 };
