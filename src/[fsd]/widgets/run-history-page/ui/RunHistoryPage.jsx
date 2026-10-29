@@ -5,7 +5,7 @@ import { Link as RouterLink, useLocation, useNavigate, useParams, useSearchParam
 import { Box, Link } from '@mui/material';
 
 import { RunHistoryContainer, SCHEDULE_RUN_COLUMNS } from '@/[fsd]/entities/run-history';
-import { buildScheduleFormLink, useAllEntitySchedules } from '@/[fsd]/entities/schedule';
+import { buildOwnerViewModeParams, buildScheduleFormLink, useAllEntitySchedules } from '@/[fsd]/entities/schedule';
 import { ChatMessageList } from '@/[fsd]/features/chat';
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
@@ -88,7 +88,16 @@ const RunHistoryPage = memo(props => {
         // The theme link, so the name reads well in dark and light
         <Link
           component={RouterLink}
-          to={buildScheduleFormLink({ entityType: scheduleEntityType, entityId: agentId, tab, scheduleId })}
+          to={{
+            pathname: buildScheduleFormLink({
+              entityType: scheduleEntityType,
+              entityId: agentId,
+              tab,
+              scheduleId,
+            }),
+            // Without the owner view mode the editor falls back to the public mode and fails to load
+            search: `?${buildOwnerViewModeParams()}`,
+          }}
           onClick={event => event.stopPropagation()}
           // A cut name shows in full on hover
           title={name}

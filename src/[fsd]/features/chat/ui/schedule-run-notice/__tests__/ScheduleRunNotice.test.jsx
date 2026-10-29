@@ -121,7 +121,7 @@ describe('ScheduleRunNotice', () => {
 
     expect(screen.getByRole('link', { name: 'Open run' })).toHaveAttribute(
       'href',
-      `/agents/all/${AGENT_ID}/history?history_run_id=77`,
+      `/agents/all/${AGENT_ID}/history?history_run_id=77&viewMode=owner`,
     );
   });
 
@@ -138,7 +138,7 @@ describe('ScheduleRunNotice', () => {
 
     expect(screen.getByRole('link', { name: 'Open run' })).toHaveAttribute(
       'href',
-      `/pipelines/all/${AGENT_ID}/history?history_run_id=77`,
+      `/pipelines/all/${AGENT_ID}/history?history_run_id=77&viewMode=owner`,
     );
   });
 

@@ -5,6 +5,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Box, Link, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { buildOwnerViewModeParams } from '@/[fsd]/entities/schedule';
 import { useSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -24,7 +25,7 @@ const STATUSES = {
 };
 
 const buildRunPath = ({ entity_id, conversation_id, isPipeline }) =>
-  `${NavigationHelpers.buildRoute(isPipeline ? RouteDefinitions.PipelineRunHistory : RouteDefinitions.ApplicationsRunHistory, { tab: 'all', agentId: entity_id })}?${new URLSearchParams({ [SearchParams.HistoryRunId]: String(conversation_id) })}`;
+  `${NavigationHelpers.buildRoute(isPipeline ? RouteDefinitions.PipelineRunHistory : RouteDefinitions.ApplicationsRunHistory, { tab: 'all', agentId: entity_id })}?${buildOwnerViewModeParams({ [SearchParams.HistoryRunId]: String(conversation_id) })}`;
 
 /**
  * Shows the result of a scheduled run of an agent that is a participant of the open chat.

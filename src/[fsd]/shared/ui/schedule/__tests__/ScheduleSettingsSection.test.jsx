@@ -261,6 +261,51 @@ describe('ScheduleSettingsSection opening tab', () => {
     expect(screen.getByTestId('cron-builder-value')).toBeInTheDocument();
   });
 
+  it('disables the Builder tab while the cron cannot be shown there', () => {
+    renderSection({ initial: '0 * * * *' });
+
+    const builderTab = screen.getByText('Builder');
+    expect(builderTab).toBeDisabled();
+    fireEvent.click(builderTab);
+
+    expect(screen.getByTestId('pipeline-schedule-cron-input')).toHaveValue('0 * * * *');
+    expect(screen.queryByTestId('cron-builder-value')).not.toBeInTheDocument();
+    expect(screen.getByTestId('pipeline-schedule-builder-blocked-hint')).toHaveTextContent(
+      'The Builder cannot show this expression',
+    );
+  });
+
+  it('links the Builder tab to the hint while it is disabled', () => {
+    renderSection({ initial: '0 * * * *' });
+
+    const hint = screen.getByTestId('pipeline-schedule-builder-blocked-hint');
+    expect(hint.id).not.toBe('');
+    expect(screen.getByText('Builder')).toHaveAttribute('aria-describedby', hint.id);
+  });
+
+  it('keeps the Builder tab enabled and shows no hint while the text is half-typed', () => {
+    renderSection({ initial: '30 9 * * *' });
+    openCronTab();
+
+    ['30 9 *', '30 9 * * x'].forEach(text => {
+      fireEvent.change(screen.getByTestId('pipeline-schedule-cron-input'), { target: { value: text } });
+
+      expect(screen.getByText('Builder')).toBeEnabled();
+      expect(screen.queryByTestId('pipeline-schedule-builder-blocked-hint')).not.toBeInTheDocument();
+    });
+  });
+
+  it('enables the Builder tab again when the text becomes a daily time', () => {
+    renderSection({ initial: '0 * * * *' });
+
+    fireEvent.change(screen.getByTestId('pipeline-schedule-cron-input'), { target: { value: '30 9 * * *' } });
+
+    expect(screen.getByText('Builder')).toBeEnabled();
+    expect(screen.queryByTestId('pipeline-schedule-builder-blocked-hint')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText('Builder'));
+    expect(screen.getByTestId('cron-builder-value')).toHaveTextContent('30 9 * * *');
+  });
+
   it('keeps the tab the user picked when the cron changes later', () => {
     renderSection({ initial: '0 0 * * 6' });
 

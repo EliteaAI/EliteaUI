@@ -162,6 +162,28 @@ describe('EntitySchedulesSection', () => {
       );
     });
 
+    it('Open run history adds the owner view mode when the editor URL has none', () => {
+      renderSection({}, '/agents/my/12');
+
+      act(() => mocks.cardProps.at(-1).onOpenRunHistory(2));
+
+      expect(mocks.navigate).toHaveBeenCalledWith(
+        { pathname: '/agents/my/12/schedules/2', hash: '#runs', search: '?viewMode=owner' },
+        { state: { returnTo: '/agents/my/12' } },
+      );
+    });
+
+    it('Open run history keeps the version id next to the owner view mode', () => {
+      renderSection({ versionId: 71 }, '/agents/my/12');
+
+      act(() => mocks.cardProps.at(-1).onOpenRunHistory(2));
+
+      expect(mocks.navigate).toHaveBeenCalledWith(
+        { pathname: '/agents/my/12/schedules/2', hash: '#runs', search: '?viewMode=owner&versionId=71' },
+        { state: { returnTo: '/agents/my/12' } },
+      );
+    });
+
     it('TC-US35-18 "Open all in Schedules" passes the agent name for the entity chip', () => {
       renderSection({ entityName: 'Digest bot' });
 

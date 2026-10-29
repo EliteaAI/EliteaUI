@@ -53,6 +53,8 @@ const EntitySchedulesSection = memo(props => {
   const openNested = useCallback(
     (to, formVersionId) => {
       const params = new URLSearchParams(search);
+      // Params of the link itself win over the editor search
+      new URLSearchParams(to.search).forEach((value, key) => params.set(key, value));
       if (formVersionId) params.set(SearchParams.VersionId, formVersionId);
       const formSearch = params.toString();
       navigate({ ...to, search: formSearch && `?${formSearch}` }, { state: { returnTo: pathname + search } });
