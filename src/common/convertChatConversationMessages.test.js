@@ -217,3 +217,89 @@ describe('input guardrail history conversion (#6886)', () => {
     expect(answer.exception).toBe('It was not sent to the model.');
   });
 });
+
+describe('history action duration stamps', () => {
+  const group = {
+    id: 5,
+    uuid: 'assistant-5',
+    author_participant_id: 20,
+    reply_to_id: 1,
+    content: 'done',
+    message_items: [],
+    created_at: '2026-10-28 10:00:00',
+    updated_at: '2026-10-28 10:00:05',
+    is_streaming: false,
+    meta: {},
+  };
+
+  it('carries started_at/finished_at onto tool and LLM actions', () => {
+    const answer = convertToAIAnswer(
+      group,
+      [group],
+      [],
+      [
+        {
+          id: 1,
+          message_group_id: 5,
+          kind: 'thinking_step',
+          model_name: 'model',
+          started_at: '2026-10-28T10:00:00.100Z',
+          finished_at: '2026-10-28T10:00:00.950Z',
+          attrs: {},
+        },
+        {
+          id: 2,
+          message_group_id: 5,
+          kind: 'tool_call',
+          tool_name: 'list_issues',
+          started_at: '2026-10-28T10:00:01.000Z',
+          finished_at: '2026-10-28T10:00:03.400Z',
+          attrs: {},
+        },
+      ],
+    );
+    const [llm, tool] = answer.toolActions;
+    expect(llm).toMatchObject({
+      startedAt: '2026-10-28T10:00:00.100Z',
+      finishedAt: '2026-10-28T10:00:00.950Z',
+    });
+    expect(tool).toMatchObject({
+      startedAt: '2026-10-28T10:00:01.000Z',
+      finishedAt: '2026-10-28T10:00:03.400Z',
+    });
+  });
+
+  it('leaves the stamps unset for a legacy row without times', () => {
+    const answer = convertToAIAnswer(
+      group,
+      [group],
+      [],
+      [{ id: 3, message_group_id: 5, kind: 'tool_call', tool_name: 'list_issues', attrs: {} }],
+    );
+    const [tool] = answer.toolActions;
+    expect(tool.created_at).toBeTruthy();
+    expect(tool.startedAt).toBeUndefined();
+    expect(tool.finishedAt).toBeUndefined();
+  });
+  it('marks a deferred (approval-paused) row for the tooltip without restoring hitl_deferred', () => {
+    const answer = convertToAIAnswer(
+      group,
+      [group],
+      [],
+      [
+        {
+          id: 4,
+          message_group_id: 5,
+          kind: 'tool_call',
+          tool_name: 'Sub',
+          attrs: { metadata: { hitl_deferred: true } },
+        },
+        { id: 6, message_group_id: 5, kind: 'tool_call', tool_name: 'list_issues', attrs: {} },
+      ],
+    );
+    const [deferred, plain] = answer.toolActions;
+    expect(deferred.approvalWaited).toBe(true);
+    expect(deferred.hitlDeferred).toBeUndefined();
+    expect(plain.approvalWaited).toBe(false);
+  });
+});

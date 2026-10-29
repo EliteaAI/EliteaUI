@@ -9,6 +9,7 @@ import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
 // Imported directly rather than through the barrel: it reaches @/components and @/common/toolkitUtils,
 // which would pull the redux store into every consumer of the chat helpers barrel
 import { resolveSubAgentIcon } from '../../lib/helpers/subAgentIcon.helpers';
+import { DurationLabel } from '../duration-label';
 
 // VS Code-style collapsible group for one sub-agent's activity. Collapsed by
 // default with a left-to-right shimmer sweeping the name while the sub-agent is
@@ -22,6 +23,8 @@ const SubAgentAccordion = memo(props => {
     agentType,
     running = false,
     paused = false,
+    durationMs = null,
+    includesApprovalWait = false,
     defaultExpanded = false,
     transparent = false,
     children,
@@ -56,6 +59,13 @@ const SubAgentAccordion = memo(props => {
           >
             {label || name}
           </Typography>
+          {!running && (
+            <DurationLabel
+              durationMs={durationMs}
+              includesApprovalWait={includesApprovalWait}
+              testId="chat-answer-subagent-duration"
+            />
+          )}
           {shimmer && (
             <CircularProgress
               size={12}

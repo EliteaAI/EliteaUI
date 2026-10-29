@@ -137,6 +137,13 @@ describe('the editor chat of a two-level development run (#7227)', () => {
     expect(screen.getAllByText(codeLess).length).toBeGreaterThan(0);
   });
 
+  it('shows the invocation duration on reloaded sub-agent headers', () => {
+    const { toolActions } = answer();
+    renderTree({ actions: toolActions, originalActions: toolActions });
+
+    expect(screen.getAllByTestId('chat-answer-subagent-duration')[0]).toHaveTextContent('· 7.9s');
+  });
+
   it('shows the turn refused before it started (a child decision of the draft) as one card with its code', () => {
     // components/Chat/hooks.js stores a socket_validation_error as the message exception, stringified
     render(

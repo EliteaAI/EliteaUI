@@ -760,6 +760,8 @@ export const useChatSocket = ({
             thinkText = thinkText.replace(/\s+with inputs\s+\{[^}]*\}/g, '');
             t.content = thinkText;
             t.ended_at = thinkStep.timestamp_finish;
+            if (thinkStep.timestamp_start) t.startedAt = thinkStep.timestamp_start;
+            if (thinkStep.timestamp_finish) t.finishedAt = thinkStep.timestamp_finish;
             const stepHierarchy = normalizeExecutionHierarchy(
               thinkStep,
               thinkStep.metadata,
@@ -809,6 +811,8 @@ export const useChatSocket = ({
           t = msg.toolActions?.find(i => i.id === response_metadata?.tool_run_id);
           if (t && t.status !== ToolActionStatus.complete && t.status !== ToolActionStatus.actionRequired) {
             t.ended_at = message.created_at;
+            // Server-side emit time; no thinking step means no timestamp_finish.
+            t.finishedAt = message.created_at;
             t.status = ToolActionStatus.complete;
           }
 
@@ -949,6 +953,8 @@ export const useChatSocket = ({
               toolOutputs: message.response_metadata?.tool_outputs,
               toolMeta: { ...toolMeta, ...hierarchy },
               created_at: message.response_metadata?.timestamp_start || message.created_at,
+              // Backend stamp only; no client-clock fallback.
+              startedAt: message.response_metadata?.timestamp_start,
               type:
                 socketMessageType === SocketMessageType.AgentLlmStart
                   ? TOOL_ACTION_TYPES.Llm
@@ -1095,6 +1101,8 @@ export const useChatSocket = ({
             const hitlDeferred = Boolean(metadata?.hitl_deferred);
             t.hitlDeferred = hitlDeferred;
             t.toolMeta.hitl_deferred = hitlDeferred;
+            // Sticky, for the duration tooltip after resume clears the flag.
+            t.approvalWaited = !!t.approvalWaited || hitlDeferred;
 
             Object.assign(t, {
               message: undefined, // we clear status messages when the tool ends
@@ -1105,6 +1113,8 @@ export const useChatSocket = ({
                   : ToolActionStatus.complete,
               ended_at: message.response_metadata.timestamp_finish || message.created_at,
               created_at: message.response_metadata.timestamp_start || t.created_at,
+              startedAt: message.response_metadata.timestamp_start || t.startedAt,
+              finishedAt: message.response_metadata.timestamp_finish,
             });
           }
           onRcvAgentEventRef.current && onRcvAgentEventRef.current({ ...message });
@@ -1129,6 +1139,8 @@ export const useChatSocket = ({
               content: convertJsonToString(message?.content ?? ''),
               status: ToolActionStatus.error,
               ended_at: message.created_at,
+              startedAt: response_metadata?.timestamp_start || t.startedAt,
+              finishedAt: response_metadata?.timestamp_finish,
               isError: true,
             });
             t.toolMeta = { ...t.toolMeta, ...(errorMetadata || {}), ...errorHierarchy };

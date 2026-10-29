@@ -11,6 +11,7 @@ import { parseGovernanceRefusal } from '@/[fsd]/features/chat/lib/helpers/refusa
 import { ContinuationError, ErrorTrace } from '@/[fsd]/features/chat/ui/error-trace';
 import { SubAgentAccordion } from '@/[fsd]/features/chat/ui/sub-agent-section';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import { DurationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { StyledAccordion, StyledAccordionDetails, StyledAccordionSummary } from '@/[fsd]/shared/ui/accordion';
 import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
 import { TOOL_ACTION_NAMES, TOOL_ACTION_TYPES, ToolActionStatus } from '@/common/constants';
@@ -71,7 +72,7 @@ const SubAgentThinkBlock = memo(props => {
   const ordinal = subEntry?.ordinal || 0;
   const label = subEntry?.breadcrumbLabel || (ordinal ? `${displayName} (${ordinal})` : displayName);
   const groups = subEntry?.groups || [];
-  const { running } = resolveSubAgentLiveness({
+  const { running, done } = resolveSubAgentLiveness({
     paused,
     resuming,
     hasActiveDescendant,
@@ -90,6 +91,9 @@ const SubAgentThinkBlock = memo(props => {
       agentType={subEntry?.agentType}
       running={running}
       paused={paused}
+      // History has no live signals: there, not running and not paused means settled.
+      durationMs={done || (!streaming && !running && !paused) ? subEntry?.durationMs : null}
+      includesApprovalWait={!!subEntry?.includesApprovalWait}
     >
       {groups.length > 0 && (
         <Box sx={badgesContainerSx}>
@@ -631,6 +635,8 @@ const ApplicationThinkView = memo(props => {
           // dropping the breadcrumb even though later actions carry the chain.
           agentPath: selectRichestAgentPath(block.actions.map(deriveSubAgentPath)),
           groups: groupActions(block.actions).groups,
+          durationMs: DurationHelpers.getBlockDurationMs(block.actions),
+          includesApprovalWait: !!block.wasPaused || block.actions.some(DurationHelpers.includesApprovalWait),
         };
       });
       // Compute one path-derived label for both one-hop and deeper blocks.
