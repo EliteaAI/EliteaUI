@@ -1,8 +1,9 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
 import { getInterruptIdentity } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
+import { parseGovernanceRefusal } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
 import {
   ChatContinue,
   ChatHitlActions,
@@ -35,6 +36,10 @@ const AnswerApprovals = memo(props => {
     onHitlResume,
   } = props;
 
+  // A governed refusal (`{code, error, ref}`) is shown as its readable text and code, whatever answer text the
+  // message also carries: the run stopped on a decision, not on a failure to debug
+  const refusal = useMemo(() => parseGovernanceRefusal(exception), [exception]);
+
   const renderHitlCard = useCallback(
     ({ interrupt, index }) => {
       const toolCallId = interrupt?.tool_call_id || '';
@@ -66,7 +71,8 @@ const AnswerApprovals = memo(props => {
         />
       ) : exception ? (
         <ErrorTrace
-          headline={realAnswer}
+          headline={refusal ? undefined : realAnswer}
+          refusal={refusal}
           trace={exception}
           messageId={messageId}
           onCopy={onCopy}

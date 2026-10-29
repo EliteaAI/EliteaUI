@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material';
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 
 import ErrorTrace from '../ErrorTrace';
 
@@ -37,16 +37,15 @@ const DENIED = {
 describe('ErrorTrace', () => {
   afterEach(() => cleanup());
 
-  it('shows the refusal text with its code chip and keeps the debugging accordion', () => {
+  it('shows the refusal text with its code chip and no debugging accordion', () => {
     const trace = JSON.stringify(DENIED, null, 2);
     renderTrace({ headline: '', trace });
 
     expect(screen.getByText(DENIED.error)).toBeTruthy();
     expect(screen.getByTestId('error-code-chip').textContent).toBe('DENIED_GRANT');
     expect(screen.queryByText('Unknown error')).toBeNull();
-
-    fireEvent.click(screen.getByText('Error debugging info'));
-    expect(screen.getByText((_, el) => el?.tagName === 'PRE' && el.textContent === trace)).toBeTruthy();
+    // a refusal is a decision, not a failure to debug: the raw payload stays hidden
+    expect(screen.queryByText('Error debugging info')).toBeNull();
   });
 
   it('shows the refusal a caller already parsed, without reading the trace again', () => {
@@ -54,6 +53,13 @@ describe('ErrorTrace', () => {
 
     expect(screen.getByText('Not allowed here')).toBeTruthy();
     expect(screen.getByTestId('error-code-chip').textContent).toBe('DENIED_GRANT');
+  });
+
+  it('shows the support reference of a worker refusal next to its code', () => {
+    renderTrace({ trace: JSON.stringify({ ...DENIED, ref: 'ref-1234' }) });
+
+    expect(screen.getByTestId('error-code-chip').textContent).toBe('DENIED_GRANT');
+    expect(screen.getByTestId('error-support-ref').textContent).toBe('Reference ref-1234');
   });
 
   it('keeps the generic text when the payload has no error string', () => {

@@ -79,9 +79,20 @@ const ErrorTrace = memo(props => {
         </Box>
       )}
 
+      {refusal?.supportRef && (
+        <Typography
+          component="div"
+          variant="bodySmall"
+          data-testid="error-support-ref"
+          sx={styles.supportRef}
+        >
+          Reference {refusal.supportRef}
+        </Typography>
+      )}
+
       {afterHeadline}
 
-      {trace && trace !== headline && (
+      {!refusal && trace && trace !== headline && (
         <Box sx={styles.errorStackTrace}>
           <Box
             sx={styles.errorStackTraceHeader}
@@ -157,6 +168,12 @@ const errorTraceStyles = (isExpanded, compact) => ({
     color: ({ palette }) => palette.text.warning,
     fontSize: '.875rem',
     marginBottom: '0.5rem',
+  },
+  supportRef: {
+    marginTop: '-0.25rem',
+    marginBottom: '0.5rem',
+    color: ({ palette }) => palette.text.secondary,
+    userSelect: 'all',
   },
   errorStackTrace: {
     width: '100%',

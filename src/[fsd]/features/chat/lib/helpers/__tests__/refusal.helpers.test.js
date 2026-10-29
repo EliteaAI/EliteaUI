@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import { parseRefusalPayload } from '../refusal.helpers';
 
-const DENIED = { code: 'DENIED_GRANT', error: 'This agent is not allowed to use one of its credentials for you.' };
+const DENIED = {
+  code: 'DENIED_GRANT',
+  error: 'This agent is not allowed to use one of its credentials for you.',
+};
 
 describe('parseRefusalPayload', () => {
   it('reads the text and code from a stringified payload', () => {
@@ -14,6 +17,24 @@ describe('parseRefusalPayload', () => {
 
   it('accepts an already parsed object', () => {
     expect(parseRefusalPayload(DENIED)).toEqual({ message: DENIED.error, code: 'DENIED_GRANT' });
+  });
+
+  it('keeps the support reference of a worker refusal', () => {
+    const payload = { ...DENIED, ref: '0b6c2f0e-6f8a-4d7e-9a51-3c2a1e7d9b40' };
+    expect(parseRefusalPayload(JSON.stringify(payload))).toEqual({
+      message: DENIED.error,
+      code: 'DENIED_GRANT',
+      supportRef: payload.ref,
+    });
+  });
+
+  it.each([
+    ['markup', '<img src=x>'],
+    ['a path', '../../etc'],
+    ['too long', 'a'.repeat(65)],
+    ['not a string', 42],
+  ])('drops a support reference that is %s', (_name, ref) => {
+    expect(parseRefusalPayload({ ...DENIED, ref })).toEqual({ message: DENIED.error, code: 'DENIED_GRANT' });
   });
 
   it('returns the text alone when there is no code', () => {
