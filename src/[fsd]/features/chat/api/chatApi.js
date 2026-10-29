@@ -9,6 +9,7 @@ const TAG_TYPE_CONVERSATION_DETAILS = 'TAG_TYPE_CONVERSATION_DETAILS';
 const TAG_TYPE_TOTAL_CONVERSATIONS = 'TAG_TYPE_TOTAL_CONVERSATIONS';
 const TAG_TYPE_MESSAGES = 'TAG_TYPE_MESSAGES';
 const TAG_TYPE_CANVAS_DETAILS = 'TAG_TYPE_CANVAS_DETAILS';
+const TAG_TYPE_FOLDERS = 'TAG_TYPE_FOLDERS';
 
 export { TAG_TYPE_CONVERSATION_DETAILS };
 
@@ -128,7 +129,11 @@ export const apiSlice = eliteaApi
         },
         invalidatesTags: (result, error) => {
           if (error) return [];
-          return [{ type: TAG_TYPE_CONVERSATION_DETAILS, id: result?.id }, TAG_TYPE_CONVERSATIONS];
+          return [
+            { type: TAG_TYPE_CONVERSATION_DETAILS, id: result?.id },
+            TAG_TYPE_CONVERSATIONS,
+            TAG_TYPE_FOLDERS,
+          ];
         },
       }),
       addParticipantIntoConversation: build.mutation({
