@@ -92,7 +92,7 @@ const ErrorTrace = memo(props => {
 
       {afterHeadline}
 
-      {trace && trace !== headline && (
+      {!refusal && trace && trace !== headline && (
         <Box sx={styles.errorStackTrace}>
           <Box
             sx={styles.errorStackTraceHeader}
