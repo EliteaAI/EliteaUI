@@ -46,6 +46,7 @@ const ParticipantAttentionCard = memo(
       isSkillGone,
       isSkillVersionUnavailable,
       hasMisconfigurationErrors,
+      governedRefusal,
       shouldDisableThisItem,
       mcpIsDisconnected,
       someToolsAreUnavailable,
@@ -148,6 +149,7 @@ const ParticipantAttentionCard = memo(
               isSkillGone={isSkillGone}
               isSkillVersionUnavailable={isSkillVersionUnavailable}
               hasMisconfigurationErrors={hasMisconfigurationErrors}
+              governedRefusal={governedRefusal}
               shouldDisableThisItem={shouldDisableThisItem}
               mcpIsDisconnected={mcpIsDisconnected}
               someToolsAreUnavailable={someToolsAreUnavailable}

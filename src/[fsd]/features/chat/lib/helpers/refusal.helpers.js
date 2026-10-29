@@ -54,6 +54,28 @@ export const parseGovernanceRefusal = trace => {
   return refusal?.code ? refusal : undefined;
 };
 
+const VALUE_ERROR_PREFIX = 'Value error, ';
+
+/**
+ * A governance refusal carried by a validation result (#7281): a toolkit's connection error that names its `code`
+ * (`{msg, code}`), or an agent's toolkit error whose text is the refusal payload (`Value error, {"code", "error"}`).
+ * Anything else (a real misconfiguration) is undefined and keeps its own marker.
+ *
+ * @param {unknown} info a validation entry, or its message
+ * @returns {{ message: string, code: string, supportRef?: string } | undefined}
+ */
+export const parseValidationRefusal = info => {
+  if (info && typeof info === 'object' && !Array.isArray(info)) {
+    const message = typeof info.msg === 'string' ? info.msg.trim() : '';
+    const code = typeof info.code === 'string' ? info.code.trim() : '';
+    return message && code ? { message, code } : undefined;
+  }
+  if (typeof info !== 'string') return undefined;
+  return parseGovernanceRefusal(
+    info.startsWith(VALUE_ERROR_PREFIX) ? info.slice(VALUE_ERROR_PREFIX.length) : info,
+  );
+};
+
 /**
  * A governance refusal of a toolkit or index run, kept with the payload it was read from and the message it
  * belongs to, so the card's "Error debugging info" shows what the worker sent and names its download.

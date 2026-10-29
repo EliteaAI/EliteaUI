@@ -5,6 +5,7 @@ import { Typography } from '@mui/material';
 import { McpLogInLink } from '@/[fsd]/features/mcp';
 import { OpenApiLogInLink } from '@/[fsd]/features/openapi';
 import { SharepointLogInLink } from '@/[fsd]/features/sharepoint';
+import { Chip } from '@/[fsd]/shared/ui';
 import { ChatParticipantType } from '@/common/constants';
 
 const ParticipantWarning = memo(props => {
@@ -14,6 +15,7 @@ const ParticipantWarning = memo(props => {
     isSkillGone,
     isSkillVersionUnavailable,
     hasMisconfigurationErrors,
+    governedRefusal,
     shouldDisableThisItem,
     mcpIsDisconnected,
     someToolsAreUnavailable,
@@ -51,6 +53,19 @@ const ParticipantWarning = memo(props => {
   if (isSkillGone) return 'Skill is no longer available, switch to a model or remove it';
 
   if (isSkillVersionUnavailable) return 'Skill version is no longer available, select another version';
+
+  if (hasMisconfigurationErrors && governedRefusal) {
+    // a credential refused by governance (#7281): what was refused and why, not "misconfiguration"
+    return (
+      <>
+        {governedRefusal.message}
+        <Chip.ErrorCodeChip
+          code={governedRefusal.code}
+          testId="participant-refusal-code-chip"
+        />
+      </>
+    );
+  }
 
   if (hasMisconfigurationErrors) {
     const isPipelineAgent = participant.entity_settings?.agent_type === 'pipeline';
