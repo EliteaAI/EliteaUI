@@ -13,9 +13,8 @@ export const NODE_DOCS_URLS = {
   [PipelineNodeTypes.Hitl]: `${DOCS_NODES_URL}/control-flow-nodes#human-in-the-loop-node`,
   [PipelineNodeTypes.StateModifier]: `${DOCS_NODES_URL}/utility-nodes#state-modifier-node`,
   [PipelineNodeTypes.Printer]: `${DOCS_NODES_URL}/utility-nodes#printer-node`,
+  // Custom is deprecated but has no migration guide
+  [PipelineNodeTypes.Custom]: `${DOCS_NODES_URL}/execution-nodes#custom-node`,
 };
-
-// Custom is deprecated but has no migration guide
-export const CUSTOM_NODE_DOCS_URL = `${DOCS_NODES_URL}/execution-nodes#custom-node`;
 
 export const MIGRATION_GUIDE_TOOLTIP = 'Open migration guide';
