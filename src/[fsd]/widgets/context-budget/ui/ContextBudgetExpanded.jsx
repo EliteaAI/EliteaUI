@@ -38,7 +38,7 @@ const ContextBudgetExpanded = memo(props => {
     openDialog: openSummarizeDialog,
     closeDialog: closeSummarizeDialog,
     confirmSummarize,
-    isOptimizing: isSummarizing,
+    isSummarizing,
   } = useSummarizeContext({ conversationId });
 
   return (
