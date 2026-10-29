@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
+import { toExecutionTypeRow } from '@/[fsd]/entities/run-history/lib/helpers';
 import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat';
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
@@ -75,6 +76,8 @@ const SkillRunHistoryView = memo(props => {
           entityProjectId={entityProjectId}
           source={ParticipantEntityTypes.Skill}
           versions={versions}
+          eventColumnLabel="Execution type"
+          decorateRow={toExecutionTypeRow}
           handleRestoreConversation={restoreConversation}
           handleOpenAnalytics={handleOpenAnalytics}
           ChatMessageListComponent={ChatMessageList}
