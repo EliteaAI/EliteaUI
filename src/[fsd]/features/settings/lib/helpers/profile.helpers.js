@@ -39,8 +39,8 @@ export const PROFILE_INITIAL_VALUES = {
   // #6898: '' follows the project default for new chats
   context_window_mode: '',
   preserve_recent_messages: DEFAULT_CONTEXT_STRATEGY.PRESERVE_RECENT_MESSAGES,
-  enable_summarization: DEFAULT_CONTEXT_STRATEGY.ENABLE_SUMMARIZATION,
   enable_context_editing: DEFAULT_CONTEXT_STRATEGY.ENABLE_CONTEXT_EDITING,
+  enable_summarization: DEFAULT_CONTEXT_STRATEGY.ENABLE_SUMMARIZATION,
   summary_llm_settings: {
     instructions: '',
     model_name: '',

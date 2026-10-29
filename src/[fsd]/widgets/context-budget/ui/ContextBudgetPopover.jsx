@@ -3,12 +3,17 @@ import { memo, useCallback, useEffect, useRef } from 'react';
 import { Box, ClickAwayListener, Grow, Paper, Popper } from '@mui/material';
 
 import { useModal } from '@/[fsd]/shared/lib/hooks';
+import { CONTEXT_WINDOW_COPY } from '@/[fsd]/widgets/context-budget/lib/constants';
+import { useSummarizeContext } from '@/[fsd]/widgets/context-budget/lib/hooks';
 
 import ContextBudgetDetails from './ContextBudgetDetails';
 import ContextBudgetHeader from './ContextBudgetHeader';
 import ContextBudgetProgress from './ContextBudgetProgress';
 import ContextBudgetStatsDisplay from './ContextBudgetStatsDisplay';
+import ContextHighUsageBanner from './ContextHighUsageBanner';
 import ContextStrategyModal from './ContextStrategyModal';
+import ContextWindowModeSelector from './ContextWindowModeSelector';
+import SummarizeConfirmDialog from './SummarizeConfirmDialog';
 
 /**
  * Full context budget card in a popper, anchored to a compact trigger (ring or pill), plus the edit modal.
@@ -25,7 +30,6 @@ const ContextBudgetPopover = memo(props => {
     onSwitchMode,
     isSwitching,
     conversationId,
-    contextStatus,
     contextStrategy,
     setActiveConversation,
     conversationInstructions,
@@ -69,6 +73,20 @@ const ContextBudgetPopover = memo(props => {
     handleModalOpen();
   }, [onClose, handleModalOpen]);
 
+  const {
+    isDialogOpen: isSummarizeDialogOpen,
+    openDialog: openSummarizeDialog,
+    closeDialog: closeSummarizeDialog,
+    confirmSummarize,
+    isSummarizing,
+  } = useSummarizeContext({ conversationId });
+
+  // The confirmation lives outside the popper, so close the popover first or the click-away would race it
+  const handleSummarizeClick = useCallback(() => {
+    onClose();
+    openSummarizeDialog();
+  }, [onClose, openSummarizeDialog]);
+
   return (
     <>
       <Popper
@@ -94,11 +112,30 @@ const ContextBudgetPopover = memo(props => {
                     onEdit={handleEdit}
                     canEdit={canEdit}
                   />
+                  <Box sx={styles.selectorRow}>
+                    <ContextWindowModeSelector
+                      layout="stacked"
+                      value={stats.windowMode}
+                      onChange={onSwitchMode}
+                      disabled={!canEdit || isSwitching}
+                      disabledReason={!canEdit ? CONTEXT_WINDOW_COPY.NO_PERMISSION : undefined}
+                      balancedWindowTokens={stats.balancedWindowTokens}
+                      fullWindowTokens={stats.fullWindowTokens}
+                    />
+                  </Box>
                   <ContextBudgetProgress
-                    tokensDisplay={stats.tokensDisplay}
+                    stats={stats}
                     utilizationPercentage={stats.utilizationPercentage}
                     isHighUtilization={isHighUtilization}
                   />
+                  {isHighUtilization && (
+                    <ContextHighUsageBanner
+                      isSummarizationEnabled={contextStrategy?.enable_summarization !== false}
+                      canEdit={canEdit}
+                      isSummarizing={isSummarizing}
+                      onSummarize={handleSummarizeClick}
+                    />
+                  )}
                   <ContextBudgetStatsDisplay
                     stats={stats}
                     isCompact
@@ -107,12 +144,7 @@ const ContextBudgetPopover = memo(props => {
                     rowStyle={styles.statRow}
                     conversationId={conversationId}
                   />
-                  <ContextBudgetDetails
-                    stats={stats}
-                    canEdit={canEdit}
-                    onSwitchMode={onSwitchMode}
-                    isSwitching={isSwitching}
-                  />
+                  <ContextBudgetDetails stats={stats} />
                 </Box>
               </ClickAwayListener>
             </Paper>
@@ -124,13 +156,18 @@ const ContextBudgetPopover = memo(props => {
         open={isModalOpen}
         onClose={handleModalClose}
         conversationId={conversationId}
-        currentContextStatus={contextStatus}
         contextStrategy={contextStrategy}
         setActiveConversation={setActiveConversation}
         stats={stats}
-        isHighUtilization={isHighUtilization}
         conversationInstructions={conversationInstructions}
         persona={persona}
+      />
+
+      <SummarizeConfirmDialog
+        open={isSummarizeDialogOpen}
+        onClose={closeSummarizeDialog}
+        onConfirm={confirmSummarize}
+        confirming={isSummarizing}
       />
     </>
   );
@@ -153,6 +190,9 @@ const contextBudgetPopoverStyles = () => ({
   content: {
     display: 'flex',
     flexDirection: 'column',
+  },
+  selectorRow: {
+    padding: '0.5rem 1rem 0',
   },
   statRow: {
     display: 'flex',

@@ -19,3 +19,21 @@ export const formatApproxCost = chatUsage => {
 };
 
 export const formatTokens = value => (value == null ? '—' : formatNumberWithSpaces(value));
+
+/**
+ * Short window size: 272000 -> "272K", 1048576 -> "1M". Empty when the size is unknown.
+ */
+export const formatWindowSize = tokens => {
+  if (!tokens || tokens <= 0) return '';
+  if (tokens >= 1000000) return `${Number((tokens / 1000000).toFixed(1))}M`;
+  return `${Math.round(tokens / 1000)}K`;
+};
+
+/**
+ * Tokens each window mode gives the selected model. Balanced is capped, Full is the whole window
+ * (mirrors the backend resolve_context_budget).
+ */
+export const getWindowModeTokens = (modelWindow, balancedCap) => ({
+  balanced: modelWindow > 0 ? Math.min(balancedCap, modelWindow) : 0,
+  full: modelWindow > 0 ? modelWindow : 0,
+});

@@ -1,12 +1,15 @@
 import { memo, useMemo } from 'react';
 
-import { Box, MenuItem, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
-import { Label } from '@/[fsd]/shared/ui';
+import { Input, Label } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { PERSONA_OPTIONS } from '@/[fsd]/widgets/context-budget/lib/constants';
-import FormInput from '@/components/FormInput';
 
+/**
+ * Persona management section of the Context Management modal.
+ * Mirrors the persona controls of Settings → AI Personality.
+ */
 const ContextStrategySystemMessages = memo(props => {
   const { formData, errors, handleInputChange } = props;
   const styles = systemMessagesStyles();
@@ -16,76 +19,67 @@ const ContextStrategySystemMessages = memo(props => {
       PERSONA_OPTIONS.map(option => ({
         value: option.value,
         label: option.label,
+        description: option.description,
       })),
     [],
   );
 
   return (
     <Box sx={styles.container}>
-      {/* Preserve System Messages Toggle */}
-      {/* <Box sx={styles.toggleSection}>
-        <Switch.BaseSwitch
-          checked={formData.preserve_system_messages}
-          onChange={(event, checkedValue) =>
-            handleInputChange(
-              { target: { checked: checkedValue, type: 'checkbox' } },
-              'preserve_system_messages',
-            )
-          }
-          label="Always preserve system messages"
-          slotProps={{
-            switch: { size: 'small' },
-            formControlLabel: {
-              sx: styles.toggleLabel,
-            },
-          }}
-        />
-      </Box> */}
-
-      {/* Default Persona Selection */}
       <Box sx={styles.section}>
         <Label.InfoLabelWithTooltip
-          label="Default Persona"
+          label="Default persona"
           tooltip="Select the default assistant persona for model chat (without agent selected)"
           sx={styles.label}
         />
         <SingleSelect
           showBorder
           value={formData.persona}
+          emptyPlaceholder=""
           onChange={e => handleInputChange(e, 'persona')}
           disabled={!formData.preserve_system_messages}
           options={personaOptions}
-          renderOption={(option, isSelected) => (
-            <MenuItem
-              key={option.value}
-              value={option.value}
-              selected={isSelected}
-            >
-              <Typography variant="bodyMedium">{option.label}</Typography>
-            </MenuItem>
+          customRenderOption={option => (
+            <Box sx={styles.optionContainer}>
+              <Typography
+                variant="bodyMedium"
+                color="text.secondary"
+              >
+                {option.label}
+              </Typography>
+              <Typography
+                variant="bodySmall"
+                color="text.primary"
+              >
+                {option.description}
+              </Typography>
+            </Box>
           )}
         />
       </Box>
 
-      {/* User Instructions */}
-      <Box sx={styles.section}>
-        <Label.InfoLabelWithTooltip
-          label="User instructions"
-          tooltip="Custom instructions for the assistant"
-          sx={styles.label}
-        />
-        <FormInput
-          multiline
-          maxRows={3}
-          value={formData.system_messages}
-          onChange={e => handleInputChange(e, 'system_messages')}
-          error={!!errors.system_messages}
-          helperText={errors.system_messages || ' '}
-          disabled={!formData.preserve_system_messages}
-          placeholder="Enter custom instructions for the assistant..."
-          sx={styles.formInput}
-        />
-      </Box>
+      <Input.StyledInputEnhancer
+        label="User instructions"
+        tooltipDescription="Custom instructions for the assistant"
+        autoComplete="off"
+        variantInput="outlined"
+        fullWidth
+        multiline
+        value={formData.system_messages}
+        onChange={e => handleInputChange(e, 'system_messages')}
+        enableAutoBlur={false}
+        error={!!errors.system_messages}
+        helperText={errors.system_messages}
+        disabled={!formData.preserve_system_messages}
+        placeholder="Enter custom instructions for the assistant..."
+        hasActionsToolBar
+        showExpandAction={false}
+        fieldName="User Instructions"
+        containerProps={styles.inputContainer}
+        inputProps={{
+          'data-testid': 'persona-user-instructions-textarea',
+        }}
+      />
     </Box>
   );
 });
@@ -98,28 +92,22 @@ const systemMessagesStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     paddingRight: '1rem',
-    gap: '0.75rem',
+    gap: '1.25rem',
   },
   section: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.5rem',
   },
   label: {
     paddingLeft: '0.75rem',
   },
-  formInput: {
+  optionContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  inputContainer: {
     padding: '0rem',
     margin: '0rem',
-  },
-  toggleSection: {
-    display: 'flex',
-    alignItems: 'center',
-    paddingLeft: '0.5rem',
-  },
-  toggleLabel: {
-    gap: '0.7rem',
-    marginTop: '-1rem',
   },
 });
 

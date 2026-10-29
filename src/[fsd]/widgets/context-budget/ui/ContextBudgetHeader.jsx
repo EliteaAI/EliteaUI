@@ -17,7 +17,7 @@ const ContextBudgetHeader = memo(props => {
     <Box sx={styles.header}>
       <Box sx={styles.headerLeft}>
         <Typography
-          variant="labelSmall"
+          variant="headingSmall"
           sx={styles.title}
         >
           Context management
@@ -73,11 +73,14 @@ const contextBudgetHeaderStyles = () => ({
     alignItems: 'center',
     padding: 0,
     gap: '0.25rem',
-    height: '1rem',
     flex: '1',
+    minWidth: 0,
   },
   title: ({ palette }) => ({
     color: palette.text.secondary,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   }),
   infoIconWrapper: {
     display: 'flex',

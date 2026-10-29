@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatApproxCost, formatTokens } from '../contextBudget.helpers';
+import {
+  formatApproxCost,
+  formatTokens,
+  formatWindowSize,
+  getWindowModeTokens,
+} from '../contextBudget.helpers';
 
 describe('formatApproxCost', () => {
   it('returns untracked placeholder without usage', () => {
@@ -52,5 +57,38 @@ describe('formatTokens', () => {
 
   it('formats large numbers', () => {
     expect(formatTokens(272000).replace(/\s/g, ' ')).toBe('272 000');
+  });
+});
+
+describe('formatWindowSize', () => {
+  it('formats thousands as K', () => {
+    expect(formatWindowSize(272000)).toBe('272K');
+    expect(formatWindowSize(128000)).toBe('128K');
+  });
+
+  it('formats millions as M with one decimal at most', () => {
+    expect(formatWindowSize(1000000)).toBe('1M');
+    expect(formatWindowSize(1048576)).toBe('1M');
+    expect(formatWindowSize(1500000)).toBe('1.5M');
+  });
+
+  it('returns an empty string for an unknown size', () => {
+    expect(formatWindowSize(0)).toBe('');
+    expect(formatWindowSize(undefined)).toBe('');
+    expect(formatWindowSize(-5)).toBe('');
+  });
+});
+
+describe('getWindowModeTokens', () => {
+  it('caps Balanced and keeps the whole window for Full', () => {
+    expect(getWindowModeTokens(400000, 272000)).toEqual({ balanced: 272000, full: 400000 });
+  });
+
+  it('gives both modes the same size when the model window is below the cap', () => {
+    expect(getWindowModeTokens(128000, 272000)).toEqual({ balanced: 128000, full: 128000 });
+  });
+
+  it('returns zeros when the model window is unknown', () => {
+    expect(getWindowModeTokens(undefined, 272000)).toEqual({ balanced: 0, full: 0 });
   });
 });

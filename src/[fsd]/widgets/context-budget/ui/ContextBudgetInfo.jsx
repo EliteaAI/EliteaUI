@@ -11,6 +11,7 @@ import { formatNumberWithSpaces } from '@/utils/stringUtils';
 import { BALANCED_WINDOW_TOKENS, CONTEXT_WINDOW_MODES } from '../lib/constants';
 import { useContextUtilization } from '../lib/hooks/useContextUtilization.hooks';
 import { useContextWindowSwitch } from '../lib/hooks/useContextWindowSwitch.hooks';
+import { getWindowModeTokens } from '../lib/utils';
 import ContextBudgetCompact from './ContextBudgetCompact';
 import ContextBudgetExpanded from './ContextBudgetExpanded';
 import ContextBudgetPill from './ContextBudgetPill';
@@ -31,7 +32,6 @@ const ContextBudgetInfo = memo(props => {
     conversationInstructions,
     persona,
   } = props;
-
   const selectedProjectId = useSelectedProjectId();
   const { isOpen, handleOpen, handleClose } = useModal();
 
@@ -84,6 +84,15 @@ const ContextBudgetInfo = memo(props => {
         : Math.min(BALANCED_WINDOW_TOKENS, selectedModelWindow)
       : null;
 
+  const resolvedModelWindow = previewWindow ? selectedModelWindow : model_window;
+  const resolvedEffectiveWindow = contextStatus.effective_window;
+  // balancedWindowTokens: always derived from the model window, not from effectiveWindow,
+  // so it stays stable during a mode switch (effectiveWindow is stale until the next API response).
+  const { balanced: balancedWindowTokens, full: fullWindowTokens } = getWindowModeTokens(
+    resolvedModelWindow,
+    BALANCED_WINDOW_TOKENS,
+  );
+
   // Prepare stats object for child components
   const stats = {
     strategyName: strategy_name.replace(/_/g, ' '),
@@ -91,13 +100,15 @@ const ContextBudgetInfo = memo(props => {
     summariesGenerated,
     currentTokens: current_tokens,
     maxTokens: max_tokens,
+    currentTokensDisplay: formatNumberWithSpaces(current_tokens),
+    maxTokensDisplay: max_tokens === 0 ? '-' : formatNumberWithSpaces(max_tokens),
     tokensDisplay: `${formatNumberWithSpaces(current_tokens)} / ${max_tokens === 0 ? '-' : formatNumberWithSpaces(max_tokens)}${contextStatus.manual_max_context_tokens ? ' (manual)' : ''}`,
     utilizationPercentage: utilizationData.percentage,
     windowMode,
-    modelWindow: previewWindow ? selectedModelWindow : model_window,
+    modelWindow: resolvedModelWindow,
     modelWindowPreview: previewWindow,
     windowSource: previewWindow ? 'model' : contextStatus.window_source,
-    effectiveWindow: contextStatus.effective_window,
+    effectiveWindow: resolvedEffectiveWindow,
     safetyMargin: contextStatus.safety_margin,
     reservedOutput: contextStatus.reserved_output,
     reservedOutputSource: contextStatus.reserved_output_source,
@@ -106,6 +117,8 @@ const ContextBudgetInfo = memo(props => {
     chatUsage: contextStatus.chat_usage,
     manualMaxTokensEnabled: !!contextStatus.manual_max_tokens_enabled,
     manualMaxContextTokens: contextStatus.manual_max_context_tokens,
+    balancedWindowTokens,
+    fullWindowTokens,
   };
 
   // Common props for all views
@@ -146,11 +159,9 @@ const ContextBudgetInfo = memo(props => {
           open={isOpen}
           onClose={handleClose}
           conversationId={conversationId}
-          currentContextStatus={contextStatus}
           contextStrategy={contextStrategy}
           setActiveConversation={setActiveConversation}
           stats={stats}
-          isHighUtilization={utilizationData.isHigh}
           conversationInstructions={conversationInstructions}
           persona={persona}
         />
@@ -162,7 +173,6 @@ const ContextBudgetInfo = memo(props => {
     <ContextBudgetExpanded
       {...commonProps}
       conversationId={conversationId}
-      contextStatus={contextStatus}
       contextStrategy={contextStrategy}
       setActiveConversation={setActiveConversation}
       conversationInstructions={conversationInstructions}

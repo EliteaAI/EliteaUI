@@ -400,7 +400,7 @@ export const apiSlice = eliteaApi
       generateSummary: build.mutation({
         query: ({ projectId, conversationId, ...body }) => {
           return {
-            url: `/context_manager/summaries/${projectId}/${conversationId}`,
+            url: `/elitea_core/conversation_summaries/prompt_lib/${projectId}/${conversationId}`,
             method: 'POST',
             headers,
             body,
@@ -413,7 +413,7 @@ export const apiSlice = eliteaApi
       }),
       getConversationSummaries: build.query({
         query: ({ projectId, conversationId, limit = 10, offset = 0 }) => ({
-          url: `/context_manager/summaries/${projectId}/${conversationId}`,
+          url: `/elitea_core/conversation_summaries/prompt_lib/${projectId}/${conversationId}`,
           method: 'GET',
           params: { limit, offset },
         }),
