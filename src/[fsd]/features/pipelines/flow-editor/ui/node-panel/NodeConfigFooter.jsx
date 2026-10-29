@@ -8,6 +8,7 @@ import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import SparkleIcon from '@/assets/ai-sparkle-icon.svg?react';
 import DuplicateNodeIcon from '@/assets/duplicate-node-icon.svg?react';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 
@@ -76,6 +77,21 @@ const NodeConfigFooter = memo(props => {
         )}
       </Box>
       <Box sx={styles.actions}>
+        <Tooltip
+          title="Coming soon"
+          placement="top"
+        >
+          <Box component="span">
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.special}
+              startIcon={<SparkleIcon />}
+              disabled
+              sx={styles.buildWithAi}
+              aria-label="Build with AI"
+              data-testid="pipeline-node-panel-build-with-ai"
+            />
+          </Box>
+        </Tooltip>
         {handleDuplicateNode && (
           <Tooltip
             title={canDuplicate ? 'Duplicate node' : DEPRECATED_DUPLICATE_TOOLTIP}
@@ -154,6 +170,13 @@ const nodeConfigFooterStyles = () => ({
   icon: {
     fontSize: '1rem',
   },
+  // Disabled until the feature ships, but keeps the Build with AI look
+  buildWithAi: ({ palette }) => ({
+    '&.Mui-disabled': {
+      backgroundColor: palette.components.button.background.split.default,
+      color: palette.components.split.text.default,
+    },
+  }),
   // SVGR icons don't take sx: the wrapper sizes the 14px glyph in a 16px box and colours it
   duplicateIcon:
     isEnabled =>

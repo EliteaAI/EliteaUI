@@ -204,6 +204,16 @@ describe('NodeConfigPanel', () => {
     expect(contextValue.handleDuplicateNode).toHaveBeenCalledWith('router_1', []);
   });
 
+  it('shows Build with AI as disabled with a Coming soon tooltip', async () => {
+    renderPanel();
+    const button = screen.getByTestId('pipeline-node-panel-build-with-ai');
+
+    expect(button).toHaveAttribute('aria-label', 'Build with AI');
+    expect(button).toBeDisabled();
+    fireEvent.mouseOver(button.parentElement);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Coming soon');
+  });
+
   it.each([
     ['a deprecated type', { id: 'loop_1', type: PipelineNodeTypes.Loop, data: {} }],
     [
