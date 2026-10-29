@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react';
 
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
-import { CONTEXT_MESSAGES } from '@/[fsd]/widgets/context-budget/lib/constants';
 import { useGenerateSummaryMutation } from '@/api';
 
 /**
@@ -22,7 +21,6 @@ export const useSummarizeContext = ({ conversationId }) => {
       await generateSummary({
         projectId: selectedProjectId,
         conversationId,
-        instruction: CONTEXT_MESSAGES.DEFAULT_SUMMARY_INSTRUCTION,
       }).unwrap();
     } catch (error) {
       toastError(error?.data?.error || 'Failed to summarize context');
