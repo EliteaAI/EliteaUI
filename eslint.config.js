@@ -22,6 +22,7 @@ export default [
       '.vscode/**',
       '.github/**',
       '.storybook/**',
+      '.playwright-mcp/**',
     ],
   },
   // Base configuration
