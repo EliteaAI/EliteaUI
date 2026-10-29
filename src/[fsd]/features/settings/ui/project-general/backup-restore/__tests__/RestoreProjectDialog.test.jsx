@@ -23,6 +23,7 @@ vi.mock('@/[fsd]/features/settings/api', () => ({
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useToast: () => ({ toastWarning: mocks.toastWarning }),
+  useTextOverflow: () => ({ textRef: { current: null }, isOverflowing: false }),
 }));
 
 const theme = createTheme({ palette: lightPalette });
