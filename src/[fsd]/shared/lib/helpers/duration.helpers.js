@@ -7,6 +7,7 @@ export const formatDurationMs = ms => {
   // Round to tenths first so 59.95s+ reads "1m 00s", not "60.0s".
   const tenths = Math.round(ms / 100);
   if (tenths < 600) return `${(tenths / 10).toFixed(1)}s`;
+  // Tenths rounded up to 60s, so clamp: 59950ms must read "1m 00s", not "0m 59s".
   const totalSeconds = Math.max(60, Math.floor(ms / 1000));
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);

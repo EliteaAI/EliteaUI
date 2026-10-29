@@ -811,6 +811,8 @@ export const useChatSocket = ({
           t = msg.toolActions?.find(i => i.id === response_metadata?.tool_run_id);
           if (t && t.status !== ToolActionStatus.complete && t.status !== ToolActionStatus.actionRequired) {
             t.ended_at = message.created_at;
+            // Server-side emit time; no thinking step means no timestamp_finish.
+            t.finishedAt = message.created_at;
             t.status = ToolActionStatus.complete;
           }
 

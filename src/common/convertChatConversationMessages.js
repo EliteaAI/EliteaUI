@@ -354,7 +354,9 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
         timestamp: step.timestamp_finish || convertTime(created_at),
         startedAt: step.timestamp_start,
         finishedAt: step.timestamp_finish,
-        // Tooltip-only; hitl_deferred itself is not restored (it drives the shimmer).
+        // Tooltip-only; hitl_deferred itself is not restored (it drives the shimmer). Set only while the
+        // deferred row survives (still paused): after a resume the completed re-fire replaces it, and its
+        // own start is the resume time, so the reloaded duration excludes the wait.
         approvalWaited: !!(step.metadata?.hitl_deferred || step.tool_meta?.metadata?.hitl_deferred),
         content: step.content || '',
         type: TOOL_ACTION_TYPES.Tool,
