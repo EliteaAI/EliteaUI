@@ -6,3 +6,4 @@ export * from './projectInfoApi';
 export * from './projectSkillsSettingsApi';
 export * from './schedulePreferencesApi';
 export * from './usageApi';
+export * from './projectDataDeleteApi';

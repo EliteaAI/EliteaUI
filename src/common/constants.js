@@ -626,6 +626,9 @@ export const PERMISSIONS = {
     download: 'models.project_backup.download',
     restore: 'models.project_backup.restore',
   },
+  projectData: {
+    delete: 'models.project_data.delete',
+  },
   secrets: {
     view: 'configuration.secrets.secret.view',
     list: 'configuration.secrets.secret.list', //show/hide secrets tab

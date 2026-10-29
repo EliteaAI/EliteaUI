@@ -23,6 +23,14 @@ vi.mock('@/[fsd]/features/settings/ui/project-general/backup-restore', () => ({
   ProjectBackupRestore: () => null,
 }));
 vi.mock('@/[fsd]/features/settings/ui/project-general/general', () => ({ ProjectParamsHeader: () => null }));
+vi.mock('@/[fsd]/features/settings/ui/project-general/delete-project-data', () => ({
+  ProjectDataDelete: () => null,
+}));
+vi.mock('@/[fsd]/features/settings/lib/hooks', () => ({ useCanDeleteProjectData: () => false }));
+vi.mock('@/[fsd]/shared/lib/hooks', async importOriginal => ({
+  ...(await importOriginal()),
+  useSelectedProjectName: () => 'Project',
+}));
 vi.mock('@/[fsd]/features/settings/ui/project-general/project-ai-configurations', () => ({
   ProjectAIConfigurations: () => null,
 }));
