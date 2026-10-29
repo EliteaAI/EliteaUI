@@ -7,9 +7,7 @@ import { useFormikAutoSaveOnBlur } from '@/[fsd]/shared/lib/hooks';
 
 import MemoryContextManagement from './MemoryContextManagement';
 
-const MemoryFormContent = memo(props => {
-  const { modelList } = props;
-
+const MemoryFormContent = memo(() => {
   const styles = memoryFormContentStyles();
 
   const { onBlur, requestSubmit } = useFormikAutoSaveOnBlur();
@@ -20,10 +18,7 @@ const MemoryFormContent = memo(props => {
       onBlur={onBlur}
     >
       <Box sx={styles.container}>
-        <MemoryContextManagement
-          modelList={modelList}
-          onAutoSaveRequested={requestSubmit}
-        />
+        <MemoryContextManagement onAutoSaveRequested={requestSubmit} />
       </Box>
     </Box>
   );

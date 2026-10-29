@@ -7,9 +7,19 @@ import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import BaseCheckbox from './BaseCheckbox';
 
 const RadioButtonGroup = memo(props => {
-  const { value, defaultValue, onChange, items, wrapRow = false, columnGap, disabled, testId } = props;
+  const {
+    value,
+    defaultValue,
+    onChange,
+    items,
+    wrapRow = false,
+    columnGap,
+    disabled,
+    testId,
+    direction = 'row',
+  } = props;
   const theme = useTheme();
-  const styles = radioButtonGroupStyles(theme, wrapRow, columnGap);
+  const styles = radioButtonGroupStyles(theme, wrapRow, columnGap, direction);
 
   const onChangeHandler = useCallback(
     event => {
@@ -80,11 +90,11 @@ const RadioButtonGroup = memo(props => {
 });
 
 /** @type {MuiSx} */
-const radioButtonGroupStyles = (theme, wrapRow, columnGap) => ({
+const radioButtonGroupStyles = (theme, wrapRow, columnGap, direction) => ({
   container: {
     display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: direction,
+    alignItems: direction === 'row' ? 'center' : 'flex-start',
     rowGap: 0,
     columnGap: columnGap || '1.5rem',
     flexWrap: wrapRow ? 'wrap' : 'nowrap',
@@ -99,13 +109,13 @@ const radioButtonGroupStyles = (theme, wrapRow, columnGap) => ({
   },
   labelContainer: {
     display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: '0.625rem',
+    flexDirection: direction === 'row' ? 'row' : 'column',
+    alignItems: direction === 'row' ? 'center' : 'flex-start',
+    gap: direction === 'row' ? '0.625rem' : '0.125rem',
   },
   typographyLabel: ({ palette }) => ({
     color: palette.text.secondary,
-    mt: '0.4375rem',
+    mt: direction === 'row' ? '0.4375rem' : 0,
   }),
   infoIcon: {
     fill: theme.palette.icon.default,

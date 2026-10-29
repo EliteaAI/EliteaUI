@@ -40,7 +40,6 @@ export const PROFILE_INITIAL_VALUES = {
   context_window_mode: '',
   preserve_recent_messages: DEFAULT_CONTEXT_STRATEGY.PRESERVE_RECENT_MESSAGES,
   enable_summarization: DEFAULT_CONTEXT_STRATEGY.ENABLE_SUMMARIZATION,
-  enable_context_editing: DEFAULT_CONTEXT_STRATEGY.ENABLE_CONTEXT_EDITING,
   summary_llm_settings: {
     instructions: '',
     model_name: '',
@@ -89,7 +88,6 @@ export const serializeProfileFormData = (authorData, moduleSettingsData, default
       : '',
     preserve_recent_messages:
       cm.preserve_recent_messages ?? DEFAULT_CONTEXT_STRATEGY.PRESERVE_RECENT_MESSAGES,
-    enable_context_editing: cm.enable_context_editing ?? DEFAULT_CONTEXT_STRATEGY.ENABLE_CONTEXT_EDITING,
     enable_summarization: s.enable_summarization ?? DEFAULT_CONTEXT_STRATEGY.ENABLE_SUMMARIZATION,
     summary_llm_settings: {
       instructions: s.summary_instructions || '',
@@ -109,7 +107,6 @@ export const deserializeProfileFormData = formValues => ({
   default_context_management: {
     context_window_mode: formValues.context_window_mode || null,
     preserve_recent_messages: formValues.preserve_recent_messages,
-    enable_context_editing: formValues.enable_context_editing,
   },
   default_summarization: {
     enable_summarization: formValues.enable_summarization,
@@ -149,7 +146,6 @@ export const profileValidationSchema = yup.object({
 
   // Context Management
   context_window_mode: yup.string().oneOf(['', ...Object.values(CONTEXT_WINDOW_MODES)]),
-  enable_context_editing: yup.boolean(),
   preserve_recent_messages: yup
     .number()
     .typeError('Please enter a valid number')

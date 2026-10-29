@@ -7,41 +7,21 @@ import { Box, DialogContent, DialogTitle, IconButton, Typography } from '@mui/ma
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
-import { CONTEXT_WINDOW_COPY, SEPARATOR } from '@/[fsd]/widgets/context-budget/lib/constants';
+import { CONTEXT_WINDOW_COPY } from '@/[fsd]/widgets/context-budget/lib/constants';
 import { handleConvertToNumberChange } from '@/[fsd]/widgets/context-budget/lib/validation';
 import {
   ContextBudgetStats,
-  ContextStrategySummarization,
   ContextStrategySystemMessages,
-  ContextStrategyTokenManagement,
+  ContextWindowModeSelector,
+  ManualMaxContextTokensField,
+  SummarizationSettings,
 } from '@/[fsd]/widgets/context-budget/ui';
 import ContextAccordion from '@/[fsd]/widgets/context-budget/ui/ContextAccordion';
-import AlertDialog from '@/components/AlertDialog';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import { StyledDialogActions } from '@/components/StyledDialog';
 
-const parseModelValue = value => {
-  const [modelName, modelProjectId] = value.split(SEPARATOR);
-  return {
-    modelName,
-    modelProjectId: Number(modelProjectId),
-  };
-};
-
 const ContextStrategyModalContent = memo(props => {
-  const {
-    onClose,
-    stats,
-    conversationId,
-    expandedAccordions,
-    setExpandedAccordions,
-    showOptimizeDialog,
-    handleOptimizeCancel,
-    handleOptimizeNow,
-    isOptimizing,
-    isUpdating,
-    modelList,
-  } = props;
+  const { onClose, stats, conversationId, expandedAccordions, setExpandedAccordions, isUpdating } = props;
   const styles = componentStyles();
   const { values, errors, setFieldValue, dirty, isValid, isSubmitting, submitForm } = useFormikContext();
 
@@ -86,24 +66,8 @@ const ContextStrategyModalContent = memo(props => {
     [setFieldValue],
   );
 
-  const handleSummaryLLMInputChange = useCallback(
-    (event, field, isNumeric = false) => {
-      const value = event?.target?.value;
-
-      if (field === 'model_name') {
-        const { modelName, modelProjectId } = parseModelValue(value);
-        setFieldValue('summary_llm_settings.model_name', modelName);
-        setFieldValue('summary_llm_settings.model_project_id', modelProjectId);
-        return;
-      }
-
-      if (isNumeric) {
-        handleConvertToNumberChange(value, `summary_llm_settings.${field}`, setFieldValue);
-        return;
-      }
-
-      setFieldValue(`summary_llm_settings.${field}`, value);
-    },
+  const handleWindowModeChange = useCallback(
+    mode => setFieldValue('context_window_mode', mode),
     [setFieldValue],
   );
 
@@ -140,44 +104,37 @@ const ContextStrategyModalContent = memo(props => {
           />
 
           <ContextAccordion
-            title="Context Strategy & Token Management"
-            expanded={expandedAccordions.tokenManagement}
+            title="Context Management"
+            expanded={expandedAccordions.contextManagement}
             onChange={(e, isExpanded) =>
-              setExpandedAccordions(prev => ({ ...prev, tokenManagement: isExpanded }))
+              setExpandedAccordions(prev => ({ ...prev, contextManagement: isExpanded }))
             }
             content={
-              <ContextStrategyTokenManagement
-                formData={values}
-                errors={errors}
-                handleInputChange={handleInputChange}
-                modelWindow={stats?.modelWindow}
-                manualMaxTokensEnabled={stats?.manualMaxTokensEnabled}
-              />
+              <Box sx={styles.sectionContent}>
+                <ContextWindowModeSelector
+                  value={values.context_window_mode}
+                  onChange={handleWindowModeChange}
+                  modelWindow={stats?.modelWindow}
+                  balancedWindowTokens={stats?.balancedWindowTokens}
+                  fullWindowTokens={stats?.fullWindowTokens}
+                />
+                {stats?.manualMaxTokensEnabled && (
+                  <ManualMaxContextTokensField
+                    value={values.manual_max_context_tokens}
+                    error={errors.manual_max_context_tokens}
+                    onChange={e => handleInputChange(e, 'manual_max_context_tokens')}
+                  />
+                )}
+                <SummarizationSettings />
+              </Box>
             }
           />
 
           <ContextAccordion
-            title="Summarization"
-            expanded={expandedAccordions.summarization}
+            title="Persona Management"
+            expanded={expandedAccordions.personaManagement}
             onChange={(e, isExpanded) =>
-              setExpandedAccordions(prev => ({ ...prev, summarization: isExpanded }))
-            }
-            content={
-              <ContextStrategySummarization
-                formData={values}
-                errors={errors}
-                handleInputChange={handleInputChange}
-                handleSummaryLLMInputChange={handleSummaryLLMInputChange}
-                modelList={modelList}
-              />
-            }
-          />
-
-          <ContextAccordion
-            title="User Instructions"
-            expanded={expandedAccordions.systemMessages}
-            onChange={(e, isExpanded) =>
-              setExpandedAccordions(prev => ({ ...prev, systemMessages: isExpanded }))
+              setExpandedAccordions(prev => ({ ...prev, personaManagement: isExpanded }))
             }
             content={
               <ContextStrategySystemMessages
@@ -214,17 +171,6 @@ const ContextStrategyModalContent = memo(props => {
           {isUpdating ? 'Saving...' : 'Save'}
         </Button.BaseBtn>
       </StyledDialogActions>
-
-      <AlertDialog
-        open={showOptimizeDialog}
-        onClose={handleOptimizeCancel}
-        onCancel={handleOptimizeCancel}
-        onConfirm={handleOptimizeNow}
-        alarm
-        title="Warning"
-        alertContent="This will optimize context by pruning messages. This can't be undone. Continue?"
-        confirming={isOptimizing}
-      />
     </>
   );
 });
@@ -282,23 +228,11 @@ const componentStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
   },
-  warningBanner: ({ palette }) => ({
+  sectionContent: {
     display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    padding: '0.5rem 1rem',
-    backgroundColor: `${palette.warning.high}14`,
-    borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.warning.high}66`,
-    marginTop: '1rem',
-    marginBottom: '0.25rem',
-  }),
-  warningText: ({ palette }) => ({
-    flex: 1,
-    color: palette.text.secondary,
-  }),
-  summarizeButton: {
-    flexShrink: 0,
+    flexDirection: 'column',
+    gap: '1rem',
+    paddingRight: '1rem',
   },
   footerNote: {
     flex: 1,

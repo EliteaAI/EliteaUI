@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { memo, useEffect, useMemo, useState } from 'react';
 
 import { Form, Formik } from 'formik';
 
@@ -6,11 +6,7 @@ import { useDefaultModel, useSelectedProjectId, useToast } from '@/[fsd]/shared/
 import { useContextStrategySubmit } from '@/[fsd]/widgets/context-budget/lib/hooks';
 import { serializeFormData } from '@/[fsd]/widgets/context-budget/lib/utils';
 import { contextStrategyValidationSchema } from '@/[fsd]/widgets/context-budget/lib/validation';
-import {
-  useConversationEditMutation,
-  useOptimizeContextMutation,
-  useUpdateContextStrategyMutation,
-} from '@/api';
+import { useConversationEditMutation, useUpdateContextStrategyMutation } from '@/api';
 import { StyledDialog } from '@/components/StyledDialog';
 
 import ContextStrategyModalContent from './ContextStrategyModalContent';
@@ -21,10 +17,8 @@ const ContextStrategyModal = memo(props => {
     onClose,
     conversationId,
     contextStrategy,
-    currentContextStatus,
     setActiveConversation,
     stats,
-    isHighUtilization,
     conversationInstructions,
     persona: conversationPersona,
   } = props;
@@ -33,14 +27,11 @@ const ContextStrategyModal = memo(props => {
   const selectedProjectId = useSelectedProjectId();
   const [updateContextStrategy, { isLoading: isUpdating }] = useUpdateContextStrategyMutation();
   const [updateConversation] = useConversationEditMutation();
-  const [optimizeContext, { isLoading: isOptimizing }] = useOptimizeContextMutation();
-  const { modelList, defaultModel } = useDefaultModel();
+  const { defaultModel } = useDefaultModel();
 
-  const [showOptimizeDialog, setShowOptimizeDialog] = useState(false);
   const [expandedAccordions, setExpandedAccordions] = useState({
-    tokenManagement: false,
-    summarization: false,
-    systemMessages: false,
+    contextManagement: false,
+    personaManagement: false,
   });
 
   const initialValues = useMemo(
@@ -58,9 +49,8 @@ const ContextStrategyModal = memo(props => {
   useEffect(() => {
     if (open) {
       setExpandedAccordions({
-        tokenManagement: true,
-        summarization: true,
-        systemMessages: true,
+        contextManagement: true,
+        personaManagement: true,
       });
     }
   }, [open]);
@@ -75,20 +65,6 @@ const ContextStrategyModal = memo(props => {
     setActiveConversation,
     toastError,
   });
-
-  const handleOptimizeNow = useCallback(async () => {
-    try {
-      setShowOptimizeDialog(false);
-      await optimizeContext({
-        projectId: selectedProjectId,
-        conversationId,
-        target_tokens: currentContextStatus?.compaction_threshold,
-      }).unwrap();
-    } catch (error) {
-      toastError(error?.data?.error || 'Failed to optimize context');
-      setShowOptimizeDialog(false);
-    }
-  }, [selectedProjectId, conversationId, optimizeContext, currentContextStatus, toastError]);
 
   return (
     <StyledDialog
@@ -108,16 +84,9 @@ const ContextStrategyModal = memo(props => {
             onClose={onClose}
             stats={stats}
             conversationId={conversationId}
-            isHighUtilization={isHighUtilization}
             expandedAccordions={expandedAccordions}
             setExpandedAccordions={setExpandedAccordions}
-            showOptimizeDialog={showOptimizeDialog}
-            handleOptimizeClick={() => setShowOptimizeDialog(true)}
-            handleOptimizeCancel={() => setShowOptimizeDialog(false)}
-            handleOptimizeNow={handleOptimizeNow}
-            isOptimizing={isOptimizing}
             isUpdating={isUpdating}
-            modelList={modelList}
           />
         </Form>
       </Formik>

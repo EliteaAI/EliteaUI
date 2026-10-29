@@ -3,13 +3,18 @@ import { memo } from 'react';
 import { Box } from '@mui/material';
 
 import { useIsSmallWindow, useModal } from '@/[fsd]/shared/lib/hooks';
+import { CONTEXT_MESSAGES, CONTEXT_WINDOW_COPY } from '@/[fsd]/widgets/context-budget/lib/constants';
+import { useSummarizeContext } from '@/[fsd]/widgets/context-budget/lib/hooks';
 import {
   ContextBudgetDetails,
   ContextBudgetHeader,
   ContextBudgetProgress,
   ContextBudgetStatsDisplay,
+  ContextHighUsageBanner,
   ContextStrategyModal,
+  ContextWindowModeSelector,
 } from '@/[fsd]/widgets/context-budget/ui';
+import AlertDialog from '@/components/AlertDialog';
 
 const ContextBudgetExpanded = memo(props => {
   const {
@@ -19,7 +24,6 @@ const ContextBudgetExpanded = memo(props => {
     onSwitchMode,
     isSwitching,
     conversationId,
-    contextStatus,
     contextStrategy,
     setActiveConversation,
     conversationInstructions,
@@ -29,6 +33,13 @@ const ContextBudgetExpanded = memo(props => {
   const { isOpen, handleOpen, handleClose } = useModal();
   const { isSmallWindow } = useIsSmallWindow();
   const styles = contextBudgetExpandedStyles(isSmallWindow);
+  const {
+    isDialogOpen: isSummarizeDialogOpen,
+    openDialog: openSummarizeDialog,
+    closeDialog: closeSummarizeDialog,
+    confirmSummarize,
+    isOptimizing: isSummarizing,
+  } = useSummarizeContext({ conversationId });
 
   return (
     <Box
@@ -40,11 +51,32 @@ const ContextBudgetExpanded = memo(props => {
         canEdit={canEdit}
       />
 
+      <Box sx={styles.selectorRow}>
+        <ContextWindowModeSelector
+          layout="stacked"
+          value={stats.windowMode}
+          onChange={onSwitchMode}
+          disabled={!canEdit || isSwitching}
+          disabledReason={!canEdit ? CONTEXT_WINDOW_COPY.NO_PERMISSION : undefined}
+          balancedWindowTokens={stats.balancedWindowTokens}
+          fullWindowTokens={stats.fullWindowTokens}
+        />
+      </Box>
+
       <ContextBudgetProgress
-        tokensDisplay={stats.tokensDisplay}
+        stats={stats}
         utilizationPercentage={stats.utilizationPercentage}
         isHighUtilization={isHighUtilization}
       />
+
+      {isHighUtilization && (
+        <ContextHighUsageBanner
+          isSummarizationEnabled={contextStrategy?.enable_summarization !== false}
+          canEdit={canEdit}
+          isSummarizing={isSummarizing}
+          onSummarize={openSummarizeDialog}
+        />
+      )}
 
       <ContextBudgetStatsDisplay
         stats={stats}
@@ -55,24 +87,28 @@ const ContextBudgetExpanded = memo(props => {
         conversationId={conversationId}
       />
 
-      <ContextBudgetDetails
-        stats={stats}
-        canEdit={canEdit}
-        onSwitchMode={onSwitchMode}
-        isSwitching={isSwitching}
-      />
+      <ContextBudgetDetails stats={stats} />
 
       <ContextStrategyModal
         open={isOpen}
         onClose={handleClose}
         conversationId={conversationId}
-        currentContextStatus={contextStatus}
         contextStrategy={contextStrategy}
         setActiveConversation={setActiveConversation}
         stats={stats}
-        isHighUtilization={isHighUtilization}
         conversationInstructions={conversationInstructions}
         persona={persona}
+      />
+
+      <AlertDialog
+        open={isSummarizeDialogOpen}
+        onClose={closeSummarizeDialog}
+        onCancel={closeSummarizeDialog}
+        onConfirm={confirmSummarize}
+        alarm
+        title="Warning"
+        alertContent={CONTEXT_MESSAGES.SUMMARIZE_CONFIRM}
+        confirming={isSummarizing}
       />
     </Box>
   );
@@ -91,6 +127,9 @@ const contextBudgetExpandedStyles = isSmallWindow => ({
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
   }),
+  selectorRow: {
+    padding: '0.5rem 1rem 0',
+  },
   statRow: {
     display: 'flex',
     flexDirection: 'row',
