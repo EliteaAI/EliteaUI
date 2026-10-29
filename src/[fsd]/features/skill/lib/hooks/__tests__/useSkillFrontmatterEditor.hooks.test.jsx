@@ -577,7 +577,7 @@ describe('useSkillFrontmatterEditor ELITEA fields mirrored from the export', () 
     expect(result.current.formik.values.version_details.run_settings.llm_settings).toMatchObject({
       model_name: null,
       temperature: null,
-      max_tokens: null,
+      max_tokens: -1,
     });
   });
 

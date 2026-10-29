@@ -47,6 +47,14 @@ describe('encodeEliteaMetadata', () => {
     });
   });
 
+  it('leaves out the default max tokens, as the server export does', () => {
+    expect(
+      encodeEliteaMetadata({ runSettings: { llm_settings: { model_name: 'gpt-4.1', max_tokens: -1 } } }),
+    ).toEqual({
+      'elitea-model': 'gpt-4.1',
+    });
+  });
+
   it('writes nothing for a base version without tags or run settings', () => {
     expect(encodeEliteaMetadata({ tags: [], versionName: 'base', runSettings: null })).toEqual({});
   });
@@ -154,6 +162,10 @@ describe('applyEliteaMetadataEdits', () => {
       0.5,
     );
     expect(edit({ ...UNCHANGED, 'elitea-temperature': 0.7 }).runSettings.llm_settings.temperature).toBe(0.7);
+  });
+
+  it('sets max tokens back to Auto when the line is deleted', () => {
+    expect(edit(withoutKey(UNCHANGED, 'elitea-max-tokens')).runSettings.llm_settings.max_tokens).toBe(-1);
   });
 
   it('accepts -1, the default max tokens', () => {

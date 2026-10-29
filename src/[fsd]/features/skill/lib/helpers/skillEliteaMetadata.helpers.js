@@ -47,7 +47,10 @@ export const encodeEliteaMetadata = ({ tags, versionName, runSettings }) => {
     [ELITEA_METADATA_KEYS.version, versionName && versionName !== BASE_VERSION_NAME ? versionName : null],
     [ELITEA_METADATA_KEYS.model, formatOptional(llmSettings.model_name)],
     [ELITEA_METADATA_KEYS.temperature, formatOptional(llmSettings.temperature)],
-    [ELITEA_METADATA_KEYS.maxTokens, formatOptional(llmSettings.max_tokens)],
+    [
+      ELITEA_METADATA_KEYS.maxTokens,
+      llmSettings.max_tokens === DEFAULT_MAX_TOKENS ? null : formatOptional(llmSettings.max_tokens),
+    ],
     [ELITEA_METADATA_KEYS.reasoningEffort, formatOptional(llmSettings.reasoning_effort)],
     [
       ELITEA_METADATA_KEYS.modelSelection,
@@ -212,13 +215,19 @@ export const applyEliteaMetadataEdits = ({ textMetadata, formMetadata, tags, run
   }
 
   const numericFields = [
-    [ELITEA_METADATA_KEYS.temperature, 'temperature', Number.isFinite, 'a number'],
-    [ELITEA_METADATA_KEYS.maxTokens, 'max_tokens', isMaxTokens, 'a positive integer or -1 for the default'],
+    [ELITEA_METADATA_KEYS.temperature, 'temperature', Number.isFinite, 'a number', null],
+    [
+      ELITEA_METADATA_KEYS.maxTokens,
+      'max_tokens',
+      isMaxTokens,
+      'a positive integer or -1 for the default',
+      DEFAULT_MAX_TOKENS,
+    ],
   ];
-  numericFields.forEach(([key, field, isValid, expectation]) => {
+  numericFields.forEach(([key, field, isValid, expectation, valueWhenRemoved]) => {
     if (!isChanged(key)) return;
     const parsed = isRemoved(key)
-      ? { value: null }
+      ? { value: valueWhenRemoved }
       : recordError(parseNumber(textMetadata[key], key, isValid, expectation));
     if (parsed.error) return;
     llmSettingsUpdate = { ...llmSettingsUpdate, [field]: parsed.value };
