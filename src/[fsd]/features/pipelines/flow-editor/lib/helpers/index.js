@@ -24,3 +24,4 @@ export * as NodeRenameHelpers from './nodeRename.helpers';
 export * as NodeYamlHelpers from './nodeYaml.helpers';
 export * as InputMappingHelpers from './inputMapping.helpers';
 export * as NodeFieldInfoHelpers from './nodeFieldInfo.helpers';
+export * as NodeDocsHelpers from './nodeDocs.helpers';

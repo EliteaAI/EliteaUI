@@ -5,3 +5,4 @@ export { ValidationErrors } from './validation.constants';
 export * as WebhookConstants from './webhook.constants';
 export * as NodePanelConstants from './nodePanel.constants';
 export * as NodeFieldInfoConstants from './nodeFieldInfo.constants';
+export * as NodeDocsConstants from './nodeDocs.constants';

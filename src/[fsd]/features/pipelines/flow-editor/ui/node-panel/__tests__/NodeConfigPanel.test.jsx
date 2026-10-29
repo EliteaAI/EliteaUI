@@ -118,6 +118,42 @@ describe('NodeConfigPanel', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it('links to the node type documentation in a new tab', () => {
+    const { onClose } = renderPanel();
+
+    const docsLink = screen.getByTestId('pipeline-node-panel-docs');
+    expect(docsLink).toHaveAttribute(
+      'href',
+      'https://docs.elitea.ai/how-tos/pipelines/nodes/control-flow-nodes#router-node',
+    );
+    expect(docsLink).toHaveAttribute('target', '_blank');
+    expect(docsLink).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(docsLink).toHaveAttribute('aria-label', 'Open Router node documentation');
+
+    fireEvent.click(docsLink);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('links a deprecated node to its migration guide', () => {
+    renderPanel({ flowNode: { id: 'function_1', type: PipelineNodeTypes.Function, data: {} } });
+
+    const docsLink = screen.getByTestId('pipeline-node-panel-docs');
+    expect(docsLink).toHaveAttribute(
+      'href',
+      'https://docs.elitea.ai/migration/v2.0.1/function-node-migration',
+    );
+    expect(docsLink).toHaveAttribute('aria-label', 'Open migration guide');
+  });
+
+  it('keeps the documentation link in read-only mode and during a run', () => {
+    renderPanel({ context: { disabled: true, isRunningPipeline: true } });
+
+    expect(screen.getByTestId('pipeline-node-panel-docs')).toHaveAttribute(
+      'href',
+      'https://docs.elitea.ai/how-tos/pipelines/nodes/control-flow-nodes#router-node',
+    );
+  });
+
   it('makes the node the entrypoint and confirms it with a toast', () => {
     const { contextValue } = renderPanel();
 
