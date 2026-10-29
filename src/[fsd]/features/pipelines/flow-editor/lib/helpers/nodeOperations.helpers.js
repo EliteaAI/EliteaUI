@@ -1,5 +1,3 @@
-import { deepClone } from '@mui/x-data-grid/internals';
-
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 
 import { getNodeNameError } from './nodeRename.helpers';
@@ -65,4 +63,4 @@ export const clearNodeConnections = yamlNode => {
 };
 
 export const duplicateYamlNode = (yamlNode, newId) =>
-  clearNodeConnections({ ...deepClone(yamlNode), id: newId });
+  clearNodeConnections({ ...structuredClone(yamlNode), id: newId });
