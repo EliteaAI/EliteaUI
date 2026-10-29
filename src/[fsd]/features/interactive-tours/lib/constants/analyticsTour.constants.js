@@ -80,10 +80,10 @@ The **Agent & Pipeline Activity** table lists all agents and pipelines with tota
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
     title: 'Skills Tab',
-    content: `The **Skills** tab shows how skills are used in the project. Summary cards count skill runs, the skills used, in-agent uses, and the cost of skill runs.
+    content: `The **Skills** tab shows how skills are used in the project. Summary cards count skill runs, the skills used, agent & chat uses, and the cost of skill runs.
 
 - **Runs** — a skill run on its own or as a chat participant; runs carry their own tokens and cost
-- **In-agent uses** — an agent loaded or mentioned the skill; these have no tokens or cost of their own, because they are part of the agent's calls
+- **Agent & chat uses** — the skill was used inside an agent or chat (mentioned in a message or loaded by the model); these have no tokens or cost of their own, because they are part of that agent's or chat's calls
 
 Click any skill to open a drill-down with a daily trend, version, model, user, and trigger breakdowns, the agents using it, and its recent runs.`,
   },

@@ -38,6 +38,11 @@ export const TRIGGER_SOURCE_LABELS = {
 // Embedding calls are metered as llm events, so every token, call and cost figure covers both (#6878)
 const MODEL_REQUESTS = 'LLM and embedding model requests';
 const EMBEDDING_OUTPUT_NOTE = 'Embedding model requests produce no output tokens.';
+const SKILL_AGENT_CHAT_USES =
+  'Times a skill was used inside an agent or chat during the selected date range, because it was mentioned in a message or the model loaded it. Counted once per skill per reply for each way it was used. Uses add no tokens or cost here; that cost is on the agent or chat.';
+const SKILL_AGENTS_USING =
+  'Different Agents that used this skill. An Agent that runs inside a Pipeline counts as that Pipeline. Chats with only a model are not counted. One agent using it 10 times counts as 1.';
+const SKILL_USERS = 'Distinct users who ran this skill or used it in an agent or chat.';
 
 export const SKILL_SOURCE_LABELS = {
   load_skill: 'Loaded by the agent',
@@ -84,7 +89,7 @@ export const TOOLTIP_TEXTS = {
     AGENT_PIPELINE_RUNS:
       'Total Agent and Pipeline runs. Each initial run and every continuation after a static or dynamic interrupt is counted as a separate run.',
     SKILL_RUNS:
-      'Total skill runs during the selected date range: a skill run on its own or as a chat participant. Each reply the skill generates is one run. A skill loaded or mentioned by an agent is part of that Agent or Pipeline run and is not counted here.',
+      'Total skill runs during the selected date range: a skill run on its own or as a chat participant. Each reply the skill generates is one run. A skill used inside an Agent or chat is part of that run and is not counted here.',
     TOKENS: `Total input and output tokens used by ${MODEL_REQUESTS} during the selected date range.`,
     COST: `Estimated USD cost of ${MODEL_REQUESTS} during the selected date range. Costs are calculated from the platform's local model-price table and may differ from provider invoices.`,
     LEADERBOARD:
@@ -115,7 +120,7 @@ export const TOOLTIP_TEXTS = {
     BY_AGENT_PIPELINE:
       'Shows estimated LLM cost attributed to Agents and Pipelines during the selected date range. Evaluation runs are excluded and shown in Cost by Evaluation.',
     BY_SKILL:
-      'Shows estimated LLM cost of skill runs during the selected date range. Skills loaded or mentioned by an agent add no cost of their own and are included in Cost by Agent & Pipeline.',
+      'Shows estimated LLM cost of skill runs during the selected date range. Skills used inside agents or chats add no cost of their own; that cost is counted on the agent or chat.',
     BY_EVALUATION:
       'Shows estimated LLM cost of evaluation runs by the evaluated Agent or Pipeline version, including judge calls. Share is relative to the total evaluation cost.',
     TOTAL_TOKENS: `Combined number of input and output tokens used by ${MODEL_REQUESTS} during the selected date range.`,
@@ -135,7 +140,7 @@ export const TOOLTIP_TEXTS = {
     BY_MODEL: 'Shows token usage for each AI model used in the selected date range.',
     BY_AGENT_PIPELINE: 'Shows token usage attributed to Agents and Pipelines during the selected date range.',
     BY_SKILL:
-      'Shows token usage of skill runs during the selected date range. Tokens used after an agent loads a skill are attributed to that Agent or Pipeline.',
+      'Shows token usage of skill runs during the selected date range. Skills used inside agents or chats add no tokens of their own; those tokens are counted on the agent or chat.',
   },
   agents: {
     CHAT_MESSAGES:
@@ -172,33 +177,37 @@ export const TOOLTIP_TEXTS = {
     ERRORS: 'Responses in which at least one model or tool call failed.',
   },
   skills: {
-    RUNS: 'Skill runs during the selected date range: a skill run on its own or as a chat participant. Each reply the skill generates is one run.',
-    SKILLS_USED: 'Number of skills that ran or were used by an agent during the selected date range.',
-    IN_AGENT_USES:
-      'Times an agent loaded or mentioned a skill during the selected date range. One use is one skill activation in one agent run.',
-    COST: 'Estimated USD cost of skill runs. In-agent uses have no cost of their own: the agent pays for the skill as part of its own model calls.',
-    MOST_USED: 'Skills with the most runs and in-agent uses during the selected date range.',
-    ACTIVITY_COUNT: 'Number of skills with recorded runs or in-agent uses during the selected date range.',
+    RUNS: 'Times a skill answered by itself during the selected date range: from its Run panel, as a chat participant, or through the API or MCP. Each reply is one run, with its own tokens and cost.',
+    SKILLS_USED:
+      'Number of different skills that were run or used in an agent or chat during the selected date range. Each skill counts once, however many times it was used.',
+    IN_AGENT_USES: SKILL_AGENT_CHAT_USES,
+    AGENTS_USING: SKILL_AGENTS_USING,
+    USERS: SKILL_USERS,
+    COST: 'Total estimated cost of all skill runs during the selected date range. Each model call is priced by the model it used. Uses inside agents or chats are not included; that cost is on the agent or chat.',
+    MOST_USED: 'Skills with the most runs and agent & chat uses during the selected date range.',
+    ACTIVITY_COUNT:
+      'Skills in the table below that were run or used during the selected date range. Follows the search.',
   },
   skillDetail: {
-    RUNS: 'Runs of this skill on its own or as a chat participant during the selected date range.',
-    IN_AGENT_USES: 'Times an agent loaded or mentioned this skill during the selected date range.',
-    UNIQUE_USERS: 'Number of distinct users who ran this skill or used it through an agent.',
-    AGENTS_USING: 'Number of distinct Agents and Pipelines that loaded or mentioned this skill.',
-    TOTAL_COST: 'Estimated USD cost of this skill’s runs. In-agent uses add no cost of their own.',
-    TOTAL_TOKENS: 'Tokens used by this skill’s runs. In-agent uses add no tokens of their own.',
+    RUNS: 'Runs of this skill on its own, as a chat participant, or through the API or MCP during the selected date range.',
+    IN_AGENT_USES:
+      'Times this skill was used inside an agent or chat during the selected date range, mentioned in a message or loaded by the model.',
+    UNIQUE_USERS: SKILL_USERS,
+    AGENTS_USING: SKILL_AGENTS_USING,
+    TOTAL_COST: 'Estimated USD cost of this skill’s runs. Agent & chat uses add no cost of their own.',
+    TOTAL_TOKENS: 'Tokens used by this skill’s runs. Agent & chat uses add no tokens of their own.',
     AVG_LATENCY: 'Average duration of the model calls made by this skill’s runs.',
     ERRORS: 'Number of this skill’s runs that ended with a detected error.',
     AVG_BODY_TOKENS:
-      'Estimated average size, in tokens, of the skill instructions an agent received on each in-agent use.',
-    VERSIONS:
-      'Runs and in-agent uses per skill version. Unknown version means the agent did not record which version it used.',
+      'Estimated average size, in tokens, of the skill instructions added to the prompt on each use.',
+    VERSIONS: 'Runs and uses per skill version. Unknown version means the version was not recorded.',
     MODELS: 'Model calls made by this skill’s runs, per model.',
-    USERS: 'Users who ran this skill or used it through an agent.',
+    USERS: SKILL_USERS,
     TRIGGERS:
       'How the runs and uses started: Chat, API, MCP, Webhook, Scheduled, Schedule run now, or Index runs.',
-    AGENTS: 'Agents and Pipelines that loaded or mentioned this skill, by number of uses.',
-    SOURCES: 'How agents activated this skill: loaded on demand (load_skill) or mentioned in the message.',
+    AGENTS:
+      'Agents that used this skill, by number of uses. An Agent that runs inside a Pipeline is listed as that Pipeline.',
+    SOURCES: 'How this skill was used: loaded on demand (load_skill) or mentioned in the message.',
     RECENT_RUNS: 'The latest runs of this skill. Open a run to see its own analytics.',
   },
   agentDetail: {
@@ -226,7 +235,7 @@ export const TOOLTIP_TEXTS = {
     TOOLS_SECTION:
       'Number of distinct tools, including nested sub-agents and sub-pipelines, used by this Agent or Pipeline during the selected date range.',
     SKILLS_SECTION:
-      'Skills this Agent or Pipeline loaded or mentioned during the selected date range. Uses counts every activation; one run can use a skill more than once.',
+      "Skills used in this Agent's runs, or by the Agents inside this Pipeline, during the selected date range, loaded by the model or mentioned in a message. Counted once per skill per run for each way it was used.",
     VERSIONS_SECTION:
       'Shows runs, token usage, and estimated cost by the Agent or Pipeline version used during execution.',
     MODELS_SECTION:
@@ -559,10 +568,9 @@ export const GUIDE_SECTIONS = [
         calculation: 'Distinct runs among the model calls whose root entity is the skill.',
       },
       {
-        name: 'In-Agent Uses',
-        description:
-          'An agent uses a skill when it loads the skill on demand (load_skill) or the user mentions the skill in a message. One use is one skill activation in one agent run. In-agent uses show no tokens or cost: the skill instructions are part of the agent’s own model calls, so they are counted on the agent.',
-        calculation: 'Count of skill activation events.',
+        name: 'Agent & Chat Uses',
+        description: SKILL_AGENT_CHAT_USES,
+        calculation: 'Skill use events, once per skill per run for each way it was used.',
       },
       {
         name: 'Tokens and Cost',
@@ -687,7 +695,7 @@ export const GUIDE_SECTIONS = [
 export const SKILLS_EMPTY_STATE = {
   title: 'No skill usage in this period',
   description:
-    'Skills appear here once they are used. Run a skill from the Skills page, add it to a chat as a participant, or attach it to an agent so the agent can load it.',
+    'Skills appear here once they are used. Run a skill from the Skills page, add it to a chat as a participant, or attach it to an agent so it can be loaded when needed.',
 };
 
 export const RUN_NO_DATA_MESSAGE = 'No analytics data is available for this run.';

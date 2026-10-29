@@ -122,7 +122,7 @@ describe('AnalyticsSkills', () => {
     [
       'Skill',
       'Runs',
-      'In-Agent Uses',
+      'Agent & Chat Uses',
       'Users',
       'Agents Using',
       'Avg Latency',
@@ -135,7 +135,7 @@ describe('AnalyticsSkills', () => {
     expect(within(first).getByTestId('analytics-skills-row-runs')).toHaveTextContent('52');
     expect(within(first).getByTestId('analytics-skills-row-in_agent_uses')).toHaveTextContent('3');
     expect(within(second).getByTestId('analytics-skills-row-in_agent_uses')).toHaveTextContent('7');
-    expect(within(second).getByTestId('analytics-skills-row-total_tokens')).toHaveTextContent('0');
+    expect(within(second).getByTestId('analytics-skills-row-total_tokens')).toHaveTextContent('—');
   });
 
   it('marks a deleted skill with its last known name', () => {
