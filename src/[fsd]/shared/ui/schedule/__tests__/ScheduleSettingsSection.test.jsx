@@ -275,6 +275,26 @@ describe('ScheduleSettingsSection opening tab', () => {
     );
   });
 
+  it('links the Builder tab to the hint while it is disabled', () => {
+    renderSection({ initial: '0 * * * *' });
+
+    const hint = screen.getByTestId('pipeline-schedule-builder-blocked-hint');
+    expect(hint.id).not.toBe('');
+    expect(screen.getByText('Builder')).toHaveAttribute('aria-describedby', hint.id);
+  });
+
+  it('keeps the Builder tab enabled and shows no hint while the text is half-typed', () => {
+    renderSection({ initial: '30 9 * * *' });
+    openCronTab();
+
+    ['30 9 *', '30 9 * * x'].forEach(text => {
+      fireEvent.change(screen.getByTestId('pipeline-schedule-cron-input'), { target: { value: text } });
+
+      expect(screen.getByText('Builder')).toBeEnabled();
+      expect(screen.queryByTestId('pipeline-schedule-builder-blocked-hint')).not.toBeInTheDocument();
+    });
+  });
+
   it('enables the Builder tab again when the text becomes a daily time', () => {
     renderSection({ initial: '0 * * * *' });
 

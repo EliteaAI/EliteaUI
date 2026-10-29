@@ -5,7 +5,7 @@ import { Link as RouterLink, useLocation, useNavigate, useParams, useSearchParam
 import { Box, Link } from '@mui/material';
 
 import { RunHistoryContainer, SCHEDULE_RUN_COLUMNS } from '@/[fsd]/entities/run-history';
-import { buildScheduleFormLink, useAllEntitySchedules } from '@/[fsd]/entities/schedule';
+import { buildOwnerViewModeParams, buildScheduleFormLink, useAllEntitySchedules } from '@/[fsd]/entities/schedule';
 import { ChatMessageList } from '@/[fsd]/features/chat';
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
@@ -15,7 +15,7 @@ import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useApplicationDetailsQuery } from '@/api/applications';
-import { SearchParams, ViewMode } from '@/common/constants';
+import { SearchParams } from '@/common/constants';
 
 const DEFAULT_TAB = 'all';
 const SCHEDULE_ID_PARAM = 'schedule_id';
@@ -96,7 +96,7 @@ const RunHistoryPage = memo(props => {
               scheduleId,
             }),
             // Without the owner view mode the editor falls back to the public mode and fails to load
-            search: `?${SearchParams.ViewMode}=${ViewMode.Owner}`,
+            search: `?${buildOwnerViewModeParams()}`,
           }}
           onClick={event => event.stopPropagation()}
           // A cut name shows in full on hover

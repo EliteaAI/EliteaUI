@@ -20,6 +20,10 @@ const ENTITY_ROUTES = {
 
 const DEFAULT_TAB = 'all';
 
+// The entity pages fall back to the public mode without the owner view mode, so every link into them adds it
+export const buildOwnerViewModeParams = (params = {}) =>
+  new URLSearchParams({ ...params, [SearchParams.ViewMode]: ViewMode.Owner });
+
 export const buildEntityEditorLink = ({ entityType, entityId, tab = DEFAULT_TAB }) =>
   NavigationHelpers.buildRoute(ENTITY_ROUTES[entityType].editor, { tab, agentId: entityId });
 
@@ -39,7 +43,7 @@ export const buildScheduleRunsLink = ({ entityType, entityId, tab, scheduleId })
   entityType
     ? {
         pathname: buildScheduleFormLink({ entityType, entityId, tab, scheduleId }),
-        search: `?${new URLSearchParams({ [SearchParams.ViewMode]: ViewMode.Owner })}`,
+        search: `?${buildOwnerViewModeParams()}`,
         hash: '#runs',
       }
     : { pathname: `${RouteDefinitions.Schedules}/${scheduleId}`, hash: '#runs' };
@@ -56,9 +60,6 @@ export const buildScheduleHistoryLink = schedule => {
     tab: DEFAULT_TAB,
     agentId: schedule.application_id,
   });
-  const query = new URLSearchParams({
-    schedule_id: schedule.id,
-    [SearchParams.ViewMode]: ViewMode.Owner,
-  }).toString();
+  const query = buildOwnerViewModeParams({ schedule_id: schedule.id }).toString();
   return `${base}?${query}`;
 };

@@ -1,4 +1,4 @@
-import { memo, useEffect, useId, useMemo, useState } from 'react';
+import { memo, useId, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
@@ -13,13 +13,18 @@ import CronBuilder from './CronBuilder';
 
 const { canConvertCronTimezone, getBrowserTimezone, getNextCronRun, validateCronExpression } =
   ScheduleHelpers;
-const { canBuildCron } = CronBuilderHelpers;
+const { canBuildCron, parseCron } = CronBuilderHelpers;
 
 const BUILDER_BLOCKED_HINT =
   'The Builder cannot show this expression. Edit it as text, or enter a daily time.';
 
-const getViewButtons = builderBlocked => [
-  { value: 'builder', label: 'Builder', buttonProps: { disabled: builderBlocked } },
+const getViewButtons = (builderBlocked, hintId) => [
+  {
+    value: 'builder',
+    label: 'Builder',
+    // A disabled tab cannot take focus, so the hint is linked to it for screen readers
+    buttonProps: { disabled: builderBlocked, 'aria-describedby': builderBlocked ? hintId : undefined },
+  },
   { value: 'cron', label: 'Cron expression' },
 ];
 
@@ -37,20 +42,25 @@ const ScheduleSettingsSection = memo(props => {
   // A saved cron the Builder cannot show opens as text, so the form never shows another schedule
   const [cronType, setCronType] = useState(() => (!value || canBuildCron(value) ? 'builder' : 'cron'));
 
-  // The Builder would show a made-up default for an expression it cannot read
-  const builderBlocked = Boolean(value) && !canBuildCron(value);
+  const cronState = useMemo(() => validateCronExpression(value), [value]);
 
-  useEffect(() => {
-    if (builderBlocked) setCronType('cron');
-  }, [builderBlocked]);
-
-  const viewButtons = useMemo(() => getViewButtons(builderBlocked), [builderBlocked]);
+  // The Builder would show a made-up default for an expression it cannot read. Text that is still
+  // half-typed does not parse as a cron, so it never blocks the tab and the tab does not flicker per keystroke.
+  // A complete cron that breaks only the once-per-day rule is not valid, but it must still block.
+  const builderBlocked = useMemo(
+    () => Boolean(value) && parseCron(value) !== null && !canBuildCron(value),
+    [value],
+  );
 
   const errorId = useId();
+  const builderHintId = useId();
+
+  const viewButtons = useMemo(
+    () => getViewButtons(builderBlocked, builderHintId),
+    [builderBlocked, builderHintId],
+  );
 
   const browserTimezone = useMemo(() => getBrowserTimezone(), []);
-
-  const cronState = useMemo(() => validateCronExpression(value), [value]);
 
   // Decided from the stored cron, never from the edited value, which is already converted.
   const timezoneNotice = useMemo(() => {
@@ -109,6 +119,7 @@ const ScheduleSettingsSection = memo(props => {
 
       {builderBlocked && (
         <Typography
+          id={builderHintId}
           data-testid={`${testIdPrefix}-builder-blocked-hint`}
           variant="labelSmall"
           sx={styles.builderBlockedHint}

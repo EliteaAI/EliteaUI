@@ -24,6 +24,7 @@ export const TabGroupButton = props => (
         key={item.value}
         type="button"
         disabled={item.buttonProps?.disabled}
+        aria-describedby={item.buttonProps?.['aria-describedby']}
         onClick={event => props.onChange(event, item.value)}
       >
         {item.label}
