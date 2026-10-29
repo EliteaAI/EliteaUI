@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 import { Box, IconButton, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { useDisassociateToolkit, useSaveAgentToolVariables } from '@/[fsd]/features/agent/lib/hooks';
+import { parseValidationRefusal } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpLogInButton, McpLogoutButton } from '@/[fsd]/features/mcp/ui';
@@ -17,7 +18,7 @@ import { SharepointDelegatedLoginButton } from '@/[fsd]/features/sharepoint/ui';
 import { ToolkitFormHelpers, ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { useSearchParamValue, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
-import { Banner, Modal } from '@/[fsd]/shared/ui';
+import { Banner, Chip, Modal } from '@/[fsd]/shared/ui';
 import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import AttachIcon from '@/assets/attach-icon.svg?react';
@@ -300,8 +301,12 @@ const ToolCard = memo(props => {
   const openTooltipText = `Open ${entityTypeLabel} in new tab`;
   const removeTooltipText = `Remove ${entityTypeLabel}`;
 
+  // a credential refused by governance (#7281): its text and code, for a toolkit and for an agent that nests one
+  const governedRefusal = useMemo(() => parseValidationRefusal(validationInfo), [validationInfo]);
+
   const toolValidationMessage = useMemo(() => {
     if (!validationInfo) return null;
+    if (governedRefusal) return governedRefusal.message;
 
     // For agent/pipeline (application-type) tools the backend already tells us WHY the sub-agent is
     // invalid (circular reference, "uses other agents" / leaf-only, self-reference). `validationInfo`
@@ -331,13 +336,25 @@ const ToolCard = memo(props => {
           },
     );
     return parsedErrorMessage?.message || validationInfo;
-  }, [validationInfo, tool, entityType]);
+  }, [validationInfo, governedRefusal, tool, entityType]);
 
   const hasVariables = variables?.length > 0;
   const styles = toolCardStyles(showActions, isDuplicate, showVariables, hasVariables);
 
   const validationBanner = useMemo(() => {
     if (!validationInfo) return null;
+
+    if (governedRefusal) {
+      return (
+        <Banner.BannerMessage containerSx={styles.containerBanner}>
+          <Typography variant="labelSmall">{governedRefusal.message}</Typography>
+          <Chip.ErrorCodeChip
+            code={governedRefusal.code}
+            testId="tool-refusal-code-chip"
+          />
+        </Banner.BannerMessage>
+      );
+    }
 
     const errorType = toolValidationMessage?.error_type;
 
@@ -379,7 +396,15 @@ const ToolCard = memo(props => {
         }
       />
     );
-  }, [validationInfo, toolValidationMessage, personal_project_id, projectId, tool, styles.containerBanner]);
+  }, [
+    validationInfo,
+    governedRefusal,
+    toolValidationMessage,
+    personal_project_id,
+    projectId,
+    tool,
+    styles.containerBanner,
+  ]);
 
   const dialogTitle = useMemo(() => `Remove ${entityTypeLabel}?`, [entityTypeLabel]);
 

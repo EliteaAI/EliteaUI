@@ -36,6 +36,8 @@ export default function useValidateToolkit({ projectId, toolkitId, forceSkip } =
       const connectionErrors = (error.data?.connection_errors || []).map(err => ({
         type: 'connection_error',
         msg: err.message,
+        // the governed check of a saved credential refused it (#7281): its code, shown with the text
+        ...(err.code && { code: err.code }),
         loc: [err.configuration_title || err.configuration_type],
         requires_authorization: err.requires_authorization,
         auth_metadata: err.auth_metadata,

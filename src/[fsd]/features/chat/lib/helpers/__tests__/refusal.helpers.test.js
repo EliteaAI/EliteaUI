@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseRefusalPayload } from '../refusal.helpers';
+import { parseRefusalPayload, parseValidationRefusal } from '../refusal.helpers';
 
 const DENIED = {
   code: 'DENIED_GRANT',
@@ -55,5 +55,34 @@ describe('parseRefusalPayload', () => {
     ['undefined', undefined],
   ])('keeps the generic rendering for %s', (_name, input) => {
     expect(parseRefusalPayload(input)).toBeUndefined();
+  });
+});
+
+describe('parseValidationRefusal (#7281)', () => {
+  const TEXT =
+    'Your Microsoft sign-in is not available to this run. Sign in with Microsoft again, then retry.';
+
+  it('reads a toolkit connection error that names its code', () => {
+    expect(
+      parseValidationRefusal({ type: 'connection_error', msg: TEXT, code: 'DENIED_ASSERTION_UNAVAILABLE' }),
+    ).toEqual({
+      message: TEXT,
+      code: 'DENIED_ASSERTION_UNAVAILABLE',
+    });
+  });
+
+  it("reads an agent's toolkit error whose text is the refusal payload", () => {
+    const msg = `Value error, ${JSON.stringify({ code: 'DENIED_ASSERTION_UNAVAILABLE', error: TEXT })}`;
+    expect(parseValidationRefusal(msg)).toEqual({ message: TEXT, code: 'DENIED_ASSERTION_UNAVAILABLE' });
+  });
+
+  it.each([
+    ['a connection error without a code', { type: 'connection_error', msg: 'Authentication failed' }],
+    ['a settings error', { type: 'missing', msg: 'Field required', loc: ['url'] }],
+    ['a plain misconfiguration text', 'Application misconfiguration error for agent_name=x: boom'],
+    ['a refusal payload without a code', 'Value error, {"error": "Denied"}'],
+    ['nothing', undefined],
+  ])('keeps the misconfiguration marker for %s', (_name, input) => {
+    expect(parseValidationRefusal(input)).toBeUndefined();
   });
 });
