@@ -10,7 +10,7 @@ import { useGenerateSummaryMutation } from '@/api';
 export const useSummarizeContext = ({ conversationId }) => {
   const selectedProjectId = useSelectedProjectId();
   const { toastError } = useToast();
-  const [generateSummary, { isLoading: isOptimizing }] = useGenerateSummaryMutation();
+  const [generateSummary, { isLoading: isSummarizing }] = useGenerateSummaryMutation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const openDialog = useCallback(() => setIsDialogOpen(true), []);
@@ -29,5 +29,5 @@ export const useSummarizeContext = ({ conversationId }) => {
     }
   }, [selectedProjectId, conversationId, generateSummary, toastError]);
 
-  return { isDialogOpen, openDialog, closeDialog, confirmSummarize, isOptimizing };
+  return { isDialogOpen, openDialog, closeDialog, confirmSummarize, isSummarizing };
 };
