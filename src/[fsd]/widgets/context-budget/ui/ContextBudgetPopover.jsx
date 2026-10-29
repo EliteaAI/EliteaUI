@@ -78,7 +78,7 @@ const ContextBudgetPopover = memo(props => {
     openDialog: openSummarizeDialog,
     closeDialog: closeSummarizeDialog,
     confirmSummarize,
-    isOptimizing: isSummarizing,
+    isSummarizing,
   } = useSummarizeContext({ conversationId });
 
   // The confirmation lives outside the popper, so close the popover first or the click-away would race it
