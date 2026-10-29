@@ -8,9 +8,8 @@ const dispatch = vi.fn(action => {
   if (action.type === 'settings/setSessionExpired') sessionExpired = action.payload;
 });
 let isStreaming = false;
-let runActiveCount = 0;
 const store = {
-  getState: () => ({ settings: { sessionExpired, runActiveCount, navBlocker: { isStreaming } } }),
+  getState: () => ({ settings: { sessionExpired, navBlocker: { isStreaming } } }),
 };
 const probeSession = vi.fn();
 let reauthListener = null;
@@ -70,7 +69,6 @@ describe('useSocketSessionGuard', () => {
     reauthListener = null;
     sessionExpired = false;
     isStreaming = false;
-    runActiveCount = 0;
   });
 
   afterEach(() => {
@@ -217,20 +215,6 @@ describe('useSocketSessionGuard', () => {
   it('keeps a streaming run alive across a long hidden period', async () => {
     vi.useFakeTimers();
     isStreaming = true;
-    probeSession.mockResolvedValue('alive');
-    const { socket } = createSocket();
-    renderHook(() => useSocketSessionGuard(socket));
-
-    act(() => setVisibility('hidden'));
-    vi.setSystemTime(Date.now() + 6 * 60 * 1000);
-    await act(async () => setVisibility('visible'));
-
-    expect(socket.disconnect).not.toHaveBeenCalled();
-  });
-
-  it('keeps a run alive across a long hidden period when only the run-active counter knows about it', async () => {
-    vi.useFakeTimers();
-    runActiveCount = 1;
     probeSession.mockResolvedValue('alive');
     const { socket } = createSocket();
     renderHook(() => useSocketSessionGuard(socket));

@@ -127,11 +127,6 @@ const settingsSlice = createSlice({
     // True when the session behind the socket is known to be expired: a socket that
     // (re)connected with it is anonymous on the server and its chat events are dropped
     sessionExpired: false,
-    // How many runs are in flight on the shared socket, whether or not navBlocker.isStreaming knows about
-    // them. Unlike that flag it never blocks navigation, and being a count, one surface finishing cannot
-    // clear another one's run. The socket session guard reads it so it does not re-handshake a socket
-    // that working runs are using.
-    runActiveCount: 0,
     // True while a platform banner occupies the bottom-right corner, so the NPS survey waits for it
     cornerBannerVisible: false,
   },
@@ -312,12 +307,6 @@ const settingsSlice = createSlice({
     },
     setSessionExpired: (state, { payload }) => {
       state.sessionExpired = payload;
-    },
-    runActiveStarted: state => {
-      state.runActiveCount += 1;
-    },
-    runActiveEnded: state => {
-      state.runActiveCount = Math.max(0, state.runActiveCount - 1);
     },
     setCornerBannerVisible: (state, { payload }) => {
       state.cornerBannerVisible = payload;

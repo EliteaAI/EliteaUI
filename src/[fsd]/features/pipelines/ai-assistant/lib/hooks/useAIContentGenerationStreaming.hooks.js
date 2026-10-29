@@ -3,7 +3,6 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'r
 import { v4 as uuidv4 } from 'uuid';
 
 import { useManualSocket } from '@/[fsd]/features/auth/lib/hooks';
-import { useRunActiveSignal } from '@/[fsd]/features/auth/lib/hooks/useRunActiveSignal.hooks';
 import {
   buildFieldContextPrompt,
   getServicePromptKeyForFieldName,
@@ -70,7 +69,6 @@ export const useAIContentGenerationStreaming = ({
 
   const [streamedContent, setStreamedContent] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  useRunActiveSignal(isGenerating);
   const [hasError, setHasError] = useState(false);
 
   const activeStreamIdRef = useRef(null);

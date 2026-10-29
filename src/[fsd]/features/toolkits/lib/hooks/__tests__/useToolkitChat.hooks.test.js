@@ -22,7 +22,6 @@ vi.hoisted(() => {
 });
 
 const createToolkitConversationWithParticipant = vi.fn();
-const runActiveSignal = vi.hoisted(() => vi.fn());
 
 vi.mock('@/[fsd]/features/toolkits/lib/helpers/toolkitConversation.helpers', () => ({
   createToolkitConversationWithParticipant,
@@ -63,10 +62,6 @@ const socketHandlerRef = { current: null };
 const validationErrorHandlerRef = { current: null };
 const socketEmit = vi.fn();
 const leaveRoomsEmit = vi.fn();
-
-vi.mock('@/[fsd]/features/auth/lib/hooks/useRunActiveSignal.hooks', () => ({
-  useRunActiveSignal: isActive => runActiveSignal(isActive),
-}));
 
 vi.mock('@/[fsd]/features/auth/lib/hooks/useSocket.hooks', () => ({
   useSocket: (event, handler) => {
@@ -542,22 +537,5 @@ describe('useToolkitChat only follows the runs it owns', () => {
     unmount();
 
     expect(leaveRoomsEmit).not.toHaveBeenCalled();
-  });
-});
-
-describe('useToolkitChat — the socket session guard is told about a working run', () => {
-  it('reports no active run while nothing is running', () => {
-    renderChat();
-
-    expect(runActiveSignal).toHaveBeenLastCalledWith(false);
-  });
-
-  it('reports an active run once a tool is running', async () => {
-    createToolkitConversationWithParticipant.mockReturnValueOnce(new Promise(() => {}));
-    const { result } = renderChat();
-
-    act(() => result.current.handleRunTool());
-
-    await waitFor(() => expect(runActiveSignal).toHaveBeenLastCalledWith(true));
   });
 });
