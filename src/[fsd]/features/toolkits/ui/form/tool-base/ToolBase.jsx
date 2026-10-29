@@ -442,7 +442,7 @@ const ToolBase = memo(props => {
             <Box sx={styles.actionsColumn}>
               <BasicAccordion
                 showMode={AccordionConstants.AccordionShowMode.LeftMode}
-                accordionSX={{ background: `${theme.palette.background.default.tertiary} !important` }}
+                accordionSX={styles.accordion}
                 expanded={isAdvancedExpanded}
                 onChange={toggleAdvanced}
                 items={[
@@ -673,7 +673,7 @@ const ToolBase = memo(props => {
         <BasicAccordion
           card
           showMode={AccordionConstants.AccordionShowMode.LeftMode}
-          accordionSX={{ background: `${theme.palette.background.default.tertiary} !important` }}
+          accordionSX={styles.accordion}
           items={[
             {
               title: 'Configuration',
@@ -694,6 +694,9 @@ ToolBase.displayName = 'ToolBase';
 
 /** @type {MuiSx} */
 const toolBaseStyles = shouldHideConfigurationHeader => ({
+  accordion: {
+    background: 'transparent !important',
+  },
   actionsColumn: {
     display: 'flex',
     flexDirection: 'column',

@@ -233,6 +233,7 @@ export const ToolActionsSelector = memo(props => {
         <BasicAccordion
           card
           showMode={AccordionConstants.AccordionShowMode.LeftMode}
+          accordionSX={styles.accordion}
           expanded={isExpanded}
           onChange={toggleExpanded}
           items={[
@@ -281,6 +282,9 @@ const toolActionsSelectorStyles = () => ({
     marginTop: '1rem',
     padding: shouldUseAccordionView ? '' : '0 0 0 0.75rem',
   }),
+  accordion: {
+    background: 'transparent !important',
+  },
   controlsRow: {
     marginTop: '0.5rem',
   },
