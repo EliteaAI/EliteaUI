@@ -18,6 +18,7 @@ const InfoLabelWithTooltip = memo(props => {
     required = false,
     tooltipTestId,
     tooltipContentTestId,
+    pinnable = false,
   } = props;
 
   const styles = infoLabelWithTooltipStyles(iconSize);
@@ -54,6 +55,7 @@ const InfoLabelWithTooltip = memo(props => {
           infoTooltip={{ title: tooltip, icon: styles.info }}
           testId={tooltipTestId}
           contentTestId={tooltipContentTestId}
+          pinnable={pinnable}
         />
       )}
     </Box>

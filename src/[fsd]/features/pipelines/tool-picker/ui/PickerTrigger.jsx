@@ -2,7 +2,7 @@ import { memo, useCallback } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { Button } from '@/[fsd]/shared/ui';
+import { Button, Label } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
 import CloseIcon from '@/components/Icons/CloseIcon';
@@ -11,6 +11,7 @@ import CloseIcon from '@/components/Icons/CloseIcon';
 const PickerTrigger = memo(props => {
   const {
     label,
+    tooltip,
     placeholder = 'Select',
     hasValue = false,
     isOpen = false,
@@ -53,12 +54,13 @@ const PickerTrigger = memo(props => {
       className="nopan nodrag"
     >
       {label && (
-        <Typography
-          variant="bodySmall"
-          sx={styles.label}
-        >
-          {label}
-        </Typography>
+        <Label.InfoLabelWithTooltip
+          label={label}
+          tooltip={tooltip}
+          pinnable
+          sx={styles.labelRow}
+          labelSx={styles.label}
+        />
       )}
       <Box
         role="combobox"
@@ -113,8 +115,11 @@ const pickerTriggerStyles = (isOpen, disabled) => ({
     minWidth: 0,
   },
   // Label, value and arrow sit 0.75rem inside the full-width underline, as in the shared SingleSelect
-  label: ({ palette }) => ({
+  labelRow: {
     paddingLeft: '0.75rem',
+    height: 'auto',
+  },
+  label: ({ palette }) => ({
     color: disabled ? palette.text.muted : isOpen ? palette.primary.main : palette.text.primary,
   }),
   field: ({ palette }) => ({

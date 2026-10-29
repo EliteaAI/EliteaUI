@@ -3,23 +3,30 @@ import { memo, useCallback, useContext, useMemo } from 'react';
 import { AIAssistantInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
 import {
   FlowEditorConstants,
+  NodeFieldInfoConstants,
   NodePanelConstants,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { FlowEditorHelpers, NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useNodeAiAssistantConfig, useNodeOptions } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import {
   FlowEditorNodePanel,
   FlowEditorNodes,
   FlowEditorSelect,
+  FlowEditorSettings,
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
-import { Chip } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useEdges } from '@xyflow/react';
 
 // Output handles sit either side of the centre of the output edge
 const ROUTES_HANDLE_OFFSET = 'calc(50% - 3.125rem)';
 const DEFAULT_OUTPUT_HANDLE_OFFSET = 'calc(50% + 3.125rem)';
+
+const { NODE_FIELD_KEYS } = NodeFieldInfoConstants;
+
+const getRouterFieldInfo = NodeFieldInfoHelpers.getNodeFieldInfoOf(
+  FlowEditorConstants.PipelineNodeTypes.Router,
+);
 
 const RouterNode = memo(props => {
   const { id, data, selected, nodeType = FlowEditorConstants.PipelineNodeTypes.Router } = props;
@@ -161,6 +168,8 @@ const RouterNode = memo(props => {
             fullWidth
             name="condition"
             label="Condition"
+            tooltipDescription={getRouterFieldInfo(NODE_FIELD_KEYS.condition)}
+            tooltipPinnable
             placeholder=""
             value={conditionValue}
             onInput={handleConditionFilling}
@@ -177,6 +186,7 @@ const RouterNode = memo(props => {
           <FlowEditorSelect.RouteSelect
             id={id}
             label="Routes"
+            tooltip={getRouterFieldInfo(NODE_FIELD_KEYS.routes)}
             fieldName="routes"
             disabled={isRunningPipeline || disabled}
             nodesFilter={node => node.id !== id}
@@ -185,7 +195,12 @@ const RouterNode = memo(props => {
           />
           <SingleSelect
             sx={styles.defaultOutputSelect}
-            labelNode={<Chip.HeadingChip label="Default output" />}
+            labelNode={
+              <FlowEditorSettings.NodeFieldHeading
+                label="Default output"
+                tooltip={getRouterFieldInfo(NODE_FIELD_KEYS.defaultOutput)}
+              />
+            }
             value={default_output_node}
             onValueChange={handleDefaultOutput}
             options={routes}

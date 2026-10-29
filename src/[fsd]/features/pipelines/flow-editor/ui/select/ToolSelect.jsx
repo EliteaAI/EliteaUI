@@ -20,6 +20,7 @@ const ToolSelect = memo(props => {
       return true;
     },
     'data-testid': dataTestId,
+    tooltip,
   } = props;
   const { getToolkitNameFromSchema } = useGetToolkitNameFromSchema();
   const getToolkitIconMeta = useGetToolkitIconMeta();
@@ -84,6 +85,8 @@ const ToolSelect = memo(props => {
       sx={styles.select}
       showEmptyPlaceholder={false}
       label={label}
+      infoIconDescription={tooltip}
+      infoIconPinnable
       value={selectedToolkit}
       onValueChange={onChangeTool}
       onClear={onClear}

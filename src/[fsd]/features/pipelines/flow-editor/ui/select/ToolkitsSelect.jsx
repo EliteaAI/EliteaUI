@@ -20,6 +20,7 @@ const ToolkitsSelect = memo(props => {
     onValueChange,
     allowApplications = false,
     'data-testid': dataTestId,
+    tooltip,
   } = props;
 
   const { setYamlJsonObject, yamlJsonObject } = useContext(FlowEditorContext);
@@ -94,6 +95,8 @@ const ToolkitsSelect = memo(props => {
     <Select.SingleSelect
       showEmptyPlaceholder={false}
       label={label}
+      infoIconDescription={tooltip}
+      infoIconPinnable
       value={selectedToolkits}
       onValueChange={handleToolkitsChange}
       options={toolkitOptions}

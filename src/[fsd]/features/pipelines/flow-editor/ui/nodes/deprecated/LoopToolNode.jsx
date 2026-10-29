@@ -2,8 +2,11 @@ import { memo, useCallback, useContext, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import {
+  FlowEditorConstants,
+  NodeFieldInfoConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { FlowEditorHelpers, NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import {
   FlowEditorNodes,
@@ -14,6 +17,12 @@ import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { Input } from '@/[fsd]/shared/ui';
 import { useEdges } from '@xyflow/react';
+
+const { NODE_FIELD_KEYS } = NodeFieldInfoConstants;
+
+const getFieldInfo = NodeFieldInfoHelpers.getNodeFieldInfoOf(
+  FlowEditorConstants.PipelineNodeTypes.LoopFromTool,
+);
 
 const LoopToolNode = memo(props => {
   const { id, data, selected, type } = props;
@@ -222,6 +231,7 @@ const LoopToolNode = memo(props => {
           disabled={isRunningPipeline || disabled}
           onChangeToolkit={onChangeToolkit}
           onChangeTool={onChangeTool}
+          tooltip={getFieldInfo(NODE_FIELD_KEYS.tool)}
         />
         <FlowEditorSelect.LoopToolSelect
           yamlNode={yamlNode}
@@ -231,6 +241,7 @@ const LoopToolNode = memo(props => {
           label="Loop toolkit"
           toolkitField="loop_toolkit_name"
           toolField="loop_tool"
+          tooltip={getFieldInfo(NODE_FIELD_KEYS.loopTool)}
         />
         <FlowEditorSettings.VariablesMapping
           variables_mapping={yamlNode?.variables_mapping || {}}

@@ -1,12 +1,20 @@
 import { memo, useCallback, useContext } from 'react';
 
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import {
+  FlowEditorConstants,
+  NodeFieldInfoConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { FlowEditorHelpers, NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useNodeOptions } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { Select } from '@/[fsd]/shared/ui';
 
 const { PipelineNodeTypes, DEFAULT_OUTPUT } = FlowEditorConstants;
+
+const DEFAULT_OUTPUT_INFO = NodeFieldInfoHelpers.getNodeFieldInfo(
+  PipelineNodeTypes.Decision,
+  NodeFieldInfoConstants.NODE_FIELD_KEYS.defaultOutput,
+);
 
 const isDefaultOutputEdge = id => edge => edge.source === id && edge.sourceHandle === DEFAULT_OUTPUT;
 
@@ -42,6 +50,8 @@ const DecisionDefaultOutputSelect = memo(props => {
   return (
     <Select.SingleSelect
       label="Default output"
+      infoIconDescription={DEFAULT_OUTPUT_INFO}
+      infoIconPinnable
       value={value}
       onValueChange={onValueChange}
       onClear={onClear}

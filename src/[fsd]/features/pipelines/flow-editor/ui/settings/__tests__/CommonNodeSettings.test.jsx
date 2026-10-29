@@ -26,11 +26,23 @@ vi.mock('@/[fsd]/shared/lib/context', () => ({
   FlowEditorContext: createContext({}),
 }));
 
-vi.mock('@/[fsd]/features/pipelines/flow-editor/lib/helpers', () => ({
-  FlowEditorHelpers: { updateYamlNode },
-}));
+vi.mock('@/[fsd]/features/pipelines/flow-editor/lib/helpers', async () => {
+  const NodeFieldInfoHelpers =
+    await import('@/[fsd]/features/pipelines/flow-editor/lib/helpers/nodeFieldInfo.helpers');
+  return { FlowEditorHelpers: { updateYamlNode }, NodeFieldInfoHelpers };
+});
 
 vi.mock('@/[fsd]/shared/ui', () => ({
+  Label: {
+    InfoLabelWithTooltip: ({ label, tooltip }) => (
+      <span
+        data-testid="structured-output-label"
+        data-tooltip={tooltip}
+      >
+        {label}
+      </span>
+    ),
+  },
   Switch: {
     BaseSwitch: ({ checked, disabled, onChange, ...rest }) => (
       <input
@@ -86,6 +98,10 @@ describe('CommonNodeSettings', () => {
     renderSettings();
 
     expect(screen.getByText('Structured output')).toBeInTheDocument();
+    expect(screen.getByTestId('structured-output-label')).toHaveAttribute(
+      'data-tooltip',
+      'When on, the LLM returns JSON matching the Output variables, and each value is saved to its variable.',
+    );
     expect(screen.getByTestId(STRUCTURED_OUTPUT_TEST_ID)).toBeChecked();
   });
 

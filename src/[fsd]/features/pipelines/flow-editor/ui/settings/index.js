@@ -2,6 +2,7 @@ export { default as CommonNodeSettings } from './CommonNodeSettings';
 export { default as ConnectionDropdown } from './ConnectionDropdown';
 export { default as EditCellInput } from './EditCellInput';
 export { default as EditCellTypeSelect } from './EditCellTypeSelect';
+export { default as NodeFieldHeading } from './NodeFieldHeading';
 export {
   AddOptionalParameterButton,
   InputMapping,

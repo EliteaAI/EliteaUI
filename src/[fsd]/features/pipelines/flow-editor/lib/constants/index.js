@@ -4,3 +4,4 @@ export * as DeprecatedConstants from './deprecated.constants';
 export { ValidationErrors } from './validation.constants';
 export * as WebhookConstants from './webhook.constants';
 export * as NodePanelConstants from './nodePanel.constants';
+export * as NodeFieldInfoConstants from './nodeFieldInfo.constants';

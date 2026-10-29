@@ -2,7 +2,11 @@ import { memo, useCallback, useEffect, useState } from 'react';
 
 import { TextField } from '@mui/material';
 
+import { NodeFieldInfoConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { useNodeRename } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
+import { Label } from '@/[fsd]/shared/ui';
+
+const { COMMON_NODE_FIELD_INFO, NODE_FIELD_KEYS } = NodeFieldInfoConstants;
 
 // MUI TextField on purpose: the shared Input.InputBase blurs on change, which would rename after one keystroke
 const NodeNameField = memo(props => {
@@ -47,7 +51,16 @@ const NodeNameField = memo(props => {
       onChange={onChange}
       onBlur={commit}
       onKeyDown={onKeyDown}
-      label="Name"
+      label={
+        <Label.InfoLabelWithTooltip
+          label="Name"
+          tooltip={COMMON_NODE_FIELD_INFO[NODE_FIELD_KEYS.name]}
+          pinnable
+          required
+          inheritLabel
+          inheritColor
+        />
+      }
       required
       fullWidth
       variant="standard"
@@ -68,6 +81,12 @@ const nodeNameFieldStyles = () => ({
   root: ({ palette }) => ({
     '& .MuiFormLabel-root': {
       color: palette.text.primary,
+      display: 'flex',
+      pointerEvents: 'auto',
+    },
+    // The asterisk is part of the label, before the info icon
+    '& .MuiFormLabel-asterisk': {
+      display: 'none',
     },
   }),
 });

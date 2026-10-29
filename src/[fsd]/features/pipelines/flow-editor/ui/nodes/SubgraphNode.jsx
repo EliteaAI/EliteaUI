@@ -1,7 +1,10 @@
 import { memo, useCallback, useContext, useMemo } from 'react';
 
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import {
+  FlowEditorConstants,
+  NodeFieldInfoConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { FlowEditorHelpers, NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { FlowEditorNodes, FlowEditorSelect } from '@/[fsd]/features/pipelines/flow-editor/ui';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
@@ -91,6 +94,10 @@ const SubgraphNode = memo(props => {
         selectedToolkit={toolkit}
         disabled={isRunningPipeline || disabled}
         filterTypes={toolkitFilter}
+        tooltip={NodeFieldInfoHelpers.getNodeFieldInfo(
+          FlowEditorConstants.PipelineNodeTypes.Pipeline,
+          NodeFieldInfoConstants.NODE_FIELD_KEYS.pipeline,
+        )}
       />
     </FlowEditorNodes.NodeCard>
   );

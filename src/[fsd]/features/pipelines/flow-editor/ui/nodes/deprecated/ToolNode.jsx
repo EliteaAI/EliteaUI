@@ -2,8 +2,11 @@ import { memo, useCallback, useContext, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import {
+  FlowEditorConstants,
+  NodeFieldInfoConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { FlowEditorHelpers, NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import {
   FlowEditorNodes,
@@ -19,6 +22,10 @@ import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 import { useEdges } from '@xyflow/react';
 
 const toolkitFilter = tool => tool.type != ToolTypes.application.value;
+
+const { NODE_FIELD_KEYS } = NodeFieldInfoConstants;
+
+const getFieldInfo = NodeFieldInfoHelpers.getNodeFieldInfoOf(FlowEditorConstants.PipelineNodeTypes.Tool);
 
 const ToolNode = memo(props => {
   const { id, data, selected } = props;
@@ -196,6 +203,8 @@ const ToolNode = memo(props => {
           <SingleSelect
             sx={{ marginBottom: 0 }}
             label="Tool"
+            infoIconDescription={getFieldInfo(NODE_FIELD_KEYS.tool)}
+            infoIconPinnable
             value={toolValue}
             onValueChange={handleSetTool}
             options={functionOptions}
@@ -217,6 +226,8 @@ const ToolNode = memo(props => {
           fullWidth
           name="task"
           label="Task"
+          tooltipDescription={getFieldInfo(NODE_FIELD_KEYS.task)}
+          tooltipPinnable
           placeholder=""
           value={taskValue}
           onInput={handleSetTask}

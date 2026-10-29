@@ -36,7 +36,16 @@ import PickerTrigger from './PickerTrigger';
  * @param {() => void} props.onClear removes every toolkit in one update
  */
 const ProjectToolkitsMultiPicker = memo(props => {
-  const { label, value = [], onAdd, onRemove, onClear, disabled = false, 'data-testid': testId } = props;
+  const {
+    label,
+    tooltip,
+    value = [],
+    onAdd,
+    onRemove,
+    onClear,
+    disabled = false,
+    'data-testid': testId,
+  } = props;
 
   const { yamlJsonObject } = useContext(FlowEditorContext);
   const isVersionLocked = useIsVersionLocked();
@@ -144,6 +153,7 @@ const ProjectToolkitsMultiPicker = memo(props => {
   return (
     <>
       <PickerTrigger
+        tooltip={tooltip}
         label={label ?? (isMcpVisible ? 'Toolkits & MCPs' : 'Toolkits')}
         hasValue={value.length > 0}
         isOpen={isOpen}

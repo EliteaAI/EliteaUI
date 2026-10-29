@@ -158,7 +158,7 @@ describe('the editor chat of a two-level development run (#7227)', () => {
 
     const card = screen.getByText(REFUSAL.error).closest('div');
     expect(within(card).getByTestId('error-code-chip')).toHaveTextContent(REFUSAL.code);
-    fireEvent.click(screen.getByText('Error debugging info'));
-    expect(screen.getByText(/DENIED_DEVELOPMENT_CREDENTIAL/, { selector: 'pre' })).toBeInTheDocument();
+    // A refusal is a decision, not a failure to debug: no raw payload under the card
+    expect(screen.queryByText('Error debugging info')).not.toBeInTheDocument();
   });
 });

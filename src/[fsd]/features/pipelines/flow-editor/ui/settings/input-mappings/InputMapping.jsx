@@ -2,11 +2,16 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { InputMappingHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { NodeFieldInfoConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import {
+  InputMappingHelpers,
+  NodeFieldInfoHelpers,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useInputOptions } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { InputMappingItem } from '@/[fsd]/features/pipelines/flow-editor/ui/settings/input-mappings';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 
 const InputMapping = memo(props => {
   const {
@@ -18,6 +23,7 @@ const InputMapping = memo(props => {
     onChangeMapping,
     requiredInputs = [],
     disabled,
+    nodeType,
     valueTestIdPrefix,
     typeTestIdPrefix,
     requiredHeadingTestId,
@@ -32,6 +38,7 @@ const InputMapping = memo(props => {
         values,
         mappingInfo,
         inputOptions,
+        nodeType,
       });
       return (
         <InputMappingItem
@@ -51,6 +58,7 @@ const InputMapping = memo(props => {
       values,
       mappingInfo,
       inputOptions,
+      nodeType,
       defaultValues,
       onChangeMapping,
       disabled,
@@ -60,6 +68,25 @@ const InputMapping = memo(props => {
   );
 
   const items = useMemo(() => {
+    const inputMappingInfo = NodeFieldInfoHelpers.getNodeFieldInfo(
+      nodeType,
+      NodeFieldInfoConstants.NODE_FIELD_KEYS.inputMapping,
+    );
+    const withInfo = title =>
+      inputMappingInfo ? (
+        <Box
+          component="span"
+          sx={styles.titleRow}
+        >
+          {title}
+          <InfoTooltip
+            infoTooltip={inputMappingInfo}
+            pinnable
+          />
+        </Box>
+      ) : (
+        title
+      );
     const keys = Object.keys(input_mapping || {});
     const requiredKeys = keys.filter(key => requiredInputs.includes(key));
     const optionalKeys = keys.filter(key => !requiredInputs.includes(key));
@@ -67,7 +94,7 @@ const InputMapping = memo(props => {
 
     if (requiredKeys.length > 0) {
       accordionItems.push({
-        title: `Input mapping (required ${requiredKeys.length})`,
+        title: withInfo(`Input mapping (required ${requiredKeys.length})`),
         content: (
           <Box
             className="nowheel"
@@ -83,7 +110,7 @@ const InputMapping = memo(props => {
 
     if (optionalKeys.length > 0) {
       accordionItems.push({
-        title: `Input mapping (optional ${optionalKeys.length})`,
+        title: withInfo(`Input mapping (optional ${optionalKeys.length})`),
         content: (
           <Box sx={styles.optionalContent}>{optionalKeys.map(key => renderMappingItem(key, 'optional'))}</Box>
         ),
@@ -93,7 +120,14 @@ const InputMapping = memo(props => {
     }
 
     return accordionItems;
-  }, [input_mapping, requiredInputs, renderMappingItem, requiredHeadingTestId, optionalHeadingTestId]);
+  }, [
+    nodeType,
+    input_mapping,
+    requiredInputs,
+    renderMappingItem,
+    requiredHeadingTestId,
+    optionalHeadingTestId,
+  ]);
 
   return (
     <BasicAccordion
@@ -122,6 +156,11 @@ const styles = {
   }),
   title: {
     color: 'text.secondary',
+  },
+  titleRow: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '.5rem',
   },
   details: {
     paddingLeft: '0rem',

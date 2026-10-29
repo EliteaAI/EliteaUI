@@ -7,9 +7,10 @@ import { Box, Typography } from '@mui/material';
 
 import {
   FlowEditorConstants,
+  NodeFieldInfoConstants,
   NodePanelConstants,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { FlowEditorHelpers, NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useFunctionInputMapping } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import {
   FlowEditorNodePanel,
@@ -34,6 +35,12 @@ const AGENT_NODE_TESTID_PREFIX = 'pipeline-agent-node';
 const TASK_KEY = 'task';
 const CHAT_HISTORY_KEY = 'chat_history';
 const BASIC_MAPPING_KEYS = [TASK_KEY];
+
+const { NODE_FIELD_KEYS } = NodeFieldInfoConstants;
+
+const getAgentFieldInfo = NodeFieldInfoHelpers.getNodeFieldInfoOf(
+  FlowEditorConstants.PipelineNodeTypes.Agent,
+);
 
 const AgentNode = memo(props => {
   const { id, data, selected, nodeType = FlowEditorConstants.PipelineNodeTypes.Agent } = props;
@@ -78,6 +85,7 @@ const AgentNode = memo(props => {
     values: yamlNode?.input_mapping || {},
     onChangeMapping,
     disabled: isRunningPipeline || disabled,
+    nodeType: FlowEditorConstants.PipelineNodeTypes.Agent,
     valueTestIdPrefix: `${AGENT_NODE_TESTID_PREFIX}-input-mapping-value`,
     typeTestIdPrefix: `${AGENT_NODE_TESTID_PREFIX}-input-mapping-type`,
   };
@@ -164,6 +172,7 @@ const AgentNode = memo(props => {
             </Box>
           )}
           <ToolPickerUI.ProjectAgentPicker
+            tooltip={getAgentFieldInfo(NODE_FIELD_KEYS.agent)}
             value={yamlNode?.tool}
             onSelect={onPickAgent}
             onClear={onClearAgent}
@@ -173,6 +182,7 @@ const AgentNode = memo(props => {
           {attachedTool && (
             <ToolPickerUI.AgentVersionSelect
               tool={attachedTool}
+              tooltip={getAgentFieldInfo(NODE_FIELD_KEYS.version)}
               disabled={isRunningPipeline || disabled}
               data-testid={`${AGENT_NODE_TESTID_PREFIX}-version-select`}
             />

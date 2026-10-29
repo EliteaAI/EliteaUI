@@ -2,7 +2,8 @@ import { memo, useCallback, useContext, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { NodeFieldInfoConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { FlowEditorHelpers, NodeFieldInfoHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import {
   useFunctionInputMapping,
   useGetToolkitNameFromSchema,
@@ -23,6 +24,8 @@ import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 const TEST_ID_PREFIX_BY_NODE_TYPE = {
   custom: 'pipeline-custom-node',
 };
+
+const { NODE_FIELD_KEYS } = NodeFieldInfoConstants;
 
 const DefaultNode = memo(props => {
   const { id, data, selected, type } = props;
@@ -200,6 +203,7 @@ const DefaultNode = memo(props => {
         values={yamlNode?.input_mapping || {}}
         onChangeMapping={onChangeMapping}
         disabled={isRunningPipeline || disabled}
+        nodeType={type}
         valueTestIdPrefix={testIdPrefix ? `${testIdPrefix}-input-mapping-value` : undefined}
         typeTestIdPrefix={testIdPrefix ? `${testIdPrefix}-input-mapping-type` : undefined}
         requiredHeadingTestId={testIdPrefix ? `${testIdPrefix}-input-mapping-heading` : undefined}
@@ -210,6 +214,10 @@ const DefaultNode = memo(props => {
         type={type}
         disabled={isRunningPipeline || disabled}
         structuredOutputTestId={testIdPrefix ? `${testIdPrefix}-structured-output-toggle` : undefined}
+      />
+      <FlowEditorSettings.NodeFieldHeading
+        label="Configuration"
+        tooltip={NodeFieldInfoHelpers.getNodeFieldInfo(type, NODE_FIELD_KEYS.configuration)}
       />
       <FlowEditorSettings.CustomNodeInput
         id={id}

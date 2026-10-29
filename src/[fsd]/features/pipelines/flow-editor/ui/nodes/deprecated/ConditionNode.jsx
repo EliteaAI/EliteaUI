@@ -1,15 +1,22 @@
 import { memo, useCallback, useContext, useMemo } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { AIAssistantInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { DecisionOutputHelpers, FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import {
+  FlowEditorConstants,
+  NodeFieldInfoConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import {
+  DecisionOutputHelpers,
+  FlowEditorHelpers,
+  NodeFieldInfoHelpers,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useInputOptions, useNodeAiAssistantConfig } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { FlowEditorNodes } from '@/[fsd]/features/pipelines/flow-editor/ui';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
-import { Select } from '@/[fsd]/shared/ui';
+import { Label, Select } from '@/[fsd]/shared/ui';
 import RemoveIcon from '@/assets/remove-icon.svg?react';
 import StyledChip from '@/components/DataDisplay/StyledChip';
 import { useEdges, useNodes } from '@xyflow/react';
@@ -17,6 +24,10 @@ import { useEdges, useNodes } from '@xyflow/react';
 // Output handles sit either side of the centre of the output edge
 const CONDITIONAL_OUTPUT_HANDLE_OFFSET = 'calc(50% - 2.5rem)';
 const DEFAULT_OUTPUT_HANDLE_OFFSET = 'calc(50% + 2.5rem)';
+
+const { NODE_FIELD_KEYS } = NodeFieldInfoConstants;
+
+const getFieldInfo = NodeFieldInfoHelpers.getNodeFieldInfoOf(FlowEditorConstants.PipelineNodeTypes.Condition);
 
 const ConditionNode = memo(props => {
   const { id, data, selected } = props;
@@ -255,6 +266,8 @@ const ConditionNode = memo(props => {
       >
         <Select.SingleSelect
           label="Conditional input"
+          infoIconDescription={getFieldInfo(NODE_FIELD_KEYS.conditionInput)}
+          infoIconPinnable
           value={conditionInput}
           onValueChange={onChangeInput}
           options={realInputOptions}
@@ -275,6 +288,8 @@ const ConditionNode = memo(props => {
           name="Condition"
           id="Condition"
           label="Condition"
+          tooltipDescription={getFieldInfo(NODE_FIELD_KEYS.condition)}
+          tooltipPinnable
           placeholder=""
           value={condition_definition}
           onInput={onChangeConditionDefinition}
@@ -286,12 +301,11 @@ const ConditionNode = memo(props => {
           modelConfig={pipelineLLMConfig}
         />
         <Box sx={styles.conditionalOutputsContainer}>
-          <Typography
-            variant="bodySmall"
-            color="text.primary"
-          >
-            Conditional outputs
-          </Typography>
+          <Label.InfoLabelWithTooltip
+            label="Conditional outputs"
+            tooltip={getFieldInfo(NODE_FIELD_KEYS.conditionalOutputs)}
+            pinnable
+          />
           <Box sx={styles.outputsBorderContainer}>
             {(condition?.conditional_outputs || []).map(item => {
               const { borderColor, tooltip } = DecisionOutputHelpers.getBorderColorAndTooltip(

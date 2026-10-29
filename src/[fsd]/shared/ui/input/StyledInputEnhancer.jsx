@@ -50,6 +50,7 @@ const StyledInputEnhancer = memo(props => {
     tooltipDescription,
     tooltipTestId,
     tooltipContentTestId,
+    tooltipPinnable,
     forceShowActionsToolbar,
     enableFStringAutocomplete,
     stateVariableOptions,
@@ -121,6 +122,7 @@ const StyledInputEnhancer = memo(props => {
         tooltipDescription={tooltipDescription}
         tooltipTestId={tooltipTestId}
         tooltipContentTestId={tooltipContentTestId}
+        tooltipPinnable={tooltipPinnable}
         forceShowActionsToolbar={forceShowActionsToolbar}
         fullScreenButtonProps={fullScreenButtonProps}
       />
