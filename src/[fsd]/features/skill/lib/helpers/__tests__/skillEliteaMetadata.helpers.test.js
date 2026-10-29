@@ -239,6 +239,40 @@ describe('applyEliteaMetadataEdits', () => {
     expect(result).not.toHaveProperty('runSettings');
   });
 
+  it('refuses a temperature next to an active reasoning effort, as the server does', () => {
+    const runSettings = {
+      llm_settings: { model_name: 'o3', model_project_id: 2, reasoning_effort: 'medium' },
+    };
+
+    const result = edit(
+      { 'elitea-model': 'o3', 'elitea-reasoning-effort': 'medium', 'elitea-temperature': '0.4' },
+      {
+        tags: [],
+        runSettings,
+      },
+    );
+
+    expect(result.errors).toEqual([
+      '"metadata.elitea-temperature" cannot be combined with an active "metadata.elitea-reasoning-effort"',
+    ]);
+    expect(result.runSettings.llm_settings).toMatchObject({ temperature: null, reasoning_effort: 'medium' });
+  });
+
+  it('accepts a temperature when the reasoning effort is none', () => {
+    const runSettings = { llm_settings: { model_name: 'o3', model_project_id: 2, reasoning_effort: 'none' } };
+
+    const result = edit(
+      { 'elitea-model': 'o3', 'elitea-reasoning-effort': 'none', 'elitea-temperature': '0.4' },
+      {
+        tags: [],
+        runSettings,
+      },
+    );
+
+    expect(result.errors).toEqual([]);
+    expect(result.runSettings.llm_settings).toMatchObject({ temperature: 0.4, reasoning_effort: 'none' });
+  });
+
   it('applies the valid lines when another line is invalid', () => {
     const result = edit({ ...UNCHANGED, 'elitea-temperature': 'hot', 'elitea-max-tokens': '2000' });
 

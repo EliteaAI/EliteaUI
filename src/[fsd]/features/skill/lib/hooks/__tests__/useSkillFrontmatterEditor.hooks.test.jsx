@@ -343,6 +343,7 @@ describe('useSkillFrontmatterEditor ELITEA fields mirrored from the export', () 
 
   const MODELS = [
     { name: 'gpt-4.1', project_id: 2 },
+    { name: 'gpt-4o', project_id: 2 },
     { name: 'o3', project_id: 2, supports_reasoning: true },
   ];
   const EXPORT_VALUES = {
@@ -447,6 +448,81 @@ describe('useSkillFrontmatterEditor ELITEA fields mirrored from the export', () 
       model_name: 'o3',
       model_project_id: 2,
     });
+  });
+
+  it('rewrites the lines the model change reset, so the text shows what will be saved', async () => {
+    const { result } = renderExportEditor();
+
+    await typeInEditor(
+      result,
+      exportText([...EXPORT_LINES.slice(0, 2), 'elitea-model: o3', ...EXPORT_LINES.slice(3)]),
+    );
+
+    expect(result.current.editor.editorText).toBe(
+      exportText([
+        ...EXPORT_LINES.slice(0, 2),
+        'elitea-model: o3',
+        EXPORT_LINES[4],
+        'elitea-reasoning-effort: medium',
+      ]),
+    );
+    expect(result.current.editor.frontmatterErrors).toEqual([]);
+  });
+
+  it('shows the temperature the model change resets to', async () => {
+    const { result } = renderExportEditor();
+
+    await typeInEditor(
+      result,
+      exportText([...EXPORT_LINES.slice(0, 2), 'elitea-model: gpt-4o', ...EXPORT_LINES.slice(3)]),
+    );
+
+    const { temperature } = result.current.formik.values.version_details.run_settings.llm_settings;
+    expect(result.current.editor.editorText).toContain(`elitea-temperature: '${temperature}'`);
+    expect(result.current.editor.editorText).toContain('elitea-model: gpt-4o');
+  });
+
+  it('clears an error once a model change rewrites the line it was about', async () => {
+    const { result } = renderExportEditor();
+
+    await typeInEditor(
+      result,
+      exportText([
+        ...EXPORT_LINES.slice(0, 2),
+        'elitea-model: gpt-4o',
+        'elitea-temperature: abc',
+        EXPORT_LINES[4],
+      ]),
+    );
+
+    expect(result.current.editor.editorText).toContain("elitea-temperature: '0.6'");
+    expect(result.current.editor.frontmatterErrors).toEqual([]);
+  });
+
+  it('clears an error once the run settings panel rewrites the line', async () => {
+    const { result } = renderExportEditor();
+    await typeInEditor(
+      result,
+      exportText([...EXPORT_LINES.slice(0, 3), 'elitea-temperature: abc', EXPORT_LINES[4]]),
+    );
+
+    await setField(result, 'version_details.run_settings.llm_settings.temperature', 0.5);
+
+    expect(result.current.editor.editorText).toContain("elitea-temperature: '0.5'");
+    expect(result.current.editor.frontmatterErrors).toEqual([]);
+  });
+
+  it('clears an error when another version with other keys is loaded', async () => {
+    const { result } = renderExportEditor();
+    await typeInEditor(
+      result,
+      exportText([...EXPORT_LINES.slice(0, 3), 'elitea-temperature: abc', EXPORT_LINES[4]]),
+    );
+
+    await setField(result, 'version_details.meta.frontmatter', { license: 'Apache-2.0' });
+
+    expect(result.current.editor.editorText).toContain('license: Apache-2.0');
+    expect(result.current.editor.frontmatterErrors).toEqual([]);
   });
 
   it('shows an error and keeps the run settings for an unknown model', async () => {

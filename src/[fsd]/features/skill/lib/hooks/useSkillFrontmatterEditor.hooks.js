@@ -90,11 +90,13 @@ export const useSkillFrontmatterEditor = ({ models = NO_MODELS } = {}) => {
         name: fields.name ?? synced.name,
         description: fields.description ?? synced.description,
         frontmatter: textFrontmatter?.frontmatter ?? synced.frontmatter,
-        eliteaMetadata: encodeEliteaMetadata({
-          tags: nextTags,
-          versionName: formValues.versionName,
-          runSettings: nextRunSettings,
-        }),
+        eliteaMetadata: edits.hasModelChanged
+          ? textFrontmatter.eliteaMetadata
+          : encodeEliteaMetadata({
+              tags: nextTags,
+              versionName: formValues.versionName,
+              runSettings: nextRunSettings,
+            }),
         body: parsedBody,
         errors: edits.errors,
       };
@@ -141,7 +143,8 @@ export const useSkillFrontmatterEditor = ({ models = NO_MODELS } = {}) => {
     const fields = buildEditorFields({ name, description, frontmatter, eliteaMetadata });
     const nextSynced = { name, description, frontmatter, eliteaMetadata, body, errors: synced.errors };
     if (!isSameFrontmatterIgnoringKeyOrder(frontmatter, synced.frontmatter)) {
-      syncedValuesRef.current = nextSynced;
+      syncedValuesRef.current = { ...nextSynced, errors: NO_ERRORS };
+      setFrontmatterErrors(NO_ERRORS);
       replaceEditorText(composeSkillEditorText({ ...fields, body }));
       return;
     }
@@ -152,7 +155,9 @@ export const useSkillFrontmatterEditor = ({ models = NO_MODELS } = {}) => {
     const isBodyChanged = body !== synced.body;
     if (!isBodyChanged && !changedKeys.length) return;
 
-    syncedValuesRef.current = nextSynced;
+    const isMetadataRewritten = changedKeys.includes('metadata');
+    syncedValuesRef.current = isMetadataRewritten ? { ...nextSynced, errors: NO_ERRORS } : nextSynced;
+    if (isMetadataRewritten) setFrontmatterErrors(NO_ERRORS);
     const textWithBody = isBodyChanged
       ? replaceSkillEditorBody(editorTextRef.current, body, fields)
       : editorTextRef.current;

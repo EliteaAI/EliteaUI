@@ -1,6 +1,9 @@
 import { DEFAULT_MAX_TOKENS } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { isAutoSelection, selectionFields } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
-import { resetLLMSettingsForModel } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+import {
+  isLLMSettingsFamilyConflict,
+  resetLLMSettingsForModel,
+} from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 
 export const ELITEA_METADATA_KEYS = {
   tags: 'elitea-tags',
@@ -138,6 +141,7 @@ export const applyEliteaMetadataEdits = ({ textMetadata, formMetadata, tags, run
   let nextTags = tags;
   let isTagsChanged = false;
   let isRunSettingsChanged = false;
+  let hasModelChanged = false;
 
   const { tags: tagsKey } = ELITEA_METADATA_KEYS;
   if (isChanged(tagsKey)) {
@@ -175,6 +179,7 @@ export const applyEliteaMetadataEdits = ({ textMetadata, formMetadata, tags, run
           ...selectionFields(model),
         };
         isRunSettingsChanged = true;
+        hasModelChanged = true;
       } else {
         errors.push(`"metadata.${modelKey}" names an unknown model: ${textMetadata[modelKey]}`);
       }
@@ -201,6 +206,7 @@ export const applyEliteaMetadataEdits = ({ textMetadata, formMetadata, tags, run
           ...selectionFields({ selection: parsed.value }),
         };
         isRunSettingsChanged = true;
+        hasModelChanged = true;
       }
     }
   }
@@ -241,8 +247,23 @@ export const applyEliteaMetadataEdits = ({ textMetadata, formMetadata, tags, run
     }
   }
 
+  if (
+    (isChanged(ELITEA_METADATA_KEYS.temperature) || isChanged(ELITEA_METADATA_KEYS.reasoningEffort)) &&
+    isLLMSettingsFamilyConflict(llmSettingsUpdate.temperature, llmSettingsUpdate.reasoning_effort)
+  ) {
+    errors.push(
+      `"metadata.${ELITEA_METADATA_KEYS.temperature}" cannot be combined with an active "metadata.${ELITEA_METADATA_KEYS.reasoningEffort}"`,
+    );
+    llmSettingsUpdate = {
+      ...llmSettingsUpdate,
+      temperature: llmSettings.temperature ?? null,
+      reasoning_effort: llmSettings.reasoning_effort ?? null,
+    };
+  }
+
   return {
     errors,
+    ...(hasModelChanged && { hasModelChanged }),
     ...(isTagsChanged && { tags: nextTags }),
     ...(isRunSettingsChanged && {
       runSettings: {

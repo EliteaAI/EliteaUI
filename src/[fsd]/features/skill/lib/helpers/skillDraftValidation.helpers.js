@@ -20,11 +20,14 @@ export const validateSkillDraft = (draft, maxInstructionsLength) => {
       'Name must be lowercase letters, digits and hyphens only, cannot start or end with a hyphen';
   else if (name.includes('claude') || name.includes('anthropic'))
     errors.name = 'Name cannot contain "claude" or "anthropic"';
+  else if (name.includes('--')) errors.name = 'Name cannot contain consecutive hyphens (--)';
 
   const description = (draft.description || '').trim();
   if (!description) errors.description = 'Description is required';
   else if (description.length > MAX_DESCRIPTION_LENGTH)
     errors.description = `Description must be ${MAX_DESCRIPTION_LENGTH} characters or less`;
+  else if (/[<>]/.test(description))
+    errors.description = 'Description cannot contain angle brackets (< or >)';
 
   const instructions = (draft.instructions || '').trim();
   if (!instructions) errors.instructions = 'Instructions are required';
