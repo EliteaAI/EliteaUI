@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { parseValidationRefusal } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
 import { ChatParticipantType } from '@/common/constants';
 import useValidateApplicationVersion, {
@@ -43,9 +45,13 @@ export const useParticipantValidation = ({
   );
 
   // a governed refusal says what it is (#7281), instead of the generic misconfiguration notice
-  const governedRefusal = [...(toolkitValidationInfoList || []), ...(totalValidationInfo || [])]
-    .map(parseValidationRefusal)
-    .find(Boolean);
+  const governedRefusal = useMemo(
+    () =>
+      [...(toolkitValidationInfoList || []), ...(totalValidationInfo || [])]
+        .map(parseValidationRefusal)
+        .find(Boolean),
+    [toolkitValidationInfoList, totalValidationInfo],
+  );
 
   return {
     hasMisconfigurationErrors: totalValidationInfo?.length > 0 || toolkitValidationInfoList?.length > 0,
