@@ -18,7 +18,7 @@ import useSavePipeline, { calculateNodesAndEdges } from '@/pages/Pipelines/useSa
 import useNavBlocker from '../useNavBlocker';
 import useSaveChangedTools from './useSaveChangedTools';
 
-const { LAYOUT_VERSION, ORIENTATION } = FlowEditorConstants;
+const { LAYOUT_VERSION } = FlowEditorConstants;
 
 const useSaveNewVersion = ({
   toastError,
@@ -36,7 +36,7 @@ const useSaveNewVersion = ({
   const { version: currentVersionId } = useParams();
   const viewMode = useViewModeFromUrl();
   const name = useNameFromUrl();
-  const { isFromPipeline, yamlCode } = useSavePipeline();
+  const { isFromPipeline, yamlCode, orientation } = useSavePipeline();
   const { onSaveTools } = useSaveChangedTools();
   const { nodes: flowNodes } = useSelector(state => state.pipelineEditor);
   const { setBlockNav } = useNavBlocker();
@@ -123,9 +123,7 @@ const useSaveNewVersion = ({
   const onCreateNewVersion = useCallback(
     async newVersionName => {
       const saveTarget = captureSaveTarget();
-      const { nodes, edges } = isFromPipeline
-        ? calculateNodesAndEdges(yamlCode, ORIENTATION.vertical, flowNodes)
-        : {};
+      const { nodes, edges } = isFromPipeline ? calculateNodesAndEdges(yamlCode, orientation, flowNodes) : {};
 
       // Reset trigger to default 'chat_message' for new versions
       const triggerConfig = isFromPipeline ? { type: 'chat_message' } : null;
@@ -144,7 +142,7 @@ const useSaveNewVersion = ({
           ? {
               nodes,
               edges,
-              orientation: ORIENTATION.vertical,
+              orientation,
               layout_version: LAYOUT_VERSION,
               trigger: triggerConfig,
             }
@@ -154,7 +152,8 @@ const useSaveNewVersion = ({
           step_limit: versionDetails?.meta?.step_limit || 25,
         },
       });
-      if ((await onSaveTools(result?.data?.id)) === false) {
+      // A new pipeline version is created with the tools its nodes picked, so they need no extra requests
+      if (!isFromPipeline && (await onSaveTools(result?.data?.id)) === false) {
         return; // Stop if toolkit save failed
       }
       onSuccessHandler(result?.data, saveTarget);
@@ -164,6 +163,7 @@ const useSaveNewVersion = ({
       onSaveTools,
       isFromPipeline,
       yamlCode,
+      orientation,
       saveNewVersion,
       versionDetails,
       sourceVersionId,

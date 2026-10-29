@@ -23,3 +23,4 @@ export { useUsageChartData } from './useUsageChartData.hooks.js';
 export { useProjectContextWindowMode } from './useProjectContextWindowMode.hooks';
 export { useAnalyticsChatsTable } from './useAnalyticsChatsTable.hooks.js';
 export { useProjectDataDelete, useCanDeleteProjectData } from './useProjectDataDelete.hooks.js';
+export { useProjectConfigRecord } from './useProjectConfigRecord.hooks.js';

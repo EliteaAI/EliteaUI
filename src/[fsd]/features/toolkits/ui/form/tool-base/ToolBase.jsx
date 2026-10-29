@@ -34,6 +34,7 @@ const ToolBase = memo(props => {
     editToolDetail = {},
     setEditToolDetail = () => {},
     editField = () => {},
+    setDefaultField,
     toolErrors = {},
     setToolErrors = () => {},
     showValidation = false,
@@ -510,6 +511,7 @@ const ToolBase = memo(props => {
                   toolErrors={toolErrors}
                   settings={settings}
                   editField={editField}
+                  setDefaultField={setDefaultField}
                   handleInputChange={handleInputChange}
                   setToolErrors={setToolErrors}
                   setNotSelectedFields={setNotSelectedFields}
@@ -520,6 +522,7 @@ const ToolBase = memo(props => {
                   disabled={disabled}
                   validationErrorMessages={validationErrorMessages}
                   onCredentialReload={onCredentialReload}
+                  credentialType={editToolDetail?.type}
                 />
               );
             })}

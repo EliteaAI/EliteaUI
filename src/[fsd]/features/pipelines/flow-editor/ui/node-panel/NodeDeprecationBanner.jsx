@@ -1,12 +1,11 @@
 import { memo } from 'react';
 
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Box, Typography } from '@mui/material';
 
 import { DeprecatedConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { Text } from '@/[fsd]/shared/ui';
+import { Banner, Text } from '@/[fsd]/shared/ui';
 
-const READ_ONLY_HINT = 'These fields are read-only. Edit this node in the Yaml tab.';
+const READ_ONLY_HINT = 'These fields are read-only. Edit this node in the YAML view.';
 
 const NodeDeprecationBanner = memo(props => {
   const { type } = props;
@@ -17,21 +16,25 @@ const NodeDeprecationBanner = memo(props => {
   const styles = nodeDeprecationBannerStyles();
 
   return (
-    <Box
-      sx={styles.root}
-      data-testid="pipeline-node-panel-deprecation-banner"
-    >
-      <WarningAmberIcon sx={styles.icon} />
-      <Box sx={styles.text}>
-        <Text.TextWithLink {...tip} />
-        <Typography
-          variant="bodySmall"
-          color="text.secondary"
-          data-testid="pipeline-node-panel-deprecation-read-only"
-        >
-          {READ_ONLY_HINT}
-        </Typography>
-      </Box>
+    <Box data-testid="pipeline-node-panel-deprecation-banner">
+      <Banner.BannerMessage containerSx={styles.container}>
+        <Box sx={styles.text}>
+          <Typography
+            variant="labelSmall"
+            component="div"
+            sx={styles.textColor}
+          >
+            <Text.TextWithLink {...tip} />
+          </Typography>
+          <Typography
+            variant="bodySmall"
+            sx={styles.textColor}
+            data-testid="pipeline-node-panel-deprecation-read-only"
+          >
+            {READ_ONLY_HINT}
+          </Typography>
+        </Box>
+      </Banner.BannerMessage>
     </Box>
   );
 });
@@ -40,24 +43,17 @@ NodeDeprecationBanner.displayName = 'NodeDeprecationBanner';
 
 /** @type {MuiSx} */
 const nodeDeprecationBannerStyles = () => ({
-  root: ({ palette }) => ({
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '0.5rem',
-    padding: '0.75rem',
-    borderRadius: '0.5rem',
-    backgroundColor: palette.components.deprecated.background,
-  }),
+  container: {
+    marginTop: 0,
+  },
   text: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.25rem',
     minWidth: 0,
   },
-  icon: ({ palette }) => ({
-    fontSize: '1rem',
-    marginTop: '0.125rem',
-    color: palette.components.deprecated.text,
+  textColor: ({ palette }) => ({
+    color: palette.text.attention,
   }),
 });
 

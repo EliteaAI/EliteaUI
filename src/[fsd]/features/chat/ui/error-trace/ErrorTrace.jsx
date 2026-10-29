@@ -26,6 +26,7 @@ const ErrorTrace = memo(props => {
     compact = false,
     budgetErrorCode,
     afterHeadline,
+    refusal: parsedRefusal,
   } = props;
   // trace/headline are expected to be strings, but defend against callers
   // passing a raw object/array (would crash React error #31 at render time)
@@ -34,8 +35,12 @@ const ErrorTrace = memo(props => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Backend refusals (e.g. admission-layer denials) arrive as `{code, error}` with no answer
-  // text; surface the readable `error` plus its `code`. Any other shape keeps the generic text.
-  const refusal = useMemo(() => (headline ? undefined : parseRefusalPayload(trace)), [headline, trace]);
+  // text; surface the readable `error` plus its `code`. Any other shape keeps the generic text. A caller that has
+  // already parsed the payload hands the result in as `refusal`.
+  const refusal = useMemo(
+    () => parsedRefusal ?? (headline ? undefined : parseRefusalPayload(trace)),
+    [parsedRefusal, headline, trace],
+  );
 
   const downloadErrorTrace = useCallback(() => {
     if (!trace) return;

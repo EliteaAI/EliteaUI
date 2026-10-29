@@ -14,7 +14,10 @@ const CustomHandle = memo(props => {
     id,
     isConnectable,
     label = '',
-    orientation = FlowEditorConstants.ORIENTATION.vertical,
+    orientation: orientationOverride,
+    offset,
+    outputIndex,
+    outputCount = 1,
     isRunningPipeline,
     isPerforming,
     style: specifiedStyle = {},
@@ -29,9 +32,17 @@ const CustomHandle = memo(props => {
   // Get isExpanded from NodeCard context (null if not within NodeCard)
   const nodeCardContext = useNodeCardContext();
   const isExpanded = nodeCardContext?.isExpanded;
-  const { onAddFromHandle } = useContext(FlowEditorContext) || {};
+  const {
+    onAddFromHandle,
+    orientation: contextOrientation,
+    isCanvasLocked,
+  } = useContext(FlowEditorContext) || {};
+  const orientation = orientationOverride || contextOrientation || FlowEditorConstants.ORIENTATION.vertical;
+  const isHorizontal = orientation === FlowEditorConstants.ORIENTATION.horizontal;
+  // A locked canvas keeps its edges: no new connections and no node created from a handle
+  const isHandleConnectable = Boolean(isConnectable) && !isCanvasLocked;
   const canAddFromHandle =
-    type === 'source' && isConnectable && !isRunningPipeline && Boolean(onAddFromHandle);
+    type === 'source' && isHandleConnectable && !isRunningPipeline && Boolean(onAddFromHandle);
 
   const handleAddClick = useCallback(
     event => {
@@ -94,18 +105,21 @@ const CustomHandle = memo(props => {
   const position = useMemo(
     () =>
       type === 'source'
-        ? orientation === FlowEditorConstants.ORIENTATION.horizontal
+        ? isHorizontal
           ? Position.Right
           : Position.Bottom
-        : orientation === FlowEditorConstants.ORIENTATION.horizontal
+        : isHorizontal
           ? Position.Left
           : Position.Top,
-    [type, orientation],
+    [type, isHorizontal],
   );
 
   const styles = customHandleStyles({
     theme,
-    orientation,
+    isHorizontal,
+    offset,
+    outputIndex,
+    outputCount,
     isPerforming,
     isRunningPipeline,
     isConnectedEdgeSelected,
@@ -120,7 +134,7 @@ const CustomHandle = memo(props => {
       id={id}
       style={styles.handle}
       position={position}
-      isConnectable={isConnectable}
+      isConnectable={isHandleConnectable}
       onClick={handleClick}
       data-testid={testId}
     >
@@ -133,10 +147,9 @@ const CustomHandle = memo(props => {
             {finalLabel}
           </Typography>
           {/* Plus icon circle with connecting line for source handles when expanded */}
-          {type === 'source' && (
+          {type === 'source' && !isCanvasLocked && (
             <>
-              {/* Connecting vertical line */}
-              <Box sx={styles.verticalLineStyles} />
+              <Box sx={styles.connectorLine} />
               {/* Plus icon circle - part of the main handle's connectable area */}
               <Box
                 sx={styles.plusCircle}
@@ -153,10 +166,29 @@ const CustomHandle = memo(props => {
   );
 });
 
+// Left to right, several outputs stack on the right edge below the card header (4.125rem), so they
+// never cover its badges; a mini card is header only, so there they sit around its middle.
+// Top to bottom they spread along the bottom edge by `offset`.
+const STACKED_OUTPUT_TOP = 5.125;
+const STACKED_OUTPUT_STEP = 1.625;
+const MINI_OUTPUT_STEP = 1;
+
+const getHandleOffsetStyle = ({ isHorizontal, isExpanded, offset, outputIndex, outputCount }) => {
+  if (!isHorizontal) return offset ? { left: offset } : {};
+  if (outputIndex === undefined) return {};
+  if (isExpanded === false) {
+    return { top: `calc(50% + ${(outputIndex - (outputCount - 1) / 2) * MINI_OUTPUT_STEP}rem)` };
+  }
+  return { top: `${STACKED_OUTPUT_TOP + outputIndex * STACKED_OUTPUT_STEP}rem` };
+};
+
 /** @type {MuiSx} */
 const customHandleStyles = ({
   theme,
-  orientation,
+  isHorizontal,
+  offset,
+  outputIndex,
+  outputCount,
   isPerforming,
   isRunningPipeline,
   isConnectedEdgeSelected,
@@ -177,53 +209,46 @@ const customHandleStyles = ({
   const handlePadding = isExpanded === false ? '0rem' : '.25rem .75rem';
   const backgroundColor = isExpanded ? card.handle.background.default : card.handle.background.collapsed;
 
+  // The "+" sits past the Output pill: below it top to bottom, right of it left to right
+  const connectorLine = isHorizontal
+    ? {
+        top: '50%',
+        left: 'calc(100% - .0625rem)',
+        transform: 'translateY(-50%)',
+        width: '.3125rem',
+        height: '.125rem',
+      }
+    : { top: '1.4375rem', left: '50%', transform: 'translateX(-50%)', width: '.125rem', height: '.3125rem' };
+  const plusCircle = isHorizontal
+    ? { top: '50%', left: 'calc(100% + .25rem)', transform: 'translateY(-50%)' }
+    : { top: '1.75rem', left: '50%', transform: 'translateX(-50%)' };
+
   return {
-    handle:
-      orientation === FlowEditorConstants.ORIENTATION.horizontal
-        ? {
-            width: handleSize,
-            padding: handlePadding,
-            height: 'auto',
-            borderRadius: '1.25rem',
-            backgroundColor,
-            border: `${borderStyle} ${borderColor}`,
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 2,
-            ...(specifiedStyle || {}),
-          }
-        : {
-            width: isExpanded ? 'auto' : handleSize,
-            padding: handlePadding,
-            height: handleSize,
-            borderRadius: isExpanded ? '1.25rem' : '.375rem',
-            backgroundColor,
-            border: `${borderStyle} ${borderColor}`,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 2,
-            ...(specifiedStyle || {}),
-          },
-    verticalLineStyles: {
+    handle: {
+      width: isExpanded ? 'auto' : handleSize,
+      padding: handlePadding,
+      height: handleSize,
+      borderRadius: isExpanded ? '1.25rem' : '.375rem',
+      backgroundColor,
+      border: `${borderStyle} ${borderColor}`,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 2,
+      ...getHandleOffsetStyle({ isHorizontal, isExpanded, offset, outputIndex, outputCount }),
+      ...(specifiedStyle || {}),
+    },
+    connectorLine: {
       position: 'absolute',
-      top: '1.4375rem',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      width: '.125rem',
-      height: '.3125rem',
+      ...connectorLine,
       backgroundColor: borderColor,
       borderRadius: '.0625rem',
       zIndex: 9,
     },
     plusCircle: {
       position: 'absolute',
-      top: '1.75rem',
-      left: '50%',
-      transform: 'translateX(-50%)',
+      ...plusCircle,
       width: '1rem',
       height: '1rem',
       borderRadius: '50%',

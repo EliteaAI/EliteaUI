@@ -23,13 +23,12 @@ import {
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { YamlCodeEditor } from '@/[fsd]/features/pipelines/yaml-editor/ui';
 import { ChunkHelpers, FunctionHelpers } from '@/[fsd]/shared/lib/helpers';
-import { useIsFrom, useIsSmallWindow, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useIsFrom, useIsPipelineLayoutDirty, useIsSmallWindow } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { CanvasToolbar } from '@/[fsd]/widgets/pipeline-canvas-toolbar';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import { PipelineEditorMode } from '@/common/constants.js';
-import { handleCopy } from '@/common/utils.jsx';
 import { ContentContainer } from '@/pages/Common/index.js';
 import RouteDefinitions from '@/routes.js';
 import { actions, selectActivePipeline } from '@/slices/pipeline.js';
@@ -63,19 +62,20 @@ const EditorPanel = forwardRef((props, ref) => {
     onTestPipeline,
     testDisabledReason,
     isTestPanelOpen = false,
+    onCanvasNodeInteraction,
   } = props;
   const dispatch = useDispatch();
-  const { toastInfo } = useToast();
   const { isSmallWindow } = useIsSmallWindow();
   const theme = useTheme();
   const isFromChat = useIsFrom(RouteDefinitions.Chat);
   const [mode, setMode] = useState(PipelineEditorMode.Flow);
   const flowEditorRef = useRef();
   const isYamlCodeDirty = useIsPipelineYamlCodeDirty();
+  const isLayoutDirty = useIsPipelineLayoutDirty();
   useEffect(() => {
-    setYamlDirty(isYamlCodeDirty);
+    setYamlDirty(isYamlCodeDirty || isLayoutDirty);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isYamlCodeDirty]);
+  }, [isYamlCodeDirty, isLayoutDirty]);
 
   const { yamlJsonObject, yamlCode } = useSelector(selectActivePipeline);
   // "Not configured" issues reported by the node cards
@@ -121,8 +121,7 @@ const EditorPanel = forwardRef((props, ref) => {
       }
       if (parsedYamlJson && !areYamlObjectsEqual(parsedYamlJson, yamlJsonObject)) {
         setYamlJsonObject(parsedYamlJson);
-        const currentExpandState = flowEditorRef.current?.getCurrentExpandState?.();
-        flowEditorRef.current?.calculateLayoutNodes?.(parsedYamlJson, true, true, currentExpandState);
+        flowEditorRef.current?.calculateLayoutNodes?.(parsedYamlJson, true, false);
       }
     },
     [setYamlJsonObject, yamlJsonObject],
@@ -147,14 +146,6 @@ const EditorPanel = forwardRef((props, ref) => {
     flowEditorRef.current?.fitView?.();
   }, []);
 
-  useImperativeHandle(ref, () => ({
-    onRcvAgentEvent,
-    deleteAllRunNodes,
-    fitView,
-    onStopRun: (...args) => flowEditorRef.current?.stopCurrentRun?.(...args),
-    hasRunsInProgress: () => flowEditorRef.current?.hasRunsInProgress?.(),
-  }));
-
   const onSelectChatMode = useCallback(
     e => {
       const newMode = e?.target?.value;
@@ -173,14 +164,23 @@ const EditorPanel = forwardRef((props, ref) => {
     [mode, onParseCodeToJson, setYamlCode, yamlCode, yamlJsonObject],
   );
 
+  useImperativeHandle(ref, () => ({
+    onRcvAgentEvent,
+    deleteAllRunNodes,
+    fitView,
+    onStopRun: (...args) => flowEditorRef.current?.stopCurrentRun?.(...args),
+    hasRunsInProgress: () => flowEditorRef.current?.hasRunsInProgress?.(),
+    panBy: (dx, dy) => flowEditorRef.current?.panBy?.(dx, dy),
+    selectNode: nodeId => {
+      if (mode !== PipelineEditorMode.Flow) onSelectChatMode({ target: { value: PipelineEditorMode.Flow } });
+      // The canvas re-reads the YAML when leaving the YAML view, so select once that is done
+      setTimeout(() => flowEditorRef.current?.selectNode?.(nodeId), 0);
+    },
+  }));
+
   const onAddNode = useCallback(type => {
     flowEditorRef.current?.onAddNode?.(type);
   }, []);
-
-  const onCopy = useCallback(() => {
-    handleCopy(yamlCode);
-    toastInfo('The code has been copied to the clipboard.');
-  }, [toastInfo, yamlCode]);
 
   useEffect(() => {
     if (yamlJsonObject.nodes?.find(node => node.decision)) {
@@ -203,7 +203,6 @@ const EditorPanel = forwardRef((props, ref) => {
         onAddNode={onAddNode}
         onTestPipeline={isTestPanelOpen ? undefined : onTestPipeline}
         testDisabledReason={testDisabledReason || flowTestDisabledReason}
-        onCopyYaml={onCopy}
         disabled={disabled}
         isCompact={isFromChat}
       />
@@ -261,6 +260,7 @@ const EditorPanel = forwardRef((props, ref) => {
                 disabled={disabled}
                 isVisible={isVisible}
                 onNodeIssuesChange={setNodeIssuesById}
+                onCanvasNodeInteraction={onCanvasNodeInteraction}
               />
             </Suspense>
           </ErrorBoundary>

@@ -7,6 +7,7 @@ import {
   ExecutionHierarchyHelpers,
   SubAgentGroupingHelpers,
 } from '@/[fsd]/features/chat/lib/helpers';
+import { parseGovernanceRefusal } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
 import { ContinuationError, ErrorTrace } from '@/[fsd]/features/chat/ui/error-trace';
 import { SubAgentAccordion } from '@/[fsd]/features/chat/ui/sub-agent-section';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
@@ -61,6 +62,12 @@ const SubAgentThinkBlock = memo(props => {
     streaming,
   } = props;
   const displayName = subEntry?.name || childError?.name || instanceKey;
+  // a sub-agent refused by governance (`{code, error}`, C-1009) shows the refusal card, as a whole turn does; a
+  // payload without the code stays the child's own text. Parsed here once, the card is handed the result
+  const childRefusal = useMemo(
+    () => (childError && !childError.headline ? parseGovernanceRefusal(childError.exception) : undefined),
+    [childError],
+  );
   const ordinal = subEntry?.ordinal || 0;
   const label = subEntry?.breadcrumbLabel || (ordinal ? `${displayName} (${ordinal})` : displayName);
   const groups = subEntry?.groups || [];
@@ -118,7 +125,8 @@ const SubAgentThinkBlock = memo(props => {
         ) : (
           <ErrorTrace
             compact
-            headline={childError.headline || childError.exception}
+            headline={childRefusal ? undefined : childError.headline || childError.exception}
+            refusal={childRefusal}
             trace={childError.exception}
             messageId={messageId}
             onCopy={onCopy}

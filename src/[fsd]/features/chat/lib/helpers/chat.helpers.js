@@ -8,6 +8,9 @@ import { normalizeHitlInterrupt } from './hitl.helpers';
 
 const { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } = LLMSettingsConstants;
 
+const REGENERATION_FAILED_MESSAGE = 'Regeneration Failed. Please try again.';
+const MAX_REGENERATION_ERROR_LENGTH = 1000;
+
 export const getWelcomeMessage = (welcomeMessage, participantId = null) => ({
   id: WELCOME_MESSAGE_ID,
   role: ROLES.Assistant,
@@ -73,9 +76,15 @@ export const prepareMessageForRegeneration = (message, createdAt = Date.now()) =
   created_at: createdAt,
 });
 
-export const applyMessageRegenerationError = (message, error) => ({
+export const toRegenerationReason = reason =>
+  typeof reason === 'string' && reason ? reason : REGENERATION_FAILED_MESSAGE;
+
+const truncateRegenerationError = error =>
+  error.length > MAX_REGENERATION_ERROR_LENGTH ? `${error.slice(0, MAX_REGENERATION_ERROR_LENGTH)}…` : error;
+
+export const applyMessageRegenerationError = (message, error, code) => ({
   ...message,
-  exception: error,
+  exception: JSON.stringify({ code, error: truncateRegenerationError(error) }),
   continuationError: undefined,
   isRegenerating: false,
 });

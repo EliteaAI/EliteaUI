@@ -79,3 +79,15 @@ export const buildCron = ({ period, minutes, hours, monthDays, weekDays }) => {
   }
   return '0 0 * * *';
 };
+
+// True when the Builder shows this cron as it is: the cron it would build runs at the same times.
+export const canBuildCron = expression => {
+  const parsed = parseCron(expression);
+  if (!parsed) return false;
+  try {
+    const runs = cron => JSON.stringify(converter.parseCronString(cron));
+    return runs(buildCron(parsed)) === runs(expression);
+  } catch {
+    return false;
+  }
+};

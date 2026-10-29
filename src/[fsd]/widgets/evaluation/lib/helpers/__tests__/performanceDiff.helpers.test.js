@@ -112,4 +112,66 @@ describe('buildPerformanceDiff', () => {
 
     expect(view.notes.some(note => note.includes('different time limit'))).toBe(false);
   });
+
+  // #7261
+  it('says how many of the run cases the comparison rests on', () => {
+    const view = buildPerformanceDiff({
+      ...COMPARE,
+      diff: { ...COMPARE.diff, coverage: { ...COMPARE.diff.coverage, run_cases: 30 } },
+    });
+
+    expect(view.coverageLabel).toBe('Compared on 3 of 30 cases');
+    expect(buildPerformanceDiff(COMPARE).coverageLabel).toBeNull();
+  });
+
+  it('withholds latency verdicts on a small overlap and explains the rule', () => {
+    const latency = metric({
+      run: 30000,
+      reference: 10000,
+      delta_pct: 200,
+      not_comparable: 'few_matched_cases',
+      verdict: null,
+    });
+    const view = buildPerformanceDiff({
+      ...COMPARE,
+      diff: {
+        ...COMPARE.diff,
+        not_comparable: ['few_matched_cases'],
+        coverage: {
+          matched: 3,
+          run_cases: 30,
+          changed: [],
+          only_in_run: [],
+          only_in_reference: [],
+          min_matched: { cases: 5, share: 0.5 },
+        },
+        metrics: { ...COMPARE.diff.metrics, p50_latency_ms: latency },
+        slower_than_reference: false,
+      },
+    });
+
+    expect(view.rows[0]).toMatchObject({
+      run: '30.0 s',
+      reference: '10.0 s',
+      change: 'Not comparable',
+      verdict: null,
+    });
+    expect(view.notes).toEqual([
+      'Only 3 of 30 cases match the reference, too few to judge latency (needs at least 5 cases and half of the run).',
+    ]);
+    expect(view.timeouts).toEqual({ newly: '#4', noLonger: null });
+    expect(view.isSlower).toBe(false);
+  });
+
+  it('falls back to a static note when the overlap counts are missing', () => {
+    const view = buildPerformanceDiff({
+      ...COMPARE,
+      diff: { ...COMPARE.diff, not_comparable: ['few_matched_cases'], coverage: {} },
+    });
+
+    expect(view.notes).toEqual([
+      'Too few cases match the reference to judge latency, so latency is not compared.',
+    ]);
+    expect(view.coverageLabel).toBeNull();
+  });
 });

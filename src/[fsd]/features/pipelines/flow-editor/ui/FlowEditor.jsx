@@ -11,7 +11,7 @@ import {
 
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Box, Tooltip, useTheme } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import { deepClone } from '@mui/x-data-grid/internals';
 
 import { useTrackEvent } from '@/GA';
@@ -25,6 +25,7 @@ import {
   ParsePipelineHelpers,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import {
+  useCanvasMinimapPref,
   useConnectNodes,
   useCtrlASelectAll,
   useDeleteItems,
@@ -33,25 +34,22 @@ import {
   useSaveNodesAndEdges,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import {
+  FlowEditorCanvasControls,
   FlowEditorEmptyState,
   FlowEditorNodePanel,
   FlowEditorNodes,
   FlowEditorSettings,
   FlowEditorState,
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import { useReconcilePipelineAttachments } from '@/[fsd]/features/pipelines/tool-picker';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { FlowEditorProvider } from '@/[fsd]/shared/lib/context';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ClipboardIcon from '@/assets/clipboard-icon.svg?react';
-import CollapseIcon from '@/assets/collapse-second-icon.svg?react';
-import ExpandIcon from '@/assets/expand-third-icon.svg?react';
-import PolylineOutlinedIcon from '@/assets/polyline-outline-icon.svg?react';
 import { actions, selectActivePipeline } from '@/slices/pipeline';
 import {
   Background,
-  ControlButton,
-  Controls,
   ReactFlow,
   SelectionMode,
   applyEdgeChanges,
@@ -61,15 +59,22 @@ import {
   useNodesState,
   useReactFlow,
   useStore,
+  useUpdateNodeInternals,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
-const END_NODE_OFFSET = { x: 160, y: 120 };
+// Where End lands next to the first node, in the flow direction
+const END_NODE_GAP = 120;
+
+const MAX_ZOOM = 2;
 
 // The first fit waits for React Flow to measure the nodes; until then they stay hidden
 const INITIAL_FIT_DELAY = 150;
+
+// End is always there, so more than one node means the pipeline has nodes to fit
+const hasNodesToFit = nodes => nodes.length > 1;
 
 const selectIsMiniZoom = state => NodeCardHelpers.isMiniCardZoom(state.transform[2]);
 
@@ -124,19 +129,42 @@ const FlowEditor = memo(
       disabled,
       isVisible = true,
       onNodeIssuesChange,
+      onCanvasNodeInteraction,
       ...leftProps
     } = props;
     const styles = flowEditorStyles();
 
     const trackEvent = useTrackEvent();
 
-    const [expandAll, setExpandAll] = useState(true);
+    const [isCanvasLocked, setIsCanvasLocked] = useState(false);
+    const { isMinimapVisible, toggleMinimap } = useCanvasMinimapPref();
     const [isStateDrawerOpen, setIsStateDrawerOpen] = useState(false);
     const [selectedNodeId, setSelectedNodeId] = useState(null);
     // The node the panel shows; it outlives the selection while the close animation runs
     const [panelNodeId, setPanelNodeId] = useState(null);
     const [nodeIssuesById, setNodeIssuesById] = useState({});
     const isDraggingNodeRef = useRef(false);
+
+    // The node YAML view registers a guard, so an invalid draft isn't left behind silently
+    const nodeLeaveGuardRef = useRef(null);
+    const pendingNodeLeaveRef = useRef(null);
+    const [isNodeLeavePromptOpen, setIsNodeLeavePromptOpen] = useState(false);
+
+    const registerNodeLeaveGuard = useCallback(guard => {
+      nodeLeaveGuardRef.current = guard;
+      return () => {
+        if (nodeLeaveGuardRef.current === guard) nodeLeaveGuardRef.current = null;
+      };
+    }, []);
+
+    const requestNodeLeave = useCallback(action => {
+      if (nodeLeaveGuardRef.current?.shouldBlock()) {
+        pendingNodeLeaveRef.current = action;
+        setIsNodeLeavePromptOpen(true);
+        return;
+      }
+      action();
+    }, []);
 
     const { setNodes, setEdges } = useSaveNodesAndEdges();
 
@@ -147,25 +175,43 @@ const FlowEditor = memo(
       layout_version,
       resetFlag,
       resetVersion,
+      orientation,
     } = useSelector(selectActivePipeline);
     const yamlJsonObjectRef = useRef(yamlJsonObject);
+    const isHorizontal = orientation === FlowEditorConstants.ORIENTATION.horizontal;
+
+    // Lets a parent react to work on the nodes (the pipeline page collapses its settings column).
+    // Called when an action ends, never mid-gesture: a canvas resize under a drag makes the node jump.
+    // Read through a ref, so the node context (via onAddFromHandle) stays stable when the parent re-renders.
+    const onCanvasNodeInteractionRef = useRef(onCanvasNodeInteraction);
+
+    useEffect(() => {
+      onCanvasNodeInteractionRef.current = onCanvasNodeInteraction;
+    }, [onCanvasNodeInteraction]);
+
+    const notifyNodeInteraction = useCallback(() => {
+      onCanvasNodeInteractionRef.current?.();
+    }, []);
+
+    // Nodes pick their toolkits, MCPs and agents; drop the ones no node uses any more
+    useReconcilePipelineAttachments({ yamlJsonObject, enabled: isVisible && !disabled });
     const { nodes: cachedNodes, edges: cachedEdges } = useSelector(state => state.pipelineEditor);
     const theme = useTheme();
     const editorRef = useRef();
-    const { fitView, getViewport, getZoom, setCenter } = useReactFlow();
+    const { fitView, getViewport, getZoom, setCenter, setViewport } = useReactFlow();
     const nodesInitialized = useNodesInitialized({
       includeHiddenNodes: true,
     });
 
     // Nodes stay invisible until the opening fit (or auto-arrange) is done, so they don't jump on open
-    const [isViewportReady, setIsViewportReady] = useState(() => initialNodes.length <= 2);
+    const [isViewportReady, setIsViewportReady] = useState(() => !hasNodesToFit(initialNodes));
     const revealTimerRef = useRef();
 
     const fitThenReveal = useCallback(() => {
       setIsViewportReady(false);
       clearTimeout(revealTimerRef.current);
       revealTimerRef.current = setTimeout(() => {
-        fitView();
+        fitView(FlowEditorConstants.FIT_VIEW_OPTIONS);
         requestAnimationFrame(() => setIsViewportReady(true));
       }, INITIAL_FIT_DELAY);
     }, [fitView]);
@@ -191,16 +237,27 @@ const FlowEditor = memo(
     const [flowNodes, setFlowNodes] = useNodesState(cachedNodes.length ? cachedNodes : initialNodes);
     const [flowEdges, setFlowEdges] = useEdgesState(cachedEdges.length ? cachedEdges : initialEdges);
 
-    // Last full-size (not mini, expanded) measurement per node id
+    // Last full-size (not mini) measurement per node id
     const fullNodeSizesRef = useRef({});
     const isMiniZoom = useStore(selectIsMiniZoom);
 
     useEffect(() => {
-      if (isMiniZoom || !expandAll) return;
+      if (isMiniZoom) return;
       flowNodes.forEach(node => {
         if (node.measured) fullNodeSizesRef.current[node.id] = node.measured;
       });
-    }, [flowNodes, isMiniZoom, expandAll]);
+    }, [flowNodes, isMiniZoom]);
+
+    // The handles change sides with the orientation; React Flow keeps the old handle bounds until the
+    // nodes are re-measured, so the edges would still leave from the bottom and enter from the top
+    const updateNodeInternals = useUpdateNodeInternals();
+    const flowNodesRef = useRef(flowNodes);
+    flowNodesRef.current = flowNodes;
+
+    useEffect(() => {
+      updateNodeInternals(flowNodesRef.current.map(node => node.id));
+    }, [orientation, updateNodeInternals]);
+
     const {
       onStopRun,
       deleteRunNode,
@@ -265,7 +322,7 @@ const FlowEditor = memo(
         setEdges(initialEdges);
       }, 150);
 
-      if (initialNodes.length > 2) fitThenReveal();
+      if (hasNodesToFit(initialNodes)) fitThenReveal();
       else setIsViewportReady(true);
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isVisible, resetFlag, resetVersion, initialNodes, initialEdges]);
@@ -322,14 +379,24 @@ const FlowEditor = memo(
         }
 
         const isFirstNode = !yamlJsonObjectRef.current?.nodes?.filter(Boolean).length;
-        const endNodePosition = {
-          x: newFlowNode.position.x + END_NODE_OFFSET.x,
-          y:
-            newFlowNode.position.y +
-            (FlowEditorConstants.NodeHeightMap[type] ||
-              FlowEditorConstants.NodeHeightMap[FlowEditorConstants.PipelineNodeTypes.Default]) +
-            END_NODE_OFFSET.y,
-        };
+        const newNodeHeight =
+          FlowEditorConstants.NodeHeightMap[type] ||
+          FlowEditorConstants.NodeHeightMap[FlowEditorConstants.PipelineNodeTypes.Default];
+        const endNodePosition = isHorizontal
+          ? {
+              x: newFlowNode.position.x + FlowEditorConstants.NODE_CARD_WIDTH + END_NODE_GAP,
+              y:
+                newFlowNode.position.y +
+                newNodeHeight / 2 -
+                FlowEditorConstants.NodeHeightMap[FlowEditorConstants.PipelineNodeTypes.End] / 2,
+            }
+          : {
+              x:
+                newFlowNode.position.x +
+                FlowEditorConstants.NODE_CARD_WIDTH / 2 -
+                FlowEditorConstants.END_NODE_WIDTH / 2,
+              y: newFlowNode.position.y + newNodeHeight + END_NODE_GAP,
+            };
 
         setFlowNodes(prevNodes => {
           const deselectedNodes = prevNodes.map(node => {
@@ -348,15 +415,16 @@ const FlowEditor = memo(
         trackEvent(GA_EVENT_NAMES.PIPELINE_NODE_CREATED, {
           [GA_EVENT_PARAMS.NODE_TYPE]: type,
         });
-        setSelectedNodeId(newNode.id);
+        requestNodeLeave(() => setSelectedNodeId(newNode.id));
 
         return newFlowNode;
       },
-      [flowNodes, setFlowNodes, setYamlJsonObject, trackEvent],
+      [flowNodes, isHorizontal, requestNodeLeave, setFlowNodes, setYamlJsonObject, trackEvent],
     );
 
     const onAddNode = useCallback(
       type => {
+        notifyNodeInteraction();
         const viewPort = getViewport();
         // The new node opens the overlaying node panel, so it must land left of it
         const viewSize = {
@@ -397,15 +465,13 @@ const FlowEditor = memo(
         }
         return newNode;
       },
-      [getViewSize, getViewport, flowNodes, onNodeCreateAtPosition, setCenter],
+      [getViewSize, getViewport, flowNodes, notifyNodeInteraction, onNodeCreateAtPosition, setCenter],
     );
 
+    // Returns the parsed nodes (with their arranged positions when shouldDoLayout is set)
     const calculateLayoutNodes = useCallback(
-      (parsedYamlJson, shouldDoLayout, layoutAll, expanded) => {
-        const { nodes, edges } = ParsePipelineHelpers.parseYaml(
-          parsedYamlJson,
-          FlowEditorConstants.ORIENTATION.vertical,
-        );
+      (parsedYamlJson, shouldDoLayout, layoutAll, layoutOrientation = orientation) => {
+        const { nodes, edges } = ParsePipelineHelpers.parseYaml(parsedYamlJson, layoutOrientation);
         let finalNodes = nodes;
         let finalEdges = edges;
         if (shouldDoLayout) {
@@ -413,12 +479,13 @@ const FlowEditor = memo(
           const measuredNodes = NodeCardHelpers.isMiniCardZoom(zoom)
             ? NodeCardHelpers.withFullNodeSizes(flowNodes, fullNodeSizesRef.current)
             : FlowEditorHelpers.measureNodes(flowNodes, zoom, editorRef);
-          const { nodes: layoutNodes, edges: layoutEdges } = LayoutHelpers.doLayout({
+          // Arrange moves every node; otherwise only the new ones get a place next to the canvas layout
+          const layout = layoutAll ? LayoutHelpers.doLayout : LayoutHelpers.mergeCanvasPositions;
+          const { nodes: layoutNodes, edges: layoutEdges } = layout({
             nodes,
             edges,
             flowNodes: measuredNodes,
-            orientation: FlowEditorConstants.ORIENTATION.vertical,
-            expanded,
+            orientation: layoutOrientation,
           });
           finalNodes = layoutNodes;
           finalEdges = layoutEdges;
@@ -448,17 +515,20 @@ const FlowEditor = memo(
             return foundEdge ? { ...foundEdge, data: { ...foundEdge.data } } : edge;
           }),
         );
+        return finalNodes;
       },
-      [flowNodes, getZoom, setFlowEdges, setFlowNodes],
+      [flowNodes, getZoom, orientation, setFlowEdges, setFlowNodes],
     );
+
+    const canFitNodes = hasNodesToFit(flowNodes);
 
     useImperativeHandle(
       ref,
       () => ({
         fitView: () => {
-          if (flowNodes.length > 2) {
+          if (canFitNodes) {
             setTimeout(() => {
-              fitView();
+              fitView(FlowEditorConstants.FIT_VIEW_OPTIONS);
             }, 100);
           }
         },
@@ -467,27 +537,43 @@ const FlowEditor = memo(
         setFlowEdges,
         setFlowNodes,
         deleteAllRunNodes,
-        getCurrentExpandState: () => expandAll,
-        calculateLayoutNodes: (parsedYamlJson, shouldDoLayout, layoutAll, explicitExpandState) => {
-          const finalExpandState = explicitExpandState !== undefined ? explicitExpandState : expandAll;
-          return calculateLayoutNodes(parsedYamlJson, shouldDoLayout, layoutAll, finalExpandState);
+        calculateLayoutNodes: (parsedYamlJson, shouldDoLayout, layoutAll) =>
+          calculateLayoutNodes(parsedYamlJson, shouldDoLayout, layoutAll),
+        // Moves the view by a screen offset, e.g. to keep the nodes in place while the canvas widens
+        panBy: (dx, dy = 0) => {
+          const viewport = getViewport();
+          setViewport({ ...viewport, x: viewport.x + dx, y: viewport.y + dy });
         },
         stopCurrentRun: () => onStopRun(pipelineRunNodes[pipelineRunNodes.length - 1]?.id || ''), // stop the last run node
         hasRunsInProgress: () =>
           pipelineRunNodes.some(node => node.data?.status === PipelineStatus.InProgress),
+        // Selects a node from outside the canvas (the Tools section "Used by") and opens its panel
+        selectNode: nodeId =>
+          requestNodeLeave(() => {
+            setFlowNodes(prevNodes =>
+              prevNodes.map(node =>
+                Boolean(node.selected) === (node.id === nodeId)
+                  ? node
+                  : { ...node, selected: node.id === nodeId },
+              ),
+            );
+            setSelectedNodeId(nodeId);
+          }),
       }),
       [
         fitView,
-        flowNodes.length,
+        canFitNodes,
         onAddNode,
         onRcvAgentEvent,
         setFlowEdges,
         setFlowNodes,
         deleteAllRunNodes,
         calculateLayoutNodes,
-        expandAll,
+        getViewport,
+        setViewport,
         onStopRun,
         pipelineRunNodes,
+        requestNodeLeave,
       ],
     );
 
@@ -537,10 +623,18 @@ const FlowEditor = memo(
       handleNodeCreate,
       availableTargets,
       availableNodeTypes,
-    } = useIncompleteEdge({ onConnect, onNodeCreateAtPosition, yamlJsonObjectRef, disabled });
+    } = useIncompleteEdge({ onConnect, onNodeCreateAtPosition, yamlJsonObjectRef, disabled, orientation });
+
+    const handleConnectEnd = useCallback(
+      (...args) => {
+        onConnectEnd(...args);
+        notifyNodeInteraction();
+      },
+      [notifyNodeInteraction, onConnectEnd],
+    );
 
     // Keep the handlers object for ReactFlow props
-    const handlers = { onConnectStart, onConnectEnd, onReconnect, onReconnectEnd };
+    const handlers = { onConnectStart, onConnectEnd: handleConnectEnd, onReconnect, onReconnectEnd };
 
     // Stable callback for the "+" under each Output, so the node context doesn't change every render
     const openFromHandleRef = useRef(openFromHandle);
@@ -549,9 +643,13 @@ const FlowEditor = memo(
       openFromHandleRef.current = openFromHandle;
     }, [openFromHandle]);
 
-    const onAddFromHandle = useCallback(args => {
-      openFromHandleRef.current(args);
-    }, []);
+    const onAddFromHandle = useCallback(
+      args => {
+        notifyNodeInteraction();
+        openFromHandleRef.current(args);
+      },
+      [notifyNodeInteraction],
+    );
 
     const closeNodePanel = useCallback(() => {
       setSelectedNodeId(null);
@@ -562,29 +660,66 @@ const FlowEditor = memo(
       );
     }, [setFlowNodes]);
 
-    const onNodeClick = useCallback((_event, node) => {
-      if (isDraggingNodeRef.current) return;
-      if (NON_CONFIGURABLE_NODE_TYPES.includes(node.type)) {
-        setSelectedNodeId(null);
-        return;
-      }
-      setSelectedNodeId(node.id);
+    const onFixNodeYaml = useCallback(() => {
+      pendingNodeLeaveRef.current = null;
+      setIsNodeLeavePromptOpen(false);
+      // A blocked click on another node already selected it on the canvas
+      setFlowNodes(prevNodes =>
+        prevNodes.map(node =>
+          Boolean(node.selected) === (node.id === selectedNodeId)
+            ? node
+            : { ...node, selected: node.id === selectedNodeId },
+        ),
+      );
+    }, [selectedNodeId, setFlowNodes]);
+
+    const onDiscardNodeYaml = useCallback(() => {
+      nodeLeaveGuardRef.current?.discard();
+      const action = pendingNodeLeaveRef.current;
+      pendingNodeLeaveRef.current = null;
+      setIsNodeLeavePromptOpen(false);
+      action?.();
     }, []);
+
+    const onCloseNodePanel = useCallback(
+      () => requestNodeLeave(closeNodePanel),
+      [closeNodePanel, requestNodeLeave],
+    );
+
+    const resyncFlowFromYaml = useCallback(
+      yaml => calculateLayoutNodes(yaml, false, false),
+      [calculateLayoutNodes],
+    );
+
+    const onNodeClick = useCallback(
+      (_event, node) => {
+        if (isDraggingNodeRef.current) return;
+        if (NON_CONFIGURABLE_NODE_TYPES.includes(node.type)) {
+          requestNodeLeave(() => setSelectedNodeId(null));
+          return;
+        }
+        notifyNodeInteraction();
+        if (node.id === selectedNodeId) return;
+        requestNodeLeave(() => setSelectedNodeId(node.id));
+      },
+      [notifyNodeInteraction, requestNodeLeave, selectedNodeId],
+    );
 
     const onNodeDragStart = useCallback(() => {
       isDraggingNodeRef.current = true;
     }, []);
 
     const onNodeDragStop = useCallback(() => {
+      notifyNodeInteraction();
       // React Flow fires the click after the drag stop, so release the guard on the next tick
       setTimeout(() => {
         isDraggingNodeRef.current = false;
       }, 0);
-    }, []);
+    }, [notifyNodeInteraction]);
 
     const onPaneClick = useCallback(() => {
-      setSelectedNodeId(null);
-    }, []);
+      requestNodeLeave(() => setSelectedNodeId(null));
+    }, [requestNodeLeave]);
 
     const onNodeRenamed = useCallback((previousId, newId) => {
       setSelectedNodeId(prevId => (prevId === previousId ? newId : prevId));
@@ -623,6 +758,7 @@ const FlowEditor = memo(
     // to measure. After deselection the last node stays until the close animation ends; a deleted node
     // has no flow node left, so the panel closes empty.
     const isNodePanelOpen = Boolean(selectedFlowNode);
+    const stateRightOffset = isNodePanelOpen ? FlowEditorConstants.NODE_PANEL_WIDTH : 0;
     const panelFlowNode = useMemo(
       () => selectedFlowNode || (panelNodeId ? flowNodes.find(node => node.id === panelNodeId) : null),
       [flowNodes, panelNodeId, selectedFlowNode],
@@ -642,25 +778,34 @@ const FlowEditor = memo(
       const onKeyDown = event => {
         if (event.key !== 'Escape' || event.defaultPrevented || isEscapeHandledElsewhere(event.target))
           return;
-        closeNodePanel();
+        onCloseNodePanel();
       };
       document.addEventListener('keydown', onKeyDown);
       return () => document.removeEventListener('keydown', onKeyDown);
-    }, [closeNodePanel, isVisible, selectedNodeId]);
+    }, [onCloseNodePanel, isVisible, selectedNodeId]);
 
-    const onReLayout = specifiedExpandAll => {
-      calculateLayoutNodes(yamlJsonObject, true, true, specifiedExpandAll || expandAll);
-      setTimeout(() => {
-        fitView();
-      }, 100);
-    };
+    const onReLayout = useCallback(
+      (layoutOrientation = orientation) => {
+        const arrangedNodes = calculateLayoutNodes(yamlJsonObject, true, true, layoutOrientation);
+        setTimeout(() => {
+          fitView(FlowEditorConstants.FIT_VIEW_OPTIONS);
+        }, 100);
+        return arrangedNodes;
+      },
+      [calculateLayoutNodes, fitView, orientation, yamlJsonObject],
+    );
 
-    const onExpandAll = () => {
-      setExpandAll(prev => !prev);
-      setTimeout(() => {
-        onReLayout(!expandAll);
-      }, 200);
-    };
+    const onArrange = useCallback(
+      nextOrientation => {
+        if (nextOrientation !== orientation) dispatch(actions.setPipelineOrientation(nextOrientation));
+        onReLayout(nextOrientation);
+      },
+      [dispatch, onReLayout, orientation],
+    );
+
+    const onToggleCanvasLock = useCallback(() => {
+      setIsCanvasLocked(prev => !prev);
+    }, []);
 
     const isEmptyPipeline = !yamlJsonObject?.nodes?.filter(Boolean).length;
 
@@ -694,7 +839,7 @@ const FlowEditor = memo(
     }, []);
 
     useEffect(() => {
-      if (initialNodes.length > 2) fitThenReveal();
+      if (hasNodesToFit(initialNodes)) fitThenReveal();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialNodes.length]);
 
@@ -723,9 +868,11 @@ const FlowEditor = memo(
 
     useEffect(() => {
       if (layout_version !== FlowEditorConstants.LAYOUT_VERSION && nodesInitialized) {
-        onReLayout();
+        const arrangedNodes = onReLayout();
+        // Not a user change: Save stays disabled and Discard returns to this layout
+        dispatch(actions.commitInitialLayout(arrangedNodes));
         // Keeps the nodes hidden through the auto-arrange so the reorder isn't visible either
-        if (flowNodes.length > 2) fitThenReveal();
+        if (hasNodesToFit(flowNodes)) fitThenReveal();
         dispatch(actions.setLayoutVersion(FlowEditorConstants.LAYOUT_VERSION));
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -746,11 +893,15 @@ const FlowEditor = memo(
           deleteRunNode={deleteRunNode}
           isRunningPipeline={isRunningPipeline}
           handleDeleteNode={onDeleteNode}
-          onAddFromHandle={disabled ? undefined : onAddFromHandle}
-          expandAll={expandAll}
+          onAddFromHandle={disabled || isCanvasLocked ? undefined : onAddFromHandle}
+          orientation={orientation}
+          isCanvasLocked={isCanvasLocked}
           disabled={disabled}
           reportNodeIssues={reportNodeIssues}
           onConnectNodes={onConnect}
+          resyncFlowFromYaml={resyncFlowFromYaml}
+          registerNodeLeaveGuard={registerNodeLeaveGuard}
+          requestNodeLeave={requestNodeLeave}
         >
           <Box
             sx={styles.container(isViewportReady)}
@@ -769,7 +920,7 @@ const FlowEditor = memo(
             </Box>
             {!isStateDrawerOpen && (
               <Box
-                sx={styles.stateButton(theme)}
+                sx={styles.stateButton(theme, stateRightOffset)}
                 data-tour={PIPELINE_TOUR_TARGET_IDS.state}
               >
                 <Button.BaseBtn
@@ -810,6 +961,10 @@ const FlowEditor = memo(
               zoomOnDoubleClick={false}
               selectionMode={SelectionMode.Partial} // enabled adding nodes to a selection that are only partially selected.
               minZoom={0.1}
+              maxZoom={MAX_ZOOM}
+              nodesDraggable={!isCanvasLocked}
+              nodesConnectable={!isCanvasLocked}
+              edgesReconnectable={!isCanvasLocked}
               defaultViewport={styles.defaultViewport}
             >
               <Background
@@ -819,52 +974,16 @@ const FlowEditor = memo(
                 offset={[0, 2]}
                 gap={20}
               />
-              <Box sx={styles.flowControls}>
-                <Controls>
-                  <Tooltip
-                    title="Toggle cards size"
-                    placement="right"
-                  >
-                    <Box
-                      component="span"
-                      sx={{
-                        display: 'inline-flex',
-                        borderBottom: `0.0625rem solid ${theme.palette.divider}`,
-                      }}
-                    >
-                      <ControlButton onClick={onExpandAll}>
-                        {expandAll ? (
-                          <CollapseIcon
-                            sx={styles.icon}
-                            fill={theme.palette.icon.secondary}
-                          />
-                        ) : (
-                          <ExpandIcon
-                            sx={styles.icon}
-                            fill={theme.palette.icon.secondary}
-                          />
-                        )}
-                      </ControlButton>
-                    </Box>
-                  </Tooltip>
-                  <Tooltip
-                    title="Auto-arrange"
-                    placement="right"
-                  >
-                    <Box
-                      component="span"
-                      sx={{ display: 'inline-flex' }}
-                    >
-                      <ControlButton onClick={onReLayout}>
-                        <PolylineOutlinedIcon
-                          sx={styles.icon}
-                          fill={theme.palette.icon.secondary}
-                        />
-                      </ControlButton>
-                    </Box>
-                  </Tooltip>
-                </Controls>
-              </Box>
+              <FlowEditorCanvasControls.CanvasControls
+                isLocked={isCanvasLocked}
+                onToggleLock={onToggleCanvasLock}
+                orientation={orientation}
+                onArrange={onArrange}
+                canArrange={!disabled && !isRunningPipeline && !isEmptyPipeline}
+                isMinimapVisible={isMinimapVisible}
+                onToggleMinimap={toggleMinimap}
+              />
+              {isMinimapVisible && <FlowEditorCanvasControls.CanvasMiniMap rightOffset={stateRightOffset} />}
             </ReactFlow>
             {isEmptyPipeline && (
               <FlowEditorEmptyState.FlowEmptyState
@@ -875,6 +994,7 @@ const FlowEditor = memo(
             <FlowEditorState.StateDrawer
               isOpen={isStateDrawerOpen}
               onClose={onToggleStateDrawer}
+              rightOffset={stateRightOffset}
               setYamlJsonObject={setYamlJsonObject}
               yamlJsonObject={yamlJsonObject}
               disabled={disabled}
@@ -888,7 +1008,7 @@ const FlowEditor = memo(
                 <FlowEditorNodePanel.NodeConfigPanel
                   flowNode={panelFlowNode}
                   NodeComponent={nodeTypes[panelFlowNode.type]}
-                  onClose={closeNodePanel}
+                  onClose={onCloseNodePanel}
                   onRenamed={onNodeRenamed}
                 />
               )}
@@ -899,6 +1019,11 @@ const FlowEditor = memo(
               onConfirm={onConfirmDelete}
               name={nodesToDelete[0]?.data?.label || nodesToDelete[0]?.id || ''}
               inlineExtraContent=" node? It can't be restored."
+            />
+            <FlowEditorNodePanel.NodeYamlLeaveModal
+              open={isNodeLeavePromptOpen}
+              onFix={onFixNodeYaml}
+              onDiscard={onDiscardNodeYaml}
             />
 
             {/* Connection dropdown for incomplete edges */}
@@ -927,11 +1052,13 @@ const flowEditorStyles = () => ({
     display: isHidden ? 'none' : 'flex',
     minWidth: 0,
   }),
-  stateButton: theme => ({
+  // The State button and drawer move left of the node panel while it is open, so it doesn't cover them
+  stateButton: (theme, rightOffset) => ({
     position: 'absolute',
     top: theme.spacing(2.5),
-    right: theme.spacing(2.5),
+    right: `calc(${theme.spacing(2.5)} + ${rightOffset / 16}rem)`,
     zIndex: 100,
+    transition: 'right 0.2s ease',
   }),
   // Only the nodes and edges layer fades in; the dotted background and controls stay visible
   container: isViewportReady => ({
@@ -964,9 +1091,6 @@ const flowEditorStyles = () => ({
     y: 0,
     zoom: 0.75,
   },
-  icon: {
-    fontSize: '1rem',
-  },
   iconScale: {
     transform: 'scale(0.8)',
   },
@@ -983,31 +1107,6 @@ const flowEditorStyles = () => ({
     '&:hover': {
       background: `${palette.components.dataGrid.background.main} !important`,
       border: `.0625rem solid ${palette.components.flowEditor.node.border}`,
-    },
-  }),
-  flowControls: ({ palette }) => ({
-    '& .react-flow__controls': {
-      border: `0.0625rem solid ${palette.border.lines}`,
-      borderRadius: '0.25rem',
-    },
-    '& .react-flow__controls-button svg': {
-      color: `${palette.icon.default} !important`,
-    },
-    '& .react-flow__controls-button': {
-      backgroundColor: palette.background.paper,
-      borderBottom: `0.0625rem solid ${palette.divider}`,
-      '&:hover': {
-        backgroundColor: palette.components.table.border,
-        '& svg': {
-          color: `${palette.icon.secondary} !important`,
-        },
-      },
-    },
-    '& .react-flow__controls-button:first-of-type': {
-      borderRadius: '0.25rem 0.25rem 0 0',
-    },
-    '& .react-flow__controls-button:last-child': {
-      borderRadius: '0 0 0.25rem 0.25rem',
     },
   }),
 });

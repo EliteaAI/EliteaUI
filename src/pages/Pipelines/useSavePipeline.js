@@ -13,7 +13,7 @@ export default function useSavePipeline() {
   const isFromPipelineDetail = useIsFromPipelineDetail();
   const isFromChat = useIsFrom(RouteDefinitions.Chat);
   const { nodes, edges } = useSelector(state => state.pipelineEditor);
-  const { yamlCode, yamlJsonObject, initState } = useSelector(selectActivePipeline);
+  const { yamlCode, yamlJsonObject, initState, orientation } = useSelector(selectActivePipeline);
 
   const hasPipelineData =
     initState.yamlJsonObject?.nodes?.length > 0 ||
@@ -26,6 +26,7 @@ export default function useSavePipeline() {
     nodes,
     edges,
     yamlCode,
+    orientation: orientation || ORIENTATION.vertical,
   };
 }
 
@@ -40,5 +41,11 @@ export const calculateNodesAndEdges = (yamlCode, orientation = ORIENTATION.verti
     parsedYamlJson,
     orientation,
   );
-  return LayoutHelpers.doLayout({ nodes: parsedNodes, edges: parsedEdges, flowNodes, orientation });
+  // Saves the layout the user sees; only nodes the canvas hasn't placed yet get arranged
+  return LayoutHelpers.mergeCanvasPositions({
+    nodes: parsedNodes,
+    edges: parsedEdges,
+    flowNodes,
+    orientation,
+  });
 };

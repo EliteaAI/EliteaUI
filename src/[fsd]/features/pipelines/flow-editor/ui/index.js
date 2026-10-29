@@ -1,4 +1,5 @@
 export * as FlowEditorAddNode from './add-node';
+export * as FlowEditorCanvasControls from './canvas-controls';
 export * as FlowEditorEmptyState from './empty-state';
 export * as FlowEditorNodes from './nodes';
 export * as FlowEditorSelect from './select';

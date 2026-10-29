@@ -15,10 +15,14 @@ export const FlowEditorProvider = memo(props => {
     isRunningPipeline,
     handleDeleteNode,
     onAddFromHandle,
-    expandAll,
+    orientation,
+    isCanvasLocked,
     disabled,
     reportNodeIssues,
     onConnectNodes,
+    resyncFlowFromYaml,
+    registerNodeLeaveGuard,
+    requestNodeLeave,
   } = props;
 
   const contextValue = useMemo(() => {
@@ -31,12 +35,16 @@ export const FlowEditorProvider = memo(props => {
       isRunningPipeline,
       handleDeleteNode,
       onAddFromHandle,
-      expandAll,
+      orientation,
+      isCanvasLocked,
       setFlowNodes,
       setFlowEdges,
       disabled,
       reportNodeIssues,
       onConnectNodes,
+      resyncFlowFromYaml,
+      registerNodeLeaveGuard,
+      requestNodeLeave,
     };
   }, [
     editorHeight,
@@ -47,12 +55,16 @@ export const FlowEditorProvider = memo(props => {
     isRunningPipeline,
     handleDeleteNode,
     onAddFromHandle,
-    expandAll,
+    orientation,
+    isCanvasLocked,
     setFlowNodes,
     setFlowEdges,
     disabled,
     reportNodeIssues,
     onConnectNodes,
+    resyncFlowFromYaml,
+    registerNodeLeaveGuard,
+    requestNodeLeave,
   ]);
 
   return <FlowEditorContext.Provider value={contextValue}>{children}</FlowEditorContext.Provider>;

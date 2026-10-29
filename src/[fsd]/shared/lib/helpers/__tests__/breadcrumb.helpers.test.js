@@ -153,6 +153,41 @@ describe('applyBreadcrumbLabels', () => {
     expect(labelsOf(applyBreadcrumbLabels(trail, 'Figma'))).toEqual(['MCPs', 'Figma', 'Run History']);
   });
 
+  it('nests the schedule form under the agent: Agents / <agent> / New or Edit Schedule', () => {
+    const create = resolveBreadcrumbTrail('/agents/all/12/schedules/create');
+    const edit = resolveBreadcrumbTrail('/agents/all/12/schedules/4');
+
+    expect(labelsOf(applyBreadcrumbLabels(create, 'Digest bot'))).toEqual([
+      'Agents',
+      'Digest bot',
+      'New Schedule',
+    ]);
+    expect(labelsOf(applyBreadcrumbLabels(edit, 'Digest bot'))).toEqual([
+      'Agents',
+      'Digest bot',
+      'Edit Schedule',
+    ]);
+    expect(create.map(crumb => crumb.to).slice(0, 2)).toEqual(['/agents/all', '/agents/all/12']);
+    expect(getBreadcrumbEntityId(edit)).toBe('12');
+  });
+
+  it('nests the schedule form under the pipeline: Pipelines / <pipeline> /...', () => {
+    const create = resolveBreadcrumbTrail('/pipelines/all/9/schedules/create');
+    const edit = resolveBreadcrumbTrail('/pipelines/all/9/schedules/4');
+
+    expect(labelsOf(applyBreadcrumbLabels(create, 'Nightly flow'))).toEqual([
+      'Pipelines',
+      'Nightly flow',
+      'New Schedule',
+    ]);
+    expect(labelsOf(applyBreadcrumbLabels(edit, 'Nightly flow'))).toEqual([
+      'Pipelines',
+      'Nightly flow',
+      'Edit Schedule',
+    ]);
+    expect(edit.map(crumb => crumb.to).slice(0, 2)).toEqual(['/pipelines/all', '/pipelines/all/9']);
+  });
+
   it('labels the create-index crumb as New Index', () => {
     const trail = resolveBreadcrumbTrail('/toolkits/all/44/create-index');
 

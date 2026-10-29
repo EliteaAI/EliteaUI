@@ -291,6 +291,7 @@ export const MyLibraryStatusOptions = [
 
 export const SearchParams = {
   ViewMode: 'viewMode',
+  VersionId: 'versionId',
   Name: 'name',
   Statuses: 'statuses',
   SortOrder: 'sort_order',
@@ -575,6 +576,17 @@ export const PERMISSIONS = {
     // webhook: 'models.applications.webhook.post', // According to Mikhail's comment, this permission is not used
     delete: 'models.applications.application.delete',
   },
+  schedules: {
+    list: 'models.applications.schedules.list',
+    details: 'models.applications.schedules.details',
+    create: 'models.applications.schedules.create',
+    update: 'models.applications.schedules.update',
+    delete: 'models.applications.schedules.delete',
+    run: 'models.applications.schedules.run',
+    admin: 'models.applications.schedules.admin',
+    export: 'models.applications.schedules.export',
+    import: 'models.applications.schedules.import',
+  },
   skills: {
     list: 'models.applications.skills.list',
     publish: 'models.applications.skills.publish',
@@ -670,6 +682,7 @@ export const PERMISSION_GROUPS = {
   chat: [PERMISSIONS.chat.folders.get],
   agents: [PERMISSIONS.applications.list],
   pipelines: [PERMISSIONS.pipelines.list],
+  schedules: [PERMISSIONS.schedules.list],
   credentials: [PERMISSIONS.toolkits.list],
   artifacts: [PERMISSIONS.artifacts.view],
   toolkits: [PERMISSIONS.toolkits.list],
@@ -941,6 +954,7 @@ export const ApplicationTypeMap = {
 export const sioEvents = {
   socket_validation_error: 'socket_validation_error',
   chat_predict: 'chat_predict',
+  schedule_run_finished: 'schedule_run_finished',
   chat_continue_predict: 'chat_continue_predict',
   application_continue_message: 'application_continue_message',
   chat_enter_room: 'chat_enter_room',
@@ -1087,6 +1101,14 @@ export const NotificationType = {
   BudgetLimitReached: 'budget_limit_reached',
   MemberBudgetThresholdReached: 'member_budget_threshold_reached',
   MemberBudgetLimitReached: 'member_budget_limit_reached',
+  ScheduleRunFailed: 'schedule_run_failed',
+  ScheduleRunSucceeded: 'schedule_run_succeeded',
+  ScheduleApprovalNeeded: 'schedule_approval_needed',
+  ScheduleApprovalExpired: 'schedule_approval_expired',
+  ScheduleExpired: 'schedule_expired',
+  ScheduleDisabled: 'schedule_disabled',
+  ScheduleEditedByAdmin: 'schedule_edited_by_admin',
+  ScheduleOwnerChanged: 'schedule_owner_changed',
   ToolSpendThresholdReached: 'tool_spend_threshold_reached',
   ToolSpendLimitReached: 'tool_spend_limit_reached',
   MemberToolSpendThresholdReached: 'member_tool_spend_threshold_reached',

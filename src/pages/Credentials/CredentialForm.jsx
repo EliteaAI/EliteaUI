@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useFormikContext } from 'formik';
+import { getIn, useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 
@@ -11,7 +11,12 @@ import {
   ConfigurationTitlesConstants,
   LlmModelFormConstants,
 } from '@/[fsd]/features/credentials/lib/constants';
-import { CredentialProbeHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import {
+  CredentialProbeHelpers,
+  OAuthAppHelpers,
+  StoredLoginHelpers,
+} from '@/[fsd]/features/credentials/lib/helpers';
+import { useCredentialPageStoredLogin } from '@/[fsd]/features/credentials/lib/hooks';
 import { CredentialLogoutModal, LlmModelForm } from '@/[fsd]/features/credentials/ui';
 import { CREDENTIALS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthFlowHelpers, McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
@@ -50,15 +55,38 @@ const CredentialForm = memo(props => {
     setApiError,
   } = props;
   const [view, setView] = useState(ToolkitViewOptions.Form);
-  const { setFieldValue } = useFormikContext();
+  const {
+    setFieldValue,
+    setValues,
+    resetForm,
+    values: formikValues,
+    initialValues: formikInitialValues,
+    errors: formikErrors,
+    touched: formikTouched,
+    isSubmitting: formikIsSubmitting,
+    submitCount: formikSubmitCount,
+    status: formikStatus,
+  } = useFormikContext();
+  const formikStateRef = useRef({});
+  formikStateRef.current = {
+    values: formikValues,
+    initialValues: formikInitialValues,
+    errors: formikErrors,
+    touched: formikTouched,
+    isSubmitting: formikIsSubmitting,
+    submitCount: formikSubmitCount,
+    status: formikStatus,
+  };
 
   const [searchParams] = useSearchParams();
 
   const { personal_project_id } = useSelector(state => state.user);
   const selectedProjectId = useSelectedProjectId();
+  // Teams/Outlook/SharePoint credentials are never shared: every project uses the admin's OAuth app instead
   const excludedFields = useMemo(() => {
-    return selectedProjectId !== PUBLIC_PROJECT_ID ? ['shared'] : [];
-  }, [selectedProjectId]);
+    const isOAuthAppCredential = OAuthAppHelpers.isOAuthAppCredentialType(credentialDetails?.type);
+    return selectedProjectId !== PUBLIC_PROJECT_ID || isOAuthAppCredential ? ['shared'] : [];
+  }, [selectedProjectId, credentialDetails?.type]);
 
   const toolType = useMemo(() => {
     return credentialDetails?.type || '';
@@ -135,6 +163,35 @@ const CredentialForm = memo(props => {
     [onChangeCredentialDetail, setFieldValue, setValidationErrorMessages],
   );
 
+  // A value the form fills in on its own (e.g. the admin's default OAuth app) is not a user edit:
+  // it also goes into Formik's baseline, so it never marks the form dirty or blocks leaving after save.
+  const setDefaultField = useCallback(
+    (field, value) => {
+      const state = formikStateRef.current;
+      const same = current => JSON.stringify(current) === JSON.stringify(value);
+      // Already the baseline and the value: nothing to move (e.g. re-fired after a save)
+      if (same(getIn(state.initialValues, field)) && same(getIn(state.values, field))) return;
+      onChangeCredentialDetail(prevState => updateObjectByPath(prevState || {}, field, value));
+      // resetForm moves Formik's baseline; the user's own edits stay dirty against it
+      const values = updateObjectByPath(state.values || {}, field, value);
+      const initialValues = updateObjectByPath(state.initialValues || {}, field, value);
+      // A second call in the same tick builds on this one, not on the last render
+      formikStateRef.current = { ...state, values, initialValues };
+      // Keep touched/errors/submit state: only the baseline moves
+      resetForm({
+        values: initialValues,
+        errors: state.errors,
+        touched: state.touched,
+        isSubmitting: state.isSubmitting,
+        submitCount: state.submitCount,
+        status: state.status,
+      });
+      // Re-apply the user's own edits on top of the new baseline, in one update
+      setValues(values, false);
+    },
+    [onChangeCredentialDetail, resetForm, setValues],
+  );
+
   const onSaveConfiguration = useCallback(
     async config => {
       setConfiguration({
@@ -162,12 +219,23 @@ const CredentialForm = memo(props => {
 
   // Config OAuth: when check_connection returns requires_authorization, open modal; on success retry test connection
   const onTestConnectionRef = useRef();
+  const storedLoginRef = useRef();
+  const isFormDirtyRef = useRef(false);
   const configOAuth = useConfigOAuthModal({
-    onSuccess: () => onTestConnectionRef.current?.(),
+    onSuccess: async () => {
+      await storedLoginRef.current?.saveLogin({ isFormDirty: isFormDirtyRef.current });
+      onTestConnectionRef.current?.();
+    },
+    // The stored-login save reports the outcome itself
+    showSuccessToast: !(
+      credentialDetails?.id && StoredLoginHelpers.getStoredLoginConfig(credentialDetails?.type)
+    ),
     credentials: {
       client_id: credentialDetails?.settings?.client_id,
       client_secret: credentialDetails?.settings?.client_secret,
       scopes: credentialDetails?.settings?.scopes,
+      oauth_app_id: credentialDetails?.settings?.oauth_app_id,
+      credential_type: credentialDetails?.type,
     },
   });
 
@@ -194,11 +262,36 @@ const CredentialForm = memo(props => {
   );
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const onConfirmLogout = useCallback(() => {
+  // `data` is the credential as saved (the form edits `settings`), so saving the login keeps it as stored
+  const storedLogin = useCredentialPageStoredLogin({
+    credential: credentialDetails?.id ? credentialDetails : null,
+    tokenKey: oauthTokenKey,
+  });
+  storedLoginRef.current = storedLogin;
+  // A team credential's stored login belongs to the project: members see it, only admins change it
+  const storedLoginLocked = storedLogin.enabled && !storedLogin.canManageLogin;
+  // For members only the stored login counts; a leftover browser token is not the project's login
+  const showsLoggedIn = storedLoginLocked
+    ? storedLogin.hasStoredLogin
+    : isOAuthLoggedIn || storedLogin.hasStoredLogin;
+  // Members never sign in on a team credential: the login would stay in their browser only
+  const onConfigAuthRequired = useCallback(
+    (...args) => {
+      if (storedLoginLocked) {
+        setApiError(StoredLoginHelpers.getLockedLoginHint(false));
+        return;
+      }
+      configOAuth.handleConfigAuthRequired(...args);
+    },
+    [storedLoginLocked, setApiError, configOAuth],
+  );
+
+  const onConfirmLogout = useCallback(async () => {
+    if (!(await storedLogin.removeLogin())) return;
     McpAuthHelpers.logout(oauthTokenKey);
     setShowLogoutModal(false);
     toastSuccess('You have successfully logged out!');
-  }, [oauthTokenKey, toastSuccess]);
+  }, [oauthTokenKey, storedLogin, toastSuccess]);
 
   const onLogout = useCallback(() => {
     setShowLogoutModal(true);
@@ -209,6 +302,7 @@ const CredentialForm = memo(props => {
   }, []);
   // A saved credential with no unsaved edits is tested by reference; anything else by the typed values
   const isFormDirty = useFormDirtyExcluding();
+  isFormDirtyRef.current = isFormDirty;
   const configurationUuid = CredentialProbeHelpers.getProbeConfigurationUuid(credentialDetails, isFormDirty);
   const { onTestConnection, isTestingConnection } = useCreateConfiguration({
     type: configurationType,
@@ -222,7 +316,7 @@ const CredentialForm = memo(props => {
     setValidationErrorMessages,
     setShowValidation,
     setTestConnectionError: setApiError,
-    onConfigAuthRequired: configOAuth.handleConfigAuthRequired,
+    onConfigAuthRequired,
     // Pass the credential-scoped token key so the correct token is fetched/stored
     oauthTokenKey,
     configurationUuid,
@@ -304,6 +398,7 @@ const CredentialForm = memo(props => {
           // editToolDetail={values}
           setEditToolDetail={onChangeCredentialDetail}
           editField={editField}
+          setDefaultField={setDefaultField}
           toolErrors={toolErrors}
           setToolErrors={setToolErrors}
           showValidation={showValidation}
@@ -351,24 +446,35 @@ const CredentialForm = memo(props => {
               </Button.BaseBtn>
             </span>
           </Tooltip>
-          {isOAuthLoggedIn && oauthTokenKey && (
-            <Button.BaseBtn
-              variant="elitea"
-              color="secondary"
-              onClick={onLogout}
+          {oauthTokenKey && (
+            <Tooltip
+              title={
+                storedLoginLocked ? StoredLoginHelpers.getLockedLoginHint(storedLogin.hasStoredLogin) : ''
+              }
+              placement="bottom"
             >
-              Logout
-            </Button.BaseBtn>
-          )}
-          {!isOAuthLoggedIn && oauthTokenKey && (
-            <Button.BaseBtn
-              variant="elitea"
-              color="secondary"
-              onClick={onClickTestConnection}
-              disabled={isTestingConnection}
-            >
-              Login
-            </Button.BaseBtn>
+              <span>
+                {showsLoggedIn ? (
+                  <Button.BaseBtn
+                    variant="elitea"
+                    color="secondary"
+                    onClick={onLogout}
+                    disabled={storedLoginLocked}
+                  >
+                    Logout
+                  </Button.BaseBtn>
+                ) : (
+                  <Button.BaseBtn
+                    variant="elitea"
+                    color="secondary"
+                    onClick={onClickTestConnection}
+                    disabled={isTestingConnection || storedLoginLocked}
+                  >
+                    Login
+                  </Button.BaseBtn>
+                )}
+              </span>
+            </Tooltip>
           )}
         </Box>
       )}

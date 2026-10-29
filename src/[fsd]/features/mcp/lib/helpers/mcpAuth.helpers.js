@@ -687,6 +687,8 @@ export const getAllTokens = () => {
       ...(value.authorization_server && { authorization_server: value.authorization_server }),
       ...(value.resource_server_url && { resource_server_url: value.resource_server_url }),
       ...(value.resource_scopes && { resource_scopes: normalizeList(value.resource_scopes) }),
+      // Public client ID the token was issued to: runtime skips a token made with another app (#7149)
+      ...(value.client_id && { client_id: value.client_id }),
     };
   });
 

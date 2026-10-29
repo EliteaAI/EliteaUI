@@ -8,6 +8,8 @@ import { SharedHelpers } from '@/[fsd]/shared/lib/helpers';
 
 import RunHistoryRowActions from './RunHistoryRowActions';
 
+const NO_EXTRA_COLUMNS = [];
+
 const RunHistoryListItem = memo(props => {
   const {
     item,
@@ -21,11 +23,12 @@ const RunHistoryListItem = memo(props => {
     source,
     hasEvent = false,
     shareOpensHistoryTab = false,
+    extraColumns = NO_EXTRA_COLUMNS,
   } = props;
 
   const noVersions = useMemo(() => versions === null, [versions]);
 
-  const styles = runHistoryListItemStyles(noVersions, hasEvent);
+  const styles = runHistoryListItemStyles(noVersions, hasEvent, extraColumns);
 
   const getCurrentVersion = useCallback(
     id => {
@@ -56,6 +59,14 @@ const RunHistoryListItem = memo(props => {
           width={noVersions ? '50%' : '70%'}
           height={20}
         />
+        {extraColumns.map(column => (
+          <Skeleton
+            key={column.id}
+            variant="text"
+            width="50%"
+            height="1.25rem"
+          />
+        ))}
         {hasEvent && (
           <Skeleton
             variant="text"
@@ -90,6 +101,26 @@ const RunHistoryListItem = memo(props => {
         text={date}
         trigger={tooltipTrigger}
       />
+      {extraColumns.map(column => {
+        const cell = column.render(item);
+        // A text cell gets the overflow tooltip; a node (for example a link) renders as it is
+        return typeof cell === 'string' ? (
+          <RunHistoryTooltipCell
+            key={column.id}
+            text={cell}
+            // The narrow schedule cells always give their full text, so a cut "Waiting for input" can be read
+            tooltipText={cell === '-' ? '' : cell}
+            trigger={tooltipTrigger}
+          />
+        ) : (
+          <Box
+            key={column.id}
+            sx={styles.nodeCell}
+          >
+            {cell}
+          </Box>
+        );
+      })}
       {hasEvent && (
         <RunHistoryTooltipCell
           text={item.event_label ?? '-'}
@@ -122,10 +153,17 @@ const RunHistoryListItem = memo(props => {
 RunHistoryListItem.displayName = 'RunHistoryListItem';
 
 /** @type {MuiSx} */
-const runHistoryListItemStyles = (noVersions, hasEvent) => ({
+const runHistoryListItemStyles = (noVersions, hasEvent, extraColumns) => ({
+  nodeCell: {
+    minWidth: 0,
+    padding: '0 1rem',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
   listItem: ({ palette }) => ({
     display: 'grid',
-    gridTemplateColumns: resolveRunHistoryColumns(noVersions, hasEvent),
+    gridTemplateColumns: resolveRunHistoryColumns(noVersions, hasEvent, extraColumns),
     alignItems: 'center',
     padding: '.5rem 1rem',
     width: '100%',

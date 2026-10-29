@@ -14,9 +14,12 @@ const setEdges = vi.fn();
 
 vi.mock('@xyflow/react', async importOriginal => ({
   ...(await importOriginal()),
-  Handle: ({ children, onClick }) => (
+  Handle: ({ children, onClick, position, style, isConnectable }) => (
     <div
       data-testid="rf-handle"
+      data-position={position}
+      data-connectable={String(isConnectable)}
+      style={{ left: style?.left, top: style?.top }}
       onClick={onClick}
     >
       {children}
@@ -98,5 +101,84 @@ describe('CustomHandle', () => {
 
     expect(screen.queryByText('Output')).toBeNull();
     expect(screen.queryByTestId('pipeline-node-add-from-output-llm_1-out')).toBeNull();
+  });
+
+  describe('orientation', () => {
+    it('puts the Input on top and the Output at the bottom top to bottom', () => {
+      renderHandle();
+      expect(screen.getByTestId('rf-handle')).toHaveAttribute('data-position', 'bottom');
+      cleanup();
+
+      renderHandle({ props: { type: 'target' } });
+      expect(screen.getByTestId('rf-handle')).toHaveAttribute('data-position', 'top');
+    });
+
+    it('puts the Input on the left and the Output on the right left to right', () => {
+      renderHandle({ context: { orientation: 'horizontal' } });
+      expect(screen.getByTestId('rf-handle')).toHaveAttribute('data-position', 'right');
+      cleanup();
+
+      renderHandle({ props: { type: 'target' }, context: { orientation: 'horizontal' } });
+      expect(screen.getByTestId('rf-handle')).toHaveAttribute('data-position', 'left');
+    });
+
+    it('spreads several outputs along the bottom edge top to bottom', () => {
+      renderHandle({ props: { offset: 'calc(50% - 3.125rem)', outputIndex: 0 } });
+
+      expect(screen.getByTestId('rf-handle').style.left).toBe('calc(50% - 3.125rem)');
+      expect(screen.getByTestId('rf-handle').style.top).toBe('');
+    });
+
+    it('stacks several outputs below the card header left to right', () => {
+      renderHandle({
+        props: { offset: 'calc(50% - 3.125rem)', outputIndex: 0 },
+        context: { orientation: 'horizontal' },
+      });
+      expect(screen.getByTestId('rf-handle').style.top).toBe('5.125rem');
+      expect(screen.getByTestId('rf-handle').style.left).toBe('');
+      cleanup();
+
+      renderHandle({ props: { outputIndex: 2 }, context: { orientation: 'horizontal' } });
+      expect(screen.getByTestId('rf-handle').style.top).toBe('8.375rem');
+    });
+
+    it('keeps several outputs inside a mini card left to right', () => {
+      renderHandle({
+        props: { outputIndex: 0, outputCount: 2 },
+        context: { orientation: 'horizontal' },
+        isExpanded: false,
+      });
+      expect(screen.getByTestId('rf-handle').style.top).toBe('calc(50% - 0.5rem)');
+      cleanup();
+
+      renderHandle({
+        props: { outputIndex: 1, outputCount: 2 },
+        context: { orientation: 'horizontal' },
+        isExpanded: false,
+      });
+      expect(screen.getByTestId('rf-handle').style.top).toBe('calc(50% + 0.5rem)');
+    });
+
+    it('keeps a single output centred left to right', () => {
+      renderHandle({ context: { orientation: 'horizontal' } });
+
+      expect(screen.getByTestId('rf-handle').style.top).toBe('');
+    });
+  });
+
+  describe('locked canvas', () => {
+    it('is not connectable and hides the "+"', () => {
+      renderHandle({ context: { isCanvasLocked: true } });
+
+      expect(screen.getByTestId('rf-handle')).toHaveAttribute('data-connectable', 'false');
+      expect(screen.getByText('Output')).toBeInTheDocument();
+      expect(screen.queryByTestId('pipeline-node-add-from-output-llm_1-out')).toBeNull();
+    });
+
+    it('is connectable again once unlocked', () => {
+      renderHandle({ context: { isCanvasLocked: false } });
+
+      expect(screen.getByTestId('rf-handle')).toHaveAttribute('data-connectable', 'true');
+    });
   });
 });

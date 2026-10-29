@@ -18,12 +18,14 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 
 import SettingsFormProvider from '../shared/SettingsFormProvider';
 import { ChatConfigurationSection } from './chat-configuration';
+import { RunWithoutAskingSetting, ScheduleNotificationsSection } from './schedules';
 
 const ProjectGeneralContent = memo(() => {
   const styles = componentStyles();
 
   const { checkPermission } = useCheckPermission();
   const canViewProjectContext = checkPermission(PERMISSIONS.projectContext.view);
+  const canListSchedules = checkPermission(PERMISSIONS.schedules.list);
   const isBackupRestoreAvailable =
     checkPermission(PERMISSIONS.projectBackup.download) || checkPermission(PERMISSIONS.projectBackup.restore);
   const canDeleteProjectData = useCanDeleteProjectData();
@@ -112,6 +114,24 @@ const ProjectGeneralContent = memo(() => {
               },
             ]}
           />
+          {canListSchedules && (
+            <BasicAccordion
+              data-testid="schedules-section"
+              showMode={AccordionConstants.AccordionShowMode.LeftMode}
+              accordionSX={styles.accordionStyles}
+              items={[
+                {
+                  title: 'Schedules',
+                  content: (
+                    <Box sx={styles.schedulesStyles}>
+                      <ScheduleNotificationsSection />
+                      <RunWithoutAskingSetting />
+                    </Box>
+                  ),
+                },
+              ]}
+            />
+          )}
           {isBackupRestoreAvailable && (
             <Box ref={backupSectionRef}>
               <BasicAccordion
@@ -175,6 +195,11 @@ const componentStyles = () => ({
   containerStyles: {
     display: 'flex',
     flexDirection: 'column',
+  },
+  schedulesStyles: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
   },
   loader: {
     display: 'flex',

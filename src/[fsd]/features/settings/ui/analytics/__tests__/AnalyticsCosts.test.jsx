@@ -70,8 +70,6 @@ vi.mock('@/[fsd]/shared/ui/tooltip', () => ({
 
 vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
   ChartTooltip: () => null,
-  InfoBanner: ({ children }) => <div data-testid="info-banner">{children}</div>,
-  infoBannerTextSx: {},
   KPICard: ({ label, value, subtitle }) => (
     <div data-testid={`kpi-${label}`}>
       <span>{value}</span>
@@ -299,7 +297,7 @@ describe('AnalyticsCosts', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('renders the estimated-cost disclaimer above the KPI row', () => {
+  it('does not render the estimated-cost disclaimer inline (it lives in the toolbar info popover)', () => {
     useAnalyticsCostsQuery.mockReturnValue({ data: MOCK_DATA, isFetching: false, isError: false });
     render(
       <AnalyticsCosts
@@ -309,7 +307,8 @@ describe('AnalyticsCosts', () => {
       />,
       { wrapper: Wrapper },
     );
-    expect(screen.getByText(/estimated from a local model-price table/i)).toBeTruthy();
+    expect(screen.queryByText(/estimated from a local model-price table/i)).toBeNull();
+    expect(screen.queryByTestId('info-banner')).toBeNull();
   });
 
   it('labels every cost KPI as estimated', () => {
@@ -546,7 +545,7 @@ describe('AnalyticsCosts — run scope', () => {
     expect(screen.getByTestId('kpi-CACHE WRITE COST')).toBeTruthy();
     expect(screen.getByText('Cost by User')).toBeTruthy();
     expect(screen.getByText('Cost by Model')).toBeTruthy();
-    expect(screen.getByTestId('info-banner')).toBeTruthy();
+    expect(screen.queryByTestId('info-banner')).toBeNull();
     expect(screen.queryByText('Daily Cost Trend')).toBeNull();
     expect(screen.queryByText('Cost by Agent & Pipeline')).toBeNull();
   });

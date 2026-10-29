@@ -1,5 +1,8 @@
 import { DEV, VITE_BASE_URI } from '@/common/constants';
 
+// The one value the Schedules pages hang from: a move of the list moves the create and edit pages too
+const SCHEDULES = '/settings/schedules';
+
 const RouteDefinitions = {
   // ExampleShowcase: '/examples/showcase',
 
@@ -18,6 +21,8 @@ const RouteDefinitions = {
   ApplicationsEvaluateDimensions: '/agents/:tab/:agentId/evaluate/dimensions',
   ApplicationsEvaluateHistory: '/agents/:tab/:agentId/evaluate/history',
   ApplicationsEvaluateHistoryAnalytics: '/agents/:tab/:agentId/evaluate/history/analytics',
+  ApplicationsCreateSchedule: '/agents/:tab/:agentId/schedules/create',
+  ApplicationsScheduleDetail: '/agents/:tab/:agentId/schedules/:scheduleId',
 
   Skills: '/skills',
   SkillsWithTab: '/skills/:tab',
@@ -41,6 +46,11 @@ const RouteDefinitions = {
   PipelineEvaluateDimensions: '/pipelines/:tab/:agentId/evaluate/dimensions',
   PipelineEvaluateHistory: '/pipelines/:tab/:agentId/evaluate/history',
   PipelineEvaluateHistoryAnalytics: '/pipelines/:tab/:agentId/evaluate/history/analytics',
+  PipelineCreateSchedule: '/pipelines/:tab/:agentId/schedules/create',
+  PipelineScheduleDetail: '/pipelines/:tab/:agentId/schedules/:scheduleId',
+  Schedules: SCHEDULES,
+  CreateSchedule: `${SCHEDULES}/create`,
+  ScheduleDetail: `${SCHEDULES}/:scheduleId`,
 
   Credentials: '/credentials',
   CredentialsWithTab: '/credentials/:tab',
@@ -125,6 +135,12 @@ export const BLOCK_NAV_PATTERNS = [
   `${RouteDefinitions.PipelineDetail}/:versionId`,
   RouteDefinitions.PipelineEvaluateSuite,
   RouteDefinitions.CreatePipeline,
+  RouteDefinitions.CreateSchedule,
+  RouteDefinitions.ScheduleDetail,
+  RouteDefinitions.ApplicationsCreateSchedule,
+  RouteDefinitions.ApplicationsScheduleDetail,
+  RouteDefinitions.PipelineCreateSchedule,
+  RouteDefinitions.PipelineScheduleDetail,
   RouteDefinitions.CreateToolkitType,
   RouteDefinitions.ToolkitDetail,
   RouteDefinitions.ToolkitIndex,
@@ -162,6 +178,7 @@ export const PathSessionMap = {
   [RouteDefinitions.Applications]: 'Agents',
   [RouteDefinitions.Skills]: 'Skills',
   [RouteDefinitions.Pipelines]: 'Pipelines',
+  [RouteDefinitions.Schedules]: 'Schedules',
   [RouteDefinitions.Toolkits]: 'Toolkits & Indexes',
   [RouteDefinitions.Apps]: 'Apps',
   [RouteDefinitions.Credentials]: 'Credentials',

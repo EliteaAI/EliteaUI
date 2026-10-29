@@ -22,6 +22,7 @@ vi.hoisted(() => {
 });
 
 const createToolkitConversationWithParticipant = vi.fn();
+const runActiveSignal = vi.hoisted(() => vi.fn());
 
 vi.mock('@/[fsd]/features/toolkits/lib/helpers/toolkitConversation.helpers', () => ({
   createToolkitConversationWithParticipant,
@@ -62,6 +63,10 @@ const socketHandlerRef = { current: null };
 const validationErrorHandlerRef = { current: null };
 const socketEmit = vi.fn();
 const leaveRoomsEmit = vi.fn();
+
+vi.mock('@/[fsd]/features/auth/lib/hooks/useRunActiveSignal.hooks', () => ({
+  useRunActiveSignal: isActive => runActiveSignal(isActive),
+}));
 
 vi.mock('@/[fsd]/features/auth/lib/hooks/useSocket.hooks', () => ({
   useSocket: (event, handler) => {
@@ -315,6 +320,76 @@ describe('useToolkitChat validation errors', () => {
     expect(result.current.isRunning).toBe(true);
   });
 
+  it('shows a governance refusal as the refusal card, with its reason and code', async () => {
+    const { result } = await startRun();
+    const refusal = {
+      code: 'DENIED_DEVELOPMENT_CREDENTIAL',
+      error: 'This credential needs a grant before a draft can use it.',
+    };
+
+    act(() => validationErrorHandlerRef.current({ type: 'error', stream_id: 'conv-7', content: refusal }));
+
+    expect(result.current.isRunning).toBe(false);
+    const last = result.current.chatHistory.at(-1);
+    // ApplicationAnswer renders `exception` through ErrorTrace, which reads the readable text and the code chip
+    expect(last.content).toBe('');
+    expect(JSON.parse(last.exception)).toEqual(refusal);
+    expect(JSON.stringify(result.current.chatHistory)).not.toContain('Failed to execute tool');
+  });
+
+  it('keeps a code-less {error} as a failed tool that names the tool', async () => {
+    const { result } = await startRun();
+
+    act(() =>
+      validationErrorHandlerRef.current({
+        type: 'error',
+        stream_id: 'conv-7',
+        content: { error: 'Bad input' },
+      }),
+    );
+
+    const last = result.current.chatHistory.at(-1);
+    expect(last.exception).toBeUndefined();
+    expect(last.content).toContain('Failed to execute tool');
+  });
+
+  it('hands the refusal of an index run to whoever traces it', async () => {
+    createToolkitConversationWithParticipant.mockResolvedValueOnce({ id: 8, uuid: 'conv-8' });
+    const traceNewIndex = vi.fn();
+    const { result } = renderChat({
+      traceNewIndex,
+      index: { id: 5, metadata: { collection: 'docs', index_configuration: { index_name: 'docs' } } },
+      modes: [],
+    });
+
+    act(() => result.current.handleIndexData());
+    await waitFor(() => expect(socketEmit).toHaveBeenCalled());
+    act(() =>
+      validationErrorHandlerRef.current({
+        type: 'error',
+        stream_id: 'conv-8',
+        message_id: 'msg-8',
+        content: { code: 'DEVELOPMENT_RUNS_DISABLED', error: 'Development runs are switched off.' },
+      }),
+    );
+
+    expect(traceNewIndex).toHaveBeenLastCalledWith(5, {
+      collection: 'docs',
+      state: 'failed',
+      // with the payload as received and the message it belongs to, for the card's debugging info
+      refusal: {
+        code: 'DEVELOPMENT_RUNS_DISABLED',
+        message: 'Development runs are switched off.',
+        trace: JSON.stringify(
+          { code: 'DEVELOPMENT_RUNS_DISABLED', error: 'Development runs are switched off.' },
+          null,
+          2,
+        ),
+        messageId: 'msg-8',
+      },
+    });
+  });
+
   it('ignores rejections once the task has started', async () => {
     const { result } = await startRun();
 
@@ -467,5 +542,22 @@ describe('useToolkitChat only follows the runs it owns', () => {
     unmount();
 
     expect(leaveRoomsEmit).not.toHaveBeenCalled();
+  });
+});
+
+describe('useToolkitChat — the socket session guard is told about a working run', () => {
+  it('reports no active run while nothing is running', () => {
+    renderChat();
+
+    expect(runActiveSignal).toHaveBeenLastCalledWith(false);
+  });
+
+  it('reports an active run once a tool is running', async () => {
+    createToolkitConversationWithParticipant.mockReturnValueOnce(new Promise(() => {}));
+    const { result } = renderChat();
+
+    act(() => result.current.handleRunTool());
+
+    await waitFor(() => expect(runActiveSignal).toHaveBeenLastCalledWith(true));
   });
 });

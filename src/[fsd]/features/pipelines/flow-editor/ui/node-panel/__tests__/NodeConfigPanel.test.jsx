@@ -10,7 +10,7 @@ import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/
 import { FlowEditorContext, NodeConfigPanelContext } from '@/[fsd]/shared/lib/context';
 import darkPalette from '@/darkPalette';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import NodeConfigPanel from '../NodeConfigPanel';
 
@@ -19,6 +19,17 @@ const { toastSuccess } = vi.hoisted(() => ({ toastSuccess: vi.fn() }));
 vi.mock('@/[fsd]/shared/lib/hooks', async importOriginal => ({
   ...(await importOriginal()),
   useToast: () => ({ toastSuccess, toastError: vi.fn() }),
+}));
+
+vi.mock('@/[fsd]/features/pipelines/yaml-editor/ui', () => ({
+  YamlCodeEditor: props => (
+    <textarea
+      data-testid="node-yaml-editor-stub"
+      value={props.code}
+      readOnly={props.disabled}
+      onChange={event => props.onChangeCode(event.target.value)}
+    />
+  ),
 }));
 
 const { PipelineNodeTypes } = FlowEditorConstants;
@@ -93,7 +104,7 @@ describe('NodeConfigPanel', () => {
       'Directs flow to different paths based on conditions.',
     );
     expect(screen.getByTestId('pipeline-node-panel-view-flow')).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByTestId('pipeline-node-panel-view-yaml')).toBeDisabled();
+    expect(screen.getByTestId('pipeline-node-panel-view-yaml')).toBeEnabled();
     expect(screen.getByTestId('pipeline-node-panel-name-input')).toHaveValue('router_1');
     expect(screen.getByTestId('node-fields-stub')).toHaveAttribute('data-node-id', 'router_1');
     expect(screen.getByTestId('pipeline-node-panel')).toHaveClass('nokey');
@@ -206,7 +217,7 @@ describe('NodeConfigPanel', () => {
       'View Migration Guide',
     );
     expect(screen.getByTestId('pipeline-node-panel-deprecation-read-only')).toHaveTextContent(
-      'Edit this node in the Yaml tab',
+      'Edit this node in the YAML view',
     );
   });
 
@@ -224,5 +235,48 @@ describe('NodeConfigPanel', () => {
 
     expect(screen.getByTestId('node-fields-stub')).toHaveAttribute('data-disabled', 'false');
     expect(screen.getByTestId('pipeline-node-panel-name-input')).not.toBeDisabled();
+  });
+
+  describe('YAML view', () => {
+    it('replaces the form with the YAML of this node only', () => {
+      renderPanel();
+
+      fireEvent.click(screen.getByTestId('pipeline-node-panel-view-yaml'));
+
+      expect(screen.queryByTestId('node-fields-stub')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('pipeline-node-panel-name-input')).not.toBeInTheDocument();
+      expect(screen.getByTestId('node-yaml-editor-stub')).toHaveValue('- id: router_1\n  type: router\n');
+    });
+
+    it('hides the deprecation banner of a deprecated node', () => {
+      renderPanel({ flowNode: { id: 'loop_1', type: PipelineNodeTypes.Loop, data: {} } });
+
+      fireEvent.click(screen.getByTestId('pipeline-node-panel-view-yaml'));
+
+      expect(screen.queryByTestId('pipeline-node-panel-deprecation-banner')).not.toBeInTheDocument();
+    });
+
+    it('asks the editor before going back to Flow', () => {
+      const requestNodeLeave = vi.fn();
+      renderPanel({ context: { requestNodeLeave } });
+
+      fireEvent.click(screen.getByTestId('pipeline-node-panel-view-yaml'));
+      fireEvent.click(screen.getByTestId('pipeline-node-panel-view-flow'));
+
+      expect(requestNodeLeave).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId('node-yaml-editor-stub')).toBeInTheDocument();
+
+      act(() => requestNodeLeave.mock.calls[0][0]());
+
+      expect(screen.getByTestId('node-fields-stub')).toBeInTheDocument();
+    });
+
+    it('is read-only while the pipeline runs', () => {
+      renderPanel({ context: { isRunningPipeline: true } });
+
+      fireEvent.click(screen.getByTestId('pipeline-node-panel-view-yaml'));
+
+      expect(screen.getByTestId('node-yaml-editor-stub')).toHaveAttribute('readonly');
+    });
   });
 });

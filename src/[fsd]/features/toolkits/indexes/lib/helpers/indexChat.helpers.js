@@ -7,6 +7,7 @@ import {
   parseIndexEntryJson,
 } from '@/[fsd]/entities/indexing-report';
 import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers';
+import { parseRunRefusal } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
 import {
   IndexStatuses,
   IndexesToolsEnum,
@@ -196,6 +197,9 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
 
   switch (socketMessageType) {
     case SocketMessageType.StartTask: {
+      // The run already has its message when its first frame arrived late (a refusal that beat it)
+      if (updatedHistory.some(msg => msg.id === message_id)) return updatedHistory;
+
       const loadingMessage = {
         id: message_id,
         role: ROLES.Assistant,
@@ -345,10 +349,24 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
         // Without the scope the headline stays "🔄 Testing tool...", which reads as still
         // running, and the block goes unexplained until the page is reloaded
         msg.budgetErrorCode = response_metadata?.budget_error_code;
-        if (msg.budgetErrorCode) msg.content = '';
+        // A run the worker refused for governance (C-1009) carries `{code, error}`: with no headline the
+        // refusal card shows its text and code
+        const refusal = parseRunRefusal(message.content, message_id);
+        if (msg.budgetErrorCode || refusal) msg.content = '';
 
-        onFinish(IndexStatuses.fail);
+        onFinish(IndexStatuses.fail, refusal ? { refusal } : undefined);
       } else {
+        // The worker can refuse before the first frame of the run (StartTask) is delivered: no message exists yet
+        const refusal = parseRunRefusal(message.content, message_id);
+        if (refusal) {
+          onFinish(IndexStatuses.fail, { refusal });
+
+          return [
+            ...updatedHistory,
+            { ...generateMockMessageTemplate('', 'toolkit'), id: message_id, exception: message.content },
+          ];
+        }
+
         // Add new error message if no existing message found
         const errorMessage = generateMockMessageTemplate(
           `❌ Error occurred during tool testing:\n\n**Error:** ${convertJsonToString(message.content)}`,

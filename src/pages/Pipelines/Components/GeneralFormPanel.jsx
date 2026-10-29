@@ -9,17 +9,34 @@ import PipelineConfigurationForm from '@/pages/Applications/Components/Applicati
 import { ContentContainer } from '@/pages/Common/index.js';
 import { useTheme } from '@emotion/react';
 
-const GeneralFormPanel = ({ applicationId, onCollapsed, isCreateMode }) => {
+const GeneralFormPanel = ({
+  applicationId,
+  onCollapsed,
+  isCreateMode,
+  onSelectNode,
+  collapsed: controlledCollapsed,
+  onCollapsedChange,
+}) => {
   const theme = useTheme();
   const viewMode = useViewMode();
 
-  const [collapsed, setCollapsed] = useState(false);
+  // Controlled when the parent passes `collapsed` (the pipeline workspace auto-collapses it)
+  const [ownCollapsed, setOwnCollapsed] = useState(false);
+  const isControlled = controlledCollapsed !== undefined;
+  const collapsed = isControlled ? controlledCollapsed : ownCollapsed;
+  const setCollapsed = useCallback(
+    value => {
+      if (!isControlled) setOwnCollapsed(value);
+      onCollapsedChange?.(value);
+    },
+    [isControlled, onCollapsedChange],
+  );
   const { isSmallWindow } = useIsSmallWindow();
 
   const onClickCollapsed = useCallback(() => {
     setCollapsed(!collapsed);
     onCollapsed?.(!collapsed);
-  }, [collapsed, onCollapsed]);
+  }, [collapsed, onCollapsed, setCollapsed]);
 
   useEffect(() => {
     if (isSmallWindow) {
@@ -78,6 +95,7 @@ const GeneralFormPanel = ({ applicationId, onCollapsed, isCreateMode }) => {
               applicationId={applicationId}
               viewMode={viewMode}
               isCreateMode={isCreateMode}
+              onSelectNode={onSelectNode}
             />
           </>
         )}

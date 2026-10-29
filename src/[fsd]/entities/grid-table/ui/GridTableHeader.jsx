@@ -17,9 +17,11 @@ const GridTableHeader = memo(props => {
     showCheckbox = true,
     columnTestIdPrefix,
     selectAllCheckboxTestId,
+    // 'compact' narrows the cell padding and adds a title to labels that can be cut
+    density,
   } = props;
 
-  const styles = gridTableHeaderStyles(gridTemplateColumns, showCheckbox);
+  const styles = gridTableHeaderStyles(gridTemplateColumns, showCheckbox, density === 'compact');
 
   return (
     <Box sx={styles.header}>
@@ -64,6 +66,7 @@ const GridTableHeader = memo(props => {
               variant="labelMedium"
               color="text.secondary"
               sx={styles.headerText}
+              title={density === 'compact' ? column.label : undefined}
             >
               {column.label}
             </Typography>
@@ -78,7 +81,7 @@ const GridTableHeader = memo(props => {
 GridTableHeader.displayName = 'GridTableHeader';
 
 /** @type {MuiSx} */
-const gridTableHeaderStyles = (gridTemplateColumns, showCheckbox) => ({
+const gridTableHeaderStyles = (gridTemplateColumns, showCheckbox, isCompact) => ({
   header: ({ palette }) => ({
     display: 'grid',
     gridTemplateColumns: gridTemplateColumns || (showCheckbox ? '3rem 1fr' : '1fr'),
@@ -106,7 +109,7 @@ const gridTableHeaderStyles = (gridTemplateColumns, showCheckbox) => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.25rem',
-    padding: '0.25rem 0.75rem',
+    padding: isCompact ? '0.25rem 0.5rem' : '0.25rem 0.75rem',
     cursor: isSortable ? 'pointer' : 'default',
     position: 'relative',
     opacity: isActive ? 1 : 0.7,

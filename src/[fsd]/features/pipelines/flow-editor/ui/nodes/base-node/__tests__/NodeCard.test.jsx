@@ -25,7 +25,6 @@ const renderCard = ({ yamlNode, panelContext = null, cardProps = {}, context = {
     yamlJsonObject: { entry_point: 'agent_1', nodes: yamlNode ? [yamlNode] : [] },
     isRunningPipeline: false,
     disabled: false,
-    expandAll: true,
     reportNodeIssues: vi.fn(),
     ...context,
   };

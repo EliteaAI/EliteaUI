@@ -50,6 +50,7 @@ import {
   useNewInputKeyDownHandler,
   useNextInputSuggestion,
   useReadAloud,
+  useRejectedSendRecovery,
   useSelectedChatModel,
   useSlashMention,
 } from '@/[fsd]/features/chat/lib/hooks';
@@ -70,6 +71,7 @@ import ChatConversationStarters from '@/[fsd]/features/chat/ui/chat-conversation
 import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
 import RecommendationList from '@/[fsd]/features/chat/ui/recommendations/RecommendationList';
 import SearchResultList from '@/[fsd]/features/chat/ui/recommendations/SearchResultList';
+import { ScheduleRunNotice } from '@/[fsd]/features/chat/ui/schedule-run-notice';
 import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { MentionSkillList } from '@/[fsd]/features/skill';
@@ -87,6 +89,7 @@ import {
   isAutoSelection,
   isLLMSettingsFamilyConflict,
   modelsWithAuto,
+  readRefusal,
   resetLLMSettingsForModel,
   resolveModelSurface,
   selectionFields,
@@ -241,6 +244,7 @@ const ChatBox = memo(
 
     const dispatch = useDispatch();
     const { toastError, toastInfo } = useToast();
+    const { rememberSend } = useRejectedSendRecovery({ chatInput, toastError, activeConversationRef });
 
     // Sockets
     const socket = useContext(SocketContext);
@@ -1275,6 +1279,7 @@ const ChatBox = memo(
             sendResult?.createdConversation?.uuid ||
             activeConversation?.uuid;
           if (conversationUuid) {
+            rememberSend(question_id, question, conversationUuid);
             emit({
               ...eventPayload,
               conversation_uuid: conversationUuid,
@@ -1327,6 +1332,7 @@ const ChatBox = memo(
         isAgentsPage,
         isSendingToUser,
         name,
+        rememberSend,
         onClearActiveParticipant,
         onClearAttachments,
         onSend,
@@ -1455,13 +1461,14 @@ const ChatBox = memo(
           return;
         }
         if (regenerateError) {
-          const errorMessage = buildErrorMessage(regenerateError) || 'Regeneration Failed. Please try again.';
-          toastError(errorMessage);
+          const reason = ChatHelpers.toRegenerationReason(buildErrorMessage(regenerateError));
+          const code = readRefusal(regenerateError)?.code;
+          toastError(reason);
           setChatHistory(prevMessages => {
             return prevMessages.map(message =>
               message.id !== uuid
                 ? message
-                : ChatHelpers.applyMessageRegenerationError(message, errorMessage),
+                : ChatHelpers.applyMessageRegenerationError(message, reason, code),
             );
           });
         }
@@ -3165,6 +3172,10 @@ const ChatBox = memo(
               isInterrupt={statusSource?.isInterrupt === true && !isReadOnly}
               participantType={statusParticipant?.entity_name}
               agentType={statusParticipant?.entity_settings?.agent_type}
+            />
+            <ScheduleRunNotice
+              conversationId={activeConversation?.id}
+              participants={activeConversation?.participants}
             />
             <NewChatInput
               fromTheChat={fromTheChat}

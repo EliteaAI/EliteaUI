@@ -38,6 +38,7 @@ export * as RtkCacheHelpers from './rtkCache.helpers';
 export * as ThemeHelpers from './theme.helpers';
 export * as CustomThemeCacheHelpers from './customThemeCache.helpers';
 export * from './isNewItem.helpers';
+export * as PipelineLayoutHelpers from './pipelineLayout.helpers';
 export * from './catalogCard.helpers';
 export * from './scrollbar.helpers';
 export * from './contextStrategy.helpers';

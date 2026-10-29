@@ -7,6 +7,7 @@ import { Box, Divider, Typography } from '@mui/material';
 import { SettingsLayoutConstants } from '@/[fsd]/features/settings/lib/constants';
 import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
 import BrainIcon from '@/assets/brain.svg?react';
+import ClockIcon from '@/assets/clock.svg?react';
 import CoinIcon from '@/assets/coin-icon.svg?react';
 import CompassIcon from '@/assets/compass.svg?react';
 import ConfigurationIcon from '@/assets/configuration-icon.svg?react';
@@ -21,6 +22,7 @@ import BriefcaseIcon from '@/components/Icons/BriefcaseIcon';
 import Lock from '@/components/Icons/Lock.jsx';
 import Person from '@/components/Icons/Person';
 import UsersIcon from '@/components/Icons/UsersIcon';
+import RouteDefinitions from '@/routes';
 
 const ICON_COMPONENTS = {
   'ai-providers': ModelIcon,
@@ -29,6 +31,7 @@ const ICON_COMPONENTS = {
   tokens: KeyIcon,
   'project-general': BriefcaseIcon,
   'project-context': CompassIcon,
+  schedules: ClockIcon,
   secrets: Lock,
   users: UsersIcon,
   analytics: AnalyticsIcon,
@@ -66,6 +69,9 @@ const SettingsDrawer = memo(props => {
       if (tabId === 'tokens' && lastSegment === 'create-personal-token') {
         return true;
       }
+      if (tabId === 'schedules' && location.pathname.startsWith(RouteDefinitions.Schedules)) {
+        return true;
+      }
       return lastSegment === tabId;
     },
     [location.pathname],
@@ -99,6 +105,7 @@ const SettingsDrawer = memo(props => {
               <Box
                 key={tab.id}
                 onClick={() => handleItemClick(tab.id)}
+                aria-current={isActive ? 'page' : undefined}
                 sx={styles.menuItem(isActive)}
               >
                 <Box sx={styles.iconWrapper(isActive)}>

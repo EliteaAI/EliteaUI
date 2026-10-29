@@ -2,6 +2,9 @@
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ThemeProvider, createTheme } from '@mui/material';
+
+import lightPalette from '@/lightPalette';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
@@ -17,18 +20,26 @@ vi.hoisted(() => {
   };
 });
 
-vi.mock('@/[fsd]/entities/run-history/ui', () => ({
-  RunHistoryContainer: props => (
-    <button
-      data-testid="open-analytics"
-      onClick={() => props.handleOpenAnalytics(77)}
-    />
-  ),
+// The light palette only: the full MainTheme pulls in API modules this test does not mock
+const LIGHT_THEME = createTheme({ palette: lightPalette });
+const containerProps = vi.hoisted(() => ({ current: null }));
+
+vi.mock('@/[fsd]/entities/run-history', async () => ({
+  ...(await vi.importActual('@/[fsd]/entities/run-history/lib/helpers')),
+  RunHistoryContainer: props => {
+    containerProps.current = props;
+    return (
+      <button
+        data-testid="open-analytics"
+        onClick={() => props.handleOpenAnalytics(77)}
+      />
+    );
+  },
 }));
 
 vi.mock('@/[fsd]/features/chat', () => ({ ChatMessageList: () => null }));
 
-vi.mock('@/[fsd]/features/settings/ui/drawer-page', () => ({ DrawerPageHeader: () => null }));
+vi.mock('@/[fsd]/features/settings', () => ({ DrawerPageHeader: () => null }));
 
 vi.mock('@/[fsd]/features/toolkits', () => ({ ToolkitsHelpers: { prettifyToolkitConversation: vi.fn() } }));
 
@@ -38,12 +49,43 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 2 }));
 
 vi.mock('@/api/applications', () => ({ useApplicationDetailsQuery: () => ({ data: undefined }) }));
 
+const scheduleList = vi.hoisted(() => ({ args: null, rows: [{ id: 4, name: 'Daily digest' }] }));
+
+vi.mock('@/[fsd]/entities/schedule', async () => ({
+  ...(await vi.importActual('@/[fsd]/entities/schedule/lib/helpers')),
+  useAllEntitySchedules: args => {
+    scheduleList.args = args;
+    return { rows: args.skip ? [] : scheduleList.rows };
+  },
+}));
+
+vi.mock('@/[fsd]/shared/ui/select', () => ({
+  SingleSelect: ({ label, options, value, onValueChange, displayEmpty, shrinkLabel }) => (
+    <select
+      data-display-empty={String(Boolean(displayEmpty))}
+      data-shrink-label={String(Boolean(shrinkLabel))}
+      aria-label={label}
+      value={value}
+      onChange={event => onValueChange(event.target.value)}
+    >
+      {options.map(option => (
+        <option
+          key={option.value}
+          value={option.value}
+        >
+          {option.label}
+        </option>
+      ))}
+    </select>
+  ),
+}));
+
 const AnalyticsProbe = () => {
   const { pathname, search } = useLocation();
   return <div data-testid="analytics-page">{`${pathname}${search}`}</div>;
 };
 
-const renderAt = url =>
+const renderAt = (url, extraProps) =>
   render(
     <MemoryRouter initialEntries={[url]}>
       <Routes>
@@ -54,6 +96,7 @@ const renderAt = url =>
               source="application"
               detailRoute="/agents/:tab/:agentId"
               analyticsRoute="/agents/:tab/:agentId/history/analytics"
+              {...extraProps}
             />
           }
         />
@@ -88,5 +131,105 @@ describe('RunHistoryPage opening run analytics', () => {
     expect(screen.getByTestId('analytics-page')).toHaveTextContent(
       '/agents/all/127/history/analytics?viewMode=owner&history_run_id=77',
     );
+  });
+});
+
+describe('RunHistoryPage execution type column', () => {
+  afterEach(() => cleanup());
+
+  it('passes the column label and row decorator through to the container', () => {
+    const decorateRow = vi.fn();
+    renderAt('/agents/all/127/history', { eventColumnLabel: 'Execution type', decorateRow });
+
+    expect(containerProps.current.eventColumnLabel).toBe('Execution type');
+    expect(containerProps.current.decorateRow).toBe(decorateRow);
+  });
+
+  it('leaves the column label and decorator unset when the caller gives none', () => {
+    renderAt('/agents/all/127/history');
+
+    expect(containerProps.current.eventColumnLabel).toBeUndefined();
+    expect(containerProps.current.decorateRow).toBeUndefined();
+  });
+});
+
+describe('RunHistoryPage schedule filter and links', () => {
+  afterEach(() => cleanup());
+
+  it('?schedule_id=4 sends schedule_id to the list and preselects the filter', () => {
+    renderAt('/agents/all/127/history?schedule_id=4', { scheduleEntityType: 'agent' });
+
+    expect(scheduleList.args).toMatchObject({ entityType: 'agent', entityId: '127', skip: false });
+    expect(containerProps.current.queryParams).toEqual({ schedule_id: 4 });
+    expect(screen.getByLabelText('Schedule')).toHaveValue('4');
+
+    fireEvent.change(screen.getByLabelText('Schedule'), { target: { value: '' } });
+    expect(containerProps.current.queryParams).toEqual({});
+  });
+
+  it('loads every page of the entity schedules so every name can link', () => {
+    renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
+
+    expect(scheduleList.args).toEqual({ entityType: 'agent', entityId: '127', skip: false });
+  });
+
+  it('a schedule not in the caller list shows a plain name', () => {
+    renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
+    const [scheduleColumn] = containerProps.current.extraColumns;
+
+    expect(scheduleColumn.render({ schedule_run: { schedule_id: 9, schedule_name: 'Hidden' } })).toBe(
+      'Hidden',
+    );
+    expect(scheduleColumn.render({ schedule_run: null })).toBe('-');
+    render(
+      <ThemeProvider theme={LIGHT_THEME}>
+        <MemoryRouter>
+          {scheduleColumn.render({ schedule_run: { schedule_id: 4, schedule_name: 'Daily digest' } })}
+        </MemoryRouter>
+      </ThemeProvider>,
+    );
+    expect(screen.getByRole('link', { name: 'Daily digest' })).toHaveAttribute(
+      'href',
+      '/agents/all/127/schedules/4',
+    );
+    // a cut name shows in full on hover
+    expect(screen.getByRole('link', { name: 'Daily digest' })).toHaveAttribute('title', 'Daily digest');
+    // the theme link (MUI Link), not the browser default blue
+    expect(screen.getByRole('link', { name: 'Daily digest' })).toHaveClass('MuiLink-root');
+    // the app link colour, not the brand colour (4.5:1 for small text)
+    expect(screen.getByRole('link', { name: 'Daily digest' })).toHaveStyle({
+      color: LIGHT_THEME.palette.text.link,
+    });
+  });
+
+  it('ignores a schedule_id that is not a number, and keeps an unknown valid id as an option', () => {
+    renderAt('/agents/all/127/history?schedule_id=abc', { scheduleEntityType: 'agent' });
+    expect(containerProps.current.queryParams).toEqual({});
+    expect(screen.getByLabelText('Schedule')).toHaveValue('');
+    cleanup();
+
+    renderAt('/agents/all/127/history?schedule_id=55', { scheduleEntityType: 'agent' });
+    expect(containerProps.current.queryParams).toEqual({ schedule_id: 55 });
+    expect(screen.getByLabelText('Schedule')).toHaveValue('55');
+    expect(screen.getByRole('option', { name: 'Schedule 55' })).toBeInTheDocument();
+  });
+
+  it('shows "All schedules" as the value when no schedule is chosen', () => {
+    renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
+
+    const select = screen.getByLabelText('Schedule');
+    expect(select).toHaveValue('');
+    expect(select).toHaveAttribute('data-display-empty', 'true');
+    // the label sits above the shown "All schedules", not on top of it
+    expect(select).toHaveAttribute('data-shrink-label', 'true');
+    expect(screen.getByRole('option', { name: 'All schedules' })).toHaveValue('');
+  });
+
+  it('histories without schedules show no filter and no extra columns', () => {
+    renderAt('/agents/all/127/history');
+
+    expect(screen.queryByLabelText('Schedule')).not.toBeInTheDocument();
+    expect(containerProps.current.extraColumns).toBeUndefined();
+    expect(scheduleList.args.skip).toBe(true);
   });
 });

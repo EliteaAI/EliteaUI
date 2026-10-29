@@ -1,3 +1,4 @@
+import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import VersionIconBlock from '@/[fsd]/entities/version/ui/VersionIconBlock';
 
 export const formatVersionMeta = version => {
@@ -47,3 +48,6 @@ export const buildVersionOption =
       testId: `version-option-${name}`,
     };
   };
+
+export const getDefaultVersionId = ({ meta, versions = [] } = {}) =>
+  meta?.default_version_id || versions.find(v => v.name === LATEST_VERSION_NAME)?.id || null;

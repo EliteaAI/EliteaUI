@@ -163,7 +163,14 @@ export const ORIENTATION = {
   vertical: 'vertical',
 };
 
-export const OrientationKey = 'elitea_ui.orientation';
+// Auto-arrange spacing in flow units: nodesep between cards of one rank, ranksep between ranks.
+// Left to right needs wider ranks, so branch and interrupt labels fit between the cards.
+export const LAYOUT_SPACING = {
+  [ORIENTATION.vertical]: { nodesep: 80, ranksep: 110 },
+  [ORIENTATION.horizontal]: { nodesep: 60, ranksep: 220 },
+};
+
+export const LAYOUT_MARGIN = 60;
 
 export const LAYOUT_VERSION = '1.0';
 
@@ -172,6 +179,12 @@ export const MINI_CARD_ZOOM = 0.6;
 
 // Node card width in flow units (20rem)
 export const NODE_CARD_WIDTH = 320;
+
+// Fit view never zooms past 100%, so a pipeline with one or two cards isn't blown up
+export const FIT_VIEW_OPTIONS = { maxZoom: 1 };
+
+// End node pill width in flow units (6.25rem)
+export const END_NODE_WIDTH = 100;
 
 // Node configuration panel width in px (25rem)
 export const NODE_PANEL_WIDTH = 400;

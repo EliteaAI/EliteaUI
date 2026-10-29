@@ -3,7 +3,7 @@ import { DEFAULT_PIPELINE_KEY } from '@/[fsd]/features/pipelines/lib/constants';
 import { DumpYamlHelpers } from '@/[fsd]/shared/lib/helpers';
 import { createSlice, current } from '@reduxjs/toolkit';
 
-const { ORIENTATION, OrientationKey } = FlowEditorConstants;
+const { ORIENTATION } = FlowEditorConstants;
 
 export { DEFAULT_PIPELINE_KEY };
 
@@ -14,6 +14,7 @@ export const initialPipelineState = {
     yamlJsonObject: {},
     yamlCode: '',
     layout_version: '',
+    orientation: ORIENTATION.vertical,
   },
   nodes: [],
   edges: [],
@@ -23,6 +24,7 @@ export const initialPipelineState = {
   // Bumped on every reset so a stale FlowEditor effect cannot clear a newer reset
   resetVersion: 0,
   layout_version: '',
+  orientation: ORIENTATION.vertical,
   stateValidationErrors: {},
 };
 
@@ -35,9 +37,6 @@ const pipelineSlice = createSlice({
     byKey: {},
     // Which key is currently active (Canvas sets this per-tab; non-Canvas pages use DEFAULT_PIPELINE_KEY)
     activePipelineKey: null,
-    // Shared orientation setting (not per-pipeline)
-    orientation:
-      (typeof localStorage !== 'undefined' && localStorage?.getItem(OrientationKey)) || ORIENTATION.vertical,
   },
   reducers: {
     setActivePipelineKey: (state, action) => {
@@ -53,6 +52,7 @@ const pipelineSlice = createSlice({
 
     initThePipeline: (state, action) => {
       const { nodes, edges, yamlJsonObject, yamlCode, layout_version } = action.payload;
+      const orientation = action.payload.orientation || ORIENTATION.vertical;
       const key = resolveKey(state);
       state.byKey[key] = {
         ...(state.byKey[key] || initialPipelineState),
@@ -63,6 +63,7 @@ const pipelineSlice = createSlice({
         resetFlag: true,
         resetVersion: (state.byKey[key]?.resetVersion ?? 0) + 1,
         layout_version,
+        orientation,
         stateValidationErrors: {},
         initState: {
           nodes: [...nodes],
@@ -70,6 +71,7 @@ const pipelineSlice = createSlice({
           yamlJsonObject: structuredClone(yamlJsonObject || {}),
           yamlCode,
           layout_version,
+          orientation,
         },
       };
     },
@@ -77,7 +79,8 @@ const pipelineSlice = createSlice({
     resetPipeline: state => {
       const key = resolveKey(state);
       if (!state.byKey[key]) return;
-      const { nodes, edges, yamlJsonObject, yamlCode, layout_version } = state.byKey[key].initState;
+      const { nodes, edges, yamlJsonObject, yamlCode, layout_version, orientation } =
+        state.byKey[key].initState;
       state.byKey[key] = {
         ...state.byKey[key],
         nodes: [...nodes],
@@ -87,6 +90,7 @@ const pipelineSlice = createSlice({
         resetFlag: true,
         resetVersion: (state.byKey[key].resetVersion ?? 0) + 1,
         layout_version,
+        orientation: orientation || ORIENTATION.vertical,
         stateValidationErrors: {},
       };
     },
@@ -115,9 +119,19 @@ const pipelineSlice = createSlice({
       }
     },
 
-    setOrientation: (state, action) => {
-      state.orientation = action.payload;
-      localStorage.setItem(OrientationKey, action.payload);
+    setPipelineOrientation: (state, action) => {
+      const key = resolveKey(state);
+      if (state.byKey[key]) {
+        state.byKey[key].orientation = action.payload;
+      }
+    },
+
+    // An automatic arrange on open is not a user change, so it becomes the layout Discard returns to
+    commitInitialLayout: (state, action) => {
+      const key = resolveKey(state);
+      if (state.byKey[key]) {
+        state.byKey[key].initState.nodes = [...(action.payload || [])];
+      }
     },
 
     updateInitState: (state, action) => {
@@ -172,7 +186,8 @@ const pipelineSlice = createSlice({
 
     restorePipelineSnapshot: (state, action) => {
       const key = resolveKey(state);
-      const { nodes, edges, yamlJsonObject, yamlCode, layout_version, initState } = action.payload;
+      const { nodes, edges, yamlJsonObject, yamlCode, layout_version, orientation, initState } =
+        action.payload;
       // Fall back to the existing initState when the snapshot's initState is null
       // (tab was hidden before versionDetails loaded and ownInitStateRef was never set).
       const resolvedInitState = initState ?? state.byKey[key]?.initState ?? initialPipelineState.initState;
@@ -182,6 +197,7 @@ const pipelineSlice = createSlice({
         yamlJsonObject: structuredClone(yamlJsonObject || {}),
         yamlCode,
         layout_version,
+        orientation: orientation || resolvedInitState.orientation || ORIENTATION.vertical,
         // resetFlag=true causes only this tab's FlowEditor to re-sync because
         // each tab reads its own key via selectActivePipeline.
         resetFlag: true,

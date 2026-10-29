@@ -69,7 +69,7 @@ const { cellRenders } = vi.hoisted(() => ({ cellRenders: { count: 0 } }));
 vi.mock('@/[fsd]/entities/run-history/ui', () => ({
   RunHistoryTooltipCell: props => {
     cellRenders.count += 1;
-    return <Box>{props.text}</Box>;
+    return <Box data-tooltip={props.tooltipText ?? ''}>{props.text}</Box>;
   },
 }));
 
@@ -206,6 +206,27 @@ describe('RunHistoryListItem actions', () => {
     expect(screen.queryByTestId('menu-item-Delete')).not.toBeInTheDocument();
   });
 
+  it('does not offer to delete a chat the run happened in', () => {
+    renderItem(
+      { ...CONVERSATION_ROW, is_chat_run: true },
+      { handleRestoreConversation: vi.fn(), source: 'skill' },
+    );
+
+    expect(screen.getByTestId('menu-item-Share link')).toBeInTheDocument();
+    expect(screen.getByTestId('menu-item-Restore chat')).toBeInTheDocument();
+    expect(screen.queryByTestId('menu-item-Delete')).not.toBeInTheDocument();
+  });
+
+  it('tells the page which run it restores', () => {
+    const handleRestoreConversation = vi.fn();
+    const chatRun = { ...CONVERSATION_ROW, is_chat_run: true };
+    renderItem(chatRun, { handleRestoreConversation, source: 'skill' });
+
+    fireEvent.click(screen.getByTestId('menu-item-Restore chat'));
+
+    expect(handleRestoreConversation).toHaveBeenCalledWith(chatRun.id, true);
+  });
+
   it('hides the menu entirely when no action is available', () => {
     renderItem({ ...CONVERSATION_ROW, hasConversation: false });
 
@@ -239,5 +260,24 @@ describe('RunHistoryListItem re-rendering', () => {
     await clickShare();
 
     expect(cellRenders.count).toBe(before);
+  });
+});
+
+describe('RunHistoryListItem schedule run cells', () => {
+  const COLUMNS = [
+    { id: 'schedule', label: 'Schedule', width: '7.5rem', render: () => 'Sched Monday digest for the squad' },
+    { id: 'status', label: 'Status', width: '5.75rem', render: () => 'Waiting for input' },
+    { id: 'empty', label: 'Empty', width: '5rem', render: () => '-' },
+  ];
+
+  it('gives a cut Status or Schedule value its full text in a tooltip', () => {
+    renderItem(CONVERSATION_ROW, { extraColumns: COLUMNS });
+
+    expect(screen.getByText('Waiting for input')).toHaveAttribute('data-tooltip', 'Waiting for input');
+    expect(screen.getByText('Sched Monday digest for the squad')).toHaveAttribute(
+      'data-tooltip',
+      'Sched Monday digest for the squad',
+    );
+    expect(screen.getByText('-')).toHaveAttribute('data-tooltip', '');
   });
 });

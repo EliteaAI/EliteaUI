@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, waitFor } from '@testing-library/react';
 
 import TriggerTypeSelector from '../TriggerTypeSelector';
 
-// EL-7213: a schedule or webhook saved on a version that governance has not bound yet is kept, and the
+// A webhook saved on a version that governance has not bound yet is kept, and the
 // backend answers with `governance_notice`; the editor shows that warning in place of the success toast
 // (the toast provider holds one toast at a time, so showing both would hide the success).
 
@@ -14,7 +14,6 @@ const toastError = vi.fn();
 const toastWarning = vi.fn();
 const unwrap = vi.fn();
 const updateTrigger = vi.fn(() => ({ unwrap }));
-let scheduleModalProps = null;
 let webhookModalProps = null;
 
 vi.mock('formik', () => ({
@@ -24,11 +23,17 @@ vi.mock('formik', () => ({
 vi.mock('@mui/icons-material/Link', () => ({ default: () => null }));
 vi.mock('@/assets/clock.svg?react', () => ({ default: () => null }));
 vi.mock('@/ComponentsLib/Tooltip', () => ({ default: ({ children }) => children }));
-vi.mock('@mui/material', () => ({
+vi.mock('@mui/material', async importOriginal => ({
+  ...(await importOriginal()),
   Box: ({ children }) => <div>{children}</div>,
   IconButton: ({ children, onClick }) => <button onClick={onClick}>{children}</button>,
 }));
 
+vi.mock('@/[fsd]/shared/ui/banner-message', () => ({
+  BannerMessage: ({ children }) => <div>{children}</div>,
+}));
+vi.mock('@/[fsd]/shared/ui', () => ({ Modal: { BaseModal: () => null } }));
+vi.mock('@/[fsd]/features/schedule', () => ({ LegacyScheduleNotice: () => null }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProject: () => ({ id: 1 }),
   useToast: () => ({ toastSuccess, toastError, toastWarning }),
@@ -63,12 +68,6 @@ vi.mock('@/api/applications', () => ({
   useGetPipelineTriggerQuery: () => ({ data: { type: 'chat_message' }, isLoading: false }),
   useUpdatePipelineTriggerMutation: () => [updateTrigger, { isLoading: false }],
 }));
-vi.mock('../PipelineScheduleModal', () => ({
-  default: props => {
-    scheduleModalProps = props;
-    return null;
-  },
-}));
 vi.mock('../PipelineWebhookModal', () => ({
   default: props => {
     webhookModalProps = props;
@@ -83,30 +82,7 @@ describe('TriggerTypeSelector under credential governance (EL-7213)', () => {
   beforeEach(() => {
     cleanup();
     vi.clearAllMocks();
-    scheduleModalProps = null;
     webhookModalProps = null;
-  });
-
-  it('shows the warning instead of the success toast when a schedule is saved on an unbound version', async () => {
-    unwrap.mockResolvedValue({ type: 'schedule', cron: '0 0 * * 6', governance_notice: NOTICE });
-    render(<TriggerTypeSelector />);
-
-    await act(async () => {
-      await scheduleModalProps.onSubmit('0 0 * * 6');
-    });
-
-    await waitFor(() => expect(updateTrigger).toHaveBeenCalledTimes(1));
-    expect(updateTrigger.mock.calls[0][0]).toMatchObject({
-      projectId: 1,
-      versionId: 70,
-      type: 'schedule',
-      cron: '0 0 * * 6',
-    });
-    expect(toastWarning).toHaveBeenCalledTimes(1);
-    expect(toastWarning).toHaveBeenCalledWith(NOTICE);
-    expect(toastSuccess).not.toHaveBeenCalled();
-    expect(toastError).not.toHaveBeenCalled();
-    expect(screen.getByTestId('trigger-select')).toBeTruthy();
   });
 
   it('shows the warning instead of the success toast when a webhook is saved on an unbound version', async () => {
@@ -129,18 +105,6 @@ describe('TriggerTypeSelector under credential governance (EL-7213)', () => {
     expect(toastWarning).toHaveBeenCalledWith(NOTICE);
     expect(toastSuccess).not.toHaveBeenCalled();
     expect(toastError).not.toHaveBeenCalled();
-  });
-
-  it('shows the success toast and no warning when the backend sends no notice (governance off, or bound)', async () => {
-    unwrap.mockResolvedValue({ type: 'schedule', cron: '0 0 * * 6' });
-    render(<TriggerTypeSelector />);
-
-    await act(async () => {
-      await scheduleModalProps.onSubmit('0 0 * * 6');
-    });
-
-    expect(toastSuccess).toHaveBeenCalledWith('Schedule configured successfully');
-    expect(toastWarning).not.toHaveBeenCalled();
   });
 
   it('keeps the webhook success wording when the backend sends no notice', async () => {
