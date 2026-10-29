@@ -19,6 +19,7 @@ export { default as ContextBudgetStats } from './ContextBudgetStats';
 export { default as ContextBudgetTooltipContent } from './ContextBudgetTooltipContent';
 export { default as ContextStrategyModal } from './ContextStrategyModal';
 export { default as ContextStrategySystemMessages } from './ContextStrategySystemMessages';
+export { default as SummarizeConfirmDialog } from './SummarizeConfirmDialog';
 export { default as SummaryDetailsButton } from './SummaryDetailsButton';
 export { default as SummaryDetailsModal } from './SummaryDetailsModal';
 export { default as SummaryDetailsItem } from './SummaryDetailsItem';

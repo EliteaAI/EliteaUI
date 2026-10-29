@@ -4,7 +4,6 @@ import { Box, Typography } from '@mui/material';
 
 import { CONTEXT_WINDOW_COPY } from '@/[fsd]/widgets/context-budget/lib/constants';
 import { formatWindowSize } from '@/[fsd]/widgets/context-budget/lib/utils';
-import { isNullOrUndefined } from '@/common/utils';
 import InfoIcon from '@/components/Icons/InfoIcon';
 
 /**
@@ -16,8 +15,7 @@ const ContextWindowHint = memo(props => {
 
   const isIdentical =
     balancedWindowTokens > 0 && fullWindowTokens > 0 && balancedWindowTokens === fullWindowTokens;
-  if (!isIdentical || isNullOrUndefined(fullWindowTokens) || isNullOrUndefined(balancedWindowTokens))
-    return null;
+  if (!isIdentical) return null;
   return (
     <Box
       sx={styles.container}
@@ -51,9 +49,6 @@ const contextWindowHintStyles = () => ({
         fill: palette.icon.tips,
       },
     },
-  }),
-  text: ({ palette }) => ({
-    color: palette.text.tips,
   }),
 });
 

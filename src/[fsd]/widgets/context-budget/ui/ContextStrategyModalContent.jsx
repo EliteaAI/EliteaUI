@@ -114,7 +114,6 @@ const ContextStrategyModalContent = memo(props => {
                 <ContextWindowModeSelector
                   value={values.context_window_mode}
                   onChange={handleWindowModeChange}
-                  modelWindow={stats?.modelWindow}
                   balancedWindowTokens={stats?.balancedWindowTokens}
                   fullWindowTokens={stats?.fullWindowTokens}
                 />

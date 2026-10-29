@@ -3,9 +3,8 @@ import { memo, useCallback, useEffect, useRef } from 'react';
 import { Box, ClickAwayListener, Grow, Paper, Popper } from '@mui/material';
 
 import { useModal } from '@/[fsd]/shared/lib/hooks';
-import { CONTEXT_MESSAGES, CONTEXT_WINDOW_COPY } from '@/[fsd]/widgets/context-budget/lib/constants';
+import { CONTEXT_WINDOW_COPY } from '@/[fsd]/widgets/context-budget/lib/constants';
 import { useSummarizeContext } from '@/[fsd]/widgets/context-budget/lib/hooks';
-import AlertDialog from '@/components/AlertDialog';
 
 import ContextBudgetDetails from './ContextBudgetDetails';
 import ContextBudgetHeader from './ContextBudgetHeader';
@@ -14,6 +13,7 @@ import ContextBudgetStatsDisplay from './ContextBudgetStatsDisplay';
 import ContextHighUsageBanner from './ContextHighUsageBanner';
 import ContextStrategyModal from './ContextStrategyModal';
 import ContextWindowModeSelector from './ContextWindowModeSelector';
+import SummarizeConfirmDialog from './SummarizeConfirmDialog';
 
 /**
  * Full context budget card in a popper, anchored to a compact trigger (ring or pill), plus the edit modal.
@@ -163,14 +163,10 @@ const ContextBudgetPopover = memo(props => {
         persona={persona}
       />
 
-      <AlertDialog
+      <SummarizeConfirmDialog
         open={isSummarizeDialogOpen}
         onClose={closeSummarizeDialog}
-        onCancel={closeSummarizeDialog}
         onConfirm={confirmSummarize}
-        alarm
-        title="Warning"
-        alertContent={CONTEXT_MESSAGES.SUMMARIZE_CONFIRM}
         confirming={isSummarizing}
       />
     </>

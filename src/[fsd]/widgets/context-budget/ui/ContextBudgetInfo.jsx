@@ -11,6 +11,7 @@ import { formatNumberWithSpaces } from '@/utils/stringUtils';
 import { BALANCED_WINDOW_TOKENS, CONTEXT_WINDOW_MODES } from '../lib/constants';
 import { useContextUtilization } from '../lib/hooks/useContextUtilization.hooks';
 import { useContextWindowSwitch } from '../lib/hooks/useContextWindowSwitch.hooks';
+import { getWindowModeTokens } from '../lib/utils';
 import ContextBudgetCompact from './ContextBudgetCompact';
 import ContextBudgetExpanded from './ContextBudgetExpanded';
 import ContextBudgetPill from './ContextBudgetPill';
@@ -87,9 +88,10 @@ const ContextBudgetInfo = memo(props => {
   const resolvedEffectiveWindow = contextStatus.effective_window;
   // balancedWindowTokens: always derived from the model window, not from effectiveWindow,
   // so it stays stable during a mode switch (effectiveWindow is stale until the next API response).
-  const balancedWindowTokens =
-    resolvedModelWindow > 0 ? Math.min(BALANCED_WINDOW_TOKENS, resolvedModelWindow) : 0;
-  const fullWindowTokens = resolvedModelWindow > 0 ? resolvedModelWindow : 0;
+  const { balanced: balancedWindowTokens, full: fullWindowTokens } = getWindowModeTokens(
+    resolvedModelWindow,
+    BALANCED_WINDOW_TOKENS,
+  );
 
   // Prepare stats object for child components
   const stats = {

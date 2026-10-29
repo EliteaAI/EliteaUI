@@ -1,8 +1,10 @@
 import { memo } from 'react';
 
-import { Box, ButtonBase, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { CONTEXT_MESSAGES, CONTEXT_WINDOW_COPY } from '@/[fsd]/widgets/context-budget/lib/constants';
 
 /**
@@ -18,19 +20,15 @@ const ContextHighUsageBanner = memo(props => {
     : CONTEXT_MESSAGES.HIGH_USAGE_BANNER_WITHOUT_SUMMARIZATION;
 
   const action = (
-    <ButtonBase
+    <Button.BaseBtn
+      variant={BUTTON_VARIANTS.auxiliary}
       onClick={onSummarize}
       disabled={!canEdit || isSummarizing}
       sx={styles.action}
       data-testid="context-budget-summarize-button"
     >
-      <Typography
-        variant="labelSmall"
-        sx={styles.actionText}
-      >
-        {CONTEXT_MESSAGES.SUMMARIZE_NOW}
-      </Typography>
-    </ButtonBase>
+      {CONTEXT_MESSAGES.SUMMARIZE_NOW}
+    </Button.BaseBtn>
   );
 
   return (
@@ -75,14 +73,10 @@ const contextHighUsageBannerStyles = () => ({
   text: ({ palette }) => ({
     color: palette.text.attention,
   }),
-  action: {
+  action: ({ palette }) => ({
     padding: '0.375rem 0',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-  },
-  actionText: ({ palette }) => ({
     color: palette.text.showMore,
+    minWidth: 0,
   }),
 });
 

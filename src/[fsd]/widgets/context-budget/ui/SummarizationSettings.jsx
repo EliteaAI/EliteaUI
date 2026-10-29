@@ -82,6 +82,7 @@ const SummarizationSettings = memo(props => {
           onChange={handlePreserveChange}
           error={!!errors.preserve_recent_messages}
           helperText={errors.preserve_recent_messages}
+          disabled={isDisabled}
           enableAutoBlur={false}
           containerProps={styles.inputContainer}
           inputProps={{
@@ -98,6 +99,7 @@ const SummarizationSettings = memo(props => {
           onChange={handleMaxTokensChange}
           error={!!errors.summary_llm_settings?.max_tokens}
           helperText={errors.summary_llm_settings?.max_tokens}
+          disabled={isDisabled}
           enableAutoBlur={false}
           containerProps={styles.inputContainer}
           inputProps={{

@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { Box } from '@mui/material';
 
 import { useIsSmallWindow, useModal } from '@/[fsd]/shared/lib/hooks';
-import { CONTEXT_MESSAGES, CONTEXT_WINDOW_COPY } from '@/[fsd]/widgets/context-budget/lib/constants';
+import { CONTEXT_WINDOW_COPY } from '@/[fsd]/widgets/context-budget/lib/constants';
 import { useSummarizeContext } from '@/[fsd]/widgets/context-budget/lib/hooks';
 import {
   ContextBudgetDetails,
@@ -14,7 +14,8 @@ import {
   ContextStrategyModal,
   ContextWindowModeSelector,
 } from '@/[fsd]/widgets/context-budget/ui';
-import AlertDialog from '@/components/AlertDialog';
+
+import SummarizeConfirmDialog from './SummarizeConfirmDialog';
 
 const ContextBudgetExpanded = memo(props => {
   const {
@@ -100,14 +101,10 @@ const ContextBudgetExpanded = memo(props => {
         persona={persona}
       />
 
-      <AlertDialog
+      <SummarizeConfirmDialog
         open={isSummarizeDialogOpen}
         onClose={closeSummarizeDialog}
-        onCancel={closeSummarizeDialog}
         onConfirm={confirmSummarize}
-        alarm
-        title="Warning"
-        alertContent={CONTEXT_MESSAGES.SUMMARIZE_CONFIRM}
         confirming={isSummarizing}
       />
     </Box>
