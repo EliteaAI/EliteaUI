@@ -136,6 +136,7 @@ describe('AnalyticsSkills', () => {
     expect(within(first).getByTestId('analytics-skills-row-in_agent_uses')).toHaveTextContent('3');
     expect(within(second).getByTestId('analytics-skills-row-in_agent_uses')).toHaveTextContent('7');
     expect(within(second).getByTestId('analytics-skills-row-total_tokens')).toHaveTextContent('—');
+    expect(within(second).getByTestId('analytics-skills-row-errors')).toHaveTextContent('—');
   });
 
   it('marks a deleted skill with its last known name', () => {

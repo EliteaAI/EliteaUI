@@ -75,7 +75,7 @@ const SKILL_COLUMNS = [
     label: 'Avg Latency',
     render: renderForRuns(r => AnalyticCommonHelpers.fmtDuration(r.avg_duration_ms)),
   },
-  { key: 'errors', label: 'Errors', render: r => r.errors },
+  { key: 'errors', label: 'Errors', render: renderForRuns(r => r.errors) },
   {
     key: 'total_tokens',
     label: 'Tokens',
