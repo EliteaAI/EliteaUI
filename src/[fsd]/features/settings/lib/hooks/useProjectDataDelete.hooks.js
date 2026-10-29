@@ -49,7 +49,12 @@ export const useProjectDataDelete = () => {
         const skippedNote = totals.skipped
           ? ` ${totals.skipped} item(s) were skipped (published, or created by ELITEA).`
           : '';
-        if (result.status === 'success' && !totals.skipped) {
+        if (result.status === 'incomplete') {
+          // The run hit its time limit: what is left stays, running again finishes it
+          toastWarning(
+            `Deleted ${totals.deleted} item(s), but the deletion did not finish in time. Run it again to delete the rest.${skippedNote}`,
+          );
+        } else if (result.status === 'success' && !totals.skipped) {
           toastInfo(`Deleted ${totals.deleted} item(s).`);
         } else if (result.status === 'success') {
           toastWarning(`Deleted ${totals.deleted} item(s).${skippedNote}`);
