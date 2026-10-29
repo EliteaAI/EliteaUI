@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks/useGetCurrentToolkitSchemas.hooks';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useToolkitAvailableToolsQuery } from '@/api/toolkits.js';
@@ -45,13 +44,7 @@ export const useToolkitToolOptions = ({ toolkitId }) => {
     const hasExplicitSelection = Array.isArray(explicitSelectedTools) && explicitSelectedTools.length > 0;
     const availableTools = hasExplicitSelection ? explicitSelectedTools : dynamicOrSchemaToolNames;
 
-    const indexToolNames = new Set(Object.values(IndexesToolsEnum));
-
     return (availableTools || [])
-      .filter(tool => {
-        const name = typeof tool === 'string' ? tool : tool?.name;
-        return !indexToolNames.has(name);
-      })
       .map(tool => ({
         label:
           typeof tool === 'string'
