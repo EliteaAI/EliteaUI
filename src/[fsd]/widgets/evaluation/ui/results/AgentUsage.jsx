@@ -4,6 +4,7 @@ import { Box, Typography } from '@mui/material';
 
 const COLUMNS = [
   { key: 'label', label: 'Agent' },
+  { key: 'model', label: 'Model' },
   { key: 'llmCalls', label: 'LLM calls' },
   { key: 'toolCalls', label: 'Tool calls' },
   { key: 'inputTokens', label: 'Input tokens' },
@@ -58,6 +59,7 @@ const AgentUsage = memo(props => {
                 key={key}
                 variant="bodySmall"
                 role="cell"
+                sx={STYLES.cell}
               >
                 {row[key]}
               </Typography>
@@ -96,7 +98,7 @@ const agentUsageStyles = () => ({
   }),
   table: {
     display: 'grid',
-    gridTemplateColumns: 'minmax(8rem, 2fr) repeat(6, minmax(0, 1fr))',
+    gridTemplateColumns: 'minmax(8rem, 2fr) minmax(8rem, 2fr) repeat(6, minmax(0, 1fr))',
     columnGap: '1rem',
     rowGap: '0.25rem',
   },
@@ -108,6 +110,10 @@ const agentUsageStyles = () => ({
     display: 'grid',
     gridColumn: '1 / -1',
     gridTemplateColumns: 'subgrid',
+  },
+  // Model names are long unbroken ids; let them wrap instead of widening the column.
+  cell: {
+    overflowWrap: 'anywhere',
   },
   note: ({ palette }) => ({
     color: palette.text.secondary,

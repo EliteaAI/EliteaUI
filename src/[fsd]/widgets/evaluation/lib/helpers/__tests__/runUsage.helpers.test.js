@@ -369,6 +369,28 @@ describe('buildCaseUsageRows', () => {
     expect(rows[0].note).toBe('tokens estimated');
     expect(buildCaseUsageRows(undefined)).toEqual([]);
   });
+
+  // #7297: the row stores only the most-used model, which cannot explain a sub-agent's cost.
+  it("names every model the case's agents ran on", () => {
+    const usage = [
+      { role: 'agent', usage_state: 'recorded', model_name: 'haiku-5-5', total_tokens: 10 },
+      { role: 'judge', usage_state: 'recorded', model_name: 'sonnet-5-5', total_tokens: 10 },
+    ];
+    const agents = [
+      { agent: null, models: ['haiku-5-5'] },
+      { agent: 'CNS3aPostFinder', models: ['haiku-5-5'] },
+      { agent: 'CNS3bDocsScout', models: ['sonnet-5', 'haiku-4-5'] },
+    ];
+    const [agent, judge] = buildCaseUsageRows(usage, agents);
+    expect(agent.note).toMatch(/^haiku-5-5 \+ sonnet-5 \+ haiku-4-5/);
+    expect(judge.note).toMatch(/^sonnet-5-5/);
+  });
+
+  it('keeps the stored model when the agents ran on one model', () => {
+    const usage = [{ role: 'agent', usage_state: 'recorded', model_name: 'haiku-5-5', total_tokens: 10 }];
+    const [row] = buildCaseUsageRows(usage, [{ agent: null, models: ['haiku-5-5'] }, { agent: 'A' }]);
+    expect(row.note).toMatch(/^haiku-5-5/);
+  });
 });
 
 describe('getRunHistoryUsage', () => {
@@ -428,6 +450,16 @@ describe('buildAgentUsageRows (#7015 P3)', () => {
       ['RD-OrderReader', 'RD-OrderReader', '3', '11,299', '$0.0123'],
     ]);
     expect(note).toMatch(/usage ledger/);
+  });
+
+  it('names the models each agent ran on (#7297)', () => {
+    const { rows } = buildAgentUsageRows([
+      { agent: null, models: ['haiku-5-5'], source: 'ledger' },
+      { agent: 'CNS3bDocsScout', models: ['sonnet-5', 'haiku-4-5'], source: 'ledger' },
+      { agent: 'NoModels', models: [], source: 'ledger' },
+      { agent: 'StoredBefore', source: 'trajectory' },
+    ]);
+    expect(rows.map(r => r.model)).toEqual(['haiku-5-5', 'sonnet-5, haiku-4-5', '—', '—']);
   });
 
   it("an unpriced ledger agent reads 'Not priced', an answer rather than a missing value", () => {
