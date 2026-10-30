@@ -22,6 +22,7 @@ export { default as ScrollableContainer } from './scrollable-container';
 export { default as Breadcrumbs, BreadcrumbsOrTitle } from './breadcrumbs';
 export * as Icon from './icon';
 export { default as Markdown } from './markdown';
+export { default as CodeBlock } from './code-block';
 export { default as SoonLabel } from './soon-label';
 export { Toast, ToastComponent, ToastProvider } from './toast';
 export { FilePreviewNavigationProvider } from './file-preview-navigation';
