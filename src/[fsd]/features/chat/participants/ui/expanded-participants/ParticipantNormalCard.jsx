@@ -3,6 +3,7 @@ import { forwardRef, memo } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
+import { Text } from '@/[fsd]/shared/ui';
 import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import AttachIcon from '@/assets/attach-icon.svg?react';
 import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
@@ -25,7 +26,6 @@ const ParticipantNormalCard = memo(
       displayName,
       versionName,
       entityIcon,
-      nameTextRef,
       status,
       originalDetails,
       onClickHandler,
@@ -90,13 +90,14 @@ const ParticipantNormalCard = memo(
           />
           {!collapsed && (
             <Box sx={styles.nameWrapper}>
-              <Typography
-                variant="bodyMedium"
-                color="text.secondary"
-                ref={nameTextRef}
-                sx={styles.nameContent}
-              >
-                {displayName}
+              <Box sx={styles.nameLeft}>
+                <Text.EllipsisTypography
+                  variant="bodyMedium"
+                  color="text.secondary"
+                  sx={styles.nameContent}
+                >
+                  {displayName}
+                </Text.EllipsisTypography>
                 {isAttachement && (
                   <IconButton
                     variant="elitea"
@@ -127,8 +128,8 @@ const ParticipantNormalCard = memo(
                   showOpenApi={!!openApiConfig}
                   openApiLoggedIn={openAPIOAuthLoggedIn}
                 />
-              </Typography>
-              <Typography
+              </Box>
+              <Text.EllipsisTypography
                 variant="bodyMedium"
                 sx={styles.versionLabel}
               >
@@ -137,7 +138,7 @@ const ParticipantNormalCard = memo(
                     ? 'Editing...'
                     : 'Viewing...'
                   : versionName}
-              </Typography>
+              </Text.EllipsisTypography>
             </Box>
           )}
           {!collapsed && !isBeingEdited && (
@@ -202,17 +203,22 @@ export const participantNormalCardStyles = ({ collapsed, isActive, maxWidth, isB
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: '.5rem',
-  },
-  nameContent: {
-    flex: 1,
-    minWidth: '50%',
-    whiteSpace: 'nowrap',
     overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpaceCollapse: 'preserve',
-    display: 'inline-flex',
+  },
+  nameLeft: {
+    display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
+    minWidth: 0,
+    flex: 1,
+    gap: '.25rem',
+    overflow: 'hidden',
+  },
+  nameContent: {
+    marginRight: 0,
+    minWidth: 0,
+    width: 'auto',
+    flexShrink: 1,
   },
   attachmentButton: ({ palette }) => ({
     marginTop: '0.15rem',
@@ -233,7 +239,7 @@ export const participantNormalCardStyles = ({ collapsed, isActive, maxWidth, isB
   },
   catalogTag: ({ palette }) => ({
     flexShrink: 0,
-    marginLeft: '.5rem',
+    marginLeft: '.25rem',
     padding: '0 .375rem',
     borderRadius: '.875rem',
     border: `.0625rem solid ${palette.border.lines}`,
@@ -241,11 +247,9 @@ export const participantNormalCardStyles = ({ collapsed, isActive, maxWidth, isB
   }),
   versionLabel: ({ palette }) => ({
     flexShrink: 0,
-    maxWidth: isBeingEdited ? 'none' : '50%',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpaceCollapse: 'preserve',
+    width: 'fit-content',
+    maxWidth: isBeingEdited ? 'none' : '2.5rem',
+    marginRight: 0,
     color: isBeingEdited ? palette.primary.main : palette.text.primary,
   }),
   infoMessageRow: {
