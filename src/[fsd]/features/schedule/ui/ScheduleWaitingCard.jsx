@@ -60,7 +60,11 @@ const ScheduleWaitingCard = memo(
     const isSignIn = waiting.need === WAITING_NEED.SIGN_IN;
     const { authAction } = conversation;
 
-    const { state: credentialState, recheck } = useWaitingRunCredentialCheck({
+    const {
+      state: credentialState,
+      recheck,
+      toolkitName,
+    } = useWaitingRunCredentialCheck({
       schedule,
       toolkit: waiting.toolkit,
       enabled: isCredential,
@@ -130,7 +134,9 @@ const ScheduleWaitingCard = memo(
             </Typography>
           )}
           <Box role="status">
-            <Typography variant="bodyMedium">{describeNeed(waiting, pausedEvent?.text)}</Typography>
+            <Typography variant="bodyMedium">
+              {describeNeed({ ...waiting, toolkit: waiting.toolkit || toolkitName }, pausedEvent?.text)}
+            </Typography>
           </Box>
           {(isCredential || isSignIn) && (
             <Box

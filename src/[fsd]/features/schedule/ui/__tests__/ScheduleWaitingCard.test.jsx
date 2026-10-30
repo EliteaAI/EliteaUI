@@ -104,6 +104,16 @@ describe('ScheduleWaitingCard', () => {
     expect(mocks.checkArgs).toMatchObject({ toolkit: 'GitHub', enabled: true });
   });
 
+  it('takes the toolkit name from the credential check when the run does not name it', () => {
+    mocks.detail = { ...mocks.detail, events: [paused({ need: 'credential', credential: 'gh-main' })] };
+    mocks.check = { state: 'missing', recheck: vi.fn(), toolkitName: 'Repo toolkit' };
+    renderCard();
+
+    expect(screen.getAllByRole('status')[0]).toHaveTextContent(
+      'Toolkit "Repo toolkit" has no usable credential "gh-main".',
+    );
+  });
+
   it('opens the credentials page and the agent editor in a new tab', () => {
     renderCard();
 

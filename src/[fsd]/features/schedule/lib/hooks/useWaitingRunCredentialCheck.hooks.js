@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useCheckScheduleRiskMutation } from '@/[fsd]/entities/schedule';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 
-import { hasMissingCredential } from '../helpers';
+import { findMissingCredential } from '../helpers';
 
 export const CREDENTIAL_CHECK_STATE = { CHECKING: 'checking', MISSING: 'missing', READY: 'ready' };
 
@@ -17,6 +17,8 @@ export const useWaitingRunCredentialCheck = ({ schedule, toolkit, enabled = true
   const projectId = useSelectedProjectId();
   const [checkRisk] = useCheckScheduleRiskMutation();
   const [state, setState] = useState(CREDENTIAL_CHECK_STATE.CHECKING);
+  // The run event may not name the toolkit; the finding of the check does
+  const [toolkitName, setToolkitName] = useState();
   // Only the latest answer counts
   const latestCall = useRef(0);
   const { id, entity_type, application_id, version_id, approval_rule } = schedule ?? {};
@@ -34,12 +36,11 @@ export const useWaitingRunCredentialCheck = ({ schedule, toolkit, enabled = true
         schedule_id: id,
         ...(approval_rule && { approval_rule }),
       }).unwrap();
-      if (call === latestCall.current)
-        setState(
-          hasMissingCredential(result, toolkit)
-            ? CREDENTIAL_CHECK_STATE.MISSING
-            : CREDENTIAL_CHECK_STATE.READY,
-        );
+      if (call === latestCall.current) {
+        const finding = findMissingCredential(result, toolkit);
+        setToolkitName(finding?.toolkit);
+        setState(finding ? CREDENTIAL_CHECK_STATE.MISSING : CREDENTIAL_CHECK_STATE.READY);
+      }
     } catch {
       if (call === latestCall.current) setState(CREDENTIAL_CHECK_STATE.MISSING);
     }
@@ -54,5 +55,5 @@ export const useWaitingRunCredentialCheck = ({ schedule, toolkit, enabled = true
     return () => window.removeEventListener('focus', recheck);
   }, [recheck]);
 
-  return { state: enabled ? state : CREDENTIAL_CHECK_STATE.READY, recheck };
+  return { state: enabled ? state : CREDENTIAL_CHECK_STATE.READY, recheck, toolkitName };
 };

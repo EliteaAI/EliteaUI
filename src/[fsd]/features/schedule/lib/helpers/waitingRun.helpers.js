@@ -30,12 +30,14 @@ export const getWaitingRunNeed = pausedEvent => {
 };
 
 // Under "Pause and ask me" the server moves this finding from `blocking` to `notices`, so all three lists count.
-// True when a missing_credential finding names the toolkit; a finding or a call without a toolkit name matches any
-export const hasMissingCredential = (result, toolkit) =>
-  [...(result?.blocking ?? []), ...(result?.warnings ?? []), ...(result?.notices ?? [])].some(
+// A finding or a call without a toolkit name matches any toolkit.
+export const findMissingCredential = (result, toolkit) =>
+  [...(result?.blocking ?? []), ...(result?.warnings ?? []), ...(result?.notices ?? [])].find(
     finding =>
       finding.code === 'missing_credential' &&
       (!toolkit || !finding.toolkit || finding.toolkit.toLowerCase() === toolkit.toLowerCase()),
   );
+
+export const hasMissingCredential = (result, toolkit) => !!findMissingCredential(result, toolkit);
 
 export const findWaitingRun = runs => (runs ?? []).find(run => run.status === 'waiting_for_approval');
