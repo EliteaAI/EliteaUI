@@ -165,8 +165,11 @@ const ScheduleRunsPanel = memo(
               shownRun?.status === 'waiting_for_approval' && (
                 <ScheduleRunApproval
                   schedule={schedule}
+                  runId={shownRun.id}
+                  hasChat={shownRun.conversation_id != null}
                   conversationUuid={conversation.conversationUuid}
                   pausedMessageId={conversation.pausedMessageId}
+                  authAction={conversation.authAction}
                   pausedAt={events.findLast(event => event.kind === 'paused')?.at}
                 />
               )

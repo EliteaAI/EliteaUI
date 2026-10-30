@@ -215,6 +215,7 @@ describe('ScheduleRunsPanel test panel log', () => {
     });
     renderPanel();
 
+    expect(screen.queryByTestId('schedule-run-sign-in')).not.toBeInTheDocument();
     const [, pausedLine] = screen.getAllByTestId('schedule-run-log-line');
     const actions = pausedLine.nextElementSibling;
     expect(within(actions).getByRole('button', { name: 'Approve' })).toBeEnabled();
@@ -226,7 +227,29 @@ describe('ScheduleRunsPanel test panel log', () => {
     expect(mocks.decide).toHaveBeenCalledWith({
       action: 'approve',
       conversationUuid: 'conv-uuid',
+      runId: newestTest.id,
       messageId: 'msg-7',
+    });
+  });
+
+  it('lets the owner decide a waiting run that has no chat', () => {
+    mocks.conversation = {};
+    mockDetail({
+      ...newestTest,
+      status: 'waiting_for_approval',
+      conversation_id: null,
+      events: [STARTED, PAUSED],
+    });
+    renderPanel();
+
+    const [, pausedLine] = screen.getAllByTestId('schedule-run-log-line');
+    const actions = pausedLine.nextElementSibling;
+    fireEvent.click(within(actions).getByRole('button', { name: 'Approve' }));
+    expect(mocks.decide).toHaveBeenCalledWith({
+      action: 'approve',
+      conversationUuid: undefined,
+      runId: newestTest.id,
+      messageId: undefined,
     });
   });
 

@@ -9,7 +9,7 @@ import { RISK_CHECK_STATUS } from '../lib/constants';
 import ScheduleRiskBlockBox from './ScheduleRiskBlockBox';
 
 const ScheduleRiskNotices = memo(
-  ({ status, blocking, entityType, entityId, versionId, projectId, onRetry }) => {
+  ({ status, blocking, waiting, entityType, entityId, versionId, projectId, onRetry }) => {
     const styles = scheduleRiskNoticesStyles();
 
     return (
@@ -17,6 +17,16 @@ const ScheduleRiskNotices = memo(
         {status === RISK_CHECK_STATUS.BLOCKED && (
           <ScheduleRiskBlockBox
             blocking={blocking}
+            entityType={entityType}
+            entityId={entityId}
+            versionId={versionId}
+            projectId={projectId}
+          />
+        )}
+        {waiting?.length > 0 && (
+          <ScheduleRiskBlockBox
+            waiting
+            blocking={waiting}
             entityType={entityType}
             entityId={entityId}
             versionId={versionId}

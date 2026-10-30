@@ -1,6 +1,6 @@
 import { compareRunTimestamp, formatRunTimestamp } from '@/[fsd]/entities/run-history';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings';
-import { ROLES } from '@/common/constants';
+import { ROLES, ToolActionStatus } from '@/common/constants';
 
 const RUN_STARTED_FORMAT = 'd MMM, HH:mm';
 
@@ -39,7 +39,9 @@ const MAX_ROUNDED_COST = 0.01;
 
 // The Analytics format, except that a small cost rounds to the nearest 4th decimal (0.00161 reads $0.0016)
 const formatRunCost = costUsd =>
-  costUsd >= MIN_ROUNDED_COST && costUsd < MAX_ROUNDED_COST ? `$${costUsd.toFixed(4)}` : AnalyticCommonHelpers.fmtCost(costUsd);
+  costUsd >= MIN_ROUNDED_COST && costUsd < MAX_ROUNDED_COST
+    ? `$${costUsd.toFixed(4)}`
+    : AnalyticCommonHelpers.fmtCost(costUsd);
 
 export const formatRunSummary = summary =>
   [
@@ -65,6 +67,13 @@ export const findRunAnswer = messages =>
     .filter(message => message.role === ROLES.Assistant)
     .map(toMessageText)
     .findLast(Boolean);
+
+// The sign-in request a paused message waits for (a toolkit authorization card), or undefined when the pause
+// is a sensitive-tool approval
+export const findPendingAuthAction = message =>
+  message?.toolActions?.find(
+    action => action.status === ToolActionStatus.actionRequired && action.authorizationRequestId,
+  );
 
 export const toPlainText = markdown =>
   (markdown ?? '')

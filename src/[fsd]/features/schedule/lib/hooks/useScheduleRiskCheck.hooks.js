@@ -1,21 +1,35 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useCheckScheduleRiskMutation } from '@/[fsd]/entities/schedule';
 
 import { RISK_CHECK_STATUS } from '../constants';
+import { splitRiskFindings } from '../helpers';
 
 const IDLE_STATE = { status: RISK_CHECK_STATUS.IDLE, result: null };
 
-const statusOf = result => (result.blocking?.length ? RISK_CHECK_STATUS.BLOCKED : RISK_CHECK_STATUS.CLEAR);
+const statusOf = (result, approvalRule) =>
+  splitRiskFindings(result, approvalRule).blocking.length
+    ? RISK_CHECK_STATUS.BLOCKED
+    : RISK_CHECK_STATUS.CLEAR;
+const hasFindingsStatus = status =>
+  status === RISK_CHECK_STATUS.BLOCKED || status === RISK_CHECK_STATUS.CLEAR;
 
 /**
  * The dry-run risk check of the schedule form. It runs when the entity type, the
  * entity or the version changes and when the person returns to the tab. `runCheck()` runs it now
- * and resolves to the findings, or null when the check did not run. `applyFindings(data)` takes the
+ * and resolves to the findings, or null when the check did not run. `approvalRule` is the rule of the form:
+ * under "Pause and ask me" a missing credential or a personal sign-in is `waiting`, not `blocking`. `applyFindings(data)` takes the
  * findings of a 409 save answer. On an edit, `scheduleId` makes the server scan as the schedule owner
  * and answer `confirmed`.
  */
-export const useScheduleRiskCheck = ({ projectId, entityType, applicationId, versionId, scheduleId }) => {
+export const useScheduleRiskCheck = ({
+  projectId,
+  entityType,
+  applicationId,
+  versionId,
+  scheduleId,
+  approvalRule,
+}) => {
   const [checkRisk] = useCheckScheduleRiskMutation();
   const [state, setState] = useState(IDLE_STATE);
   // Only the answer of the latest call is shown: an older one may name another version
@@ -65,11 +79,12 @@ export const useScheduleRiskCheck = ({ projectId, entityType, applicationId, ver
     return () => document.removeEventListener('visibilitychange', onVisibilityChange);
   }, [runCheck]);
 
-  const applyFindings = useCallback(({ blocking, sensitive, notices, fingerprint }) => {
+  const applyFindings = useCallback(({ blocking, warnings, sensitive, notices, fingerprint }) => {
     setState(prev => {
       const result = {
         ...prev.result,
         ...(blocking && { blocking }),
+        ...(warnings && { warnings }),
         ...(sensitive && { sensitive }),
         ...(notices && { notices }),
         ...(fingerprint && { fingerprint }),
@@ -78,5 +93,11 @@ export const useScheduleRiskCheck = ({ projectId, entityType, applicationId, ver
     });
   }, []);
 
-  return { ...state, runCheck, applyFindings };
+  // The rule can change after the answer came, so the findings are split again for the current rule
+  // without a new request
+  const { status, result } = state;
+  const findings = useMemo(() => splitRiskFindings(result, approvalRule), [result, approvalRule]);
+  const shownStatus = hasFindingsStatus(status) ? statusOf(result, approvalRule) : status;
+
+  return { ...state, status: shownStatus, ...findings, runCheck, applyFindings };
 };

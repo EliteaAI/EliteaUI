@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   findNewestTestRun,
+  findPendingAuthAction,
   formatExpiresIn,
   formatRunDuration,
   formatRunStarted,
@@ -138,5 +139,13 @@ describe('test panel values', () => {
     expect(formatExpiresIn(pausedAt, Date.parse('2026-10-22T10:00:00Z'))).toBe('Expires in 0 h 42 min');
     expect(formatExpiresIn(pausedAt, Date.parse('2026-10-23T00:00:00Z'))).toBe('Expired');
     expect(formatExpiresIn(undefined, 0)).toBe('');
+  });
+
+  it('finds the sign-in card of a paused message and ignores other tool actions', () => {
+    const card = { status: 'action_required', authorizationRequestId: 'auth-1' };
+    expect(findPendingAuthAction({ toolActions: [{ status: 'complete' }, card] })).toBe(card);
+    expect(findPendingAuthAction({ toolActions: [{ status: 'action_required' }] })).toBeUndefined();
+    expect(findPendingAuthAction({ toolActions: [] })).toBeUndefined();
+    expect(findPendingAuthAction(undefined)).toBeUndefined();
   });
 });

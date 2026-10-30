@@ -16,3 +16,6 @@ export const RISK_SAVE_ERROR = {
 
 // 400 `code` of a typed name that differs from the schedule name (field risk_ack)
 export const RISK_NAME_MISMATCH = 'risk_name_mismatch';
+
+// Findings that stop a save only under "Run without asking"; under "Pause and ask me" the run waits for the owner
+export const WAIT_FOR_OWNER_CODES = ['missing_credential', 'personal_signin_required'];

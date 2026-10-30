@@ -5,19 +5,39 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import getDesignTokens from '@/MainTheme';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import ScheduleRunApproval from '../ScheduleRunApproval';
 
 // test panel log, Approve and Reject at the paused log line
 
-const mocks = vi.hoisted(() => ({ decide: vi.fn(), hookArgs: null, isOwner: true, dispatch: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  decide: vi.fn(),
+  hookArgs: null,
+  isOwner: true,
+  dispatch: vi.fn(),
+  signedIn: false,
+  toastSuccess: vi.fn(),
+  modalProps: null,
+}));
 
 vi.mock('../../lib/hooks/useWaitingRunDecision.hooks', () => ({
   useWaitingRunDecision: args => {
     mocks.hookArgs = args;
     return mocks.isOwner ? mocks.decide : undefined;
   },
+}));
+vi.mock('@/[fsd]/features/mcp', () => ({
+  extractMcpAuthMetadata: () => ({ authServers: ['https://auth.example'] }),
+  useMcpTokenChange: () => ({ isLoggedIn: mocks.signedIn }),
+  McpAuthModal: props => {
+    mocks.modalProps = props;
+    return <div data-testid="mcp-auth-modal">{props.title}</div>;
+  },
+}));
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useSelectedProjectId: () => 5,
+  useToast: () => ({ toastSuccess: mocks.toastSuccess }),
 }));
 vi.mock('react-redux', async importOriginal => ({
   ...(await importOriginal()),
@@ -51,6 +71,7 @@ describe('ScheduleRunApproval', () => {
     vi.useRealTimers();
     vi.clearAllMocks();
     mocks.isOwner = true;
+    mocks.signedIn = false;
   });
 
   it('Approve and Reject send the decision for the paused message', async () => {
@@ -102,5 +123,96 @@ describe('ScheduleRunApproval', () => {
 
     expect(button('Approve')).toBeDisabled();
     expect(button('Reject')).toBeDisabled();
+  });
+
+  it('enables both buttons for a run that has no chat', () => {
+    renderApproval({ conversationUuid: undefined, hasChat: false, runId: 41 });
+
+    expect(button('Approve')).toBeEnabled();
+    expect(button('Reject')).toBeEnabled();
+  });
+
+  describe('sign-in pause', () => {
+    const authAction = {
+      authorizationRequestId: 'auth-1',
+      name: 'github',
+      toolMeta: { server_url: 'https://mcp.example', tool_call_id: 'call-1', toolkit_name: 'GitHub' },
+      toolOutputs: { server_url: 'https://mcp.example' },
+    };
+
+    it('shows no Sign in action for a sensitive-tool pause', () => {
+      renderApproval();
+
+      expect(screen.queryByTestId('schedule-run-sign-in')).not.toBeInTheDocument();
+      expect(button('Approve')).toBeEnabled();
+    });
+
+    it('shows Sign in and keeps Approve off until the owner has signed in', () => {
+      renderApproval({ authAction });
+
+      expect(screen.getByTestId('schedule-run-sign-in')).toBeEnabled();
+      expect(button('Approve')).toBeDisabled();
+      expect(button('Reject')).toBeEnabled();
+      expect(screen.getByText(/Sign in to GitHub, then approve/)).toBeInTheDocument();
+    });
+
+    it('opens the sign-in window and thanks the owner after a successful sign-in', () => {
+      renderApproval({ authAction });
+
+      fireEvent.click(screen.getByTestId('schedule-run-sign-in'));
+      expect(screen.getByTestId('mcp-auth-modal')).toHaveTextContent('GitHub');
+      expect(mocks.modalProps).toMatchObject({ tokenStorageKey: 'https://mcp.example', projectId: 5 });
+
+      act(() => mocks.modalProps.onClose(true));
+      expect(mocks.toastSuccess).toHaveBeenCalledWith('Successful authentication!');
+      expect(screen.queryByTestId('mcp-auth-modal')).not.toBeInTheDocument();
+    });
+
+    it('closes the sign-in window on cancel without a message', () => {
+      renderApproval({ authAction });
+
+      fireEvent.click(screen.getByTestId('schedule-run-sign-in'));
+      act(() => mocks.modalProps.onCancel());
+
+      expect(screen.queryByTestId('mcp-auth-modal')).not.toBeInTheDocument();
+      expect(mocks.toastSuccess).not.toHaveBeenCalled();
+    });
+
+    it('enables Approve after the sign-in and sends the sign-in request with the decision', async () => {
+      mocks.signedIn = true;
+      renderApproval({ authAction });
+
+      fireEvent.click(button('Approve'));
+
+      await waitFor(() =>
+        expect(mocks.decide).toHaveBeenCalledWith({
+          action: 'approve',
+          conversationUuid: 'conv-uuid',
+          messageId: 'msg-7',
+          authRequest: { authorizationRequestId: 'auth-1', toolCallId: 'call-1', childThreadId: undefined },
+        }),
+      );
+    });
+
+    it('rejects without a sign-in', async () => {
+      renderApproval({ authAction });
+
+      fireEvent.click(button('Reject'));
+
+      await waitFor(() =>
+        expect(mocks.decide).toHaveBeenCalledWith(
+          expect.objectContaining({ action: 'reject', authRequest: expect.any(Object) }),
+        ),
+      );
+    });
+
+    it('shows the owner-only note and no sign-in note to another user', () => {
+      mocks.isOwner = false;
+      renderApproval({ authAction });
+
+      expect(screen.getByTestId('schedule-run-sign-in')).toBeDisabled();
+      expect(screen.queryByText(/Sign in to GitHub, then approve/)).not.toBeInTheDocument();
+      expect(screen.getByText('Only the owner can approve or reject this run')).toBeInTheDocument();
+    });
   });
 });

@@ -144,6 +144,16 @@ export const scheduleApi = eliteaApi
         invalidatesTags: (_, error, { scheduleId }) => (error ? [] : scheduleTags(scheduleId)),
       }),
 
+      // The owner's answer on a waiting run that has no chat (it waits for credentials)
+      decideRunWithoutChat: build.mutation({
+        query: ({ projectId, scheduleId, runId, action }) => ({
+          url: `${schedulePath(projectId, scheduleId)}/runs/${runId}/decision`,
+          method: 'POST',
+          body: { action },
+        }),
+        invalidatesTags: (_, error, { scheduleId }) => (error ? [] : scheduleTags(scheduleId)),
+      }),
+
       // enabled is never sent: pause and resume are their own actions
       updateSchedule: build.mutation({
         // eslint-disable-next-line no-unused-vars
@@ -251,6 +261,7 @@ export const {
   useGetScheduleListQuery,
   useCreateScheduleMutation,
   useCheckScheduleRiskMutation,
+  useDecideRunWithoutChatMutation,
   useRunScheduleMutation,
   useUpdateScheduleMutation,
   usePauseScheduleMutation,

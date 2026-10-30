@@ -84,8 +84,41 @@ const pickRunWithoutAsking = () => fireEvent.click(screen.getByRole('radio', { n
 const typeName = text =>
   fireEvent.change(screen.getByLabelText(/Type the schedule name/), { target: { value: text } });
 
+const WAITING = [
+  { code: 'personal_signin_required', toolkit: 'GitHub' },
+  { code: 'missing_credential', toolkit: 'Jira' },
+];
+
 describe('RiskReviewDialog', () => {
   afterEach(cleanup);
+
+  it('lists the toolkits that need a sign-in as a warning under "Pause and ask me"', () => {
+    const { onConfirm } = setup({ waiting: WAITING });
+
+    const note = screen.getByTestId('risk-review-waiting');
+    expect(note).toHaveTextContent('the run waits for your approval');
+    expect(note).toHaveTextContent('GitHub');
+    expect(note).toHaveTextContent('Jira');
+    expect(confirmButton()).toBeEnabled();
+    fireEvent.click(confirmButton());
+    expect(onConfirm).toHaveBeenCalledWith({ rule: 'pause_and_ask' });
+  });
+
+  it('blocks "Run without asking" while a toolkit needs a sign-in', () => {
+    setup({ waiting: WAITING });
+
+    pickRunWithoutAsking();
+    typeName('Daily digest');
+
+    expect(screen.getByTestId('risk-review-waiting')).toHaveTextContent("You can't save this schedule");
+    expect(confirmButton()).toBeDisabled();
+  });
+
+  it('shows no waiting note without such toolkits', () => {
+    setup();
+
+    expect(screen.queryByTestId('risk-review-waiting')).not.toBeInTheDocument();
+  });
 
   it('names the entity and shows one card per tool with its effect and badge', () => {
     setup();

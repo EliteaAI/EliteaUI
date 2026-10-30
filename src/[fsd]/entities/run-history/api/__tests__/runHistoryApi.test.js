@@ -34,7 +34,7 @@ const makeStore = () =>
     middleware: getDefault => getDefault().concat(runHistoryApi.middleware),
   });
 
-const decide = async (action, fetchSpy) => {
+const decide = async (action, fetchSpy, extra = {}) => {
   fetchSpy.mockResolvedValue(
     new Response(JSON.stringify({}), { status: 200, headers: { 'content-type': 'application/json' } }),
   );
@@ -44,6 +44,7 @@ const decide = async (action, fetchSpy) => {
       conversationUuid: 'conv-uuid-1',
       messageId: 42,
       action,
+      ...extra,
     }),
   );
   const request = fetchSpy.mock.calls[0][0];
@@ -82,6 +83,47 @@ describe('run history decideWaitingRun', () => {
       hitl_action: 'reject',
       await_task_timeout: -1,
     });
+  });
+});
+
+describe('run history decideWaitingRun for a sign-in pause', () => {
+  let fetchSpy;
+  const mcpAuth = {
+    authorizationRequestId: 'auth-1',
+    toolCallId: 'call-1',
+    childThreadId: undefined,
+    mcpTokens: { 'https://mcp.example': { access_token: 'fresh' } },
+  };
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    fetchSpy = vi.spyOn(globalThis, 'fetch');
+  });
+
+  it('approve authorizes with the request id and the fresh tokens, without hitl fields', async () => {
+    const { body } = await decide('approve', fetchSpy, { mcpAuth });
+
+    expect(body).toEqual({
+      message_id: 42,
+      mcp_auth_resume: true,
+      mcp_auth_action: 'authorize',
+      authorization_request_id: 'auth-1',
+      mcp_auth_decisions: [
+        { interrupt_id: 'auth-1', tool_call_id: 'call-1', action: 'authorize', value: '' },
+      ],
+      mcp_tokens: mcpAuth.mcpTokens,
+      await_task_timeout: -1,
+    });
+  });
+
+  it('reject skips the sign-in and sends no tokens', async () => {
+    const { body } = await decide('reject', fetchSpy, { mcpAuth });
+
+    expect(body.mcp_auth_resume).toBe(true);
+    expect(body.mcp_auth_action).toBe('skip');
+    expect(body.mcp_auth_decisions[0].action).toBe('skip');
+    expect(body).not.toHaveProperty('mcp_tokens');
+    expect(body).not.toHaveProperty('hitl_resume');
   });
 });
 

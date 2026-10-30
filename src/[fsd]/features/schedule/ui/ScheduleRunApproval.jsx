@@ -1,26 +1,38 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useDispatch } from 'react-redux';
 
 import { Box, Typography } from '@mui/material';
 
 import { SCHEDULE_RUNS_TAG, scheduleApi } from '@/[fsd]/entities/schedule';
+import { getToolkitAuthorizationContext } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers';
+import { useMcpTokenChange } from '@/[fsd]/features/mcp';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
 
 import { formatExpiresIn } from '../lib/helpers';
 import { useWaitingRunDecision } from '../lib/hooks/useWaitingRunDecision.hooks';
+import ScheduleRunSignIn from './ScheduleRunSignIn';
 
 const EXPIRY_TICK_MS = 60_000;
 
 /**
  * Approve and Reject at the paused line of a waiting run.
  * The same owner-only decision call as the Runs table; the server still checks the owner.
+ * `authAction` is the toolkit sign-in the run waits for: the owner signs in first (the chat sign-in window),
+ * then Approve resumes the run with the fresh tokens. Reject skips the sign-in.
  */
 const ScheduleRunApproval = memo(props => {
-  const { schedule, conversationUuid, pausedMessageId, pausedAt } = props;
+  const { schedule, runId, hasChat = true, conversationUuid, pausedMessageId, pausedAt, authAction } = props;
 
   const dispatch = useDispatch();
   const [deciding, setDeciding] = useState(false);
+  const authContext = useMemo(
+    () => (authAction ? getToolkitAuthorizationContext(authAction) : null),
+    [authAction],
+  );
+  const serverUrl = authAction?.toolOutputs?.server_url || authAction?.toolMeta?.server_url || '';
+  // The token store answers for a sign-in done here or in another tab
+  const { isLoggedIn: signedIn } = useMcpTokenChange({ serverUrl });
   // The expiry text moves on every minute, not only when the run is read again
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -38,15 +50,29 @@ const ScheduleRunApproval = memo(props => {
     async action => {
       setDeciding(true);
       try {
-        await onHitlResume({ action, conversationUuid, messageId: pausedMessageId });
+        await onHitlResume({
+          action,
+          conversationUuid,
+          runId,
+          messageId: pausedMessageId,
+          ...(authAction && {
+            authRequest: {
+              authorizationRequestId: authAction.authorizationRequestId,
+              toolCallId: authAction.toolMeta?.tool_call_id,
+              childThreadId: authAction.toolMeta?.child_thread_id,
+            },
+          }),
+        });
       } finally {
         setDeciding(false);
       }
     },
-    [onHitlResume, conversationUuid, pausedMessageId],
+    [onHitlResume, conversationUuid, runId, pausedMessageId, authAction],
   );
 
-  const disabled = !onHitlResume || !conversationUuid || deciding;
+  // A run with a chat waits until its chat has loaded; a run without one (it waits for credentials) is ready
+  const disabled = !onHitlResume || (hasChat && !conversationUuid) || deciding;
+  const needsSignIn = Boolean(authAction) && !signedIn;
   const styles = scheduleRunApprovalStyles();
 
   return (
@@ -54,10 +80,17 @@ const ScheduleRunApproval = memo(props => {
       data-testid="schedule-run-approval"
       sx={styles.root}
     >
+      {authAction && (
+        <ScheduleRunSignIn
+          authAction={authAction}
+          primary={needsSignIn}
+          disabled={disabled}
+        />
+      )}
       <BaseBtn
         variant="elitea"
-        color="primary"
-        disabled={disabled}
+        color={needsSignIn ? 'secondary' : 'primary'}
+        disabled={disabled || needsSignIn}
         onClick={() => decide('approve')}
       >
         Approve
@@ -76,6 +109,15 @@ const ScheduleRunApproval = memo(props => {
       >
         {formatExpiresIn(pausedAt, now)}
       </Typography>
+      {needsSignIn && onHitlResume && (
+        <Typography
+          variant="bodySmall"
+          color="text.secondary"
+          sx={styles.note}
+        >
+          {`Sign in to ${authContext?.toolkitName || 'the toolkit'}, then approve. The run continues after you approve.`}
+        </Typography>
+      )}
       {!onHitlResume && (
         <Typography
           variant="bodySmall"

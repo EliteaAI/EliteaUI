@@ -83,6 +83,7 @@ const ScheduleForm = memo(props => {
     applicationId: values.application_id,
     versionId: values.version_id,
     scheduleId: schedule?.id,
+    approvalRule: values.approval_rule,
   });
   const save = useScheduleSave({ formik, riskCheck, schedule, onSubmit, onSaved, onTestRun });
   // Without edit in allowed_actions the server refuses a save, so the form only shows the values
@@ -136,7 +137,8 @@ const ScheduleForm = memo(props => {
   const riskNotices = (
     <ScheduleRiskNotices
       status={riskCheck.status}
-      blocking={riskCheck.result?.blocking}
+      blocking={riskCheck.blocking}
+      waiting={riskCheck.waiting}
       entityType={values.type}
       entityId={values.application_id}
       versionId={values.version_id}
@@ -333,6 +335,7 @@ const ScheduleForm = memo(props => {
         entityLabel={entityLabel}
         scheduleName={save.review?.values.name}
         tools={riskCheck.result?.sensitive}
+        waiting={riskCheck.waiting}
         runWithoutAskingAllowed={riskCheck.result?.run_without_asking_allowed === true}
         scanIncomplete={riskCheck.result?.notices?.some(notice => notice.code === 'scan_incomplete')}
         showSettingsLink={canChangeProjectSettings}
