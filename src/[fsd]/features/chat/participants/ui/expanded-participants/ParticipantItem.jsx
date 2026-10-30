@@ -46,8 +46,6 @@ const ParticipantItem = memo(props => {
     versionName,
     showEditButton,
     maxWidth,
-    nameTextRef,
-    nameIsOverflow,
     isHovering,
     onClickHandler,
     onMouseEnter,
@@ -109,7 +107,6 @@ const ParticipantItem = memo(props => {
       {...sharedCardProps}
       isAttachement={isAttachement}
       versionName={versionName}
-      nameTextRef={nameTextRef}
       styles={participantNormalCardStyles({ collapsed, isActive, maxWidth, isBeingEdited })}
     />
   ) : (
@@ -126,7 +123,7 @@ const ParticipantItem = memo(props => {
     content
   ) : (
     <Tooltip
-      title={collapsed || nameIsOverflow ? `${displayName} - ${versionName}` : ''}
+      title={collapsed ? `${displayName}${versionName ? ` - ${versionName}` : ''}` : ''}
       placement="left"
       enterDelay={1000}
     >

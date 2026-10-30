@@ -1,21 +1,32 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export const useCheckViewScrollHorizontally = () => {
-  const viewRef = useRef(null);
+  const [element, setElement] = useState(null);
   const [isScrollable, setIsScrollable] = useState(false);
 
+  const viewRef = useCallback(node => {
+    if (node) setElement(node);
+  }, []);
+
   useEffect(() => {
+    if (!element) return;
+
     const checkScrollable = () => {
-      if (viewRef.current) {
-        const { scrollWidth, clientWidth } = viewRef.current;
-        setIsScrollable(scrollWidth > clientWidth); // Check if text is truncated
-      }
+      const { scrollWidth, clientWidth } = element;
+      setIsScrollable(scrollWidth > clientWidth);
     };
 
     checkScrollable();
-    window.addEventListener('resize', checkScrollable); // Re-check on window resize
-    return () => window.removeEventListener('resize', checkScrollable);
-  }, []);
+    window.addEventListener('resize', checkScrollable);
+
+    const resizeObserver = new ResizeObserver(() => setTimeout(checkScrollable, 10));
+    resizeObserver.observe(element);
+
+    return () => {
+      window.removeEventListener('resize', checkScrollable);
+      resizeObserver.disconnect();
+    };
+  }, [element]);
 
   return {
     viewRef,

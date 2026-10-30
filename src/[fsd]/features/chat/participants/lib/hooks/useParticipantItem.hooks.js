@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSearchParams } from 'react-router-dom';
 
@@ -21,7 +21,6 @@ export const useParticipantItem = ({
   editingToolkit,
 }) => {
   const assistantRef = useEliteaAssistantRef();
-  const nameTextRef = useRef();
   const [searchParams] = useSearchParams();
 
   const { isEditingAgent, isEditingPipeline, isEditingToolkit } = useNavBlocker();
@@ -34,7 +33,6 @@ export const useParticipantItem = ({
 
   const { user_name: participantName } = meta;
 
-  const [nameIsOverflow, setNameIsOverflow] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [versionName, setVersionName] = useState('');
 
@@ -145,12 +143,6 @@ export const useParticipantItem = ({
     }
   }, [originalDetails?.versions, participant.entity_settings?.version_id, participant.meta?.version_name]);
 
-  useEffect(() => {
-    if (!isHovering && nameTextRef.current) {
-      setNameIsOverflow(nameTextRef.current.scrollWidth > nameTextRef.current.clientWidth);
-    }
-  }, [isHovering]);
-
   return {
     entity_meta,
     type,
@@ -165,8 +157,6 @@ export const useParticipantItem = ({
     versionName,
     showEditButton,
     maxWidth,
-    nameTextRef,
-    nameIsOverflow,
     isHovering,
     onClickHandler,
     onMouseEnter,
