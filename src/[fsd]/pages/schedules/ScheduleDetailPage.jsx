@@ -185,6 +185,7 @@ const ScheduleDetailPage = memo(props => {
       // Nested in an editor, the crumbs name the agent or pipeline, not the schedule
       entityName={entityType ? undefined : schedule.name}
       sidePanel={sidePanel}
+      sidePanelFirst={showWaitingCard}
       // Export of this schedule, after Cancel
       headerActions={<ScheduleDetailMenu schedule={schedule} />}
       onSubmit={onSubmit}

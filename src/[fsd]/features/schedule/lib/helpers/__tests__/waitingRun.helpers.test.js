@@ -57,6 +57,11 @@ describe('hasMissingCredential', () => {
     expect(hasMissingCredential(result, 'github')).toBe(true);
   });
 
+  it('reads the findings under notices, where "Pause and ask me" puts them', () => {
+    const notices = { blocking: [], notices: [{ code: 'missing_credential', toolkit: 'GitHub' }] };
+    expect(hasMissingCredential(notices, 'GitHub')).toBe(true);
+  });
+
   it('is false when only another toolkit misses a credential', () => {
     expect(hasMissingCredential(result, 'Jira')).toBe(false);
     expect(hasMissingCredential({ blocking: [] }, 'GitHub')).toBe(false);
