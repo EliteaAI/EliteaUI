@@ -165,6 +165,7 @@ const ScheduleWaitingCard = memo(
               title={step1Title}
               authorizationText={signInText}
               hideContinue
+              detailsExpanded
               onContinue={noop}
             />
           )}
@@ -173,6 +174,7 @@ const ScheduleWaitingCard = memo(
               title={step1Title}
               message={authorizationText}
               detailRows={credentialRows}
+              defaultExpanded
               role="status"
             >
               <BaseBtn

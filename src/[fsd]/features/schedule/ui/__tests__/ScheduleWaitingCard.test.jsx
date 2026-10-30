@@ -101,7 +101,7 @@ describe('ScheduleWaitingCard', () => {
       'Authorization is required for toolkit "GitHub".',
     );
     expect(screen.getByText('⚠️ Step 1: Toolkit Authorization Required')).toBeInTheDocument();
-    expect(screen.getByText('gh-main')).toBeInTheDocument();
+    expect(screen.getByText('gh-main')).toBeVisible();
     expect(screen.getByTestId('schedule-waiting-expiry')).toHaveTextContent('Expires in 23 h 58 min');
     expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Missing');
     expect(mocks.checkArgs).toMatchObject({ toolkit: 'GitHub', enabled: true });

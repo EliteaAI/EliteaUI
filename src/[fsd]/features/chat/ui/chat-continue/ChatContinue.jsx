@@ -30,6 +30,7 @@ const ChatContinue = memo(props => {
     title = '⚠️ Toolkit Authorization Required',
     authorizationText,
     hideContinue = false,
+    detailsExpanded = false,
   } = props;
   const styles = getStyles();
   const projectId = useSelectedProjectId();
@@ -145,6 +146,7 @@ const ChatContinue = memo(props => {
           title={title}
           message={authorizationText || authorizationMessage}
           detailRows={detailRows}
+          defaultExpanded={detailsExpanded}
         >
           <BaseBtn
             data-testid="toolkit-authorization-authorize-button"
