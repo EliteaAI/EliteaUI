@@ -3,6 +3,7 @@ import { forwardRef, memo, useId, useMemo } from 'react';
 import { Box, Chip, Typography } from '@mui/material';
 
 import { buildEntityEditorLink } from '@/[fsd]/entities/schedule';
+import { ToolkitActionPanel } from '@/[fsd]/features/chat';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -20,6 +21,7 @@ import {
 import ScheduleRunApproval from './ScheduleRunApproval';
 import ScheduleRunSignIn from './ScheduleRunSignIn';
 
+const STEP2_NOTE = 'Reject ends the run as Failed: rejected by the owner.';
 const BLOCKED_REASON = 'Provide the credential first';
 const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' };
 const ENTITY_LABELS = { agent: 'agent', pipeline: 'pipeline' };
@@ -97,6 +99,10 @@ const ScheduleWaitingCard = memo(
       now,
     );
 
+    const description = describeNeed(
+      { ...waiting, toolkit: waiting.toolkit || toolkitName },
+      pausedEvent?.text,
+    );
     const styles = scheduleWaitingCardStyles();
 
     return (
@@ -133,85 +139,62 @@ const ScheduleWaitingCard = memo(
               {expiry}
             </Typography>
           )}
-          <Box role="status">
-            <Typography variant="bodyMedium">
-              {describeNeed({ ...waiting, toolkit: waiting.toolkit || toolkitName }, pausedEvent?.text)}
-            </Typography>
-          </Box>
           {(isCredential || isSignIn) && (
-            <Box
-              component="section"
-              aria-labelledby={`${statusId}-step1`}
-              sx={styles.step}
-            >
-              <Box sx={styles.stepHeader}>
-                <Typography
-                  id={`${statusId}-step1`}
-                  component="h3"
-                  sx={styles.stepTitle}
-                >
+            <ToolkitActionPanel
+              title={
+                <Box sx={styles.stepHeader}>
                   {isSignIn ? 'Step 1: Sign in' : 'Step 1: Provide the credential'}
-                </Typography>
-                <Chip
-                  data-testid="schedule-waiting-step1-status"
-                  size="small"
-                  variant="outlined"
-                  label={status.label}
-                  sx={styles.chip[status.tone]}
-                />
-              </Box>
-              <Box sx={styles.actions}>
-                {isCredential && (
-                  <>
-                    <BaseBtn
-                      component="a"
-                      href={credentialsLink}
-                      variant="elitea"
-                      color="secondary"
-                      {...NEW_TAB}
-                    >
-                      Open credentials
-                    </BaseBtn>
-                    <BaseBtn
-                      component="a"
-                      href={editorLink}
-                      variant="elitea"
-                      color="secondary"
-                      {...NEW_TAB}
-                    >
-                      {`Open ${entityLabel} editor`}
-                    </BaseBtn>
-                    <BaseBtn
-                      variant="elitea"
-                      color="secondary"
-                      disabled={credentialState === CREDENTIAL_CHECK_STATE.CHECKING}
-                      onClick={recheck}
-                    >
-                      Check again
-                    </BaseBtn>
-                  </>
-                )}
-                {isSignIn && authAction && (
-                  <ScheduleRunSignIn
-                    authAction={authAction}
-                    primary={!signedIn}
+                  <Chip
+                    data-testid="schedule-waiting-step1-status"
+                    size="small"
+                    variant="outlined"
+                    label={status.label}
+                    sx={styles.chip[status.tone]}
                   />
-                )}
-              </Box>
-            </Box>
-          )}
-          <Box
-            component="section"
-            aria-labelledby={`${statusId}-step2`}
-            sx={styles.step}
-          >
-            <Typography
-              id={`${statusId}-step2`}
-              component="h3"
-              sx={styles.stepTitle}
+                </Box>
+              }
+              message={description}
+              role="status"
             >
-              {isCredential || isSignIn ? 'Step 2: Approve to continue from the paused step' : 'Decide'}
-            </Typography>
+              {isCredential && (
+                <>
+                  <BaseBtn
+                    component="a"
+                    href={credentialsLink}
+                    variant="neutral"
+                    {...NEW_TAB}
+                  >
+                    Open credentials
+                  </BaseBtn>
+                  <BaseBtn
+                    component="a"
+                    href={editorLink}
+                    variant="neutral"
+                    {...NEW_TAB}
+                  >
+                    {`Open ${entityLabel} editor`}
+                  </BaseBtn>
+                  <BaseBtn
+                    variant="neutral"
+                    disabled={credentialState === CREDENTIAL_CHECK_STATE.CHECKING}
+                    onClick={recheck}
+                  >
+                    Check again
+                  </BaseBtn>
+                </>
+              )}
+              {isSignIn && authAction && (
+                <ScheduleRunSignIn
+                  authAction={authAction}
+                  primary={!signedIn}
+                />
+              )}
+            </ToolkitActionPanel>
+          )}
+          <ToolkitActionPanel
+            title={isCredential || isSignIn ? 'Step 2: Approve to continue from the paused step' : 'Decide'}
+            message={isCredential || isSignIn ? STEP2_NOTE : `${description} ${STEP2_NOTE}`}
+          >
             <ScheduleRunApproval
               compact
               schedule={schedule}
@@ -225,13 +208,7 @@ const ScheduleWaitingCard = memo(
                 isCredential && credentialState !== CREDENTIAL_CHECK_STATE.READY ? BLOCKED_REASON : undefined
               }
             />
-            <Typography
-              variant="bodySmall"
-              color="text.secondary"
-            >
-              Reject ends the run as Failed: rejected by the owner.
-            </Typography>
-          </Box>
+          </ToolkitActionPanel>
         </Box>
       </Box>
     );
@@ -248,7 +225,7 @@ const toneChip = (palette, tone) => ({
 
 /** @type {MuiSx} */
 const scheduleWaitingCardStyles = () => ({
-  root: ({ palette, breakpoints }) => ({
+  root: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
@@ -257,11 +234,6 @@ const scheduleWaitingCardStyles = () => ({
     border: `0.0625rem solid ${palette.alert.warning.borderStrong ?? palette.border.lines}`,
     backgroundColor: palette.background.default.tertiary,
     scrollMarginTop: '4.5rem',
-    [`${breakpoints.up('xl')} and (min-height: 46rem)`]: {
-      flex: '1 1 0',
-      minHeight: '20rem',
-      overflowY: 'auto',
-    },
   }),
   header: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' },
   title: ({ palette }) => ({
@@ -271,17 +243,7 @@ const scheduleWaitingCardStyles = () => ({
     color: palette.text.primary,
   }),
   body: { display: 'flex', flexDirection: 'column', gap: '1rem' },
-  step: ({ palette }) => ({
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-    padding: '0.75rem 1rem',
-    borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.border.lines}`,
-  }),
   stepHeader: { display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' },
-  stepTitle: ({ palette }) => ({ fontSize: '0.875rem', fontWeight: 600, color: palette.text.primary }),
-  actions: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' },
   chip: {
     warning: ({ palette }) => toneChip(palette, 'warning'),
     info: ({ palette }) => toneChip(palette, 'info'),

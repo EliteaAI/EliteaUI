@@ -8,6 +8,8 @@ import { SCHEDULE_RUNS_TAG, scheduleApi } from '@/[fsd]/entities/schedule';
 import { getToolkitAuthorizationContext } from '@/[fsd]/features/chat';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
+import CheckedIcon from '@/assets/checked-icon.svg?react';
+import ArrowForwardIcon from '@/assets/icons/arrow-forward.svg?react';
 
 import { formatExpiresIn } from '../lib/helpers';
 import { useNow } from '../lib/hooks/useNow.hooks';
@@ -99,8 +101,8 @@ const ScheduleRunApproval = memo(props => {
         />
       )}
       <BaseBtn
-        variant="elitea"
-        color={needsSignIn ? 'secondary' : 'primary'}
+        variant={needsSignIn ? 'neutral' : 'positive'}
+        startIcon={<CheckedIcon />}
         disabled={disabled || needsSignIn || !!blockedReason}
         aria-describedby={approveDescribed ? approveNoteId : undefined}
         onClick={() => decide('approve')}
@@ -108,8 +110,8 @@ const ScheduleRunApproval = memo(props => {
         Approve
       </BaseBtn>
       <BaseBtn
-        variant="elitea"
-        color="secondary"
+        variant="neutral"
+        startIcon={<ArrowForwardIcon />}
         disabled={disabled}
         onClick={() => decide('reject')}
       >
