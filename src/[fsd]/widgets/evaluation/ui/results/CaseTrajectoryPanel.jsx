@@ -40,7 +40,7 @@ const STEP_SLOT_PROPS = { transition: { unmountOnExit: true } };
  * spent on it (#6716), the run counters and the ordered LLM and tool steps. Steps a sub-agent ran are indented under the call that started them.
  * A pipeline's trajectory also lists the nodes that ran (#7015), each with the node it went to next; the LLM and tool steps a node made are indented under it.
  * When the case carries an `expected_trajectory` (#6809 item 7), the expected calls are set beside the recorded ones.
- * When the agent called sub-agents, a "By agent" table splits the case's calls, tokens and cost by agent (#7015 P3).
+ * When the agent called sub-agents, a "By agent" table splits the case's calls, tokens and cost by agent (#7015 P3), with the models each ran on (#7297).
  */
 const CaseTrajectoryPanel = memo(props => {
   const { projectId, runId, datasetCaseId, expectedTrajectory } = props;
@@ -55,7 +55,10 @@ const CaseTrajectoryPanel = memo(props => {
   const outputsStored = execution?.trajectory?.tool_outputs_stored;
   const inPipeline = isPipelineTrajectory(execution?.trajectory);
   const metricItems = useMemo(() => getTrajectoryMetricItems(execution?.metrics), [execution?.metrics]);
-  const usageRows = useMemo(() => buildCaseUsageRows(data?.usage), [data?.usage]);
+  const usageRows = useMemo(
+    () => buildCaseUsageRows(data?.usage, execution?.metrics?.agents),
+    [data?.usage, execution?.metrics?.agents],
+  );
   const agentUsage = useMemo(
     () => buildAgentUsageRows(execution?.metrics?.agents),
     [execution?.metrics?.agents],
