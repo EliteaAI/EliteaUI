@@ -78,6 +78,7 @@ const RadioButtonGroup = memo(props => {
                         icon: styles.infoIcon,
                       }}
                       pinnable={item.infoPinnable}
+                      label={item.infoLabel}
                     />
                   )}
                 </Box>

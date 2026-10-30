@@ -12,7 +12,7 @@ import '@testing-library/jest-dom/vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import { APPROVAL_RULE_INFO } from '../../lib/constants';
-import ScheduleApprovalSection from '../ScheduleApprovalSection';
+import ScheduleApprovalSection, { APPROVAL_RULE_ITEMS } from '../ScheduleApprovalSection';
 
 let allowRunWithoutAsking = true;
 
@@ -38,6 +38,7 @@ vi.mock('@/[fsd]/shared/ui/checkbox/RadioButtonGroup', () => ({
             <InfoTooltip
               infoTooltip={item.info}
               pinnable={item.infoPinnable}
+              label={item.infoLabel}
               testId={`${testId}-${item.value}-info`}
             />
           )}
@@ -106,6 +107,17 @@ describe('ScheduleApprovalSection', () => {
     act(() => icon.focus());
 
     expect(await screen.findByText(text)).toBeInTheDocument();
+  });
+
+  it('names each info icon after its option', () => {
+    renderSection();
+
+    expect(APPROVAL_RULE_ITEMS.map(item => item.infoLabel)).toEqual([
+      'More info about Pause and ask me',
+      'More info about Run without asking',
+    ]);
+    expect(screen.getByLabelText('More info about Pause and ask me')).toBeInTheDocument();
+    expect(screen.getByLabelText('More info about Run without asking')).toBeInTheDocument();
   });
 
   it('opens the info text on hover', async () => {

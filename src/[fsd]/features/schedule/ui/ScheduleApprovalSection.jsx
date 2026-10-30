@@ -18,12 +18,14 @@ export const APPROVAL_RULE_ITEMS = [
     label: 'Pause and ask me',
     info: APPROVAL_RULE_INFO[APPROVAL_RULE.PAUSE_AND_ASK],
     infoPinnable: true,
+    infoLabel: 'More info about Pause and ask me',
   },
   {
     value: APPROVAL_RULE.RUN_WITHOUT_ASKING,
     label: 'Run without asking',
     info: APPROVAL_RULE_INFO[APPROVAL_RULE.RUN_WITHOUT_ASKING],
     infoPinnable: true,
+    infoLabel: 'More info about Run without asking',
   },
 ];
 // "21 Oct 2026" for the line of who confirmed "Run without asking"

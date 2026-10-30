@@ -53,23 +53,27 @@ const ApprovalRuleCards = memo(props => {
               sx={styles.radio}
             />
             <Box sx={styles.body}>
-              <Box
-                id={titleId}
-                sx={styles.titleRow}
-              >
-                <Typography variant="labelMedium">{card.title}</Typography>
+              <Box sx={styles.titleRow}>
+                <Box
+                  id={titleId}
+                  sx={styles.titleRow}
+                >
+                  <Typography variant="labelMedium">{card.title}</Typography>
+                  {card.value === APPROVAL_RULE.PAUSE_AND_ASK && (
+                    <Chip
+                      size="small"
+                      variant="outlined"
+                      color="primary"
+                      label="Default"
+                    />
+                  )}
+                </Box>
+                {/* Outside the element that names the radio, so the icon label is not read as part of the name */}
                 <InfoTooltip
                   infoTooltip={APPROVAL_RULE_INFO[card.value]}
+                  label={`More info about ${card.title}`}
                   pinnable
                 />
-                {card.value === APPROVAL_RULE.PAUSE_AND_ASK && (
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    color="primary"
-                    label="Default"
-                  />
-                )}
               </Box>
               <Typography
                 id={`${titleId}-text`}
