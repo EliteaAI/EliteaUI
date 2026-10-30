@@ -64,6 +64,8 @@ const buildInitialValues = (data, defaultModel) => ({
   },
 });
 
+const NAME_TOUCHED = { name: true };
+
 const EditSkill = memo(() => {
   const styles = editSkillStyles();
   const navigate = useNavigate();
@@ -275,6 +277,7 @@ const EditSkill = memo(() => {
         key={formKey}
         enableReinitialize
         initialValues={initialValues}
+        initialTouched={NAME_TOUCHED}
         validationSchema={validationSchema}
         onSubmit={() => {}}
       >
