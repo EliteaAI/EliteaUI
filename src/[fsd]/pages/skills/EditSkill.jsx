@@ -31,10 +31,11 @@ import {
 import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
 import { SkillTabBar } from '@/[fsd]/widgets/skill-tab-bar';
 import { eliteaApi } from '@/api/eliteaApi';
-import { SkillsTabs, ViewMode } from '@/common/constants';
+import { PERMISSIONS, SkillsTabs, ViewMode } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
 import StyledTabs from '@/components/StyledTabs';
+import useCheckPermission from '@/hooks/useCheckPermission';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import {
   ContentContainer,
@@ -165,6 +166,9 @@ const EditSkill = memo(() => {
     },
     [dispatch, navigate, onRunConversationChange, projectId, skillId, tab, toastError],
   );
+
+  const { checkPermission } = useCheckPermission();
+  const hasEditPermission = useMemo(() => checkPermission(PERMISSIONS.skills.update), [checkPermission]);
 
   const { defaultModel, isLoadingModels } = useSkillModels();
   const validationSchema = useSkillValidationSchema(data?.version_details?.instructions);
@@ -342,6 +346,7 @@ const EditSkill = memo(() => {
                       <ContentContainer height="100%">
                         <CreateSkillForm
                           viewMode={ViewMode.Owner}
+                          disabled={!hasEditPermission}
                           summaryEditAction={<AIEditSkillButton />}
                           instructionsKey={`${skillId}:${currentVersionId}:${
                             (data?.version_details?.instructions ?? data?.instructions ?? '').length

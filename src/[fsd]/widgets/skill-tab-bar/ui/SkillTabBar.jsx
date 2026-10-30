@@ -8,7 +8,9 @@ import { VersionSelectOption } from '@/[fsd]/entities/version/ui';
 import { DiscardSkillButton, SaveSkillButton, SaveSkillVersionButton } from '@/[fsd]/features/skill';
 import { Select } from '@/[fsd]/shared/ui';
 import PublishIcon from '@/assets/publish-version.svg?react';
+import { PERMISSIONS } from '@/common/constants';
 import PinIcon from '@/components/Icons/PinIcon';
+import useCheckPermission from '@/hooks/useCheckPermission';
 
 const SkillTabBar = memo(props => {
   const {
@@ -21,6 +23,8 @@ const SkillTabBar = memo(props => {
   } = props;
 
   const styles = skillTabBarStyles();
+  const { checkPermission } = useCheckPermission();
+  const hasEditPermission = useMemo(() => checkPermission(PERMISSIONS.skills.update), [checkPermission]);
 
   // When no explicit default is set, `base` is the implicit default.
   const effectiveDefaultId = useMemo(() => {
@@ -128,11 +132,15 @@ const SkillTabBar = memo(props => {
         />
       </Box>
       <Box sx={styles.rightBlock}>
-        <SaveSkillButton onSuccess={onSuccess} />
-        <SaveSkillVersionButton
-          onSuccess={onSuccess}
-          onChangeVersion={onChangeVersion}
-        />
+        {hasEditPermission && (
+          <>
+            <SaveSkillButton onSuccess={onSuccess} />
+            <SaveSkillVersionButton
+              onSuccess={onSuccess}
+              onChangeVersion={onChangeVersion}
+            />
+          </>
+        )}
         <DiscardSkillButton />
       </Box>
     </Box>

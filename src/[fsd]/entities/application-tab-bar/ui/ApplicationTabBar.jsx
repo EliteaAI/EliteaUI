@@ -16,8 +16,9 @@ import {
   useViewMode,
 } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
-import { ViewMode } from '@/common/constants';
+import { PERMISSIONS, ViewMode } from '@/common/constants';
 import useFromApplications from '@/hooks/application/useIsFromApplication';
+import useCheckPermission from '@/hooks/useCheckPermission';
 import ApplicationValidator from '@/pages/Applications/Components/Applications/ApplicationValidator';
 import SaveApplicationButton from '@/pages/Applications/Components/Applications/SaveApplicationButton';
 import SaveNewVersionButton from '@/pages/Applications/Components/Applications/SaveNewVersionButton';
@@ -44,7 +45,14 @@ const ApplicationTabBar = memo(props => {
 
   const { discardApplicationChanges } = useDiscardApplicationChanges(onDiscard);
 
+  const { checkPermission } = useCheckPermission();
+  const hasEditPermission = useMemo(
+    () => checkPermission(PERMISSIONS.applications.update),
+    [checkPermission],
+  );
+
   const isPublic = useMemo(() => viewMode === ViewMode.Public, [viewMode]);
+  const canEdit = !isPublic && hasEditPermission;
 
   useRefetchAgentDetails();
 
@@ -67,7 +75,7 @@ const ApplicationTabBar = memo(props => {
           />
         </Box>
         <Box sx={styles.rightBlock}>
-          {!isPublic && (
+          {canEdit && (
             <>
               <SaveApplicationButton onSuccess={onSuccess} />
               <SaveNewVersionButton onSuccess={onSuccess} />
