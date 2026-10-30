@@ -11,7 +11,7 @@ import UsageSortHeader from './UsageSortHeader';
 const MAX_ROWS = 5;
 
 const UsageTopSkills = memo(props => {
-  const { topSkills = [], canSeeAmounts, currency, analyticsUrl, sx = {} } = props;
+  const { topSkills = [], topSkillsByRuns = [], canSeeAmounts, currency, analyticsUrl, sx = {} } = props;
 
   const { palette } = useTheme();
   const styles = usageTopSkillsStyles();
@@ -19,18 +19,25 @@ const UsageTopSkills = memo(props => {
   const [sortKey, setSortKey] = useState('spend');
   const [sortDir, setSortDir] = useState('desc');
 
-  const totalSpend = useMemo(() => topSkills.reduce((sum, s) => sum + (s.spend || 0), 0), [topSkills]);
+  // When sorting by runs, switch to the server-fetched top-by-runs dataset so the
+  // correct top entities appear — not just a re-order of the top-spend list.
+  const activeDataset = sortKey === 'runs' ? topSkillsByRuns : topSkills;
+
+  const totalSpend = useMemo(
+    () => activeDataset.reduce((sum, s) => sum + (s.spend || 0), 0),
+    [activeDataset],
+  );
 
   const enrichedSkills = useMemo(
     () =>
-      topSkills.map((skill, idx) => {
+      activeDataset.map((skill, idx) => {
         const key = skill.name || skill.id || String(idx);
         const runs = skill.uses ?? skill.call_count ?? null;
         const perRun = runs ? (skill.spend || 0) / runs : 0;
 
         return { ...skill, _key: key, _runs: runs, _perRun: perRun };
       }),
-    [topSkills],
+    [activeDataset],
   );
 
   const sortedSkills = useMemo(() => {
@@ -70,7 +77,9 @@ const UsageTopSkills = memo(props => {
     [sortKey],
   );
 
-  if (!topSkills.length) return null;
+  const title = sortKey === 'runs' ? 'Top Run Skills' : 'Top Spend Skills';
+
+  if (!topSkills.length && !topSkillsByRuns.length) return null;
 
   const visibleSkills = sortedSkills.slice(0, MAX_ROWS);
 
@@ -84,7 +93,7 @@ const UsageTopSkills = memo(props => {
           variant="labelMedium"
           sx={styles.title}
         >
-          Top skills
+          {title}
         </Typography>
         {analyticsUrl && (
           <Link
