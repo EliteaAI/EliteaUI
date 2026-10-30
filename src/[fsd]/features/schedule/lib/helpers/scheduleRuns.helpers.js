@@ -34,6 +34,17 @@ export const formatRunDuration = durationMs => {
     : `${Math.floor(seconds / 60)} m ${String(seconds % 60).padStart(2, '0')} s`;
 };
 
+const NO_DURATION_TEXT = {
+  waiting_for_approval: 'Paused until you decide',
+  running: 'Running',
+};
+
+// A run without a duration says why, so the row never shows a bare dash
+export const describeRunDuration = run =>
+  run.duration_ms == null
+    ? (NO_DURATION_TEXT[run.status] ?? 'Duration not recorded')
+    : formatRunDuration(run.duration_ms);
+
 const MIN_ROUNDED_COST = 0.0001;
 const MAX_ROUNDED_COST = 0.01;
 

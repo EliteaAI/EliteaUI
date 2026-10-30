@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { describe, expect, it } from 'vitest';
 
 import {
+  describeRunDuration,
   findNewestTestRun,
   findPendingAuthAction,
   formatExpiresIn,
@@ -92,6 +93,12 @@ describe('test panel values', () => {
     expect(formatRunDuration(65_400)).toBe('1 m 05 s');
     expect(formatRunDuration(0)).toBe('0 s');
     expect(formatRunDuration(null)).toBe('–');
+    expect(describeRunDuration({ duration_ms: 38_000 })).toBe('38 s');
+    expect(describeRunDuration({ status: 'waiting_for_approval', duration_ms: null })).toBe(
+      'Paused until you decide',
+    );
+    expect(describeRunDuration({ status: 'running', duration_ms: null })).toBe('Running');
+    expect(describeRunDuration({ status: 'failed', duration_ms: null })).toBe('Duration not recorded');
   });
 
   it('joins duration, tokens and cost of the run summary', () => {

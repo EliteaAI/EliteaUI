@@ -12,6 +12,7 @@ import { SearchParams, ViewMode } from '@/common/constants';
 import RouteDefinitions from '@/routes';
 
 import { WAITING_NEED, formatApprovalExpiry, getWaitingRunNeed } from '../lib/helpers';
+import { useActionButtonProps } from '../lib/hooks/useActionButtonProps.hooks';
 import { useNow } from '../lib/hooks/useNow.hooks';
 import { useScheduleRun, useScheduleRunConversation } from '../lib/hooks/useScheduleRuns.hooks';
 import {
@@ -123,6 +124,7 @@ const ScheduleWaitingCard = memo(
         />
       </Box>
     );
+    const buttonProps = useActionButtonProps();
     const styles = scheduleWaitingCardStyles();
 
     return (
@@ -165,6 +167,7 @@ const ScheduleWaitingCard = memo(
               title={step1Title}
               authorizationText={signInText}
               hideContinue
+              authorizeProps={buttonProps.primary}
               detailsExpanded
               onContinue={noop}
             />
@@ -180,7 +183,7 @@ const ScheduleWaitingCard = memo(
               <BaseBtn
                 component="a"
                 href={credentialsLink}
-                variant="neutral"
+                {...buttonProps.secondary}
                 sx={styles.button}
                 {...NEW_TAB}
               >
@@ -189,14 +192,14 @@ const ScheduleWaitingCard = memo(
               <BaseBtn
                 component="a"
                 href={editorLink}
-                variant="neutral"
+                {...buttonProps.secondary}
                 sx={styles.button}
                 {...NEW_TAB}
               >
                 {`Open ${entityLabel} editor`}
               </BaseBtn>
               <BaseBtn
-                variant="neutral"
+                {...buttonProps.secondary}
                 sx={styles.button}
                 disabled={credentialState === CREDENTIAL_CHECK_STATE.CHECKING}
                 onClick={recheck}

@@ -31,6 +31,7 @@ const ChatContinue = memo(props => {
     authorizationText,
     hideContinue = false,
     detailsExpanded = false,
+    authorizeProps = { variant: 'positive' },
   } = props;
   const styles = getStyles();
   const projectId = useSelectedProjectId();
@@ -150,7 +151,7 @@ const ChatContinue = memo(props => {
         >
           <BaseBtn
             data-testid="toolkit-authorization-authorize-button"
-            variant="positive"
+            {...authorizeProps}
             sx={styles.button}
             startIcon={<CheckedIcon />}
             onClick={handleAuthorize}

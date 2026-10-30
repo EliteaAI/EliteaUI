@@ -12,6 +12,7 @@ import CheckedIcon from '@/assets/checked-icon.svg?react';
 import ArrowForwardIcon from '@/assets/icons/arrow-forward.svg?react';
 
 import { formatExpiresIn } from '../lib/helpers';
+import { useActionButtonProps } from '../lib/hooks/useActionButtonProps.hooks';
 import { useNow } from '../lib/hooks/useNow.hooks';
 import { useWaitingRunDecision } from '../lib/hooks/useWaitingRunDecision.hooks';
 import ScheduleRunSignIn from './ScheduleRunSignIn';
@@ -86,6 +87,7 @@ const ScheduleRunApproval = memo(props => {
   const needsSignIn = Boolean(authAction) && !signedIn;
   const approveNoteId = blockedReason ? blockedNoteId : signInNoteId;
   const approveDescribed = !disabled && (blockedReason || needsSignIn);
+  const buttonProps = useActionButtonProps();
   const styles = scheduleRunApprovalStyles();
 
   return (
@@ -101,7 +103,7 @@ const ScheduleRunApproval = memo(props => {
         />
       )}
       <BaseBtn
-        variant={needsSignIn ? 'neutral' : 'positive'}
+        {...(needsSignIn ? buttonProps.secondary : buttonProps.primary)}
         sx={styles.button}
         startIcon={<CheckedIcon />}
         disabled={disabled || needsSignIn || !!blockedReason}
@@ -111,7 +113,7 @@ const ScheduleRunApproval = memo(props => {
         Approve
       </BaseBtn>
       <BaseBtn
-        variant="neutral"
+        {...buttonProps.secondary}
         sx={styles.button}
         startIcon={<ArrowForwardIcon />}
         disabled={disabled}

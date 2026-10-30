@@ -103,7 +103,11 @@ describe('ScheduleRunList', () => {
   it('shows the duration and the version name of each run, and a dash without one', () => {
     renderList([withConversation, withoutConversation, manual]);
 
-    expect(rows().map(row => cell(row, 'duration').textContent)).toEqual(['31 s', '1 m 05 s', '–']);
+    expect(rows().map(row => cell(row, 'duration').textContent)).toEqual([
+      '31 s',
+      '1 m 05 s',
+      'Duration not recorded',
+    ]);
     expect(rows().map(row => cell(row, 'version').textContent)).toEqual(['v2', 'v3', '–']);
   });
 
