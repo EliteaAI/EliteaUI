@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Box, ThemeProvider, createTheme } from '@mui/material';
+import { Box, Dialog, ThemeProvider, createTheme } from '@mui/material';
 
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
@@ -116,8 +116,8 @@ describe('InfoTooltip', () => {
       await vi.waitFor(() => expect(screen.queryByTestId('info-content')).not.toBeInTheDocument());
     });
 
-    it('keeps Escape from reaching other document handlers while open', async () => {
-      const onDocumentKeyDown = vi.fn(event => event.defaultPrevented);
+    it('stops Escape before other document handlers while open', async () => {
+      const onDocumentKeyDown = vi.fn();
       document.addEventListener('keydown', onDocumentKeyDown);
       renderTooltip({ pinnable: true });
 
@@ -125,8 +125,52 @@ describe('InfoTooltip', () => {
       expect(await screen.findByTestId('info-content')).toBeInTheDocument();
       fireEvent.keyDown(document, { key: 'Escape' });
 
-      expect(onDocumentKeyDown).toHaveReturnedWith(true);
+      expect(onDocumentKeyDown).not.toHaveBeenCalled();
       document.removeEventListener('keydown', onDocumentKeyDown);
+    });
+
+    it('keeps a MUI Dialog open on the first Escape and closes the tooltip', async () => {
+      const onClose = vi.fn();
+      render(
+        <ThemeProvider theme={theme}>
+          <Dialog
+            open
+            onClose={onClose}
+          >
+            <InfoTooltip
+              infoTooltip={TEXT}
+              testId="info"
+              contentTestId="info-content"
+              pinnable
+            />
+          </Dialog>
+        </ThemeProvider>,
+      );
+      const icon = screen.getByTestId('info');
+
+      fireEvent.focus(icon);
+      expect(await screen.findByTestId('info-content')).toBeInTheDocument();
+      fireEvent.keyDown(icon, { key: 'Escape' });
+
+      await vi.waitFor(() => expect(screen.queryByTestId('info-content')).not.toBeInTheDocument());
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it('uses the label prop as the name of the icon and defaults to More info', () => {
+      const { rerender } = renderTooltip({ pinnable: true });
+      expect(screen.getByTestId('info')).toHaveAttribute('aria-label', 'More info');
+
+      rerender(
+        <ThemeProvider theme={theme}>
+          <InfoTooltip
+            infoTooltip={TEXT}
+            testId="info"
+            label="More info about Pause and ask me"
+            pinnable
+          />
+        </ThemeProvider>,
+      );
+      expect(screen.getByTestId('info')).toHaveAttribute('aria-label', 'More info about Pause and ask me');
     });
 
     it('closes on a click outside', async () => {
