@@ -8,7 +8,6 @@ import { useApplicationDetailsQuery } from '@/api/applications';
 
 import {
   useCancelEvalRunMutation,
-  useDeleteEvalRunMutation,
   useEvalRunQuery,
   useEvalRunsQuery,
   useStartEvalRunMutation,
@@ -55,7 +54,7 @@ export const useEvalRunActions = ({
   const { search } = useLocation();
   const evalRoutes = useEvalRoutes();
   const persistentSearch = NavigationHelpers.pickPersistentSearch(search);
-  const { toastError, toastSuccess } = useToast();
+  const { toastError } = useToast();
 
   const { data: applicationDetails, isLoading: isLoadingVersions } = useApplicationDetailsQuery(
     { projectId, applicationId },
@@ -63,7 +62,6 @@ export const useEvalRunActions = ({
   );
   const [startEvalRun, { isLoading: isStartingRun }] = useStartEvalRunMutation();
   const [cancelEvalRun] = useCancelEvalRunMutation();
-  const [deleteEvalRun] = useDeleteEvalRunMutation();
 
   // The agent's resolved default version (`meta.default_version_id` or the `base` version) —
   // used to preselect the version dropdown and as the run's version unless the user picks another.
@@ -72,7 +70,6 @@ export const useEvalRunActions = ({
 
   const [activeRunId, setActiveRunId] = useState(null);
   const [cancelRequested, setCancelRequested] = useState(false);
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const storageKey =
     editingSuiteId == null ? null : versionStorageKey(projectId, applicationId, editingSuiteId);
   // Tagged with its suite key so a pick never carries over to another agent or suite.
@@ -150,7 +147,6 @@ export const useEvalRunActions = ({
   useEffect(() => {
     setActiveRunId(null);
     setCancelRequested(false);
-    setShowClearConfirm(false);
   }, [editingSuiteId]);
 
   // A reload drops `activeRunId`, so re-adopt a run that is still in flight from the
@@ -237,39 +233,10 @@ export const useEvalRunActions = ({
 
   // Determine the "display run" — active run if in progress, otherwise last run from history
   const displayRun = runActive ? activeRunData : lastRun;
-  const runToClear = displayRun;
 
   const { exportRun, isExporting } = useEvaluationExport({ projectId, applicationId });
 
   const handleExportResults = useCallback(() => exportRun(displayRun), [exportRun, displayRun]);
-
-  const handleClearResults = useCallback(() => {
-    if (!runToClear?.id) return;
-    setShowClearConfirm(true);
-  }, [runToClear?.id]);
-
-  const handleCloseClearConfirm = useCallback(() => {
-    setShowClearConfirm(false);
-  }, []);
-
-  const handleConfirmClearResults = useCallback(async () => {
-    const runId = runToClear?.id;
-    if (!runId) {
-      setShowClearConfirm(false);
-      return;
-    }
-    try {
-      await deleteEvalRun({ projectId, runId }).unwrap();
-      if (activeRunId === runId) {
-        setActiveRunId(null);
-      }
-      toastSuccess('Results cleared successfully.');
-      refetchRuns();
-    } catch (error) {
-      toastError(parseEvalError(error, 'Failed to clear results.'));
-    }
-    setShowClearConfirm(false);
-  }, [deleteEvalRun, projectId, runToClear?.id, activeRunId, toastError, toastSuccess, refetchRuns]);
 
   return {
     applicationId,
@@ -280,7 +247,6 @@ export const useEvalRunActions = ({
     runActive,
     isEvaluating: isStartingRun || runActive,
     cancelRequested,
-    showClearConfirm,
     versions,
     isLoadingVersions,
     selectedVersionId,
@@ -288,9 +254,6 @@ export const useEvalRunActions = ({
     handleEvaluate,
     handleCancelRun,
     handleOpenHistory,
-    handleClearResults,
-    handleCloseClearConfirm,
-    handleConfirmClearResults,
     handleExportResults,
     isExporting,
   };
