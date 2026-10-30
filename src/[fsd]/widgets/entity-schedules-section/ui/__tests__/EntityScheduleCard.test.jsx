@@ -195,13 +195,13 @@ describe('EntityScheduleCard', () => {
     expect(cardText()).toMatch(/Last run:\s*Never run/);
   });
 
-  it('shows the run status chip of the Runs panel: Failed, Waiting for input and Running', () => {
+  it('shows the run status chip of the Runs panel: Failed, Waiting for approval and Running', () => {
     renderCard({ last_run_status: 'failed' });
     expect(statusChip()).toHaveTextContent('Failed');
     cleanup();
 
     renderCard({ last_run_status: 'waiting_for_approval' });
-    expect(statusChip()).toHaveTextContent('Waiting for input');
+    expect(statusChip()).toHaveTextContent('Waiting for approval');
     cleanup();
 
     renderCard({ last_run_status: 'running' });
