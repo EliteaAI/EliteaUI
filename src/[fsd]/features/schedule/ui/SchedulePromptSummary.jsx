@@ -15,14 +15,24 @@ const MAX_VARIABLE_CHIPS = 3;
  * The read-only prompt of the schedule with Run test, as one pinned
  * line: the chevron opens the full prompt and the variable chips; a test start closes it.
  * The prompt changes in the form; `onTestRun` saves a changed form first. `running`: a test runs now.
- * `description`: read with Run test by screen readers.
+ * `description`: read with Run test by screen readers. `disabledHint`: Run test is disabled and the hint says why (#7254).
  */
 const SchedulePromptSummary = memo(props => {
-  const { prompt, variables = [], versionLabel, running, pending, description, onTestRun } = props;
+  const {
+    prompt,
+    variables = [],
+    versionLabel,
+    running,
+    pending,
+    description,
+    disabledHint,
+    onTestRun,
+  } = props;
 
   const [open, setOpen] = useState(false);
   const regionId = useId();
   const descriptionId = useId();
+  const hintId = useId();
   const toggle = useCallback(() => setOpen(value => !value), []);
 
   useEffect(() => {
@@ -133,13 +143,23 @@ const SchedulePromptSummary = memo(props => {
             {description}
           </Box>
         )}
+        {disabledHint && (
+          <Typography
+            id={hintId}
+            data-testid="schedule-test-run-hint"
+            variant="bodySmall"
+            color="text.secondary"
+          >
+            {disabledHint}
+          </Typography>
+        )}
         <BaseBtn
           data-testid="schedule-test-run"
           variant="elitea"
           color="primary"
           startIcon={<PlayArrowIcon />}
-          disabled={running || pending}
-          aria-describedby={description ? descriptionId : undefined}
+          disabled={running || pending || !!disabledHint}
+          aria-describedby={disabledHint ? hintId : description ? descriptionId : undefined}
           onClick={onTestRun}
           sx={styles.runTest}
         >
