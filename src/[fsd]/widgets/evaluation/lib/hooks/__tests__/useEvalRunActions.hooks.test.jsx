@@ -25,6 +25,7 @@ const startEvalRun = vi.fn();
 
 let runsSkipped = false;
 let lastActiveRun;
+let runsData = [];
 
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
@@ -48,7 +49,7 @@ vi.mock('../../../api', () => ({
   useStartEvalRunMutation: () => [startEvalRun, { isLoading: false }],
   useEvalRunsQuery: (_args, { skip }) => {
     runsSkipped = skip;
-    return { data: [], refetch: refetchRuns };
+    return { data: runsData, refetch: refetchRuns };
   },
   useEvalRunQuery: ({ runId }, { skip }) => {
     if (!skip) lastActiveRun = { id: runId, status: 'finished' };
@@ -78,6 +79,7 @@ describe('useEvalRunActions', () => {
     vi.clearAllMocks();
     runsSkipped = false;
     lastActiveRun = undefined;
+    runsData = [];
     refetchRuns.mockImplementation(() => {
       if (runsSkipped) throw new Error('Cannot refetch a query that has not been started yet.');
     });
@@ -157,5 +159,32 @@ describe('useEvalRunActions', () => {
     expect(() => rerender({ ...BASE_PROPS, editingSuiteId: null })).not.toThrow();
     expect(refetchRuns).not.toHaveBeenCalled();
     expect(result.current.activeRun).toBeUndefined();
+  });
+
+  // #7311: a freshly created version has no runs of its own, so the panel shows the suite's latest
+  // run on any version rather than "No results yet".
+  it('shows the latest run of another version when the selected one has none', () => {
+    runsData = [
+      { id: 31, status: 'finished', application_version_id: 12 },
+      { id: 30, status: 'finished', application_version_id: 12 },
+    ];
+    const { result } = renderHook(() => useEvalRunActions({ ...BASE_PROPS, editingSuiteId: 3 }));
+    expect(result.current.selectedVersionId).toBe(11);
+    expect(result.current.lastRun?.id).toBe(31);
+    expect(result.current.displayRun?.id).toBe(31);
+  });
+
+  it("prefers the selected version's own latest run", () => {
+    runsData = [
+      { id: 31, status: 'finished', application_version_id: 12 },
+      { id: 30, status: 'finished', application_version_id: 11 },
+    ];
+    const { result } = renderHook(() => useEvalRunActions({ ...BASE_PROPS, editingSuiteId: 3 }));
+    expect(result.current.lastRun?.id).toBe(30);
+  });
+
+  it('has no last run when the suite has never run', () => {
+    const { result } = renderHook(() => useEvalRunActions({ ...BASE_PROPS, editingSuiteId: 3 }));
+    expect(result.current.lastRun).toBeNull();
   });
 });
