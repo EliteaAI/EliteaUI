@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { useDecideRunWithoutChatMutation } from '@/[fsd]/entities/schedule';
-import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
+import { McpAuthHelpers } from '@/[fsd]/features/mcp';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { buildErrorMessage } from '@/common/utils';
 

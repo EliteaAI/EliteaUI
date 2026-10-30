@@ -19,7 +19,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('react-redux', () => ({ useSelector: select => select({ user: mocks.user }) }));
-vi.mock('@/[fsd]/features/mcp/lib/helpers', () => ({
+vi.mock('@/[fsd]/features/mcp', () => ({
   McpAuthHelpers: { getAllTokens: () => mocks.tokens },
 }));
 vi.mock('@/[fsd]/entities/run-history/api', () => ({
