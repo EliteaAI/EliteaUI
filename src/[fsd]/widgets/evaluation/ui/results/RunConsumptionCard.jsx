@@ -17,6 +17,9 @@ const USAGE_COLUMNS = [
   { key: 'cost', label: 'Cost' },
 ];
 
+// Matches the backend: input counts cache reads and writes, during settlement and after it (#7300).
+const CACHED_TOKENS_NOTE = 'Input tokens include cached input tokens, and so do the token limits.';
+
 /**
  * What a run spent (#6716): agent and judge tokens and cost, how the run did against the suite's
  * budget, and whether the figures were settled against the usage ledger. Renders nothing for a run
@@ -98,6 +101,13 @@ const RunConsumptionCard = memo(props => {
               )}
             </Box>
           ))}
+          <Typography
+            variant="bodySmall"
+            sx={styles.coverage}
+            data-testid="evaluation-consumption-cache-note"
+          >
+            {CACHED_TOKENS_NOTE}
+          </Typography>
         </Box>
       )}
 

@@ -47,7 +47,7 @@ const STEPS_LIMIT_TOOLTIP = `The most steps the agent may take on each case of a
 const CASE_TIME_LIMIT_TOOLTIP = `The longest the agent may work on one case, from ${MIN_CASE_TIME_LIMIT_SECONDS} to ${MAX_CASE_TIME_LIMIT_SECONDS} seconds. Applies to each case separately, not to the whole run. A case that reaches it is stopped and counted as timed out. A case can override it in the dataset. Leave empty for ${DEFAULT_CASE_TIME_LIMIT_SECONDS} seconds.`;
 
 const RUN_LIMITS_HINT =
-  'Per-case and cost limits are checked after the run. A per-run token limit stops the run early unless set to only report.';
+  'Per-case and cost limits are checked after the run. A per-run token limit stops the run early unless set to only report. Token limits count input and output tokens, cached input tokens included.';
 
 const STORE_TOOL_OUTPUTS_TOOLTIP =
   'Keep what each tool returned in the stored trajectory. Secrets are masked either way; turn this off when tool outputs may hold sensitive data. Tool names and inputs are always kept.';
