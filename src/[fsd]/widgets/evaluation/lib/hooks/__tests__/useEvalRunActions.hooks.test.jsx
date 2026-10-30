@@ -45,7 +45,6 @@ vi.mock('@/api/applications', () => ({
 
 vi.mock('../../../api', () => ({
   useCancelEvalRunMutation: () => [vi.fn()],
-  useDeleteEvalRunMutation: () => [vi.fn()],
   useStartEvalRunMutation: () => [startEvalRun, { isLoading: false }],
   useEvalRunsQuery: (_args, { skip }) => {
     runsSkipped = skip;
