@@ -179,6 +179,7 @@ const ScheduleWaitingCard = memo(
               detailRows={credentialRows}
               defaultExpanded
               role="status"
+              sx={styles.panel}
             >
               <BaseBtn
                 component="a"
@@ -211,6 +212,7 @@ const ScheduleWaitingCard = memo(
           <ToolkitActionPanel
             title={`⚠️ ${isCredential || isSignIn ? 'Step 2: Approve to continue from the paused step' : 'Decide'}`}
             message={isCredential || isSignIn ? STEP2_NOTE : `${description} ${STEP2_NOTE}`}
+            sx={styles.panel}
           >
             <ScheduleRunApproval
               compact
@@ -252,6 +254,9 @@ const scheduleWaitingCardStyles = () => ({
     backgroundColor: palette.background.default.tertiary,
     scrollMarginTop: '4.5rem',
   }),
+  // Dark theme keeps the approved chat surface; light theme uses the lighter one, as the card is grey already
+  panel: ({ palette }) =>
+    palette.mode === 'light' ? { background: palette.background.surface.interactive.default } : {},
   button: { width: 'auto !important' },
   header: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' },
   title: ({ palette }) => ({
