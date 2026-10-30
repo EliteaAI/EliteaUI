@@ -113,7 +113,7 @@ const ScheduleWaitingCard = memo(
     ].filter(([, value]) => value);
     const step1Title = (
       <Box sx={scheduleWaitingCardStyles().stepHeader}>
-        Step 1: Toolkit Authorization Required
+        ⚠️ Step 1: Toolkit Authorization Required
         <Chip
           data-testid="schedule-waiting-step1-status"
           size="small"
@@ -179,6 +179,7 @@ const ScheduleWaitingCard = memo(
                 component="a"
                 href={credentialsLink}
                 variant="neutral"
+                sx={styles.button}
                 {...NEW_TAB}
               >
                 Open credentials
@@ -187,12 +188,14 @@ const ScheduleWaitingCard = memo(
                 component="a"
                 href={editorLink}
                 variant="neutral"
+                sx={styles.button}
                 {...NEW_TAB}
               >
                 {`Open ${entityLabel} editor`}
               </BaseBtn>
               <BaseBtn
                 variant="neutral"
+                sx={styles.button}
                 disabled={credentialState === CREDENTIAL_CHECK_STATE.CHECKING}
                 onClick={recheck}
               >
@@ -201,7 +204,7 @@ const ScheduleWaitingCard = memo(
             </ToolkitActionPanel>
           )}
           <ToolkitActionPanel
-            title={isCredential || isSignIn ? 'Step 2: Approve to continue from the paused step' : 'Decide'}
+            title={`⚠️ ${isCredential || isSignIn ? 'Step 2: Approve to continue from the paused step' : 'Decide'}`}
             message={isCredential || isSignIn ? STEP2_NOTE : `${description} ${STEP2_NOTE}`}
           >
             <ScheduleRunApproval
@@ -244,6 +247,7 @@ const scheduleWaitingCardStyles = () => ({
     backgroundColor: palette.background.default.tertiary,
     scrollMarginTop: '4.5rem',
   }),
+  button: { width: 'auto !important' },
   header: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' },
   title: ({ palette }) => ({
     flex: '1 1 auto',

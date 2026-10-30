@@ -102,6 +102,7 @@ const ScheduleRunApproval = memo(props => {
       )}
       <BaseBtn
         variant={needsSignIn ? 'neutral' : 'positive'}
+        sx={styles.button}
         startIcon={<CheckedIcon />}
         disabled={disabled || needsSignIn || !!blockedReason}
         aria-describedby={approveDescribed ? approveNoteId : undefined}
@@ -111,6 +112,7 @@ const ScheduleRunApproval = memo(props => {
       </BaseBtn>
       <BaseBtn
         variant="neutral"
+        sx={styles.button}
         startIcon={<ArrowForwardIcon />}
         disabled={disabled}
         onClick={() => decide('reject')}
@@ -176,6 +178,7 @@ const scheduleRunApprovalStyles = () => ({
   },
   compact: { padding: 0 },
   note: { flexBasis: '100%' },
+  button: { width: 'auto !important' },
 });
 
 export default ScheduleRunApproval;

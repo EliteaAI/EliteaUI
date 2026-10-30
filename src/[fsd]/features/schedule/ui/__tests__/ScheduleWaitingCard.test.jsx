@@ -100,7 +100,7 @@ describe('ScheduleWaitingCard', () => {
     expect(screen.getAllByRole('status')[0]).toHaveTextContent(
       'Authorization is required for toolkit "GitHub".',
     );
-    expect(screen.getByText('Step 1: Toolkit Authorization Required')).toBeInTheDocument();
+    expect(screen.getByText('⚠️ Step 1: Toolkit Authorization Required')).toBeInTheDocument();
     expect(screen.getByText('gh-main')).toBeInTheDocument();
     expect(screen.getByTestId('schedule-waiting-expiry')).toHaveTextContent('Expires in 23 h 58 min');
     expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Missing');
