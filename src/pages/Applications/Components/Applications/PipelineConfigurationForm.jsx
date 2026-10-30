@@ -9,8 +9,9 @@ import ApplicationAdvanceSettings from '@/[fsd]/features/agent/ui/agent-details/
 import ApplicationEditorNotes from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationEditorNotes';
 import PipelineToolsSection from '@/[fsd]/features/pipelines/tool-picker/ui/PipelineToolsSection';
 import { EntitySchedulesSection } from '@/[fsd]/widgets/entity-schedules-section';
-import { ViewMode } from '@/common/constants.js';
+import { PERMISSIONS, ViewMode } from '@/common/constants.js';
 import ConversationStarters from '@/components/ConversationStarters';
+import useCheckPermission from '@/hooks/useCheckPermission';
 import ApplicationEditForm from '@/pages/Applications/Components/Applications/ApplicationEditForm';
 import ApplicationInformation from '@/pages/Applications/Components/Applications/ApplicationInformation';
 
@@ -27,7 +28,11 @@ const PipelineConfigurationForm = memo(props => {
   } = props;
   // The saved name, not an unsaved edit, names the entity chip on the Schedules page
   const { initialValues, values } = useFormikContext();
-  const isDisabled = viewMode !== ViewMode.Owner;
+  const { checkPermission } = useCheckPermission();
+  const isDisabled = useMemo(
+    () => viewMode !== ViewMode.Owner || !checkPermission(PERMISSIONS.applications.update),
+    [viewMode, checkPermission],
+  );
 
   const styles = useMemo(() => pipelineConfigurationFormStyles(isChatView), [isChatView]);
 
