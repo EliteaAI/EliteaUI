@@ -120,7 +120,7 @@ const UsageTopSkills = memo(props => {
             onSort={handleSort}
           />
           <UsageSortHeader
-            label="Per run"
+            label="Avg per run"
             keyName="perRun"
             flex={1.2}
             sortKey={sortKey}

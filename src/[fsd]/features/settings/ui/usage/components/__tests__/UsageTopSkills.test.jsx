@@ -33,9 +33,10 @@ describe('UsageTopSkills', () => {
     const card = within(screen.getByTestId('usage-top-skills'));
 
     expect(card.getByText('Runs')).toBeInTheDocument();
-    expect(card.getByText('Per run')).toBeInTheDocument();
+    expect(card.getByText('Avg per run')).toBeInTheDocument();
     expect(card.queryByText('Uses')).not.toBeInTheDocument();
     expect(card.queryByText('Per use')).not.toBeInTheDocument();
+    expect(card.queryByText('Per run')).not.toBeInTheDocument();
   });
 
   it('divides spend by runs for the per-run cost', () => {
@@ -46,7 +47,7 @@ describe('UsageTopSkills', () => {
 
   it.each([
     ['Runs', ['skill-b', 'skill-c', 'skill-a']],
-    ['Per run', ['skill-c', 'skill-a', 'skill-b']],
+    ['Avg per run', ['skill-c', 'skill-a', 'skill-b']],
   ])('sorts by %s', (header, expectedOrder) => {
     renderTopSkills([
       { id: 1, name: 'skill-a', uses: 1, spend: 0.002 },
