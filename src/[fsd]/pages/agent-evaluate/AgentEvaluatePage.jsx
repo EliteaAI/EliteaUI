@@ -275,17 +275,6 @@ const AgentEvaluatePage = memo(() => {
           />
         </>
       )}
-
-      {/* Clear results confirmation */}
-      <Modal.DeleteEntityModal
-        open={runActions.showClearConfirm}
-        onClose={runActions.handleCloseClearConfirm}
-        onConfirm={runActions.handleConfirmClearResults}
-        title="Clear confirmation"
-        textContent="Are you sure you want to clear the evaluation results? This action cannot be undone."
-        confirmButtonText="Clear"
-        inlineExtraContent=" "
-      />
     </Box>
   );
 });
