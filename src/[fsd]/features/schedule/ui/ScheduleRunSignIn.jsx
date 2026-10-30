@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { getToolkitAuthorizationContext } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers';
+import { getToolkitAuthorizationContext } from '@/[fsd]/features/chat';
 import { McpAuthModal, extractMcpAuthMetadata } from '@/[fsd]/features/mcp';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';

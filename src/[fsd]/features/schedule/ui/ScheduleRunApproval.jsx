@@ -5,7 +5,7 @@ import { useDispatch } from 'react-redux';
 import { Box, Typography } from '@mui/material';
 
 import { SCHEDULE_RUNS_TAG, scheduleApi } from '@/[fsd]/entities/schedule';
-import { getToolkitAuthorizationContext } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers';
+import { getToolkitAuthorizationContext } from '@/[fsd]/features/chat';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
 
