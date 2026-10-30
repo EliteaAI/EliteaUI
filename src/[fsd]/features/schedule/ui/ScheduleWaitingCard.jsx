@@ -21,6 +21,8 @@ import {
 } from '../lib/hooks/useWaitingRunCredentialCheck.hooks';
 import ScheduleRunApproval from './ScheduleRunApproval';
 
+// The design target for the card is darker than the theme warning colour, which the chat prompt keeps
+const CARD_ORANGE = '#DA670D';
 const noop = () => {};
 const STEP2_NOTE = 'Reject ends the run as Failed: rejected by the owner.';
 const BLOCKED_REASON = 'Provide the credential first';
@@ -250,13 +252,16 @@ const scheduleWaitingCardStyles = () => ({
     gap: '0.75rem',
     padding: '1rem 1.5rem',
     borderRadius: '1rem',
-    border: `0.0625rem solid ${palette.warning.main}`,
+    border: `0.0625rem solid ${CARD_ORANGE}`,
     backgroundColor: palette.background.default.tertiary,
     scrollMarginTop: '4.5rem',
   }),
   // Dark theme keeps the approved chat surface; light theme uses the lighter one, as the card is grey already
-  panel: ({ palette }) =>
-    palette.mode === 'light' ? { background: palette.background.surface.interactive.default } : {},
+  panel: ({ palette }) => ({
+    borderColor: CARD_ORANGE,
+    '& > div:first-of-type': { color: CARD_ORANGE },
+    ...(palette.mode === 'light' && { background: palette.background.surface.interactive.default }),
+  }),
   button: { width: 'auto !important' },
   header: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' },
   title: ({ palette }) => ({
