@@ -1,19 +1,23 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
 import { Box, Divider, Typography } from '@mui/material';
 
+import Tooltip from '@/ComponentsLib/Tooltip';
 import { IWModalEntityCardWrapper, IWModalEntityTextField } from '@/[fsd]/entities/import-wizard/ui';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { ProjectSelectConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { useLazyCheckPermissionListQuery } from '@/api/auth';
 import SkillIcon from '@/assets/skill-icon.svg?react';
 import ProjectSelect from '@/components/ProjectSelect';
 
 const { ProjectSelectShowMode } = ProjectSelectConstants;
+
+const SKILL_CREATE_PERMISSION = 'models.applications.skills.create';
 
 const SkillImportModal = memo(props => {
   const { open, skill, isImporting, onClose, onConfirm } = props;
@@ -21,6 +25,7 @@ const SkillImportModal = memo(props => {
 
   const projectId = useSelectedProjectId();
   const { projects = [] } = useSelector(state => state.settings);
+  const user = useSelector(state => state.user);
 
   const defaultProject = useMemo(() => {
     const match = projects.find(p => String(p.id) === String(projectId));
@@ -28,12 +33,34 @@ const SkillImportModal = memo(props => {
   }, [projects, projectId]);
 
   const [selectedProject, setSelectedProject] = useState(defaultProject);
+  const [canImport, setCanImport] = useState(false);
+
+  const [getUserPermissions] = useLazyCheckPermissionListQuery();
+
+  const targetProject = useMemo(
+    () => (selectedProject?.id ? selectedProject : defaultProject),
+    [selectedProject, defaultProject],
+  );
+
+  const targetProjectId = targetProject?.id;
+  const isCurrentProject = targetProjectId && String(targetProjectId) === String(projectId);
+
+  // Current project: read from already-loaded user.permissions — no API call, no cache side-effects.
+  useEffect(() => {
+    if (!isCurrentProject) return;
+    setCanImport(Array.isArray(user.permissions) && user.permissions.includes(SKILL_CREATE_PERMISSION));
+  }, [isCurrentProject, user.permissions]);
+
+  // Other project: fetch independently; does not touch the current project's cached permissions.
+  useEffect(() => {
+    if (!targetProjectId || isCurrentProject) return;
+    setCanImport(false);
+    getUserPermissions(targetProjectId).then(result => {
+      setCanImport(Array.isArray(result.data) && result.data.includes(SKILL_CREATE_PERMISSION));
+    });
+  }, [getUserPermissions, isCurrentProject, targetProjectId]);
 
   if (!skill) return null;
-
-  // Imported skills are always created with version 'base', regardless of
-  // what version was in the exported file.
-  const targetProject = selectedProject?.id ? selectedProject : defaultProject;
 
   return (
     <Modal.BaseModal
@@ -102,13 +129,21 @@ const SkillImportModal = memo(props => {
           >
             Cancel
           </Button.BaseBtn>
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.elitea}
-            onClick={() => onConfirm(targetProject?.id)}
-            disabled={isImporting}
+          <Tooltip
+            title={!canImport ? 'Insufficient permissions to import in this project.' : ''}
+            placement="top"
           >
-            Import
-          </Button.BaseBtn>
+            <Box component="span">
+              <Button.BaseBtn
+                variant={BUTTON_VARIANTS.elitea}
+                onClick={() => onConfirm(targetProject?.id)}
+                disabled={isImporting || !canImport}
+                data-testid="skill-import-confirm-button"
+              >
+                Import
+              </Button.BaseBtn>
+            </Box>
+          </Tooltip>
         </>
       }
     />
