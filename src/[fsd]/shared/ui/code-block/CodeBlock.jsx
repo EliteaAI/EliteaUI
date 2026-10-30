@@ -46,12 +46,13 @@ const CodeBlock = memo(props => {
     const { LANG_TO_EXTENSION } = CodeBlockConstants;
     const ext = LANG_TO_EXTENSION[markedToken.lang?.toLowerCase()] ?? 'txt';
     const blob = new Blob([markedToken.text], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
+    a.href = URL.createObjectURL(blob);
     a.download = `code.${ext}`;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
   }, [markedToken.lang, markedToken.text]);
 
   const { onClickCopy, onClickDownload } = useCopyDownloadHandlers({ onCopy, onDownload });
