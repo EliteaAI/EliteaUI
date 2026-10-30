@@ -44,15 +44,11 @@ const PipelineConfigurationForm = memo(props => {
         disabled={isDisabled}
         onSelectNode={onSelectNode}
       />
-      {!isDisabled && (
-        <>
-          <AgentInput.WelcomeMessageInput />
-          <ConversationStarters
-            disabled={isDisabled}
-            style={styles.conversationStarters}
-          />
-        </>
-      )}
+      <AgentInput.WelcomeMessageInput disabled={isDisabled} />
+      <ConversationStarters
+        disabled={isDisabled}
+        style={styles.conversationStarters}
+      />
       <EntitySchedulesSection
         style={styles.information}
         entityType="pipeline"
