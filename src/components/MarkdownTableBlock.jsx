@@ -14,7 +14,7 @@ import {
 import Table from '@mui/material/Table';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { useEliteATheme, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useCheckIsBlockEditing, useEliteATheme, useToast } from '@/[fsd]/shared/lib/hooks';
 import { downloadTableOptions, useDownloadTable } from '@/[fsd]/shared/lib/hooks/useDownloadTable.hooks';
 import { PERMISSIONS } from '@/common/constants';
 import useCopyDownloadHandlers from '@/hooks/chat/useCopyEventHandlers';
@@ -22,7 +22,6 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 import { useTheme } from '@emotion/react';
 
 import EditingPlaceholder from './Chat/EditingPlaceholder';
-import { useCheckIsBlockEditing } from './CodeBlock';
 import EditIcon from './Icons/EditIcon';
 import { parseMarkdownTable } from './MarkdownTableEditor';
 import SplitButton from './SplitButton';

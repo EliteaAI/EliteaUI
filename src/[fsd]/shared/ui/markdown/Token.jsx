@@ -9,9 +9,9 @@ import { MarkdownConstants } from '@/[fsd]/shared/lib/constants';
 import { useArtifactLinkResolver } from '@/[fsd]/shared/lib/context/ArtifactLinkContext';
 import { resolveArtifactHrefsInHtml } from '@/[fsd]/shared/lib/helpers/link.helpers';
 import { MarkdownMapping, removeHTMLTags } from '@/[fsd]/shared/lib/utils';
-import CodeBlock from '@/components/CodeBlock';
 import MarkdownTableBlock from '@/components/MarkdownTableBlock';
 
+import CodeBlock from '../code-block';
 import DefaultMarkdown from './DefaultMarkdown';
 
 const Token = memo(props => {
