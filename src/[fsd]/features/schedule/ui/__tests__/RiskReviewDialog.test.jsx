@@ -171,14 +171,12 @@ describe('RiskReviewDialog', () => {
   });
 
   it.each([
-    ['pause_and_ask', 0],
-    ['run_without_asking', 1],
-  ])('shows the same info text for %s as the schedule page', async (value, index) => {
+    ['pause_and_ask', 'More info about Pause and ask me'],
+    ['run_without_asking', 'More info about Run without asking'],
+  ])('shows the same info text for %s as the schedule page', async (value, name) => {
     setup();
 
-    const icons = screen.getAllByRole('button', { name: 'More info' });
-    expect(icons).toHaveLength(2);
-    act(() => icons[index].focus());
+    act(() => screen.getByRole('button', { name }).focus());
 
     expect(await screen.findByText(APPROVAL_RULE_INFO[value])).toBeInTheDocument();
   });
