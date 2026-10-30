@@ -38,9 +38,9 @@ describe('ScheduleRunStatusChip', () => {
 
   it('shows only the icon, named by the status word, for the icon variant', () => {
     renderChip({ status: 'waiting_for_approval', variant: 'icon' });
-    const icon = screen.getByRole('img', { name: 'Waiting for input' });
+    const icon = screen.getByRole('img', { name: 'Waiting for approval' });
     expect(icon).toHaveAttribute('data-testid', 'schedule-run-status');
-    expect(icon).not.toHaveTextContent('Waiting for input');
+    expect(icon).not.toHaveTextContent('Waiting for approval');
     expect(icon.querySelector('svg')).not.toBeNull();
   });
 });

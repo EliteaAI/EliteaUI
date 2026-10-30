@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import ScheduleDetailPage from '../ScheduleDetailPage';
 
@@ -24,6 +24,7 @@ const mocks = vi.hoisted(() => ({
   params: { scheduleId: '9' },
   state: { returnTo: '/settings/schedules' },
   panelProps: null,
+  waitingProps: null,
   sectionProps: null,
   testRunProps: { onTestRun: () => {}, testRunPending: true, testRunError: 'Already running' },
   runsView: null,
@@ -90,6 +91,10 @@ vi.mock('@/[fsd]/features/schedule', async importOriginal => {
       return null;
     }),
     ScheduleRunsPanel,
+    ScheduleWaitingCard: forwardRef(props => {
+      mocks.waitingProps = props;
+      return <div data-testid="waiting-card" />;
+    }),
     ScheduleForm: props => {
       mocks.formProps = props;
       return (
@@ -148,6 +153,7 @@ describe('ScheduleDetailPage', () => {
     mocks.menuProps = null;
     mocks.settingsProps = null;
     mocks.panelProps = null;
+    mocks.waitingProps = null;
     mocks.sectionProps = null;
     mocks.query = {};
     mocks.params = { scheduleId: '9' };
@@ -181,6 +187,31 @@ describe('ScheduleDetailPage', () => {
       onBackToTest: view.backToTest,
       ...mocks.testRunProps,
     });
+  });
+
+  it('shows the Action needed card instead of the test panel while a run waits, and switches back', () => {
+    mocks.query = { currentData: schedule };
+    const waiting = { id: 5, status: 'waiting_for_approval' };
+    mocks.runsView = { ...makeRunsView(), runs: [waiting], viewedRun: undefined };
+    render(<ScheduleDetailPage />);
+
+    expect(screen.getByTestId('waiting-card')).toBeInTheDocument();
+    expect(mocks.panelProps).toBeNull();
+    expect(mocks.waitingProps).toMatchObject({ schedule, run: waiting });
+
+    act(() => mocks.waitingProps.onShowTest());
+
+    expect(screen.queryByTestId('waiting-card')).not.toBeInTheDocument();
+    expect(mocks.panelProps.schedule).toBe(schedule);
+    expect(mocks.runsView.backToTest).toHaveBeenCalled();
+  });
+
+  it('keeps the test panel when no run waits', () => {
+    mocks.query = { currentData: schedule };
+    render(<ScheduleDetailPage />);
+
+    expect(screen.queryByTestId('waiting-card')).not.toBeInTheDocument();
+    expect(mocks.panelProps).not.toBeNull();
   });
 
   it('TC-US32-20 renders the Runs section in the right block, with no afterForm', () => {

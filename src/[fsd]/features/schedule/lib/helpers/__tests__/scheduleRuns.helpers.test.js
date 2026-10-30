@@ -40,7 +40,7 @@ describe('status text', () => {
     ).toEqual([
       'Running',
       'Success',
-      'Waiting for input',
+      'Waiting for approval',
       'Expired',
       'Failed',
       'Blocked',

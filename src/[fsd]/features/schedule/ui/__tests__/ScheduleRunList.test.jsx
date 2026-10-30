@@ -112,11 +112,11 @@ describe('ScheduleRunList', () => {
     expect(cell(rows()[0], 'line2')).toHaveTextContent('Model unavailable');
   });
 
-  it('each row is one button that opens the run, a waiting run reads Review', () => {
+  it('each row is one button that opens the run, a waiting run reads Review and approve', () => {
     const onOpen = renderList([withConversation, waitingRun]);
 
-    expect(within(rows()[0]).getByText('Review')).toBeInTheDocument();
-    expect(within(rows()[1]).queryByText('Review')).toBeNull();
+    expect(within(rows()[0]).getByText('Review and approve')).toBeInTheDocument();
+    expect(within(rows()[1]).queryByText('Review and approve')).toBeNull();
     fireEvent.click(rowButton(rows()[0]));
     expect(onOpen).toHaveBeenLastCalledWith(waitingRun);
     fireEvent.click(rowButton(rows()[1]));

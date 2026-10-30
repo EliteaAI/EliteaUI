@@ -85,10 +85,18 @@ export const toPlainText = markdown =>
     .replace(/\n\s*\n/g, '\n')
     .trim();
 
-export const formatExpiresIn = (pausedAt, now) => {
-  if (!pausedAt) return '';
-  const left = Date.parse(pausedAt) + APPROVAL_WINDOW_MS - now;
+const formatTimeLeft = (endMs, now) => {
+  const left = endMs - now;
   if (left <= 0) return 'Expired';
   const minutes = Math.floor(left / MINUTE_MS);
   return `Expires in ${Math.floor(minutes / 60)} h ${minutes % 60} min`;
 };
+
+export const formatExpiresIn = (pausedAt, now) =>
+  pausedAt ? formatTimeLeft(Date.parse(pausedAt) + APPROVAL_WINDOW_MS, now) : '';
+
+// The server sends the end of the approval window as `approval_expires_at`; an older run has only the pause time
+export const formatApprovalExpiry = ({ expiresAt, pausedAt }, now) =>
+  expiresAt && !Number.isNaN(Date.parse(expiresAt))
+    ? formatTimeLeft(Date.parse(expiresAt), now)
+    : formatExpiresIn(pausedAt, now);

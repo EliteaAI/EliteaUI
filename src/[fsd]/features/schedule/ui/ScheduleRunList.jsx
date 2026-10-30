@@ -144,13 +144,12 @@ const ScheduleRunList = memo(props => {
                   </Typography>
                 )}
                 {run.status === 'waiting_for_approval' && (
-                  <Typography
+                  <Box
                     component="span"
-                    variant="bodySmall"
                     sx={styles.review}
                   >
-                    Review
-                  </Typography>
+                    Review and approve
+                  </Box>
                 )}
               </Box>
             </ButtonBase>
@@ -191,7 +190,17 @@ const scheduleRunListStyles = () => ({
   status: { marginLeft: 'auto' },
   meta: ({ palette }) => ({ color: palette.text.secondary, flexShrink: 0 }),
   reason: ({ palette }) => ({ color: palette.text.secondary, minWidth: 0 }),
-  review: ({ palette }) => ({ marginLeft: 'auto', color: palette.text.link, textDecoration: 'underline' }),
+  // Looks like a button, but the whole row is the button
+  review: ({ palette }) => ({
+    marginLeft: 'auto',
+    padding: '0.125rem 0.75rem',
+    borderRadius: '0.5rem',
+    border: `0.0625rem solid ${palette.primary.main}`,
+    color: palette.primary.main,
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    whiteSpace: 'nowrap',
+  }),
   // test: the primary border with the strong ink (the magenta text is 4.3:1 on the card), cron: blue, manual: grey
   trigger: {
     test: ({ palette }) => ({ color: palette.text.secondary, borderColor: palette.primary.main }),
