@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback } from 'react';
 
 import { formatDistanceToNow } from 'date-fns';
 
@@ -42,7 +42,6 @@ const NotificationListItem = memo(props => {
   const { textVariant } = NOTIFICATION_CONTEXT_STYLES[context] ?? NOTIFICATION_CONTEXT_STYLES.list;
   const styles = notificationListItemStyles(clampLines, context === 'list');
 
-  const [isHovered, setIsHovered] = useState(false);
   const projectId = useSelectedProjectId();
   const [bulkMarkSeenNotifications] = useNotificationBulkMarkSeenMutation();
   const { toastError } = useToast();
@@ -50,14 +49,6 @@ const NotificationListItem = memo(props => {
   const shouldMarkAsRead = !notification.is_seen;
   const markToggleLabel = shouldMarkAsRead ? 'Mark as read' : 'Mark as unread';
   const MarkIcon = shouldMarkAsRead ? MarkReadIcon : MarkUnreadIcon;
-
-  const handleMouseEnter = useCallback(() => {
-    setIsHovered(true);
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    setIsHovered(false);
-  }, []);
 
   const handleMarkToggle = useCallback(
     async e => {
@@ -85,11 +76,7 @@ const NotificationListItem = memo(props => {
   );
 
   return (
-    <Box
-      sx={[styles.container, sx]}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
+    <Box sx={[styles.container, sx]}>
       {showIcon && <Box sx={styles.iconContainer}>{getIcon(event_type, theme, notification)}</Box>}
       <Box sx={[styles.content, contentSX]}>
         <Box sx={styles.message}>
@@ -105,7 +92,7 @@ const NotificationListItem = memo(props => {
           </Typography>
         )}
       </Box>
-      {context === 'list' && isHovered && (
+      {context === 'list' && (
         <Tooltip
           title={markToggleLabel}
           enterDelay={1200}
@@ -117,6 +104,7 @@ const NotificationListItem = memo(props => {
             aria-label={markToggleLabel}
             onClick={handleMarkToggle}
             sx={styles.markButton}
+            className="mark-toggle"
           />
         </Tooltip>
       )}
@@ -140,10 +128,16 @@ const notificationListItemStyles = (clampLines, isContextList) => ({
     '&:hover': {
       backgroundColor: isContextList ? palette.background.surface.interactive.default : undefined,
     },
+    '&:hover .mark-toggle, &:focus-within .mark-toggle': {
+      opacity: 1,
+    },
   }),
+  // Always in the layout, so the text keeps its width and the row does not jump on hover
   markButton: {
     flexShrink: 0,
     alignSelf: 'center',
+    opacity: 0,
+    transition: 'opacity 0.15s',
   },
   iconContainer: {
     width: '2rem',
