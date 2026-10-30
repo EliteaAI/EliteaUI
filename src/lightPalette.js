@@ -23,6 +23,8 @@ const orange40 = '#e9791266';
 const warningStatusText = '#D37015';
 
 const warningOrange = '#ED6C02';
+// The border and title colour of the schedule "Action needed" card, darker than the warning colour
+const scheduleCardOrange = '#DA670D';
 const warningYellow = '#FFC124';
 const orangeFill5 = '#e979120d';
 const orangeOutline40 = '#e9791266';
@@ -357,6 +359,7 @@ const lightPalette = {
   },
   warning: {
     main: warningOrange,
+    scheduleCard: scheduleCardOrange,
     high: warningYellow,
   },
   diff: {

@@ -5,7 +5,13 @@ import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
 import { contextResolver } from '@/common/utils';
 import RouteDefinitions from '@/routes';
 
-import { DEFAULT_APPROVAL_RULE, UNKNOWN_WARNING_LABEL, WARNING_LABELS } from '../constants';
+import {
+  APPROVAL_RULE,
+  DEFAULT_APPROVAL_RULE,
+  UNKNOWN_WARNING_LABEL,
+  WAIT_FOR_OWNER_CODES,
+  WARNING_LABELS,
+} from '../constants';
 
 const ENTITY_TYPES = ['agent', 'pipeline'];
 const ENTRY_POINT = 'entry_point';
@@ -160,4 +166,16 @@ export const toRiskItems = (blocking = []) => {
     groups.get(finding.code).findings.push(finding);
   });
   return [...groups.values()];
+};
+
+// Splits the risk answer by the approval rule. Under "Pause and ask me" a missing credential or a personal
+// sign-in does not stop the save: the run waits for the owner, so these findings move to `waiting`.
+export const splitRiskFindings = (result, approvalRule) => {
+  const blocking = result?.blocking ?? [];
+  if (approvalRule !== APPROVAL_RULE.PAUSE_AND_ASK) return { blocking, waiting: [] };
+  const waitsForOwner = finding => WAIT_FOR_OWNER_CODES.includes(finding.code);
+  return {
+    blocking: blocking.filter(finding => !waitsForOwner(finding)),
+    waiting: [...blocking, ...(result?.warnings ?? [])].filter(waitsForOwner),
+  };
 };

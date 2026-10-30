@@ -8,6 +8,7 @@ import { useScheduleRun, useScheduleRunConversation, useScheduleRuns } from '../
 // test panel log: one run polled while active, and its conversation
 
 const mocks = vi.hoisted(() => ({
+  chatHistory: null,
   useGetScheduleRunQuery: vi.fn(),
   useGetScheduleRunsQuery: vi.fn(),
   useGetRunHistoryDetailsQuery: vi.fn(),
@@ -21,11 +22,12 @@ vi.mock('@/[fsd]/entities/run-history/api', () => ({
   RunHistoryApi: { useGetRunHistoryDetailsQuery: mocks.useGetRunHistoryDetailsQuery },
 }));
 vi.mock('@/common/convertChatConversationMessages', () => ({
-  convertConversationToChatHistory: () => [
-    { id: 'q1', role: 'user', content: 'List the PRs' },
-    { id: 'a1', role: 'assistant', content: '## Open PRs' },
-    { id: 'a2', role: 'assistant', content: '' },
-  ],
+  convertConversationToChatHistory: () =>
+    mocks.chatHistory ?? [
+      { id: 'q1', role: 'user', content: 'List the PRs' },
+      { id: 'a1', role: 'assistant', content: '## Open PRs' },
+      { id: 'a2', role: 'assistant', content: '' },
+    ],
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 5, useToast: () => ({}) }));
 
@@ -107,7 +109,10 @@ describe('useScheduleRun', () => {
 });
 
 describe('useScheduleRunConversation', () => {
-  afterEach(() => vi.clearAllMocks());
+  afterEach(() => {
+    vi.clearAllMocks();
+    mocks.chatHistory = null;
+  });
 
   const conversation = { uuid: 'conv-uuid', message_groups: [] };
 
@@ -135,8 +140,23 @@ describe('useScheduleRunConversation', () => {
     expect(result.current).toEqual({
       conversationUuid: 'conv-uuid',
       pausedMessageId: 'a2',
+      authAction: undefined,
       answer: '## Open PRs',
     });
+  });
+
+  it('gives the sign-in card of the paused message, so the panel can ask for a sign-in', () => {
+    const card = { status: 'action_required', authorizationRequestId: 'auth-1' };
+    mocks.chatHistory = [
+      { id: 'q1', role: 'user', content: 'Run' },
+      { id: 'a1', role: 'assistant', content: '', toolActions: [{ status: 'complete' }, card] },
+    ];
+    mocks.useGetRunHistoryDetailsQuery.mockReturnValue({ currentData: conversation });
+    const { result } = renderHook(() =>
+      useScheduleRunConversation({ conversation_id: 70, status: 'waiting_for_approval' }),
+    );
+
+    expect(result.current.authAction).toBe(card);
   });
 });
 

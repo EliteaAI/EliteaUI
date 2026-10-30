@@ -443,6 +443,65 @@ describe('schedule row mutations', () => {
   });
 });
 
+describe('decide a run without a chat', () => {
+  let fetchSpy;
+  let respond;
+
+  const posts = async () =>
+    (await Promise.all(fetchSpy.mock.calls.map(([arg]) => arg))).filter(arg => arg.method === 'POST');
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    respond = async () => jsonResponse({ ok: true });
+    fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(args => {
+      const request = args instanceof Request ? args : new Request(String(args));
+      return request.method === 'POST'
+        ? respond()
+        : Promise.resolve(jsonResponse({ total: 1, rows: [{ id: 7 }] }));
+    });
+  });
+
+  it('posts the action to the decision path of the run and refetches the schedule', async () => {
+    const store = makeStore();
+    await store.dispatch(scheduleApi.endpoints.getScheduleList.initiate({ projectId: 5 }));
+    const callsBefore = fetchSpy.mock.calls.length;
+
+    const result = await store.dispatch(
+      scheduleApi.endpoints.decideRunWithoutChat.initiate({
+        projectId: 5,
+        scheduleId: 7,
+        runId: 9,
+        action: 'approve',
+      }),
+    );
+
+    const [request] = await posts();
+    expect(new URL(request.url).pathname).toBe('/elitea_core/schedules/prompt_lib/5/7/runs/9/decision');
+    expect(await request.clone().json()).toEqual({ action: 'approve' });
+    expect(result.data).toEqual({ ok: true });
+    await vi.waitFor(() => expect(fetchSpy.mock.calls.length).toBeGreaterThan(callsBefore + 1));
+  });
+
+  it('keeps the cache and returns the error when the decision is refused', async () => {
+    respond = async () => jsonResponse({ error: 'not waiting' }, 400);
+    const store = makeStore();
+    await store.dispatch(scheduleApi.endpoints.getScheduleList.initiate({ projectId: 5 }));
+    const callsBefore = fetchSpy.mock.calls.length;
+
+    const result = await store.dispatch(
+      scheduleApi.endpoints.decideRunWithoutChat.initiate({
+        projectId: 5,
+        scheduleId: 7,
+        runId: 9,
+        action: 'reject',
+      }),
+    );
+
+    expect(result.error.status).toBe(400);
+    expect(fetchSpy.mock.calls).toHaveLength(callsBefore + 1);
+  });
+});
+
 describe('change schedule owner', () => {
   let fetchSpy;
   let respond;
@@ -739,5 +798,68 @@ describe('mutations invalidate only the schedule they change', () => {
     });
     const paths = refetchedPaths(callsBefore);
     expect(paths.some(path => path.endsWith('/8') || path.endsWith('/8/runs'))).toBe(false);
+  });
+});
+
+describe('decideRunWithoutChat', () => {
+  let fetchSpy;
+  let handler;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    handler = async () => jsonResponse({ id: 7, rows: [] });
+    fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(args => handler(args));
+  });
+
+  it('posts the action to the decision endpoint of the run', async () => {
+    await makeStore().dispatch(
+      scheduleApi.endpoints.decideRunWithoutChat.initiate({
+        projectId: 5,
+        scheduleId: 7,
+        runId: 41,
+        action: 'approve',
+      }),
+    );
+
+    const request = await lastRequestOf(fetchSpy);
+    expect(request.method).toBe('POST');
+    expect(request.url.pathname).toBe('/elitea_core/schedules/prompt_lib/5/7/runs/41/decision');
+    expect(request.body).toEqual({ action: 'approve' });
+  });
+
+  it('refetches the schedule runs after success', async () => {
+    const store = makeStore();
+    await store.dispatch(scheduleApi.endpoints.getScheduleRuns.initiate({ projectId: 5, scheduleId: 7 }));
+    const callsBefore = fetchSpy.mock.calls.length;
+
+    await store.dispatch(
+      scheduleApi.endpoints.decideRunWithoutChat.initiate({
+        projectId: 5,
+        scheduleId: 7,
+        runId: 41,
+        action: 'reject',
+      }),
+    );
+
+    await vi.waitFor(() => expect(fetchSpy.mock.calls.length).toBeGreaterThan(callsBefore + 1));
+  });
+
+  it('keeps the caches when the decision fails', async () => {
+    const store = makeStore();
+    await store.dispatch(scheduleApi.endpoints.getScheduleRuns.initiate({ projectId: 5, scheduleId: 7 }));
+    const callsBefore = fetchSpy.mock.calls.length;
+    handler = async () => jsonResponse({ error: 'gone' }, 409);
+
+    const result = await store.dispatch(
+      scheduleApi.endpoints.decideRunWithoutChat.initiate({
+        projectId: 5,
+        scheduleId: 7,
+        runId: 41,
+        action: 'approve',
+      }),
+    );
+
+    expect(result.error.status).toBe(409);
+    expect(fetchSpy.mock.calls).toHaveLength(callsBefore + 1);
   });
 });

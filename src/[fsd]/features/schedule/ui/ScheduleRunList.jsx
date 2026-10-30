@@ -4,7 +4,7 @@ import { Box, ButtonBase, Chip, Typography } from '@mui/material';
 
 import { compareRunTimestamp } from '@/[fsd]/entities/run-history';
 
-import { formatRunDuration, formatRunStarted, toRunStatusLabel } from '../lib/helpers';
+import { describeRunDuration, formatRunStarted, toRunStatusLabel } from '../lib/helpers';
 import ScheduleRunStatusChip from './ScheduleRunStatusChip';
 
 const NO_VALUE = '–';
@@ -130,7 +130,7 @@ const ScheduleRunList = memo(props => {
                     component="span"
                     data-testid="schedule-run-duration"
                   >
-                    {formatRunDuration(run.duration_ms)}
+                    {describeRunDuration(run)}
                   </Box>
                 </Typography>
                 {run.reason && (
@@ -144,13 +144,12 @@ const ScheduleRunList = memo(props => {
                   </Typography>
                 )}
                 {run.status === 'waiting_for_approval' && (
-                  <Typography
+                  <Box
                     component="span"
-                    variant="bodySmall"
                     sx={styles.review}
                   >
-                    Review
-                  </Typography>
+                    Review and approve
+                  </Box>
                 )}
               </Box>
             </ButtonBase>
@@ -191,7 +190,13 @@ const scheduleRunListStyles = () => ({
   status: { marginLeft: 'auto' },
   meta: ({ palette }) => ({ color: palette.text.secondary, flexShrink: 0 }),
   reason: ({ palette }) => ({ color: palette.text.secondary, minWidth: 0 }),
-  review: ({ palette }) => ({ marginLeft: 'auto', color: palette.text.link, textDecoration: 'underline' }),
+  // Looks like the Open full history link, but the whole row is the button
+  review: ({ palette }) => ({
+    marginLeft: 'auto',
+    color: palette.text.link,
+    fontSize: '0.875rem',
+    '&:hover': { textDecoration: 'underline' },
+  }),
   // test: the primary border with the strong ink (the magenta text is 4.3:1 on the card), cron: blue, manual: grey
   trigger: {
     test: ({ palette }) => ({ color: palette.text.secondary, borderColor: palette.primary.main }),

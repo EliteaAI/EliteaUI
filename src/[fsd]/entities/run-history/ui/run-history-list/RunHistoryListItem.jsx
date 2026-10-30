@@ -108,7 +108,7 @@ const RunHistoryListItem = memo(props => {
           <RunHistoryTooltipCell
             key={column.id}
             text={cell}
-            // The narrow schedule cells always give their full text, so a cut "Waiting for input" can be read
+            // The narrow schedule cells always give their full text, so a cut "Waiting for approval" can be read
             tooltipText={cell === '-' ? '' : cell}
             trigger={tooltipTrigger}
           />

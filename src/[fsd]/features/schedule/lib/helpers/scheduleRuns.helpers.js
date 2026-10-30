@@ -1,6 +1,6 @@
 import { compareRunTimestamp, formatRunTimestamp } from '@/[fsd]/entities/run-history';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings';
-import { ROLES } from '@/common/constants';
+import { ROLES, ToolActionStatus } from '@/common/constants';
 
 const RUN_STARTED_FORMAT = 'd MMM, HH:mm';
 
@@ -34,12 +34,27 @@ export const formatRunDuration = durationMs => {
     : `${Math.floor(seconds / 60)} m ${String(seconds % 60).padStart(2, '0')} s`;
 };
 
+const NO_DURATION_TEXT = {
+  waiting_for_approval: 'Paused until you decide',
+  running: 'Running',
+};
+
+// A run without a duration says why, so the row never shows a bare dash
+export const describeRunDuration = run =>
+  run.duration_ms == null
+    ? (NO_DURATION_TEXT[run.status] ?? 'Duration not recorded')
+    : formatRunDuration(run.duration_ms);
+
 const MIN_ROUNDED_COST = 0.0001;
 const MAX_ROUNDED_COST = 0.01;
 
 // The Analytics format, except that a small cost rounds to the nearest 4th decimal (0.00161 reads $0.0016)
-const formatRunCost = costUsd =>
-  costUsd >= MIN_ROUNDED_COST && costUsd < MAX_ROUNDED_COST ? `$${costUsd.toFixed(4)}` : AnalyticCommonHelpers.fmtCost(costUsd);
+// A zero cost has nothing to show, and a cost below the 4th decimal reads "< $0.0001" instead of a long decimal
+const formatRunCost = costUsd => {
+  if (!(costUsd > 0)) return '';
+  if (costUsd < MIN_ROUNDED_COST) return `< $${MIN_ROUNDED_COST}`;
+  return costUsd < MAX_ROUNDED_COST ? `$${costUsd.toFixed(4)}` : AnalyticCommonHelpers.fmtCost(costUsd);
+};
 
 export const formatRunSummary = summary =>
   [
@@ -66,6 +81,13 @@ export const findRunAnswer = messages =>
     .map(toMessageText)
     .findLast(Boolean);
 
+// The sign-in request a paused message waits for (a toolkit authorization card), or undefined when the pause
+// is a sensitive-tool approval
+export const findPendingAuthAction = message =>
+  message?.toolActions?.find(
+    action => action.status === ToolActionStatus.actionRequired && action.authorizationRequestId,
+  );
+
 export const toPlainText = markdown =>
   (markdown ?? '')
     .replace(/^#+\s+/gm, '')
@@ -76,10 +98,18 @@ export const toPlainText = markdown =>
     .replace(/\n\s*\n/g, '\n')
     .trim();
 
-export const formatExpiresIn = (pausedAt, now) => {
-  if (!pausedAt) return '';
-  const left = Date.parse(pausedAt) + APPROVAL_WINDOW_MS - now;
+const formatTimeLeft = (endMs, now) => {
+  const left = endMs - now;
   if (left <= 0) return 'Expired';
   const minutes = Math.floor(left / MINUTE_MS);
   return `Expires in ${Math.floor(minutes / 60)} h ${minutes % 60} min`;
 };
+
+export const formatExpiresIn = (pausedAt, now) =>
+  pausedAt ? formatTimeLeft(Date.parse(pausedAt) + APPROVAL_WINDOW_MS, now) : '';
+
+// The server sends the end of the approval window as `approval_expires_at`; an older run has only the pause time
+export const formatApprovalExpiry = ({ expiresAt, pausedAt }, now) =>
+  expiresAt && !Number.isNaN(Date.parse(expiresAt))
+    ? formatTimeLeft(Date.parse(expiresAt), now)
+    : formatExpiresIn(pausedAt, now);

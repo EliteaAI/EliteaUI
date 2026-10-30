@@ -101,6 +101,30 @@ describe('useScheduleRiskCheck', () => {
     expect(mocks.check).toHaveBeenLastCalledWith(expect.objectContaining({ entity_type: 'pipeline' }));
   });
 
+  it('lists a sign-in as waiting, not blocking, under "Pause and ask me"', async () => {
+    const signin = { code: 'personal_signin_required', toolkit: 'GitHub' };
+    mocks.check.mockReturnValue(answer({ ...CLEAR, blocking: [signin] }));
+    const { result } = setup({ ...DEFAULT_INITIAL, approvalRule: 'pause_and_ask' });
+
+    await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));
+    expect(result.current.blocking).toEqual([]);
+    expect(result.current.waiting).toEqual([signin]);
+  });
+
+  it('splits the same answer again when the rule changes, without a new request', async () => {
+    const signin = { code: 'personal_signin_required', toolkit: 'GitHub' };
+    mocks.check.mockReturnValue(answer({ ...CLEAR, blocking: [signin] }));
+    const { result, rerender } = setup({ ...DEFAULT_INITIAL, approvalRule: 'pause_and_ask' });
+    await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));
+
+    rerender({ ...DEFAULT_INITIAL, approvalRule: 'run_without_asking' });
+
+    expect(result.current.status).toBe(RISK_CHECK_STATUS.BLOCKED);
+    expect(result.current.blocking).toEqual([signin]);
+    expect(result.current.waiting).toEqual([]);
+    expect(mocks.check).toHaveBeenCalledTimes(1);
+  });
+
   it('applyFindings takes the notices of a refusal too', async () => {
     const { result } = setup();
     await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));

@@ -47,6 +47,7 @@ const RISK_STATES_WITHOUT_SAVE = [
  * Agents editor puts its chat; its `onTestRun` saves a changed form, then calls the `onTestRun()` prop
  * (a promise) in the place of `onSaved` at the same post-save point. What `sidePanel` returns (the panel and
  * the Runs section under it) fills the right column from xl, and sits under the form below it.
+ * `sidePanelFirst` puts the panel above the form below xl, for a card the owner must see at once.
  * `headerActions` (a node) sits in the header bar after Cancel, for example the page's 3-dots menu.
  */
 const ScheduleForm = memo(props => {
@@ -60,6 +61,7 @@ const ScheduleForm = memo(props => {
     onTestRun,
     onCancel,
     sidePanel,
+    sidePanelFirst = false,
     headerActions,
     children,
   } = props;
@@ -83,6 +85,7 @@ const ScheduleForm = memo(props => {
     applicationId: values.application_id,
     versionId: values.version_id,
     scheduleId: schedule?.id,
+    approvalRule: values.approval_rule,
   });
   const save = useScheduleSave({ formik, riskCheck, schedule, onSubmit, onSaved, onTestRun });
   // Without edit in allowed_actions the server refuses a save, so the form only shows the values
@@ -136,7 +139,8 @@ const ScheduleForm = memo(props => {
   const riskNotices = (
     <ScheduleRiskNotices
       status={riskCheck.status}
-      blocking={riskCheck.result?.blocking}
+      blocking={riskCheck.blocking}
+      waiting={riskCheck.waiting}
       entityType={values.type}
       entityId={values.application_id}
       versionId={values.version_id}
@@ -314,7 +318,7 @@ const ScheduleForm = memo(props => {
                 {sidePanel && (
                   <Grid
                     size={{ xs: 12, xl: 6 }}
-                    sx={styles.sidePanel}
+                    sx={[styles.sidePanel, sidePanelFirst && styles.sidePanelFirst]}
                   >
                     {sidePanel({
                       onTestRun: save.handleTestRun,
@@ -333,6 +337,7 @@ const ScheduleForm = memo(props => {
         entityLabel={entityLabel}
         scheduleName={save.review?.values.name}
         tools={riskCheck.result?.sensitive}
+        waiting={riskCheck.waiting}
         runWithoutAskingAllowed={riskCheck.result?.run_without_asking_allowed === true}
         scanIncomplete={riskCheck.result?.notices?.some(notice => notice.code === 'scan_incomplete')}
         showSettingsLink={canChangeProjectSettings}
@@ -363,6 +368,8 @@ const styles = {
   // the ConfigurationTab grid padding
   split: { padding: '0 1.5rem 1.5rem' },
   sidePanel: { order: 2, paddingTop: '0.75rem' },
+  // Below xl the panel is stacked under the form; an urgent card goes above it, so it is seen first
+  sidePanelFirst: ({ breakpoints }) => ({ order: -1, [breakpoints.up('xl')]: { order: 2 } }),
   // The header holds one unlabelled tab, so its selected-tab indicator is a stray line under the crumbs
   noTabIndicator: { '& .MuiTabs-indicator': { display: 'none' } },
   accordion: ({ palette }) => ({ background: `${palette.background.default.tertiary} !important` }),

@@ -12,6 +12,7 @@ import {
   isPromptShown,
   resetWhatToRun,
   scheduleFormSchema,
+  splitRiskFindings,
   syncPromptVariables,
   toCreateBody,
   toFieldErrors,
@@ -428,5 +429,36 @@ describe('risk review blocking findings', () => {
 
   it('toRiskItems accepts a missing list', () => {
     expect(toRiskItems(undefined)).toEqual([]);
+  });
+});
+
+describe('splitRiskFindings', () => {
+  const signin = { code: 'personal_signin_required', toolkit: 'GitHub' };
+  const credential = { code: 'missing_credential', toolkit: 'Jira' };
+  const step = { code: 'human_input_step', step: 'review' };
+
+  it('keeps every finding blocking under "Run without asking"', () => {
+    expect(splitRiskFindings({ blocking: [signin, credential, step] }, 'run_without_asking')).toEqual({
+      blocking: [signin, credential, step],
+      waiting: [],
+    });
+  });
+
+  it('moves a sign-in and a missing credential to waiting under "Pause and ask me"', () => {
+    expect(splitRiskFindings({ blocking: [signin, step, credential] }, 'pause_and_ask')).toEqual({
+      blocking: [step],
+      waiting: [signin, credential],
+    });
+  });
+
+  it('reads the two codes from warnings too, because core lists them there for this rule', () => {
+    expect(splitRiskFindings({ blocking: [], warnings: [signin, step] }, 'pause_and_ask')).toEqual({
+      blocking: [],
+      waiting: [signin],
+    });
+  });
+
+  it('accepts a missing answer', () => {
+    expect(splitRiskFindings(null, 'pause_and_ask')).toEqual({ blocking: [], waiting: [] });
   });
 });

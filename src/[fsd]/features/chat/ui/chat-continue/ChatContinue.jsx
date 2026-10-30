@@ -1,6 +1,6 @@
-import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Box, Collapse, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import {
   buildToolkitAuthorizationMessage,
@@ -17,6 +17,8 @@ import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import ArrowForwardIcon from '@/assets/icons/arrow-forward.svg?react';
 
+import ToolkitActionPanel from './ToolkitActionPanel';
+
 const ChatContinue = memo(props => {
   const {
     onContinue,
@@ -25,14 +27,17 @@ const ChatContinue = memo(props => {
     message,
     authRequiredAction,
     continueLabel = 'Continue',
+    title = '⚠️ Toolkit Authorization Required',
+    authorizationText,
+    hideContinue = false,
+    detailsExpanded = false,
+    authorizeProps = { variant: 'positive' },
   } = props;
   const styles = getStyles();
   const projectId = useSelectedProjectId();
   const { toastSuccess } = useToast();
 
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
-  const detailsId = useId();
   const automaticResumeRef = useRef({ actionId: null, attempted: false, resumed: false });
 
   const mcpAuthMetadata = useMemo(
@@ -133,92 +138,28 @@ const ChatContinue = memo(props => {
     setShowAuthModal(false);
   }, []);
 
-  const toggleDetails = useCallback(() => {
-    setShowDetails(current => !current);
-  }, []);
-
   if (authRequiredAction) {
     return (
       <>
-        <Box
+        <ToolkitActionPanel
           data-testid="toolkit-authorization-panel"
           data-authorization-request-id={authRequiredAction.authorizationRequestId || undefined}
-          sx={styles.authorizationContainer}
+          title={title}
+          message={authorizationText || authorizationMessage}
+          detailRows={detailRows}
+          defaultExpanded={detailsExpanded}
         >
-          <Typography
-            variant="labelMedium"
-            sx={styles.authorizationTitle}
+          <BaseBtn
+            data-testid="toolkit-authorization-authorize-button"
+            {...authorizeProps}
+            sx={styles.button}
+            startIcon={<CheckedIcon />}
+            onClick={handleAuthorize}
+            disabled={disabled}
           >
-            ⚠️ Toolkit Authorization Required
-          </Typography>
-          <Typography
-            variant="labelMedium"
-            sx={styles.authorizationMessage}
-          >
-            {authorizationMessage}
-          </Typography>
-          {detailRows.length > 0 && (
-            <Box sx={styles.detailsWrapper}>
-              <Box
-                role="button"
-                tabIndex={0}
-                aria-expanded={showDetails}
-                aria-controls={detailsId}
-                onClick={toggleDetails}
-                onKeyDown={event => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    toggleDetails();
-                  }
-                }}
-                sx={styles.detailsHeader}
-              >
-                <Typography
-                  variant="labelSmall"
-                  sx={styles.detailsHeaderText}
-                >
-                  Authorization details {showDetails ? '▾' : '▸'}
-                </Typography>
-              </Box>
-              <Collapse
-                in={showDetails}
-                id={detailsId}
-              >
-                <Box sx={styles.detailsList}>
-                  {detailRows.map(([label, value]) => (
-                    <Box
-                      key={label}
-                      sx={styles.detailsRow}
-                    >
-                      <Typography
-                        variant="labelSmall"
-                        sx={styles.detailsLabel}
-                      >
-                        {label}:
-                      </Typography>
-                      <Typography
-                        variant="labelSmall"
-                        sx={styles.detailsValue}
-                      >
-                        {value}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-              </Collapse>
-            </Box>
-          )}
-          <Box sx={styles.buttonContainer}>
-            <BaseBtn
-              data-testid="toolkit-authorization-authorize-button"
-              variant="positive"
-              sx={styles.button}
-              startIcon={<CheckedIcon />}
-              onClick={handleAuthorize}
-              disabled={disabled}
-            >
-              Authorize
-            </BaseBtn>
+            Authorize
+          </BaseBtn>
+          {!hideContinue && (
             <BaseBtn
               data-testid="toolkit-authorization-skip-button"
               variant="neutral"
@@ -229,8 +170,8 @@ const ChatContinue = memo(props => {
             >
               {continueLabel}
             </BaseBtn>
-          </Box>
-        </Box>
+          )}
+        </ToolkitActionPanel>
         {showAuthModal && mcpAuthMetadata && (
           <McpAuthModal
             open={showAuthModal}
@@ -285,69 +226,6 @@ const getStyles = () => ({
     borderRadius: '0.5rem',
     backgroundColor: palette.components.chatContinue.background,
     alignItems: 'flex-start',
-  }),
-  authorizationContainer: ({ palette }) => ({
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    padding: '0.625rem 0.75rem',
-    gap: '0.5rem',
-    borderRadius: '0.625rem',
-    background: palette.background.surface.interactive.active,
-    border: `0.0625rem solid ${palette.warning.main}`,
-    alignItems: 'flex-start',
-  }),
-  authorizationTitle: ({ palette }) => ({
-    fontSize: '0.875rem',
-    fontWeight: 600,
-    lineHeight: '1.25rem',
-    color: palette.warning.main,
-  }),
-  authorizationMessage: ({ palette }) => ({
-    fontSize: '0.8125rem',
-    fontWeight: 400,
-    lineHeight: '1.25rem',
-    color: palette.text.secondary,
-  }),
-  detailsWrapper: ({ palette }) => ({
-    width: '100%',
-    borderRadius: '0.375rem',
-    border: `0.0625rem solid ${palette.border?.lines || palette.divider}`,
-    overflow: 'hidden',
-  }),
-  detailsHeader: ({ palette }) => ({
-    padding: '0.375rem 0.625rem',
-    cursor: 'pointer',
-    userSelect: 'none',
-    backgroundColor: palette.action.hover,
-  }),
-  detailsHeaderText: ({ palette }) => ({
-    fontSize: '0.75rem',
-    fontWeight: 600,
-    color: palette.text.secondary,
-  }),
-  detailsList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-    padding: '0.5rem 0.625rem',
-  },
-  detailsRow: {
-    display: 'flex',
-    gap: '0.5rem',
-    alignItems: 'flex-start',
-  },
-  detailsLabel: ({ palette }) => ({
-    fontSize: '0.75rem',
-    fontWeight: 600,
-    color: palette.text.secondary,
-    flexShrink: 0,
-  }),
-  detailsValue: ({ palette }) => ({
-    fontSize: '0.75rem',
-    fontWeight: 400,
-    color: palette.text.primary,
-    overflowWrap: 'anywhere',
   }),
   buttonContainer: {
     display: 'flex',

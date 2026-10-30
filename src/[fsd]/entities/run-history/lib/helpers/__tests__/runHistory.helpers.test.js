@@ -213,7 +213,7 @@ describe('schedule runs in Agent and Pipeline Run History', () => {
     const [schedule, status] = SCHEDULE_RUN_COLUMNS;
     const run = { schedule_run: { schedule_name: 'Daily digest', status: 'waiting_for_approval' } };
     expect([schedule.label, status.label]).toEqual(['Schedule', 'Status']);
-    expect([schedule.render(run), status.render(run)]).toEqual(['Daily digest', 'Waiting for input']);
+    expect([schedule.render(run), status.render(run)]).toEqual(['Daily digest', 'Waiting for approval']);
     expect([schedule.render({ schedule_run: null }), status.render({})]).toEqual(['-', '-']);
   });
 
