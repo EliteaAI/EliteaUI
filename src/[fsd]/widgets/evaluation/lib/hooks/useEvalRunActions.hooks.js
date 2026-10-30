@@ -102,11 +102,13 @@ export const useEvalRunActions = ({
   );
 
   // Last run from API (most recent completed run) — scoped to whichever version is
-  // currently selected, so switching versions shows that version's own run history.
+  // currently selected, so switching versions shows that version's own run history. A version
+  // that has no run yet (a freshly created one) shows the suite's latest run on any version
+  // instead of an empty panel; the header names the version it ran on (#7311).
   const lastRun = useMemo(() => {
     const matching =
       selectedVersionId == null ? runs : runs.filter(run => run.application_version_id === selectedVersionId);
-    return matching.length ? matching[0] : null;
+    return matching[0] ?? runs[0] ?? null;
   }, [runs, selectedVersionId]);
 
   // Fetch active run details (for in-progress runs)
