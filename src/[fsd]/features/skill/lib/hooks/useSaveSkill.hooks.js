@@ -20,6 +20,7 @@ const useSaveSkill = () => {
     const description = values?.description?.trim() || '';
     const instructions = values?.version_details?.instructions || '';
     const tags = normalizeTagsForSave(values?.version_details?.tags);
+    const frontmatter = values?.version_details?.meta?.frontmatter;
 
     // Without a version id the viewed version cannot be addressed — the
     // backend would fall back to the default version.
@@ -35,7 +36,7 @@ const useSaveSkill = () => {
         name,
         description,
         version: withRunSettings(
-          { id: selectedVersionId, instructions, tags },
+          { id: selectedVersionId, instructions, tags, ...(frontmatter && { meta: { frontmatter } }) },
           values?.version_details?.run_settings,
         ),
       }).unwrap();

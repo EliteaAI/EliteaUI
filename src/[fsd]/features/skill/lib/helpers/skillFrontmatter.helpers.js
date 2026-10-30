@@ -22,53 +22,74 @@ const locateFrontmatter = text => {
   return { yamlStart, yamlEnd, bodyStart: closingEnd + (lineBreakBeforeBody?.[0].length ?? 0) };
 };
 
-const readYamlMapping = yamlText => {
+const readYamlMapping = (yamlText, schema = yaml.FAILSAFE_SCHEMA) => {
   try {
-    const parsed = yaml.load(yamlText, { schema: yaml.FAILSAFE_SCHEMA }) ?? {};
+    const parsed = yaml.load(yamlText, { schema }) ?? {};
     return typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
   } catch {
     return null;
   }
 };
 
-const formatFrontmatterEntry = (key, value) =>
-  value ? yaml.dump({ [key]: value }, { lineWidth: -1 }).replace(FINAL_LINE_BREAK, '') : `${key}:`;
+const omitSkillFrontmatterKeys = mapping =>
+  Object.fromEntries(Object.entries(mapping).filter(([key]) => !SKILL_FRONTMATTER_KEYS.includes(key)));
+
+const formatExtraFrontmatter = frontmatter =>
+  frontmatter && Object.keys(frontmatter).length
+    ? yaml.dump(frontmatter, { lineWidth: -1, schema: yaml.CORE_SCHEMA })
+    : '';
+
+const isEmptyFrontmatterValue = value =>
+  !value || (typeof value === 'object' && !Array.isArray(value) && !Object.keys(value).length);
+
+const formatFrontmatterEntry = (key, value) => {
+  if (!isEmptyFrontmatterValue(value)) {
+    return yaml.dump({ [key]: value }, { lineWidth: -1 }).replace(FINAL_LINE_BREAK, '');
+  }
+  return SKILL_FRONTMATTER_KEYS.includes(key) ? `${key}:` : null;
+};
 
 const replaceFrontmatterEntry = (lines, key, entry) => {
   const keyLine = new RegExp(`^${key}[ \\t]*:`);
   const start = lines.findIndex(line => keyLine.test(line));
-  if (start === -1) return [...lines, entry];
+  if (start === -1) return entry === null ? lines : [...lines, entry];
 
   const nextTopLevelLine = lines.findIndex((line, index) => index > start && TOP_LEVEL_LINE.test(line));
   const end = nextTopLevelLine === -1 ? lines.length : nextTopLevelLine;
   const valueLines = lines.slice(start + 1, end);
   const trailingBlankLineCount = valueLines.length - (valueLines.findLastIndex(line => line.trim()) + 1);
-  return [...lines.slice(0, start), entry, ...lines.slice(end - trailingBlankLineCount)];
+  const entryLines = entry === null ? [] : [entry];
+  return [...lines.slice(0, start), ...entryLines, ...lines.slice(end - trailingBlankLineCount)];
 };
 
-export const composeSkillEditorText = ({ name, description, body }) =>
-  `---\n${formatFrontmatterEntry('name', name)}\n${formatFrontmatterEntry('description', description)}\n---\n\n${body}`;
+export const composeSkillEditorText = ({ name, description, frontmatter, body }) =>
+  `---\n${formatFrontmatterEntry('name', name)}\n${formatFrontmatterEntry('description', description)}\n${formatExtraFrontmatter(frontmatter)}---\n\n${body}`;
 
 const locateValidFrontmatter = text => {
   const location = locateFrontmatter(text);
   if (!location || location.bodyStart === null) return null;
 
-  const mapping = readYamlMapping(text.slice(location.yamlStart, location.yamlEnd));
-  return mapping ? { ...location, mapping } : null;
+  const yamlText = text.slice(location.yamlStart, location.yamlEnd);
+  const mapping = readYamlMapping(yamlText);
+  return mapping ? { ...location, mapping, typedMapping: readYamlMapping(yamlText, yaml.CORE_SCHEMA) } : null;
 };
 
 export const parseSkillEditorText = text => {
   const frontmatter = locateValidFrontmatter(text);
   if (!frontmatter) return { body: text, fields: {} };
 
-  const { mapping } = frontmatter;
+  const { mapping, typedMapping } = frontmatter;
   const fields = Object.fromEntries(
     SKILL_FRONTMATTER_KEYS.filter(key => typeof mapping[key] === 'string' && mapping[key].trim()).map(key => [
       key,
       mapping[key],
     ]),
   );
-  return { body: text.slice(frontmatter.bodyStart), fields };
+  return {
+    body: text.slice(frontmatter.bodyStart),
+    fields,
+    extraFrontmatter: typedMapping ? omitSkillFrontmatterKeys(typedMapping) : undefined,
+  };
 };
 
 export const writeSkillFrontmatterFields = (text, fields, changedKeys) => {

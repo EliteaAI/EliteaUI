@@ -21,3 +21,5 @@ export const SKILL_RUN_MATCH = {
 export const SKILL_RUN_START_ERROR = 'Failed to start the skill run';
 
 export const RUN_SETTINGS_FIELD = 'version_details.run_settings';
+
+export const SPEC_MAX_DESCRIPTION_LENGTH = 1024;

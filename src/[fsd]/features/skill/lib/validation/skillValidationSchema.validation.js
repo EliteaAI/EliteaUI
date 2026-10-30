@@ -5,10 +5,10 @@ import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
 
 // Mirror the backend skill-name rule (elitea_core models/pd/skill.py
 // validate_skill_name): lowercase letters/digits/hyphens, no leading/trailing
-// hyphen, <= 64 chars, and must not contain "claude" or "anthropic". Kept in
+// or consecutive hyphens, <= 64 chars, and must not contain "claude" or "anthropic". Kept in
 // sync so invalid names surface as inline field errors instead of a 400 toast.
 const SKILL_NAME_MAX_LENGTH = 64;
-const SKILL_NAME_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
+const SKILL_NAME_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 const SkillValidateSchema = (maxInstructionsLength, savedInstructions) =>
   yup.object({
@@ -19,7 +19,7 @@ const SkillValidateSchema = (maxInstructionsLength, savedInstructions) =>
       .max(SKILL_NAME_MAX_LENGTH, `Name must be at most ${SKILL_NAME_MAX_LENGTH} characters`)
       .matches(
         SKILL_NAME_RE,
-        'Name must be lowercase letters, digits and hyphens only (no spaces), and cannot start or end with a hyphen',
+        'Name must be lowercase letters, digits and hyphens only (no spaces), and cannot start or end with a hyphen or contain consecutive hyphens',
       )
       .test('no-reserved-vendor', 'Name cannot contain "claude" or "anthropic"', value => {
         if (!value) return true;

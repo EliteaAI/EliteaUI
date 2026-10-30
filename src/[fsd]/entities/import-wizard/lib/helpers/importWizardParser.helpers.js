@@ -103,7 +103,13 @@ const buildSkillsFromFrontmatter = frontmatter => {
       import_uuid: uuidv4(),
       name: block.name,
       description: block.description || '',
-      versions: [{ name: block.version || 'base', instructions: block.instructions || '' }],
+      versions: [
+        {
+          name: block.version || 'base',
+          instructions: block.instructions || '',
+          ...(block.frontmatter && { meta: { frontmatter: block.frontmatter } }),
+        },
+      ],
     }));
 
   const skillRefs = skills.map(skill => ({
