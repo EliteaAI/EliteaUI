@@ -21,8 +21,6 @@ import {
 } from '../lib/hooks/useWaitingRunCredentialCheck.hooks';
 import ScheduleRunApproval from './ScheduleRunApproval';
 
-// The design target for the card is darker than the theme warning colour, which the chat prompt keeps
-const CARD_ORANGE = '#DA670D';
 const noop = () => {};
 const STEP2_NOTE = 'Reject ends the run as Failed: rejected by the owner.';
 const BLOCKED_REASON = 'Provide the credential first';
@@ -54,6 +52,7 @@ const ScheduleWaitingCard = memo(
   forwardRef((props, ref) => {
     const { schedule, run, onShowTest } = props;
     const projectId = useSelectedProjectId();
+    const styles = useMemo(() => scheduleWaitingCardStyles(), []);
     const now = useNow();
     const statusId = useId();
     const { run: detail } = useScheduleRun(schedule.id, run.id);
@@ -114,20 +113,22 @@ const ScheduleWaitingCard = memo(
       ['Credential', waiting.credential],
       ['Status', status.label],
     ].filter(([, value]) => value);
-    const step1Title = (
-      <Box sx={scheduleWaitingCardStyles().stepHeader}>
-        ⚠️ Step 1: Toolkit Authorization Required
-        <Chip
-          data-testid="schedule-waiting-step1-status"
-          size="small"
-          variant="outlined"
-          label={status.label}
-          sx={scheduleWaitingCardStyles().chip[status.tone]}
-        />
-      </Box>
+    const step1Title = useMemo(
+      () => (
+        <Box sx={styles.stepHeader}>
+          ⚠️ Step 1: Toolkit Authorization Required
+          <Chip
+            data-testid="schedule-waiting-step1-status"
+            size="small"
+            variant="outlined"
+            label={status.label}
+            sx={styles.chip[status.tone]}
+          />
+        </Box>
+      ),
+      [status, styles],
     );
     const buttonProps = useActionButtonProps();
-    const styles = scheduleWaitingCardStyles();
 
     return (
       <Box
@@ -182,6 +183,7 @@ const ScheduleWaitingCard = memo(
               defaultExpanded
               role="status"
               sx={styles.panel}
+              titleSx={styles.panelTitle}
             >
               <BaseBtn
                 component="a"
@@ -215,6 +217,7 @@ const ScheduleWaitingCard = memo(
             title={`⚠️ ${isCredential || isSignIn ? 'Step 2: Approve to continue from the paused step' : 'Decide'}`}
             message={isCredential || isSignIn ? STEP2_NOTE : `${description} ${STEP2_NOTE}`}
             sx={styles.panel}
+            titleSx={styles.panelTitle}
           >
             <ScheduleRunApproval
               compact
@@ -252,16 +255,16 @@ const scheduleWaitingCardStyles = () => ({
     gap: '0.75rem',
     padding: '1rem 1.5rem',
     borderRadius: '1rem',
-    border: `0.0625rem solid ${CARD_ORANGE}`,
+    border: `0.0625rem solid ${palette.warning.scheduleCard}`,
     backgroundColor: palette.background.default.tertiary,
     scrollMarginTop: '4.5rem',
   }),
   // Dark theme keeps the approved chat surface; light theme uses the lighter one, as the card is grey already
   panel: ({ palette }) => ({
-    borderColor: CARD_ORANGE,
-    '& > div:first-of-type': { color: CARD_ORANGE },
+    borderColor: palette.warning.scheduleCard,
     ...(palette.mode === 'light' && { background: palette.background.surface.interactive.default }),
   }),
+  panelTitle: ({ palette }) => ({ color: palette.warning.scheduleCard }),
   button: { width: 'auto !important' },
   header: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' },
   title: ({ palette }) => ({

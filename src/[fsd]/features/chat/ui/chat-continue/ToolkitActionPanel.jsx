@@ -5,10 +5,19 @@ import { Box, Collapse, Typography } from '@mui/material';
 /**
  * The orange "action needed" panel of a toolkit: a title, a message, optional collapsible details and the
  * action buttons as children. The chat authorization prompt and the schedule "Action needed" card share it.
- * `sx` overrides the panel styles. `detailRows` is a list of [label, value] pairs; `defaultExpanded` opens the details at first render.
+ * `sx` overrides the panel styles and `titleSx` the title styles. `detailRows` is a list of [label, value] pairs; `defaultExpanded` opens the details at first render.
  */
 const ToolkitActionPanel = memo(props => {
-  const { title, message, detailRows = [], defaultExpanded = false, children, sx, ...restProps } = props;
+  const {
+    title,
+    message,
+    detailRows = [],
+    defaultExpanded = false,
+    children,
+    sx,
+    titleSx,
+    ...restProps
+  } = props;
   const [showDetails, setShowDetails] = useState(defaultExpanded);
   const detailsId = useId();
   const styles = toolkitActionPanelStyles();
@@ -25,7 +34,7 @@ const ToolkitActionPanel = memo(props => {
       <Typography
         component="div"
         variant="labelMedium"
-        sx={styles.authorizationTitle}
+        sx={[styles.authorizationTitle, titleSx]}
       >
         {title}
       </Typography>
