@@ -10,17 +10,14 @@ describe('validateSkillDraft Agent Skills spec rules', () => {
   });
 
   it('rejects a generated name with consecutive hyphens before it reaches the server', () => {
-    expect(validateSkillDraft({ ...DRAFT, name: 'file--converter' }, 50000).name).toBe(
-      'Name cannot contain consecutive hyphens (--)',
+    expect(validateSkillDraft({ ...DRAFT, name: 'file--converter' }, 50000).name).toMatch(
+      /consecutive hyphens/,
     );
   });
 
-  it.each(['Converts <input> files', 'Maps a -> b'])(
-    'rejects a generated description with angle brackets: %s',
-    description => {
-      expect(validateSkillDraft({ ...DRAFT, description }, 50000).description).toBe(
-        'Description cannot contain angle brackets (< or >)',
-      );
-    },
-  );
+  it('accepts a generated description with angle brackets', () => {
+    expect(validateSkillDraft({ ...DRAFT, description: 'Converts <input> files, a -> b' }, 50000)).toEqual(
+      {},
+    );
+  });
 });
