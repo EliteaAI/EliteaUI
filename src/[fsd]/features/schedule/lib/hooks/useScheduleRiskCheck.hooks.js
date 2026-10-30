@@ -5,14 +5,15 @@ import { useCheckScheduleRiskMutation } from '@/[fsd]/entities/schedule';
 import { RISK_CHECK_STATUS } from '../constants';
 import { splitRiskFindings } from '../helpers';
 
-const IDLE_STATE = { status: RISK_CHECK_STATUS.IDLE, result: null };
+// The state keeps the phase of the request. The blocked and clear status come from the findings
+// and the rule, so they have no second copy in the state.
+const ANSWERED = 'answered';
+const IDLE_STATE = { phase: RISK_CHECK_STATUS.IDLE, result: null };
 
 const statusOf = (result, approvalRule) =>
   splitRiskFindings(result, approvalRule).blocking.length
     ? RISK_CHECK_STATUS.BLOCKED
     : RISK_CHECK_STATUS.CLEAR;
-const hasFindingsStatus = status =>
-  status === RISK_CHECK_STATUS.BLOCKED || status === RISK_CHECK_STATUS.CLEAR;
 
 /**
  * The dry-run risk check of the schedule form. It runs when the entity type, the
@@ -43,7 +44,7 @@ export const useScheduleRiskCheck = ({
     }
     // The findings belong to one entity and version; a failed re-check of the same pair keeps them, with the failed status
     const key = `${entityType}:${applicationId}:${versionId}`;
-    setState(prev => ({ ...prev, status: RISK_CHECK_STATUS.CHECKING }));
+    setState(prev => ({ ...prev, phase: RISK_CHECK_STATUS.CHECKING }));
     try {
       const result = await checkRisk({
         projectId,
@@ -52,13 +53,13 @@ export const useScheduleRiskCheck = ({
         version_id: versionId,
         ...(scheduleId && { schedule_id: scheduleId }),
       }).unwrap();
-      if (call === latestCall.current) setState({ status: statusOf(result), result, key });
+      if (call === latestCall.current) setState({ phase: ANSWERED, result, key });
       return result;
     } catch {
       // A failed check shows as failed; the findings of the same pair stay for an open review dialog
       if (call === latestCall.current) {
         setState(prev => ({
-          status: RISK_CHECK_STATUS.FAILED,
+          phase: RISK_CHECK_STATUS.FAILED,
           result: prev.key === key ? prev.result : null,
           key: prev.key,
         }));
@@ -89,15 +90,15 @@ export const useScheduleRiskCheck = ({
         ...(notices && { notices }),
         ...(fingerprint && { fingerprint }),
       };
-      return { ...prev, status: statusOf(result), result };
+      return { ...prev, phase: ANSWERED, result };
     });
   }, []);
 
   // The rule can change after the answer came, so the findings are split again for the current rule
   // without a new request
-  const { status, result } = state;
+  const { phase, result, key } = state;
   const findings = useMemo(() => splitRiskFindings(result, approvalRule), [result, approvalRule]);
-  const shownStatus = hasFindingsStatus(status) ? statusOf(result, approvalRule) : status;
+  const status = phase === ANSWERED ? statusOf(result, approvalRule) : phase;
 
-  return { ...state, status: shownStatus, ...findings, runCheck, applyFindings };
+  return { status, result, key, ...findings, runCheck, applyFindings };
 };

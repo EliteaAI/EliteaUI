@@ -113,7 +113,10 @@ describe('test panel values', () => {
     expect(formatRunSummary({ duration_ms: 5139, tokens: 447, cost_usd: 0.00161 })).toBe(
       '5 s · 447 tokens · $0.0016',
     );
-    expect(formatRunSummary({ cost_usd: 0 })).toBe('$0.00');
+    expect(formatRunSummary({ cost_usd: 0 })).toBe('');
+    expect(formatRunSummary({ duration_ms: 1000, tokens: 5, cost_usd: 0 })).toBe('1 s · 5 tokens');
+    expect(formatRunSummary({ cost_usd: 0.000004 })).toBe('< $0.0001');
+    expect(formatRunSummary({ cost_usd: 0.0001 })).toBe('$0.0001');
     expect(formatRunSummary({ duration_ms: 1000 })).toBe('1 s');
     expect(formatRunSummary(undefined)).toBe('');
   });

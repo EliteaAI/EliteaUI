@@ -49,10 +49,12 @@ const MIN_ROUNDED_COST = 0.0001;
 const MAX_ROUNDED_COST = 0.01;
 
 // The Analytics format, except that a small cost rounds to the nearest 4th decimal (0.00161 reads $0.0016)
-const formatRunCost = costUsd =>
-  costUsd >= MIN_ROUNDED_COST && costUsd < MAX_ROUNDED_COST
-    ? `$${costUsd.toFixed(4)}`
-    : AnalyticCommonHelpers.fmtCost(costUsd);
+// A zero cost has nothing to show, and a cost below the 4th decimal reads "< $0.0001" instead of a long decimal
+const formatRunCost = costUsd => {
+  if (!(costUsd > 0)) return '';
+  if (costUsd < MIN_ROUNDED_COST) return `< $${MIN_ROUNDED_COST}`;
+  return costUsd < MAX_ROUNDED_COST ? `$${costUsd.toFixed(4)}` : AnalyticCommonHelpers.fmtCost(costUsd);
+};
 
 export const formatRunSummary = summary =>
   [
