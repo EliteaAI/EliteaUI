@@ -7,7 +7,7 @@ import { formatRunTimestamp } from '@/[fsd]/entities/run-history';
 import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
 import { BUTTON_VARIANTS, BaseBtn, ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
 
-import { findNewestTestRun, isRunActive } from '../lib/helpers';
+import { findNewestTestRun, isRunActive, ownerOnlyRunHint } from '../lib/helpers';
 import { useScheduleRun, useScheduleRunConversation } from '../lib/hooks/useScheduleRuns.hooks';
 import SchedulePromptSummary from './SchedulePromptSummary';
 import ScheduleRunApproval from './ScheduleRunApproval';
@@ -46,11 +46,13 @@ const ScheduleRunsPanel = memo(
     const run = detail ?? row;
     const conversation = useScheduleRunConversation(run);
 
-    // Without the run action the panel shows the log and the result only
-    const showTestTools = !viewedRun && !!schedule.allowed_actions?.includes('run');
+    // Without the run action the panel shows the log and the result only; an admin sees Run test disabled (#7254)
+    const canRun = !viewedRun && !!schedule.allowed_actions?.includes('run');
+    const runHint = viewedRun ? null : ownerOnlyRunHint(schedule);
+    const showTestTools = canRun || !!runHint;
     // The info box shows before the first test run only; after it the "i" button holds it
-    const showInfoBox = showTestTools && !newestTestRun;
-    const showInfoButton = showTestTools && !!newestTestRun;
+    const showInfoBox = canRun && !newestTestRun;
+    const showInfoButton = canRun && !!newestTestRun;
     // A starting test hides the previous test, which is still the newest until the list loads again
     const starting = !viewedRun && testRunPending;
     const shownRun = starting ? undefined : run;
@@ -191,6 +193,7 @@ const ScheduleRunsPanel = memo(
               running={active}
               pending={testRunPending}
               description={NOTE_TEXT}
+              disabledHint={runHint}
               onTestRun={onTestRun}
             />
           )}

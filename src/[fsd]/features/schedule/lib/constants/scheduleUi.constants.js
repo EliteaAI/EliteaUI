@@ -10,3 +10,8 @@ export const VISUALLY_HIDDEN = {
   whiteSpace: 'nowrap',
   width: '1px',
 };
+
+// Why the system paused a schedule (`disabled_reason`), where the row says it (#7254)
+export const DISABLED_REASON_LABELS = {
+  governance_refused: 'Paused: runs were refused by credential governance',
+};
