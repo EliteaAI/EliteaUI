@@ -6,6 +6,7 @@ import { Box, IconButton } from '@mui/material';
 import Tooltip from '@/ComponentsLib/Tooltip';
 import {
   SERVICE_PROMPT_KEYS,
+  useCheckIsBlockEditing,
   useSelectedProjectId,
   useServicePromptByKey,
   useToast,
@@ -17,7 +18,6 @@ import { useCanvasEditSocket } from '@/hooks/chat/useCanvasSocket';
 import useCopyDownloadHandlers from '@/hooks/chat/useCopyEventHandlers';
 
 import EditingPlaceholder from './Chat/EditingPlaceholder';
-import { useCheckIsBlockEditing } from './CodeBlock';
 import EditIcon from './Icons/EditIcon';
 import { useShouldDisableEditCanvas } from './MarkdownTableBlock';
 import MermaidDiagramOutput from './MermaidDiagramOutput/DiagramOutput';
