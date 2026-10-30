@@ -582,6 +582,7 @@ const UsageContainer = memo(() => {
                 topAgents={data.top_agents}
                 topAgentsByRuns={data.top_agents_by_runs}
                 comparisonAgents={previousData?.top_agents}
+                comparisonAgentsByRuns={previousData?.top_agents_by_runs}
                 canSeeAmounts={resolvedCanSeeAmounts}
                 currency={data.currency}
                 analyticsUrl="/settings/analytics?tab=agents&range=30"

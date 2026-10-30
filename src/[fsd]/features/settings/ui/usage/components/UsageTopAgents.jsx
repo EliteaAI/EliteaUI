@@ -21,6 +21,7 @@ const UsageTopAgents = memo(props => {
     canSeeAmounts,
     currency,
     comparisonAgents = [],
+    comparisonAgentsByRuns = [],
     analyticsUrl,
     sx = {},
   } = props;
@@ -34,14 +35,15 @@ const UsageTopAgents = memo(props => {
   // When sorting by runs, switch to the server-fetched top-by-runs dataset so the
   // correct top entities appear — not just a re-order of the top-spend list.
   const activeDataset = sortKey === 'runs' ? topAgentsByRuns : topAgents;
+  const activeComparison = sortKey === 'runs' ? comparisonAgentsByRuns : comparisonAgents;
 
   const prevByName = useMemo(() => {
     const map = new Map();
 
-    comparisonAgents.forEach(a => map.set(a.name || a.id, a));
+    activeComparison.forEach(a => map.set(a.name || a.id, a));
 
     return map;
-  }, [comparisonAgents]);
+  }, [activeComparison]);
 
   const totalSpend = useMemo(
     () => activeDataset.reduce((sum, a) => sum + (a.spend || 0), 0),
