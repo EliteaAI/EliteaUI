@@ -5,15 +5,17 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { useIsFromPipelineDetail, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useDeleteApplicationMutation } from '@/api/applications';
+import { PrivateApplicationTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import DeleteEntityButton from '@/components/DeleteEntityButton';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
+import RouteDefinitions from '@/routes';
 import { useTheme } from '@emotion/react';
 
 const useDeleteApplication = setBlockNav => {
   const isFromPipeline = useIsFromPipelineDetail();
   const projectId = useSelectedProjectId();
-  const { agentId: applicationId } = useParams();
+  const { agentId: applicationId, tab } = useParams();
   const { values: { name } = {} } = useFormikContext();
   const navigate = useNavigate();
   const [deleteApplication, { isLoading, error, isError, isSuccess, reset }] = useDeleteApplicationMutation();
@@ -21,13 +23,13 @@ const useDeleteApplication = setBlockNav => {
   const onCloseToast = useCallback(() => {
     if (isError) {
       reset();
-    } else if (isSuccess) {
+    } else if (isSuccess && !isFromPipeline) {
       setBlockNav(false);
       setTimeout(() => {
         navigate(-1);
       }, 0);
     }
-  }, [isError, isSuccess, navigate, reset, setBlockNav]);
+  }, [isError, isFromPipeline, isSuccess, navigate, reset, setBlockNav]);
 
   const toastProps = useMemo(() => ({ onCloseToast }), [onCloseToast]);
   const { toastSuccess, toastError } = useToast(toastProps);
@@ -43,8 +45,27 @@ const useDeleteApplication = setBlockNav => {
     } else if (isSuccess) {
       const entityType = !isFromPipeline ? 'agent' : 'pipeline';
       toastSuccess(`The ${name || entityType} ${entityType} has been successfully deleted.`);
+      if (isFromPipeline) {
+        // The deleted pipeline has no page to stay on; the toast close callback is not reliable for this
+        setBlockNav(false);
+        setTimeout(() => {
+          navigate(`${RouteDefinitions.Pipelines}/${tab || PrivateApplicationTabs[0]}`, { replace: true });
+        }, 0);
+      }
     }
-  }, [error, isError, isFromPipeline, isSuccess, name, reset, toastError, toastSuccess]);
+  }, [
+    error,
+    isError,
+    isFromPipeline,
+    isSuccess,
+    name,
+    navigate,
+    reset,
+    setBlockNav,
+    tab,
+    toastError,
+    toastSuccess,
+  ]);
 
   return {
     name,
