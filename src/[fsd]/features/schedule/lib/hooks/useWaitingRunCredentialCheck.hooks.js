@@ -25,7 +25,12 @@ export const useWaitingRunCredentialCheck = ({ schedule, toolkit, enabled = true
 
   const recheck = useCallback(async () => {
     const call = ++latestCall.current;
-    if (!enabled || !projectId || !application_id || !version_id) return;
+    if (!enabled) return;
+    // Without these ids no check can run: report missing so Check again works and the owner sees the status
+    if (!projectId || !application_id || !version_id) {
+      setState(CREDENTIAL_CHECK_STATE.MISSING);
+      return;
+    }
     setState(CREDENTIAL_CHECK_STATE.CHECKING);
     try {
       const result = await checkRisk({
