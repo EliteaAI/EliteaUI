@@ -23,7 +23,7 @@ const ParticipantActions = memo(props => {
   } = props;
   const styles = participantActionsStyles();
 
-  const isPublic = participant.entity_meta?.project_id == PUBLIC_PROJECT_ID;
+  const isPublic = Number(participant.entity_meta?.project_id) === PUBLIC_PROJECT_ID;
 
   return (
     <Box
