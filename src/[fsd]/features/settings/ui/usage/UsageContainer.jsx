@@ -580,6 +580,7 @@ const UsageContainer = memo(() => {
               <UsageTopAgents
                 sx={{ flex: 1 }}
                 topAgents={data.top_agents}
+                topAgentsByRuns={data.top_agents_by_runs}
                 comparisonAgents={previousData?.top_agents}
                 canSeeAmounts={resolvedCanSeeAmounts}
                 currency={data.currency}
@@ -588,6 +589,7 @@ const UsageContainer = memo(() => {
               <UsageTopSkills
                 sx={{ flex: 1 }}
                 topSkills={data.top_skills}
+                topSkillsByRuns={data.top_skills_by_runs}
                 canSeeAmounts={resolvedCanSeeAmounts}
                 currency={data.currency}
                 analyticsUrl="/settings/analytics?tab=skills&range=30"
