@@ -14,12 +14,16 @@ afterEach(() => cleanup());
 
 const theme = createTheme({ palette: lightPalette });
 
-const renderTopSkills = (topSkills = [{ id: 7, name: 'bug-triage', uses: 2, spend: 0.004 }]) =>
+const renderTopSkills = (
+  topSkills = [{ id: 7, name: 'bug-triage', uses: 2, spend: 0.004 }],
+  topSkillsByRuns = topSkills,
+) =>
   render(
     <MemoryRouter>
       <ThemeProvider theme={theme}>
         <UsageTopSkills
           topSkills={topSkills}
+          topSkillsByRuns={topSkillsByRuns}
           canSeeAmounts
           currency="USD"
         />
@@ -44,19 +48,47 @@ describe('UsageTopSkills', () => {
     expect(screen.getByText('$0.0020')).toBeInTheDocument();
   });
 
-  it.each([
-    ['Runs', ['skill-b', 'skill-c', 'skill-a']],
-    ['Per run', ['skill-c', 'skill-a', 'skill-b']],
-  ])('sorts by %s', (header, expectedOrder) => {
-    renderTopSkills([
-      { id: 1, name: 'skill-a', uses: 1, spend: 0.002 },
-      { id: 2, name: 'skill-b', uses: 10, spend: 0.003 },
-      { id: 3, name: 'skill-c', uses: 5, spend: 0.02 },
-    ]);
+  it('shows "Top Spend Skills" title by default', () => {
+    renderTopSkills();
 
-    fireEvent.click(screen.getByText(header));
-
-    const names = screen.getAllByText(/^skill-/).map(node => node.textContent);
-    expect(names).toEqual(expectedOrder);
+    expect(screen.getByText('Top Spend Skills')).toBeInTheDocument();
   });
+
+  it('switches to "Top Run Skills" title and uses the by-runs dataset when sorted by Runs', () => {
+    const topSkillsByRuns = [
+      { id: 99, name: 'high-runner', uses: 100, spend: 0.001 },
+      { id: 1, name: 'skill-a', uses: 1, spend: 0.002 },
+    ];
+    renderTopSkills(
+      [
+        { id: 1, name: 'skill-a', uses: 1, spend: 0.002 },
+        { id: 2, name: 'skill-b', uses: 10, spend: 0.003 },
+      ],
+      topSkillsByRuns,
+    );
+
+    fireEvent.click(screen.getByText('Runs'));
+
+    expect(screen.getByText('Top Run Skills')).toBeInTheDocument();
+    // high-runner appears from the by-runs dataset (not in the spend list)
+    expect(screen.getByText('high-runner')).toBeInTheDocument();
+    // skill-b was in the spend list but not in the by-runs dataset
+    expect(screen.queryByText('skill-b')).not.toBeInTheDocument();
+  });
+
+  it.each([['Per run', ['skill-c', 'skill-a', 'skill-b']]])(
+    'sorts by %s within the active dataset',
+    (header, expectedOrder) => {
+      renderTopSkills([
+        { id: 1, name: 'skill-a', uses: 1, spend: 0.002 },
+        { id: 2, name: 'skill-b', uses: 10, spend: 0.003 },
+        { id: 3, name: 'skill-c', uses: 5, spend: 0.02 },
+      ]);
+
+      fireEvent.click(screen.getByText(header));
+
+      const names = screen.getAllByText(/^skill-/).map(node => node.textContent);
+      expect(names).toEqual(expectedOrder);
+    },
+  );
 });
