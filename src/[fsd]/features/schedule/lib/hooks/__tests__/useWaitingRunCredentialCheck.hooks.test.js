@@ -115,4 +115,17 @@ describe('useWaitingRunCredentialCheck', () => {
     await waitFor(() => expect(result.current.state).toBe(CREDENTIAL_CHECK_STATE.MISSING));
     expect(mocks.check).not.toHaveBeenCalled();
   });
+
+  it('clears the toolkit name of an earlier check when an id goes missing', async () => {
+    mocks.check.mockReturnValue(answer({ blocking: [FINDING] }));
+    const { result, rerender } = renderHook(
+      ({ schedule }) => useWaitingRunCredentialCheck({ schedule, toolkit: undefined }),
+      { initialProps: { schedule: SCHEDULE } },
+    );
+    await waitFor(() => expect(result.current.toolkitName).toBe('github'));
+
+    rerender({ schedule: { ...SCHEDULE, version_id: undefined } });
+
+    await waitFor(() => expect(result.current.toolkitName).toBeUndefined());
+  });
 });

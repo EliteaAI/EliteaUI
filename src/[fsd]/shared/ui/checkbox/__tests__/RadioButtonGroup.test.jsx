@@ -43,4 +43,28 @@ describe('RadioButtonGroup', () => {
 
     expect(screen.getAllByRole('button', { name: 'More info' })).toHaveLength(1);
   });
+
+  it('names the info icon with the label of the item', () => {
+    render(
+      <ThemeProvider theme={createTheme(getDesignTokens('light'))}>
+        <RadioButtonGroup
+          testId="group"
+          items={[
+            {
+              value: 'a',
+              label: 'Option A',
+              info: 'About A',
+              infoPinnable: true,
+              infoLabel: 'More info about A',
+            },
+          ]}
+          value="a"
+          onChange={vi.fn()}
+        />
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByRole('button', { name: 'More info about A' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'More info' })).not.toBeInTheDocument();
+  });
 });

@@ -28,6 +28,7 @@ export const useWaitingRunCredentialCheck = ({ schedule, toolkit, enabled = true
     if (!enabled) return;
     // Without these ids no check can run: report missing so Check again works and the owner sees the status
     if (!projectId || !application_id || !version_id) {
+      setToolkitName(undefined);
       setState(CREDENTIAL_CHECK_STATE.MISSING);
       return;
     }
