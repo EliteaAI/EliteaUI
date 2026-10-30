@@ -27,6 +27,9 @@ const ChatContinue = memo(props => {
     message,
     authRequiredAction,
     continueLabel = 'Continue',
+    title = '⚠️ Toolkit Authorization Required',
+    authorizationText,
+    hideContinue = false,
   } = props;
   const styles = getStyles();
   const projectId = useSelectedProjectId();
@@ -139,8 +142,8 @@ const ChatContinue = memo(props => {
         <ToolkitActionPanel
           data-testid="toolkit-authorization-panel"
           data-authorization-request-id={authRequiredAction.authorizationRequestId || undefined}
-          title="⚠️ Toolkit Authorization Required"
-          message={authorizationMessage}
+          title={title}
+          message={authorizationText || authorizationMessage}
           detailRows={detailRows}
         >
           <BaseBtn
@@ -153,16 +156,18 @@ const ChatContinue = memo(props => {
           >
             Authorize
           </BaseBtn>
-          <BaseBtn
-            data-testid="toolkit-authorization-skip-button"
-            variant="neutral"
-            sx={styles.button}
-            onClick={onContinue}
-            disabled={disabled}
-            startIcon={<ArrowForwardIcon />}
-          >
-            {continueLabel}
-          </BaseBtn>
+          {!hideContinue && (
+            <BaseBtn
+              data-testid="toolkit-authorization-skip-button"
+              variant="neutral"
+              sx={styles.button}
+              onClick={onContinue}
+              disabled={disabled}
+              startIcon={<ArrowForwardIcon />}
+            >
+              {continueLabel}
+            </BaseBtn>
+          )}
         </ToolkitActionPanel>
         {showAuthModal && mcpAuthMetadata && (
           <McpAuthModal

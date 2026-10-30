@@ -37,6 +37,7 @@ vi.mock('@/[fsd]/features/mcp', () => ({
   extractMcpAuthMetadata: () => ({ authServers: ['https://auth.example'] }),
   useMcpTokenChange: () => ({ isLoggedIn: mocks.signedIn }),
   McpAuthModal: () => null,
+  McpAuthHelpers: { reuseAuthFamilyToken: () => false },
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: () => 5,
@@ -97,8 +98,10 @@ describe('ScheduleWaitingCard', () => {
       screen.getByRole('heading', { name: 'Action needed: this run is waiting for you' }),
     ).toBeInTheDocument();
     expect(screen.getAllByRole('status')[0]).toHaveTextContent(
-      'Toolkit "GitHub" has no usable credential "gh-main".',
+      'Authorization is required for toolkit "GitHub".',
     );
+    expect(screen.getByText('Step 1: Toolkit Authorization Required')).toBeInTheDocument();
+    expect(screen.getByText('gh-main')).toBeInTheDocument();
     expect(screen.getByTestId('schedule-waiting-expiry')).toHaveTextContent('Expires in 23 h 58 min');
     expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Missing');
     expect(mocks.checkArgs).toMatchObject({ toolkit: 'GitHub', enabled: true });
@@ -110,7 +113,7 @@ describe('ScheduleWaitingCard', () => {
     renderCard();
 
     expect(screen.getAllByRole('status')[0]).toHaveTextContent(
-      'Toolkit "Repo toolkit" has no usable credential "gh-main".',
+      'Authorization is required for toolkit "Repo toolkit".',
     );
   });
 
@@ -179,8 +182,11 @@ describe('ScheduleWaitingCard', () => {
     };
     renderCard();
 
-    expect(screen.getAllByRole('status')[0]).toHaveTextContent('Toolkit "Jira" needs you to sign in.');
-    expect(screen.getByTestId('schedule-run-sign-in')).toBeInTheDocument();
+    expect(screen.getByTestId('toolkit-authorization-panel')).toHaveTextContent(
+      'Authorization is required for toolkit "Jira".',
+    );
+    expect(screen.getByTestId('toolkit-authorization-authorize-button')).toBeInTheDocument();
+    expect(screen.queryByTestId('toolkit-authorization-skip-button')).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Open credentials' })).not.toBeInTheDocument();
     expect(mocks.checkArgs.enabled).toBe(false);
     expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Missing');

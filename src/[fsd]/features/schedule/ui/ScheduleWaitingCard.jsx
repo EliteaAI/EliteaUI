@@ -3,7 +3,7 @@ import { forwardRef, memo, useId, useMemo } from 'react';
 import { Box, Chip, Typography } from '@mui/material';
 
 import { buildEntityEditorLink } from '@/[fsd]/entities/schedule';
-import { ToolkitActionPanel } from '@/[fsd]/features/chat';
+import { ChatContinue, ToolkitActionPanel } from '@/[fsd]/features/chat';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -19,8 +19,8 @@ import {
   useWaitingRunCredentialCheck,
 } from '../lib/hooks/useWaitingRunCredentialCheck.hooks';
 import ScheduleRunApproval from './ScheduleRunApproval';
-import ScheduleRunSignIn from './ScheduleRunSignIn';
 
+const noop = () => {};
 const STEP2_NOTE = 'Reject ends the run as Failed: rejected by the owner.';
 const BLOCKED_REASON = 'Provide the credential first';
 const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' };
@@ -103,6 +103,26 @@ const ScheduleWaitingCard = memo(
       { ...waiting, toolkit: waiting.toolkit || toolkitName },
       pausedEvent?.text,
     );
+    const toolkitLabel = waiting.toolkit || toolkitName || 'the toolkit';
+    const authorizationText = `Authorization is required for toolkit "${toolkitLabel}". Provide the credential, then approve.`;
+    const signInText = `Authorization is required for toolkit "${toolkitLabel}". Authorize now, then approve.`;
+    const credentialRows = [
+      ['Toolkit', toolkitLabel],
+      ['Credential', waiting.credential],
+      ['Status', status.label],
+    ].filter(([, value]) => value);
+    const step1Title = (
+      <Box sx={scheduleWaitingCardStyles().stepHeader}>
+        Step 1: Toolkit Authorization Required
+        <Chip
+          data-testid="schedule-waiting-step1-status"
+          size="small"
+          variant="outlined"
+          label={status.label}
+          sx={scheduleWaitingCardStyles().chip[status.tone]}
+        />
+      </Box>
+    );
     const styles = scheduleWaitingCardStyles();
 
     return (
@@ -139,56 +159,45 @@ const ScheduleWaitingCard = memo(
               {expiry}
             </Typography>
           )}
-          {(isCredential || isSignIn) && (
+          {isSignIn && authAction && (
+            <ChatContinue
+              authRequiredAction={authAction}
+              title={step1Title}
+              authorizationText={signInText}
+              hideContinue
+              onContinue={noop}
+            />
+          )}
+          {isCredential && (
             <ToolkitActionPanel
-              title={
-                <Box sx={styles.stepHeader}>
-                  {isSignIn ? 'Step 1: Sign in' : 'Step 1: Provide the credential'}
-                  <Chip
-                    data-testid="schedule-waiting-step1-status"
-                    size="small"
-                    variant="outlined"
-                    label={status.label}
-                    sx={styles.chip[status.tone]}
-                  />
-                </Box>
-              }
-              message={description}
+              title={step1Title}
+              message={authorizationText}
+              detailRows={credentialRows}
               role="status"
             >
-              {isCredential && (
-                <>
-                  <BaseBtn
-                    component="a"
-                    href={credentialsLink}
-                    variant="neutral"
-                    {...NEW_TAB}
-                  >
-                    Open credentials
-                  </BaseBtn>
-                  <BaseBtn
-                    component="a"
-                    href={editorLink}
-                    variant="neutral"
-                    {...NEW_TAB}
-                  >
-                    {`Open ${entityLabel} editor`}
-                  </BaseBtn>
-                  <BaseBtn
-                    variant="neutral"
-                    disabled={credentialState === CREDENTIAL_CHECK_STATE.CHECKING}
-                    onClick={recheck}
-                  >
-                    Check again
-                  </BaseBtn>
-                </>
-              )}
-              {isSignIn && authAction && (
-                <ScheduleRunSignIn
-                  authAction={authAction}
-                  primary={!signedIn}
-                />
-              )}
+              <BaseBtn
+                component="a"
+                href={credentialsLink}
+                variant="neutral"
+                {...NEW_TAB}
+              >
+                Open credentials
+              </BaseBtn>
+              <BaseBtn
+                component="a"
+                href={editorLink}
+                variant="neutral"
+                {...NEW_TAB}
+              >
+                {`Open ${entityLabel} editor`}
+              </BaseBtn>
+              <BaseBtn
+                variant="neutral"
+                disabled={credentialState === CREDENTIAL_CHECK_STATE.CHECKING}
+                onClick={recheck}
+              >
+                Check again
+              </BaseBtn>
             </ToolkitActionPanel>
           )}
           <ToolkitActionPanel
@@ -231,7 +240,7 @@ const scheduleWaitingCardStyles = () => ({
     gap: '0.75rem',
     padding: '1rem 1.5rem',
     borderRadius: '1rem',
-    border: `0.0625rem solid ${palette.alert.warning.borderStrong ?? palette.border.lines}`,
+    border: `0.0625rem solid ${palette.warning.main}`,
     backgroundColor: palette.background.default.tertiary,
     scrollMarginTop: '4.5rem',
   }),
