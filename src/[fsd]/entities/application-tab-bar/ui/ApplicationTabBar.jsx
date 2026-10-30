@@ -52,7 +52,7 @@ const ApplicationTabBar = memo(props => {
   );
 
   const isPublic = useMemo(() => viewMode === ViewMode.Public, [viewMode]);
-  const canEdit = !isPublic && hasEditPermission && false;
+  const canEdit = !isPublic && hasEditPermission;
 
   useRefetchAgentDetails();
 
