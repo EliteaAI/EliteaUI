@@ -13,11 +13,10 @@ import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useLazyCheckPermissionListQuery } from '@/api/auth';
 import SkillIcon from '@/assets/skill-icon.svg?react';
+import { PERMISSIONS } from '@/common/constants';
 import ProjectSelect from '@/components/ProjectSelect';
 
 const { ProjectSelectShowMode } = ProjectSelectConstants;
-
-const SKILL_CREATE_PERMISSION = 'models.applications.skills.create';
 
 const SkillImportModal = memo(props => {
   const { open, skill, isImporting, onClose, onConfirm } = props;
@@ -43,22 +42,28 @@ const SkillImportModal = memo(props => {
   );
 
   const targetProjectId = targetProject?.id;
-  const isCurrentProject = targetProjectId && String(targetProjectId) === String(projectId);
 
-  // Current project: read from already-loaded user.permissions — no API call, no cache side-effects.
   useEffect(() => {
-    if (!isCurrentProject) return;
-    setCanImport(Array.isArray(user.permissions) && user.permissions.includes(SKILL_CREATE_PERMISSION));
-  }, [isCurrentProject, user.permissions]);
+    const checkPermission = permissions =>
+      Array.isArray(permissions) && permissions.includes(PERMISSIONS.skills.create);
 
-  // Other project: fetch independently; does not touch the current project's cached permissions.
-  useEffect(() => {
-    if (!targetProjectId || isCurrentProject) return;
     setCanImport(false);
+
+    if (!targetProjectId) return;
+
+    if (String(targetProjectId) === String(projectId)) {
+      setCanImport(checkPermission(user.permissions));
+      return;
+    }
+
+    let ignore = false;
     getUserPermissions(targetProjectId).then(result => {
-      setCanImport(Array.isArray(result.data) && result.data.includes(SKILL_CREATE_PERMISSION));
+      if (!ignore) setCanImport(checkPermission(result.data));
     });
-  }, [getUserPermissions, isCurrentProject, targetProjectId]);
+    return () => {
+      ignore = true;
+    };
+  }, [getUserPermissions, projectId, targetProjectId, user.permissions]);
 
   if (!skill) return null;
 
