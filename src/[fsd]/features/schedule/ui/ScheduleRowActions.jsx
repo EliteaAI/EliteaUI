@@ -10,6 +10,7 @@ import ExportIcon from '@/components/Icons/ExportIcon';
 import PersonIcon from '@/components/Icons/Person';
 import PlayIcon from '@/components/Icons/PlayIcon';
 
+import { ownerOnlyRunHint } from '../lib/helpers';
 import ChangeOwnerDialog from './ChangeOwnerDialog';
 
 // Owner CR : every item shows a small icon; the item sets the colour through currentColor
@@ -34,6 +35,7 @@ const ScheduleRowActions = memo(props => {
     hideChangeOwner,
   } = props;
   const allowed = row.allowed_actions;
+  const runHint = ownerOnlyRunHint(row);
   const [isOwnerDialogOpen, setIsOwnerDialogOpen] = useState(false);
   const openOwnerDialog = useCallback(() => setIsOwnerDialogOpen(true), []);
   const closeOwnerDialog = useCallback(() => setIsOwnerDialogOpen(false), []);
@@ -43,7 +45,7 @@ const ScheduleRowActions = memo(props => {
   const items = useMemo(
     () =>
       [
-        allowed?.includes('run') && {
+        (allowed?.includes('run') || runHint) && {
           key: 'run',
           label: 'Run now',
           icon: (
@@ -52,7 +54,10 @@ const ScheduleRowActions = memo(props => {
               sx={ICON_SX}
             />
           ),
-          onClick: onRun,
+          // #7254: shown to an admin, disabled, with who can run it; no handler then
+          disabled: !!runHint,
+          tooltip: runHint,
+          onClick: runHint ? undefined : onRun,
         },
         allowed?.includes('edit') && {
           key: 'edit',
@@ -120,6 +125,7 @@ const ScheduleRowActions = memo(props => {
       ].filter(Boolean),
     [
       allowed,
+      runHint,
       row.enabled,
       row.name,
       onRun,

@@ -303,4 +303,31 @@ describe('ScheduleRunsPanel test panel log', () => {
     ).toBeInTheDocument();
     expect(screen.queryByText('Open conversation')).not.toBeInTheDocument();
   });
+
+  it('#7254: an admin sees Run test disabled with the owner hint, and no info box', () => {
+    const { onTestRun } = renderPanel({
+      schedule: {
+        ...schedule,
+        allowed_actions: ['edit', 'pause', 'delete', 'change_owner'],
+        owner: { id: 1, name: 'Ann Lee' },
+      },
+      runs: [],
+    });
+
+    expect(runTest()).toBeDisabled();
+    expect(runTest()).toHaveAccessibleDescription('Only the schedule owner, Ann Lee, can run it.');
+    expect(screen.getByTestId('schedule-test-run-hint')).toHaveTextContent(
+      'Only the schedule owner, Ann Lee, can run it.',
+    );
+    expect(screen.queryByText(INFO)).not.toBeInTheDocument();
+    fireEvent.click(runTest());
+    expect(onTestRun).not.toHaveBeenCalled();
+  });
+
+  it('#7254: the owner without a version sees no Run test, as before', () => {
+    renderPanel({ schedule: { ...schedule, version_id: null, allowed_actions: ['edit', 'change_owner'] } });
+
+    expect(runTest()).not.toBeInTheDocument();
+    expect(screen.queryByTestId('schedule-test-run-hint')).not.toBeInTheDocument();
+  });
 });
