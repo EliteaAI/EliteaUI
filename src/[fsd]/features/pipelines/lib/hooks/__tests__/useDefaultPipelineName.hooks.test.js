@@ -61,4 +61,15 @@ describe('useDefaultPipelineName', () => {
 
     expect(result.current.defaultName).toBe('Pipeline 1');
   });
+
+  it('keeps the first resolved name when the total is refetched after saving', () => {
+    useTotalApplicationsQuery.mockReturnValue({ data: { total: 2 }, isFetching: false, isError: false });
+
+    const { result, rerender } = renderHook(() => useDefaultPipelineName());
+
+    useTotalApplicationsQuery.mockReturnValue({ data: { total: 3 }, isFetching: false, isError: false });
+    rerender();
+
+    expect(result.current).toEqual({ defaultName: 'Pipeline 3', isLoading: false });
+  });
 });
