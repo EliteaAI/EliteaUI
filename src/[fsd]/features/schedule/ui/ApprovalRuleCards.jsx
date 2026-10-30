@@ -2,7 +2,9 @@ import { memo, useId } from 'react';
 
 import { Box, Chip, Radio, RadioGroup, Typography, alpha } from '@mui/material';
 
-import { APPROVAL_RULE } from '../lib/constants';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
+
+import { APPROVAL_RULE, APPROVAL_RULE_INFO } from '../lib/constants';
 
 const CARDS = [
   {
@@ -56,6 +58,10 @@ const ApprovalRuleCards = memo(props => {
                 sx={styles.titleRow}
               >
                 <Typography variant="labelMedium">{card.title}</Typography>
+                <InfoTooltip
+                  infoTooltip={APPROVAL_RULE_INFO[card.value]}
+                  pinnable
+                />
                 {card.value === APPROVAL_RULE.PAUSE_AND_ASK && (
                   <Chip
                     size="small"

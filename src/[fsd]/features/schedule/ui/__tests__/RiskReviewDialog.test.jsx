@@ -6,8 +6,9 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import getDesignTokens from '@/MainTheme';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
+import { APPROVAL_RULE_INFO } from '../../lib/constants';
 import RiskReviewDialog from '../RiskReviewDialog';
 
 // The toolkit icon reads the store; the dialog test needs only its place
@@ -167,6 +168,19 @@ describe('RiskReviewDialog', () => {
     fireEvent.click(confirmButton());
 
     expect(onConfirm).toHaveBeenCalledWith({ rule: 'pause_and_ask' });
+  });
+
+  it.each([
+    ['pause_and_ask', 0],
+    ['run_without_asking', 1],
+  ])('shows the same info text for %s as the schedule page', async (value, index) => {
+    setup();
+
+    const icons = screen.getAllByRole('button', { name: 'More info' });
+    expect(icons).toHaveLength(2);
+    act(() => icons[index].focus());
+
+    expect(await screen.findByText(APPROVAL_RULE_INFO[value])).toBeInTheDocument();
   });
 
   it('Run without asking shows the warning and keeps Confirm disabled until the name matches', () => {

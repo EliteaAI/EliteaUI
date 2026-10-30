@@ -1,10 +1,17 @@
 // @vitest-environment jsdom
+import { Fragment } from 'react';
+
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { ThemeProvider, createTheme } from '@mui/material';
 
+import getDesignTokens from '@/MainTheme';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
+import '@testing-library/jest-dom/vitest';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+
+import { APPROVAL_RULE_INFO } from '../../lib/constants';
 import ScheduleApprovalSection from '../ScheduleApprovalSection';
 
 let allowRunWithoutAsking = true;
@@ -17,16 +24,24 @@ vi.mock('@/[fsd]/shared/ui/checkbox/RadioButtonGroup', () => ({
   default: ({ items, value, onChange, testId }) => (
     <div data-testid={testId}>
       {items.map(item => (
-        <button
-          key={item.value}
-          type="button"
-          data-testid={`${testId}-${item.value}`}
-          aria-pressed={item.value === value}
-          disabled={item.disabled}
-          onClick={() => onChange(item.value)}
-        >
-          {item.label}
-        </button>
+        <Fragment key={item.value}>
+          <button
+            type="button"
+            data-testid={`${testId}-${item.value}`}
+            aria-pressed={item.value === value}
+            disabled={item.disabled}
+            onClick={() => onChange(item.value)}
+          >
+            {item.label}
+          </button>
+          {item.info && (
+            <InfoTooltip
+              infoTooltip={item.info}
+              pinnable={item.infoPinnable}
+              testId={`${testId}-${item.value}-info`}
+            />
+          )}
+        </Fragment>
       ))}
     </div>
   ),
@@ -34,16 +49,18 @@ vi.mock('@/[fsd]/shared/ui/checkbox/RadioButtonGroup', () => ({
 
 const renderSection = (props = {}) =>
   render(
-    <MemoryRouter>
-      <ScheduleApprovalSection
-        rule="pause_and_ask"
-        ruleChanged={false}
-        canChangeProjectSettings={false}
-        error=""
-        onChange={vi.fn()}
-        {...props}
-      />
-    </MemoryRouter>,
+    <ThemeProvider theme={createTheme(getDesignTokens('light'))}>
+      <MemoryRouter>
+        <ScheduleApprovalSection
+          rule="pause_and_ask"
+          ruleChanged={false}
+          canChangeProjectSettings={false}
+          error=""
+          onChange={vi.fn()}
+          {...props}
+        />
+      </MemoryRouter>
+    </ThemeProvider>,
   );
 
 describe('ScheduleApprovalSection', () => {
@@ -74,6 +91,29 @@ describe('ScheduleApprovalSection', () => {
       'aria-describedby',
       'schedule-approval-rule-hint',
     );
+  });
+
+  it.each([
+    ['pause_and_ask', APPROVAL_RULE_INFO.pause_and_ask],
+    ['run_without_asking', APPROVAL_RULE_INFO.run_without_asking],
+  ])('opens the info text of %s when its icon gets keyboard focus', async (value, text) => {
+    renderSection();
+
+    const icon = screen.getByTestId(`schedule-approval-rule-${value}-info`);
+    expect(icon).toHaveAttribute('tabindex', '0');
+    expect(screen.queryByText(text)).not.toBeInTheDocument();
+
+    act(() => icon.focus());
+
+    expect(await screen.findByText(text)).toBeInTheDocument();
+  });
+
+  it('opens the info text on hover', async () => {
+    renderSection();
+
+    fireEvent.mouseEnter(screen.getByTestId('schedule-approval-rule-run_without_asking-info'));
+
+    expect(await screen.findByText(APPROVAL_RULE_INFO.run_without_asking)).toBeInTheDocument();
   });
 
   it('shows who confirmed the rule and the field error', () => {
