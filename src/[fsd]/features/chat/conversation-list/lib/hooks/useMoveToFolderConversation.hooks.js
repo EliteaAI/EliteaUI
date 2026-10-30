@@ -1,10 +1,15 @@
 import { useCallback, useEffect } from 'react';
 
+import { useDispatch } from 'react-redux';
+
 import { sortConversations } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useConversationEditMutation, useFolderCreateMutation } from '@/api';
+import { eliteaApi } from '@/api/eliteaApi';
 import { DefaultFolderName, dummyConversation } from '@/common/constants.js';
 import { buildErrorMessage } from '@/common/utils';
+
+const TAG_TYPE_FOLDERS = 'TAG_TYPE_FOLDERS';
 
 export const useMoveToFolderConversation = props => {
   const {
@@ -18,6 +23,7 @@ export const useMoveToFolderConversation = props => {
     folders = [],
   } = props;
 
+  const dispatch = useDispatch();
   const projectId = useSelectedProjectId();
   const [editConversation, { isError: isEditError, error: editError }] = useConversationEditMutation();
   const [createFolder, { isError: isCreateError, error: createError }] = useFolderCreateMutation();
@@ -181,6 +187,7 @@ export const useMoveToFolderConversation = props => {
 
       if (!result.error) {
         moveConversationToFolder(conversation, targetFolder);
+        dispatch(eliteaApi.util.invalidateTags([TAG_TYPE_FOLDERS]));
 
         // Show success notification
         if (toastSuccess) {
@@ -201,6 +208,7 @@ export const useMoveToFolderConversation = props => {
       editConversation,
       projectId,
       moveConversationToFolder,
+      dispatch,
       toastSuccess,
     ],
   );
