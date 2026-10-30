@@ -11,7 +11,14 @@ import { buildErrorMessage } from '@/common/utils';
 // Owner-only approve or reject of a waiting schedule run. Returns undefined for any other
 // user, so the run detail shows the buttons disabled. The server still checks the owner.
 // A run without a chat (`conversationUuid` empty) is decided through the schedule route with `runId`.
-// `authRequest` (from the sign-in pause) switches the call to the mcp_auth resume, with the tokens read now.
+// `authRequest` (from the sign-in pause) switches the call to the mcp_auth resume, with the token of the
+// paused server read now. Other stored tokens stay in the browser.
+const getPausedServerTokens = serverUrl => {
+  const key = McpAuthHelpers.getStorageKey({ serverUrl });
+  const token = key ? McpAuthHelpers.getAllTokens()[key] : undefined;
+  return token ? { [key]: token } : {};
+};
+
 export const useWaitingRunDecision = ({ schedule, onDecided }) => {
   const projectId = useSelectedProjectId();
   const userId = useSelector(state => state.user.id);
@@ -32,7 +39,7 @@ export const useWaitingRunDecision = ({ schedule, onDecided }) => {
           authorizationRequestId: authRequest.authorizationRequestId,
           toolCallId: authRequest.toolCallId,
           childThreadId: authRequest.childThreadId,
-          mcpTokens: McpAuthHelpers.getAllTokens(),
+          mcpTokens: getPausedServerTokens(authRequest.serverUrl),
         };
         await decideWaitingRun({
           projectId,
@@ -43,7 +50,7 @@ export const useWaitingRunDecision = ({ schedule, onDecided }) => {
         }).unwrap();
         onDecided?.();
       } catch (error) {
-        if (error?.status === 400 || error?.status === 409) {
+        if (error?.status === 409) {
           toastInfo('The run no longer waits for approval.');
           onDecided?.();
         } else {

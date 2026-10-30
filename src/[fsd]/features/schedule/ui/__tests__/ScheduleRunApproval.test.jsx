@@ -153,7 +153,17 @@ describe('ScheduleRunApproval', () => {
       expect(screen.getByTestId('schedule-run-sign-in')).toBeEnabled();
       expect(button('Approve')).toBeDisabled();
       expect(button('Reject')).toBeEnabled();
-      expect(screen.getByText(/Sign in to GitHub, then approve/)).toBeInTheDocument();
+      const note = screen.getByText(/Sign in to GitHub, then approve/);
+      expect(note).toBeInTheDocument();
+      expect(note.closest('[role="status"]')).not.toBeNull();
+      expect(button('Approve')).toHaveAttribute('aria-describedby', note.id);
+    });
+
+    it('sets no description on Approve once the owner has signed in', () => {
+      mocks.signedIn = true;
+      renderApproval({ authAction });
+
+      expect(button('Approve')).not.toHaveAttribute('aria-describedby');
     });
 
     it('opens the sign-in window and thanks the owner after a successful sign-in', () => {
@@ -189,7 +199,12 @@ describe('ScheduleRunApproval', () => {
           action: 'approve',
           conversationUuid: 'conv-uuid',
           messageId: 'msg-7',
-          authRequest: { authorizationRequestId: 'auth-1', toolCallId: 'call-1', childThreadId: undefined },
+          authRequest: {
+            authorizationRequestId: 'auth-1',
+            toolCallId: 'call-1',
+            childThreadId: undefined,
+            serverUrl: 'https://mcp.example',
+          },
         }),
       );
     });

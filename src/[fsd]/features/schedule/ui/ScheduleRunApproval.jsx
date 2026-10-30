@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useId, useMemo, useState } from 'react';
 
 import { useDispatch } from 'react-redux';
 
@@ -25,6 +25,7 @@ const ScheduleRunApproval = memo(props => {
   const { schedule, runId, hasChat = true, conversationUuid, pausedMessageId, pausedAt, authAction } = props;
 
   const dispatch = useDispatch();
+  const signInNoteId = useId();
   const [deciding, setDeciding] = useState(false);
   const authContext = useMemo(
     () => (authAction ? getToolkitAuthorizationContext(authAction) : null),
@@ -60,6 +61,7 @@ const ScheduleRunApproval = memo(props => {
               authorizationRequestId: authAction.authorizationRequestId,
               toolCallId: authAction.toolMeta?.tool_call_id,
               childThreadId: authAction.toolMeta?.child_thread_id,
+              serverUrl,
             },
           }),
         });
@@ -67,7 +69,7 @@ const ScheduleRunApproval = memo(props => {
         setDeciding(false);
       }
     },
-    [onHitlResume, conversationUuid, runId, pausedMessageId, authAction],
+    [onHitlResume, conversationUuid, runId, pausedMessageId, authAction, serverUrl],
   );
 
   // A run with a chat waits until its chat has loaded; a run without one (it waits for credentials) is ready
@@ -91,6 +93,7 @@ const ScheduleRunApproval = memo(props => {
         variant="elitea"
         color={needsSignIn ? 'secondary' : 'primary'}
         disabled={disabled || needsSignIn}
+        aria-describedby={disabled || !needsSignIn ? undefined : signInNoteId}
         onClick={() => decide('approve')}
       >
         Approve
@@ -110,13 +113,18 @@ const ScheduleRunApproval = memo(props => {
         {formatExpiresIn(pausedAt, now)}
       </Typography>
       {needsSignIn && onHitlResume && (
-        <Typography
-          variant="bodySmall"
-          color="text.secondary"
+        <Box
+          role="status"
           sx={styles.note}
         >
-          {`Sign in to ${authContext?.toolkitName || 'the toolkit'}, then approve. The run continues after you approve.`}
-        </Typography>
+          <Typography
+            id={signInNoteId}
+            variant="bodySmall"
+            color="text.secondary"
+          >
+            {`Sign in to ${authContext?.toolkitName || 'the toolkit'}, then approve. The run continues after you approve.`}
+          </Typography>
+        </Box>
       )}
       {!onHitlResume && (
         <Typography

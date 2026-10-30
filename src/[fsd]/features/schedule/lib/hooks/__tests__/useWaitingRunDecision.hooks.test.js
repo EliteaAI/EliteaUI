@@ -15,12 +15,18 @@ const mocks = vi.hoisted(() => ({
   toastInfo: vi.fn(),
   toastSuccess: vi.fn(),
   refetch: vi.fn(),
-  tokens: { 'https://mcp.example': { access_token: 'fresh' } },
+  tokens: {
+    'https://mcp.example': { access_token: 'fresh' },
+    'https://other.example': { access_token: 'other', refresh_token: 'secret' },
+  },
 }));
 
 vi.mock('react-redux', () => ({ useSelector: select => select({ user: mocks.user }) }));
 vi.mock('@/[fsd]/features/mcp', () => ({
-  McpAuthHelpers: { getAllTokens: () => mocks.tokens },
+  McpAuthHelpers: {
+    getAllTokens: () => mocks.tokens,
+    getStorageKey: ({ serverUrl }) => serverUrl || null,
+  },
 }));
 vi.mock('@/[fsd]/entities/run-history/api', () => ({
   RunHistoryApi: { useDecideWaitingRunMutation: () => [mocks.decide] },
@@ -67,12 +73,21 @@ describe('useWaitingRunDecision', () => {
     expect(mocks.toastError).not.toHaveBeenCalled();
   });
 
-  it.each([400, 409])('shows an info toast and refetches on %s', async status => {
-    mocks.decide.mockReturnValue(fail({ status }));
+  it('shows an info toast and refetches on a 409', async () => {
+    mocks.decide.mockReturnValue(fail({ status: 409 }));
     const result = setup();
     await act(() => result.current(request));
     expect(mocks.toastInfo).toHaveBeenCalledWith('The run no longer waits for approval.');
     expect(mocks.refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows an error toast and keeps the panel open on a 400', async () => {
+    mocks.decide.mockReturnValue(fail({ status: 400, data: { message: 'bad request' } }));
+    const result = setup();
+    await act(() => result.current(request));
+    expect(mocks.toastError).toHaveBeenCalledTimes(1);
+    expect(mocks.toastInfo).not.toHaveBeenCalled();
+    expect(mocks.refetch).not.toHaveBeenCalled();
   });
 
   it('shows an error toast and does not refetch on a 500', async () => {
@@ -98,7 +113,12 @@ describe('useWaitingRunDecision', () => {
     await act(() =>
       result.current({
         ...request,
-        authRequest: { authorizationRequestId: 'auth-1', toolCallId: 'call-1', childThreadId: 'child-1' },
+        authRequest: {
+          authorizationRequestId: 'auth-1',
+          toolCallId: 'call-1',
+          childThreadId: 'child-1',
+          serverUrl: 'https://mcp.example',
+        },
       }),
     );
     expect(mocks.decide).toHaveBeenCalledWith({
@@ -110,10 +130,22 @@ describe('useWaitingRunDecision', () => {
         authorizationRequestId: 'auth-1',
         toolCallId: 'call-1',
         childThreadId: 'child-1',
-        mcpTokens: mocks.tokens,
+        mcpTokens: { 'https://mcp.example': mocks.tokens['https://mcp.example'] },
       },
     });
     expect(mocks.refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends no tokens when none is stored for the paused server', async () => {
+    mocks.decide.mockReturnValue(ok());
+    const result = setup();
+    await act(() =>
+      result.current({
+        ...request,
+        authRequest: { authorizationRequestId: 'auth-1', serverUrl: 'https://missing.example' },
+      }),
+    );
+    expect(mocks.decide.mock.calls[0][0].mcpAuth.mcpTokens).toEqual({});
   });
 
   it('sends no sign-in fields for a sensitive-tool decision', async () => {

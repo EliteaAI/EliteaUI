@@ -34,12 +34,12 @@ const ScheduleRunSignIn = memo(props => {
         data-testid="schedule-run-sign-in"
         variant="elitea"
         color={primary ? 'primary' : 'secondary'}
-        disabled={disabled}
+        disabled={disabled || !mcpAuthMetadata}
         onClick={handleOpen}
       >
         Sign in
       </BaseBtn>
-      {open && (
+      {open && mcpAuthMetadata && (
         <McpAuthModal
           open={open}
           serverUrl={authAction.toolMeta?.server_url}

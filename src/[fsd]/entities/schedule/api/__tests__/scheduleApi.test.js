@@ -741,3 +741,66 @@ describe('mutations invalidate only the schedule they change', () => {
     expect(paths.some(path => path.endsWith('/8') || path.endsWith('/8/runs'))).toBe(false);
   });
 });
+
+describe('decideRunWithoutChat', () => {
+  let fetchSpy;
+  let handler;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    handler = async () => jsonResponse({ id: 7, rows: [] });
+    fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(args => handler(args));
+  });
+
+  it('posts the action to the decision endpoint of the run', async () => {
+    await makeStore().dispatch(
+      scheduleApi.endpoints.decideRunWithoutChat.initiate({
+        projectId: 5,
+        scheduleId: 7,
+        runId: 41,
+        action: 'approve',
+      }),
+    );
+
+    const request = await lastRequestOf(fetchSpy);
+    expect(request.method).toBe('POST');
+    expect(request.url.pathname).toBe('/elitea_core/schedules/prompt_lib/5/7/runs/41/decision');
+    expect(request.body).toEqual({ action: 'approve' });
+  });
+
+  it('refetches the schedule runs after success', async () => {
+    const store = makeStore();
+    await store.dispatch(scheduleApi.endpoints.getScheduleRuns.initiate({ projectId: 5, scheduleId: 7 }));
+    const callsBefore = fetchSpy.mock.calls.length;
+
+    await store.dispatch(
+      scheduleApi.endpoints.decideRunWithoutChat.initiate({
+        projectId: 5,
+        scheduleId: 7,
+        runId: 41,
+        action: 'reject',
+      }),
+    );
+
+    await vi.waitFor(() => expect(fetchSpy.mock.calls.length).toBeGreaterThan(callsBefore + 1));
+  });
+
+  it('keeps the caches when the decision fails', async () => {
+    const store = makeStore();
+    await store.dispatch(scheduleApi.endpoints.getScheduleRuns.initiate({ projectId: 5, scheduleId: 7 }));
+    const callsBefore = fetchSpy.mock.calls.length;
+    handler = async () => jsonResponse({ error: 'gone' }, 409);
+
+    const result = await store.dispatch(
+      scheduleApi.endpoints.decideRunWithoutChat.initiate({
+        projectId: 5,
+        scheduleId: 7,
+        runId: 41,
+        action: 'approve',
+      }),
+    );
+
+    expect(result.error.status).toBe(409);
+    expect(fetchSpy.mock.calls).toHaveLength(callsBefore + 1);
+  });
+});
