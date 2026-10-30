@@ -322,13 +322,20 @@ const CreateSkillForm = memo(props => {
                     <Box sx={styles.charCounterWrapper}>
                       {instructionsErrorNode}
                       {frontmatterErrors.length > 0 && (
-                        <Typography
-                          variant="bodySmall"
-                          sx={styles.instructionsError}
+                        <Box
+                          sx={styles.frontmatterErrors}
                           data-testid="skill-frontmatter-error"
                         >
-                          {frontmatterErrors.join(' ')}
-                        </Typography>
+                          {frontmatterErrors.map(error => (
+                            <Typography
+                              key={error}
+                              variant="bodySmall"
+                              sx={styles.instructionsError}
+                            >
+                              {error}
+                            </Typography>
+                          ))}
+                        </Box>
                       )}
                       <Typography
                         variant="bodySmall"
@@ -452,6 +459,10 @@ const skillCreateFormStyles = () => ({
     color: palette.text.primary,
     marginLeft: 'auto',
   }),
+  frontmatterErrors: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
   instructionsError: ({ palette }) => ({
     color: palette.error.main,
   }),

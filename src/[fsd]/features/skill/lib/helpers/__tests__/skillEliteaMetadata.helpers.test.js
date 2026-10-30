@@ -270,6 +270,19 @@ describe('applyEliteaMetadataEdits', () => {
     expect(result.runSettings.llm_settings).toMatchObject({ temperature: null, reasoning_effort: 'medium' });
   });
 
+  it('keeps a model change and drops only the conflicting temperature pasted with it', () => {
+    const result = edit({ ...UNCHANGED, 'elitea-model': 'o3', 'elitea-temperature': '0.4' });
+
+    expect(result.errors).toEqual([
+      '"metadata.elitea-temperature" cannot be combined with an active "metadata.elitea-reasoning-effort"',
+    ]);
+    expect(result.runSettings.llm_settings).toMatchObject({
+      model_name: 'o3',
+      temperature: null,
+      reasoning_effort: 'medium',
+    });
+  });
+
   it('accepts a temperature when the reasoning effort is none', () => {
     const runSettings = { llm_settings: { model_name: 'o3', model_project_id: 2, reasoning_effort: 'none' } };
 

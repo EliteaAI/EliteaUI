@@ -127,7 +127,7 @@ const parseNumber = (value, key, isValid, expectation) => {
 
 const findModelByName = (models, name, preferredProjectId) =>
   models.find(model => model.name === name && model.project_id === preferredProjectId) ||
-  models.find(model => model.name === name && !isAutoSelection(model));
+  models.find(model => model.name === name);
 
 export const applyEliteaMetadataEdits = ({ textMetadata, formMetadata, tags, runSettings, models }) => {
   const isChanged = key => formatTypedValue(textMetadata[key]) !== formMetadata[key];
@@ -214,6 +214,7 @@ export const applyEliteaMetadataEdits = ({ textMetadata, formMetadata, tags, run
     }
   }
 
+  const selectedModelSettings = llmSettingsUpdate;
   const numericFields = [
     [ELITEA_METADATA_KEYS.temperature, 'temperature', Number.isFinite, 'a number', null],
     [
@@ -265,8 +266,8 @@ export const applyEliteaMetadataEdits = ({ textMetadata, formMetadata, tags, run
     );
     llmSettingsUpdate = {
       ...llmSettingsUpdate,
-      temperature: llmSettings.temperature ?? null,
-      reasoning_effort: llmSettings.reasoning_effort ?? null,
+      temperature: selectedModelSettings.temperature ?? null,
+      reasoning_effort: selectedModelSettings.reasoning_effort ?? null,
     };
   }
 
