@@ -13,7 +13,7 @@ const { parseRunEvent } = await import('../parseRunsByEvent.helpers');
 
 // A failed pipeline run showed only a bare "Error" label: the error text was captured
 // here but never surfaced. These pin what the run carries so the dialog has something
-// to render, including the budget scope that selects the friendly message.
+// to render, including the budget scope that selects the friendly message
 const buildStatus = () => ({
   current: {
     data: {
