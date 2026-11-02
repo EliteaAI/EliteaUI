@@ -12,6 +12,8 @@ import { notifyTaskComplete } from '@/[fsd]/shared/lib/utils';
 import { SocketMessageType } from '@/common/constants';
 import { convertJsonToString } from '@/common/utils';
 
+const SANDBOX_TOOL_NAMES = new Set(['pyodide_sandbox', 'pyodide']);
+
 export const getInitialState = state =>
   Object.keys(state ?? {}).reduce((prev, key) => {
     const value =
@@ -131,18 +133,18 @@ export const parseRunEvent = (
           event.response_metadata.toolkit_name ||
           (toolNameRaw.includes('___') ? toolNameRaw.split('___')[0] : toolNameRaw);
         if (tool_name) {
+          // Code nodes run as the sandbox tool; label the step with the node name instead
+          const real_tool_name = SANDBOX_TOOL_NAMES.has(tool_name)
+            ? event.response_metadata.metadata?.langgraph_node || tool_name
+            : tool_name;
           runPipelineStatus.current.data.timeline.push({
-            id: tool_name,
+            id: real_tool_name,
             langgraph_node: event.response_metadata.metadata?.langgraph_node,
             status: PipelineStatus.InProgress,
             state: {},
             created_at: new Date().getTime(),
             tool_run_id: event.response_metadata.tool_run_id,
           });
-          const real_tool_name =
-            tool_name === 'pyodide_sandbox' || tool_name === 'pyodide'
-              ? event.response_metadata?.metadata?.langgraph_node
-              : tool_name;
           activeNodeIdRef.current = findNode(nodes, real_tool_name)?.id;
         }
       }

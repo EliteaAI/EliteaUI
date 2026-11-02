@@ -299,3 +299,41 @@ describe('agent node in a pipeline run timeline', () => {
     expect(data.timeline[1].status).toBe(FlowEditorConstants.PipelineStatus.Error);
   });
 });
+
+describe('code node in a pipeline run timeline', () => {
+  const CODE_NODE = 'MyCode';
+  const codeNodes = [pipelineNode('First', 'llm', CODE_NODE), pipelineNode(CODE_NODE, 'code', 'END')];
+  const codeToolEvent = (type, toolkitName) => ({
+    type,
+    response_metadata: {
+      tool_name: toolkitName,
+      tool_run_id: 'code-call',
+      metadata: { langgraph_node: CODE_NODE, toolkit_name: toolkitName },
+    },
+  });
+
+  it.each(['pyodide_sandbox', 'pyodide'])('labels the %s step with the code node name', toolkitName => {
+    const data = runPipeline(codeNodes, [
+      ...firstNodeEvents(CODE_NODE),
+      codeToolEvent(SocketMessageType.AgentToolStart, toolkitName),
+      codeToolEvent(SocketMessageType.AgentToolEnd, toolkitName),
+      edge({ langgraph_node: CODE_NODE }, 'END', pipelineState('CODE_DONE'), 'code-edge'),
+    ]);
+
+    expect(timelineIds(data)).toEqual(['First', CODE_NODE]);
+    expect(data.timeline[1].status).toBe(FlowEditorConstants.PipelineStatus.Completed);
+    expect(data.timeline[1].state.agent_out).toBe('CODE_DONE');
+  });
+
+  it('marks the code node step as failed when the sandbox errors', () => {
+    const data = runPipeline(codeNodes, [
+      ...firstNodeEvents(CODE_NODE),
+      codeToolEvent(SocketMessageType.AgentToolStart, 'pyodide_sandbox'),
+      { ...codeToolEvent(SocketMessageType.AgentToolError, 'pyodide_sandbox'), content: 'boom' },
+    ]);
+
+    expect(timelineIds(data)).toEqual(['First', CODE_NODE]);
+    expect(data.timeline[1].status).toBe(FlowEditorConstants.PipelineStatus.Error);
+    expect(data.timeline[1].error).toBe('boom');
+  });
+});
