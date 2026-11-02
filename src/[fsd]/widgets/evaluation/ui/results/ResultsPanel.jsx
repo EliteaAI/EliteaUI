@@ -6,7 +6,6 @@ import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ClockIcon from '@/assets/clock_icon.svg?react';
 import DownloadIcon from '@/assets/download.svg?react';
-import DeleteIcon from '@/components/Icons/DeleteIcon';
 
 import { isRunTerminal, resolveRunVersionName } from '../../lib/helpers';
 import EnhanceWithAiButton from '../enhance/EnhanceWithAiButton';
@@ -26,7 +25,6 @@ const ResultsPanel = memo(props => {
     handleVersionChange: onVersionChange,
     handleCancelRun: onCancelRun,
     handleOpenHistory: onOpenHistory,
-    handleClearResults: onClearResults,
     handleExportResults: onExportResults,
     isExporting = false,
   } = runActions;
@@ -110,20 +108,6 @@ const ResultsPanel = memo(props => {
                         />
                       )
                     }
-                  />
-                </Box>
-              </Tooltip>
-              <Tooltip
-                title="Clear the results"
-                placement="top"
-              >
-                <Box component="span">
-                  <Button.BaseBtn
-                    variant={BUTTON_VARIANTS.tertiary}
-                    size="small"
-                    onClick={onClearResults}
-                    sx={styles.actionButton}
-                    startIcon={<DeleteIcon sx={styles.actionIcon} />}
                   />
                 </Box>
               </Tooltip>
