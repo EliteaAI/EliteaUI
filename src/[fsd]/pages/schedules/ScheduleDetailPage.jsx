@@ -1,22 +1,20 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Box, CircularProgress } from '@mui/material';
 
 import {
-  buildScheduleHistoryLink,
+  useCancelDraftTestRunMutation,
   useGetScheduleQuery,
   useRunScheduleMutation,
+  useStartDraftTestRunMutation,
   useUpdateScheduleMutation,
 } from '@/[fsd]/entities/schedule';
 import {
   ScheduleForm,
-  ScheduleRunsPanel,
-  ScheduleRunsSection,
-  ScheduleWaitingCard,
+  ScheduleRunsCard,
   buildEditValues,
-  findWaitingRun,
   useEntityScheduleRoute,
   useScheduleRunsView,
 } from '@/[fsd]/features/schedule';
@@ -44,6 +42,8 @@ const ScheduleDetailPage = memo(props => {
   } = useGetScheduleQuery({ projectId, scheduleId }, { skip: !projectId });
   const [updateSchedule] = useUpdateScheduleMutation();
   const [runSchedule] = useRunScheduleMutation();
+  const [startDraftTestRun] = useStartDraftTestRunMutation();
+  const [cancelDraftTestRun] = useCancelDraftTestRunMutation();
   const entityRoute = useEntityScheduleRoute(entityType);
   const runsView = useScheduleRunsView(schedule?.id, schedule?.application_id);
 
@@ -65,95 +65,32 @@ const ScheduleDetailPage = memo(props => {
     [updateSchedule, projectId, scheduleId],
   );
   const onSaved = useCallback(() => navigate(returnTo), [navigate, returnTo]);
-  const onTestRun = useCallback(
-    () => runSchedule({ projectId, scheduleId, trigger: 'test' }).unwrap(),
+  // Leaving without saving drops the hidden Test draft; the server also removes idle drafts
+  const onCancel = useCallback(() => {
+    if (schedule?.application_id != null)
+      cancelDraftTestRun({ projectId, applicationId: schedule.application_id });
+    navigate(returnTo);
+  }, [cancelDraftTestRun, projectId, schedule?.application_id, navigate, returnTo]);
+  const onRunNow = useCallback(
+    () => runSchedule({ projectId, scheduleId, trigger: 'manual' }).unwrap(),
     [runSchedule, projectId, scheduleId],
   );
-  // The Test schedule panel right of the form and the Runs section under the panel
-  const {
-    runs,
-    runsTotal,
-    viewedRun,
-    versionNames,
-    panelRef,
-    runsSectionRef,
-    runsExpanded,
-    setRunsExpanded,
-    openRun,
-    showRunHistory,
-    backToTest,
-    announcement,
-    runNotFound,
-  } = runsView;
-  // A run that waits for approval replaces the Test block with the Action needed card. The Test schedule
-  // button switches back for this run; opening the waiting run from the Runs section shows the card again.
-  const waitingRun = useMemo(() => findWaitingRun(runs), [runs]);
-  const [testShownFor, setTestShownFor] = useState(null);
-  const showWaitingCard =
-    !!waitingRun && (viewedRun ? viewedRun.id === waitingRun.id : testShownFor !== waitingRun.id);
-  const showTest = useCallback(() => {
-    setTestShownFor(waitingRun?.id ?? null);
-    backToTest();
-  }, [waitingRun?.id, backToTest]);
+  const onDraftTestRun = useCallback(
+    body => startDraftTestRun({ projectId, ...body }).unwrap(),
+    [startDraftTestRun, projectId],
+  );
   const sidePanel = useCallback(
-    testRunProps => (
-      <Box
-        data-testid="schedule-right-block"
-        sx={styles.rightBlock}
-      >
-        {showWaitingCard ? (
-          <ScheduleWaitingCard
-            ref={panelRef}
-            schedule={schedule}
-            run={waitingRun}
-            onShowTest={showTest}
-          />
-        ) : (
-          <ScheduleRunsPanel
-            ref={panelRef}
-            schedule={schedule}
-            runs={runs}
-            viewedRun={viewedRun}
-            versionNames={versionNames}
-            onRunHistory={showRunHistory}
-            onBackToTest={backToTest}
-            {...testRunProps}
-          />
-        )}
-        <ScheduleRunsSection
-          ref={runsSectionRef}
-          runs={runs}
-          total={runsTotal}
-          versionNames={versionNames}
-          selectedRunId={viewedRun?.id}
-          onOpen={openRun}
-          expanded={runsExpanded}
-          onExpandedChange={setRunsExpanded}
-          announcement={announcement}
-          runNotFound={runNotFound}
-          fullHistoryLink={schedule && buildScheduleHistoryLink(schedule)}
-        />
-      </Box>
+    runProps => (
+      <ScheduleRunsCard
+        ref={runsView.cardRef}
+        schedule={schedule}
+        entityType={schedule?.entity_type}
+        applicationId={schedule?.application_id}
+        view={runsView}
+        {...runProps}
+      />
     ),
-    [
-      showWaitingCard,
-      waitingRun,
-      showTest,
-      schedule,
-      runs,
-      runsTotal,
-      viewedRun,
-      versionNames,
-      panelRef,
-      showRunHistory,
-      backToTest,
-      runsSectionRef,
-      openRun,
-      runsExpanded,
-      setRunsExpanded,
-      announcement,
-      runNotFound,
-    ],
+    [schedule, runsView],
   );
 
   if (isError)
@@ -185,13 +122,13 @@ const ScheduleDetailPage = memo(props => {
       // Nested in an editor, the crumbs name the agent or pipeline, not the schedule
       entityName={entityType ? undefined : schedule.name}
       sidePanel={sidePanel}
-      sidePanelFirst={showWaitingCard}
       // Export of this schedule, after Cancel
       headerActions={<ScheduleDetailMenu schedule={schedule} />}
       onSubmit={onSubmit}
       onSaved={onSaved}
-      onTestRun={onTestRun}
-      onCancel={onSaved}
+      onRunNow={onRunNow}
+      onDraftTestRun={onDraftTestRun}
+      onCancel={onCancel}
     >
       {({ values: formValues, setFieldValue, fieldError }) => (
         <>
@@ -224,17 +161,4 @@ export default ScheduleDetailPage;
 /** @type {MuiSx} */
 const styles = {
   loader: { display: 'flex', justifyContent: 'center', padding: '3rem' },
-  // The panel and the Runs section stacked. From xl, in a window at least 46 rem (736 px) high, the
-  // block stays in view: 100dvh minus the page header, its top margin and the bottom margin (6 rem). A fixed
-  // height, so the runs card takes 40 % of the window and the test panel fills the rest and scrolls inside.
-  rightBlock: ({ breakpoints }) => ({
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    [`${breakpoints.up('xl')} and (min-height: 46rem)`]: {
-      position: 'sticky',
-      top: '0.75rem',
-      height: 'calc(100dvh - 6rem)',
-    },
-  }),
 };

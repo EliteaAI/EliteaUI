@@ -11,6 +11,9 @@ import CreateSchedulePage from '../CreateSchedulePage';
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   createSchedule: vi.fn(),
+  startDraftTestRun: vi.fn(),
+  cancelDraftTestRun: vi.fn(),
+  draftRunsProps: null,
   settingsProps: null,
   stopProps: null,
   fieldErrors: {},
@@ -28,6 +31,8 @@ vi.mock('react-router-dom', () => ({
 vi.mock('@/[fsd]/entities/schedule', async importOriginal => ({
   ...(await importOriginal()),
   useCreateScheduleMutation: () => [mocks.createSchedule],
+  useStartDraftTestRunMutation: () => [mocks.startDraftTestRun],
+  useCancelDraftTestRunMutation: () => [mocks.cancelDraftTestRun],
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 5, useViewMode: () => 'owner' }));
 vi.mock('@/[fsd]/shared/ui/schedule', () => ({
@@ -44,6 +49,10 @@ vi.mock('@/[fsd]/features/schedule', async importOriginal => {
   const { toCreateBody } = await import('@/[fsd]/features/schedule/lib/helpers');
   return {
     ...(await importOriginal()),
+    ScheduleDraftRuns: props => {
+      mocks.draftRunsProps = props;
+      return null;
+    },
     ScheduleForm: props => {
       const { initialValues, onSubmit, onSaved, children } = props;
       mocks.formProps = props;
@@ -54,6 +63,9 @@ vi.mock('@/[fsd]/features/schedule', async importOriginal => {
             setFieldValue: vi.fn(),
             fieldError: name => mocks.fieldErrors[name] ?? '',
           })}
+          {props.sidePanel({ values: initialValues, onTestRun: 'test-run', testRunPending: false })}
+          <button onClick={() => props.onCancel(initialValues)}>Cancel</button>
+          <button onClick={() => props.onDraftTestRun({ name: 'Draft' })}>Test run</button>
           <button onClick={async () => onSaved(await onSubmit(toCreateBody(initialValues)))}>Save</button>
         </>
       );
@@ -68,6 +80,7 @@ describe('CreateSchedulePage', () => {
     mocks.params = {};
     mocks.fieldErrors = {};
     mocks.stopProps = null;
+    mocks.draftRunsProps = null;
     mocks.state = { returnTo: '/agents/3' };
   });
 
@@ -133,5 +146,47 @@ describe('CreateSchedulePage', () => {
     render(<CreateSchedulePage />);
 
     expect(mocks.stopProps.error).toBe('Stop date is in the past');
+  });
+
+  it('shows the Runs card of the form entity with the Test Run handler', () => {
+    mocks.params = { tab: 'all', agentId: '12' };
+    render(<CreateSchedulePage entityType="agent" />);
+
+    expect(mocks.draftRunsProps).toMatchObject({
+      entityType: 'agent',
+      applicationId: 12,
+      onTestRun: 'test-run',
+    });
+  });
+
+  it('Test Run sends the draft body with the project id', async () => {
+    mocks.startDraftTestRun.mockReturnValue({ unwrap: () => Promise.resolve({ run_id: 1 }) });
+    render(<CreateSchedulePage />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Test run' }));
+
+    await waitFor(() =>
+      expect(mocks.startDraftTestRun).toHaveBeenCalledWith({ projectId: 5, name: 'Draft' }),
+    );
+  });
+
+  it('Cancel drops the Test draft of the chosen agent and returns', () => {
+    mocks.params = { tab: 'all', agentId: '12' };
+    mocks.state = null;
+    render(<CreateSchedulePage entityType="agent" />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(mocks.cancelDraftTestRun).toHaveBeenCalledWith({ projectId: 5, applicationId: 12 });
+    expect(mocks.navigate).toHaveBeenCalledWith('/agents/all/12?viewMode=owner');
+  });
+
+  it('Cancel without a chosen entity only returns', () => {
+    render(<CreateSchedulePage />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(mocks.cancelDraftTestRun).not.toHaveBeenCalled();
+    expect(mocks.navigate).toHaveBeenCalledWith('/agents/3');
   });
 });

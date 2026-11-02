@@ -2,9 +2,14 @@ import { useCallback, useMemo } from 'react';
 
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
-import { useCreateScheduleMutation } from '@/[fsd]/entities/schedule';
+import {
+  useCancelDraftTestRunMutation,
+  useCreateScheduleMutation,
+  useStartDraftTestRunMutation,
+} from '@/[fsd]/entities/schedule';
 import {
   DEFAULT_SCHEDULE_CRON,
+  ScheduleDraftRuns,
   ScheduleForm,
   buildInitialValues,
   useEntityScheduleRoute,
@@ -20,6 +25,8 @@ const CreateSchedulePage = props => {
   const [searchParams] = useSearchParams();
   const { state } = useLocation();
   const [createSchedule] = useCreateScheduleMutation();
+  const [startDraftTestRun] = useStartDraftTestRunMutation();
+  const [cancelDraftTestRun] = useCancelDraftTestRunMutation();
   const entityRoute = useEntityScheduleRoute(entityType);
 
   const { values, urlEntity, returnTo } = useMemo(
@@ -34,14 +41,42 @@ const CreateSchedulePage = props => {
 
   const onSaved = useCallback(() => navigate(returnTo), [navigate, returnTo]);
 
-  const onCancel = useCallback(() => navigate(returnTo), [navigate, returnTo]);
+  const onDraftTestRun = useCallback(
+    body => startDraftTestRun({ projectId, ...body }).unwrap(),
+    [startDraftTestRun, projectId],
+  );
+  const sidePanel = useCallback(
+    ({ values: formValues, onTestRun, testRunPending, testRunError }) => (
+      <ScheduleDraftRuns
+        entityType={formValues.type}
+        applicationId={formValues.application_id || undefined}
+        onTestRun={onTestRun}
+        testRunPending={testRunPending}
+        testRunError={testRunError}
+      />
+    ),
+    [],
+  );
+
+  // The hidden draft of a Test Run is dropped when the user leaves without saving; a failed cleanup is harmless
+  // because the server also removes idle drafts
+  const onCancel = useCallback(
+    formValues => {
+      if (formValues?.application_id)
+        cancelDraftTestRun({ projectId, applicationId: formValues.application_id });
+      navigate(returnTo);
+    },
+    [cancelDraftTestRun, projectId, navigate, returnTo],
+  );
 
   return (
     <ScheduleForm
       initialValues={values}
       lockedEntity={urlEntity}
       onSubmit={onSubmit}
+      sidePanel={sidePanel}
       onSaved={onSaved}
+      onDraftTestRun={onDraftTestRun}
       onCancel={onCancel}
     >
       {form => (
