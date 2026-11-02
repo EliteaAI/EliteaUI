@@ -92,7 +92,10 @@ describe('run history decideWaitingRun for a sign-in pause', () => {
     authorizationRequestId: 'auth-1',
     toolCallId: 'call-1',
     childThreadId: undefined,
-    mcpTokens: { 'https://mcp.example': { access_token: 'fresh' } },
+    mcpTokens: {
+      'https://mcp.example': { access_token: 'fresh' },
+      'https://other.example': { access_token: 'other' },
+    },
   };
 
   beforeEach(() => {

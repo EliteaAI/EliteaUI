@@ -107,7 +107,7 @@ describe('useWaitingRunDecision', () => {
     expect(mocks.refetch).not.toHaveBeenCalled();
   });
 
-  it('sends the sign-in request with fresh tokens when the pause is a sign-in', async () => {
+  it('sends the sign-in request with every stored token when the pause is a sign-in', async () => {
     mocks.decide.mockReturnValue(ok());
     const result = setup();
     await act(() =>
@@ -130,22 +130,29 @@ describe('useWaitingRunDecision', () => {
         authorizationRequestId: 'auth-1',
         toolCallId: 'call-1',
         childThreadId: 'child-1',
-        mcpTokens: { 'https://mcp.example': mocks.tokens['https://mcp.example'] },
+        mcpTokens: mocks.tokens,
       },
     });
     expect(mocks.refetch).toHaveBeenCalledTimes(1);
   });
 
-  it('sends no tokens when none is stored for the paused server', async () => {
-    mocks.decide.mockReturnValue(ok());
-    const result = setup();
-    await act(() =>
-      result.current({
-        ...request,
-        authRequest: { authorizationRequestId: 'auth-1', serverUrl: 'https://missing.example' },
-      }),
+  it('keeps the run waiting and shows the server text when the credential is still missing', async () => {
+    mocks.decideWithoutChat.mockReturnValue(
+      fail({ status: 409, data: { code: 'credential_missing', error: 'The credential is still missing.' } }),
     );
-    expect(mocks.decide.mock.calls[0][0].mcpAuth.mcpTokens).toEqual({});
+    const result = setup();
+    await act(() => result.current({ action: 'approve', runId: 41 }));
+    expect(mocks.toastError).toHaveBeenCalledWith('The credential is still missing.');
+    expect(mocks.toastInfo).not.toHaveBeenCalled();
+    expect(mocks.refetch).not.toHaveBeenCalled();
+  });
+
+  it.each(['run_not_waiting', 'run_has_chat'])('shows the notice on a 409 %s', async code => {
+    mocks.decideWithoutChat.mockReturnValue(fail({ status: 409, data: { code, error: 'x' } }));
+    const result = setup();
+    await act(() => result.current({ action: 'approve', runId: 41 }));
+    expect(mocks.toastInfo).toHaveBeenCalledWith('The run no longer waits for approval.');
+    expect(mocks.refetch).toHaveBeenCalledTimes(1);
   });
 
   it('sends no sign-in fields for a sensitive-tool decision', async () => {

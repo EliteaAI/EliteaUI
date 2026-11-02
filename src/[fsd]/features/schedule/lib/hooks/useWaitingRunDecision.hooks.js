@@ -11,13 +11,10 @@ import { buildErrorMessage } from '@/common/utils';
 // Owner-only approve or reject of a waiting schedule run. Returns undefined for any other
 // user, so the run detail shows the buttons disabled. The server still checks the owner.
 // A run without a chat (`conversationUuid` empty) is decided through the schedule route with `runId`.
-// `authRequest` (from the sign-in pause) switches the call to the mcp_auth resume, with the token of the
-// paused server read now. Other stored tokens stay in the browser.
-const getPausedServerTokens = serverUrl => {
-  const key = McpAuthHelpers.getStorageKey({ serverUrl });
-  const token = key ? McpAuthHelpers.getAllTokens()[key] : undefined;
-  return token ? { [key]: token } : {};
-};
+// `authRequest` (from the sign-in pause) switches the call to the mcp_auth resume. It sends every stored token,
+// as the chat resume does, because the resumed run may call other signed-in servers.
+// A 409 with `credential_missing` is not a stale run: the run still waits, so the server text is shown.
+const CREDENTIAL_MISSING = 'credential_missing';
 
 export const useWaitingRunDecision = ({ schedule, onDecided }) => {
   const projectId = useSelectedProjectId();
@@ -39,7 +36,7 @@ export const useWaitingRunDecision = ({ schedule, onDecided }) => {
           authorizationRequestId: authRequest.authorizationRequestId,
           toolCallId: authRequest.toolCallId,
           childThreadId: authRequest.childThreadId,
-          mcpTokens: getPausedServerTokens(authRequest.serverUrl),
+          mcpTokens: McpAuthHelpers.getAllTokens(),
         };
         await decideWaitingRun({
           projectId,
@@ -50,7 +47,9 @@ export const useWaitingRunDecision = ({ schedule, onDecided }) => {
         }).unwrap();
         onDecided?.();
       } catch (error) {
-        if (error?.status === 409) {
+        if (error?.status === 409 && error?.data?.code === CREDENTIAL_MISSING) {
+          toastError(error.data.error || buildErrorMessage(error));
+        } else if (error?.status === 409) {
           toastInfo('The run no longer waits for approval.');
           onDecided?.();
         } else {
