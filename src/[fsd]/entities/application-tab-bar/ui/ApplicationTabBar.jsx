@@ -79,16 +79,15 @@ const ApplicationTabBar = memo(props => {
             <>
               <SaveApplicationButton onSuccess={onSuccess} />
               <SaveNewVersionButton onSuccess={onSuccess} />
+              <Button.DiscardButton
+                dataTestId="discard-button"
+                modalDataTestId="discard-confirm-modal"
+                confirmButtonDataTestId="discard-confirm-button"
+                disabled={!isFormDirtyExcluding && !isYamlCodeDirty && !isLayoutDirty}
+                onDiscard={discardApplicationChanges}
+              />
             </>
           )}
-
-          <Button.DiscardButton
-            dataTestId="discard-button"
-            modalDataTestId="discard-confirm-modal"
-            confirmButtonDataTestId="discard-confirm-button"
-            disabled={!isFormDirtyExcluding && !isYamlCodeDirty && !isLayoutDirty}
-            onDiscard={discardApplicationChanges}
-          />
         </Box>
       </Box>
     </>

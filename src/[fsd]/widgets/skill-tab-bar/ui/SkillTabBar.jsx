@@ -139,9 +139,9 @@ const SkillTabBar = memo(props => {
               onSuccess={onSuccess}
               onChangeVersion={onChangeVersion}
             />
+            <DiscardSkillButton />
           </>
         )}
-        <DiscardSkillButton />
       </Box>
     </Box>
   );

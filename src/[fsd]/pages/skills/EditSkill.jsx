@@ -190,7 +190,10 @@ const EditSkill = memo(() => {
     return data?.versions?.[0]?.id;
   }, [data?.version_details?.id, data?.versions, version]);
 
-  const blockOptions = useMemo(() => ({ blockCondition: dirty }), [dirty]);
+  const blockOptions = useMemo(
+    () => ({ blockCondition: dirty && hasEditPermission }),
+    [dirty, hasEditPermission],
+  );
   useNavBlocker(blockOptions);
 
   const shouldShowNotFoundPage = isError && isNotFoundError(error);
