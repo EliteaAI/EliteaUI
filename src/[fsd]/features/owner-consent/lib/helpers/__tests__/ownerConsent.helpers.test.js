@@ -32,4 +32,15 @@ describe('ownerConsent.helpers (EL-7337)', () => {
   it('says that signing out does not end the consent', () => {
     expect(OwnerConsentHelpers.CONSENT_GIVEN_TEXT).toMatch(/Signing out does not end it; withdraw here/);
   });
+
+  it('names the covered credentials and sends only picked candidates', () => {
+    const candidates = [
+      { project_id: 5, credential_ref: 'a', title: 'one' },
+      { project_id: 6, credential_ref: 'b', title: 'two' },
+    ];
+    expect(OwnerConsentHelpers.pickedCredentials(candidates, ['6:b', '9:z'])).toEqual([
+      { project_id: 6, credential_ref: 'b' },
+    ]);
+    expect(OwnerConsentHelpers.coveredText(candidates)).toMatch(/^Microsoft sign-in: one, two\./);
+  });
 });

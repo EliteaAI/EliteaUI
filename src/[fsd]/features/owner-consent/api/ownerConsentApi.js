@@ -12,16 +12,22 @@ export const ownerConsentApi = eliteaApi
   .enhanceEndpoints({ addTagTypes: [TAG_OWNER_CONSENT, TAG_MY_MANDATES] })
   .injectEndpoints({
     endpoints: build => ({
-      // { allowed, linked, mandates, consents: { [tokenId]: consentedAt } }
+      // { allowed, linked, mandates, consents: { [tokenId]: { consented_at, credentials } } }; with projects also
+      // candidates: the delegated credentials a consent for a token of those projects may name
       getOwnerConsentStatus: build.query({
-        query: () => ({ url: `${apiSlicePath}/token_identity/default` }),
+        query: ({ projects } = {}) => ({
+          url: `${apiSlicePath}/token_identity/default`,
+          params: projects?.length ? { projects: [...projects].sort((a, b) => a - b).join(',') } : undefined,
+        }),
         providesTags: [TAG_OWNER_CONSENT],
       }),
+      // consent names the credentials it covers: [{ project_id, credential_ref }]
       tokenConsentAction: build.mutation({
-        query: ({ tokenId, action }) => ({
+        query: ({ tokenId, action, credentials }) => ({
           url: `${apiSlicePath}/token_identity/default`,
           method: 'POST',
-          body: { action, token_id: tokenId },
+          body:
+            action === 'consent' ? { action, token_id: tokenId, credentials } : { action, token_id: tokenId },
         }),
         invalidatesTags: [TAG_OWNER_CONSENT],
       }),

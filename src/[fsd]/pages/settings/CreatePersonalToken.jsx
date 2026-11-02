@@ -7,6 +7,7 @@ import * as yup from 'yup';
 import { Box, CircularProgress, FormControlLabel, Tooltip, Typography } from '@mui/material';
 
 import {
+  ConsentCredentialPicker,
   OwnerConsentHelpers,
   useGetOwnerConsentStatusQuery,
   useTokenConsentActionMutation,
@@ -47,11 +48,22 @@ const CreatePersonalToken = memo(() => {
   const [restricted, setRestricted] = useState(false);
   const [scopeProjects, setScopeProjects] = useState([]);
   const [scopeOperations, setScopeOperations] = useState(TokenScopeHelpers.DEFAULT_TOKEN_OPERATIONS);
-  // (#7337) a restricted token may act with the owner's Microsoft sign-in: the owner's consent, given here
+  // (#7337) a restricted token may act with the owner's Microsoft sign-in for the delegated credentials they name:
+  // the owner's consent, given here
   const { data: consentStatus } = useGetOwnerConsentStatusQuery();
+  const consentPossible = restricted && Boolean(consentStatus?.allowed && consentStatus?.linked);
+  const { data: offered, isFetching: isFetchingOffered } = useGetOwnerConsentStatusQuery(
+    { projects: scopeProjects },
+    { skip: !consentPossible || !scopeProjects.length },
+  );
+  const candidates = offered?.candidates;
   const [giveConsent] = useTokenConsentActionMutation();
   const [actWithSignIn, setActWithSignIn] = useState(false);
-  const canOfferConsent = restricted && Boolean(consentStatus?.allowed && consentStatus?.linked);
+  const [pickedCredentials, setPickedCredentials] = useState([]);
+  const canOfferConsent = consentPossible && candidates?.length > 0;
+  const noDelegatedCredentials =
+    consentPossible && scopeProjects.length > 0 && !isFetchingOffered && candidates?.length === 0;
+  const consentWanted = canOfferConsent && actWithSignIn;
 
   const formik = useFormik({
     initialValues: {
@@ -75,9 +87,13 @@ const CreatePersonalToken = memo(() => {
         }),
       });
       if (!error) {
-        if (canOfferConsent && actWithSignIn && tokenData?.id) {
+        if (consentWanted && tokenData?.id) {
           // the token exists either way; a refused consent is said and can be given again from the token list
-          const { error: consentError } = await giveConsent({ tokenId: tokenData.id, action: 'consent' });
+          const { error: consentError } = await giveConsent({
+            tokenId: tokenData.id,
+            action: 'consent',
+            credentials: OwnerConsentHelpers.pickedCredentials(candidates, pickedCredentials),
+          });
           if (consentError) toastError(buildErrorMessage(consentError));
         }
         setData(tokenData);
@@ -132,7 +148,12 @@ const CreatePersonalToken = memo(() => {
     : '';
 
   const isGenerateDisabled =
-    !formik.values.name || nameHasError || isGenerating || !!data.uuid || Boolean(scopeError);
+    !formik.values.name ||
+    nameHasError ||
+    isGenerating ||
+    !!data.uuid ||
+    Boolean(scopeError) ||
+    (consentWanted && !OwnerConsentHelpers.pickedCredentials(candidates, pickedCredentials).length);
 
   const onToggleActWithSignIn = useCallback(event => setActWithSignIn(event.target.checked), []);
 
@@ -281,6 +302,14 @@ const CreatePersonalToken = memo(() => {
                       />
                     }
                   />
+                  {actWithSignIn && (
+                    <ConsentCredentialPicker
+                      candidates={candidates}
+                      picked={pickedCredentials}
+                      onChange={setPickedCredentials}
+                      testId="create-personal-token-consent-credentials"
+                    />
+                  )}
                   <Typography
                     variant="bodySmall"
                     sx={styles.consentHint}
@@ -288,6 +317,15 @@ const CreatePersonalToken = memo(() => {
                     {OwnerConsentHelpers.TOKEN_CHECKBOX_HINT}
                   </Typography>
                 </Box>
+              )}
+              {noDelegatedCredentials && (
+                <Typography
+                  variant="bodySmall"
+                  sx={styles.consentField}
+                  data-testid="create-personal-token-no-delegated-credentials"
+                >
+                  {OwnerConsentHelpers.NO_DELEGATED_CREDENTIALS_TEXT}
+                </Typography>
               )}
             </Box>
           </Box>

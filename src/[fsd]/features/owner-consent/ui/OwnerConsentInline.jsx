@@ -9,7 +9,15 @@ import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 // One consent line for every holder that runs without its owner (a scoped token, a schedule's mandate): the state
 // in words and the owner's one action, Give consent or Withdraw (C-1009, #7337)
 const OwnerConsentInline = memo(props => {
-  const { consented, isBusy = false, onConsent, onWithdraw, testId = 'owner-consent' } = props;
+  const {
+    consented,
+    isBusy = false,
+    onConsent,
+    onWithdraw,
+    testId = 'owner-consent',
+    givenText,
+    children,
+  } = props;
   const styles = ownerConsentInlineStyles();
 
   return (
@@ -21,13 +29,16 @@ const OwnerConsentInline = memo(props => {
         variant="bodySmall"
         sx={styles.text}
       >
-        {consented ? OwnerConsentHelpers.CONSENT_GIVEN_TEXT : OwnerConsentHelpers.CONSENT_NEEDED_TEXT}
+        {consented
+          ? givenText || OwnerConsentHelpers.CONSENT_GIVEN_TEXT
+          : OwnerConsentHelpers.CONSENT_NEEDED_TEXT}
       </Typography>
+      {children}
       <Button.BaseBtn
         data-testid={`${testId}-${consented ? 'withdraw' : 'give'}`}
         variant={BUTTON_VARIANTS.tertiary}
         size="small"
-        disabled={isBusy}
+        disabled={isBusy || props.actionDisabled}
         onClick={consented ? onWithdraw : onConsent}
       >
         {consented ? 'Withdraw' : 'Give consent'}

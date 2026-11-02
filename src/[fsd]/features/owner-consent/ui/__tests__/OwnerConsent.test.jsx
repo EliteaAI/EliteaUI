@@ -22,6 +22,27 @@ vi.mock('@/[fsd]/features/owner-consent/api/ownerConsentApi', () => ({
   useTokenConsentActionMutation: () => [api.tokenAction, { isLoading: false }],
   useMandateConsentActionMutation: () => [api.mandateAction, { isLoading: false }],
 }));
+vi.mock('@/[fsd]/shared/ui/select', () => ({
+  SingleSelect: props => (
+    <select
+      data-testid={props['data-testid']}
+      multiple
+      value={props.value}
+      onChange={event =>
+        props.onChange({ target: { value: [...event.target.selectedOptions].map(o => o.value) } })
+      }
+    >
+      {props.options.map(option => (
+        <option
+          key={option.value}
+          value={option.value}
+        >
+          {option.label}
+        </option>
+      ))}
+    </select>
+  ),
+}));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useToast: () => ({ toastSuccess: vi.fn(), toastError: vi.fn() }),
   useSelectedProjectId: () => 5,
@@ -48,11 +69,36 @@ describe('owner consent (EL-7337)', () => {
     expect(screen.queryByTestId('token-consent')).toBeNull();
   });
 
-  it('offers consent for a restricted live token of a linked owner and gives it', () => {
-    api.status.mockReturnValue({ data: { allowed: true, linked: true, consents: {} } });
+  it('gives consent from the list for the credentials picked among the token projects', async () => {
+    const candidates = [{ project_id: 5, credential_ref: 'ref-1', title: 'obo-sharepoint' }];
+    api.status.mockImplementation(args => ({
+      data: args?.projects ? { allowed: true, candidates } : { allowed: true, linked: true, consents: {} },
+    }));
+    wrap(<TokenConsentInline token={TOKEN} />);
+    fireEvent.click(screen.getByTestId('token-consent-give')); // first: choose
+    expect(api.tokenAction).not.toHaveBeenCalled();
+    expect(api.status).toHaveBeenCalledWith({ projects: [5] }, expect.objectContaining({ skip: false }));
+    expect(screen.getByTestId('token-consent-give')).toBeDisabled(); // nothing picked yet
+    const picker = screen.getByTestId('token-consent-credentials');
+    picker.options[0].selected = true;
+    fireEvent.change(picker);
+    fireEvent.click(screen.getByTestId('token-consent-give'));
+    expect(api.tokenAction).toHaveBeenCalledWith({
+      tokenId: 76,
+      action: 'consent',
+      credentials: [{ project_id: 5, credential_ref: 'ref-1' }],
+    });
+  });
+
+  it('says so in the list when the token projects hold no delegated credential', () => {
+    api.status.mockImplementation(args => ({
+      data: args?.projects
+        ? { allowed: true, candidates: [] }
+        : { allowed: true, linked: true, consents: {} },
+    }));
     wrap(<TokenConsentInline token={TOKEN} />);
     fireEvent.click(screen.getByTestId('token-consent-give'));
-    expect(api.tokenAction).toHaveBeenCalledWith({ tokenId: 76, action: 'consent' });
+    expect(screen.getByTestId('token-consent')).toHaveTextContent('No delegated credentials are set up');
   });
 
   it('offers no consent for an unrestricted token or an unlinked owner', () => {
