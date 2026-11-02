@@ -13,6 +13,7 @@ import {
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
 import { PERSONAL_TOKENS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { TokenConsentInline, useGetOwnerConsentStatusQuery } from '@/[fsd]/features/owner-consent';
 import * as TokenScopeHelpers from '@/[fsd]/features/settings/lib/helpers/tokenScope.helpers';
 import ExpiryInDays from '@/[fsd]/features/settings/ui/personal-tokes/ExpiryInDays';
 import TokenActionsCell from '@/[fsd]/features/settings/ui/personal-tokes/TokenActionsCell';
@@ -32,6 +33,8 @@ const TOKENS_COLUMNS = [
   { field: 'scope', label: 'Scope', width: '1fr', sortable: false },
   { field: 'actions', label: 'Actions', width: '9.375rem', sortable: false },
 ];
+// Shown only where the platform lets a restricted token act with its owner's Microsoft sign-in (#7337)
+const CONSENT_COLUMN = { field: 'consent', label: 'Microsoft sign-in', width: '1.5fr', sortable: false };
 
 const TokensTable = memo(props => {
   const { showDownload, onIdeSettingsDownload, onPreviewSettings, filteredTokens = null } = props;
@@ -48,9 +51,19 @@ const TokensTable = memo(props => {
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
 
   const displayTokens = filteredTokens !== null ? filteredTokens : tokens;
+  const { data: consentStatus } = useGetOwnerConsentStatusQuery(undefined, {
+    skip: !user.personal_project_id,
+  });
+  const columns = useMemo(
+    () =>
+      consentStatus?.allowed
+        ? [...TOKENS_COLUMNS.slice(0, -1), CONSENT_COLUMN, TOKENS_COLUMNS[TOKENS_COLUMNS.length - 1]]
+        : TOKENS_COLUMNS,
+    [consentStatus?.allowed],
+  );
 
   const { visibleColumns, gridTemplateColumns, dataColumns } = useResponsiveColumns({
-    columns: TOKENS_COLUMNS,
+    columns,
     containerWidth: windowWidth,
     showCheckbox: false,
     actionsColumnWidth: '9.375rem',
@@ -137,6 +150,10 @@ const TokensTable = memo(props => {
             {TokenScopeHelpers.scopeLabel(row)}
           </Text.EllipsisTypography>
         );
+      }
+
+      if (column.field === 'consent') {
+        return <TokenConsentInline token={row} />;
       }
 
       return value || '-';

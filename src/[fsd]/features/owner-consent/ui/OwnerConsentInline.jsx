@@ -1,0 +1,64 @@
+import { memo } from 'react';
+
+import { Box, CircularProgress, Typography } from '@mui/material';
+
+import * as OwnerConsentHelpers from '@/[fsd]/features/owner-consent/lib/helpers/ownerConsent.helpers';
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+
+// One consent line for every holder that runs without its owner (a scoped token, a schedule's mandate): the state
+// in words and the owner's one action, Give consent or Withdraw (C-1009, #7337)
+const OwnerConsentInline = memo(props => {
+  const { consented, isBusy = false, onConsent, onWithdraw, testId = 'owner-consent' } = props;
+  const styles = ownerConsentInlineStyles();
+
+  return (
+    <Box
+      sx={styles.root}
+      data-testid={testId}
+    >
+      <Typography
+        variant="bodySmall"
+        sx={styles.text}
+      >
+        {consented ? OwnerConsentHelpers.CONSENT_GIVEN_TEXT : OwnerConsentHelpers.CONSENT_NEEDED_TEXT}
+      </Typography>
+      <Button.BaseBtn
+        data-testid={`${testId}-${consented ? 'withdraw' : 'give'}`}
+        variant={BUTTON_VARIANTS.tertiary}
+        size="small"
+        disabled={isBusy}
+        onClick={consented ? onWithdraw : onConsent}
+      >
+        {consented ? 'Withdraw' : 'Give consent'}
+        {isBusy && (
+          <CircularProgress
+            size={12}
+            sx={styles.progress}
+          />
+        )}
+      </Button.BaseBtn>
+    </Box>
+  );
+});
+
+OwnerConsentInline.displayName = 'OwnerConsentInline';
+
+/** @type {MuiSx} */
+const ownerConsentInlineStyles = () => ({
+  root: {
+    display: 'flex',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '0.5rem',
+    minWidth: 0,
+  },
+  text: ({ palette }) => ({
+    color: palette.text.secondary,
+  }),
+  progress: {
+    ml: '0.25rem',
+  },
+});
+
+export default OwnerConsentInline;

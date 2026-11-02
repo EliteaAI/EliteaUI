@@ -12,6 +12,7 @@ import {
   useConfigOAuthModal,
   useMcpTokenChange,
 } from '@/[fsd]/features/mcp';
+import { DelegatedConsentNote } from '@/[fsd]/features/owner-consent';
 import { useResolvedSharepointConfig } from '@/[fsd]/features/sharepoint/lib/hooks/useResolvedSharepointConfig.hooks';
 import { useSharepointCheckConnection } from '@/[fsd]/features/sharepoint/lib/hooks/useSharepointCheckConnection.hooks';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
@@ -129,6 +130,7 @@ const SharepointOAuthStatus = memo(props => {
           </Box>
         </Tooltip>
       </Box>
+      <DelegatedConsentNote show={Boolean(oauthEndpoint && toolkitId)} />
       <McpAuthModal {...(oauthEndpoint ? storedLogin.modalProps : authModalProps)} />
       <McpLogoutModal
         serverUrl={oauthTokenKey}

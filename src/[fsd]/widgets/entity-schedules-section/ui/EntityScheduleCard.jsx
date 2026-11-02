@@ -2,6 +2,7 @@ import { memo, useCallback, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { ScheduleMandateConsent } from '@/[fsd]/features/owner-consent';
 import {
   ScheduleEnabledSwitch,
   ScheduleRowActions,
@@ -100,6 +101,12 @@ const EntityScheduleCard = memo(props => {
           text={owner}
         />
       )}
+      <Box sx={styles.consent}>
+        <ScheduleMandateConsent
+          versionId={row.version_id}
+          isOwner={isYou}
+        />
+      </Box>
       <Box sx={styles.footer}>
         {allowed?.includes('edit') && (
           <Button.BaseBtn
@@ -164,6 +171,7 @@ const entityScheduleCardStyles = () => ({
       "next"
       "name"
       "owner"
+      "consent"
       "footer"`,
     alignItems: 'center',
     rowGap: '0.25rem',
@@ -176,7 +184,8 @@ const entityScheduleCardStyles = () => ({
         "title title footer"
         "shown shown footer"
         "last  next  footer"
-        "name  owner footer"`,
+        "name  owner footer"
+        "consent consent footer"`,
       columnGap: '1rem',
     },
   }),
@@ -188,6 +197,11 @@ const entityScheduleCardStyles = () => ({
     color: palette.icon.secondary,
     whiteSpace: 'pre-line',
   }),
+  // the owner's consent when the schedule acts with their Microsoft sign-in (#7337); empty otherwise
+  consent: {
+    gridArea: 'consent',
+    minWidth: 0,
+  },
   footer: {
     gridArea: 'footer',
     justifySelf: 'end',

@@ -1,0 +1,49 @@
+import { eliteaApi } from '@/api';
+
+const apiSlicePath = '/elitea_core';
+
+const TAG_OWNER_CONSENT = 'OWNER_CONSENT';
+const TAG_MY_MANDATES = 'MY_MANDATES';
+
+// The owner's consent to a holder that runs without them acting with their Microsoft sign-in (C-1009, #7337):
+// a scoped API token, or an autonomous mandate (a schedule's or a webhook's). Always the owner's own act, in their
+// own session; the server checks it again.
+export const ownerConsentApi = eliteaApi
+  .enhanceEndpoints({ addTagTypes: [TAG_OWNER_CONSENT, TAG_MY_MANDATES] })
+  .injectEndpoints({
+    endpoints: build => ({
+      // { allowed, linked, mandates, consents: { [tokenId]: consentedAt } }
+      getOwnerConsentStatus: build.query({
+        query: () => ({ url: `${apiSlicePath}/token_identity/default` }),
+        providesTags: [TAG_OWNER_CONSENT],
+      }),
+      tokenConsentAction: build.mutation({
+        query: ({ tokenId, action }) => ({
+          url: `${apiSlicePath}/token_identity/default`,
+          method: 'POST',
+          body: { action, token_id: tokenId },
+        }),
+        invalidatesTags: [TAG_OWNER_CONSENT],
+      }),
+      // The caller's own mandates in the project: { rows: [{ id, version, state, identity_source, consented }] }
+      getMyMandates: build.query({
+        query: ({ projectId }) => ({ url: `${apiSlicePath}/autonomous_mandates/prompt_lib/${projectId}` }),
+        providesTags: (_, _error, { projectId }) => [{ type: TAG_MY_MANDATES, id: projectId }],
+      }),
+      mandateConsentAction: build.mutation({
+        query: ({ projectId, mandateId, action }) => ({
+          url: `${apiSlicePath}/autonomous_mandate_action/prompt_lib/${projectId}/${mandateId}`,
+          method: 'POST',
+          body: { action },
+        }),
+        invalidatesTags: (_, _error, { projectId }) => [{ type: TAG_MY_MANDATES, id: projectId }],
+      }),
+    }),
+  });
+
+export const {
+  useGetOwnerConsentStatusQuery,
+  useTokenConsentActionMutation,
+  useGetMyMandatesQuery,
+  useMandateConsentActionMutation,
+} = ownerConsentApi;

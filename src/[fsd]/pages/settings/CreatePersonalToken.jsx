@@ -4,8 +4,13 @@ import { useFormik } from 'formik';
 import { useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
 
-import { Box, CircularProgress, Tooltip } from '@mui/material';
+import { Box, CircularProgress, FormControlLabel, Tooltip, Typography } from '@mui/material';
 
+import {
+  OwnerConsentHelpers,
+  useGetOwnerConsentStatusQuery,
+  useTokenConsentActionMutation,
+} from '@/[fsd]/features/owner-consent';
 import {
   DrawerPage,
   DrawerPageHeader,
@@ -14,7 +19,7 @@ import {
   TokenScopeHelpers,
 } from '@/[fsd]/features/settings';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
-import { Button, Input } from '@/[fsd]/shared/ui';
+import { Button, Checkbox, Input } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useTokenCreateMutation, useTokenListQuery } from '@/api/auth';
 import { DEFAULT_TOKEN_EXPIRATION_DAYS, EXPIRATION_MEASURES, MAX_VARIABLES_LENGTH } from '@/common/constants';
@@ -42,6 +47,11 @@ const CreatePersonalToken = memo(() => {
   const [restricted, setRestricted] = useState(false);
   const [scopeProjects, setScopeProjects] = useState([]);
   const [scopeOperations, setScopeOperations] = useState(TokenScopeHelpers.DEFAULT_TOKEN_OPERATIONS);
+  // (#7337) a restricted token may act with the owner's Microsoft sign-in: the owner's consent, given here
+  const { data: consentStatus } = useGetOwnerConsentStatusQuery();
+  const [giveConsent] = useTokenConsentActionMutation();
+  const [actWithSignIn, setActWithSignIn] = useState(false);
+  const canOfferConsent = restricted && Boolean(consentStatus?.allowed && consentStatus?.linked);
 
   const formik = useFormik({
     initialValues: {
@@ -65,6 +75,11 @@ const CreatePersonalToken = memo(() => {
         }),
       });
       if (!error) {
+        if (canOfferConsent && actWithSignIn && tokenData?.id) {
+          // the token exists either way; a refused consent is said and can be given again from the token list
+          const { error: consentError } = await giveConsent({ tokenId: tokenData.id, action: 'consent' });
+          if (consentError) toastError(buildErrorMessage(consentError));
+        }
         setData(tokenData);
         setOpenTokenDialog(true);
         await refetch();
@@ -118,6 +133,8 @@ const CreatePersonalToken = memo(() => {
 
   const isGenerateDisabled =
     !formik.values.name || nameHasError || isGenerating || !!data.uuid || Boolean(scopeError);
+
+  const onToggleActWithSignIn = useCallback(event => setActWithSignIn(event.target.checked), []);
 
   const onToggleRestricted = useCallback(() => {
     // a restricted token always expires: "never" becomes the default number of days
@@ -251,6 +268,27 @@ const CreatePersonalToken = memo(() => {
                 onProjectsChange={setScopeProjects}
                 onOperationsChange={setScopeOperations}
               />
+              {canOfferConsent && (
+                <Box sx={styles.consentField}>
+                  <FormControlLabel
+                    label={OwnerConsentHelpers.TOKEN_CHECKBOX_LABEL}
+                    control={
+                      <Checkbox.BaseCheckbox
+                        size="small"
+                        checked={actWithSignIn}
+                        onChange={onToggleActWithSignIn}
+                        inputProps={{ 'data-testid': 'create-personal-token-act-with-sign-in' }}
+                      />
+                    }
+                  />
+                  <Typography
+                    variant="bodySmall"
+                    sx={styles.consentHint}
+                  >
+                    {OwnerConsentHelpers.TOKEN_CHECKBOX_HINT}
+                  </Typography>
+                </Box>
+              )}
             </Box>
           </Box>
         </Box>
@@ -338,6 +376,14 @@ const createPersonalTokenStyles = () => ({
     width: '5.375rem',
     paddingTop: '0.125rem',
   },
+  consentField: {
+    width: '30rem',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  consentHint: ({ palette }) => ({
+    color: palette.text.secondary,
+  }),
 });
 
 export default memo(CreatePersonalToken);
