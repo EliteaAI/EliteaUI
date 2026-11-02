@@ -459,7 +459,7 @@ describe('buildAgentUsageRows (#7015 P3)', () => {
       { agent: 'NoModels', models: [], source: 'ledger' },
       { agent: 'StoredBefore', source: 'trajectory' },
     ]);
-    expect(rows.map(r => r.model)).toEqual(['haiku-5-5', 'sonnet-5, haiku-4-5', '—', '—']);
+    expect(rows.map(r => r.model)).toEqual(['haiku-5-5', 'sonnet-5 + haiku-4-5', '—', '—']);
   });
 
   it("an unpriced ledger agent reads 'Not priced', an answer rather than a missing value", () => {

@@ -4,7 +4,8 @@ import { Box, Typography } from '@mui/material';
 
 const COLUMNS = [
   { key: 'label', label: 'Agent' },
-  { key: 'model', label: 'Model' },
+  // Model names are long unbroken ids, so this column wraps them instead of widening.
+  { key: 'model', label: 'Model', wrap: true },
   { key: 'llmCalls', label: 'LLM calls' },
   { key: 'toolCalls', label: 'Tool calls' },
   { key: 'inputTokens', label: 'Input tokens' },
@@ -54,12 +55,12 @@ const AgentUsage = memo(props => {
             role="row"
             data-testid={`case-agent-usage-${row.key}`}
           >
-            {COLUMNS.map(({ key }) => (
+            {COLUMNS.map(({ key, wrap }) => (
               <Typography
                 key={key}
                 variant="bodySmall"
                 role="cell"
-                sx={STYLES.cell}
+                sx={wrap ? STYLES.wrap : undefined}
               >
                 {row[key]}
               </Typography>
@@ -111,8 +112,7 @@ const agentUsageStyles = () => ({
     gridColumn: '1 / -1',
     gridTemplateColumns: 'subgrid',
   },
-  // Model names are long unbroken ids; let them wrap instead of widening the column.
-  cell: {
+  wrap: {
     overflowWrap: 'anywhere',
   },
   note: ({ palette }) => ({

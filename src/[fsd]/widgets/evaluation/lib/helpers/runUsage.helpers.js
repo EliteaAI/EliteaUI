@@ -330,6 +330,9 @@ const COST_SOURCE_LABEL = {
 
 // Every model the case's agents ran on, in the order first seen. The usage row stores only the
 // most-used one, which cannot explain the cost when a sub-agent runs on another model (#7297).
+// One separator for a list of models, so the usage row and the By agent table read the same (#7297).
+const MODEL_SEPARATOR = ' + ';
+
 const agentModels = agents => [
   ...new Set((Array.isArray(agents) ? agents : []).flatMap(agent => agent?.models ?? [])),
 ];
@@ -353,7 +356,7 @@ export const buildCaseUsageRows = (usage, agents) => {
       const cost = isRecorded ? formatUsd(row.cost) : null;
       const notes = [];
       if (isRecorded) {
-        if (row.role === 'agent' && models.length > 1) notes.push(models.join(' + '));
+        if (row.role === 'agent' && models.length > 1) notes.push(models.join(MODEL_SEPARATOR));
         else if (row.model_name) notes.push(row.model_name);
         if (row.token_source === 'estimate') notes.push('tokens estimated');
         if (cost != null && COST_SOURCE_LABEL[row.cost_source])
@@ -412,7 +415,7 @@ export const buildAgentUsageRows = agents => {
       key: agent.agent ?? '__agent__',
       label: agent.agent ?? 'Agent under test',
       // What the row's cost is priced at (#7297); a sub-agent can run on another model.
-      model: agent.models?.length ? agent.models.join(', ') : '—',
+      model: agent.models?.length ? agent.models.join(MODEL_SEPARATOR) : '—',
       llmCalls: formatCount(agent.llm_calls),
       toolCalls: formatCount(agent.tool_calls),
       inputTokens: formatTokenCount(agent.input_tokens),
