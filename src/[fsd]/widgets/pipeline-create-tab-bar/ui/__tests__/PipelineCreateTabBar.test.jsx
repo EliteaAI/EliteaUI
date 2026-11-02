@@ -9,6 +9,8 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 const create = vi.fn();
+const setBlockNav = vi.fn();
+const createApplicationSpy = vi.fn();
 let pipelineState = { stateValidationErrors: {} };
 
 vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn() }));
@@ -18,9 +20,12 @@ vi.mock('react-redux', async importOriginal => ({
     selector({ pipeline: { byKey: { default: pipelineState }, activePipelineKey: 'default' } }),
 }));
 vi.mock('@/hooks/application/useCreateApplication', () => ({
-  default: () => ({ isLoading: false, create, error: null, isError: false }),
+  default: (...args) => {
+    createApplicationSpy(...args);
+    return { isLoading: false, create, error: null, isError: false };
+  },
 }));
-vi.mock('@/hooks/useNavBlocker', () => ({ default: () => ({}) }));
+vi.mock('@/hooks/useNavBlocker', () => ({ default: () => ({ setBlockNav }) }));
 vi.mock('@/pages/Pipelines/useIsPipelineYamlCodeDirty', () => ({ default: () => false }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useToast: () => ({ toastError: vi.fn() }) }));
 vi.mock('@/[fsd]/shared/ui', async () => {
@@ -88,5 +93,13 @@ describe('PipelineCreateTabBar', () => {
     renderTabBar({ name: 'Pipeline 1', description: '' });
 
     await waitFor(() => expect(screen.getByTestId('agent-save-button')).toBeDisabled());
+  });
+
+  it('releases the nav blocker before redirecting after save', () => {
+    renderTabBar({ name: 'Pipeline test', description: '' });
+
+    const resetBlockNav = createApplicationSpy.mock.calls.at(-1)[1];
+    resetBlockNav();
+    expect(setBlockNav).toHaveBeenLastCalledWith(false);
   });
 });
