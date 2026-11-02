@@ -7,10 +7,15 @@ import { findMissingCredential } from '../helpers';
 
 export const CREDENTIAL_CHECK_STATE = { CHECKING: 'checking', MISSING: 'missing', READY: 'ready' };
 
+// The check expands the version and walks every toolkit on the server, so a burst of window focus events
+// must not start a scan each. A check by hand (`recheck()`) and the first check are never held back.
+export const FOCUS_RECHECK_MIN_INTERVAL_MS = 30000;
+
 /**
  * Runs the risk check of the schedule again to see if the credential a waiting run needs exists now.
  * It runs on mount, on `recheck()` and when the window gets focus again, because the owner adds the
- * credential in another tab. `enabled` false skips every check and reports `ready`.
+ * credential in another tab. A focus event starts no check while one is running or when the last one
+ * started less than FOCUS_RECHECK_MIN_INTERVAL_MS ago. `enabled` false skips every check and reports `ready`.
  * A failed check keeps the state `missing`, so the Approve button stays locked.
  */
 export const useWaitingRunCredentialCheck = ({ schedule, toolkit, enabled = true }) => {
@@ -21,6 +26,8 @@ export const useWaitingRunCredentialCheck = ({ schedule, toolkit, enabled = true
   const [toolkitName, setToolkitName] = useState();
   // Only the latest answer counts
   const latestCall = useRef(0);
+  const inFlight = useRef(0);
+  const lastStartedAt = useRef(0);
   const { id, entity_type, application_id, version_id, approval_rule } = schedule ?? {};
 
   const recheck = useCallback(async () => {
@@ -33,6 +40,8 @@ export const useWaitingRunCredentialCheck = ({ schedule, toolkit, enabled = true
       return;
     }
     setState(CREDENTIAL_CHECK_STATE.CHECKING);
+    inFlight.current += 1;
+    lastStartedAt.current = Date.now();
     try {
       const result = await checkRisk({
         projectId,
@@ -49,6 +58,8 @@ export const useWaitingRunCredentialCheck = ({ schedule, toolkit, enabled = true
       }
     } catch {
       if (call === latestCall.current) setState(CREDENTIAL_CHECK_STATE.MISSING);
+    } finally {
+      inFlight.current -= 1;
     }
   }, [checkRisk, enabled, projectId, id, entity_type, application_id, version_id, approval_rule, toolkit]);
 
@@ -56,10 +67,16 @@ export const useWaitingRunCredentialCheck = ({ schedule, toolkit, enabled = true
     recheck();
   }, [recheck]);
 
-  useEffect(() => {
-    window.addEventListener('focus', recheck);
-    return () => window.removeEventListener('focus', recheck);
+  const recheckOnFocus = useCallback(() => {
+    if (inFlight.current > 0) return;
+    if (Date.now() - lastStartedAt.current < FOCUS_RECHECK_MIN_INTERVAL_MS) return;
+    recheck();
   }, [recheck]);
+
+  useEffect(() => {
+    window.addEventListener('focus', recheckOnFocus);
+    return () => window.removeEventListener('focus', recheckOnFocus);
+  }, [recheckOnFocus]);
 
   return { state: enabled ? state : CREDENTIAL_CHECK_STATE.READY, recheck, toolkitName };
 };

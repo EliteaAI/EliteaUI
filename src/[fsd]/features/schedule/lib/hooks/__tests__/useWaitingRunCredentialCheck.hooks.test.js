@@ -3,7 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 
-import { CREDENTIAL_CHECK_STATE, useWaitingRunCredentialCheck } from '../useWaitingRunCredentialCheck.hooks';
+import {
+  CREDENTIAL_CHECK_STATE,
+  FOCUS_RECHECK_MIN_INTERVAL_MS,
+  useWaitingRunCredentialCheck,
+} from '../useWaitingRunCredentialCheck.hooks';
 
 const mocks = vi.hoisted(() => ({ check: vi.fn(), projectId: 3 }));
 
@@ -87,16 +91,67 @@ describe('useWaitingRunCredentialCheck', () => {
     expect(result.current.state).toBe(CREDENTIAL_CHECK_STATE.READY);
   });
 
-  it('checks again when the window gets focus', async () => {
-    mocks.check.mockReturnValue(answer({ blocking: [] }));
-    setup();
-    await waitFor(() => expect(mocks.check).toHaveBeenCalledTimes(1));
+  describe('window focus', () => {
+    const focus = () =>
+      act(() => {
+        window.dispatchEvent(new Event('focus'));
+      });
 
-    act(() => {
-      window.dispatchEvent(new Event('focus'));
+    afterEach(() => vi.restoreAllMocks());
+
+    it('checks again when the window gets focus after the minimum interval', async () => {
+      const now = vi.spyOn(Date, 'now').mockReturnValue(1000000);
+      mocks.check.mockReturnValue(answer({ blocking: [] }));
+      setup();
+      await waitFor(() => expect(mocks.check).toHaveBeenCalledTimes(1));
+
+      now.mockReturnValue(1000000 + FOCUS_RECHECK_MIN_INTERVAL_MS);
+      focus();
+
+      await waitFor(() => expect(mocks.check).toHaveBeenCalledTimes(2));
     });
 
-    await waitFor(() => expect(mocks.check).toHaveBeenCalledTimes(2));
+    it('starts no check on a focus inside the minimum interval', async () => {
+      const now = vi.spyOn(Date, 'now').mockReturnValue(1000000);
+      mocks.check.mockReturnValue(answer({ blocking: [] }));
+      setup();
+      await waitFor(() => expect(mocks.check).toHaveBeenCalledTimes(1));
+
+      now.mockReturnValue(1000000 + FOCUS_RECHECK_MIN_INTERVAL_MS - 1);
+      focus();
+      focus();
+
+      expect(mocks.check).toHaveBeenCalledTimes(1);
+    });
+
+    it('starts no check on a focus while a check is running', async () => {
+      const now = vi.spyOn(Date, 'now').mockReturnValue(1000000);
+      const running = deferred();
+      mocks.check.mockReturnValue({ unwrap: () => running.promise });
+      setup();
+      await waitFor(() => expect(mocks.check).toHaveBeenCalledTimes(1));
+
+      now.mockReturnValue(1000000 + FOCUS_RECHECK_MIN_INTERVAL_MS * 2);
+      focus();
+      expect(mocks.check).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        running.resolve({ blocking: [] });
+      });
+    });
+
+    it('checks on a manual recheck inside the minimum interval', async () => {
+      vi.spyOn(Date, 'now').mockReturnValue(1000000);
+      mocks.check.mockReturnValue(answer({ blocking: [] }));
+      const { result } = setup();
+      await waitFor(() => expect(mocks.check).toHaveBeenCalledTimes(1));
+
+      await act(async () => {
+        await result.current.recheck();
+      });
+
+      expect(mocks.check).toHaveBeenCalledTimes(2);
+    });
   });
 
   it('sends no request and reports ready when it is not enabled', () => {
