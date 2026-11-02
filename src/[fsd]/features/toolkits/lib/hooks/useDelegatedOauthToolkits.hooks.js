@@ -23,7 +23,9 @@ const hasOauthCredential = (tool, configsByProject) => {
   if (configRef?.elitea_title) {
     const configs = configsByProject[configRef.private ? 'personal' : 'project']?.[tool.type] ?? [];
     const cred = configs.find(item => item.elitea_title === configRef.elitea_title);
-    return Boolean(cred?.data?.oauth_discovery_endpoint);
+    // A stored Microsoft login lets SharePoint run unattended (backend schedule_risk does the same)
+    const hasStoredLogin = tool.type === 'sharepoint' && Boolean(cred?.data?.refresh_token);
+    return Boolean(cred?.data?.oauth_discovery_endpoint) && !hasStoredLogin;
   }
 
   // Only OpenAPI can carry the endpoint inline instead of referencing a credential.
