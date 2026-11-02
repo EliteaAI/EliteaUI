@@ -16,25 +16,37 @@ const FIELDS_WITH_INPUT = [
   'expires_at',
 ];
 const PROMPT_FIELDS = ['prompt', 'variables'];
+// Test Run answers 400 with this code when the project does not allow "Run without asking"
+const DRAFT_TEST_ERROR = { APPROVAL_NOT_ALLOWED: 'approval_rule_not_allowed' };
 
 /**
  * The save flow of the schedule form: the risk review, the save call with its error branches, the warnings
- * dialog and the Test run that waits for a save. `submit(values, helpers)` is the Formik submit handler;
+ * dialog, the Run Now that waits for a save and the Test Run of the unsaved form. `submit(values, helpers)` is the Formik submit handler;
  * `riskCheck` is the result of `useScheduleRiskCheck`, read when a save runs.
  */
-export const useScheduleSave = ({ formik, riskCheck, schedule, onSubmit, onSaved, onTestRun }) => {
+export const useScheduleSave = ({
+  formik,
+  riskCheck,
+  schedule,
+  onSubmit,
+  onSaved,
+  onRunNow,
+  onDraftTestRun,
+}) => {
   const { setFieldValue } = formik;
   const { toastError, toastWarning } = useToast();
   const [banner, setBanner] = useState('');
   const [saved, setSaved] = useState(null);
   const [ruleChanged, setRuleChanged] = useState(false);
   const [savedRule, setSavedRule] = useState('');
-  const [testRunPending, setTestRunPending] = useState(false);
-  const [testRunError, setTestRunError] = useState('');
-  // review: the values and the pending Test run of a save that waits for the risk review dialog
+  const [runNowPending, setRunNowPending] = useState(false);
+  const [runNowError, setRunNowError] = useState('');
+  const [draftTestPending, setDraftTestPending] = useState(false);
+  const [draftTestError, setDraftTestError] = useState('');
+  // review: the values and the pending Run Now of a save that waits for the risk review dialog
   const [review, setReview] = useState(null);
   const [reviewSaving, setReviewSaving] = useState(false);
-  // afterSave: the Test run that replaces onSaved after this save; afterWarnings keeps it until the dialog closes
+  // afterSave: the Run Now that replaces onSaved after this save; afterWarnings keeps it until the dialog closes
   const afterSave = useRef(null);
   const afterWarnings = useRef(null);
 
@@ -123,32 +135,61 @@ export const useScheduleSave = ({ formik, riskCheck, schedule, onSubmit, onSaved
   const handleReviewCancel = useCallback(() => setReview(null), []);
 
   // A clean form runs at once; a changed one saves first, and a failed or invalid save never reaches the run
-  const runTest = useCallback(async () => {
-    setTestRunPending(true);
+  const runNow = useCallback(async () => {
+    setRunNowPending(true);
     try {
-      await onTestRun();
+      await onRunNow();
     } catch (error) {
-      if (error?.status === 400 || error?.status === 409) setTestRunError(error.data?.error ?? '');
-      else toastError('Failed to start the test run');
+      if (error?.status === 400 || error?.status === 409) setRunNowError(error.data?.error ?? '');
+      else toastError('Failed to start the run');
     } finally {
-      setTestRunPending(false);
+      setRunNowPending(false);
     }
-  }, [onTestRun, toastError]);
+  }, [onRunNow, toastError]);
 
-  const handleTestRun = async () => {
-    setTestRunError('');
-    setTestRunPending(true);
+  const handleRunNow = async () => {
+    setRunNowError('');
+    setRunNowPending(true);
     try {
       if (formik.dirty) {
-        afterSave.current = runTest;
+        afterSave.current = runNow;
         await formik.submitForm();
-      } else await runTest();
+      } else await runNow();
     } finally {
       afterSave.current = null;
-      setTestRunPending(false);
+      setRunNowPending(false);
     }
   };
-  // The dialog close is the post-save point: a pending Test run starts here, else onSaved
+  // Test Run starts from the unsaved form: nothing is saved, and the server runs a hidden draft copy.
+  // An invalid form shows its field errors, as a Save would, and sends nothing.
+  const handleDraftTestRun = async () => {
+    setDraftTestError('');
+    const isShownField = field =>
+      (isPromptShown(formik.values) ? [...FIELDS_WITH_INPUT, ...PROMPT_FIELDS] : FIELDS_WITH_INPUT).includes(
+        field,
+      );
+    const formErrors = await formik.validateForm();
+    if (Object.keys(formErrors).length) {
+      await formik.submitForm();
+      return;
+    }
+    setDraftTestPending(true);
+    try {
+      await onDraftTestRun(toCreateBody(formik.values));
+    } catch (error) {
+      const code = error?.data?.code;
+      if (error?.status === 400 && code === DRAFT_TEST_ERROR.APPROVAL_NOT_ALLOWED)
+        formik.setErrors({ approval_rule: error.data.error });
+      else if (error?.status === 400 && Object.keys(toFieldErrors(error)).some(isShownField))
+        formik.setErrors(toFieldErrors(error));
+      else if ([400, 404, 409, 500].includes(error?.status)) setDraftTestError(error.data?.error ?? '');
+      else toastError('Failed to start the test run');
+    } finally {
+      setDraftTestPending(false);
+    }
+  };
+
+  // The dialog close is the post-save point: a pending Run Now starts here, else onSaved
   const handleWarningsClose = useCallback(() => {
     const next = afterWarnings.current ?? onSaved;
     afterWarnings.current = null;
@@ -163,12 +204,15 @@ export const useScheduleSave = ({ formik, riskCheck, schedule, onSubmit, onSaved
     savedRule,
     review,
     reviewSaving,
-    testRunPending,
-    testRunError,
+    runNowPending,
+    runNowError,
     submit,
     handleReviewConfirm,
     handleReviewCancel,
-    handleTestRun,
+    handleRunNow,
+    draftTestPending,
+    draftTestError,
+    handleDraftTestRun,
     handleWarningsClose,
   };
 };

@@ -2,43 +2,48 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useLocation, useSearchParams } from 'react-router-dom';
 
-import { compareRunTimestamp } from '@/[fsd]/entities/run-history';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useApplicationDetailsQuery } from '@/api/applications';
 
-import { formatRunStarted, toRunStatusLabel } from '../helpers/scheduleRuns.helpers';
-import { useScheduleRuns, useScheduleRunsLoaded, useScheduleRunsTotal } from './useScheduleRuns.hooks';
+import { toRunStatusLabel } from '../helpers/scheduleRuns.helpers';
+import { ALL_FILTER, filterRuns, mergeRuns, toStatusOptions } from '../helpers/scheduleRunsCard.helpers';
+import { findWaitingRun } from '../helpers/waitingRun.helpers';
+import {
+  useDraftTestRuns,
+  useScheduleRuns,
+  useScheduleRunsLoaded,
+  useScheduleRunsTotal,
+} from './useScheduleRuns.hooks';
 
-// From xl the panel and the list are both in view, so the page scrolls only below it
 const matches = query => window.matchMedia?.(query).matches === true;
-const isWide = () => matches('(min-width: 1536px)');
 const scrollBehavior = () => (matches('(prefers-reduced-motion: reduce)') ? 'auto' : 'smooth');
-const byNewest = (a, b) => compareRunTimestamp(b.started_at, a.started_at);
+const NO_FILTERS = { trigger: ALL_FILTER, status: ALL_FILTER };
 
 /**
- * The Edit schedule page state shared by the test panel and the Runs section:
- * the run the panel shows, the open state of the Runs section and the scroll targets.
+ * The state of the Runs card of the schedule pages: the saved schedule's runs and the Test runs of the unsaved
+ * form in one list, the filters, and the one run that is open. A new page has no `scheduleId` yet.
+ * Test runs that were already on the server when the page opened stay out of the card (see `mergeRuns`).
  */
 export const useScheduleRunsView = (scheduleId, applicationId) => {
   const projectId = useSelectedProjectId();
-  const runs = useScheduleRuns(scheduleId);
+  const savedRuns = useScheduleRuns(scheduleId);
+  const { rows: draftRuns, loaded: draftLoaded } = useDraftTestRuns(applicationId);
   const runsLoaded = useScheduleRunsLoaded(scheduleId);
-  const runsTotal = useScheduleRunsTotal(scheduleId);
+  const savedTotal = useScheduleRunsTotal(scheduleId);
   // The approval notice links here with the conversation of the waiting run
   const linkedConversationId = useSearchParams()[0].get('history_run_id');
-  // undefined: nothing chosen yet, so the notice link decides; null: back to the test
+  // undefined: nothing chosen yet, so the notice link decides; null: all cards closed
   const [chosenRunId, setChosenRunId] = useState();
-  const [runsExpanded, setRunsExpanded] = useState(true);
-  // A request to show the runs ({ runId } or { conversationId }) waits for the section to mount and the runs to load
-  const [request, setRequest] = useState(null);
-  const [runNotFound, setRunNotFound] = useState(false);
-  const [announcement, setAnnouncement] = useState('');
-  // A callback ref: the section may mount after the schedule, and the request waits for it
-  const [sectionElement, setSectionElement] = useState(null);
-  const runsSectionRef = useCallback(node => setSectionElement(node), []);
-  const panelRef = useRef(null);
+  const [filters, setFilters] = useState(NO_FILTERS);
+  const cardRef = useRef(null);
 
-  // The same args as the form's entity details, so both share one request
+  // The draft runs of an earlier visit are not part of this page: the newest id seen at the first load is the
+  // baseline for this entity
+  const baseline = useRef({ applicationId: null, id: 0 });
+  if (draftLoaded && baseline.current.applicationId !== applicationId) {
+    baseline.current = { applicationId, id: draftRuns.reduce((max, run) => Math.max(max, run.id), 0) };
+  }
+
   const { currentData: details } = useApplicationDetailsQuery(
     { projectId, applicationId },
     { skip: !projectId || applicationId == null },
@@ -48,50 +53,44 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
     [details],
   );
 
-  const viewedRun =
-    chosenRunId === undefined
-      ? linkedConversationId != null && runs.find(run => String(run.conversation_id) === linkedConversationId)
-      : runs.find(run => run.id === chosenRunId);
+  const runs = useMemo(
+    () =>
+      mergeRuns(
+        savedRuns,
+        baseline.current.applicationId === applicationId ? draftRuns : [],
+        baseline.current.id,
+      ),
+    // The baseline is set during render when the draft list loads, so the loaded flag stands for it
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [savedRuns, draftRuns, applicationId, draftLoaded],
+  );
+  const shownRuns = useMemo(() => filterRuns(runs, filters), [runs, filters]);
+  const statusOptions = useMemo(() => toStatusOptions(runs, toRunStatusLabel), [runs]);
+  const draftCount = runs.length - savedRuns.length;
+  const total = Number.isFinite(savedTotal)
+    ? savedTotal + draftCount
+    : scheduleId == null
+      ? runs.length
+      : undefined;
 
-  // Below xl the panel sits under the form, so Open scrolls to it; at xl both are in view
-  const openRun = useCallback(run => {
-    setChosenRunId(run.id);
-    if (!isWide()) panelRef.current?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
-  }, []);
-  const backToTest = useCallback(() => setChosenRunId(null), []);
-  // Run History: open the Runs section and select the run when one is named. The effect below
-  // scrolls and focuses once the section and the runs are there. The arg may be a click event.
-  const showRunHistory = useCallback(arg => {
-    const runId = arg?.runId;
-    if (runId != null) setChosenRunId(runId);
-    setRunsExpanded(true);
-    setRequest({ runId });
-  }, []);
-
+  // The newest run opens by itself, so a fresh Test Run shows its log at once
+  const newestRunId = runs[0]?.id;
+  const previousNewestId = useRef(newestRunId);
   useEffect(() => {
-    if (!request || !sectionElement || !runsExpanded || !runsLoaded) return;
-    const named = request.runId != null || request.conversationId != null;
-    const run = named
-      ? runs.find(item =>
-          request.runId != null
-            ? item.id === request.runId
-            : String(item.conversation_id) === request.conversationId,
-        )
-      : [...runs].sort(byNewest)[0];
-    const row = run && sectionElement.querySelector(`[data-run-id="${run.id}"]`);
-    sectionElement.scrollIntoView({ behavior: scrollBehavior(), block: isWide() ? 'nearest' : 'start' });
-    row?.scrollIntoView?.({ block: 'nearest' });
-    (row || sectionElement).focus?.({ preventScroll: true });
-    setRunNotFound(named && !run);
-    setAnnouncement(
-      named && run
-        ? `Showing run ${formatRunStarted(run.started_at)}, ${run.trigger}, ${toRunStatusLabel(run.status)}`
-        : 'Showing the runs of this schedule',
-    );
-    setRequest(null);
-  }, [request, sectionElement, runsExpanded, runsLoaded, runs]);
+    if (newestRunId !== previousNewestId.current && newestRunId != null) setChosenRunId(newestRunId);
+    previousNewestId.current = newestRunId;
+  }, [newestRunId]);
 
-  // A #runs or history_run_id link shows the runs once the page has its schedule. A new hash asks again.
+  const linkedRun =
+    linkedConversationId != null && runs.find(run => String(run.conversation_id) === linkedConversationId);
+  // Nothing chosen yet: the linked run, else the run that waits for a decision
+  const expandedRunId = chosenRunId === undefined ? (linkedRun?.id ?? findWaitingRun(runs)?.id) : chosenRunId;
+
+  const onExpand = useCallback(runId => setChosenRunId(current => (current === runId ? null : runId)), []);
+  const onFilterChange = useCallback((name, value) => setFilters(prev => ({ ...prev, [name]: value })), []);
+  const onClearFilters = useCallback(() => setFilters(NO_FILTERS), []);
+
+  // A #runs or history_run_id link brings the card into view once the runs are there
   const hash = useLocation().hash;
   const handledLink = useRef(null);
   useEffect(() => {
@@ -100,25 +99,23 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
       return;
     }
     const key = `${hash}|${linkedConversationId}`;
-    if (scheduleId == null || handledLink.current === key) return;
+    if (!runsLoaded || handledLink.current === key) return;
     handledLink.current = key;
-    setRunsExpanded(true);
-    setRequest({ conversationId: linkedConversationId ?? undefined });
-  }, [hash, linkedConversationId, scheduleId]);
+    cardRef.current?.scrollIntoView?.({ behavior: scrollBehavior(), block: 'start' });
+    cardRef.current?.focus?.({ preventScroll: true });
+  }, [hash, linkedConversationId, runsLoaded]);
 
   return {
     runs,
-    runsTotal,
-    viewedRun: viewedRun || undefined,
+    shownRuns,
+    total,
     versionNames,
-    runsExpanded,
-    setRunsExpanded,
-    runsSectionRef,
-    panelRef,
-    openRun,
-    backToTest,
-    showRunHistory,
-    announcement,
-    runNotFound,
+    expandedRunId,
+    onExpand,
+    filters,
+    statusOptions,
+    onFilterChange,
+    onClearFilters,
+    cardRef,
   };
 };

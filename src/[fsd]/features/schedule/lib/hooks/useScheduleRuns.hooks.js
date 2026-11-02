@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
-import { useGetScheduleRunQuery, useGetScheduleRunsQuery } from '@/[fsd]/entities/schedule';
+import {
+  useGetDraftTestRunQuery,
+  useGetDraftTestRunsQuery,
+  useGetScheduleRunQuery,
+  useGetScheduleRunsQuery,
+} from '@/[fsd]/entities/schedule';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
 import { buildErrorMessage } from '@/common/utils.jsx';
@@ -106,4 +111,41 @@ export const useScheduleRunConversation = run => {
       answer: findRunAnswer(messages),
     };
   }, [currentData]);
+};
+
+// The Test runs the caller started from the form. The server keeps them on a hidden draft, so they are
+// not in the runs of the saved schedule; each row is marked `isDraftRun` and loads its detail from the draft route.
+export const useDraftTestRuns = applicationId => {
+  const projectId = useSelectedProjectId();
+  const args = { projectId, applicationId, ...RUNS_PAGE };
+  const skip = !projectId || applicationId == null;
+  const { currentData, isError } = useGetDraftTestRunsQuery(args, { skip });
+  const rows = useMemo(
+    () => (currentData?.rows ?? NO_RUNS).map(row => ({ ...row, isDraftRun: true })),
+    [currentData],
+  );
+  const polling = !isError && isRunning(rows);
+  useGetDraftTestRunsQuery(args, { skip, pollingInterval: polling ? POLLING_INTERVAL_MS : 0 });
+
+  return { rows, loaded: !!currentData };
+};
+
+// One draft Test run with its log, polled every 2 seconds while it runs or waits
+const useDraftTestRun = (applicationId, runId) => {
+  const projectId = useSelectedProjectId();
+  const args = { projectId, applicationId, runId };
+  const skip = !projectId || runId == null || applicationId == null;
+  const { currentData, isError, refetch } = useGetDraftTestRunQuery(args, { skip });
+  const polling = !isError && isRunActive(currentData?.status);
+  useGetDraftTestRunQuery(args, { skip, pollingInterval: polling ? RUN_POLLING_INTERVAL_MS : 0 });
+
+  return { run: currentData, isError, refetch };
+};
+
+// The detail of a row of the merged Runs list, from the saved schedule or from the draft
+export const useRunDetail = (scheduleId, applicationId, row) => {
+  const saved = useScheduleRun(scheduleId, row?.isDraftRun ? undefined : row?.id);
+  const draft = useDraftTestRun(applicationId, row?.isDraftRun ? row.id : undefined);
+
+  return row?.isDraftRun ? draft : saved;
 };
