@@ -1,7 +1,7 @@
 export * as ChatButton from './chat-button';
 export * as ChatModal from './chat-modal';
 export * as ChatAttachment from './chat-attachment';
-export { ChatContinue } from './chat-continue';
+export { ChatContinue, ToolkitActionPanel } from './chat-continue';
 export { ErrorTrace, BudgetErrorMessage, ContinuationError } from './error-trace';
 export { BudgetWarningBanner, WebSearchBudgetWarning } from './budget-warning';
 export { InputGuardrailNotice } from './input-guardrail';

@@ -142,7 +142,8 @@ const scheduleRunsSectionStyles = () => ({
   fullHistory: {
     alignSelf: 'flex-start',
     flexShrink: 0,
-    padding: '0.5rem 1rem 0',
+    // Lined up with the row text, which sits right of the 0.1875 rem selection bar
+    padding: '0.5rem 1.1875rem 0.75rem',
   },
   root: ({ palette }) => ({
     flex: '0 1 auto',

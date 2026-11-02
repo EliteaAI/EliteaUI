@@ -3,7 +3,9 @@ import { format } from 'date-fns';
 import { describe, expect, it } from 'vitest';
 
 import {
+  describeRunDuration,
   findNewestTestRun,
+  findPendingAuthAction,
   formatExpiresIn,
   formatRunDuration,
   formatRunStarted,
@@ -39,7 +41,7 @@ describe('status text', () => {
     ).toEqual([
       'Running',
       'Success',
-      'Waiting for input',
+      'Waiting for approval',
       'Expired',
       'Failed',
       'Blocked',
@@ -91,6 +93,12 @@ describe('test panel values', () => {
     expect(formatRunDuration(65_400)).toBe('1 m 05 s');
     expect(formatRunDuration(0)).toBe('0 s');
     expect(formatRunDuration(null)).toBe('–');
+    expect(describeRunDuration({ duration_ms: 38_000 })).toBe('38 s');
+    expect(describeRunDuration({ status: 'waiting_for_approval', duration_ms: null })).toBe(
+      'Paused until you decide',
+    );
+    expect(describeRunDuration({ status: 'running', duration_ms: null })).toBe('Running');
+    expect(describeRunDuration({ status: 'failed', duration_ms: null })).toBe('Duration not recorded');
   });
 
   it('joins duration, tokens and cost of the run summary', () => {
@@ -105,7 +113,10 @@ describe('test panel values', () => {
     expect(formatRunSummary({ duration_ms: 5139, tokens: 447, cost_usd: 0.00161 })).toBe(
       '5 s · 447 tokens · $0.0016',
     );
-    expect(formatRunSummary({ cost_usd: 0 })).toBe('$0.00');
+    expect(formatRunSummary({ cost_usd: 0 })).toBe('');
+    expect(formatRunSummary({ duration_ms: 1000, tokens: 5, cost_usd: 0 })).toBe('1 s · 5 tokens');
+    expect(formatRunSummary({ cost_usd: 0.000004 })).toBe('< $0.0001');
+    expect(formatRunSummary({ cost_usd: 0.0001 })).toBe('$0.0001');
     expect(formatRunSummary({ duration_ms: 1000 })).toBe('1 s');
     expect(formatRunSummary(undefined)).toBe('');
   });
@@ -138,5 +149,13 @@ describe('test panel values', () => {
     expect(formatExpiresIn(pausedAt, Date.parse('2026-10-22T10:00:00Z'))).toBe('Expires in 0 h 42 min');
     expect(formatExpiresIn(pausedAt, Date.parse('2026-10-23T00:00:00Z'))).toBe('Expired');
     expect(formatExpiresIn(undefined, 0)).toBe('');
+  });
+
+  it('finds the sign-in card of a paused message and ignores other tool actions', () => {
+    const card = { status: 'action_required', authorizationRequestId: 'auth-1' };
+    expect(findPendingAuthAction({ toolActions: [{ status: 'complete' }, card] })).toBe(card);
+    expect(findPendingAuthAction({ toolActions: [{ status: 'action_required' }] })).toBeUndefined();
+    expect(findPendingAuthAction({ toolActions: [] })).toBeUndefined();
+    expect(findPendingAuthAction(undefined)).toBeUndefined();
   });
 });

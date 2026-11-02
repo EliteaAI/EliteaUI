@@ -1341,7 +1341,7 @@ describe('ScheduleForm', () => {
 
     it('shows the block box under the entity, disables Save and names the reason in the header', async () => {
       checkRisk.mockReturnValue(answer({ ...CLEAR, blocking: [SIGNIN] }));
-      renderForm();
+      renderForm({ initialValues: { ...INITIAL, approval_rule: 'run_without_asking' } });
       pickEntity(7);
 
       const hint = await screen.findByText('Fix the risk check to save');
@@ -1401,13 +1401,55 @@ describe('ScheduleForm', () => {
     });
 
     it('checks again on Save and saves nothing when the fresh check blocks', async () => {
-      const { onSubmit } = renderForm();
+      const { onSubmit } = renderForm({ initialValues: { ...INITIAL, approval_rule: 'run_without_asking' } });
       await fillAgent();
       checkRisk.mockReturnValue(answer({ ...CLEAR, blocking: [SIGNIN] }));
 
       await save();
 
       expect(await screen.findByTestId('schedule-risk-block-box')).toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('shows a personal sign-in as a warning under "Pause and ask me" and saves', async () => {
+      checkRisk.mockReturnValue(answer({ ...CLEAR, blocking: [SIGNIN] }));
+      const { onSubmit } = renderForm();
+      await fillAgent();
+
+      expect(screen.getByTestId('schedule-risk-wait-box')).toHaveTextContent('waits');
+      expect(screen.queryByTestId('schedule-risk-block-box')).not.toBeInTheDocument();
+      expect(screen.queryByText('Fix the risk check to save')).not.toBeInTheDocument();
+
+      await save();
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    });
+
+    it('turns the warning into a block box when the rule changes to "Run without asking"', async () => {
+      checkRisk.mockReturnValue(answer({ ...CLEAR, blocking: [SIGNIN] }));
+      renderForm();
+      await fillAgent();
+      expect(screen.getByTestId('schedule-risk-wait-box')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId('schedule-approval-rule-run_without_asking'));
+
+      expect(await screen.findByTestId('schedule-risk-block-box')).toBeInTheDocument();
+      expect(screen.queryByTestId('schedule-risk-wait-box')).not.toBeInTheDocument();
+      expect(saveButton()).toBeDisabled();
+    });
+
+    it('keeps a human-input step blocking under "Pause and ask me"', async () => {
+      checkRisk.mockReturnValue(
+        answer({
+          ...CLEAR,
+          blocking: [{ code: 'human_input_step', step: 'review', fix: SIGNIN.fix }],
+        }),
+      );
+      const { onSubmit } = renderForm();
+      pickEntity(7);
+
+      expect(await screen.findByTestId('schedule-risk-block-box')).toBeInTheDocument();
+      expect(saveButton()).toBeDisabled();
       expect(onSubmit).not.toHaveBeenCalled();
     });
 
@@ -1571,12 +1613,12 @@ describe('ScheduleForm', () => {
     it('409 schedule_blocked closes the dialog and shows the block box', async () => {
       checkRisk.mockReturnValue(answer(RISKY));
       const onSubmit = vi.fn().mockRejectedValue(conflict('schedule_blocked', { blocking: [SIGNIN] }));
-      renderForm({ onSubmit });
+      renderForm({ onSubmit, initialValues: { ...INITIAL, approval_rule: 'run_without_asking' } });
       await fillAgent();
       await save();
       await screen.findByTestId('risk-dialog');
 
-      await act(async () => reviewProps.onConfirm({ rule: 'pause_and_ask' }));
+      await act(async () => reviewProps.onConfirm({ rule: 'run_without_asking' }));
 
       expect(screen.queryByTestId('risk-dialog')).not.toBeInTheDocument();
       expect(screen.getByTestId('schedule-risk-block-box')).toBeInTheDocument();
@@ -1736,7 +1778,13 @@ describe('ScheduleForm', () => {
       checkRisk.mockReturnValue(answer({ ...CLEAR, blocking: [SIGNIN] }));
       renderForm(
         {
-          initialValues: { ...INITIAL, application_id: '7', version_id: 71, prompt: 'Hi' },
+          initialValues: {
+            ...INITIAL,
+            application_id: '7',
+            version_id: 71,
+            prompt: 'Hi',
+            approval_rule: 'run_without_asking',
+          },
           lockedEntity: { type: 'agent', id: '7' },
           schedule: { id: 3, owner: { name: 'Ann Lee' } },
         },

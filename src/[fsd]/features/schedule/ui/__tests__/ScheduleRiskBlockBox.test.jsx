@@ -127,4 +127,35 @@ describe('ScheduleRiskBlockBox', () => {
 
     expect(screen.queryByTestId('schedule-risk-block-box')).not.toBeInTheDocument();
   });
+
+  describe('waiting for the owner', () => {
+    it('shows a yellow box that says the run waits, with a link to sign in or add credentials', () => {
+      setup({ blocking: SIGNIN, waiting: true });
+
+      expect(screen.queryByTestId('schedule-risk-block-box')).not.toBeInTheDocument();
+      const box = within(screen.getByTestId('schedule-risk-wait-box'));
+      expect(box.getByText(/needs a personal sign-in/)).toBeInTheDocument();
+      expect(box.getByText(/the run waits for your approval/)).toBeInTheDocument();
+      expect(box.queryByText(/You can't save this schedule/)).not.toBeInTheDocument();
+      const link = box.getByRole('link', { name: /Open agent to sign in or add credentials/ });
+      expect(link).toHaveAttribute('href', appUrl('/agents/all/12/31'));
+    });
+
+    it('explains a missing credential and where to add it', () => {
+      setup({
+        blocking: [
+          {
+            code: 'missing_credential',
+            toolkit: 'Jira',
+            fix: { entity_type: 'agent', id: 12, version_id: 31 },
+          },
+        ],
+        waiting: true,
+      });
+
+      const box = within(screen.getByTestId('schedule-risk-wait-box'));
+      expect(box.getByText("Toolkit 'Jira' has no usable credential for the owner.")).toBeInTheDocument();
+      expect(box.getByText(/Add the credential in the toolkit settings/)).toBeInTheDocument();
+    });
+  });
 });

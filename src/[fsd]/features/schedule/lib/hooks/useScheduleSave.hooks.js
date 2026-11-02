@@ -3,7 +3,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 
 import { APPROVAL_RULE, RISK_NAME_MISMATCH, RISK_SAVE_ERROR } from '../constants';
-import { isPromptShown, toCreateBody, toFieldErrors, toUpdateBody } from '../helpers';
+import { isPromptShown, splitRiskFindings, toCreateBody, toFieldErrors, toUpdateBody } from '../helpers';
 
 // Fields with their own message in the form; a 400 for any other field goes to the banner
 const FIELDS_WITH_INPUT = [
@@ -95,7 +95,8 @@ export const useScheduleSave = ({ formik, riskCheck, schedule, onSubmit, onSaved
     // A fresh check on Save: a blocked or failed check shows in the form, sensitive tools open the review
     const risk = await riskCheck.runCheck();
     if (!risk) return toastError('The risk check did not run. Try again.');
-    if (risk.blocking?.length) return;
+    // Under "Pause and ask me" a missing credential or sign-in does not stop the save: the run waits
+    if (splitRiskFindings(risk, values.approval_rule).blocking.length) return;
     // An edit that keeps the stored "Run without asking" consent saves without a new review
     const keepsConsent = risk.confirmed && values.approval_rule === APPROVAL_RULE.RUN_WITHOUT_ASKING;
     if (risk.sensitive?.length && !keepsConsent) setReview({ values, runAfterSave, changed: false });

@@ -96,7 +96,7 @@ describe('useScheduleRunsView', () => {
     expect(result.current.viewedRun).toBe(waiting);
     expect(rowOf(section, waiting).focus).toHaveBeenCalledWith({ preventScroll: true });
     expect(rowOf(section, waiting).scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' });
-    expect(result.current.announcement).toMatch(/^Showing run .*, cron, Waiting for input$/);
+    expect(result.current.announcement).toMatch(/^Showing run .*, cron, Waiting for approval$/);
   });
 
   it('Run History called with a click event shows the list and selects no run', () => {
@@ -175,7 +175,7 @@ describe('useScheduleRunsView', () => {
 
     expect(section.scrollIntoView).toHaveBeenCalled();
     expect(rowOf(section, waiting).focus).toHaveBeenCalledWith({ preventScroll: true });
-    expect(result.current.announcement).toMatch(/^Showing run .*, cron, Waiting for input$/);
+    expect(result.current.announcement).toMatch(/^Showing run .*, cron, Waiting for approval$/);
     expect(result.current.runNotFound).toBe(false);
   });
 
