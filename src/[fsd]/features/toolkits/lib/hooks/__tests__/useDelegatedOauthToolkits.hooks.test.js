@@ -51,6 +51,24 @@ describe('useDelegatedOauthToolkits', () => {
     expect(delegatedOauthToolkitNames).toEqual(['Remote', 'GitHub MCP', 'Wrapped']);
   });
 
+  it('does not flag SharePoint whose credential holds a stored Microsoft login', () => {
+    shared.configsByProjectAndType[`${PROJECT_ID}:sharepoint`] = [
+      {
+        elitea_title: 'stored',
+        data: { oauth_discovery_endpoint: 'https://login', refresh_token: '{{secret.x}}' },
+      },
+    ];
+    const tools = [
+      {
+        name: 'SP Stored',
+        type: 'sharepoint',
+        settings: { sharepoint_configuration: { elitea_title: 'stored' } },
+      },
+    ];
+
+    expect(renderWith(tools).delegatedOauthToolkitNames).toEqual([]);
+  });
+
   it('detects SharePoint only when its credential has an OAuth discovery endpoint', () => {
     shared.configsByProjectAndType[`${PROJECT_ID}:sharepoint`] = [
       { elitea_title: 'delegated', data: { oauth_discovery_endpoint: 'https://login/.well-known' } },
