@@ -50,9 +50,13 @@ const toSavedCredential = row => ({
 // Saved value (or select-value payload) -> menu row. A saved reference resolves by uuid only (the backend
 // resolves it the same way, so a stale uuid must show as missing, not as a same-title row); legacy values
 // without a reference keep the title + private match.
-const findSavedOption = (options, saved) => {
+const findSavedOption = (options, saved, personalProjectId) => {
   const savedUuid = saved?.[credentialMenuItemValue.keyConfigurationUuid];
-  if (savedUuid) return options.find(option => option.uuid === savedUuid);
+  const savedProjectId = saved?.[credentialMenuItemValue.keyConfigurationProjectId];
+  // Another member's private reference resolves to this user's own same-title credential, as the backend does
+  const isForeignPrivate =
+    saved?.private && savedProjectId != null && String(savedProjectId) !== String(personalProjectId);
+  if (savedUuid && !isForeignPrivate) return options.find(option => option.uuid === savedUuid);
   const hasSavedKeys = option =>
     option.elitea_title === saved?.elitea_title && option.private === saved?.private;
   // A value without a uuid is the legacy row when one exists; a legacy saved value still
@@ -353,7 +357,7 @@ const CredentialsSelect = memo(props => {
       );
     }
 
-    const availableSavedData = findSavedOption(savedCredentialsMenuData, value);
+    const availableSavedData = findSavedOption(savedCredentialsMenuData, value, personal_project_id);
 
     if (availableSavedData) return availableSavedData;
 
@@ -386,6 +390,7 @@ const CredentialsSelect = memo(props => {
     section,
     projectDefaultVectorStorageModel,
     fallbackToFirstCredential,
+    personal_project_id,
   ]);
 
   useEffect(() => {
@@ -543,7 +548,7 @@ const CredentialsSelect = memo(props => {
     newValue => {
       const savedRow = selectValueToSavedRow(newValue);
       if (savedRow) {
-        const matchingSaved = findSavedOption(savedCredentialsMenuData, savedRow);
+        const matchingSaved = findSavedOption(savedCredentialsMenuData, savedRow, personal_project_id);
         if (matchingSaved) {
           onSelectItem(matchingSaved);
           onReload?.({
@@ -563,7 +568,15 @@ const CredentialsSelect = memo(props => {
         if (matchingCreate) createSelectHandler('Create', matchingCreate);
       }
     },
-    [savedCredentialsMenuData, onSelectItem, onReload, propKey, createMenuData, createSelectHandler],
+    [
+      savedCredentialsMenuData,
+      onSelectItem,
+      onReload,
+      propKey,
+      createMenuData,
+      createSelectHandler,
+      personal_project_id,
+    ],
   );
 
   const showMismatchFooter = Boolean(
