@@ -4,6 +4,8 @@ import { PAGE_SIZE } from '@/common/constants.js';
 
 export const SCHEDULES_TAG = 'SCHEDULES_TAG';
 export const SCHEDULE_RUNS_TAG = 'SCHEDULE_RUNS_TAG';
+// The runs of the caller's hidden Test draft share one tag, because the draft id is never sent
+export const DRAFT_RUNS_ID = 'DRAFT';
 const SCHEDULE_SETTINGS_TAG = 'SCHEDULE_SETTINGS_TAG';
 
 // false is a real value (enabled=false); only unset, blank and empty list are left out
@@ -144,6 +146,43 @@ export const scheduleApi = eliteaApi
         invalidatesTags: (_, error, { scheduleId }) => (error ? [] : scheduleTags(scheduleId)),
       }),
 
+      // Test Run of an unsaved form: the server runs the Save body from a hidden draft, so nothing is saved
+      startDraftTestRun: build.mutation({
+        query: ({ projectId, ...body }) => ({
+          url: `${schedulesPath(projectId)}/test_run`,
+          method: 'POST',
+          body,
+        }),
+        invalidatesTags: (_, error) => (error ? [] : [{ type: SCHEDULE_RUNS_TAG, id: DRAFT_RUNS_ID }]),
+      }),
+
+      // The caller's runs from the hidden draft, newest first
+      getDraftTestRuns: build.query({
+        query: ({ projectId, applicationId, page = 0, pageSize = PAGE_SIZE }) => ({
+          url: `${schedulesPath(projectId)}/test_run`,
+          params: { application_id: applicationId, limit: pageSize, offset: page * pageSize },
+        }),
+        providesTags: [{ type: SCHEDULE_RUNS_TAG, id: DRAFT_RUNS_ID }],
+      }),
+
+      // One draft run with its log `events` and `summary`
+      getDraftTestRun: build.query({
+        query: ({ projectId, applicationId, runId }) => ({
+          url: `${schedulesPath(projectId)}/test_run/${runId}`,
+          params: { application_id: applicationId },
+        }),
+        providesTags: [{ type: SCHEDULE_RUNS_TAG, id: DRAFT_RUNS_ID }],
+      }),
+
+      // Cancel on the form drops the hidden draft; the server answers 204 also when there is none
+      cancelDraftTestRun: build.mutation({
+        query: ({ projectId, applicationId }) => ({
+          url: `${schedulesPath(projectId)}/test_run`,
+          method: 'DELETE',
+          params: { application_id: applicationId },
+        }),
+      }),
+
       // The owner's answer on a waiting run that has no chat (it waits for credentials)
       decideRunWithoutChat: build.mutation({
         query: ({ projectId, scheduleId, runId, action }) => ({
@@ -263,6 +302,10 @@ export const {
   useCheckScheduleRiskMutation,
   useDecideRunWithoutChatMutation,
   useRunScheduleMutation,
+  useStartDraftTestRunMutation,
+  useCancelDraftTestRunMutation,
+  useGetDraftTestRunsQuery,
+  useGetDraftTestRunQuery,
   useUpdateScheduleMutation,
   usePauseScheduleMutation,
   useResumeScheduleMutation,

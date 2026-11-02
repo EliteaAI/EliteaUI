@@ -55,11 +55,12 @@ export const buildSchedulesListLink = ({ entityType, entityId }) => {
 
 // The agent or pipeline Run History filtered to one schedule. The owner view mode travels with it, because
 // the breadcrumb copies the search and the entity page falls back to the public mode without it.
-export const buildScheduleHistoryLink = schedule => {
+// A Test run of an unsaved form has no schedule id: the link then filters by the extra params instead.
+export const buildScheduleHistoryLink = (schedule, extraParams = {}) => {
   const base = NavigationHelpers.buildRoute(ENTITY_ROUTES[schedule.entity_type].history, {
     tab: DEFAULT_TAB,
     agentId: schedule.application_id,
   });
-  const query = buildOwnerViewModeParams({ schedule_id: schedule.id }).toString();
-  return `${base}?${query}`;
+  const params = schedule.id == null ? extraParams : { schedule_id: schedule.id, ...extraParams };
+  return `${base}?${buildOwnerViewModeParams(params).toString()}`;
 };
