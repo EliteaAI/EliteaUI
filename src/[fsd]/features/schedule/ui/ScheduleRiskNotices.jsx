@@ -8,50 +8,49 @@ import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
 import { RISK_CHECK_STATUS } from '../lib/constants';
 import ScheduleRiskBlockBox from './ScheduleRiskBlockBox';
 
-const ScheduleRiskNotices = memo(
-  ({ status, blocking, waiting, entityType, entityId, versionId, projectId, onRetry }) => {
-    const styles = scheduleRiskNoticesStyles();
+const ScheduleRiskNotices = memo(props => {
+  const { status, blocking, waiting, entityType, entityId, versionId, projectId, onRetry } = props;
+  const styles = scheduleRiskNoticesStyles();
 
-    return (
-      <>
-        {status === RISK_CHECK_STATUS.BLOCKED && (
-          <ScheduleRiskBlockBox
-            blocking={blocking}
-            entityType={entityType}
-            entityId={entityId}
-            versionId={versionId}
-            projectId={projectId}
-          />
-        )}
-        {waiting?.length > 0 && (
-          <ScheduleRiskBlockBox
-            waiting
-            blocking={waiting}
-            entityType={entityType}
-            entityId={entityId}
-            versionId={versionId}
-            projectId={projectId}
-          />
-        )}
-        {status === RISK_CHECK_STATUS.FAILED && (
-          <BannerMessage variant="warning">
-            <Box sx={styles.failed}>
-              <Typography variant="bodySmall">The risk check did not run. Try again.</Typography>
-              <BaseBtn
-                type="button"
-                variant="elitea"
-                color="secondary"
-                onClick={onRetry}
-              >
-                Retry
-              </BaseBtn>
-            </Box>
-          </BannerMessage>
-        )}
-      </>
-    );
-  },
-);
+  return (
+    <>
+      {status === RISK_CHECK_STATUS.BLOCKED && (
+        <ScheduleRiskBlockBox
+          blocking={blocking}
+          entityType={entityType}
+          entityId={entityId}
+          versionId={versionId}
+          projectId={projectId}
+        />
+      )}
+      {waiting?.length > 0 && (
+        <ScheduleRiskBlockBox
+          waiting
+          blocking={waiting}
+          entityType={entityType}
+          entityId={entityId}
+          versionId={versionId}
+          projectId={projectId}
+        />
+      )}
+      {status === RISK_CHECK_STATUS.FAILED && (
+        <BannerMessage variant="warning">
+          <Box sx={styles.failed}>
+            <Typography variant="bodySmall">The risk check did not run. Try again.</Typography>
+            <BaseBtn
+              type="button"
+              variant="elitea"
+              color="secondary"
+              onClick={onRetry}
+            >
+              Retry
+            </BaseBtn>
+          </Box>
+        </BannerMessage>
+      )}
+    </>
+  );
+});
 
 ScheduleRiskNotices.displayName = 'ScheduleRiskNotices';
 

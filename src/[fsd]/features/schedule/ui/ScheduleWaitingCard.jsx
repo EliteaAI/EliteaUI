@@ -52,7 +52,7 @@ const ScheduleWaitingCard = memo(
   forwardRef((props, ref) => {
     const { schedule, run, onShowTest } = props;
     const projectId = useSelectedProjectId();
-    const styles = useMemo(() => scheduleWaitingCardStyles(), []);
+    const styles = scheduleWaitingCardStyles();
     const now = useNow();
     const statusId = useId();
     const { run: detail } = useScheduleRun(schedule.id, run.id);
@@ -113,20 +113,17 @@ const ScheduleWaitingCard = memo(
       ['Credential', waiting.credential],
       ['Status', status.label],
     ].filter(([, value]) => value);
-    const step1Title = useMemo(
-      () => (
-        <Box sx={styles.stepHeader}>
-          ⚠️ Step 1: Toolkit Authorization Required
-          <Chip
-            data-testid="schedule-waiting-step1-status"
-            size="small"
-            variant="outlined"
-            label={status.label}
-            sx={styles.chip[status.tone]}
-          />
-        </Box>
-      ),
-      [status, styles],
+    const step1Title = (
+      <Box sx={styles.stepHeader}>
+        ⚠️ Step 1: Toolkit Authorization Required
+        <Chip
+          data-testid="schedule-waiting-step1-status"
+          size="small"
+          variant="outlined"
+          label={status.label}
+          sx={styles.chip[status.tone]}
+        />
+      </Box>
     );
     const buttonProps = useActionButtonProps();
 
