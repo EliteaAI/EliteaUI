@@ -1019,24 +1019,24 @@ describe('ScheduleForm', () => {
     };
     const EDIT_INITIAL = { ...INITIAL, application_id: 7, version_id: 71, prompt: 'Hi' };
     // The edit page's side panel holds Test run; this stand-in shows what the form passes
-    const sidePanel = ({ onTestRun, testRunPending, testRunError }) => (
+    const sidePanel = ({ onRunNow, runNowPending, runNowError }) => (
       <div data-testid="side-panel">
         <button
           type="button"
           data-testid="schedule-form-test-run"
-          disabled={testRunPending}
-          onClick={onTestRun}
+          disabled={runNowPending}
+          onClick={onRunNow}
         >
           Test run
         </button>
-        {testRunError && <p data-testid="test-run-error">{testRunError}</p>}
+        {runNowError && <p data-testid="test-run-error">{runNowError}</p>}
       </div>
     );
     const renderEdit = (props = {}) =>
       renderForm({
         initialValues: EDIT_INITIAL,
         schedule: SCHEDULE,
-        onTestRun: vi.fn().mockResolvedValue(undefined),
+        onRunNow: vi.fn().mockResolvedValue(undefined),
         sidePanel,
         ...props,
       });
@@ -1148,13 +1148,13 @@ describe('ScheduleForm', () => {
     it('saves a changed form first, then starts the run', async () => {
       const calls = [];
       const onSubmit = vi.fn().mockImplementation(async () => calls.push('save'));
-      const onTestRun = vi.fn().mockImplementation(async () => calls.push('run'));
-      renderEdit({ onSubmit, onTestRun });
+      const onRunNow = vi.fn().mockImplementation(async () => calls.push('run'));
+      renderEdit({ onSubmit, onRunNow });
       edit();
 
       testRun();
 
-      await waitFor(() => expect(onTestRun).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(onRunNow).toHaveBeenCalledTimes(1));
       expect(calls).toEqual(['save', 'run']);
       expect(onSubmit.mock.calls[0][0]).toMatchObject({ name: 'Changed' });
     });
@@ -1170,13 +1170,13 @@ describe('ScheduleForm', () => {
 
     it('disables Test run while the run is pending, so a double click sends one run', async () => {
       let finish;
-      const onTestRun = vi.fn(() => new Promise(resolve => (finish = resolve)));
-      renderEdit({ onTestRun });
+      const onRunNow = vi.fn(() => new Promise(resolve => (finish = resolve)));
+      renderEdit({ onRunNow });
 
       testRun();
       await waitFor(() => expect(screen.getByTestId('schedule-form-test-run')).toBeDisabled());
       testRun();
-      expect(onTestRun).toHaveBeenCalledTimes(1);
+      expect(onRunNow).toHaveBeenCalledTimes(1);
 
       await act(async () => finish());
       expect(screen.getByTestId('schedule-form-test-run')).toBeEnabled();
@@ -1195,9 +1195,9 @@ describe('ScheduleForm', () => {
     });
 
     it('sends no run when the save fails', async () => {
-      const onTestRun = vi.fn();
+      const onRunNow = vi.fn();
       renderEdit({
-        onTestRun,
+        onRunNow,
         onSubmit: vi.fn().mockRejectedValue({ status: 400, data: { field: 'name', error: 'Name is taken' } }),
       });
       edit();
@@ -1205,7 +1205,7 @@ describe('ScheduleForm', () => {
       testRun();
 
       expect(await screen.findByText('Name is taken')).toBeInTheDocument();
-      expect(onTestRun).not.toHaveBeenCalled();
+      expect(onRunNow).not.toHaveBeenCalled();
     });
 
     it('sends no run when the form is invalid', async () => {
@@ -1220,7 +1220,7 @@ describe('ScheduleForm', () => {
 
     it('passes the server reason of a 409 run to the side panel, not the form banner', async () => {
       renderEdit({
-        onTestRun: vi.fn().mockRejectedValue({ status: 409, data: { error: 'Already running' } }),
+        onRunNow: vi.fn().mockRejectedValue({ status: 409, data: { error: 'Already running' } }),
       });
 
       testRun();
@@ -1230,11 +1230,11 @@ describe('ScheduleForm', () => {
     });
 
     it('clears the run reason when the next Test run starts', async () => {
-      const onTestRun = vi
+      const onRunNow = vi
         .fn()
         .mockRejectedValueOnce({ status: 409, data: { error: 'Already running' } })
         .mockResolvedValue(undefined);
-      renderEdit({ onTestRun });
+      renderEdit({ onRunNow });
 
       testRun();
       await screen.findByTestId('test-run-error');
@@ -1256,20 +1256,20 @@ describe('ScheduleForm', () => {
 
     it('starts the run after the warnings dialog closes, not before, and skips onSaved', async () => {
       const onSaved = vi.fn();
-      const onTestRun = vi.fn().mockResolvedValue(undefined);
+      const onRunNow = vi.fn().mockResolvedValue(undefined);
       renderEdit({
         onSubmit: vi.fn().mockResolvedValue({ id: 3, warnings: [{ code: 'x', message: 'm' }] }),
         onSaved,
-        onTestRun,
+        onRunNow,
       });
       edit();
 
       testRun();
 
       await screen.findByTestId('warnings-dialog');
-      expect(onTestRun).not.toHaveBeenCalled();
+      expect(onRunNow).not.toHaveBeenCalled();
       fireEvent.click(screen.getByRole('button', { name: 'OK' }));
-      await waitFor(() => expect(onTestRun).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(onRunNow).toHaveBeenCalledTimes(1));
       expect(onSaved).not.toHaveBeenCalled();
     });
 
@@ -1627,14 +1627,14 @@ describe('ScheduleForm', () => {
 
     it('starts a pending Test run only after the confirmed save', async () => {
       checkRisk.mockReturnValue(answer(RISKY));
-      const onTestRun = vi.fn().mockResolvedValue(undefined);
+      const onRunNow = vi.fn().mockResolvedValue(undefined);
       const onSubmit = vi.fn().mockResolvedValue({ id: 3 });
       renderForm({
         initialValues: { ...INITIAL, application_id: 7, version_id: 71, prompt: 'Hi' },
         schedule: { id: 3, owner: { name: 'Ann Lee' } },
         onSubmit,
-        onTestRun,
-        sidePanel: ({ onTestRun: run }) => (
+        onRunNow,
+        sidePanel: ({ onRunNow: run }) => (
           <button
             type="button"
             onClick={run}
@@ -1649,11 +1649,11 @@ describe('ScheduleForm', () => {
 
       fireEvent.click(screen.getByRole('button', { name: 'Test run' }));
       await screen.findByTestId('risk-dialog');
-      expect(onTestRun).not.toHaveBeenCalled();
+      expect(onRunNow).not.toHaveBeenCalled();
 
       await act(async () => reviewProps.onConfirm({ rule: 'pause_and_ask' }));
 
-      await waitFor(() => expect(onTestRun).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(onRunNow).toHaveBeenCalledTimes(1));
     });
 
     it('400 risk_name_mismatch keeps the dialog open and shows the server text at the typed name', async () => {

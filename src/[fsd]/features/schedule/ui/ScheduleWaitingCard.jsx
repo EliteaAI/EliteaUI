@@ -43,10 +43,9 @@ const describeNeed = ({ need, toolkit, credential }, pausedText) => {
 };
 
 /**
- * The "Action needed" card of the schedule page. It takes the place of the Test schedule panel while a run
- * waits for approval. A run that waits for a credential gets two steps: provide the credential, then approve.
+ * The "Action needed" card of the schedule page. It opens inside a run of the Runs card that waits for approval. A run that waits for a credential gets two steps: provide the credential, then approve.
  * Approve stays off until the risk check of the schedule finds the credential. A run that waits for a sign-in
- * has the sign-in button as step 1. `run` is a row of the runs list; `onShowTest` switches back to the Test panel.
+ * has the sign-in button as step 1. `run` is a row of the runs list; `onShowTest` (optional) goes back to the Runs card.
  */
 const ScheduleWaitingCard = memo(
   forwardRef((props, ref) => {
@@ -143,13 +142,15 @@ const ScheduleWaitingCard = memo(
           >
             Action needed: this run is waiting for you
           </Typography>
-          <BaseBtn
-            variant="elitea"
-            color="secondary"
-            onClick={onShowTest}
-          >
-            Test schedule
-          </BaseBtn>
+          {onShowTest && (
+            <BaseBtn
+              variant="elitea"
+              color="secondary"
+              onClick={onShowTest}
+            >
+              Show runs
+            </BaseBtn>
+          )}
         </Box>
         <Box sx={styles.body}>
           {expiry && (

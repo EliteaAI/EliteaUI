@@ -201,10 +201,10 @@ describe('ScheduleWaitingCard', () => {
     expect(screen.getByText('Only the owner can approve or reject this run')).toBeInTheDocument();
   });
 
-  it('switches back to the test block from the header button', () => {
+  it('shows the runs from the header button', () => {
     const onShowTest = renderCard();
 
-    fireEvent.click(button('Test schedule'));
+    fireEvent.click(button('Show runs'));
 
     expect(onShowTest).toHaveBeenCalledTimes(1);
   });

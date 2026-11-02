@@ -43,9 +43,10 @@ const RISK_STATES_WITHOUT_SAVE = [
  * `onSubmit(body)` returns a promise of the save answer and rejects with the API error;
  * `onSaved(answer)` runs at once after a save without warnings, else when the warnings dialog closes.
  * `schedule` turns on edit mode: read-only Owner and update body. `entityName` names the page.
- * `sidePanel({ onTestRun, testRunPending, testRunError })` renders a card right of the form, as the
- * Agents editor puts its chat; its `onTestRun` saves a changed form, then calls the `onTestRun()` prop
- * (a promise) in the place of `onSaved` at the same post-save point. What `sidePanel` returns (the panel and
+ * `sidePanel({ values, onRunNow, runNowPending, runNowError, onTestRun, testRunPending, testRunError })` renders a card right of the form, as the
+ * Agents editor puts its chat; its `onRunNow` saves a changed form, then calls the `onRunNow()` prop
+ * (a promise) in the place of `onSaved` at the same post-save point. `onTestRun` runs the unsaved form through
+ * the `onDraftTestRun(body)` prop (a promise) and saves nothing. What `sidePanel` returns (the panel and
  * the Runs section under it) fills the right column from xl, and sits under the form below it.
  * `sidePanelFirst` puts the panel above the form below xl, for a card the owner must see at once.
  * `headerActions` (a node) sits in the header bar after Cancel, for example the page's 3-dots menu.
@@ -58,7 +59,8 @@ const ScheduleForm = memo(props => {
     entityName,
     onSubmit,
     onSaved,
-    onTestRun,
+    onRunNow,
+    onDraftTestRun,
     onCancel,
     sidePanel,
     sidePanelFirst = false,
@@ -87,7 +89,15 @@ const ScheduleForm = memo(props => {
     scheduleId: schedule?.id,
     approvalRule: values.approval_rule,
   });
-  const save = useScheduleSave({ formik, riskCheck, schedule, onSubmit, onSaved, onTestRun });
+  const save = useScheduleSave({
+    formik,
+    riskCheck,
+    schedule,
+    onSubmit,
+    onSaved,
+    onRunNow,
+    onDraftTestRun,
+  });
   // Without edit in allowed_actions the server refuses a save, so the form only shows the values
   const readOnly = Array.isArray(schedule?.allowed_actions) && !schedule.allowed_actions.includes('edit');
   const riskBlocksSave = RISK_STATES_WITHOUT_SAVE.includes(riskCheck.status);
@@ -126,6 +136,9 @@ const ScheduleForm = memo(props => {
     [setFieldValue],
   );
   const handleRuleChange = useCallback(rule => setFieldValue('approval_rule', rule), [setFieldValue]);
+
+  // The page drops the hidden Test draft of this form when the user leaves without saving
+  const handleCancel = useCallback(() => onCancel?.(values), [onCancel, values]);
 
   const ruleNote = save.ruleChanged
     ? `The schedule was saved with the rule "${APPROVAL_RULE_ITEMS.find(item => item.value === save.savedRule)?.label ?? save.savedRule}".`
@@ -281,7 +294,7 @@ const ScheduleForm = memo(props => {
                   formik.isSubmitting || riskBlocksSave || readOnly || (!!schedule && !formik.dirty)
                 }
                 onSave={formik.handleSubmit}
-                onCancel={onCancel}
+                onCancel={handleCancel}
                 headerActions={headerActions}
               />
             ),
@@ -321,9 +334,13 @@ const ScheduleForm = memo(props => {
                     sx={[styles.sidePanel, sidePanelFirst && styles.sidePanelFirst]}
                   >
                     {sidePanel({
-                      onTestRun: save.handleTestRun,
-                      testRunPending: formik.isSubmitting || save.testRunPending,
-                      testRunError: save.testRunError,
+                      values,
+                      onRunNow: save.handleRunNow,
+                      runNowPending: formik.isSubmitting || save.runNowPending,
+                      runNowError: save.runNowError,
+                      onTestRun: save.handleDraftTestRun,
+                      testRunPending: save.draftTestPending,
+                      testRunError: save.draftTestError,
                     })}
                   </Grid>
                 )}
