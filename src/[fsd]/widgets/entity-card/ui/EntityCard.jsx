@@ -166,7 +166,9 @@ const EntityCard = memo(props => {
   );
 
   const isOnApplicationsPage = useIsFrom(RouteDefinitions.Applications);
-  const showForkedFromLink = isForked && isOnApplicationsPage;
+  const isOnSkillsPage = useIsFrom(RouteDefinitions.Skills);
+  const isOnPipelinesPage = useIsFrom(RouteDefinitions.Pipelines);
+  const showForkedFromLink = isForked && (isOnApplicationsPage || isOnSkillsPage || isOnPipelinesPage);
 
   return (
     <Box
