@@ -147,7 +147,7 @@ const toolkitTestEmptyStateStyles = () => ({
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
     gap: '0.5rem',
-    [breakpoints.down('sm')]: {
+    [breakpoints.down('lg')]: {
       gridTemplateColumns: '1fr',
     },
   }),
