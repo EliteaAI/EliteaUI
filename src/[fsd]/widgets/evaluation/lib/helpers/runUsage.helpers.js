@@ -257,11 +257,17 @@ const formatRange = (range, format, unit = '') => {
   return `${low === high ? low : `${low}–${high}`}${unit}`;
 };
 
+// A version with no finished run yet is estimated from the suite's last run on another one (#7311).
+const isFromOtherVersion = data =>
+  data.history_application_version_id != null &&
+  data.application_version_id != null &&
+  data.history_application_version_id !== data.application_version_id;
+
 /**
  * What the suite panel shows before launch (#6716, design Q-S6), from the estimate endpoint. The
  * estimate is the last finished run of this suite on the same version scaled to today's case
- * count; with no such run there is no estimate. Cost is preferred; tokens stand in when that run
- * was not priced.
+ * count, or on another version when this one has not finished a run yet (#7311); with no finished
+ * run at all there is no estimate. Cost is preferred; tokens stand in when that run was not priced.
  * @param {object} [data] - `eval_suite_estimate` response
  * @returns {{ available: boolean, label: string, range: string | null, detail: string | null,
  *   budget: string | null, warning: string | null } | null}
@@ -279,7 +285,7 @@ export const buildRunEstimateSummary = data => {
       available: false,
       label: 'No estimate (first run)',
       range: null,
-      detail: 'Estimates come from the last finished run of this suite on the selected version.',
+      detail: 'Estimates come from the last finished run of this suite.',
       budget: budgetText,
       warning: null,
     };
@@ -292,6 +298,7 @@ export const buildRunEstimateSummary = data => {
   const parts = [
     `${estimate.cases} ${estimate.cases === 1 ? 'case' : 'cases'}`,
     `based on run #${data.history_run_id}`,
+    ...(isFromOtherVersion(data) ? ['from another version'] : []),
     estimate.includes_judge ? 'agent + judge' : 'agent only',
   ];
   if (priced && estimate.unpriced_cases) parts.push(`${estimate.unpriced_cases} not priced`);

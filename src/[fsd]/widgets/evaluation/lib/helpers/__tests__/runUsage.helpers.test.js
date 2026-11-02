@@ -280,6 +280,21 @@ describe('buildRunEstimateSummary', () => {
     expect(summary.warning).toMatch(/over the remaining monthly budget/);
   });
 
+  it('says when the estimate comes from a run on another version (#7311)', () => {
+    const summary = buildRunEstimateSummary(
+      estimateResponse({ application_version_id: 12, history_application_version_id: 11 }),
+    );
+    expect(summary.available).toBe(true);
+    expect(summary.detail).toBe('10 cases · based on run #149 · from another version · agent + judge');
+  });
+
+  it('does not flag an estimate from the same version', () => {
+    const summary = buildRunEstimateSummary(
+      estimateResponse({ application_version_id: 12, history_application_version_id: 12 }),
+    );
+    expect(summary.detail).toBe('10 cases · based on run #149 · agent + judge');
+  });
+
   it('says there is no estimate before the first finished run', () => {
     const summary = buildRunEstimateSummary({ available: false, estimate: null, budget: null });
     expect(summary.available).toBe(false);
