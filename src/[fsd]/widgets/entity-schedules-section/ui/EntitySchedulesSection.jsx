@@ -1,6 +1,5 @@
 import { memo, useCallback } from 'react';
 
-import { useSelector } from 'react-redux';
 import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Box, Link, Skeleton, Typography } from '@mui/material';
@@ -43,7 +42,6 @@ const EntitySchedulesSection = memo(props => {
     versionId,
     skip: isHidden,
   });
-  const currentUserId = useSelector(state => state.user.id);
   const navigate = useNavigate();
   const { tab } = useParams();
   const { pathname, search } = useLocation();
@@ -100,17 +98,6 @@ const EntitySchedulesSection = memo(props => {
             sx={styles.header}
             data-testid={`${testId}-header`}
           >
-            {canCreate && (
-              <Button.BaseBtn
-                variant={BUTTON_VARIANTS.iconLabel}
-                startIcon={<PlusIcon />}
-                onClick={onAdd}
-                sx={styles.noWrap}
-                data-testid={`${testId}-add`}
-              >
-                Schedule
-              </Button.BaseBtn>
-            )}
             <Typography
               variant="bodyMedium"
               color="text.secondary"
@@ -170,11 +157,21 @@ const EntitySchedulesSection = memo(props => {
               key={row.id}
               row={row}
               entityType={entityType}
-              currentUserId={currentUserId}
               onOpenForm={openForm}
               onOpenRunHistory={openRunHistory}
             />
           ))}
+          {canCreate && !isError && (
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.iconLabel}
+              startIcon={<PlusIcon />}
+              onClick={onAdd}
+              sx={styles.add}
+              data-testid={`${testId}-add`}
+            >
+              Schedule
+            </Button.BaseBtn>
+          )}
           {hasMore && (
             <Button.BaseBtn
               variant={BUTTON_VARIANTS.text}
@@ -219,7 +216,7 @@ const entitySchedulesSectionStyles = () => ({
     gap: '0.75rem',
     containerType: 'inline-size',
   },
-  // Below 30 rem: the button and the link on row 1, the count on row 2; from 30 rem: one row
+  // Below 30 rem: the link on row 1, the count on row 2; from 30 rem: the count and the link on one row
   header: {
     display: 'flex',
     flexWrap: 'wrap',
@@ -235,9 +232,9 @@ const entitySchedulesSectionStyles = () => ({
       order: 0,
     },
   },
-  noWrap: {
+  add: {
+    alignSelf: 'flex-start',
     whiteSpace: 'nowrap',
-    flexShrink: 0,
   },
   link: {
     display: 'inline-flex',

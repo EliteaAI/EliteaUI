@@ -128,6 +128,22 @@ describe('EntitySchedulesSection', () => {
       expect(link).toHaveStyle({ color: theme.palette.text.link });
     });
 
+    it('puts the add button after the last card and the link in the header', () => {
+      renderSection();
+
+      const add = screen.getByTestId('agent-schedules-section-add');
+      const header = screen.getByTestId('agent-schedules-section-header');
+      expect(header).not.toContainElement(add);
+      expect(header).toContainElement(screen.getByTestId('agent-schedules-section-open-all'));
+      expect(
+        screen
+          .getAllByRole('button', { name: /./ })
+          .filter(el => el.dataset.testid?.startsWith('card-'))
+          .at(-1)
+          .compareDocumentPosition(add),
+      ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+
     it('the add button is an iconLabel button with a plus icon', () => {
       renderSection();
 
@@ -205,7 +221,7 @@ describe('EntitySchedulesSection', () => {
         'Daily digest',
         'Friday recap',
       ]);
-      expect(mocks.cardProps[0]).toMatchObject({ entityType: 'agent', currentUserId: 3 });
+      expect(mocks.cardProps[0]).toMatchObject({ entityType: 'agent' });
     });
 
     it('TC-US35-19 counts one schedule in the singular', () => {
@@ -431,7 +447,7 @@ describe('EntitySchedulesSection', () => {
       renderPipeline();
 
       expect(mocks.cardProps).toHaveLength(1);
-      expect(mocks.cardProps[0]).toMatchObject({ row: migrated, currentUserId: 3, entityType: 'pipeline' });
+      expect(mocks.cardProps[0]).toMatchObject({ row: migrated, entityType: 'pipeline' });
     });
 
     it('TC-US36-06 "+ Schedule" opens the create form nested in the pipeline', () => {

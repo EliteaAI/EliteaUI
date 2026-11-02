@@ -20,7 +20,7 @@ const SVG_ICON_STYLE = { width: '1rem', height: '1rem' };
 const MENU_BUTTON_PROPS = { 'aria-label': 'More actions' };
 
 const ScheduleRowActions = memo(props => {
-  // onOpenRunHistory and hideChangeOwner shape the card menu of the editor Schedules section
+  // onOpenRunHistory, hideChangeOwner, hideEdit and hideToggle shape the card menu of the editor Schedules section
   // onExport comes from useScheduleRowActions only with the export permission
   const {
     row,
@@ -33,6 +33,8 @@ const ScheduleRowActions = memo(props => {
     onDelete,
     isBusy,
     hideChangeOwner,
+    hideEdit,
+    hideToggle,
   } = props;
   const allowed = row.allowed_actions;
   const runHint = ownerOnlyRunHint(row);
@@ -47,7 +49,7 @@ const ScheduleRowActions = memo(props => {
       [
         (allowed?.includes('run') || runHint) && {
           key: 'run',
-          label: 'Run now',
+          label: 'Run Now',
           icon: (
             <PlayIcon
               fill="currentColor"
@@ -59,25 +61,28 @@ const ScheduleRowActions = memo(props => {
           tooltip: runHint,
           onClick: runHint ? undefined : onRun,
         },
-        allowed?.includes('edit') && {
-          key: 'edit',
-          label: 'Edit',
-          icon: (
-            <EditIcon
-              fill="currentColor"
-              sx={ICON_SX}
-            />
-          ),
-          onClick: onEdit,
-        },
-        row.enabled &&
+        !hideEdit &&
+          allowed?.includes('edit') && {
+            key: 'edit',
+            label: 'Edit',
+            icon: (
+              <EditIcon
+                fill="currentColor"
+                sx={ICON_SX}
+              />
+            ),
+            onClick: onEdit,
+          },
+        !hideToggle &&
+          row.enabled &&
           allowed?.includes('pause') && {
             key: 'pause',
             label: 'Pause',
             icon: <PauseIcon style={SVG_ICON_STYLE} />,
             onClick: onPause,
           },
-        !row.enabled &&
+        !hideToggle &&
+          !row.enabled &&
           allowed?.includes('resume') && {
             key: 'resume',
             label: 'Resume',
@@ -87,7 +92,7 @@ const ScheduleRowActions = memo(props => {
         onOpenRunHistory &&
           allowed?.includes('edit') && {
             key: 'history',
-            label: 'Open run history',
+            label: 'Run History',
             icon: <ClockIcon style={SVG_ICON_STYLE} />,
             onClick: onOpenRunHistory,
           },
@@ -137,6 +142,8 @@ const ScheduleRowActions = memo(props => {
       onDelete,
       openOwnerDialog,
       hideChangeOwner,
+      hideEdit,
+      hideToggle,
       styles.deleteSlotProps,
     ],
   );

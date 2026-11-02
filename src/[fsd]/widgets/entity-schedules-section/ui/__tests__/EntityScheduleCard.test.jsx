@@ -51,7 +51,6 @@ const renderCard = (row = {}, props = {}) => {
       <EntityScheduleCard
         row={{ ...ROW, ...row }}
         entityType="agent"
-        currentUserId={3}
         onOpenForm={onOpenForm}
         onOpenRunHistory={onOpenRunHistory}
         {...props}
@@ -67,7 +66,6 @@ const statusChip = (entityType = 'agent') =>
 const cardText = (entityType = 'agent') => screen.getByTestId(`${entityType}-schedule-card-7`).textContent;
 const ruleLine = (entityType = 'agent') => screen.getByTestId(`${entityType}-schedule-card-rule-7`);
 const nextLine = (entityType = 'agent') => screen.getByTestId(`${entityType}-schedule-card-next-7`);
-const styleText = () => [...document.querySelectorAll('style')].map(style => style.textContent).join('');
 
 describe('EntityScheduleCard', () => {
   beforeEach(() => {
@@ -78,70 +76,75 @@ describe('EntityScheduleCard', () => {
     vi.clearAllMocks();
   });
 
-  it('TC-US58-06 shows the rule title, the zone and the labelled lines with the Success chip', () => {
+  it('shows the rule, the zone, the name, the last and next run with the Success chip', () => {
     renderCard();
 
     const card = screen.getByTestId('agent-schedule-card-7');
     expect(ruleLine()).toHaveTextContent('Rule of 0 9 * * * from UTC');
-    expect(card).toHaveTextContent('Shown: Europe/Kyiv');
+    expect(screen.getByTestId('agent-schedule-card-timezone-7')).toHaveTextContent('· Europe/Kyiv');
+    expect(card).toHaveTextContent('Daily digest');
     expect(card).toHaveTextContent(/Last run:\s*19 Oct, 09:00/);
     expect(card).toHaveTextContent(/Next run:\s*20 Oct, 09:00/);
-    expect(card).toHaveTextContent('Name: Daily digest');
-    expect(card).toHaveTextContent('Owner: You');
     expect(statusChip()).toHaveTextContent('Success');
   });
 
-  it('TC-US58-06 shows Edit, Delete, the switch and the menu in this order', () => {
+  it('shows the switch with its Active label and the menu, and no Edit or Delete button', () => {
     renderCard();
 
     const card = screen.getByTestId('agent-schedule-card-7');
     const controls = [...card.querySelectorAll('button, input[role="switch"]')].map(
       element => element.getAttribute('aria-label') ?? '',
     );
-    expect(controls).toEqual([
-      expect.stringMatching(/^Edit/),
-      expect.stringMatching(/^Delete/),
-      'Enable Daily digest',
-      'More actions',
-    ]);
+    expect(controls).toEqual(['Enable Daily digest', 'More actions']);
+    expect(screen.getByTestId('agent-schedule-card-state-7')).toHaveTextContent('Active');
   });
 
-  it('TC-US35-05 shows the owner name on a card of another owner', () => {
-    renderCard({}, { currentUserId: 1 });
+  it('shows no owner on the card, whoever owns the schedule', () => {
+    renderCard({}, {});
 
-    expect(cardText()).toContain('Owner: Anna K.');
+    expect(cardText()).not.toContain('Owner');
+    expect(cardText()).not.toContain('Anna K.');
   });
 
-  it('TC-US58-06 shows "Paused" instead of the next run of a disabled schedule', () => {
+  it('shows "Not scheduled" and the Paused label for a disabled schedule', () => {
     renderCard({ enabled: false });
 
-    expect(cardText()).toMatch(/Next run:\s*Paused/);
+    expect(cardText()).toMatch(/Next run:\s*Not scheduled/);
     expect(cardText()).not.toContain('20 Oct');
+    expect(screen.getByTestId('agent-schedule-card-state-7')).toHaveTextContent('Paused');
   });
 
-  it('TC-US36-18 TC-US36-19 the card is a container with the 30 rem breakpoint and a footer row for the actions', () => {
-    renderCard();
+  it('opens the details page when the card is clicked', () => {
+    const { onOpenForm } = renderCard();
 
-    const css = styleText();
-    expect(css).toContain('container-type:inline-size');
-    expect(css).toContain('@container (min-width: 30rem)');
-    expect(css).not.toContain('26rem');
-    // Narrow: name, chip, rule and next run each on its own line, then the footer with switch and menu
-    const areas = getComputedStyle(screen.getByTestId('agent-schedule-card-7')).gridTemplateAreas;
-    expect(areas).toMatch(/footer|actions/);
+    fireEvent.click(screen.getByTestId('agent-schedule-card-7'));
+
+    expect(onOpenForm.mock.calls).toEqual([[7]]);
   });
 
-  it('TC-US58-06 leaves out the Owner line when the row has no owner name', () => {
-    renderCard({ owner: { id: 99 } });
+  it('opens the details page from the keyboard on the rule line', () => {
+    const { onOpenForm } = renderCard();
 
-    expect(cardText()).not.toContain('Owner:');
+    fireEvent.keyDown(ruleLine(), { key: 'Enter' });
+
+    expect(onOpenForm.mock.calls).toEqual([[7]]);
   });
 
-  it('shows no Owner line, and not You, for a row without an owner when the user id is unknown', () => {
-    renderCard({ owner: undefined }, { currentUserId: undefined });
+  it('does not open the details page from the switch or the menu', () => {
+    const { onOpenForm } = renderCard();
 
-    expect(cardText()).not.toContain('Owner:');
-    expect(cardText()).not.toContain('You');
+    fireEvent.click(screen.getByRole('switch', { name: 'Enable Daily digest' }));
+    openMenu();
+
+    expect(onOpenForm).not.toHaveBeenCalled();
+  });
+
+  it('does not open the details page of a card without the edit action', () => {
+    const { onOpenForm } = renderCard({ allowed_actions: ['run'] });
+
+    fireEvent.click(screen.getByTestId('agent-schedule-card-7'));
+
+    expect(onOpenForm).not.toHaveBeenCalled();
   });
 
   it('every line is one line with an ellipsis', () => {
@@ -161,8 +164,8 @@ describe('EntityScheduleCard', () => {
     renderCard({ name: 'Sched Translation of release notes to German' });
     const name = screen.getByText('Sched Translation of release notes to German');
 
-    // every truncating value is a tab stop; the rule, Last run and Next run come before the name
-    for (let step = 0; step < 4; step += 1) await userEvent.tab();
+    // every truncating value is a tab stop; the rule comes before the name
+    for (let step = 0; step < 2; step += 1) await userEvent.tab();
 
     expect(name).toHaveFocus();
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
@@ -179,7 +182,7 @@ describe('EntityScheduleCard', () => {
     expect(await screen.findByRole('tooltip')).toHaveTextContent('Rule of 0 9 * * * from UTC');
   });
 
-  it('TC-US58-08 shows "Never run" and no chip before the first run, and still the toggle and the menu', () => {
+  it('shows "Never run" and no chip before the first run, and still the toggle and the menu', () => {
     renderCard({ last_run: null, last_run_status: null });
 
     expect(statusChip()).not.toBeInTheDocument();
@@ -188,7 +191,7 @@ describe('EntityScheduleCard', () => {
     expect(screen.getByTestId('schedule-7-menu-button')).toBeInTheDocument();
   });
 
-  it('TC-US58-08 shows no chip next to "Never run" when the row has a status but no run time', () => {
+  it('shows no chip next to "Never run" when the row has a status but no run time', () => {
     renderCard({ last_run: null, last_run_status: 'success' });
 
     expect(statusChip()).not.toBeInTheDocument();
@@ -205,11 +208,12 @@ describe('EntityScheduleCard', () => {
     cleanup();
 
     renderCard({ last_run_status: 'running' });
-    expect(statusChip()).toHaveTextContent('Running');
+    expect(statusChip()).toHaveTextContent('Running...');
     expect(within(statusChip()).getByRole('progressbar')).toBeInTheDocument();
+    expect(cardText()).not.toMatch(/Last run:\s*19 Oct/);
   });
 
-  it('TC-US35-22 the toggle of an enabled schedule pauses it', () => {
+  it('the toggle of an enabled schedule pauses it', () => {
     renderCard();
 
     fireEvent.click(screen.getByRole('switch', { name: 'Enable Daily digest' }));
@@ -218,71 +222,52 @@ describe('EntityScheduleCard', () => {
     expect(mocks.actions.onResume).not.toHaveBeenCalled();
   });
 
-  it('TC-US35-23 disables the toggle without pause and resume', () => {
+  it('disables the toggle without pause and resume', () => {
     renderCard({ allowed_actions: ['edit'] });
 
     expect(screen.getByRole('switch', { name: 'Enable Daily digest' })).toBeDisabled();
   });
 
-  it('TC-US58-07 the menu lists Run now, Edit, Pause, Open run history and Delete, without Change owner', () => {
+  const menuItems = () => screen.getAllByRole('menuitem').map(item => item.textContent);
+
+  it('the menu lists Run Now, Run History and Delete, without Edit, Pause or Change owner', () => {
     renderCard();
     openMenu();
 
-    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
-      'Run now',
-      'Edit',
-      'Pause',
-      'Open run history',
-      'Delete',
-    ]);
+    expect(menuItems()).toEqual(['Run Now', 'Run History', 'Delete']);
   });
 
-  it('TC-US58-07 the menu lists Export before Delete with the export permission', () => {
+  it('the menu lists Export before Delete with the export permission', () => {
     // useScheduleRowActions gives onExport only with the export permission
     const onExport = vi.fn();
     mocks.actions = { ...mocks.actions, onExport };
     renderCard();
     openMenu();
 
-    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
-      'Run now',
-      'Edit',
-      'Pause',
-      'Open run history',
-      'Export',
-      'Delete',
-    ]);
+    expect(menuItems()).toEqual(['Run Now', 'Run History', 'Export', 'Delete']);
     fireEvent.click(screen.getByText('Export'));
     expect(onExport).toHaveBeenCalledTimes(1);
     delete mocks.actions.onExport;
   });
 
-  it('TC-US58-10 hides the Delete icon, Run now, Delete and Export without their keys', () => {
+  it('hides Run Now and Delete without their keys', () => {
     renderCard({ allowed_actions: ['edit', 'pause'] });
-
-    expect(screen.getByRole('button', { name: /^Edit/ })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^Delete/ })).not.toBeInTheDocument();
     openMenu();
-    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
-      'Edit',
-      'Pause',
-      'Open run history',
-    ]);
+
+    expect(menuItems()).toEqual(['Run History']);
   });
 
-  it('TC-US35-10 TC-US35-22 Edit opens the form and Open run history opens its Runs section', () => {
+  it('Run History opens the Runs section of the schedule without opening the details page', () => {
     const { onOpenForm, onOpenRunHistory } = renderCard();
 
     openMenu();
-    fireEvent.click(screen.getByText('Edit'));
-    openMenu();
-    fireEvent.click(screen.getByText('Open run history'));
+    fireEvent.click(screen.getByText('Run History'));
 
-    expect(onOpenForm.mock.calls).toEqual([[7]]);
     expect(onOpenRunHistory.mock.calls).toEqual([[7]]);
+    expect(onOpenForm).not.toHaveBeenCalled();
   });
 
-  it('TC-US35-23 Delete opens the delete dialog and Cancel keeps the card', () => {
+  it('Delete opens the delete dialog and Cancel keeps the card', () => {
     renderCard();
     openMenu();
 
@@ -295,33 +280,27 @@ describe('EntityScheduleCard', () => {
   });
 
   describe('pipeline card', () => {
-    it('TC-US36-18 shows the same lines, chip, toggle and menu with pipeline test ids', () => {
-      renderCard({ last_run_status: 'skipped' }, { entityType: 'pipeline', currentUserId: 1 });
+    it('shows the same lines, chip, toggle and menu with pipeline test ids', () => {
+      renderCard({ last_run_status: 'skipped' }, { entityType: 'pipeline' });
 
       expect(screen.getByTestId('pipeline-schedule-card-7')).toHaveTextContent('Daily digest');
       expect(ruleLine('pipeline')).toHaveTextContent('Rule of 0 9 * * * from UTC');
-      expect(cardText('pipeline')).toContain('Owner: Anna K.');
       expect(statusChip('pipeline')).toHaveTextContent('Skipped');
       expect(screen.getByTestId('pipeline-schedule-card-toggle-7')).toBeInTheDocument();
     });
 
-    it('TC-US36-19 the admin menu on another owner card offers only the allowed actions', () => {
+    it('the menu on another owner card offers only the allowed actions', () => {
       renderCard({ allowed_actions: ['edit', 'pause', 'delete'] }, { entityType: 'pipeline' });
       openMenu();
 
-      expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
-        'Edit',
-        'Pause',
-        'Open run history',
-        'Delete',
-      ]);
+      expect(menuItems()).toEqual(['Run History', 'Delete']);
     });
 
-    it('TC-US36-08 hides Edit and Open run history without the edit action', () => {
+    it('hides Run History without the edit action', () => {
       renderCard({ allowed_actions: ['run', 'delete'] }, { entityType: 'pipeline' });
       openMenu();
 
-      expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual(['Run now', 'Delete']);
+      expect(menuItems()).toEqual(['Run Now', 'Delete']);
     });
   });
 });

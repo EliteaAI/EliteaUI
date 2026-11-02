@@ -47,7 +47,7 @@ describe('ScheduleRowActions', () => {
   it('shows only the actions the row allows', () => {
     renderMenu({ allowed_actions: ['run', 'pause'] });
     openMenu();
-    expect(screen.getByText('Run now')).toBeInTheDocument();
+    expect(screen.getByText('Run Now')).toBeInTheDocument();
     expect(screen.getByText('Pause')).toBeInTheDocument();
     expect(screen.queryByText('Delete')).not.toBeInTheDocument();
     expect(screen.queryByText('Resume')).not.toBeInTheDocument();
@@ -60,11 +60,11 @@ describe('ScheduleRowActions', () => {
     expect(screen.getByText('Delete')).toBeInTheDocument();
   });
 
-  it('lists Run now, Edit, Pause, Change owner and Delete in this order', () => {
+  it('lists Run Now, Edit, Pause, Change owner and Delete in this order', () => {
     renderMenu({ allowed_actions: ['delete', 'change_owner', 'pause', 'edit', 'run'] });
     openMenu();
     expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
-      'Run now',
+      'Run Now',
       'Edit',
       'Pause',
       'Change owner',
@@ -72,17 +72,17 @@ describe('ScheduleRowActions', () => {
     ]);
   });
 
-  it('the table menu lists Open run history between Pause and Change owner', () => {
+  it('the table menu lists Run History between Pause and Change owner', () => {
     renderMenu(
       { allowed_actions: ['delete', 'change_owner', 'pause', 'edit', 'run'] },
       { onOpenRunHistory: vi.fn() },
     );
     openMenu();
     expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
-      'Run now',
+      'Run Now',
       'Edit',
       'Pause',
-      'Open run history',
+      'Run History',
       'Change owner',
       'Delete',
     ]);
@@ -100,34 +100,34 @@ describe('ScheduleRowActions', () => {
     expect(screen.queryByText('Edit')).not.toBeInTheDocument();
   });
 
-  it('TC-US35-22 the card menu lists Run now, Edit, Pause, Open run history and Delete', () => {
+  it('TC-US35-22 the card menu lists Run Now, Edit, Pause, Run History and Delete', () => {
     renderMenu(
       { allowed_actions: ['delete', 'change_owner', 'pause', 'edit', 'run'] },
       { onEdit: vi.fn(), onOpenRunHistory: vi.fn(), hideChangeOwner: true },
     );
     openMenu();
     expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
-      'Run now',
+      'Run Now',
       'Edit',
       'Pause',
-      'Open run history',
+      'Run History',
       'Delete',
     ]);
   });
 
-  it('TC-US35-12 Open run history needs edit and calls onOpenRunHistory', () => {
+  it('TC-US35-12 Run History needs edit and calls onOpenRunHistory', () => {
     const onOpenRunHistory = vi.fn();
     renderMenu({ allowed_actions: ['edit'] }, { onOpenRunHistory });
     openMenu();
-    fireEvent.click(screen.getByText('Open run history'));
+    fireEvent.click(screen.getByText('Run History'));
     expect(onOpenRunHistory).toHaveBeenCalledTimes(1);
     cleanup();
     renderMenu({ allowed_actions: ['run', 'delete'] }, { onOpenRunHistory });
     openMenu();
-    expect(screen.queryByText('Open run history')).not.toBeInTheDocument();
+    expect(screen.queryByText('Run History')).not.toBeInTheDocument();
   });
 
-  it('the page menu offers no Open run history without the handler', () => {
+  it('the page menu offers no Run History without the handler', () => {
     renderMenu({ allowed_actions: ['edit'] }, { onEdit: vi.fn() });
     openMenu();
     expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual(['Edit']);
@@ -178,7 +178,7 @@ describe('ScheduleRowActions', () => {
     renderMenu({ allowed_actions: ['delete', 'edit', 'run'] }, { onExport });
     openMenu();
     expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
-      'Run now',
+      'Run Now',
       'Edit',
       'Export',
       'Delete',
@@ -198,7 +198,7 @@ describe('ScheduleRowActions', () => {
     const onPause = vi.fn();
     renderMenu({ allowed_actions: ['run', 'pause'] }, { onRun, onPause });
     openMenu();
-    fireEvent.click(screen.getByText('Run now'));
+    fireEvent.click(screen.getByText('Run Now'));
     expect(onRun).toHaveBeenCalledTimes(1);
     expect(onPause).not.toHaveBeenCalled();
   });
@@ -272,7 +272,7 @@ describe('ScheduleRowActions', () => {
     expect(screen.queryByTestId('delete-confirm-dialog')).not.toBeInTheDocument();
   });
 
-  it('#7254: an admin sees Run now disabled, with who can run it', () => {
+  it('#7254: an admin sees Run Now disabled, with who can run it', () => {
     const onRun = vi.fn();
     renderMenu(
       {
@@ -283,23 +283,23 @@ describe('ScheduleRowActions', () => {
       { onRun },
     );
     openMenu();
-    const item = screen.getByRole('menuitem', { name: /Run now/ });
+    const item = screen.getByRole('menuitem', { name: /Run Now/ });
     expect(item).toHaveAttribute('aria-disabled', 'true');
     fireEvent.click(item);
     expect(onRun).not.toHaveBeenCalled();
     // the menu's tooltip names the item with the hint
     expect(screen.getByLabelText('Only the schedule owner, Ann Lee, can run it.')).toHaveTextContent(
-      'Run now',
+      'Run Now',
     );
   });
 
-  it('#7254: the owner of a schedule without a version gets no Run now, as before', () => {
+  it('#7254: the owner of a schedule without a version gets no Run Now, as before', () => {
     renderMenu({
       version_id: null,
       owner: { id: 1, name: 'Ann Lee' },
       allowed_actions: ['edit', 'change_owner'],
     });
     openMenu();
-    expect(screen.queryByText('Run now')).not.toBeInTheDocument();
+    expect(screen.queryByText('Run Now')).not.toBeInTheDocument();
   });
 });
