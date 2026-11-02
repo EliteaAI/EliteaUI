@@ -1,11 +1,15 @@
 import { memo, useCallback, useMemo } from 'react';
 
-import { Link as RouterLink, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Box, Link } from '@mui/material';
 
 import { RunHistoryContainer, SCHEDULE_RUN_COLUMNS } from '@/[fsd]/entities/run-history';
-import { buildOwnerViewModeParams, buildScheduleFormLink, useAllEntitySchedules } from '@/[fsd]/entities/schedule';
+import {
+  buildOwnerViewModeParams,
+  buildScheduleFormLink,
+  useAllEntitySchedules,
+} from '@/[fsd]/entities/schedule';
 import { ChatMessageList } from '@/[fsd]/features/chat';
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
@@ -13,21 +17,19 @@ import { NavigationConstants, TextLinkConstants } from '@/[fsd]/shared/lib/const
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
-import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useApplicationDetailsQuery } from '@/api/applications';
 import { SearchParams } from '@/common/constants';
 
+import { useRunHistoryFilters } from '../lib/hooks/useRunHistoryFilters.hooks';
+import RunHistoryFilters from './RunHistoryFilters';
+
 const DEFAULT_TAB = 'all';
-const SCHEDULE_ID_PARAM = 'schedule_id';
-const ALL_SCHEDULES = '';
-const NO_QUERY_PARAMS = {};
 
 const RunHistoryPage = memo(props => {
   const { source, detailRoute, analyticsRoute, eventColumnLabel, decorateRow, scheduleEntityType } = props;
   const { tab, agentId } = useParams();
   const navigate = useNavigate();
   const { search } = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
   const projectId = useSelectedProjectId();
   const styles = runHistoryPageStyles();
 
@@ -43,38 +45,7 @@ const RunHistoryPage = memo(props => {
     entityId: agentId,
     skip: !scheduleEntityType,
   });
-  // A positive whole number only: anything else (for example "abc") is ignored, not sent as NaN
-  const rawScheduleId = searchParams.get(SCHEDULE_ID_PARAM) ?? ALL_SCHEDULES;
-  const scheduleIdParam = /^[1-9]\d*$/.test(rawScheduleId) ? rawScheduleId : ALL_SCHEDULES;
-  const queryParams = useMemo(
-    () => (scheduleIdParam ? { [SCHEDULE_ID_PARAM]: Number(scheduleIdParam) } : NO_QUERY_PARAMS),
-    [scheduleIdParam],
-  );
-  const scheduleOptions = useMemo(
-    () => [
-      { label: 'All schedules', value: ALL_SCHEDULES },
-      ...schedules.map(schedule => ({ label: schedule.name, value: String(schedule.id) })),
-      // A linked id the caller's list does not hold still shows, so the select is never blank
-      ...(scheduleIdParam && !schedules.some(schedule => String(schedule.id) === scheduleIdParam)
-        ? [{ label: `Schedule ${scheduleIdParam}`, value: scheduleIdParam }]
-        : []),
-    ],
-    [schedules, scheduleIdParam],
-  );
-  const handleScheduleChange = useCallback(
-    value => {
-      setSearchParams(
-        prev => {
-          const next = new URLSearchParams(prev);
-          if (value) next.set(SCHEDULE_ID_PARAM, value);
-          else next.delete(SCHEDULE_ID_PARAM);
-          return next;
-        },
-        { replace: true },
-      );
-    },
-    [setSearchParams],
-  );
+  const filters = useRunHistoryFilters({ schedules, versions });
   const extraColumns = useMemo(() => {
     if (!scheduleEntityType) return undefined;
     const openable = new Set(schedules.map(schedule => schedule.id));
@@ -155,26 +126,17 @@ const RunHistoryPage = memo(props => {
         title={<Breadcrumbs />}
       />
       <Box sx={styles.content}>
-        {scheduleEntityType && (
-          <Box sx={styles.filter}>
-            <SingleSelect
-              showBorder
-              label="Schedule"
-              options={scheduleOptions}
-              value={scheduleIdParam}
-              onValueChange={handleScheduleChange}
-              // The empty value is "All schedules": show its label instead of a blank select
-              displayEmpty
-              // The label moves up above the shown value, as in the credential select
-              shrinkLabel
-              showEmptyPlaceholder={false}
-              inputProps={{ 'aria-label': 'Schedule' }}
-            />
-          </Box>
-        )}
+        <RunHistoryFilters
+          values={filters.values}
+          options={filters.options}
+          handlers={filters.handlers}
+          hasFilters={filters.hasFilters}
+          onClear={filters.onClear}
+          hasScheduleFilter={Boolean(scheduleEntityType)}
+        />
         <RunHistoryContainer
-          // A new schedule restarts paging at page 1
-          key={scheduleIdParam}
+          // A new filter restarts paging at page 1
+          key={JSON.stringify(filters.queryParams)}
           entityId={agentId}
           source={source}
           versions={versions}
@@ -185,7 +147,7 @@ const RunHistoryPage = memo(props => {
           eventColumnLabel={eventColumnLabel}
           decorateRow={decorateRow}
           extraColumns={extraColumns}
-          queryParams={queryParams}
+          queryParams={filters.queryParams}
           shareOpensHistoryTab
         />
       </Box>
@@ -202,9 +164,6 @@ const runHistoryPageStyles = () => ({
     flexDirection: 'column',
     height: '100%',
     overflow: 'hidden',
-  },
-  filter: {
-    width: '16rem',
   },
   content: {
     display: 'flex',

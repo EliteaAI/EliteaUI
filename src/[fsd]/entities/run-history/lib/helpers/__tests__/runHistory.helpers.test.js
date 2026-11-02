@@ -182,7 +182,8 @@ describe('toExecutionTypeRow', () => {
   });
 
   it.each([
-    ['schedule_manual', 'Run now'],
+    ['schedule_manual', 'Manual'],
+    ['schedule_test', 'Test'],
     ['chat', 'Chat'],
     ['api', 'API'],
     ['mcp', 'MCP'],
@@ -203,10 +204,10 @@ describe('toExecutionTypeRow', () => {
 });
 
 describe('schedule runs in Agent and Pipeline Run History', () => {
-  it('a test-trigger schedule run reads Test, also in the Execution type column', () => {
+  it('a test-trigger schedule run reads Test, also in the Trigger type column', () => {
     const row = { id: 9, execution_type: 'schedule_manual', schedule_run: { trigger: 'test' } };
     expect(toExecutionTypeRow(row).event_label).toBe('Test');
-    expect(toExecutionTypeRow({ ...row, schedule_run: { trigger: 'manual' } }).event_label).toBe('Run now');
+    expect(toExecutionTypeRow({ ...row, schedule_run: { trigger: 'manual' } }).event_label).toBe('Manual');
   });
 
   it('the Schedule and Status cells read the run record, or "-" without one', () => {
@@ -218,7 +219,7 @@ describe('schedule runs in Agent and Pipeline Run History', () => {
   });
 
   it('D7 extra columns use fixed rem widths after Date; without them the tracks stay fractional', () => {
-    // Execution type and Version fit their header labels with the sort icon (live check at 1536 px)
+    // Trigger type and Version fit their header labels with the sort icon (live check at 1536 px)
     // Review r8, from live measures: a row grid has 736 px (768 px list minus the 2 x 16 px row padding).
     // The minimum sum is 120 + 120 + 92 + 168 + 112 + 120 = 732 px, and every header label fits.
     const template = resolveRunHistoryColumns(false, true, SCHEDULE_RUN_COLUMNS);

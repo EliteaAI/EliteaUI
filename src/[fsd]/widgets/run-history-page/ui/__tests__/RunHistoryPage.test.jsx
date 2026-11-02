@@ -59,6 +59,11 @@ vi.mock('@/[fsd]/entities/schedule', async () => ({
   },
 }));
 
+vi.mock('@/[fsd]/shared/ui/button', () => ({
+  BUTTON_VARIANTS: { text: 'text' },
+  BaseBtn: ({ children, ...rest }) => <button {...rest}>{children}</button>,
+}));
+
 vi.mock('@/[fsd]/shared/ui/select', () => ({
   SingleSelect: ({ label, options, value, onValueChange, displayEmpty, shrinkLabel }) => (
     <select
@@ -139,9 +144,9 @@ describe('RunHistoryPage execution type column', () => {
 
   it('passes the column label and row decorator through to the container', () => {
     const decorateRow = vi.fn();
-    renderAt('/agents/all/127/history', { eventColumnLabel: 'Execution type', decorateRow });
+    renderAt('/agents/all/127/history', { eventColumnLabel: 'Trigger type', decorateRow });
 
-    expect(containerProps.current.eventColumnLabel).toBe('Execution type');
+    expect(containerProps.current.eventColumnLabel).toBe('Trigger type');
     expect(containerProps.current.decorateRow).toBe(decorateRow);
   });
 
@@ -214,21 +219,62 @@ describe('RunHistoryPage schedule filter and links', () => {
     expect(screen.getByRole('option', { name: 'Schedule 55' })).toBeInTheDocument();
   });
 
-  it('shows "All schedules" as the value when no schedule is chosen', () => {
+  it('shows "All" as the value when no schedule is chosen', () => {
     renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
 
     const select = screen.getByLabelText('Schedule');
     expect(select).toHaveValue('');
     expect(select).toHaveAttribute('data-display-empty', 'true');
-    // the label sits above the shown "All schedules", not on top of it
+    // the label sits above the shown "All", not on top of it
     expect(select).toHaveAttribute('data-shrink-label', 'true');
-    expect(screen.getByRole('option', { name: 'All schedules' })).toHaveValue('');
+    expect(screen.queryByRole('option', { name: 'All schedules' })).not.toBeInTheDocument();
   });
 
-  it('histories without schedules show no filter and no extra columns', () => {
+  it('sends status, trigger type and version together with the schedule', () => {
+    renderAt('/agents/all/127/history?schedule_id=4&status=failed&trigger_type=test&version_id=9', {
+      scheduleEntityType: 'agent',
+    });
+
+    expect(containerProps.current.queryParams).toEqual({
+      schedule_id: 4,
+      status: 'failed',
+      trigger_type: 'test',
+      version_id: 9,
+    });
+    expect(screen.getByLabelText('Status')).toHaveValue('failed');
+    expect(screen.getByLabelText('Trigger type')).toHaveValue('test');
+  });
+
+  it('changing a filter updates the list params and Clear filters resets all of them', () => {
+    renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
+    expect(screen.queryByTestId('run-history-filters-clear')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'success' } });
+    fireEvent.change(screen.getByLabelText('Trigger type'), { target: { value: 'manual' } });
+    expect(containerProps.current.queryParams).toEqual({ status: 'success', trigger_type: 'manual' });
+
+    fireEvent.click(screen.getByTestId('run-history-filters-clear'));
+    expect(containerProps.current.queryParams).toEqual({});
+  });
+
+  it('offers the three trigger types and ignores an unknown value in the link', () => {
+    renderAt('/agents/all/127/history?trigger_type=bogus&status=bogus', { scheduleEntityType: 'agent' });
+
+    expect(containerProps.current.queryParams).toEqual({});
+    const select = screen.getByLabelText('Trigger type');
+    expect([...select.options].map(option => option.textContent)).toEqual([
+      'All',
+      'Scheduled',
+      'Manual',
+      'Test',
+    ]);
+  });
+
+  it('histories without schedules show no Schedule filter and no extra columns', () => {
     renderAt('/agents/all/127/history');
 
     expect(screen.queryByLabelText('Schedule')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Status')).toBeInTheDocument();
     expect(containerProps.current.extraColumns).toBeUndefined();
     expect(scheduleList.args.skip).toBe(true);
   });
