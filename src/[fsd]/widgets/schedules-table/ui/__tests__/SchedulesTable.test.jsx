@@ -261,8 +261,8 @@ describe('SchedulesTable', () => {
   });
 
   it.each([
-    ['running', 'Running'],
-    ['waiting_for_approval', 'Waiting for approval'], // the owner's label for the approval wait
+    ['running', 'Running...'],
+    ['waiting_for_approval', 'Awaiting approval'], // the owner's label for the approval wait
   ])('shows %s in the Last run cell from last_run_status', (status, label) => {
     renderTable([makeRow({ last_run_status: status })]);
     const cell = screen.getByTestId('schedule-column-value-last_run');

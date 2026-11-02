@@ -5,7 +5,7 @@ import { ROLES, ToolActionStatus } from '@/common/constants';
 const RUN_STARTED_FORMAT = 'd MMM, HH:mm';
 
 // The labels live in the schedule entity, so the run history list can use them too
-export { toRunStatusLabel, toWord } from '@/[fsd]/entities/schedule';
+export { toRunStatusLabel, toRunStatusMeta, toWord } from '@/[fsd]/entities/schedule';
 
 export const formatRunStarted = value => formatRunTimestamp(value, RUN_STARTED_FORMAT);
 

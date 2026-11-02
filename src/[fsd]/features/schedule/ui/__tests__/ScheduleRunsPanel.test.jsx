@@ -220,7 +220,7 @@ describe('ScheduleRunsPanel test panel log', () => {
     const actions = pausedLine.nextElementSibling;
     expect(within(actions).getByRole('button', { name: 'Approve' })).toBeEnabled();
     expect(within(actions).getByRole('button', { name: 'Reject' })).toBeEnabled();
-    expect(screen.getByTestId('schedule-run-log-status')).toHaveTextContent(/Waiting/);
+    expect(screen.getByTestId('schedule-run-log-status')).toHaveTextContent(/Awaiting/);
     expect(runTest()).toBeDisabled();
 
     fireEvent.click(within(actions).getByRole('button', { name: 'Approve' }));
