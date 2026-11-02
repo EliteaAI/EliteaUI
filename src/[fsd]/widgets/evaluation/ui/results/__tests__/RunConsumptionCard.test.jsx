@@ -55,6 +55,14 @@ describe('RunConsumptionCard', () => {
     ).toBeInTheDocument();
   });
 
+  it('says the input and the token limits count cached tokens', () => {
+    renderCard({ agent_usage: usage() });
+
+    expect(screen.getByTestId('evaluation-consumption-cache-note')).toHaveTextContent(
+      'Input tokens include cached input tokens, and so do the token limits.',
+    );
+  });
+
   it('shows each budget limit with its verdict', () => {
     renderCard({
       agent_usage: usage(),
