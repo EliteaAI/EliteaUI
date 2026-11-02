@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Box, ThemeProvider, createTheme } from '@mui/material';
 
+import getDesignTokens from '@/MainTheme';
 import { store } from '@/[fsd]/shared/config';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
@@ -29,7 +30,14 @@ const CONVERSATION_ID = 1234;
 const { fetchRunList, queryResult, toastInfo } = vi.hoisted(() => ({
   fetchRunList: vi.fn(),
   toastInfo: vi.fn(),
-  queryResult: { data: undefined, isUninitialized: false, isLoading: false, isFetching: false },
+  queryResult: {
+    data: undefined,
+    isUninitialized: false,
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    error: undefined,
+  },
 }));
 
 vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
@@ -54,6 +62,8 @@ beforeEach(() => {
   queryResult.isUninitialized = false;
   queryResult.isLoading = false;
   queryResult.isFetching = false;
+  queryResult.isError = false;
+  queryResult.error = undefined;
 });
 
 const receivedRowSets = [];
@@ -100,13 +110,7 @@ vi.mock('@/[fsd]/shared/lib/hooks/useIsSmallWindow.hooks', () => ({
 
 afterEach(() => cleanup());
 
-const theme = createTheme({
-  palette: {
-    background: { surface: { interactive: { default: '#eee' } } },
-    split: { pressed: '#ddd' },
-    border: { lines: '#ccc' },
-  },
-});
+const theme = createTheme(getDesignTokens('light'));
 
 const LocationProbe = () => <Box data-testid="search">{useLocation().search}</Box>;
 
@@ -436,5 +440,33 @@ describe('RunHistoryContainer list column width', () => {
     renderContainer('');
 
     expect(screen.getByTestId('run-history-list-column')).toHaveStyle({ maxWidth: '32rem' });
+  });
+});
+
+describe('RunHistoryContainer list error', () => {
+  it('shows the server text of a refused filter and retries on request', () => {
+    queryResult.isError = true;
+    queryResult.error = { status: 400, data: { code: 'invalid_input', error: 'Unknown trigger type' } };
+    renderContainer('');
+    fetchRunList.mockClear();
+
+    expect(screen.getByTestId('run-history-error')).toHaveTextContent('Unknown trigger type');
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+
+    expect(fetchRunList).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a plain text when the answer has no message', () => {
+    queryResult.isError = true;
+    queryResult.error = { status: 500 };
+    renderContainer('');
+
+    expect(screen.getByTestId('run-history-error')).toHaveTextContent('Failed to load the run history.');
+  });
+
+  it('shows no error text for a good answer', () => {
+    renderContainer('');
+
+    expect(screen.queryByTestId('run-history-error')).not.toBeInTheDocument();
   });
 });
