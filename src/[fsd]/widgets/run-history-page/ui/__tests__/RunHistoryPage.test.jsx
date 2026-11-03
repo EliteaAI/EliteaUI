@@ -146,9 +146,9 @@ describe('RunHistoryPage execution type column', () => {
 
   it('passes the column label and row decorator through to the container', () => {
     const decorateRow = vi.fn();
-    renderAt('/agents/all/127/history', { eventColumnLabel: 'Trigger type', decorateRow });
+    renderAt('/agents/all/127/history', { eventColumnLabel: 'Trigger Type', decorateRow });
 
-    expect(containerProps.current.eventColumnLabel).toBe('Trigger type');
+    expect(containerProps.current.eventColumnLabel).toBe('Trigger Type');
     expect(containerProps.current.decorateRow).toBe(decorateRow);
   });
 
@@ -243,7 +243,7 @@ describe('RunHistoryPage schedule filter and links', () => {
       version_id: 9,
     });
     expect(screen.getByLabelText('Status')).toHaveValue('failed');
-    expect(screen.getByLabelText('Trigger type')).toHaveValue('test');
+    expect(screen.getByLabelText('Trigger Type')).toHaveValue('test');
   });
 
   it('changing a filter updates the list params and Clear filters resets all of them', () => {
@@ -251,7 +251,7 @@ describe('RunHistoryPage schedule filter and links', () => {
     expect(screen.queryByTestId('run-history-filters-clear')).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'success' } });
-    fireEvent.change(screen.getByLabelText('Trigger type'), { target: { value: 'manual' } });
+    fireEvent.change(screen.getByLabelText('Trigger Type'), { target: { value: 'manual' } });
     expect(containerProps.current.queryParams).toEqual({ status: 'success', trigger_type: 'manual' });
 
     fireEvent.click(screen.getByTestId('run-history-filters-clear'));
@@ -262,7 +262,7 @@ describe('RunHistoryPage schedule filter and links', () => {
     renderAt('/agents/all/127/history?trigger_type=bogus&status=bogus', { scheduleEntityType: 'agent' });
 
     expect(containerProps.current.queryParams).toEqual({});
-    const select = screen.getByLabelText('Trigger type');
+    const select = screen.getByLabelText('Trigger Type');
     expect([...select.options].map(option => option.textContent)).toEqual([
       'All',
       'Scheduled',

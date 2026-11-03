@@ -7,7 +7,7 @@ import { SingleSelect } from '@/[fsd]/shared/ui/select';
 
 // The order and the inline "Label: All" form of the Run History mockup
 const FILTERS = [
-  { key: 'trigger', label: 'Trigger type' },
+  { key: 'trigger', label: 'Trigger Type' },
   { key: 'status', label: 'Status' },
   { key: 'version', label: 'Version' },
   { key: 'schedule', label: 'Schedule' },

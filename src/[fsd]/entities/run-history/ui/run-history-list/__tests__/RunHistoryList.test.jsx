@@ -67,11 +67,11 @@ describe('RunHistoryList event column title', () => {
     render(
       <RunHistoryList
         hasEvent
-        eventColumnLabel="Trigger type"
+        eventColumnLabel="Trigger Type"
       />,
     );
 
-    expect(screen.getByTestId('header')).toHaveTextContent('Date|Trigger type|Version|Duration');
+    expect(screen.getByTestId('header')).toHaveTextContent('Date|Trigger Type|Version|Duration');
   });
 
   it('keeps the Event title when no title is given', () => {
@@ -83,13 +83,13 @@ describe('RunHistoryList event column title', () => {
 
 describe('RunHistoryList event column rows', () => {
   it('sorts rows by the event label when the title is clicked', () => {
-    renderList({ conversations: RUNS, eventColumnLabel: 'Trigger type' });
+    renderList({ conversations: RUNS, eventColumnLabel: 'Trigger Type' });
 
-    fireEvent.click(screen.getByText('sort Trigger type'));
+    fireEvent.click(screen.getByText('sort Trigger Type'));
 
     expect(rowTexts()).toEqual(['Chat', 'Schedule']);
 
-    fireEvent.click(screen.getByText('sort Trigger type'));
+    fireEvent.click(screen.getByText('sort Trigger Type'));
 
     expect(rowTexts()).toEqual(['Schedule', 'Chat']);
   });

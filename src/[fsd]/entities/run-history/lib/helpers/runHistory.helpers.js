@@ -9,10 +9,10 @@ export const RUN_FULL_TIMESTAMP_FORMAT = 'dd-MM-yyyy, hh:mm:ss a';
 // Usage is tagged with `run_id` / `eval_run_id` only from this date; older runs have nothing to show
 const RUN_ANALYTICS_AVAILABLE_FROM = Date.UTC(2026, 8, 30);
 
-// With extra columns the tracks are fixed rem widths: Date, Trigger type, extras, Version, Duration.
+// With extra columns the tracks are fixed rem widths: Date, Trigger Type, extras, Version, Duration.
 // From live measures at 16 px per rem: a row grid has 736 px (a 768 px list minus 2 x 16 px of row
 // padding; the row menu is absolute and takes no track). A sortable header needs its label plus 57 px (padding,
-// sort icon, gap, border) and a plain one its label plus 33 px: Date 91, Schedule 99, Status 78, Trigger type
+// sort icon, gap, border) and a plain one its label plus 33 px: Date 91, Schedule 99, Status 78, Trigger Type
 // 163, Version 110 and Duration 119 px. The minimum sum is 732 px. Dates up to 145 px stay cut, with a tooltip.
 const FIXED_TRACKS = {
   date: '7.5rem',
