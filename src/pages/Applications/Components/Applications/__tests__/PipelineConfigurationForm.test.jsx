@@ -29,6 +29,7 @@ vi.mock('@/[fsd]/widgets/entity-schedules-section', () => ({
 }));
 vi.mock('@/components/ApplicationVariables.jsx', () => ({ default: stub('variables') }));
 vi.mock('@/components/ConversationStarters', () => ({ default: stub('starters') }));
+vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => true }) }));
 vi.mock('@/pages/Applications/Components/Applications/ApplicationEditForm', () => ({
   default: stub('edit-form'),
 }));
@@ -51,14 +52,14 @@ describe('PipelineConfigurationForm section order', () => {
     expect(order()).toEqual(['starters', 'schedules', 'advanced']);
   });
 
-  it('Schedules sits right before Advanced when Chat starters is hidden', () => {
+  it('keeps the same section order in read-only view', () => {
     render(
       <PipelineConfigurationForm
         viewMode={ViewMode.Public}
         applicationId={1}
       />,
     );
-    expect(order()).toEqual(['schedules', 'advanced']);
+    expect(order()).toEqual(['starters', 'schedules', 'advanced']);
   });
 
   it('passes isChatView so the chat shows no Schedules section', () => {

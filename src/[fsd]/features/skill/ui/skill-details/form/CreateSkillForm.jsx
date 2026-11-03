@@ -15,11 +15,12 @@ import {
 import { GenerateSkillButton } from '@/[fsd]/features/skill/ui/generate-skill-modal';
 import { AccordionConstants, MarkdownConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
-import { Field, Input, Markdown, Text } from '@/[fsd]/shared/ui';
+import { Field, Input, Markdown, MarkdownEditorActions, Text } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { MarkdownViewToggle } from '@/[fsd]/shared/ui/tab-group-button';
 import { useTagListQuery } from '@/api/tags.js';
 import { ChatParticipantType, MAX_DESCRIPTION_LENGTH, PROMPT_PAYLOAD_KEY } from '@/common/constants';
+import StyledInputModal from '@/components/StyledInputModal';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import TagEditor from '@/pages/Common/Components/TagEditor';
 import { markdown } from '@codemirror/lang-markdown';
@@ -52,6 +53,7 @@ const CreateSkillForm = memo(props => {
   const [instructionsViewMode, setInstructionsViewMode] = useState(
     isCreateMode ? MARKDOWN_VIEW_MODES.edit : MARKDOWN_VIEW_MODES.preview,
   );
+  const [isFullScreenOpen, setIsFullScreenOpen] = useState(false);
   const styles = skillCreateFormStyles();
   const { toggleFieldFocus, isFocused } = useFieldFocus();
   const { models } = useSkillModels();
@@ -105,6 +107,18 @@ const CreateSkillForm = memo(props => {
   const onInstructionsBlur = useCallback(() => {
     formik.setFieldTouched('version_details.instructions', true);
   }, [formik]);
+
+  const onOpenFullScreen = useCallback(() => setIsFullScreenOpen(true), []);
+
+  const onCloseFullScreen = useCallback(() => setIsFullScreenOpen(false), []);
+
+  const onFullScreenChange = useCallback(
+    event => {
+      onEditorChange(event.target.value);
+      formik.setFieldTouched('version_details.instructions', true);
+    },
+    [formik, onEditorChange],
+  );
 
   const onChangeSkillIcon = useCallback(
     icon => {
@@ -290,6 +304,14 @@ const CreateSkillForm = memo(props => {
                 sx={styles.summaryActions}
                 onClick={e => e.stopPropagation()}
               >
+                {instructionsViewMode === MARKDOWN_VIEW_MODES.edit && (
+                  <MarkdownEditorActions
+                    value={editorText}
+                    onFullScreen={onOpenFullScreen}
+                    copyMessage="The instructions have been copied to the clipboard."
+                    testIdPrefix="skill-instructions"
+                  />
+                )}
                 <MarkdownViewToggle
                   value={instructionsViewMode}
                   onChange={setInstructionsViewMode}
@@ -372,6 +394,22 @@ const CreateSkillForm = memo(props => {
         accordionStyle={accordionStyle}
         disabled={disabled}
       />
+
+      {isFullScreenOpen && (
+        <StyledInputModal
+          open
+          title="Instructions"
+          value={editorText}
+          disabled={disabled}
+          specifiedLanguage="markdown"
+          inputProps={{ maxLength: maxInstructionsLength }}
+          countLength={countSkillBodyLength}
+          hasOnChangeCallback
+          onChange={onFullScreenChange}
+          onClose={onCloseFullScreen}
+          data-testid="skill-instructions-full-screen-modal"
+        />
+      )}
     </Box>
   );
 });

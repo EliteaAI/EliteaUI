@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material';
 
 import darkPalette from '@/darkPalette';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import CreateSkillForm from '../CreateSkillForm';
 
@@ -35,24 +35,41 @@ vi.mock('@/[fsd]/shared/ui', () => ({
   },
   Input: { StyledInputEnhancer: () => null },
   Markdown: () => null,
+  MarkdownEditorActions: () => null,
   Text: { CharacterCounter: () => null },
 }));
 vi.mock('@/[fsd]/shared/ui/accordion/BasicAccordion', () => ({
-  default: ({ items }) => items.map(item => <div key={item.title}>{item.content}</div>),
+  default: ({ items }) =>
+    items.map(item => (
+      <div key={item.title}>
+        {item.summaryAction}
+        {item.content}
+      </div>
+    )),
 }));
-vi.mock('@/[fsd]/shared/ui/tab-group-button', () => ({ MarkdownViewToggle: () => null }));
+vi.mock('@/[fsd]/shared/ui/tab-group-button', () => ({
+  MarkdownViewToggle: ({ onChange }) => (
+    <button
+      data-testid="edit-mode-toggle"
+      onClick={() => onChange('edit')}
+    />
+  ),
+}));
+vi.mock('@/components/StyledInputModal', () => ({ default: () => null }));
 
-const renderForm = instructions =>
+const renderForm = instructions => {
   render(
     <ThemeProvider theme={createTheme({ palette: darkPalette })}>
       <Formik
         initialValues={{ name: 'reviewer', description: 'Reviews code', version_details: { instructions } }}
         onSubmit={vi.fn()}
       >
-        <CreateSkillForm isCreateMode />
+        <CreateSkillForm />
       </Formik>
     </ThemeProvider>,
   );
+  fireEvent.click(screen.getByTestId('edit-mode-toggle'));
+};
 
 describe('CreateSkillForm instructions limit', () => {
   afterEach(() => {
