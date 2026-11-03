@@ -36,6 +36,7 @@ const useSaveSkillVersion = () => {
           tags: normalizeTagsForSave(values?.version_details?.tags),
           meta: values?.version_details?.meta || {},
           run_settings: toRunSettingsPayload(values?.version_details?.run_settings),
+          filesFromVersionId: values?.version_details?.id,
         }).unwrap();
 
         resetForm({ values });
