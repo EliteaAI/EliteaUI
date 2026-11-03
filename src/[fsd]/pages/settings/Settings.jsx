@@ -36,6 +36,7 @@ const VALID_TAB_IDS = [
   'tokens',
   'integrations',
   'secrets',
+  'governance',
   'users',
   'analytics',
   'usage',
@@ -93,6 +94,13 @@ const SETTINGS_TABS_CONFIG = [
         label: 'Secrets',
         icon: <Lock />,
         permission: PERMISSIONS.secrets.list,
+      },
+      {
+        // (#7269) the project's own admins operate governance here; members see their Save cards instead
+        id: 'governance',
+        label: 'Governance',
+        icon: <KeyIcon />,
+        anyPermission: [PERMISSIONS.governance.bindingsView, PERMISSIONS.governance.credentialsView],
       },
       {
         id: 'users',
@@ -178,6 +186,8 @@ const Settings = memo(() => {
           .filter(tabItem => VALID_TAB_IDS.includes(tabItem.id))
           .filter(item => {
             if (!checkPermission(item.permission)) return false;
+            if (item.anyPermission && !item.anyPermission.some(permission => checkPermission(permission)))
+              return false;
             if (item.publicOnly) return projectId == PUBLIC_PROJECT_ID;
             if (item.id === 'project-context') return projectId !== PUBLIC_PROJECT_ID;
             if (item.id === 'analytics' && platformSettings?.analytics_enabled === false) return false;
