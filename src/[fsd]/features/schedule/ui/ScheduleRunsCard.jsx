@@ -106,8 +106,7 @@ const ScheduleRunsCard = memo(
               <BaseBtn
                 data-testid="schedule-test-run"
                 title={TEST_RUN_NOTE}
-                variant={BUTTON_VARIANTS.elitea}
-                color="primary"
+                variant={BUTTON_VARIANTS.special}
                 startIcon={<ScienceOutlinedIcon />}
                 disabled={busy || !canTest || !!runHint || !draftSettled}
                 onClick={startRun(onTestRun)}
