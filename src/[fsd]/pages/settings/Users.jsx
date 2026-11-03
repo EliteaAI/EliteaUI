@@ -89,7 +89,8 @@ const Users = memo(() => {
   );
 
   const rolesOptions = useMemo(() => roles.map(({ name }) => ({ label: name, value: name })), [roles]);
-  const { rows: users = [], total } = data || {};
+  // SCIM projects: members follow the IdP group; only ELITEA admins (Admin UI) change roles or add admins
+  const { rows: users = [], total, scim_managed: isScimManaged = false } = data || {};
 
   const visibleRows = useMemo(
     () => users.slice(visiblePage * pageSize, visiblePage * pageSize + pageSize),
@@ -195,7 +196,7 @@ const Users = memo(() => {
         <DrawerPageHeader
           title="Users"
           titleTestId="users-page-title"
-          showAddButton={checkPermission(PERMISSIONS.users.create)}
+          showAddButton={checkPermission(PERMISSIONS.users.create) && !isScimManaged}
           showSearchInput={checkPermission(PERMISSIONS.users.view)}
           slotProps={{
             searchInput: {
@@ -213,7 +214,7 @@ const Users = memo(() => {
           }}
           extraContent={
             <>
-              {checkPermission(PERMISSIONS.users.edit) && (
+              {checkPermission(PERMISSIONS.users.edit) && !isScimManaged && (
                 <EditUsersButton
                   users={selectedUsers}
                   disabled={!selectedUsers.length}
@@ -228,7 +229,7 @@ const Users = memo(() => {
                   saveButtonTestId="users-edit-roles-save-button"
                 />
               )}
-              {checkPermission(PERMISSIONS.users.delete) && (
+              {checkPermission(PERMISSIONS.users.delete) && !isScimManaged && (
                 <DeleteUserButton
                   users={selectedUsers}
                   disabled={!selectedUsers.length}
@@ -262,6 +263,7 @@ const Users = memo(() => {
                 toastSuccess={toastSuccess}
                 rolesOptions={rolesOptions}
                 setSelectedUsers={setSelectedUsers}
+                isReadOnly={isScimManaged}
               />
             </Box>
           </>
@@ -269,7 +271,7 @@ const Users = memo(() => {
       </DrawerPage>
       <InviteUserDialog
         title="Invite users"
-        open={openInviteDialog}
+        open={openInviteDialog && !isScimManaged}
         onClose={handleCloseInviteDialog}
         onCancel={handleCloseInviteDialog}
         onConfirm={handleConfirmInvite}

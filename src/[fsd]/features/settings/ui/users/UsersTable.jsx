@@ -47,6 +47,7 @@ const UsersTable = memo(props => {
     onSelectRow,
     rolesOptions,
     setSelectedUsers,
+    isReadOnly = false,
   } = props;
 
   const styles = usersTableStyles();
@@ -146,14 +147,14 @@ const UsersTable = memo(props => {
           data-tour={USERS_TOUR_TARGET_IDS.userActions}
           sx={styles.actionsContainer}
         >
-          {checkPermission(PERMISSIONS.users.edit) && (
+          {checkPermission(PERMISSIONS.users.edit) && !isReadOnly && (
             <EditUsersButton
               users={row}
               rolesOptions={rolesOptions}
               testId="user-row-edit-button"
             />
           )}
-          {checkPermission(PERMISSIONS.users.delete) && (
+          {checkPermission(PERMISSIONS.users.delete) && !isReadOnly && (
             <DeleteUserButton
               users={[row]}
               setSelectedUsers={setSelectedUsers}
@@ -163,7 +164,7 @@ const UsersTable = memo(props => {
         </Box>
       );
     },
-    [checkPermission, rolesOptions, setSelectedUsers, styles.actionsContainer],
+    [checkPermission, isReadOnly, rolesOptions, setSelectedUsers, styles.actionsContainer],
   );
 
   return !isFetching ? (
