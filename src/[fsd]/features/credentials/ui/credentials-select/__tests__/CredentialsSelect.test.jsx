@@ -656,6 +656,64 @@ describe('CredentialsSelect', () => {
       expect(onSelectConfiguration).toHaveBeenCalledWith(null);
     });
 
+    const foreignPrivateValue = () =>
+      savedCredential(GITHUB_TITLE, 'uuid-creators-private', {
+        private: true,
+        configuration_project_id: 'creators-personal-project',
+      });
+    const OWN_PRIVATE = { ...CREDENTIAL_CONFIGURATIONS[0], project_id: PERSONAL_PROJECT_ID };
+
+    it("commits a team credential picked while another member's private reference is stored", () => {
+      renderSelect({
+        section: 'credentials',
+        value: foreignPrivateValue(),
+        configurations: [
+          OWN_PRIVATE,
+          { id: 99, uuid: 'uuid-other', elitea_title: 'other-token', project_id: TEAM_PROJECT_ID, data: {} },
+        ],
+      });
+
+      singleSelectProps.onValueChange(optionValueFor('other-token'));
+
+      expect(onSelectConfiguration).toHaveBeenCalledTimes(1);
+      expect(onSelectConfiguration).toHaveBeenCalledWith(
+        expect.objectContaining({ configuration_uuid: 'uuid-other', private: false }),
+      );
+    });
+
+    it("commits another own private credential picked while another member's private reference is stored", () => {
+      renderSelect({
+        section: 'credentials',
+        value: foreignPrivateValue(),
+        configurations: [
+          OWN_PRIVATE,
+          {
+            id: 98,
+            uuid: 'uuid-own-other',
+            elitea_title: 'other-token',
+            project_id: PERSONAL_PROJECT_ID,
+            data: {},
+          },
+        ],
+      });
+
+      singleSelectProps.onValueChange(optionValueFor('other-token'));
+
+      expect(onSelectConfiguration).toHaveBeenCalledTimes(1);
+      expect(onSelectConfiguration).toHaveBeenCalledWith(
+        expect.objectContaining({ configuration_uuid: 'uuid-own-other', private: true }),
+      );
+    });
+
+    it("deselects when the resolved own credential is clicked again for another member's private reference", () => {
+      renderSelect({ section: 'credentials', value: foreignPrivateValue(), configurations: [OWN_PRIVATE] });
+
+      singleSelectProps.onValueChange(optionValueFor(GITHUB_TITLE));
+
+      expect(onSelectConfiguration).toHaveBeenCalledTimes(1);
+      expect(onSelectConfiguration).toHaveBeenCalledWith(null);
+    });
+
     it("keeps the uuid-only match for the user's own private reference", () => {
       renderSelect({
         section: 'credentials',
