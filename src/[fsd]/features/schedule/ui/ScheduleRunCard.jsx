@@ -100,13 +100,13 @@ const scheduleRunCardStyles = (expanded, isLatest) => ({
     alignItems: 'stretch',
     gap: '0.375rem',
     width: '100%',
-    padding: '1rem',
+    padding: '0.75rem 1.25rem',
     textAlign: 'left',
     '&:focus-visible': { outline: '0.125rem solid currentColor', outlineOffset: '-0.125rem' },
   },
   line: { display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 },
   // In this theme text.secondary is the bright tone and text.primary the muted one, as in the mockups
-  started: ({ palette }) => ({ fontWeight: 600, color: palette.text.primary }),
+  started: ({ palette }) => ({ fontWeight: 600, color: palette.text.secondary }),
   status: { marginLeft: 'auto' },
   chevron: { transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' },
   latest: ({ palette }) => ({
@@ -116,7 +116,10 @@ const scheduleRunCardStyles = (expanded, isLatest) => ({
     color: palette.primary.main,
     backgroundColor: `${palette.primary.main}1a`,
   }),
-  trigger: ({ palette }) => ({ color: palette.text.secondary }),
+  trigger: ({ palette }) => ({
+    color: palette.text.subtle,
+    backgroundColor: palette.background.surface.interactive.active,
+  }),
 });
 
 export default ScheduleRunCard;
