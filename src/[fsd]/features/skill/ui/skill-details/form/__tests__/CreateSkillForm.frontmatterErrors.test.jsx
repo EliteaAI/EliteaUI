@@ -6,7 +6,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import lightPalette from '@/lightPalette';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import CreateSkillForm from '../CreateSkillForm';
 
@@ -36,6 +36,7 @@ vi.mock('@/[fsd]/shared/ui', () => ({
   Field: { CodeMirrorEditor: () => <div data-testid="codemirror-editor" /> },
   Input: { StyledInputEnhancer: () => null },
   Markdown: ({ children }) => <div data-testid="instructions-markdown">{children}</div>,
+  MarkdownEditorActions: () => null,
   Text: { CharacterCounter: () => null },
 }));
 vi.mock('@/[fsd]/shared/ui/accordion/BasicAccordion', () => ({
@@ -47,6 +48,7 @@ vi.mock('@/[fsd]/shared/ui/accordion/BasicAccordion', () => ({
       </div>
     )),
 }));
+vi.mock('@/components/StyledInputModal', () => ({ default: () => null }));
 vi.mock('@/[fsd]/shared/config/store', () => ({ default: {} }));
 vi.mock('@/api/tags.js', () => ({ useTagListQuery: () => ({ data: {} }) }));
 vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => false }) }));
@@ -65,10 +67,11 @@ describe('CreateSkillForm frontmatter errors', () => {
           initialValues={{ name: 'skill', description: '', version_details: { instructions: 'Do it.' } }}
           onSubmit={() => {}}
         >
-          <CreateSkillForm isCreateMode />
+          <CreateSkillForm />
         </Formik>
       </ThemeProvider>,
     );
+    fireEvent.click(screen.getByTestId('markdown-edit-mode-toggle'));
 
     const lines = Array.from(screen.getByTestId('skill-frontmatter-error').children).map(
       line => line.textContent,

@@ -21,7 +21,8 @@ const NAME_LABEL_ID = 'risk-review-name-label';
  * "Review risks before scheduling", opened on Save when the check finds sensitive tools.
  * `onConfirm({ rule, confirmedName })` saves; confirmedName comes only with "Run without asking".
  * `changed` shows the banner of a 409 risk_changed; `nameError` the server text of a 400 risk_name_mismatch;
- * `saving` disables both buttons.
+ * `saving` disables both buttons. `waiting` holds the missing credentials and personal sign-ins: under
+ * "Pause and ask me" they are warnings (the run waits for the owner); "Run without asking" cannot save with them.
  */
 const RiskReviewDialog = memo(props => {
   const {
@@ -29,6 +30,7 @@ const RiskReviewDialog = memo(props => {
     entityLabel,
     scheduleName,
     tools = [],
+    waiting = [],
     runWithoutAskingAllowed,
     scanIncomplete,
     showSettingsLink,
@@ -53,7 +55,8 @@ const RiskReviewDialog = memo(props => {
 
   const runWithoutAsking = rule === APPROVAL_RULE.RUN_WITHOUT_ASKING;
   const nameMatches = typedName.trim() === scheduleName?.trim();
-  const canConfirm = !saving && (!runWithoutAsking || nameMatches);
+  const waitingBlocksRule = runWithoutAsking && waiting.length > 0;
+  const canConfirm = !saving && !waitingBlocksRule && (!runWithoutAsking || nameMatches);
 
   const handleNameChange = useCallback(event => {
     setTypedName(event.target.value);
@@ -126,6 +129,37 @@ const RiskReviewDialog = memo(props => {
               />
             ))}
           </Box>
+          {waiting.length > 0 && (
+            <BannerMessage variant={waitingBlocksRule ? 'error' : 'warning'}>
+              <Box
+                data-testid="risk-review-waiting"
+                sx={styles.waiting}
+              >
+                <Typography
+                  variant="bodySmall"
+                  sx={styles.text}
+                >
+                  {waitingBlocksRule
+                    ? 'You can\'t save this schedule with "Run without asking". These toolkits need a sign-in or a credential:'
+                    : 'With "Pause and ask me", the run waits for your approval. These toolkits need a sign-in or a credential:'}
+                </Typography>
+                {waiting.map((finding, index) => (
+                  <Typography
+                    key={`${finding.code}-${finding.toolkit}-${index}`}
+                    variant="bodySmall"
+                    sx={styles.text}
+                  >
+                    <Box
+                      component="strong"
+                      sx={styles.strong}
+                    >
+                      {finding.toolkit}
+                    </Box>
+                  </Typography>
+                ))}
+              </Box>
+            </BannerMessage>
+          )}
           <Typography variant="labelMedium">
             What should a scheduled run do before it uses these tools?
           </Typography>
@@ -222,6 +256,7 @@ const riskReviewDialogStyles = () => ({
   tools: { display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '20rem', overflowY: 'auto' },
   text: ({ palette }) => ({ color: palette.text.primary }),
   strong: { fontWeight: 600 },
+  waiting: { display: 'flex', flexDirection: 'column', gap: '0.25rem' },
   confirm: { display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' },
 });
 

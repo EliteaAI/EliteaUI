@@ -208,6 +208,7 @@ const CreateAgentForm = memo(props => {
         <AgentInput.InstructionsInput
           containerStyle={styles.instructionsContainer}
           style={styles.instructionsInput}
+          isCreateMode
         />
       )}
       <ApplicationVariables

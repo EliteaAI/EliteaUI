@@ -11,11 +11,33 @@ import { SearchParams, ViewMode } from '@/common/constants';
 import { toRiskItems } from '../lib/helpers';
 
 const FIX_LINK_TEXT = { agent: 'Open agent to change tools', pipeline: 'Open pipeline to change steps' };
+const WAIT_LINK_TEXT = {
+  agent: 'Open agent to sign in or add credentials',
+  pipeline: 'Open pipeline to sign in or add credentials',
+};
+const WAIT_NOTE = 'You can save this schedule. With "Pause and ask me", the run waits for your approval.';
 
 const stepName = ({ step_label, step }) => step_label ?? step;
 
-// Title lines, the line above the list and the closing line of one cause kind
-const describeGroup = (code, findings, entityType) => {
+// Title lines, the line above the list and the closing line of one cause kind.
+// `waiting` is the yellow box: the save goes on and the run waits for the owner.
+const describeGroup = (code, findings, entityType, waiting) => {
+  if (waiting && code === 'personal_signin_required')
+    return {
+      title: [`This ${entityType} needs a personal sign-in.`, 'The run waits until you sign in and approve.'],
+      intro: WAIT_NOTE,
+      items: findings.map(({ toolkit, reason }) => ({ name: toolkit, reason })),
+      outro: 'Sign in to these toolkits, or use a toolkit with a shared project credential.',
+    };
+  if (waiting && code === 'missing_credential')
+    return {
+      title: ['A toolkit has no usable credential.', 'The run waits until you add one and approve.'],
+      intro: WAIT_NOTE,
+      items: findings.map(({ toolkit }) => ({
+        reason: `Toolkit '${toolkit}' has no usable credential for the owner.`,
+      })),
+      outro: 'Add the credential in the toolkit settings.',
+    };
   if (code === 'personal_signin_required')
     return {
       title: [`This ${entityType} needs a personal sign-in.`, "Scheduled runs can't sign in for you."],
@@ -47,14 +69,15 @@ const describeGroup = (code, findings, entityType) => {
   };
 };
 
-// The red boxes under the entity when the risk check blocks the save: one box per cause kind
+// The boxes under the entity when the risk check finds a cause: one box per cause kind. Red boxes block the
+// save; with `waiting` the boxes are yellow, the save goes on and the run waits for the owner.
 const ScheduleRiskBlockBox = memo(props => {
-  const { blocking, entityType, entityId, versionId, projectId } = props;
+  const { blocking, waiting = false, entityType, entityId, versionId, projectId } = props;
   const groups = useMemo(() => toRiskItems(blocking), [blocking]);
   const styles = scheduleRiskBlockBoxStyles();
 
   return groups.map(({ code, findings }) => {
-    const { title, intro, items, outro } = describeGroup(code, findings, entityType);
+    const { title, intro, items, outro } = describeGroup(code, findings, entityType, waiting);
     // The server names what to fix; the form entity and version stand in when it does not
     const fix = findings.find(finding => finding.fix)?.fix ?? {
       entity_type: entityType,
@@ -72,10 +95,10 @@ const ScheduleRiskBlockBox = memo(props => {
     return (
       <BannerMessage
         key={code}
-        variant="error"
+        variant={waiting ? 'warning' : 'error'}
       >
         <Box
-          data-testid="schedule-risk-block-box"
+          data-testid={waiting ? 'schedule-risk-wait-box' : 'schedule-risk-block-box'}
           sx={styles.body}
         >
           <Box>
@@ -139,7 +162,7 @@ const ScheduleRiskBlockBox = memo(props => {
             variant="bodySmall"
             sx={styles.link}
           >
-            {FIX_LINK_TEXT[fix.entity_type]}
+            {(waiting ? WAIT_LINK_TEXT : FIX_LINK_TEXT)[fix.entity_type]}
             <Box
               component={OpenInNewIcon}
               aria-hidden

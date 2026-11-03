@@ -26,6 +26,8 @@ const InfoTooltip = memo(props => {
     contentTestId,
     // Opens on hover or focus; click, Enter or Space pins it until Esc or a click outside
     pinnable = false,
+    // The accessible name of the pinnable icon; name the topic when several icons sit near each other
+    label = 'More info',
   } = props;
   const styles = infoTooltipStyles();
 
@@ -44,10 +46,12 @@ const InfoTooltip = memo(props => {
 
   useEffect(() => {
     if (!pinnable || !isOpen) return undefined;
-    // Capture phase and preventDefault: Esc closes only the tooltip, not the panel or dialog it sits in
+    // Capture phase, preventDefault and stopPropagation: a MUI Modal does not check defaultPrevented,
+    // so Esc closes only the tooltip, not the panel or dialog it sits in
     const handleKeyDown = event => {
       if (event.key !== 'Escape') return;
       event.preventDefault();
+      event.stopPropagation();
       dismiss();
     };
     document.addEventListener('keydown', handleKeyDown, true);
@@ -82,7 +86,7 @@ const InfoTooltip = memo(props => {
         ? {
             tabIndex: 0,
             role: 'button',
-            'aria-label': 'More info',
+            'aria-label': label,
             onClick: togglePinned,
             onMouseDown: event => event.stopPropagation(),
             onKeyDown: handleKeyDown,
@@ -98,7 +102,7 @@ const InfoTooltip = memo(props => {
             onBlur: () => setIsFocused(false),
           }
         : {},
-    [pinnable, togglePinned, handleKeyDown],
+    [pinnable, label, togglePinned, handleKeyDown],
   );
 
   const unpin = useCallback(() => setIsPinned(false), []);

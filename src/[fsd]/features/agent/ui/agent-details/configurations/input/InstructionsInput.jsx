@@ -1,90 +1,55 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, useTheme } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 
 import { useInstructionsMention } from '@/[fsd]/features/agent/lib/hooks/useInstructionsMention.hooks';
 import { useInstructionsSkillMention } from '@/[fsd]/features/agent/lib/hooks/useInstructionsSkillMention.hooks';
 import { MentionSkillList } from '@/[fsd]/features/skill';
-import { AccordionConstants, MentionConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
+import {
+  AccordionConstants,
+  MarkdownConstants,
+  MentionConstants,
+  TourTargetConstants,
+} from '@/[fsd]/shared/lib/constants';
 import { useInstructionsInputRefContext } from '@/[fsd]/shared/lib/context';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { Markdown, MarkdownEditorActions } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
-import { FileReaderEnhancer } from '@/[fsd]/shared/ui/input';
+import { MarkdownViewToggle } from '@/[fsd]/shared/ui/tab-group-button';
 import { contextResolver } from '@/common/utils';
 
+import InstructionsMarkdownEditor from './InstructionsMarkdownEditor';
 import InstructionsSlashSuggestionList from './InstructionsSlashSuggestionList';
 
-/**
- * Renders the mirror overlay content using span-rendering Boxes only (no MUI Typography),
- * so font metrics are purely inherited from the mirror container (which is synced to the textarea).
- */
-const renderMirrorHighlights = (text, ranges, textColor, highlightColor) => {
-  if (!ranges?.length || !text) return null;
-  const parts = [];
-  let lastIndex = 0;
-  for (const { start, end } of ranges) {
-    if (start > lastIndex) {
-      parts.push(
-        <Box
-          component="span"
-          key={`n-${lastIndex}`}
-          sx={mirrorSpanStyles(textColor)}
-        >
-          {text.slice(lastIndex, start)}
-        </Box>,
-      );
-    }
-    parts.push(
-      <Box
-        component="span"
-        key={`h-${start}`}
-        sx={mirrorSpanStyles(highlightColor)}
-      >
-        {text.slice(start, end)}
-      </Box>,
-    );
-    lastIndex = end;
-  }
-  if (lastIndex < text.length) {
-    parts.push(
-      <Box
-        component="span"
-        key={`n-${lastIndex}`}
-        sx={mirrorSpanStyles(textColor)}
-      >
-        {text.slice(lastIndex)}
-      </Box>,
-    );
-  }
-  return parts;
-};
+const { MARKDOWN_VIEW_MODES } = MarkdownConstants;
 
-/** @type {(color: string) => MuiSx} */
-const mirrorSpanStyles = color => ({ color });
+const PREVIEW_FIRST = [MARKDOWN_VIEW_MODES.preview, MARKDOWN_VIEW_MODES.edit];
 
 const InstructionsInput = memo(props => {
-  const { style, containerStyle, disabled, applicationId, entityProjectId } = props;
+  const { style, containerStyle, disabled, applicationId, entityProjectId, isCreateMode = false } = props;
   const theme = useTheme();
   const inputRef = useInstructionsInputRefContext();
-  const mirrorRef = useRef(null);
-  // Tracks the version id whose mirror overlay has been sized to the textarea.
-  // `mirrorReady` is DERIVED from it during render (below), so a version switch flips
-  // the gate off synchronously in the same render — no stale-true frame. While the
-  // gate is off, the real textarea text (correct size) is shown instead of an
-  // unsynced, oversized mirror flashing in.
-  const [syncedVersionId, setSyncedVersionId] = useState(undefined);
   const styles = instructionsInputStyles();
   const {
     values: { version_details },
     setFieldValue,
   } = useFormikContext();
-  const mirrorReady = syncedVersionId === version_details?.id;
   const selectedProjectId = useSelectedProjectId();
   const projectId = entityProjectId || selectedProjectId;
+  const instructions = version_details?.instructions || '';
 
-  const handleChange = useCallback(field => value => setFieldValue(field, value), [setFieldValue]);
+  const [viewMode, setViewMode] = useState(
+    isCreateMode ? MARKDOWN_VIEW_MODES.edit : MARKDOWN_VIEW_MODES.preview,
+  );
+  const [isFullScreenOpen, setIsFullScreenOpen] = useState(false);
+  const isEditMode = viewMode === MARKDOWN_VIEW_MODES.edit;
+
+  const onChangeInstructions = useCallback(
+    value => setFieldValue('version_details.instructions', value),
+    [setFieldValue],
+  );
 
   const updateVariableList = useCallback(
     value => {
@@ -104,7 +69,7 @@ const InstructionsInput = memo(props => {
     [setFieldValue, version_details?.variables],
   );
 
-  // ── Mention hook ──────────────────────────────────────────────────────────────
+  // ── Mention hooks ─────────────────────────────────────────────────────────────
 
   const {
     phase,
@@ -113,7 +78,6 @@ const InstructionsInput = memo(props => {
     filteredItems,
     filteredTools,
     highlightedIndex,
-    highlightRanges,
     codeMirrorExtensions,
     onKeyDown: mentionOnKeyDown,
     onInstructionsInputChange,
@@ -132,7 +96,6 @@ const InstructionsInput = memo(props => {
     committedMentions: skillCommittedMentions,
     filteredItems: skillFilteredItems,
     highlightedIndex: skillHighlightedIndex,
-    highlightRanges: skillHighlightRanges,
     codeMirrorExtensions: skillCodeMirrorExtensions,
     onKeyDown: skillMentionOnKeyDown,
     onInstructionsInputChange: onSkillInstructionsInputChange,
@@ -144,12 +107,7 @@ const InstructionsInput = memo(props => {
     versionDetails: version_details,
   });
 
-  // Merge "/" tool-mention and "~" skill-mention highlights so both render in the
-  // mirror overlay (textarea) and the full-screen CodeMirror surface simultaneously.
-  const mergedHighlightRanges = useMemo(
-    () => [...highlightRanges, ...skillHighlightRanges].sort((a, b) => a.start - b.start),
-    [highlightRanges, skillHighlightRanges],
-  );
+  // Both "/" tool-mention and "~" skill-mention highlights render in the inline and full-screen editors.
   const mergedCodeMirrorExtensions = useMemo(
     () => [...codeMirrorExtensions, ...skillCodeMirrorExtensions],
     [codeMirrorExtensions, skillCodeMirrorExtensions],
@@ -177,123 +135,6 @@ const InstructionsInput = memo(props => {
     [isSkillPhaseActive, isSlashPhaseActive, mentionOnKeyDown, skillMentionOnKeyDown],
   );
 
-  const hasHighlights = mergedHighlightRanges.length > 0;
-
-  // Sync the mirror div's geometry (position, size, padding) and scroll with the textarea.
-  useEffect(() => {
-    if (!hasHighlights) return;
-    const mirror = mirrorRef.current;
-    if (!mirror) return;
-
-    // Resolved once the textarea is actually mounted (see attach() below).
-    let textareaEl = null;
-    let rafId = null;
-    let ro = null;
-
-    const syncGeometry = () => {
-      if (!textareaEl) return;
-      const containerEl = mirror.parentElement;
-      const containerRect = containerEl.getBoundingClientRect();
-      const textareaRect = textareaEl.getBoundingClientRect();
-      const cs = window.getComputedStyle(textareaEl);
-      mirror.style.top = textareaRect.top - containerRect.top + 'px';
-      mirror.style.left = textareaRect.left - containerRect.left + 'px';
-      mirror.style.width = textareaEl.offsetWidth + 'px';
-      mirror.style.height = textareaEl.offsetHeight + 'px';
-      mirror.style.paddingTop = cs.paddingTop;
-      mirror.style.paddingBottom = cs.paddingBottom;
-      mirror.style.paddingLeft = cs.paddingLeft;
-      mirror.style.paddingRight = cs.paddingRight;
-      // Copy font metrics so text wraps at the same positions as in the textarea.
-      mirror.style.fontFamily = cs.fontFamily;
-      mirror.style.fontSize = cs.fontSize;
-      mirror.style.fontWeight = cs.fontWeight;
-      mirror.style.lineHeight = cs.lineHeight;
-      mirror.style.letterSpacing = cs.letterSpacing;
-    };
-
-    const syncScroll = () => {
-      if (!textareaEl) return;
-      mirror.scrollTop = textareaEl.scrollTop;
-    };
-
-    // Sync after cursor moves (keyup/click may cause textarea to auto-scroll to cursor).
-    // requestAnimationFrame defers until after the browser finishes the scroll.
-    const syncScrollAfterFrame = () => requestAnimationFrame(syncScroll);
-
-    // The textarea may not be mounted yet on the run where hasHighlights first
-    // turns true — notably right after a version switch, which force-remounts the
-    // input via key={version_details.id}. Bailing here permanently would leave the
-    // mirror overlay stuck at its CSS default (16px / origin) while the real textarea
-    // (14px) renders transparent underneath, so the user sees oversized, overflowing,
-    // non-scrolling instructions. Retry on the next frame until the textarea exists.
-    const attach = () => {
-      textareaEl = inputRef.current?.getTextareaElement?.();
-      if (!textareaEl) {
-        rafId = requestAnimationFrame(attach);
-        return;
-      }
-      rafId = null;
-      syncGeometry();
-      syncScroll();
-      // Mirror is now sized to the textarea for THIS version — reveal it and make the
-      // textarea text transparent, so the swap is between two identically-sized
-      // renders (no visible grow/shrink flash).
-      setSyncedVersionId(version_details?.id);
-      textareaEl.addEventListener('scroll', syncScroll);
-      textareaEl.addEventListener('keyup', syncScrollAfterFrame);
-      textareaEl.addEventListener('click', syncScrollAfterFrame);
-      ro = new ResizeObserver(() => {
-        syncGeometry();
-        syncScroll();
-      });
-      ro.observe(textareaEl);
-    };
-    attach();
-
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      if (textareaEl) {
-        textareaEl.removeEventListener('scroll', syncScroll);
-        textareaEl.removeEventListener('keyup', syncScrollAfterFrame);
-        textareaEl.removeEventListener('click', syncScrollAfterFrame);
-      }
-      if (ro) ro.disconnect();
-    };
-    // version_details.id is the key on FileReaderEnhancer: when it changes the input
-    // (and its textarea) remounts, so re-run to tear down the stale element and
-    // re-attach/sync to the new textarea.
-  }, [hasHighlights, inputRef, version_details?.id]);
-
-  const overlayContent = hasHighlights ? (
-    <Box
-      ref={mirrorRef}
-      aria-hidden="true"
-      sx={[styles.mirrorOverlay, !mirrorReady && { visibility: 'hidden' }]}
-    >
-      {renderMirrorHighlights(
-        version_details?.instructions ?? '',
-        mergedHighlightRanges,
-        theme.palette.text.secondary,
-        theme.palette.primary.main,
-      )}
-    </Box>
-  ) : null;
-
-  // ── Modal / suggestion list ───────────────────────────────────────────────────
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Intercept onChange so BOTH mention hooks track the current textarea content.
-  const handleInstructionsChange = useCallback(
-    value => {
-      handleChange('version_details.instructions')(value);
-      onInstructionsInputChange(value);
-      onSkillInstructionsInputChange(value);
-    },
-    [handleChange, onInstructionsInputChange, onSkillInstructionsInputChange],
-  );
-
   const handleRealtimeChange = useCallback(
     value => {
       onInstructionsInputChange(value);
@@ -301,6 +142,26 @@ const InstructionsInput = memo(props => {
     },
     [onInstructionsInputChange, onSkillInstructionsInputChange],
   );
+
+  // ── View mode / full screen ───────────────────────────────────────────────────
+
+  const onChangeViewMode = useCallback(
+    mode => {
+      if (!mode) return;
+      if (mode !== MARKDOWN_VIEW_MODES.edit) {
+        resetSlash();
+        resetSkill();
+      }
+      setViewMode(mode);
+    },
+    [resetSkill, resetSlash],
+  );
+
+  const onOpenFullScreen = useCallback(() => setIsFullScreenOpen(true), []);
+
+  const onCloseFullScreen = useCallback(() => setIsFullScreenOpen(false), []);
+
+  // ── Suggestion lists ──────────────────────────────────────────────────────────
 
   const suggestionList = (
     <InstructionsSlashSuggestionList
@@ -338,35 +199,67 @@ const InstructionsInput = memo(props => {
         {
           title: 'Instructions',
           testId: 'agent-canvas-section-instructions',
+          summaryAction: (
+            <Box
+              component="span"
+              sx={styles.summaryActions}
+              onClick={e => e.stopPropagation()}
+            >
+              {isEditMode && (
+                <MarkdownEditorActions
+                  value={instructions}
+                  onFullScreen={onOpenFullScreen}
+                  copyMessage="The instructions have been copied to the clipboard."
+                  testIdPrefix="agent-instructions"
+                />
+              )}
+              <MarkdownViewToggle
+                value={viewMode}
+                onChange={onChangeViewMode}
+                iconOrder={PREVIEW_FIRST}
+              />
+            </Box>
+          ),
           content: (
             <Box
               sx={styles.wrapper}
               data-tour={TourTargetConstants.AGENT_TOUR_TARGET_IDS.instructions}
             >
               <Box sx={containerStyle}>
-                <FileReaderEnhancer
-                  ref={inputRef}
-                  showexpandicon="true"
-                  id="application-instructions"
-                  placeholder="Guidelines for the AI agent"
-                  inputProps={{ 'data-testid': 'agent-instructions-input' }}
-                  defaultValue={version_details?.instructions}
-                  onChange={handleInstructionsChange}
-                  updateVariableList={updateVariableList}
-                  key={version_details?.id}
-                  multiline
-                  disabled={disabled}
-                  fieldName={'Instructions'}
-                  onKeyDown={combinedOnKeyDown}
-                  onRealtimeChange={handleRealtimeChange}
-                  onFullScreenChange={setIsModalOpen}
-                  afterContent={activeSuggestionList}
-                  overlayContent={overlayContent}
-                  codeMirrorExtensions={mergedCodeMirrorExtensions}
-                  sx={hasHighlights && mirrorReady ? styles.transparentInput : undefined}
-                />
+                {isEditMode ? (
+                  <InstructionsMarkdownEditor
+                    ref={inputRef}
+                    key={version_details?.id}
+                    value={instructions}
+                    disabled={disabled}
+                    codeMirrorExtensions={mergedCodeMirrorExtensions}
+                    onKeyDown={combinedOnKeyDown}
+                    onValueChange={onChangeInstructions}
+                    onRealtimeChange={handleRealtimeChange}
+                    updateVariableList={updateVariableList}
+                    isFullScreenOpen={isFullScreenOpen}
+                    onCloseFullScreen={onCloseFullScreen}
+                    afterContent={activeSuggestionList}
+                  />
+                ) : (
+                  <Box
+                    data-testid="agent-instructions-preview"
+                    sx={styles.preview}
+                  >
+                    {instructions ? (
+                      <Markdown>{instructions}</Markdown>
+                    ) : (
+                      <Typography
+                        variant="bodyMedium"
+                        sx={styles.emptyPreview}
+                      >
+                        No instructions yet.
+                      </Typography>
+                    )}
+                  </Box>
+                )}
               </Box>
-              {!isModalOpen && activeSuggestionList}
+              {isEditMode && !isFullScreenOpen && activeSuggestionList}
             </Box>
           ),
         },
@@ -377,8 +270,6 @@ const InstructionsInput = memo(props => {
 
 InstructionsInput.displayName = 'InstructionsInput';
 
-export default InstructionsInput;
-
 /** @type {MuiSx} */
 const instructionsInputStyles = () => ({
   wrapper: {
@@ -386,25 +277,27 @@ const instructionsInputStyles = () => ({
     flexDirection: 'column',
     gap: '0.5rem',
   },
-  // Mirror div — position/size/padding/font all synced from the textarea via JS.
-  // overflow: scroll creates a real scroll container so scrollTop sync works when content overflows.
-  mirrorOverlay: ({ palette }) => ({
-    position: 'absolute',
-    overflow: 'scroll',
-    scrollbarWidth: 'none',
-    '&::-webkit-scrollbar': { display: 'none' },
-    pointerEvents: 'none',
-    zIndex: 0,
-    boxSizing: 'border-box',
-    whiteSpace: 'pre-wrap',
-    wordBreak: 'break-word',
-    color: palette.text.primary,
+  summaryActions: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    // TabGroupButton hardcodes zIndex: 2000; keep the toggle below modals.
+    isolation: 'isolate',
+  },
+  preview: ({ palette }) => ({
+    minHeight: '12rem',
+    maxHeight: '24rem',
+    padding: '0.75rem',
+    borderRadius: '0.375rem',
+    border: `0.0625rem solid ${palette.border.default}`,
+    backgroundColor: palette.background.surface.interactive.default,
+    overflow: 'auto',
+    fontSize: '0.875rem',
   }),
-  // Make textarea text transparent so the mirror overlay shows through.
-  transparentInput: ({ palette }) => ({
-    '.MuiInputBase-input': {
-      color: 'transparent',
-      caretColor: palette.text.primary,
-    },
+  emptyPreview: ({ palette }) => ({
+    color: palette.text.metrics,
+    fontStyle: 'italic',
   }),
 });
+
+export default InstructionsInput;

@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -14,7 +14,9 @@ import {
   ScheduleForm,
   ScheduleRunsPanel,
   ScheduleRunsSection,
+  ScheduleWaitingCard,
   buildEditValues,
+  findWaitingRun,
   useEntityScheduleRoute,
   useScheduleRunsView,
 } from '@/[fsd]/features/schedule';
@@ -83,22 +85,41 @@ const ScheduleDetailPage = memo(props => {
     announcement,
     runNotFound,
   } = runsView;
+  // A run that waits for approval replaces the Test block with the Action needed card. The Test schedule
+  // button switches back for this run; opening the waiting run from the Runs section shows the card again.
+  const waitingRun = useMemo(() => findWaitingRun(runs), [runs]);
+  const [testShownFor, setTestShownFor] = useState(null);
+  const showWaitingCard =
+    !!waitingRun && (viewedRun ? viewedRun.id === waitingRun.id : testShownFor !== waitingRun.id);
+  const showTest = useCallback(() => {
+    setTestShownFor(waitingRun?.id ?? null);
+    backToTest();
+  }, [waitingRun?.id, backToTest]);
   const sidePanel = useCallback(
     testRunProps => (
       <Box
         data-testid="schedule-right-block"
         sx={styles.rightBlock}
       >
-        <ScheduleRunsPanel
-          ref={panelRef}
-          schedule={schedule}
-          runs={runs}
-          viewedRun={viewedRun}
-          versionNames={versionNames}
-          onRunHistory={showRunHistory}
-          onBackToTest={backToTest}
-          {...testRunProps}
-        />
+        {showWaitingCard ? (
+          <ScheduleWaitingCard
+            ref={panelRef}
+            schedule={schedule}
+            run={waitingRun}
+            onShowTest={showTest}
+          />
+        ) : (
+          <ScheduleRunsPanel
+            ref={panelRef}
+            schedule={schedule}
+            runs={runs}
+            viewedRun={viewedRun}
+            versionNames={versionNames}
+            onRunHistory={showRunHistory}
+            onBackToTest={backToTest}
+            {...testRunProps}
+          />
+        )}
         <ScheduleRunsSection
           ref={runsSectionRef}
           runs={runs}
@@ -115,6 +136,9 @@ const ScheduleDetailPage = memo(props => {
       </Box>
     ),
     [
+      showWaitingCard,
+      waitingRun,
+      showTest,
       schedule,
       runs,
       runsTotal,
@@ -161,6 +185,7 @@ const ScheduleDetailPage = memo(props => {
       // Nested in an editor, the crumbs name the agent or pipeline, not the schedule
       entityName={entityType ? undefined : schedule.name}
       sidePanel={sidePanel}
+      sidePanelFirst={showWaitingCard}
       // Export of this schedule, after Cancel
       headerActions={<ScheduleDetailMenu schedule={schedule} />}
       onSubmit={onSubmit}
