@@ -86,6 +86,7 @@ const SchedulePromptSection = memo(props => {
             tooltipDescription={PROMPT_INFO}
             tooltipPinnable
             minRows={4}
+            maxRows={6}
             variantInput={INPUT_VARIANTS.outlined}
             InputLabelProps={{ shrink: true }}
             value={prompt}
