@@ -86,13 +86,14 @@ describe('ScheduleRunDetail', () => {
   it('shows the reason of the run', () => {
     renderDetail({ ...ended, status: 'failed', reason: 'Model quota exceeded' });
 
-    expect(screen.getByTestId('schedule-run-reason')).toHaveTextContent('Model quota exceeded');
+    expect(screen.getByText('Model quota exceeded')).toBeInTheDocument();
   });
 
-  it('shows a short response for a failed run, not the raw tool error', () => {
+  it('shows a short error line for a failed run, not the raw tool error', () => {
     renderDetail({ ...ended, status: 'failed' });
 
-    expect(screen.getByTestId('schedule-run-answer')).toHaveTextContent(/did not finish/);
+    expect(screen.getByText(/did not finish/)).toBeInTheDocument();
+    expect(screen.queryByTestId('schedule-run-answer')).not.toBeInTheDocument();
   });
 
   it('offers a retry when the run detail fails to load', () => {

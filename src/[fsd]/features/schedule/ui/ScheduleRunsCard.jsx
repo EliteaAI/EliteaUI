@@ -1,6 +1,6 @@
 import { forwardRef, memo, useState } from 'react';
 
-import EventNoteOutlinedIcon from '@mui/icons-material/EventNoteOutlined';
+import PendingActionsOutlinedIcon from '@mui/icons-material/PendingActionsOutlined';
 import PlayArrowOutlinedIcon from '@mui/icons-material/PlayArrowOutlined';
 import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
 import { Box, Typography } from '@mui/material';
@@ -130,7 +130,7 @@ const ScheduleRunsCard = memo(
         )}
         {runs.length === 0 ? (
           <Box sx={styles.empty}>
-            <EventNoteOutlinedIcon sx={styles.emptyIcon} />
+            <PendingActionsOutlinedIcon sx={styles.emptyIcon} />
             <Typography
               variant="bodyMedium"
               color="text.secondary"
@@ -154,6 +154,7 @@ const ScheduleRunsCard = memo(
                 entityType={entityType}
                 applicationId={applicationId}
                 onToggle={onExpand}
+                onRunAgain={canRunNow && !busy ? onRunNow : undefined}
               />
             ))}
           </Box>

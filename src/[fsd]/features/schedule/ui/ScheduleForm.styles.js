@@ -18,7 +18,7 @@ const scheduleFormStyles = {
     gap: '1rem',
     padding: '1rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.default.tertiary,
+    backgroundColor: palette.background.surface.interactive.default,
   }),
   // A fieldset, so `disabled` reaches every input inside; its default border, margin and min width are reset
   section: {
