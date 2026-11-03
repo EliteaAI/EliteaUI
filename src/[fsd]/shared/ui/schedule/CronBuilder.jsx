@@ -220,7 +220,7 @@ const cronBuilderStyles = alignStart => ({
     width: '8.75rem',
   },
   narrowSelect: {
-    width: '5rem',
+    width: alignStart ? '4.25rem' : '5rem',
   },
 });
 
