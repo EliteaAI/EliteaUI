@@ -17,17 +17,7 @@ const TYPE_LABEL = Object.fromEntries(TYPE_ITEMS.map(({ value, label }) => [valu
 const AGENTS_TYPE = { agent: 'classic', pipeline: 'pipeline' };
 
 const ScheduleEntitySection = memo(
-  ({
-    type,
-    applicationId,
-    details,
-    lockActive,
-    lockFailed,
-    readOnly,
-    error,
-    onTypeChange,
-    onEntityChange,
-  }) => {
+  ({ type, applicationId, details, lockFailed, readOnly, error, onTypeChange, onEntityChange }) => {
     const projectId = useSelectedProjectId();
     const [list, setList] = useState({ page: 0, query: '' });
 
@@ -83,7 +73,6 @@ const ScheduleEntitySection = memo(
           items={TYPE_ITEMS}
           value={type}
           onChange={handleTypeChange}
-          disabled={lockActive}
         />
         <LazySelect
           required
@@ -98,7 +87,7 @@ const ScheduleEntitySection = memo(
           onLoadMore={() => setList(prev => ({ ...prev, page: prev.page + 1 }))}
           searchString={list.query}
           onSearch={query => setList({ page: 0, query })}
-          disabled={lockActive || readOnly}
+          disabled={readOnly}
           error={!!error}
           helperText={error}
         />

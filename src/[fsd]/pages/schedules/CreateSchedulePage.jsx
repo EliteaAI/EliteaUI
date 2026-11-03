@@ -35,7 +35,7 @@ const CreateSchedulePage = props => {
   );
 
   const onSubmit = useCallback(
-    body => createSchedule({ projectId, enabled: true, ...body }).unwrap(),
+    body => createSchedule({ projectId, ...body }).unwrap(),
     [createSchedule, projectId],
   );
 

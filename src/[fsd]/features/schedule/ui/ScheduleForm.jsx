@@ -28,8 +28,10 @@ import ScheduleApprovalSection, { APPROVAL_RULE_ITEMS } from './ScheduleApproval
 import ScheduleEntitySection from './ScheduleEntitySection';
 import ScheduleFormActions from './ScheduleFormActions';
 import ScheduleGeneralSection from './ScheduleGeneralSection';
+import ScheduleLockedEntity from './ScheduleLockedEntity';
 import SchedulePromptSection from './SchedulePromptSection';
 import ScheduleRiskNotices from './ScheduleRiskNotices';
+import ScheduleSettingsHeader from './ScheduleSettingsHeader';
 
 // The risk check states that keep Save disabled
 const RISK_STATES_WITHOUT_SAVE = [
@@ -100,9 +102,9 @@ const ScheduleForm = memo(props => {
     [formik.dirty, formik.isSubmitting],
   );
   useNavBlocker(blockOptions);
-  // Messages show after the first Save, so a half-filled form shows no required errors
   const fieldError = name => (submitCount ? errors[name] : '');
 
+  // An editor route or a saved schedule fixes the entity: it is shown, not changeable
   const { details, lockActive } = useScheduleEntityDetails({
     projectId,
     formik,
@@ -128,6 +130,7 @@ const ScheduleForm = memo(props => {
     [setFieldValue],
   );
   const handleRuleChange = useCallback(rule => setFieldValue('approval_rule', rule), [setFieldValue]);
+  const handleEnabledChange = useCallback(enabled => setFieldValue('enabled', enabled), [setFieldValue]);
 
   // The page drops the hidden Test draft of this form when the user leaves without saving
   const handleCancel = useCallback(() => onCancel?.(values), [onCancel, values]);
@@ -165,10 +168,6 @@ const ScheduleForm = memo(props => {
       setValues={setValues}
     />
   );
-  // A form nested in an editor takes the entity and version from the route: its selectors and WHAT TO RUN
-  // are hidden and the prompt fields move under GENERAL
-  const hideWhatToRun = lockActive;
-
   const sections = [
     {
       title: 'GENERAL',
@@ -202,16 +201,10 @@ const ScheduleForm = memo(props => {
             descriptionError={fieldError('description')}
             setFieldValue={setFieldValue}
           />
-          {hideWhatToRun && (
-            <>
-              {riskNotices}
-              {promptFields}
-            </>
-          )}
         </Box>
       ),
     },
-    !hideWhatToRun && {
+    {
       title: 'WHAT TO RUN',
       testId: 'schedule-section-what-to-run',
       content: (
@@ -220,17 +213,24 @@ const ScheduleForm = memo(props => {
           disabled={readOnly}
           sx={styles.section}
         >
-          <ScheduleEntitySection
-            type={values.type}
-            applicationId={values.application_id}
-            details={details}
-            lockActive={lockActive}
-            lockFailed={lockFailed}
-            readOnly={readOnly}
-            error={fieldError('application_id')}
-            onTypeChange={handleTypeChange}
-            onEntityChange={handleEntityChange}
-          />
+          {lockActive || (schedule?.id && values.application_id) ? (
+            <ScheduleLockedEntity
+              type={values.type}
+              name={details?.name}
+              editing={!!schedule}
+            />
+          ) : (
+            <ScheduleEntitySection
+              type={values.type}
+              applicationId={values.application_id}
+              details={details}
+              lockFailed={lockFailed}
+              readOnly={readOnly}
+              error={fieldError('application_id')}
+              onTypeChange={handleTypeChange}
+              onEntityChange={handleEntityChange}
+            />
+          )}
           {riskNotices}
           <VersionSelect
             entityId={values.application_id}
@@ -267,7 +267,7 @@ const ScheduleForm = memo(props => {
         </Box>
       ),
     },
-  ].filter(Boolean);
+  ];
 
   // The same header bar, column and collapsible sections as New Agent (CreateApplication)
   return (
@@ -313,6 +313,12 @@ const ScheduleForm = memo(props => {
                         variant="error"
                       />
                     )}
+                    <ScheduleSettingsHeader
+                      schedule={schedule}
+                      enabled={values.enabled}
+                      readOnly={readOnly}
+                      onEnabledChange={handleEnabledChange}
+                    />
                     <BasicAccordion
                       showMode={AccordionConstants.AccordionShowMode.LeftMode}
                       accordionSX={styles.accordion}

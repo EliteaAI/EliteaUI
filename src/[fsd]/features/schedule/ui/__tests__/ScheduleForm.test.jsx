@@ -63,6 +63,20 @@ vi.mock('@/[fsd]/entities/schedule', async () => ({
   }),
   useCheckScheduleRiskMutation: () => [checkRisk],
 }));
+vi.mock('../ScheduleActiveToggle', () => ({
+  default: props => (
+    <input
+      type="checkbox"
+      role="switch"
+      aria-label="Active"
+      data-testid="schedule-active-switch"
+      data-saved={String(!!props.schedule?.id)}
+      checked={Boolean(props.value)}
+      disabled={props.disabled}
+      onChange={event => props.onChange?.(event.target.checked)}
+    />
+  ),
+}));
 vi.mock('../RiskReviewDialog', () => ({
   default: props => {
     reviewProps = props;
@@ -190,6 +204,7 @@ const INITIAL = {
   timezone: 'Europe/Kyiv',
   expires_at: null,
   approval_rule: 'pause_and_ask',
+  enabled: true,
 };
 
 const theme = createTheme(getDesignTokens('dark'));
@@ -293,10 +308,26 @@ describe('ScheduleForm', () => {
     renderForm();
 
     expect(screen.getAllByRole('heading').map(h => h.textContent)).toEqual([
+      'Settings',
       'GENERAL',
       'WHAT TO RUN',
       'SCHEDULE SETTINGS',
     ]);
+  });
+
+  describe('Active switch', () => {
+    it('sends enabled with a new schedule and starts on', async () => {
+      const { onSubmit } = renderForm();
+      expect(screen.getByTestId('schedule-active-switch')).toBeChecked();
+
+      fireEvent.click(screen.getByTestId('schedule-active-switch'));
+      pickEntity(7);
+      typePrompt('Hi');
+      await save();
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+      expect(onSubmit.mock.calls[0][0]).toMatchObject({ enabled: false });
+    });
   });
 
   it('shows Name and a multiline Description capped at 2304, and no tags field', () => {
@@ -965,16 +996,23 @@ describe('ScheduleForm', () => {
       expect(after(element, screen.getByTestId('schedule-section-settings'))).toBe(true);
     };
 
-    it('TC-US58-14 hides the type switch, the entity, the version and WHAT TO RUN', () => {
+    it('shows the locked entity, the version and the Settings link, without the type switch', () => {
       renderLocked();
 
       expect(screen.getAllByRole('heading').map(h => h.textContent)).toEqual([
+        'Settings',
         'GENERAL',
+        'WHAT TO RUN',
         'SCHEDULE SETTINGS',
       ]);
+      expect(screen.getByTestId('schedule-locked-entity')).toBeInTheDocument();
+      expect(screen.getByTestId('schedule-locked-entity-link')).toHaveAttribute(
+        'href',
+        '/settings/schedules',
+      );
       expect(screen.queryByTestId('schedule-type')).not.toBeInTheDocument();
       expect(screen.queryByTestId('entity-select')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('version-select')).not.toBeInTheDocument();
+      expect(screen.getByTestId('version-select')).toBeInTheDocument();
     });
 
     it('TC-US58-15 shows Prompt and Variables under General for an agent', () => {
@@ -1044,6 +1082,17 @@ describe('ScheduleForm', () => {
     const edit = () => fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Changed' } });
     const saveButton = () => screen.getByTestId('schedule-save-button');
 
+    it('does not send enabled when a saved schedule is edited', async () => {
+      const { onSubmit } = renderEdit();
+      expect(screen.getByTestId('schedule-active-switch')).toHaveAttribute('data-saved', 'true');
+
+      edit();
+      await save();
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+      expect(onSubmit.mock.calls[0][0]).not.toHaveProperty('enabled');
+    });
+
     it('keeps Save disabled on the edit page until a value changes', async () => {
       renderEdit();
       await act(async () => {});
@@ -1064,14 +1113,13 @@ describe('ScheduleForm', () => {
       expect(saveButton()).toBeEnabled();
     });
 
-    it('shows the Owner as read-only text only for a saved schedule', () => {
+    it('shows the Owner as a line of text only for a saved schedule', () => {
       renderEdit();
-      expect(screen.getByLabelText('Owner')).toHaveValue('Ann Lee');
-      expect(screen.getByLabelText('Owner')).toBeDisabled();
+      expect(screen.getByTestId('schedule-owner')).toHaveTextContent('Owner: Ann Lee');
       cleanup();
 
       renderForm();
-      expect(screen.queryByLabelText('Owner')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('schedule-owner')).not.toBeInTheDocument();
     });
 
     it('disables the fields and Save when allowed_actions has no edit', async () => {
@@ -1081,9 +1129,7 @@ describe('ScheduleForm', () => {
       expect(screen.getByLabelText('Name')).toBeDisabled();
       expect(screen.getByLabelText('Description')).toBeDisabled();
       expect(screen.getByLabelText(/Prompt/)).toBeDisabled();
-      expect(screen.getByTestId('schedule-type-agent')).toBeDisabled();
       expect(screen.getByTestId('schedule-approval-rule-pause_and_ask')).toBeDisabled();
-      expect(selectProps.disabled).toBe(true);
       expect(versionProps.disabled).toBe(true);
       expect(saveButton()).toBeDisabled();
       expect(screen.getByTestId('schedule-cancel-button')).toBeEnabled();
@@ -1094,14 +1140,14 @@ describe('ScheduleForm', () => {
       await act(async () => {});
 
       expect(screen.getByLabelText('Name')).toBeEnabled();
-      expect(selectProps.disabled).toBe(false);
+      expect(versionProps.disabled).toBe(false);
     });
 
-    it('keeps Type and the entity editable without a URL entity', () => {
+    it('shows the entity of a saved schedule locked, without a URL entity', () => {
       renderEdit();
 
-      expect(screen.getByTestId('schedule-type-agent')).toBeEnabled();
-      expect(selectProps.disabled).toBeFalsy();
+      expect(screen.getByTestId('schedule-locked-entity')).toBeInTheDocument();
+      expect(screen.queryByTestId('schedule-type-agent')).not.toBeInTheDocument();
     });
 
     it('has no Test run in the header; only the side panel holds it', () => {

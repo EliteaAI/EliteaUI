@@ -1,5 +1,7 @@
 import { memo } from 'react';
 
+import { Box, Typography } from '@mui/material';
+
 import StyledInputEnhancer from '@/[fsd]/shared/ui/input/StyledInputEnhancer';
 import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
 
@@ -8,13 +10,6 @@ const ownerName = owner => owner?.name || owner?.email || '-';
 const ScheduleGeneralSection = memo(
   ({ showOwner, owner, name, description, nameError, descriptionError, setFieldValue }) => (
     <>
-      {showOwner && (
-        <StyledInputEnhancer
-          disabled
-          label="Owner"
-          value={ownerName(owner)}
-        />
-      )}
       <StyledInputEnhancer
         required
         label="Name"
@@ -32,6 +27,21 @@ const ScheduleGeneralSection = memo(
         error={!!descriptionError}
         helperText={descriptionError}
       />
+      {showOwner && (
+        <Typography
+          variant="bodyMedium"
+          color="text.secondary"
+          data-testid="schedule-owner"
+        >
+          {'Owner: '}
+          <Box
+            component="span"
+            sx={styles.ownerName}
+          >
+            {ownerName(owner)}
+          </Box>
+        </Typography>
+      )}
     </>
   ),
 );
@@ -39,3 +49,8 @@ const ScheduleGeneralSection = memo(
 ScheduleGeneralSection.displayName = 'ScheduleGeneralSection';
 
 export default ScheduleGeneralSection;
+
+/** @type {MuiSx} */
+const styles = {
+  ownerName: ({ palette }) => ({ color: palette.text.primary }),
+};
