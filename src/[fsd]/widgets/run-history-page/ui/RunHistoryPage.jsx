@@ -14,7 +14,7 @@ import { ChatMessageList } from '@/[fsd]/features/chat';
 import { ScheduleRunStatusChip } from '@/[fsd]/features/schedule';
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
-import { NavigationConstants, TextLinkConstants } from '@/[fsd]/shared/lib/constants';
+import { NavigationConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
@@ -25,6 +25,12 @@ import { useRunHistoryFilters } from '../lib/hooks/useRunHistoryFilters.hooks';
 import RunHistoryFilters from './RunHistoryFilters';
 
 const DEFAULT_TAB = 'all';
+
+// The mockup draws the schedule name in the bright text tone, underlined, not in the link blue
+const scheduleLinkSx = ({ palette }) => ({
+  color: palette.text.secondary,
+  '&:hover': { color: palette.text.secondary },
+});
 
 const RunHistoryPage = memo(props => {
   const { source, detailRoute, analyticsRoute, eventColumnLabel, decorateRow, scheduleEntityType } = props;
@@ -74,8 +80,8 @@ const RunHistoryPage = memo(props => {
           // A cut name shows in full on hover
           title={name}
           variant="bodyMedium"
-          underline="hover"
-          sx={TextLinkConstants.TEXT_LINK_SX}
+          underline="always"
+          sx={scheduleLinkSx}
         >
           {name}
         </Link>

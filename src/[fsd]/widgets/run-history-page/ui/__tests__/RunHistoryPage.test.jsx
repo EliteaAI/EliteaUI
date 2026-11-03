@@ -205,7 +205,7 @@ describe('RunHistoryPage schedule filter and links', () => {
     expect(screen.getByRole('link', { name: 'Daily digest' })).toHaveClass('MuiLink-root');
     // the app link colour, not the brand colour (4.5:1 for small text)
     expect(screen.getByRole('link', { name: 'Daily digest' })).toHaveStyle({
-      color: LIGHT_THEME.palette.text.link,
+      color: LIGHT_THEME.palette.text.secondary,
     });
   });
 

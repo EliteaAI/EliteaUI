@@ -63,12 +63,11 @@ const runHistoryFiltersStyles = () => ({
     display: 'flex',
     flexWrap: 'wrap',
     alignItems: 'center',
-    gap: '1.5rem',
+    gap: '2rem',
     padding: '0 0.5rem',
   },
-  select: {
-    minWidth: '9rem',
-  },
+  // Each filter is as wide as its text, so the bar reads as one line
+  select: { minWidth: 0 },
   // the inline "Label: All" form
   label: { '&::after': { content: '":"' } },
 });
