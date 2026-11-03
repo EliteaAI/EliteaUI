@@ -86,7 +86,7 @@ const SchedulePromptSection = memo(props => {
             tooltipDescription={PROMPT_INFO}
             tooltipPinnable
             minRows={4}
-            maxRows={6}
+            sx={styles.prompt}
             variantInput={INPUT_VARIANTS.outlined}
             InputLabelProps={{ shrink: true }}
             value={prompt}
@@ -109,6 +109,8 @@ SchedulePromptSection.displayName = 'SchedulePromptSection';
 
 /** @type {MuiSx} */
 const styles = {
+  // the outlined variant grows the box to 25rem; the mockup keeps it at the 8.25rem minimum and scrolls the text
+  prompt: { '& .MuiInputBase-inputMultiline': { maxHeight: '8.25rem' } },
   runMode: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
   runModeLabel: { display: 'flex', alignItems: 'center', gap: '0.25rem' },
 };
