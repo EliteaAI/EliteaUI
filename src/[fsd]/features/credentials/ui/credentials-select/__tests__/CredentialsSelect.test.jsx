@@ -714,6 +714,33 @@ describe('CredentialsSelect', () => {
       expect(onSelectConfiguration).toHaveBeenCalledWith(null);
     });
 
+    it("shows the mismatch footer when the user has no credential for another member's private reference", () => {
+      renderSelect({ section: 'credentials', value: foreignPrivateValue(), configurations: [] });
+
+      expect(screen.getByTestId('credential-mismatch-footer')).toBeInTheDocument();
+      expect(JSON.parse(singleSelectProps.value).configuration_uuid).toBe('uuid-creators-private');
+    });
+
+    it("does not fall through to a team or other-title credential for another member's private reference", () => {
+      renderSelect({
+        section: 'credentials',
+        value: foreignPrivateValue(),
+        configurations: [
+          { ...CREDENTIAL_CONFIGURATIONS[0], project_id: TEAM_PROJECT_ID },
+          {
+            id: 98,
+            uuid: 'uuid-own-other',
+            elitea_title: 'other-token',
+            project_id: PERSONAL_PROJECT_ID,
+            data: {},
+          },
+        ],
+      });
+
+      expect(screen.getByTestId('credential-mismatch-footer')).toBeInTheDocument();
+      expect(JSON.parse(singleSelectProps.value).configuration_uuid).toBe('uuid-creators-private');
+    });
+
     it("keeps the uuid-only match for the user's own private reference", () => {
       renderSelect({
         section: 'credentials',

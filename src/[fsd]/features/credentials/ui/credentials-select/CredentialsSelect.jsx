@@ -47,10 +47,6 @@ const toSavedCredential = row => ({
   }),
 });
 
-// Saved value (or select-value payload) -> menu row. Two paths: a saved reference resolves by uuid only (the
-// backend resolves it the same way, so a stale uuid must show as missing, not as a same-title row); a legacy
-// value without a reference, or a private reference saved by another member (its uuid points into their
-// personal project), resolves by title + private flag.
 // Another member's private reference resolves to this user's own same-title credential, as the backend does;
 // until the personal project is known, stay on the strict uuid match
 const isForeignPrivateReference = (saved, personalProjectId) => {
@@ -63,6 +59,10 @@ const isForeignPrivateReference = (saved, personalProjectId) => {
   );
 };
 
+// Saved value (or select-value payload) -> menu row. Two paths: a saved reference resolves by uuid only (the
+// backend resolves it the same way, so a stale uuid must show as missing, not as a same-title row); a legacy
+// value without a reference, or a private reference saved by another member (its uuid points into their
+// personal project), resolves by title + private flag.
 const findSavedOption = (options, saved, personalProjectId) => {
   const savedUuid = saved?.[credentialMenuItemValue.keyConfigurationUuid];
   if (savedUuid && !isForeignPrivateReference(saved, personalProjectId))
