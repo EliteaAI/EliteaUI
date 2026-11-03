@@ -67,6 +67,7 @@ const LEGACY_CONFIGURATION = { id: 4, elitea_title: GITHUB_TITLE, project_id: TE
 let singleSelectProps;
 let credentialsData;
 let hasAutoSelectedRef;
+let personalProjectIdInStore = PERSONAL_PROJECT_ID;
 
 const onSelectConfiguration = vi.fn();
 const onRefresh = vi.fn();
@@ -139,7 +140,7 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
 vi.mock('@/GA', () => ({ useTrackEvent: () => trackEvent }));
 
 vi.mock('react-redux', () => ({
-  useSelector: selector => selector({ user: { personal_project_id: PERSONAL_PROJECT_ID } }),
+  useSelector: selector => selector({ user: { personal_project_id: personalProjectIdInStore } }),
 }));
 
 vi.mock('@/routes', async importOriginal => {
@@ -177,6 +178,7 @@ vi.mock('@/assets/refresh-icon.svg?react', () => ({ default: () => null }));
 beforeEach(() => {
   singleSelectProps = undefined;
   hasAutoSelectedRef = { current: false };
+  personalProjectIdInStore = PERSONAL_PROJECT_ID;
   onSelectConfiguration.mockClear();
   onRefresh.mockClear();
   trackEvent.mockClear();
@@ -639,6 +641,20 @@ describe('CredentialsSelect', () => {
     });
 
     it("keeps the uuid-only match for the user's own private reference", () => {
+      renderSelect({
+        section: 'credentials',
+        value: savedCredential(GITHUB_TITLE, 'uuid-deleted', {
+          private: true,
+          configuration_project_id: PERSONAL_PROJECT_ID,
+        }),
+        configurations: [{ ...CREDENTIAL_CONFIGURATIONS[0], project_id: PERSONAL_PROJECT_ID }],
+      });
+
+      expect(singleSelectProps.value).not.toBe(savedOptions()[0].value);
+    });
+
+    it('stays on the uuid-only match while the personal project is not loaded yet', () => {
+      personalProjectIdInStore = undefined;
       renderSelect({
         section: 'credentials',
         value: savedCredential(GITHUB_TITLE, 'uuid-deleted', {

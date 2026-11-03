@@ -53,9 +53,13 @@ const toSavedCredential = row => ({
 const findSavedOption = (options, saved, personalProjectId) => {
   const savedUuid = saved?.[credentialMenuItemValue.keyConfigurationUuid];
   const savedProjectId = saved?.[credentialMenuItemValue.keyConfigurationProjectId];
-  // Another member's private reference resolves to this user's own same-title credential, as the backend does
+  // Another member's private reference resolves to this user's own same-title credential, as the backend does;
+  // until the personal project is known, stay on the strict uuid match
   const isForeignPrivate =
-    saved?.private && savedProjectId != null && String(savedProjectId) !== String(personalProjectId);
+    saved?.private &&
+    savedProjectId != null &&
+    personalProjectId != null &&
+    String(savedProjectId) !== String(personalProjectId);
   if (savedUuid && !isForeignPrivate) return options.find(option => option.uuid === savedUuid);
   const hasSavedKeys = option =>
     option.elitea_title === saved?.elitea_title && option.private === saved?.private;
