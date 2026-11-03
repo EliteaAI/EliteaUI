@@ -27,6 +27,12 @@ vi.mock('@/[fsd]/shared/lib/helpers/schedule.helpers', async importOriginal => (
 vi.mock('@/[fsd]/shared/lib/hooks/useDeleteConfirmationDisabled.hooks', () => ({
   useDeleteConfirmationDisabled: () => false,
 }));
+// the owner's mandate consent line (#7337) has its own tests: here only what the card hands it
+vi.mock('@/[fsd]/features/owner-consent', () => ({
+  ScheduleMandateConsent: props => (
+    <span data-testid="schedule-mandate-consent-stub">{`${props.versionId}:${props.isOwner}`}</span>
+  ),
+}));
 
 const theme = createTheme(getDesignTokens('light'));
 
@@ -104,6 +110,14 @@ describe('EntityScheduleCard', () => {
       'Enable Daily digest',
       'More actions',
     ]);
+  });
+
+  it('EL-7337 hands the consent line its version and whether the viewer owns the schedule', () => {
+    renderCard({ version_id: 70 });
+    expect(screen.getByTestId('schedule-mandate-consent-stub')).toHaveTextContent('70:true');
+    cleanup();
+    renderCard({ version_id: 70, owner: { id: 4, name: 'Bo' } });
+    expect(screen.getByTestId('schedule-mandate-consent-stub')).toHaveTextContent('70:false');
   });
 
   it('TC-US35-05 shows the owner name on a card of another owner', () => {
