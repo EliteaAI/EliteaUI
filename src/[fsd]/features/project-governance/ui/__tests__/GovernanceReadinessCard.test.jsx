@@ -16,6 +16,7 @@ const api = vi.hoisted(() => ({
   readOwn: vi.fn(),
   own: { rows: [] },
   putValue: vi.fn(),
+  record: null, // the mutation's record (its arguments) as RTK keeps it until reset
   types: [],
   toast: { toastSuccess: vi.fn(), toastError: vi.fn(), toastInfo: vi.fn() },
 }));
@@ -26,7 +27,18 @@ vi.mock('@/[fsd]/features/project-governance/api/projectGovernanceApi', () => ({
     api.readOwn,
     { data: api.own, isFetching: false, isError: false },
   ],
-  usePutMyCredentialValueMutation: () => [api.putValue, { isLoading: false }],
+  usePutMyCredentialValueMutation: () => [
+    args => {
+      api.record = { originalArgs: args };
+      return api.putValue(args);
+    },
+    {
+      isLoading: false,
+      reset: () => {
+        api.record = null;
+      },
+    },
+  ],
 }));
 vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({ useToast: () => api.toast }));
 vi.mock('@/[fsd]/shared/config/store', () => ({ default: { getState: () => ({}), dispatch: () => {} } }));
@@ -239,6 +251,7 @@ describe('Save card: writing your own value inline (EL-7269)', () => {
     await waitFor(() => expect(api.toast.toastSuccess).toHaveBeenCalled());
     expect(screen.queryByTestId('governance-readiness-value')).toBeNull();
     expect(document.body.textContent).not.toContain('typed-test-value');
+    expect(api.record?.originalArgs?.fields).toBeUndefined(); // no value left in the mutation record
   });
 
   it('reads a refusal inline, with its code', async () => {
@@ -262,5 +275,6 @@ describe('Save card: writing your own value inline (EL-7269)', () => {
     expect(await screen.findByTestId('governance-readiness-value-error')).toHaveTextContent(
       'The value changed in the meantime; read it again. (STORE_VERSION_CONFLICT)',
     );
+    expect(api.record).toBeNull(); // the refusal is the component's own text; the record is gone
   });
 });

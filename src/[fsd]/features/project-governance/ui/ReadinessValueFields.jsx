@@ -27,7 +27,7 @@ const ReadinessValueFields = memo(props => {
   const { data: types, isFetching: typesLoading } = useGetAvailableConfigurationsTypeQuery({
     section: 'credentials',
   });
-  const [putValue, { isLoading: isStoring }] = usePutMyCredentialValueMutation();
+  const [putValue, { isLoading: isStoring, reset }] = usePutMyCredentialValueMutation();
 
   useEffect(() => {
     readOwn({ projectId });
@@ -59,8 +59,10 @@ const ReadinessValueFields = memo(props => {
       onDone?.();
     } catch (err) {
       setError(GovernanceHelpers.toGovernanceError(err, 'The value was not stored.'));
+    } finally {
+      reset(); // the mutation record held the typed value as its argument: dropped once it settles
     }
-  }, [filled, item.ref, onDone, projectId, putValue, reference, values]);
+  }, [filled, item.ref, onDone, projectId, putValue, reference, reset, values]);
 
   if (ownLoading || typesLoading) {
     return (
