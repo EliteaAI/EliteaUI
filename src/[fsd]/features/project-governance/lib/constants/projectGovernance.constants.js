@@ -37,7 +37,10 @@ export const ESCALATED_HINT =
 export const REFERENCE_PATTERN = /^[A-Za-z0-9._:/@-]{1,128}$/;
 export const REFERENCE_HELP = 'Letters, digits and . _ : / @ - (at most 128 characters).';
 // A change that raced another admin, or a view that is out of date: the list is read again
-export const STALE_CODES = ['CONCURRENT_CHANGE', 'INVALID_STATE'];
+// (#7228) BINDING_DIGEST_MISMATCH: the agent changed since the approval was opened; the list is read again
+export const STALE_CODES = ['CONCURRENT_CHANGE', 'INVALID_STATE', 'BINDING_DIGEST_MISMATCH'];
+export const AGENT_CHANGED_TEXT =
+  'The agent changed since you opened it; the list was read again: review it again.';
 
 // The states the inbox asks each list for (the server filters, so no waiting row is lost behind newer ones)
 export const INBOX_STATES = {

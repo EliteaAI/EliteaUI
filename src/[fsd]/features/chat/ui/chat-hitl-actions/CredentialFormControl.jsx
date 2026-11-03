@@ -18,7 +18,11 @@ import { useGetAvailableConfigurationsTypeQuery } from '@/api/configurations';
 const PRIVATE = 'personal';
 const SHARED = 'project_shared';
 const OWNERSHIP_TABS = [
-  { value: PRIVATE, label: 'Private', buttonProps: { 'data-testid': 'credential-form-ownership-private' } },
+  {
+    value: PRIVATE,
+    label: 'Only me (in this project)',
+    buttonProps: { 'data-testid': 'credential-form-ownership-private' },
+  },
   {
     value: SHARED,
     label: 'Shared with the team',

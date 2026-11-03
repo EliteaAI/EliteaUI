@@ -122,7 +122,7 @@ describe('project governance constants (EL-7269)', () => {
       grant: 'grant',
       mandate: 'mandate',
     });
-    expect(C.STALE_CODES).toEqual(['CONCURRENT_CHANGE', 'INVALID_STATE']);
+    expect(C.STALE_CODES).toEqual(['CONCURRENT_CHANGE', 'INVALID_STATE', 'BINDING_DIGEST_MISMATCH']);
     expect(C.INBOX_STATES.reference).toEqual(['pending', 'validated']);
     expect(Object.values(H).every(value => typeof value === 'function')).toBe(true);
   });
@@ -277,6 +277,25 @@ describe('project governance constants (EL-7269)', () => {
       'acme',
     );
     expect(other.filter(field => field.primary).map(field => field.name)).toEqual(['url', 'key']);
+  });
+
+  it('EL-7228 an approval of an identity names the definition the admin reviewed; a changed one is a stale view', () => {
+    const row = { state: 'pending_approval', definition_digest_full: 'adv1:' + 'a'.repeat(64) };
+    expect(
+      H.actionBody(C.KINDS.binding, row, 'activate', { approval_ref: 'A', policy_revision: 'B' }),
+    ).toEqual({
+      action: 'activate',
+      expected_state: 'pending_approval',
+      definition_digest: 'adv1:' + 'a'.repeat(64),
+      approval_ref: 'A',
+      policy_revision: 'B',
+    });
+    expect(H.actionBody(C.KINDS.binding, row, 'retire')).toEqual({
+      action: 'retire',
+      expected_state: 'pending_approval',
+    });
+    expect(C.STALE_CODES).toContain('BINDING_DIGEST_MISMATCH');
+    expect(H.versionsMoreText(1)).toBe('1 more agent uses this toolkit: open it to request what it needs.');
   });
 
   it('EL-7228 never shows a waiting identity for an edited agent as merely waiting: it is brought up to date first', () => {

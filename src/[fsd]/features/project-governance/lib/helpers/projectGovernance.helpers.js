@@ -182,10 +182,12 @@ export const rowActions = (kind, row, userId) => {
   return [];
 };
 
-// The body of an action; a binding action carries the state the admin saw
+// The body of an action; a binding action carries the state the admin saw, and (#7228) its approval the definition
+// the admin reviewed: one brought up to date since is refused, so the admin reviews it again
 export const actionBody = (kind, row, name, approval) => ({
   action: name,
   ...(kind === KINDS.binding && { expected_state: row.state }),
+  ...(kind === KINDS.binding && name === 'activate' && { definition_digest: row.definition_digest_full }),
   ...(approval || {}),
 });
 
@@ -368,8 +370,16 @@ export const governanceRequestOf = output => {
       return true;
     },
   );
-  return { ...main, entities };
+  // (#7228) the toolkit's other agents beyond the cap: said, so the person opens them
+  const versionsMore =
+    Number.isInteger(found.versions_more) && found.versions_more > 0 ? found.versions_more : 0;
+  return { ...main, entities, versionsMore };
 };
+
+export const versionsMoreText = count =>
+  `${count} more agent${count === 1 ? '' : 's'} use${count === 1 ? 's' : ''} this toolkit: open ${
+    count === 1 ? 'it' : 'them'
+  } to request what ${count === 1 ? 'it needs' : 'they need'}.`;
 
 // (#7228) an automatic request of a governed run that could not be filed, in words (no code, no JSON): the card below
 // it then offers Request for what is still missing

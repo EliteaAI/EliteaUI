@@ -133,4 +133,21 @@ describe('ActionView governed creation card (EL-7269)', () => {
     expect(refused).toHaveLength(1);
     expect(refused[0]).toHaveTextContent('the service could not be reached');
   });
+
+  it('EL-7228 says how many agents beyond the cap use a changed toolkit, never dropping them silently', () => {
+    const capped = JSON.stringify({
+      governance_requests: {
+        entity_kind: 'toolkit',
+        entity_id: 3,
+        filed: [],
+        versions: [{ entity_kind: 'version', entity_id: 41, filed: [] }],
+        versions_more: 4,
+      },
+    });
+    wrap({ ...RELOADED, name: 'patch_elitea_core_tool', traceStepId: undefined, toolOutputs: capped });
+    expect(screen.getAllByTestId('chat-governance-card')).toHaveLength(2);
+    expect(screen.getByTestId('chat-governance-versions-more')).toHaveTextContent(
+      '4 more agents use this toolkit: open them to request what they need.',
+    );
+  });
 });

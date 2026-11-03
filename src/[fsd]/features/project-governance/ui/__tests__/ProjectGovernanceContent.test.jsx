@@ -302,4 +302,43 @@ describe('project governance view (EL-7269)', () => {
     wrap();
     expect(screen.getByText(/Read only/)).toBeInTheDocument();
   });
+
+  it('EL-7228 approves the definition it showed; one brought up to date since closes the dialog and says so', async () => {
+    const digest = 'adv1:' + 'b'.repeat(64);
+    api.bindings.mockReturnValue(
+      list([
+        {
+          id: 'b3',
+          state: 'pending_approval',
+          created_at: '2026-11-03T10:00:00',
+          created_by: { id: 5, email: 'member@x' },
+          escalated: false,
+          application: { name: 'Agent' },
+          version: { name: 'base' },
+          definition_digest_full: digest,
+        },
+      ]),
+    );
+    api.bindingAction.mockReturnValue({
+      unwrap: () =>
+        Promise.reject({
+          status: 409,
+          data: { code: 'BINDING_DIGEST_MISMATCH', error: 'the agent changed' },
+        }),
+    });
+    wrap();
+    fireEvent.click(screen.getByTestId('governance-action-activate-b3'));
+    fireEvent.change(screen.getByTestId('governance-approve-ref'), { target: { value: 'CHG-1' } });
+    fireEvent.change(screen.getByTestId('governance-approve-policy'), { target: { value: 'rev-1' } });
+    fireEvent.click(screen.getByTestId('governance-approve-submit'));
+    await waitFor(() =>
+      expect(api.bindingAction).toHaveBeenCalledWith(expect.objectContaining({ definition_digest: digest })),
+    );
+    await waitFor(() =>
+      expect(api.toast.toastInfo).toHaveBeenCalledWith(
+        'The agent changed since you opened it; the list was read again: review it again.',
+      ),
+    );
+    await waitFor(() => expect(screen.queryByTestId('governance-approve-submit')).toBeNull());
+  });
 });

@@ -477,6 +477,15 @@ const ActionView = memo(props => {
             />
           </Fragment>
         ))}
+        {governedCreation?.versionsMore > 0 && (
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+            data-testid="chat-governance-versions-more"
+          >
+            {ProjectGovernanceHelpers.versionsMoreText(governedCreation.versionsMore)}
+          </Typography>
+        )}
 
         {/* Previous executions from merged same-name actions - thinking collapsed, content shown */}
         {previousExecutions.map((execution, idx) => (

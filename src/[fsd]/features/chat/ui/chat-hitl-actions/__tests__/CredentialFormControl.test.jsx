@@ -225,9 +225,13 @@ describe('CredentialFormControl (#7228)', () => {
     expect(api.create).not.toHaveBeenCalled();
   });
 
-  it('offers Private (preselected) or Shared with the team for a regular type in a team project', async () => {
+  it('offers Only me (preselected) or Shared with the team for a regular type in a team project', async () => {
     wrap();
     expect(screen.getByTestId('credential-form-ownership-private')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('credential-form-ownership-private')).toHaveTextContent(
+      'Only me (in this project)',
+    );
+    expect(screen.getByTestId('credential-form-ownership-shared')).toHaveTextContent('Shared with the team');
     fireEvent.click(screen.getByTestId('credential-form-ownership-shared'));
     type('access_token', SECRET);
     fireEvent.click(screen.getByTestId('credential-form-create'));

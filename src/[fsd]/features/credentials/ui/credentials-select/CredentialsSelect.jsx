@@ -37,6 +37,14 @@ const credentialMenuItemValue = Object.freeze({
 
 const isBlankEliteaTitle = title => title == null || String(title).trim() === '';
 
+// (#7228) a credential the chat's form created as "Only me (in this project)": the author's own, listed with their
+// personal ones. Its reference (uuid + this project) is what the toolkit stores, so it resolves in this project.
+const PERSONAL_OWNER_META = 'personal_owner_id';
+const isOwnInProject = (configuration, personalProjectId, userId) =>
+  userId != null &&
+  configuration?.project_id !== personalProjectId &&
+  configuration?.meta?.[PERSONAL_OWNER_META] === userId;
+
 // The value stored in the toolkit settings. The immutable reference (uuid + project) is only added when the row has one.
 const toSavedCredential = row => ({
   private: row.private,
@@ -154,7 +162,7 @@ const CredentialsSelect = memo(props => {
   } = props;
 
   const trackEvent = useTrackEvent();
-  const { personal_project_id } = useSelector(state => state.user);
+  const { personal_project_id, id: userId } = useSelector(state => state.user);
   const selectedProjectId = useSelectedProjectId();
   const { contextExecutionEntity } = useContextExecutionEntity();
   const {
@@ -206,10 +214,12 @@ const CredentialsSelect = memo(props => {
       config =>
         config.elitea_title &&
         config.elitea_title === value.elitea_title &&
-        (config.project_id === personal_project_id || config.shared),
+        (config.project_id === personal_project_id ||
+          config.shared ||
+          isOwnInProject(config, personal_project_id, userId)),
     );
     return !match;
-  }, [value?.private, value?.elitea_title, selectedProjectId, personal_project_id, configurations]);
+  }, [value?.private, value?.elitea_title, selectedProjectId, personal_project_id, configurations, userId]);
 
   const createMenuData = useMemo(() => {
     const options = [];
@@ -258,12 +268,16 @@ const CredentialsSelect = memo(props => {
   const savedCredentialsMenuData = useMemo(() => {
     return (presetOptions?.length ? presetOptions : configurations)
       .filter(configuration => {
-        const isConfigurationPersonal = configuration.project_id === personal_project_id;
+        const isConfigurationPersonal =
+          configuration.project_id === personal_project_id ||
+          isOwnInProject(configuration, personal_project_id, userId);
         if (onlyPublic) return !isConfigurationPersonal;
         return true;
       })
       .map(configuration => {
-        const isConfigurationPersonal = configuration.project_id === personal_project_id;
+        const isConfigurationPersonal =
+          configuration.project_id === personal_project_id ||
+          isOwnInProject(configuration, personal_project_id, userId);
         const configUid = configuration.id || configuration.uuid;
         const credentialUrl = configUid
           ? (() => {
@@ -339,6 +353,7 @@ const CredentialsSelect = memo(props => {
     presetOptions,
     configurations,
     personal_project_id,
+    userId,
     onlyPublic,
     getCredentialStatus,
     getCredentialMessage,
