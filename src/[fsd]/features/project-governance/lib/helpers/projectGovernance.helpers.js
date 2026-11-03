@@ -1,45 +1,16 @@
+import {
+  ESCALATED_TEXT,
+  ITEM_TEXT,
+  KINDS,
+  MAX_SCHEMA_DEPTH,
+  REFERENCE_PATTERN,
+  STATE_LABELS,
+  WAITING_STATES,
+} from '@/[fsd]/features/project-governance/lib/constants/projectGovernance.constants';
 import { PERMISSIONS } from '@/common/constants';
 
 // The project operator view (C-1009, #7269): the four governed kinds, their columns, the actions the Admin UI offers
 // on each (the server decides again, in the project) and the project inbox (everything waiting for an approval).
-
-export const KINDS = {
-  binding: 'binding',
-  reference: 'reference',
-  grant: 'grant',
-  mandate: 'mandate',
-};
-
-export const KIND_LABELS = {
-  binding: 'Agent identity',
-  reference: 'Credential',
-  grant: 'Grant',
-  mandate: 'Mandate',
-};
-
-export const STATE_LABELS = {
-  draft: 'Draft',
-  provisioning: 'Provisioning',
-  pending: 'Pending',
-  pending_approval: 'Pending approval',
-  validated: 'Validated',
-  active: 'Active',
-  suspended: 'Suspended',
-  retiring: 'Retiring',
-  retired: 'Retired',
-  revoked: 'Revoked',
-  expired: 'Expired',
-};
-
-export const ESCALATED_TEXT = 'Needs a platform operator';
-export const ESCALATED_HINT =
-  'No admin of this project can approve it (there is none, or the only one asked for it): a platform operator approves it in the Admin UI.';
-
-// The backend accepts exactly these letters, digits and . _ : / @ - (1 to 128 characters)
-export const REFERENCE_PATTERN = /^[A-Za-z0-9._:/@-]{1,128}$/;
-export const REFERENCE_HELP = 'Letters, digits and . _ : / @ - (at most 128 characters).';
-// A change that raced another admin, or a view that is out of date: the list is read again
-export const STALE_CODES = ['CONCURRENT_CHANGE', 'INVALID_STATE'];
 
 export const stateLabel = state => STATE_LABELS[state] ?? state ?? '-';
 export const isValidReference = value => REFERENCE_PATTERN.test(value || '');
@@ -208,14 +179,6 @@ export const takesSiblings = approving =>
   approving.row.credential?.ownership_class !== 'personal' &&
   !String(approving.row.subject?.ref ?? '').startsWith('mandate:');
 
-// The states the inbox asks each list for (the server filters, so no waiting row is lost behind newer ones)
-export const INBOX_STATES = {
-  [KINDS.binding]: ['pending_approval'],
-  [KINDS.reference]: ['pending', 'validated'],
-  [KINDS.grant]: ['pending_approval'],
-  [KINDS.mandate]: ['pending_approval'],
-};
-
 // How many rows of these pages the server has but did not send (a page holds at most its limit)
 export const hiddenCount = pages =>
   pages.reduce((sum, page) => sum + Math.max(0, (page?.total ?? 0) - (page?.rows?.length ?? 0)), 0);
@@ -231,48 +194,6 @@ export const inboxItems = lists =>
     );
 
 // --- the Save card (#7269 phase 2): what an entity still needs to run governed, in words -------------------------
-
-const WAITING_STATES = ['pending', 'validated', 'pending_approval', 'provisioning', 'draft'];
-
-const ITEM_TEXT = {
-  binding: {
-    missing: 'Its identity is not set up yet',
-    changed: 'It changed since its identity was approved',
-    draft: 'Its identity is a draft',
-    provisioning: 'Its identity is being set up',
-    pending_approval: 'Its identity waits for approval',
-    suspended: 'Its identity is suspended',
-  },
-  reference: {
-    missing: 'Not registered for governed use (your own copy is requested)',
-    needs_value: 'Your value is still to be written',
-    pending: 'Waits for a check and an approval',
-    validated: 'Waits for approval',
-    suspended: 'Suspended',
-    changed: 'Changed since it was approved',
-    not_registrable: 'A value typed into the toolkit: store it as a credential first',
-    other_project: 'A credential of another project',
-    personal_to_another: 'Another member’s personal credential',
-    needs_owner_sign_in: 'Acts with a Microsoft sign-in the schedule does not name',
-  },
-  grant: {
-    missing: 'Not granted yet',
-    pending_approval: 'Waits for approval',
-    suspended: 'Suspended',
-    expired: 'Outside its validity',
-    needs_an_agent_grant: 'Needs a grant to you on an agent that uses it (a project admin grants it)',
-  },
-  mandate: {
-    missing: 'The schedule has no mandate yet',
-    held_by_another: "Another member's schedule holds this agent version's mandate",
-    draft: 'The mandate is a draft',
-    pending_approval: 'The mandate waits for approval',
-    suspended: 'The mandate is suspended',
-  },
-  consent: { missing: 'Give your consent on the schedule card' },
-  identity: { unlinked: 'Your account has no linked sign-in: nothing can be granted to you' },
-  permission: { not_permitted: 'You may not use credentials in this project' },
-};
 
 export const readinessText = item =>
   ITEM_TEXT[item.kind]?.[item.state] ?? (item.kind === 'blocking' ? 'Stops a scheduled run' : item.state);
@@ -298,7 +219,7 @@ export const secretFieldsOf = (types, provider, depth = 0, properties = undefine
     if (!isObject(schema)) return [];
     const path = `${prefix}${name}`;
     if (isPasswordSchema(schema)) return [{ path, label: schema.title ?? path }];
-    if (isObject(schema.properties) && depth < 4)
+    if (isObject(schema.properties) && depth < MAX_SCHEMA_DEPTH)
       return secretFieldsOf(types, provider, depth + 1, schema.properties, `${path}.`);
     return [];
   });

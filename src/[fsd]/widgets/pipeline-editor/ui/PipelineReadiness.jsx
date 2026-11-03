@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import GovernanceReadinessCard from '@/[fsd]/features/project-governance/ui/GovernanceReadinessCard';
+import { GovernanceReadinessCard } from '@/[fsd]/features/project-governance';
 
 // (#7269) the Save card of a pipeline: what its version still needs to run governed, above the editor
 const PipelineReadiness = memo(() => {

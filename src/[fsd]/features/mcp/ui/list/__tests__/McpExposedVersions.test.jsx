@@ -11,7 +11,7 @@ const fixture = vi.hoisted(() => ({ settings: {}, versions: vi.fn() }));
 vi.mock('@/api/platformSettings', () => ({
   useGetPlatformSettingsQuery: () => ({ data: fixture.settings }),
 }));
-vi.mock('@/[fsd]/features/project-governance/api/projectGovernanceApi', () => ({
+vi.mock('@/[fsd]/features/project-governance', () => ({
   useGetMcpExposedVersionsQuery: (...args) => fixture.versions(...args),
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 12 }));

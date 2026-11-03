@@ -10,6 +10,7 @@ import * as GovernanceHelpers from '@/[fsd]/features/project-governance/lib/help
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 
 import ReadinessValueFields from './ReadinessValueFields';
 
@@ -26,9 +27,13 @@ const GovernanceReadinessCard = memo(props => {
   const [writing, setWriting] = useState(null); // the key of the row whose value is being written
   const seenFor = useRef(null);
 
+  // Only while credential governance is enforced (the platform settings say so): under off and audit only nothing
+  // is asked or shown, as for the Governance tab and the MCP versions line
+  const { data: platformSettings } = useGetPlatformSettingsQuery();
+  const enforced = Boolean(platformSettings?.governance_enforced);
   const { data, isFetching } = useGetGovernanceReadinessQuery(
     { projectId, entityKind, entityId },
-    { skip: !projectId || !entityId, refetchOnMountOrArgChange: true },
+    { skip: !enforced || !projectId || !entityId, refetchOnMountOrArgChange: true },
   );
   const [requestSetup, { isLoading: isRequesting }] = useRequestGovernedSetupMutation();
 
@@ -53,6 +58,8 @@ const GovernanceReadinessCard = memo(props => {
       toastError(refusal.code ? `${refusal.message} (${refusal.code})` : refusal.message);
     }
   }, [entityId, entityKind, keys, projectId, requestSetup, toastError, toastSuccess]);
+
+  if (!enforced) return null;
 
   if (!items.length) {
     return wasNeeded && !isFetching ? (

@@ -2,6 +2,7 @@ import { memo, useCallback, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { ProjectGovernanceConstants } from '@/[fsd]/features/project-governance/lib/constants';
 import * as GovernanceHelpers from '@/[fsd]/features/project-governance/lib/helpers/projectGovernance.helpers';
 import { Button, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -52,7 +53,7 @@ const GovernanceApproveDialog = memo(props => {
       onDone('done');
     } catch (err) {
       const refusal = GovernanceHelpers.toGovernanceError(err, 'The approval failed.');
-      if (GovernanceHelpers.STALE_CODES.includes(refusal.code)) {
+      if (ProjectGovernanceConstants.STALE_CODES.includes(refusal.code)) {
         reset();
         onDone('stale');
       } else {
@@ -111,7 +112,7 @@ const GovernanceApproveDialog = memo(props => {
             required
             autoFocus
             error={approvalRef !== '' && !GovernanceHelpers.isValidReference(approvalRef)}
-            helperText={`A ticket or change number that records the approval. ${GovernanceHelpers.REFERENCE_HELP}`}
+            helperText={`A ticket or change number that records the approval. ${ProjectGovernanceConstants.REFERENCE_HELP}`}
             inputProps={{ 'data-testid': `${testId}-ref` }}
           />
           <Input.InputBase
@@ -121,7 +122,7 @@ const GovernanceApproveDialog = memo(props => {
             enableAutoBlur={false}
             required
             error={policyRevision !== '' && !GovernanceHelpers.isValidReference(policyRevision)}
-            helperText={`The rules you approved against. ${GovernanceHelpers.REFERENCE_HELP}`}
+            helperText={`The rules you approved against. ${ProjectGovernanceConstants.REFERENCE_HELP}`}
             inputProps={{ 'data-testid': `${testId}-policy` }}
           />
           {children}

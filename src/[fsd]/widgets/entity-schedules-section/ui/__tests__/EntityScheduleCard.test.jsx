@@ -39,8 +39,8 @@ vi.mock('@/[fsd]/features/owner-consent', () => ({
 // the governance readiness card (#7269) has its own tests: here only where the card puts it; it renders nothing
 // unless something is missing
 const readiness = vi.hoisted(() => ({ shown: false }));
-vi.mock('@/[fsd]/features/project-governance/ui/GovernanceReadinessCard', () => ({
-  default: props =>
+vi.mock('@/[fsd]/features/project-governance', () => ({
+  GovernanceReadinessCard: props =>
     readiness.shown ? (
       <span data-testid="schedule-readiness-stub">{`${props.entityKind}:${props.entityId}`}</span>
     ) : null,

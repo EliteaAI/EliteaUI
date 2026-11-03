@@ -18,6 +18,7 @@ const api = vi.hoisted(() => ({
   putValue: vi.fn(),
   record: null, // the mutation's record (its arguments) as RTK keeps it until reset
   types: [],
+  settings: { governance_enforced: true },
   toast: { toastSuccess: vi.fn(), toastError: vi.fn(), toastInfo: vi.fn() },
 }));
 vi.mock('@/[fsd]/features/project-governance/api/projectGovernanceApi', () => ({
@@ -42,6 +43,9 @@ vi.mock('@/[fsd]/features/project-governance/api/projectGovernanceApi', () => ({
 }));
 vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({ useToast: () => api.toast }));
 vi.mock('@/[fsd]/shared/config/store', () => ({ default: { getState: () => ({}), dispatch: () => {} } }));
+vi.mock('@/api/platformSettings', () => ({
+  useGetPlatformSettingsQuery: () => ({ data: api.settings }),
+}));
 vi.mock('@/api/configurations', () => ({
   useGetAvailableConfigurationsTypeQuery: () => ({ data: api.types, isFetching: false }),
 }));
@@ -276,5 +280,33 @@ describe('Save card: writing your own value inline (EL-7269)', () => {
       'The value changed in the meantime; read it again. (STORE_VERSION_CONFLICT)',
     );
     expect(api.record).toBeNull(); // the refusal is the component's own text; the record is gone
+  });
+});
+
+describe('Save card under off and audit only (EL-7269)', () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+    api.settings = { governance_enforced: true };
+  });
+
+  it('asks for no readiness and shows nothing while governance is not enforced', () => {
+    api.settings = {};
+    api.readiness.mockReturnValue({ data: undefined, isFetching: false });
+    const { container } = wrap();
+    expect(api.readiness).toHaveBeenCalledWith(
+      { projectId: 12, entityKind: 'version', entityId: 70 },
+      expect.objectContaining({ skip: true }),
+    );
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('asks for it while governance is enforced', () => {
+    api.readiness.mockReturnValue({ data: { items: [] }, isFetching: false });
+    wrap();
+    expect(api.readiness).toHaveBeenCalledWith(
+      { projectId: 12, entityKind: 'version', entityId: 70 },
+      expect.objectContaining({ skip: false }),
+    );
   });
 });

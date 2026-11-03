@@ -14,6 +14,7 @@ import {
   useProjectMandateActionMutation,
   useProjectReferenceActionMutation,
 } from '@/[fsd]/features/project-governance/api/projectGovernanceApi';
+import { ProjectGovernanceConstants } from '@/[fsd]/features/project-governance/lib/constants';
 import * as GovernanceHelpers from '@/[fsd]/features/project-governance/lib/helpers/projectGovernance.helpers';
 import { DrawerPageBody, DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
@@ -25,7 +26,7 @@ import GovernanceApproveDialog from './GovernanceApproveDialog';
 import GovernanceRowsTable from './GovernanceRowsTable';
 import GrantAlsoToFields from './GrantAlsoToFields';
 
-const { INBOX_STATES, KINDS } = GovernanceHelpers;
+const { INBOX_STATES, KINDS } = ProjectGovernanceConstants;
 const G = PERMISSIONS.governance;
 const TABS = [
   { value: 'inbox', label: 'Inbox' },
@@ -164,7 +165,7 @@ const ProjectGovernanceContent = memo(() => {
         toastSuccess(`${GovernanceHelpers.rowTitle(kind, row)}: done.`);
       } catch (err) {
         const refusal = GovernanceHelpers.toGovernanceError(err);
-        if (GovernanceHelpers.STALE_CODES.includes(refusal.code)) toastInfo(STALE_TEXT);
+        if (ProjectGovernanceConstants.STALE_CODES.includes(refusal.code)) toastInfo(STALE_TEXT);
         else toastError(refusal.code ? `${refusal.message} (${refusal.code})` : refusal.message);
       }
     },

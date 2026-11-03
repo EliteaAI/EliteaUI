@@ -9,6 +9,7 @@ import {
   GridTableHeader,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
+import { ProjectGovernanceConstants } from '@/[fsd]/features/project-governance/lib/constants';
 import * as GovernanceHelpers from '@/[fsd]/features/project-governance/lib/helpers/projectGovernance.helpers';
 import { useGetWindowWidth } from '@/[fsd]/shared/lib/hooks';
 import { Text } from '@/[fsd]/shared/ui';
@@ -52,7 +53,7 @@ const GovernanceRowsTable = memo(props => {
     ...row,
     id: `${kind}:${row.id}`,
     name: GovernanceHelpers.rowTitle(kind, row),
-    kindLabel: GovernanceHelpers.KIND_LABELS[kind],
+    kindLabel: ProjectGovernanceConstants.KIND_LABELS[kind],
     governedKind: kind,
     original: row,
   }));
@@ -87,10 +88,10 @@ const GovernanceRowsTable = memo(props => {
               <Typography
                 variant="bodySmall2"
                 color="warning.main"
-                title={GovernanceHelpers.ESCALATED_HINT}
+                title={ProjectGovernanceConstants.ESCALATED_HINT}
                 data-testid={`governance-escalated-${row.id}`}
               >
-                {GovernanceHelpers.ESCALATED_TEXT}
+                {ProjectGovernanceConstants.ESCALATED_TEXT}
               </Typography>
             )}
           </Box>

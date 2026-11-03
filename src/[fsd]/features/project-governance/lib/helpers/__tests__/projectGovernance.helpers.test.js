@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import * as C from '../../constants/projectGovernance.constants';
 import * as H from '../projectGovernance.helpers';
 
 const ME = 7;
@@ -12,10 +13,10 @@ describe('project governance helpers (EL-7269)', () => {
       created_by: { id: ME },
       state_changed_by: { id: ME },
     };
-    const [approve] = H.rowActions(H.KINDS.binding, binding, ME).filter(item => item.approval);
+    const [approve] = H.rowActions(C.KINDS.binding, binding, ME).filter(item => item.approval);
     expect(approve.action).toBe('activate');
     expect(approve.disabledReason).toMatch(/another admin/);
-    expect(H.rowActions(H.KINDS.binding, binding, 8).find(item => item.approval).disabledReason).toBeNull();
+    expect(H.rowActions(C.KINDS.binding, binding, 8).find(item => item.approval).disabledReason).toBeNull();
 
     const reference = {
       id: 'r',
@@ -25,23 +26,23 @@ describe('project governance helpers (EL-7269)', () => {
       written_by: { id: ME },
     };
     expect(
-      H.rowActions(H.KINDS.reference, reference, ME).find(item => item.approval).disabledReason,
+      H.rowActions(C.KINDS.reference, reference, ME).find(item => item.approval).disabledReason,
     ).toBeTruthy();
     expect(
-      H.rowActions(H.KINDS.reference, { ...reference, approved_by: { id: 2 } }, ME).map(i => i.action),
+      H.rowActions(C.KINDS.reference, { ...reference, approved_by: { id: 2 } }, ME).map(i => i.action),
     ).toContain('activate');
 
     const grant = { id: 'g', state: 'pending_approval', created_by: { id: ME } };
-    expect(H.rowActions(H.KINDS.grant, grant, ME).find(item => item.approval).disabledReason).toBeTruthy();
+    expect(H.rowActions(C.KINDS.grant, grant, ME).find(item => item.approval).disabledReason).toBeTruthy();
 
     const mandate = { id: 'm', state: 'pending_approval', created_by: { id: 1 }, owner: { id: ME } };
-    const actions = H.rowActions(H.KINDS.mandate, mandate, ME);
+    const actions = H.rowActions(C.KINDS.mandate, mandate, ME);
     expect(actions.find(item => item.approval).disabledReason).toBeTruthy();
     expect(actions.map(item => item.action)).toEqual(['approve', 'reject']);
   });
 
   it('names the permission each action needs', () => {
-    const actions = H.rowActions(H.KINDS.grant, { id: 'g', state: 'active' }, ME);
+    const actions = H.rowActions(C.KINDS.grant, { id: 'g', state: 'active' }, ME);
     expect(actions.map(item => [item.action, item.permission])).toEqual([
       ['suspend', 'credentials.manage'],
       ['revoke', 'credentials.manage'],
@@ -49,12 +50,12 @@ describe('project governance helpers (EL-7269)', () => {
   });
 
   it('carries the state the admin saw on a binding action only', () => {
-    expect(H.actionBody(H.KINDS.binding, { state: 'draft' }, 'submit')).toEqual({
+    expect(H.actionBody(C.KINDS.binding, { state: 'draft' }, 'submit')).toEqual({
       action: 'submit',
       expected_state: 'draft',
     });
     expect(
-      H.actionBody(H.KINDS.grant, { state: 'x' }, 'approve', { approval_ref: 'A', policy_revision: 'B' }),
+      H.actionBody(C.KINDS.grant, { state: 'x' }, 'approve', { approval_ref: 'A', policy_revision: 'B' }),
     ).toEqual({ action: 'approve', approval_ref: 'A', policy_revision: 'B' });
   });
 
@@ -103,5 +104,19 @@ describe('what a run created (EL-7269)', () => {
     );
     expect(H.readinessStatus({ state: 'missing', requestable: false })).toBe('Needed');
     expect(H.readinessText({ kind: 'consent', state: 'missing' })).toMatch(/consent/);
+  });
+});
+
+describe('project governance constants (EL-7269)', () => {
+  it('holds the shared constants; the helpers file keeps functions only', () => {
+    expect(C.KINDS).toEqual({
+      binding: 'binding',
+      reference: 'reference',
+      grant: 'grant',
+      mandate: 'mandate',
+    });
+    expect(C.STALE_CODES).toEqual(['CONCURRENT_CHANGE', 'INVALID_STATE']);
+    expect(C.INBOX_STATES.reference).toEqual(['pending', 'validated']);
+    expect(Object.values(H).every(value => typeof value === 'function')).toBe(true);
   });
 });

@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { useGetMcpExposedVersionsQuery } from '@/[fsd]/features/project-governance/api/projectGovernanceApi';
+import { useGetMcpExposedVersionsQuery } from '@/[fsd]/features/project-governance';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 

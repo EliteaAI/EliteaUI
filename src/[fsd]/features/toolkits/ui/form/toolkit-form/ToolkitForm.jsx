@@ -10,7 +10,7 @@ import { CredentialWarningHelpers } from '@/[fsd]/entities/credential-warning/li
 import { ConfigurationTitlesConstants } from '@/[fsd]/features/credentials/lib/constants';
 import { useGetCurrentConfigurationAsSchemas } from '@/[fsd]/features/credentials/lib/hooks';
 import { McpAuthHelpers, McpPatBanner } from '@/[fsd]/features/mcp';
-import GovernanceReadinessCard from '@/[fsd]/features/project-governance/ui/GovernanceReadinessCard';
+import { GovernanceReadinessCard } from '@/[fsd]/features/project-governance';
 import { ToolkitFormConstants, ToolkitLayoutConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { ToolComponentHelpers, ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import {

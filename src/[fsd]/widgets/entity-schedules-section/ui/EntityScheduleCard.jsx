@@ -3,7 +3,7 @@ import { memo, useCallback, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { ScheduleMandateConsent } from '@/[fsd]/features/owner-consent';
-import GovernanceReadinessCard from '@/[fsd]/features/project-governance/ui/GovernanceReadinessCard';
+import { GovernanceReadinessCard } from '@/[fsd]/features/project-governance';
 import {
   ScheduleEnabledSwitch,
   ScheduleRowActions,

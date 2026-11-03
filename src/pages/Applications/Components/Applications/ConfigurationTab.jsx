@@ -7,7 +7,7 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import { useApplicationChat } from '@/[fsd]/features/agent/lib/hooks';
 import { ChatBox, ChatButton } from '@/[fsd]/features/chat/ui';
 import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import GovernanceReadinessCard from '@/[fsd]/features/project-governance/ui/GovernanceReadinessCard';
+import { GovernanceReadinessCard } from '@/[fsd]/features/project-governance';
 import {
   useRestoredConversation,
   useRunHistoryNavigation,
