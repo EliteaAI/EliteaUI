@@ -216,11 +216,17 @@ const cronBuilderStyles = alignStart => ({
     gap: '0.5rem',
     flexShrink: 0,
   },
+  // the mockup selects are 2.25rem high
   wideSelect: {
     width: '8.75rem',
+    '& .MuiOutlinedInput-root': { minHeight: '2.25rem' },
   },
+  // the two digits must fit next to the arrow, so the side paddings are smaller
   narrowSelect: {
     width: alignStart ? '4.25rem' : '5rem',
+    '& .MuiOutlinedInput-root': { minHeight: '2.25rem' },
+    '&.MuiAutocomplete-hasPopupIcon .MuiOutlinedInput-root': { paddingRight: '1.75rem !important' },
+    '& .MuiAutocomplete-input': { paddingLeft: '0.375rem !important' },
   },
 });
 
