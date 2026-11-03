@@ -51,17 +51,22 @@ const toSavedCredential = row => ({
 // backend resolves it the same way, so a stale uuid must show as missing, not as a same-title row); a legacy
 // value without a reference, or a private reference saved by another member (its uuid points into their
 // personal project), resolves by title + private flag.
-const findSavedOption = (options, saved, personalProjectId) => {
-  const savedUuid = saved?.[credentialMenuItemValue.keyConfigurationUuid];
+// Another member's private reference resolves to this user's own same-title credential, as the backend does;
+// until the personal project is known, stay on the strict uuid match
+const isForeignPrivateReference = (saved, personalProjectId) => {
   const savedProjectId = saved?.[credentialMenuItemValue.keyConfigurationProjectId];
-  // Another member's private reference resolves to this user's own same-title credential, as the backend does;
-  // until the personal project is known, stay on the strict uuid match
-  const isForeignPrivate =
-    saved?.private &&
+  return (
+    !!saved?.private &&
     savedProjectId != null &&
     personalProjectId != null &&
-    String(savedProjectId) !== String(personalProjectId);
-  if (savedUuid && !isForeignPrivate) return options.find(option => option.uuid === savedUuid);
+    String(savedProjectId) !== String(personalProjectId)
+  );
+};
+
+const findSavedOption = (options, saved, personalProjectId) => {
+  const savedUuid = saved?.[credentialMenuItemValue.keyConfigurationUuid];
+  if (savedUuid && !isForeignPrivateReference(saved, personalProjectId))
+    return options.find(option => option.uuid === savedUuid);
   const hasSavedKeys = option =>
     option.elitea_title === saved?.elitea_title && option.private === saved?.private;
   // A value without a uuid is the legacy row when one exists; a legacy saved value still
@@ -432,7 +437,7 @@ const CredentialsSelect = memo(props => {
       // (no uuid yet) falls back to the title + private comparison
       const isCommittedValue =
         value?.configuration_uuid && option.uuid
-          ? value.configuration_uuid === option.uuid
+          ? value.configuration_uuid === option.uuid || isForeignPrivateReference(value, personal_project_id)
           : !value?.configuration_uuid &&
             value?.elitea_title === option.elitea_title &&
             Boolean(value?.private) === option.private;
@@ -449,15 +454,7 @@ const CredentialsSelect = memo(props => {
       });
       commitConfiguration(toSavedCredential(option));
     },
-    [
-      commitConfiguration,
-      value?.elitea_title,
-      value?.private,
-      value?.configuration_uuid,
-      type,
-      trackEvent,
-      contextExecutionEntity,
-    ],
+    [commitConfiguration, value, personal_project_id, type, trackEvent, contextExecutionEntity],
   );
 
   const handleClear = useCallback(() => {

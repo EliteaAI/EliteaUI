@@ -640,6 +640,22 @@ describe('CredentialsSelect', () => {
       expect(JSON.parse(savedOptions()[0].value).configuration_uuid).toBe(GITHUB_UUID);
     });
 
+    it("clears another member's private reference instead of committing the user's own credential", () => {
+      renderSelect({
+        section: 'credentials',
+        value: savedCredential(GITHUB_TITLE, 'uuid-creators-private', {
+          private: true,
+          configuration_project_id: 'creators-personal-project',
+        }),
+        configurations: [{ ...CREDENTIAL_CONFIGURATIONS[0], project_id: PERSONAL_PROJECT_ID }],
+      });
+
+      singleSelectProps.onClear();
+
+      expect(onSelectConfiguration).toHaveBeenCalledTimes(1);
+      expect(onSelectConfiguration).toHaveBeenCalledWith(null);
+    });
+
     it("keeps the uuid-only match for the user's own private reference", () => {
       renderSelect({
         section: 'credentials',
