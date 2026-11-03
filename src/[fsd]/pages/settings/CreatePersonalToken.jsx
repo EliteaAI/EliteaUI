@@ -6,12 +6,20 @@ import * as yup from 'yup';
 
 import { Box, CircularProgress, Tooltip } from '@mui/material';
 
-import { DrawerPage, DrawerPageHeader, GeneratedTokenDialog } from '@/[fsd]/features/settings';
+import {
+  DrawerPage,
+  DrawerPageHeader,
+  GeneratedTokenDialog,
+  TokenScopeConstants,
+  TokenScopeFields,
+  TokenScopeHelpers,
+} from '@/[fsd]/features/settings';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Input } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useTokenCreateMutation, useTokenListQuery } from '@/api/auth';
 import { DEFAULT_TOKEN_EXPIRATION_DAYS, EXPIRATION_MEASURES, MAX_VARIABLES_LENGTH } from '@/common/constants';
-import { capitalizeFirstChar } from '@/common/utils';
+import { buildErrorMessage, capitalizeFirstChar } from '@/common/utils';
 import useNavBlocker from '@/hooks/useNavBlocker';
 
 const TOKEN_NAME_PATTERN = /^[a-zA-Z0-9_-]*$/;
@@ -30,6 +38,10 @@ const CreatePersonalToken = memo(() => {
   const [openTokenDialog, setOpenTokenDialog] = useState(false);
   const [createToken, { isLoading: isGenerating }] = useTokenCreateMutation();
   const { refetch } = useTokenListQuery({ skip: true });
+  const { toastError } = useToast();
+  const [restricted, setRestricted] = useState(false);
+  const [scopeProjects, setScopeProjects] = useState([]);
+  const [scopeOperations, setScopeOperations] = useState(TokenScopeConstants.DEFAULT_TOKEN_OPERATIONS);
 
   const formik = useFormik({
     initialValues: {
@@ -43,13 +55,21 @@ const CreatePersonalToken = memo(() => {
         formik.values.measure === EXPIRATION_MEASURES[0]
           ? null
           : { measure: formik.values.measure, value: formik.values.expiration };
-      const { error, data: tokenData } = await createToken({ name: formik.values.name, expires });
+      const { error, data: tokenData } = await createToken({
+        name: formik.values.name,
+        expires,
+        ...TokenScopeHelpers.scopePayload({
+          restricted,
+          projects: scopeProjects,
+          operations: scopeOperations,
+        }),
+      });
       if (!error) {
         setData(tokenData);
         setOpenTokenDialog(true);
         await refetch();
       } else {
-        // Handle error
+        toastError(buildErrorMessage(error));
       }
     },
   });
@@ -60,9 +80,12 @@ const CreatePersonalToken = memo(() => {
         name: '',
         measure: EXPIRATION_MEASURES[1],
         expiration: DEFAULT_TOKEN_EXPIRATION_DAYS,
-      }) !== JSON.stringify(formik.values)
+        restricted: false,
+        scopeProjects: [],
+        scopeOperations: TokenScopeConstants.DEFAULT_TOKEN_OPERATIONS,
+      }) !== JSON.stringify({ ...formik.values, restricted, scopeProjects, scopeOperations })
     );
-  }, [formik.values]);
+  }, [formik.values, restricted, scopeProjects, scopeOperations]);
 
   const onCancel = useCallback(() => {
     setWantToCancel(true);
@@ -87,7 +110,27 @@ const CreatePersonalToken = memo(() => {
   const nameHasError = formik.touched.name && Boolean(formik.errors.name);
   const isAtCharacterLimit = formik.values.name.length >= MAX_VARIABLES_LENGTH;
 
-  const isGenerateDisabled = !formik.values.name || nameHasError || isGenerating || !!data.uuid;
+  const scopeError = restricted
+    ? TokenScopeHelpers.scopeError({
+        projects: scopeProjects,
+        operations: scopeOperations,
+        measure: formik.values.measure,
+        expiration: formik.values.expiration,
+      })
+    : '';
+
+  const isGenerateDisabled =
+    !formik.values.name || nameHasError || isGenerating || !!data.uuid || Boolean(scopeError);
+
+  const { setFieldValue } = formik;
+  const expirationMeasure = formik.values.measure;
+  const onToggleRestricted = useCallback(() => {
+    // a restricted token always expires: "never" becomes the default number of days
+    if (!restricted && expirationMeasure === EXPIRATION_MEASURES[0]) {
+      setFieldValue('measure', EXPIRATION_MEASURES[1]);
+    }
+    setRestricted(value => !value);
+  }, [expirationMeasure, restricted, setFieldValue]);
 
   const getNameHelperText = useCallback(() => {
     if (formik.touched.name && formik.errors.name) {
@@ -178,7 +221,9 @@ const CreatePersonalToken = memo(() => {
                     label="Expiration period"
                     onChange={formik.handleChange}
                     value={formik.values.measure}
-                    options={EXPIRATION_MEASURES.map(measure => ({
+                    options={EXPIRATION_MEASURES.filter(
+                      measure => !restricted || measure !== EXPIRATION_MEASURES[0],
+                    ).map(measure => ({
                       label: capitalizeFirstChar(measure),
                       value: measure,
                     }))}
@@ -202,6 +247,15 @@ const CreatePersonalToken = memo(() => {
                   )}
                 </Box>
               </Box>
+              <TokenScopeFields
+                restricted={restricted}
+                projects={scopeProjects}
+                operations={scopeOperations}
+                error={scopeError}
+                onToggle={onToggleRestricted}
+                onProjectsChange={setScopeProjects}
+                onOperationsChange={setScopeOperations}
+              />
             </Box>
           </Box>
         </Box>
