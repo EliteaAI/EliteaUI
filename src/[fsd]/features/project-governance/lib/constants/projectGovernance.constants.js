@@ -94,3 +94,13 @@ export const ITEM_TEXT = {
 
 // How deep a credential type's schema is walked for its secret fields (as the server walks it)
 export const MAX_SCHEMA_DEPTH = 4;
+
+// --- the chat's credential form (#7228) --------------------------------------------------------------------------
+
+// Credential types whose material is the person's own Microsoft sign-in (the server's DELEGATED_TYPES): never typed,
+// never shared
+export const SIGN_IN_CREDENTIAL_TYPES = ['sharepoint'];
+// The check's code when the person's Elitea sign-in carries no Microsoft identity
+export const SIGN_IN_NOT_MICROSOFT = 'DENIED_ASSERTION_SOURCE_UNSUPPORTED';
+export const SIGN_IN_NOT_MICROSOFT_TEXT =
+  'Your Elitea sign-in is not a Microsoft sign-in, so this credential cannot act for you yet: sign in to Elitea with Microsoft, then ask the agent again.';

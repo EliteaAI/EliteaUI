@@ -33,6 +33,7 @@ import {
   getInterruptIdentity,
   getPendingHitlMessage,
   hasRootHitlTurnEnded,
+  hitlResumeValue,
   isPipelineHitlHistoryInterrupt,
   isPipelineHitlNodeInterrupt,
   scheduleRootHitlDecision,
@@ -2036,14 +2037,9 @@ const ChatBox = memo(
           // `edit` carries the rewritten prompt; `block_with_comment` carries the
           // user's free-text note (-> SDK blocked-tool `denial_reason`, #5318);
           // `answer` carries the clarifying-question answers object.
-          if (action === 'edit' || action === 'block_with_comment') {
-            payload.hitl_value = value ?? '';
-          } else if (action === 'answer') {
-            payload.hitl_value = value ?? {};
-          } else if (action === 'created') {
-            // (#7228) the credential form's answer: the new reference id only (the server replaces it by its record)
-            payload.hitl_value = { reference_id: value?.reference_id };
-          }
+          // (#7228) a credential form's `created` carries the new reference id only (the server replaces it)
+          const hitlValue = hitlResumeValue(action, value);
+          if (hitlValue !== undefined) payload.hitl_value = hitlValue;
           if (usesDurablePipelineHistory) {
             payload.hitl_decisions = [
               {

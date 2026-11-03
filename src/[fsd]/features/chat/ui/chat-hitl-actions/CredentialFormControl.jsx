@@ -5,17 +5,16 @@ import { useSelector } from 'react-redux';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import {
+  ProjectGovernanceConstants,
   ProjectGovernanceHelpers,
   useCreateCredentialFromChatMutation,
 } from '@/[fsd]/features/project-governance';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
-import { Button, Input, Markdown } from '@/[fsd]/shared/ui';
+import { Button, Input, Select } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { useGetAvailableConfigurationsTypeQuery } from '@/api/configurations';
 
-// Credential types whose material is the person's own Microsoft sign-in: never typed, never shared (as the server)
-const SIGN_IN_TYPES = ['sharepoint'];
 const PRIVATE = 'personal';
 const SHARED = 'project_shared';
 const OWNERSHIP_TABS = [
@@ -31,10 +30,13 @@ const OWNERSHIP_TABS = [
 // person types the values here, never into the chat; Create stores them as a governed credential (the server also
 // files what the agent needs for approval) and resumes the run with the new reference id only. The typed values live
 // in this card's state until the request settles, then are gone (nothing of them reaches Redux, the message or the
-// socket). A sign-in type shows its non-secret fields only and uses the person's own Microsoft sign-in.
+// socket). What the agent chose (title, type, purpose) is shown as plain text, never rendered. A sign-in type shows its
+// required non-secret fields only and uses the person's own Microsoft sign-in.
 const CredentialFormControl = memo(props => {
   const { hitlInterrupt, interruptId, messageId, conversationUuid, onHitlResume, disabled, testId } = props;
   const { credential_type: credentialType, title, purpose } = hitlInterrupt || {};
+  const { SIGN_IN_CREDENTIAL_TYPES, SIGN_IN_NOT_MICROSOFT, SIGN_IN_NOT_MICROSOFT_TEXT } =
+    ProjectGovernanceConstants;
   const styles = credentialFormControlStyles();
   const projectId = useSelectedProjectId();
   const personalProjectId = useSelector(state => state.user?.personal_project_id);
@@ -43,23 +45,37 @@ const CredentialFormControl = memo(props => {
   const [error, setError] = useState(null);
   const [result, setResult] = useState(hitlInterrupt?.credential_form_result ?? null);
 
-  const { data: types, isFetching: typesLoading } = useGetAvailableConfigurationsTypeQuery({
-    section: 'credentials',
-  });
+  const {
+    data: types,
+    isFetching: typesLoading,
+    isError: typesFailed,
+    refetch: retryTypes,
+  } = useGetAvailableConfigurationsTypeQuery({ section: 'credentials' });
   const [createCredential, { isLoading: isCreating, reset }] = useCreateCredentialFromChatMutation();
-
-  useEffect(() => () => setValues({}), []);
 
   const fields = useMemo(
     () => ProjectGovernanceHelpers.credentialFormFieldsOf(types, credentialType),
     [types, credentialType],
   );
-  const isSignIn = SIGN_IN_TYPES.includes(credentialType);
+  const isSignIn = SIGN_IN_CREDENTIAL_TYPES.includes(credentialType);
   // a sign-in type asks for what it requires only (its site, say): the app and the sign-in are the platform's
   const shownFields = useMemo(
     () => (fields ?? []).filter(field => !isSignIn || (field.required && !field.secret)),
     [fields, isSignIn],
   );
+
+  // the schema's defaults prefill the form (nothing secret has one)
+  useEffect(() => {
+    if (!shownFields.length) return;
+    setValues(prev => ({
+      ...Object.fromEntries(
+        shownFields.filter(field => field.defaultValue).map(f => [f.name, f.defaultValue]),
+      ),
+      ...prev,
+    }));
+  }, [shownFields]);
+  useEffect(() => () => setValues({}), []);
+
   const offersOwnership = !isSignIn && projectId !== personalProjectId;
   const missingRequired = shownFields.some(field => field.required && !(values[field.name] ?? '').trim());
   const hasSecret = isSignIn || shownFields.some(field => field.secret && (values[field.name] ?? '') !== '');
@@ -69,6 +85,7 @@ const CredentialFormControl = memo(props => {
     name => event => setValues(prev => ({ ...prev, [name]: event.target.value })),
     [],
   );
+  const handleSelect = useCallback(name => value => setValues(prev => ({ ...prev, [name]: value })), []);
   const handleOwnership = useCallback((_, value) => value && setOwnership(value), []);
 
   const handleCancel = useCallback(() => {
@@ -134,11 +151,19 @@ const CredentialFormControl = memo(props => {
           variant="bodyMedium"
           color="text.secondary"
         >
-          {`Credential '${result.title}' (${result.credential_type}) is registered, ${ProjectGovernanceHelpers.stateLabel(
-            result.state,
-          ).toLowerCase()}: pending approval by a project admin before the agent can use it.`}
+          {ProjectGovernanceHelpers.credentialFormResultText(result)}
         </Typography>
-        {disabled === false && hitlInterrupt?.credential_form_result && (
+        {result.check === SIGN_IN_NOT_MICROSOFT && (
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+            data-testid={`${testId}-not-microsoft`}
+          >
+            {SIGN_IN_NOT_MICROSOFT_TEXT}
+          </Typography>
+        )}
+        {!disabled && (
+          // the run did not take the answer yet (a reload, a resume that did not go through): one click resumes it
           <Box sx={styles.actions}>
             <Button.BaseBtn
               variant={BUTTON_VARIANTS.elitea}
@@ -160,7 +185,13 @@ const CredentialFormControl = memo(props => {
       data-testid={testId}
     >
       <Box sx={styles.message}>
-        <Markdown>{`The agent asks you to create the credential **${title || credentialType}** (${credentialType}).`}</Markdown>
+        <Typography
+          variant="bodyMedium"
+          color="text.secondary"
+          data-testid={`${testId}-asked`}
+        >
+          {`The agent asks you to create the credential "${title || credentialType}" (${credentialType}).`}
+        </Typography>
         {purpose && (
           <Typography
             variant="bodySmall"
@@ -175,6 +206,24 @@ const CredentialFormControl = memo(props => {
           size={14}
           data-testid={`${testId}-loading`}
         />
+      ) : typesFailed ? (
+        <Box sx={styles.actions}>
+          <Typography
+            variant="bodySmall"
+            color="error"
+            data-testid={`${testId}-types-failed`}
+          >
+            The credential types could not be read.
+          </Typography>
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.tertiary}
+            size="small"
+            onClick={retryTypes}
+            data-testid={`${testId}-retry`}
+          >
+            Retry
+          </Button.BaseBtn>
+        </Box>
       ) : fields === null ? (
         <Typography
           variant="bodySmall"
@@ -194,20 +243,36 @@ const CredentialFormControl = memo(props => {
               It uses your own Microsoft sign-in: nothing secret is typed here, and it stays private to you.
             </Typography>
           )}
-          {shownFields.map(field => (
-            <Input.InputBase
-              key={field.name}
-              label={field.label}
-              required={field.required}
-              type={field.secret ? 'password' : 'text'}
-              autoComplete={field.secret ? 'new-password' : 'off'}
-              value={values[field.name] ?? ''}
-              onChange={handleChange(field.name)}
-              enableAutoBlur={false}
-              disabled={disabled || isCreating}
-              inputProps={{ 'data-testid': `${testId}-field-${field.name}` }}
-            />
-          ))}
+          {shownFields.map(field =>
+            field.options ? (
+              <Box
+                key={field.name}
+                data-testid={`${testId}-field-${field.name}`}
+              >
+                <Select.SingleSelect
+                  label={field.label}
+                  value={values[field.name] ?? ''}
+                  options={field.options.map(option => ({ label: option, value: option }))}
+                  onValueChange={handleSelect(field.name)}
+                  disabled={disabled || isCreating}
+                />
+              </Box>
+            ) : (
+              <Input.InputBase
+                key={field.name}
+                label={field.label}
+                required={field.required}
+                type={field.secret ? 'password' : 'text'}
+                autoComplete={field.secret ? 'new-password' : 'off'}
+                value={values[field.name] ?? ''}
+                onChange={handleChange(field.name)}
+                helperText={field.description || undefined}
+                enableAutoBlur={false}
+                disabled={disabled || isCreating}
+                inputProps={{ 'data-testid': `${testId}-field-${field.name}` }}
+              />
+            ),
+          )}
           {offersOwnership && (
             <TabGroupButton
               arrayBtn={OWNERSHIP_TABS}
@@ -230,7 +295,7 @@ const CredentialFormControl = memo(props => {
         </Typography>
       )}
       <Box sx={styles.actions}>
-        {fields !== null && !typesLoading && (
+        {fields !== null && !typesLoading && !typesFailed && (
           <Button.BaseBtn
             variant={BUTTON_VARIANTS.elitea}
             size="small"
@@ -269,14 +334,11 @@ const credentialFormControlStyles = () => ({
     background: palette.background.surface.interactive.active,
     alignItems: 'flex-start',
   }),
-  message: ({ palette }) => ({
+  message: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.25rem',
-    fontSize: '0.875rem',
-    lineHeight: '1.25rem',
-    color: palette.text.secondary,
-  }),
+  },
   fields: {
     width: '100%',
     display: 'flex',

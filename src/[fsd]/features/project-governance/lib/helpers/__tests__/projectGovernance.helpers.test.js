@@ -131,7 +131,17 @@ describe('project governance constants (EL-7269)', () => {
           properties: {
             data: {
               properties: {
-                base_url: { type: 'string', title: 'Base URL' },
+                base_url: {
+                  type: 'string',
+                  title: 'Base URL',
+                  prefill_value: 'https://api.github.com',
+                  description: '**Base** API URL\n\nmore',
+                },
+                hosting: {
+                  anyOf: [{ enum: ['Auto', 'Cloud'], type: 'string' }, { type: 'null' }],
+                  default: 'Auto',
+                  description: 'Select the hosting type.',
+                },
                 access_token: {
                   anyOf: [{ type: 'string', format: 'password' }, { type: 'null' }],
                   title: 'Token',
@@ -147,9 +157,37 @@ describe('project governance constants (EL-7269)', () => {
       },
     ];
     expect(H.credentialFormFieldsOf(types, 'github')).toEqual([
-      { name: 'base_url', label: 'Base URL', secret: false, required: false },
-      { name: 'access_token', label: 'Token', secret: true, required: true },
+      {
+        name: 'base_url',
+        label: 'Base URL',
+        secret: false,
+        required: false,
+        defaultValue: 'https://api.github.com',
+        description: 'Base API URL',
+        options: null,
+      },
+      {
+        name: 'hosting',
+        label: 'hosting',
+        secret: false,
+        required: false,
+        defaultValue: 'Auto',
+        description: 'Select the hosting type.',
+        options: ['Auto', 'Cloud'],
+      },
+      {
+        name: 'access_token',
+        label: 'Token',
+        secret: true,
+        required: true,
+        defaultValue: '',
+        description: '',
+        options: null,
+      },
     ]);
+    expect(H.credentialFormResultText({ title: 'G', credential_type: 'github', state: 'active' })).toBe(
+      "Credential 'G' (github) is registered and approved: the agent can use it.",
+    );
     expect(H.credentialFormFieldsOf(types, 'unknown')).toBeNull();
     expect(H.credentialFormFieldsOf(undefined, 'github')).toBeNull();
   });

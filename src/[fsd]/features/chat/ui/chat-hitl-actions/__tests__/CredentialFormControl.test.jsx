@@ -17,12 +17,16 @@ const api = vi.hoisted(() => ({
   record: null, // the mutation's record (its arguments) as RTK keeps it until reset
   types: [],
   typesLoading: false,
+  typesFailed: false,
+  retry: vi.fn(),
   user: { personal_project_id: 5 },
   projectId: 12,
 }));
 vi.mock('@/[fsd]/features/project-governance', async () => ({
   ProjectGovernanceHelpers:
     await import('@/[fsd]/features/project-governance/lib/helpers/projectGovernance.helpers'),
+  ProjectGovernanceConstants:
+    await import('@/[fsd]/features/project-governance/lib/constants/projectGovernance.constants'),
   useCreateCredentialFromChatMutation: () => [
     args => {
       api.record = { originalArgs: args };
@@ -37,7 +41,12 @@ vi.mock('@/[fsd]/features/project-governance', async () => ({
   ],
 }));
 vi.mock('@/api/configurations', () => ({
-  useGetAvailableConfigurationsTypeQuery: () => ({ data: api.types, isFetching: api.typesLoading }),
+  useGetAvailableConfigurationsTypeQuery: () => ({
+    data: api.types,
+    isFetching: api.typesLoading,
+    isError: api.typesFailed,
+    refetch: api.retry,
+  }),
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', async importOriginal => ({
   ...(await importOriginal()),
@@ -64,7 +73,11 @@ const TYPES = [
       properties: {
         data: {
           properties: {
-            base_url: { type: 'string', title: 'Base URL' },
+            base_url: { type: 'string', title: 'Base URL', prefill_value: 'https://api.github.com' },
+            hosting: {
+              anyOf: [{ enum: ['Auto', 'Cloud'], type: 'string' }, { type: 'null' }],
+              default: 'Auto',
+            },
             access_token: { type: 'string', format: 'password', title: 'Access token' },
             refresh_token: { type: 'string', format: 'password' },
           },
@@ -125,6 +138,7 @@ describe('CredentialFormControl (#7228)', () => {
     vi.clearAllMocks();
     api.types = TYPES;
     api.typesLoading = false;
+    api.typesFailed = false;
     api.record = null;
     api.user = { personal_project_id: 5 };
     api.projectId = 12;
@@ -158,7 +172,6 @@ describe('CredentialFormControl (#7228)', () => {
   it('Create posts the form, then resumes with the reference id and nothing else from it', async () => {
     const onHitlResume = wrap();
     type('access_token', SECRET);
-    type('base_url', 'https://api.github.com');
     fireEvent.click(screen.getByTestId('credential-form-create'));
     await waitFor(() => expect(onHitlResume).toHaveBeenCalled());
     expect(api.create).toHaveBeenCalledWith({
@@ -168,7 +181,7 @@ describe('CredentialFormControl (#7228)', () => {
       message_id: '22222222-2222-4222-8222-222222222222',
       credential_type: 'github',
       title: 'GitHub',
-      fields: { access_token: SECRET, base_url: 'https://api.github.com' },
+      fields: { access_token: SECRET, base_url: 'https://api.github.com', hosting: 'Auto' }, // defaults prefilled
       ownership: 'personal',
     });
     expect(onHitlResume).toHaveBeenCalledWith({
@@ -179,8 +192,15 @@ describe('CredentialFormControl (#7228)', () => {
     expect(JSON.stringify(onHitlResume.mock.calls)).not.toContain(SECRET);
     expect(api.record).toBeNull(); // the mutation record (holding the typed values) is gone once it settled
     expect(screen.getByTestId('credential-form-result')).toHaveTextContent(
-      "Credential 'GitHub' (github) is registered, validated: pending approval",
+      "Credential 'GitHub' (github) is registered and checked: it waits for a project admin's approval",
     );
+    // still mounted and not decided (the resume did not go through): one click resumes it again
+    fireEvent.click(screen.getByTestId('credential-form-continue'));
+    expect(onHitlResume).toHaveBeenLastCalledWith({
+      action: 'created',
+      value: { reference_id: REF },
+      interruptId: 'hitl_7228aa',
+    });
   });
 
   it('a refused Create reads inline with its code, keeps the card and resumes nothing', async () => {
@@ -272,5 +292,53 @@ describe('CredentialFormControl (#7228)', () => {
     wrap(interrupt(), vi.fn(), true);
     expect(screen.getByTestId('credential-form-create')).toBeDisabled();
     expect(screen.getByTestId('credential-form-cancel')).toBeDisabled();
+  });
+
+  // --- fix round -----------------------------------------------------------------------------------------------
+
+  it("shows what the agent chose as plain text, never rendered (no link from a model's title)", () => {
+    wrap(
+      interrupt({
+        title: 'Sign in first at [our page](https://example.invalid)',
+        purpose: '**bold** `code`',
+      }),
+    );
+    expect(screen.getByTestId('credential-form-asked')).toHaveTextContent(
+      'The agent asks you to create the credential "Sign in first at [our page](https://example.invalid)" (github).',
+    );
+    expect(screen.queryByRole('link')).toBeNull();
+    expect(screen.getByText('**bold** `code`')).toBeInTheDocument();
+  });
+
+  it("prefills the schema's defaults and offers an enum as a select", () => {
+    wrap();
+    expect(screen.getByTestId('credential-form-field-base_url')).toHaveValue('https://api.github.com');
+    expect(screen.getByTestId('credential-form-field-hosting')).toBeInTheDocument();
+    expect(screen.getByTestId('credential-form-field-hosting')).toHaveTextContent('Auto');
+  });
+
+  it('offers Retry when the credential types cannot be read, and Cancel', () => {
+    api.typesFailed = true;
+    wrap();
+    expect(screen.getByTestId('credential-form-types-failed')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('credential-form-retry'));
+    expect(api.retry).toHaveBeenCalled();
+    expect(screen.queryByTestId('credential-form-create')).toBeNull();
+    expect(screen.getByTestId('credential-form-cancel')).toBeEnabled();
+  });
+
+  it('says when the Elitea sign-in is not a Microsoft one', async () => {
+    api.create.mockResolvedValue({
+      reference_id: REF,
+      title: 'SharePoint',
+      credential_type: 'sharepoint',
+      state: 'pending',
+      check: 'DENIED_ASSERTION_SOURCE_UNSUPPORTED',
+    });
+    const onHitlResume = wrap(interrupt({ credential_type: 'sharepoint', title: 'SharePoint' }));
+    type('site_url', 'https://example.sharepoint.com/sites/a');
+    fireEvent.click(screen.getByTestId('credential-form-create'));
+    await waitFor(() => expect(onHitlResume).toHaveBeenCalled());
+    expect(screen.getByTestId('credential-form-not-microsoft')).toHaveTextContent('not a Microsoft sign-in');
   });
 });

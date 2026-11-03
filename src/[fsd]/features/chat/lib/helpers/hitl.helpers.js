@@ -287,3 +287,13 @@ export const hasRootHitlTurnEnded = (state, turnEndRevision) =>
     state?.inFlightIdentities?.length &&
     Number(turnEndRevision || 0) >= Number(state.requiredTurnEndRevision || 1),
   );
+
+// The `hitl_value` a scalar resume sends for an action, or undefined when the action carries none: `edit` the rewritten
+// prompt, `block_with_comment` the note, `answer` the clarifying answers, (#7228) `created` the credential form's new
+// reference id and nothing else of the form
+export const hitlResumeValue = (action, value) => {
+  if (action === 'edit' || action === 'block_with_comment') return value ?? '';
+  if (action === 'answer') return value ?? {};
+  if (action === 'created') return { reference_id: value?.reference_id };
+  return undefined;
+};

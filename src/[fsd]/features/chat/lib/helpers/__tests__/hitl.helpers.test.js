@@ -333,3 +333,17 @@ describe('EL-7228 credential form interrupts', () => {
     );
   });
 });
+
+describe('EL-7228 resume values', () => {
+  it('a credential form sends the reference id only; other actions as before', async () => {
+    const { hitlResumeValue } = await import('../hitl.helpers');
+    expect(hitlResumeValue('created', { reference_id: 'r', fields: { token: 'x' }, title: 't' })).toEqual({
+      reference_id: 'r',
+    });
+    expect(hitlResumeValue('cancel', { reference_id: 'r' })).toBeUndefined();
+    expect(hitlResumeValue('approve')).toBeUndefined();
+    expect(hitlResumeValue('edit', 'text')).toBe('text');
+    expect(hitlResumeValue('answer')).toEqual({});
+    expect(hitlResumeValue('block_with_comment')).toBe('');
+  });
+});

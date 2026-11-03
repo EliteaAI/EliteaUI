@@ -226,9 +226,21 @@ export const secretFieldsOf = (types, provider, depth = 0, properties = undefine
 };
 
 // (#7228) the fields the chat's credential form shows for a credential type: its top-level text fields (a secret
-// one masked), required as the type's schema says; null when the type is unknown to the schema store. A stored sign-in
-// (`refresh_token`) and nested or selected configurations are never typed into the form.
+// one masked), required as the type's schema says, with the schema's default (or prefill), the first line of its
+// description and its choices (an enum, offered as a select); null when the type is unknown to the schema store. A
+// stored sign-in (`refresh_token`) and nested or selected configurations are never typed into the form.
 const NOT_TYPED = ['refresh_token'];
+const plainLine = text =>
+  String(text || '')
+    .split('\n')
+    .map(line => line.replace(/[*`_#>]/g, '').trim())
+    .find(Boolean) || '';
+const optionsOf = schema => {
+  const found = Array.isArray(schema.enum)
+    ? schema.enum
+    : (schema.anyOf || []).find(option => Array.isArray(option?.enum))?.enum;
+  return Array.isArray(found) ? found.filter(item => typeof item === 'string') : null;
+};
 export const credentialFormFieldsOf = (types, type) => {
   const entry = (Array.isArray(types) ? types : []).find(candidate => candidate?.type === type);
   const data = entry?.config_schema?.properties?.data;
@@ -237,12 +249,39 @@ export const credentialFormFieldsOf = (types, type) => {
   return Object.entries(data.properties).flatMap(([name, schema]) => {
     if (!isObject(schema) || NOT_TYPED.includes(name) || schema.$ref) return [];
     const secret = isPasswordSchema(schema);
+    const options = secret ? null : optionsOf(schema);
     const text =
       secret ||
+      Boolean(options) ||
       schema.type === 'string' ||
       (Array.isArray(schema.anyOf) && schema.anyOf.some(option => option?.type === 'string' && !option.$ref));
-    return text ? [{ name, label: schema.title ?? name, secret, required: required.includes(name) }] : [];
+    if (!text) return [];
+    const preset = [schema.default, schema.prefill_value].find(value => typeof value === 'string' && value);
+    return [
+      {
+        name,
+        label: schema.title ?? name,
+        secret,
+        required: required.includes(name),
+        defaultValue: secret ? '' : (preset ?? ''),
+        description: plainLine(schema.description),
+        options,
+      },
+    ];
   });
+};
+
+// (#7228) what the card says after Create, from the credential's state and its check: who acts next, in words
+export const credentialFormResultText = result => {
+  const name = `Credential '${result?.title ?? ''}' (${result?.credential_type ?? ''}) is registered`;
+  switch (result?.state) {
+    case 'active':
+      return `${name} and approved: the agent can use it.`;
+    case 'validated':
+      return `${name} and checked: it waits for a project admin's approval before the agent can use it.`;
+    default:
+      return `${name}: it waits for a check and a project admin's approval before the agent can use it.`;
+  }
 };
 
 export const isWaitingItem = item => WAITING_STATES.includes(item.state) && Boolean(item.ref);
