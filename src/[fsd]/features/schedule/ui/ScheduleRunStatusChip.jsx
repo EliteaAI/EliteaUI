@@ -65,8 +65,8 @@ const scheduleRunStatusChipStyles = statusColor => ({
     height: 'auto',
     backgroundColor: 'transparent',
     color: statusColor,
-    '& .MuiChip-label': { padding: '0 0 0 0.25rem' },
-    '& .MuiChip-icon': { marginLeft: 0 },
+    '& .MuiChip-label': { padding: 0, fontSize: '0.75rem' },
+    '& .MuiChip-icon': { marginLeft: 0, marginRight: '0.25rem' },
   },
   // A 20 px hit area around the icon
   iconOnly: ({ palette }) => ({
