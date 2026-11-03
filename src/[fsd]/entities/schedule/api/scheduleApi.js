@@ -146,7 +146,8 @@ export const scheduleApi = eliteaApi
         invalidatesTags: (_, error, { scheduleId }) => (error ? [] : scheduleTags(scheduleId)),
       }),
 
-      // Test Run of an unsaved form: the server runs the Save body from a hidden draft, so nothing is saved
+      // Test Run of an unsaved form: the server runs the Save body from a hidden draft, so nothing is saved.
+      // The server finds the draft by the caller and application_id, so the client sends no draft id.
       startDraftTestRun: build.mutation({
         query: ({ projectId, ...body }) => ({
           url: `${schedulesPath(projectId)}/test_run`,
