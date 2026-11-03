@@ -296,7 +296,7 @@ const ScheduleForm = memo(props => {
               // under the form, where each half would be too narrow.
               <StyledGridContainer
                 container
-                columnSpacing="2rem"
+                columnSpacing={0}
                 rowSpacing="1.5rem"
                 sx={sidePanel && styles.split}
               >

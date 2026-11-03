@@ -112,7 +112,8 @@ const scheduleRunCardStyles = (expanded, isLatest) => ({
     height: '1.25rem',
     fontSize: '0.6875rem',
     color: palette.secondary.main,
-    backgroundColor: palette.background.default.secondary,
+    backgroundColor: 'transparent',
+    border: `0.0625rem solid ${palette.secondary.main}`,
   }),
   trigger: ({ palette }) => ({ color: palette.text.secondary, borderColor: palette.border.lines }),
 });

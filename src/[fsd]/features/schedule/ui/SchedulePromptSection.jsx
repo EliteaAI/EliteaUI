@@ -1,5 +1,7 @@
 import { memo, useCallback } from 'react';
 
+import { Box, Typography } from '@mui/material';
+
 import StyledInputEnhancer from '@/[fsd]/shared/ui/input/StyledInputEnhancer';
 import VariableList from '@/components/VariableList';
 
@@ -44,12 +46,20 @@ const SchedulePromptSection = memo(props => {
   return (
     <>
       {type === 'pipeline' && (
-        <ScheduleSegmentedToggle
-          testId="schedule-run-mode"
-          items={RUN_MODE_ITEMS}
-          value={runMode}
-          onChange={handleRunModeChange}
-        />
+        <Box sx={styles.runMode}>
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+          >
+            Starting input *
+          </Typography>
+          <ScheduleSegmentedToggle
+            testId="schedule-run-mode"
+            items={RUN_MODE_ITEMS}
+            value={runMode}
+            onChange={handleRunModeChange}
+          />
+        </Box>
       )}
       {showPrompt && (
         <>
@@ -74,5 +84,10 @@ const SchedulePromptSection = memo(props => {
 });
 
 SchedulePromptSection.displayName = 'SchedulePromptSection';
+
+/** @type {MuiSx} */
+const styles = {
+  runMode: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
+};
 
 export default SchedulePromptSection;

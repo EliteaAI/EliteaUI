@@ -74,6 +74,17 @@ describe('ScheduleRunsCard', () => {
     expect(screen.getAllByTestId('run-card-stub').map(card => card.textContent)).toEqual(['2 latest', '1']);
   });
 
+  it('has no filters for one run, and with several runs filters the cards by type and status', () => {
+    renderCard({ view: makeView([run(1)]) });
+    expect(screen.queryByTestId('schedule-runs-filter-trigger')).not.toBeInTheDocument();
+    cleanup();
+
+    renderCard({ view: makeView([run(3, { trigger: 'cron' }), run(2, { status: 'failed' }), run(1)]) });
+    expect(screen.getByTestId('schedule-runs-filter-trigger')).toBeInTheDocument();
+    expect(screen.getByTestId('schedule-runs-filter-status')).toBeInTheDocument();
+    expect(screen.getAllByTestId('run-card-stub')).toHaveLength(3);
+  });
+
   it('opens the card that the view names', () => {
     renderCard({ view: makeView(undefined, { expandedRunId: 1 }) });
 

@@ -13,7 +13,7 @@ import CronBuilder from './CronBuilder';
 
 const { canConvertCronTimezone, getBrowserTimezone, getNextCronRun, validateCronExpression } =
   ScheduleHelpers;
-const { canBuildCron, parseCron } = CronBuilderHelpers;
+const { canBuildCron, describeCron, parseCron } = CronBuilderHelpers;
 
 const BUILDER_BLOCKED_HINT =
   'The Builder cannot show this expression. Edit it as text, or enter a daily time.';
@@ -97,7 +97,7 @@ const ScheduleSettingsSection = memo(props => {
 
   // The schedule pages read as a sentence ("Runs at 08:00."); the legacy modal keeps the quoted text
   const summaryText = alignStart
-    ? `Runs ${cronState.message.charAt(0).toLowerCase()}${cronState.message.slice(1)}.`
+    ? describeCron(value) || `Runs ${cronState.message.charAt(0).toLowerCase()}${cronState.message.slice(1)}.`
     : `"${cronState.message}"`;
 
   const errorText = error || (cronState.isValid ? null : cronState.message);

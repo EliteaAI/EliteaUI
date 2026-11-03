@@ -1,7 +1,7 @@
-import { forwardRef, memo } from 'react';
+import { forwardRef, memo, useState } from 'react';
 
 import EventNoteOutlinedIcon from '@mui/icons-material/EventNoteOutlined';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PlayArrowOutlinedIcon from '@mui/icons-material/PlayArrowOutlined';
 import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
 import { Box, Typography } from '@mui/material';
 
@@ -12,6 +12,7 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { isRunActive, ownerOnlyRunHint } from '../lib/helpers';
 import ScheduleRunCard from './ScheduleRunCard';
+import ScheduleRunsFilters, { ALL_RUNS } from './ScheduleRunsFilters';
 
 /**
  * The "Runs (count)" card right of the schedule form. `view` is the result of `useScheduleRunsView`.
@@ -43,6 +44,12 @@ const ScheduleRunsCard = memo(
     const runHint = schedule?.id ? ownerOnlyRunHint(schedule) : null;
     const busy = hasActiveRun || runNowPending || testRunPending;
     const newestId = runs[0]?.id;
+    const [trigger, setTrigger] = useState(ALL_RUNS);
+    const [status, setStatus] = useState(ALL_RUNS);
+    const shownRuns = runs.filter(
+      run =>
+        (trigger === ALL_RUNS || run.trigger === trigger) && (status === ALL_RUNS || run.status === status),
+    );
     const styles = scheduleRunsCardStyles();
 
     return (
@@ -74,9 +81,8 @@ const ScheduleRunsCard = memo(
               <BaseBtn
                 data-testid="schedule-run-now"
                 title={RUN_NOW_NOTE}
-                variant={BUTTON_VARIANTS.elitea}
-                color="secondary"
-                startIcon={<PlayArrowIcon />}
+                variant={BUTTON_VARIANTS.secondary}
+                startIcon={<PlayArrowOutlinedIcon />}
                 disabled={busy || !canRunNow || !!runHint}
                 onClick={onRunNow}
               >
@@ -113,6 +119,15 @@ const ScheduleRunsCard = memo(
             message={runNowError || testRunError}
           />
         )}
+        {runs.length > 1 && (
+          <ScheduleRunsFilters
+            runs={runs}
+            trigger={trigger}
+            status={status}
+            onTriggerChange={setTrigger}
+            onStatusChange={setStatus}
+          />
+        )}
         {runs.length === 0 ? (
           <Box sx={styles.empty}>
             <EventNoteOutlinedIcon sx={styles.emptyIcon} />
@@ -128,7 +143,7 @@ const ScheduleRunsCard = memo(
             component="ul"
             sx={styles.list}
           >
-            {runs.map(run => (
+            {shownRuns.map(run => (
               <ScheduleRunCard
                 key={`${run.isDraftRun ? 'draft' : 'saved'}-${run.id}`}
                 run={run}
@@ -152,15 +167,14 @@ ScheduleRunsCard.displayName = 'ScheduleRunsCard';
 
 /** @type {MuiSx} */
 const scheduleRunsCardStyles = () => ({
-  root: ({ palette }) => ({
+  root: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
     padding: '0 0 1.5rem',
-    borderLeft: `0.0625rem solid ${palette.border.lines}`,
     scrollMarginTop: '4.5rem',
     outline: 'none',
-  }),
+  },
   header: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
