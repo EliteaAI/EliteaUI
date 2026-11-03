@@ -3,6 +3,7 @@ import { memo, useCallback, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { ScheduleMandateConsent } from '@/[fsd]/features/owner-consent';
+import { GovernanceReadinessCard } from '@/[fsd]/features/project-governance';
 import {
   ScheduleEnabledSwitch,
   ScheduleRowActions,
@@ -106,6 +107,15 @@ const EntityScheduleCard = memo(props => {
         isOwner={isYou}
         sx={styles.consent}
       />
+      {/* (#7269) the owner's Save card: the mandate, its grants and consent this schedule still needs */}
+      {isYou && (
+        <GovernanceReadinessCard
+          entityKind="schedule"
+          entityId={row.id}
+          testId={`${testId}-readiness-${row.id}`}
+          sx={styles.readiness}
+        />
+      )}
       <Box sx={styles.footer}>
         {allowed?.includes('edit') && (
           <Button.BaseBtn
@@ -199,6 +209,12 @@ const entityScheduleCardStyles = () => ({
   // the owner's consent when the schedule acts with their Microsoft sign-in; empty otherwise
   consent: {
     gridArea: 'consent',
+    minWidth: 0,
+  },
+  // (#7269) what the schedule still needs to run governed for its owner: no area of the template, so the card takes a
+  // row of its own (the full width, after the others) only when it renders; with nothing to show nothing is there
+  readiness: {
+    gridColumn: '1 / -1',
     minWidth: 0,
   },
   footer: {
