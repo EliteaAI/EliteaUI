@@ -303,6 +303,12 @@ const ScheduleForm = memo(props => {
                 sx={sidePanel && styles.split}
               >
                 <Grid size={{ xs: 12, lg: sidePanel ? 6 : 12 }}>
+                  <ScheduleSettingsHeader
+                    schedule={schedule}
+                    enabled={values.enabled}
+                    readOnly={readOnly}
+                    onEnabledChange={handleEnabledChange}
+                  />
                   <Box
                     component="form"
                     noValidate
@@ -315,12 +321,6 @@ const ScheduleForm = memo(props => {
                         variant="error"
                       />
                     )}
-                    <ScheduleSettingsHeader
-                      schedule={schedule}
-                      enabled={values.enabled}
-                      readOnly={readOnly}
-                      onEnabledChange={handleEnabledChange}
-                    />
                     <BasicAccordion
                       showMode={AccordionConstants.AccordionShowMode.LeftMode}
                       accordionSX={styles.accordion}
@@ -380,14 +380,11 @@ export default ScheduleForm;
 
 /** @type {MuiSx} */
 const styles = {
-  // the New Agent form column (CreateAgentForm)
-  root: { order: 1, width: '100%', margin: '0.75rem auto 0', maxWidth: '40.1875rem' },
-  // the ConfigurationTab grid padding
-  split: { padding: '0 1.5rem 1.5rem' },
-  sidePanel: { order: 2, paddingTop: '0.75rem' },
+  root: { order: 1, width: '100%', margin: '0.75rem auto 0', padding: '0 1.5rem', maxWidth: '40.1875rem' },
+  split: { padding: '0 0 1.5rem' },
+  sidePanel: { order: 2 },
   // Below lg the panel is stacked under the form; an urgent card goes above it, so it is seen first
   sidePanelFirst: ({ breakpoints }) => ({ order: -1, [breakpoints.up('lg')]: { order: 2 } }),
-  // The header holds one unlabelled tab, so its selected-tab indicator is a stray line under the crumbs
   noTabIndicator: { '& .MuiTabs-indicator': { display: 'none' } },
   accordion: ({ palette }) => ({ background: `${palette.background.default.tertiary} !important` }),
   panel: ({ palette }) => ({

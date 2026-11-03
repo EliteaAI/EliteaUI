@@ -29,15 +29,15 @@ const ScheduleRunCard = memo(props => {
         sx={styles.header}
         onClick={() => onToggle(run.id)}
       >
+        {isLatest && (
+          <Chip
+            data-testid="schedule-run-latest"
+            size="small"
+            label="LATEST"
+            sx={styles.latest}
+          />
+        )}
         <Box sx={styles.line}>
-          {isLatest && (
-            <Chip
-              data-testid="schedule-run-latest"
-              size="small"
-              label="LATEST"
-              sx={styles.latest}
-            />
-          )}
           <Typography
             data-testid="schedule-run-started"
             variant="bodyMedium"
@@ -108,9 +108,10 @@ const scheduleRunCardStyles = (expanded, isLatest) => ({
   status: { marginLeft: 'auto' },
   chevron: { transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' },
   latest: ({ palette }) => ({
+    alignSelf: 'flex-start',
     height: '1.25rem',
     fontSize: '0.6875rem',
-    color: palette.text.secondary,
+    color: palette.secondary.main,
     backgroundColor: palette.background.default.secondary,
   }),
   trigger: ({ palette }) => ({ color: palette.text.secondary, borderColor: palette.border.lines }),

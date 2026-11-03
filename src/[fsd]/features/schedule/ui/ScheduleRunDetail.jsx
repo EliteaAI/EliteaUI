@@ -137,7 +137,7 @@ const scheduleRunDetailStyles = () => ({
   section: { display: 'flex', flexDirection: 'column', gap: '0.25rem' },
   answer: { whiteSpace: 'pre-line' },
   toggle: { alignSelf: 'flex-start' },
-  history: { alignSelf: 'flex-start' },
+  history: { alignSelf: 'flex-start', textDecoration: 'underline', textUnderlineOffset: '0.25rem' },
 });
 
 export default ScheduleRunDetail;
