@@ -5,8 +5,7 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useApplicationDetailsQuery } from '@/api/applications';
 
-import { toRunStatusLabel } from '../helpers/scheduleRuns.helpers';
-import { ALL_FILTER, filterRuns, mergeRuns, toStatusOptions } from '../helpers/scheduleRunsCard.helpers';
+import { mergeRuns } from '../helpers/scheduleRunsCard.helpers';
 import { findWaitingRun } from '../helpers/waitingRun.helpers';
 import {
   useDraftTestRuns,
@@ -17,11 +16,10 @@ import {
 
 const matches = query => window.matchMedia?.(query).matches === true;
 const scrollBehavior = () => (matches('(prefers-reduced-motion: reduce)') ? 'auto' : 'smooth');
-const NO_FILTERS = { trigger: ALL_FILTER, status: ALL_FILTER };
 
 /**
  * The state of the Runs card of the schedule pages: the saved schedule's runs and the Test runs of the unsaved
- * form in one list, the filters, and the one run that is open. A new page has no `scheduleId` yet.
+ * form in one list and the one run that is open. A new page has no `scheduleId` yet.
  * Test runs that were already on the server when the page opened stay out of the card (see `mergeRuns`).
  */
 export const useScheduleRunsView = (scheduleId, applicationId) => {
@@ -34,7 +32,6 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
   const linkedConversationId = useSearchParams()[0].get('history_run_id');
   // undefined: nothing chosen yet, so the notice link decides; null: all cards closed
   const [chosenRunId, setChosenRunId] = useState();
-  const [filters, setFilters] = useState(NO_FILTERS);
   const cardRef = useRef(null);
 
   // The draft runs of an earlier visit are not part of this page: the newest id seen at the first load is the
@@ -64,8 +61,6 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [savedRuns, draftRuns, applicationId, draftLoaded],
   );
-  const shownRuns = useMemo(() => filterRuns(runs, filters), [runs, filters]);
-  const statusOptions = useMemo(() => toStatusOptions(runs, toRunStatusLabel), [runs]);
   const draftCount = runs.length - savedRuns.length;
   const total = Number.isFinite(savedTotal)
     ? savedTotal + draftCount
@@ -87,8 +82,6 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
   const expandedRunId = chosenRunId === undefined ? (linkedRun?.id ?? findWaitingRun(runs)?.id) : chosenRunId;
 
   const onExpand = useCallback(runId => setChosenRunId(current => (current === runId ? null : runId)), []);
-  const onFilterChange = useCallback((name, value) => setFilters(prev => ({ ...prev, [name]: value })), []);
-  const onClearFilters = useCallback(() => setFilters(NO_FILTERS), []);
 
   // A #runs or history_run_id link brings the card into view once the runs are there
   const hash = useLocation().hash;
@@ -107,15 +100,10 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
 
   return {
     runs,
-    shownRuns,
     total,
     versionNames,
     expandedRunId,
     onExpand,
-    filters,
-    statusOptions,
-    onFilterChange,
-    onClearFilters,
     cardRef,
   };
 };

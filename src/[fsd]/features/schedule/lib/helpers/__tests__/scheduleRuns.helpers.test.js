@@ -56,7 +56,7 @@ describe('status text', () => {
 describe('start time', () => {
   it('shows the start as day, month and 24-hour time', () => {
     const started = '2026-10-14T12:05:00Z';
-    expect(formatRunStarted(started)).toBe(format(new Date(started), 'd MMM, HH:mm'));
+    expect(formatRunStarted(started)).toBe(format(new Date(started), 'MMM d, HH:mm'));
     expect(formatRunStarted(null)).toBe('—');
   });
 });
@@ -89,11 +89,11 @@ describe('test panel values', () => {
   });
 
   it('writes a duration in seconds, or minutes and two-digit seconds, and a dash without one', () => {
-    expect(formatRunDuration(38_000)).toBe('38 s');
-    expect(formatRunDuration(65_400)).toBe('1 m 05 s');
-    expect(formatRunDuration(0)).toBe('0 s');
+    expect(formatRunDuration(38_000)).toBe('38s');
+    expect(formatRunDuration(65_400)).toBe('1m 05s');
+    expect(formatRunDuration(0)).toBe('0s');
     expect(formatRunDuration(null)).toBe('–');
-    expect(describeRunDuration({ duration_ms: 38_000 })).toBe('38 s');
+    expect(describeRunDuration({ duration_ms: 38_000 })).toBe('38s');
     expect(describeRunDuration({ status: 'waiting_for_approval', duration_ms: null })).toBe(
       'Paused until you decide',
     );
@@ -103,21 +103,21 @@ describe('test panel values', () => {
 
   it('joins duration, tokens and cost of the run summary', () => {
     expect(formatRunSummary({ duration_ms: 38_000, tokens: 2140, cost_usd: 0.031 })).toBe(
-      '38 s · 2,140 tokens · $0.0310',
+      '38s · 2,140 tokens · $0.0310',
     );
     // a small run does not read as $0.00 (D4)
     expect(formatRunSummary({ duration_ms: 4000, tokens: 357, cost_usd: 0.001205 })).toBe(
-      '4 s · 357 tokens · $0.0012',
+      '4s · 357 tokens · $0.0012',
     );
     // r2 D2: the recorded run 98 reads $0.0016, not $0.00 and not the rounded-up $0.0017
     expect(formatRunSummary({ duration_ms: 5139, tokens: 447, cost_usd: 0.00161 })).toBe(
-      '5 s · 447 tokens · $0.0016',
+      '5s · 447 tokens · $0.0016',
     );
     expect(formatRunSummary({ cost_usd: 0 })).toBe('');
-    expect(formatRunSummary({ duration_ms: 1000, tokens: 5, cost_usd: 0 })).toBe('1 s · 5 tokens');
+    expect(formatRunSummary({ duration_ms: 1000, tokens: 5, cost_usd: 0 })).toBe('1s · 5 tokens');
     expect(formatRunSummary({ cost_usd: 0.000004 })).toBe('< $0.0001');
     expect(formatRunSummary({ cost_usd: 0.0001 })).toBe('$0.0001');
-    expect(formatRunSummary({ duration_ms: 1000 })).toBe('1 s');
+    expect(formatRunSummary({ duration_ms: 1000 })).toBe('1s');
     expect(formatRunSummary(undefined)).toBe('');
   });
 

@@ -103,17 +103,6 @@ describe('useScheduleRunsView', () => {
     expect(result.current.expandedRunId).toBeNull();
   });
 
-  it('filters by trigger and status and clears the filters', () => {
-    mocks.saved = [waiting, saved];
-    const { result } = setup();
-
-    act(() => result.current.onFilterChange('status', 'success'));
-    expect(result.current.shownRuns.map(run => run.id)).toEqual([1]);
-    expect(result.current.runs).toHaveLength(2);
-    act(() => result.current.onClearFilters());
-    expect(result.current.shownRuns).toHaveLength(2);
-  });
-
   it('keeps the Test runs of an earlier visit out of the card and shows new ones', () => {
     mocks.draft = [testRun(3, '2026-10-20T09:00:00Z')];
     const { result, rerender } = setup();

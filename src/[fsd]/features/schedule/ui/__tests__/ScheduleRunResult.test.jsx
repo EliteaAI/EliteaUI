@@ -42,7 +42,7 @@ describe('ScheduleRunResult', () => {
     renderResult();
 
     expect(screen.getByTestId('schedule-run-status')).toHaveTextContent('Success');
-    expect(screen.getByTestId('schedule-run-summary')).toHaveTextContent('38 s · 2,140 tokens · $0.0300');
+    expect(screen.getByTestId('schedule-run-summary')).toHaveTextContent('38s · 2,140 tokens · $0.0300');
   });
 
   it('has no Open conversation link, even when the run has a conversation', () => {
@@ -92,7 +92,7 @@ describe('ScheduleRunResult', () => {
       overflow: 'hidden',
       textOverflow: 'ellipsis',
     });
-    expect(summary).toHaveAttribute('aria-label', '38 s · 2,140 tokens · $0.0300');
+    expect(summary).toHaveAttribute('aria-label', '38s · 2,140 tokens · $0.0300');
   });
 
   it('clamps the answer to 4 lines, and to 2 lines in a window under 62.5 rem high', () => {

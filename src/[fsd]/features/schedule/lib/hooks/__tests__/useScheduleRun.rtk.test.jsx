@@ -54,6 +54,6 @@ describe('useScheduleRun with the real query cache (r2 D1)', () => {
 
     for (let i = 0; i < 8; i += 1) await act(() => vi.advanceTimersByTimeAsync(2000));
 
-    expect(formatRunSummary(result.current.run.summary)).toBe('5 s · 447 tokens · $0.0016');
+    expect(formatRunSummary(result.current.run.summary)).toBe('5s · 447 tokens · $0.0016');
   });
 });

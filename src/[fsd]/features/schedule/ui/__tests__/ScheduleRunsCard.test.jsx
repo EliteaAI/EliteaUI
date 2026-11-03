@@ -9,7 +9,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import ScheduleRunsCard from '../ScheduleRunsCard';
 
-// the Runs card: header buttons, notes, error banner, filters and the list
+// the Runs card: header buttons, notes, error banner and the list
 
 const mocks = vi.hoisted(() => ({ canRun: true, cardProps: [] }));
 
@@ -28,7 +28,6 @@ vi.mock('../ScheduleRunCard', () => ({
     );
   },
 }));
-vi.mock('../ScheduleRunsFilters', () => ({ default: () => <div data-testid="filters-stub" /> }));
 
 const theme = createTheme(getDesignTokens('light'));
 const saved = { id: 9, allowed_actions: ['run'] };
@@ -36,15 +35,10 @@ const run = (id, extra = {}) => ({ id, status: 'success', trigger: 'manual', ...
 
 const makeView = (runs = [run(2), run(1)], extra = {}) => ({
   runs,
-  shownRuns: runs,
   total: runs.length,
   versionNames: {},
   expandedRunId: null,
   onExpand: vi.fn(),
-  filters: { trigger: '', status: '' },
-  statusOptions: [],
-  onFilterChange: vi.fn(),
-  onClearFilters: vi.fn(),
   ...extra,
 });
 
@@ -107,7 +101,6 @@ describe('ScheduleRunsCard', () => {
     expect(screen.getByTestId('schedule-test-run')).toBeEnabled();
     expect(screen.getByTestId('schedule-runs-note')).not.toHaveTextContent(/Manual/);
     expect(screen.getByText('No runs yet.')).toBeInTheDocument();
-    expect(screen.queryByTestId('filters-stub')).not.toBeInTheDocument();
   });
 
   it('disables Run Now while a run is active', () => {
@@ -142,12 +135,5 @@ describe('ScheduleRunsCard', () => {
 
     renderCard({ schedule: undefined, view: makeView([]), testRunError: 'Test failed' });
     expect(screen.getByText('Test failed')).toBeInTheDocument();
-  });
-
-  it('says so when the filters match no run', () => {
-    renderCard({ view: makeView(undefined, { shownRuns: [] }) });
-
-    expect(screen.getByText('No runs match the filters.')).toBeInTheDocument();
-    expect(screen.getByTestId('filters-stub')).toBeInTheDocument();
   });
 });

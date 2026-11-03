@@ -11,7 +11,6 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { isRunActive, ownerOnlyRunHint } from '../lib/helpers';
 import ScheduleRunCard from './ScheduleRunCard';
-import ScheduleRunsFilters from './ScheduleRunsFilters';
 
 const RUN_NOW_NOTE = 'Run Now runs the saved schedule and is recorded as Manual. It never changes Next run.';
 const TEST_RUN_NOTE =
@@ -37,7 +36,7 @@ const ScheduleRunsCard = memo(
     } = props;
 
     const { checkPermission } = useCheckPermission();
-    const { runs, shownRuns, total, versionNames, expandedRunId, onExpand, filters, statusOptions } = view;
+    const { runs, total, versionNames, expandedRunId, onExpand } = view;
     const hasActiveRun = runs.some(run => isRunActive(run.status));
     const canRunNow = Boolean(schedule?.id) && Boolean(schedule?.allowed_actions?.includes('run'));
     const canTest = checkPermission(PERMISSIONS.schedules.run);
@@ -119,14 +118,6 @@ const ScheduleRunsCard = memo(
             message={runNowError || testRunError}
           />
         )}
-        {runs.length > 0 && (
-          <ScheduleRunsFilters
-            filters={filters}
-            statusOptions={statusOptions}
-            onChange={view.onFilterChange}
-            onClear={view.onClearFilters}
-          />
-        )}
         {runs.length === 0 ? (
           <Typography
             variant="bodyMedium"
@@ -135,20 +126,12 @@ const ScheduleRunsCard = memo(
           >
             No runs yet.
           </Typography>
-        ) : shownRuns.length === 0 ? (
-          <Typography
-            variant="bodyMedium"
-            color="text.secondary"
-            sx={styles.empty}
-          >
-            No runs match the filters.
-          </Typography>
         ) : (
           <Box
             component="ul"
             sx={styles.list}
           >
-            {shownRuns.map(run => (
+            {runs.map(run => (
               <ScheduleRunCard
                 key={`${run.isDraftRun ? 'draft' : 'saved'}-${run.id}`}
                 run={run}

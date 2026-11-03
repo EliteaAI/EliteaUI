@@ -2,7 +2,7 @@ import { compareRunTimestamp, formatRunTimestamp } from '@/[fsd]/entities/run-hi
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings';
 import { ROLES, ToolActionStatus } from '@/common/constants';
 
-const RUN_STARTED_FORMAT = 'd MMM, HH:mm';
+const RUN_STARTED_FORMAT = 'MMM d, HH:mm';
 
 // The labels live in the schedule entity, so the run history list can use them too
 export { toRunStatusLabel, toRunStatusMeta, toWord } from '@/[fsd]/entities/schedule';
@@ -30,8 +30,8 @@ export const formatRunDuration = durationMs => {
   if (durationMs == null) return '–';
   const seconds = Math.round(durationMs / 1000);
   return seconds < 60
-    ? `${seconds} s`
-    : `${Math.floor(seconds / 60)} m ${String(seconds % 60).padStart(2, '0')} s`;
+    ? `${seconds}s`
+    : `${Math.floor(seconds / 60)}m ${String(seconds % 60).padStart(2, '0')}s`;
 };
 
 const NO_DURATION_TEXT = {
