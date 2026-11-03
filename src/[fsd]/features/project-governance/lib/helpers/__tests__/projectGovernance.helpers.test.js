@@ -80,3 +80,28 @@ describe('project governance helpers (EL-7269)', () => {
     expect(H.isValidReference('')).toBe(false);
   });
 });
+
+describe('what a run created (EL-7269)', () => {
+  it('reads the request a governed run filed from its tool output', () => {
+    const output = JSON.stringify({
+      result: {},
+      governance_requests: { entity_kind: 'version', entity_id: 7, filed: [] },
+    });
+    expect(H.governanceRequestOf(output)).toEqual({ entityKind: 'version', entityId: 7 });
+    expect(H.governanceRequestOf({ governance_requests: { entity_kind: 'toolkit', entity_id: 3 } })).toEqual({
+      entityKind: 'toolkit',
+      entityId: 3,
+    });
+    expect(H.governanceRequestOf('plain text')).toBeNull();
+    expect(H.governanceRequestOf('{"governance_requests": {"filed": []}}')).toBeNull();
+  });
+
+  it('says what an item needs and who acts', () => {
+    expect(H.readinessStatus({ state: 'missing', requestable: true })).toBe('To request');
+    expect(H.readinessStatus({ state: 'pending_approval', ref: 'x', escalated: false })).toBe(
+      'Pending approval',
+    );
+    expect(H.readinessStatus({ state: 'missing', requestable: false })).toBe('Needed');
+    expect(H.readinessText({ kind: 'consent', state: 'missing' })).toMatch(/consent/);
+  });
+});

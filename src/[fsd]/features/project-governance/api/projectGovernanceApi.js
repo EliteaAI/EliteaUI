@@ -1,6 +1,9 @@
+import { SCHEDULES_TAG } from '@/[fsd]/entities/schedule/api/scheduleApi';
 import { eliteaApi } from '@/api';
+import { TAG_TYPE_DETAILS_TOOLKITS } from '@/api/toolkits';
 
 const TAG_PROJECT_GOVERNANCE = 'PROJECT_GOVERNANCE';
+export const TAG_GOVERNANCE_READINESS = 'GOVERNANCE_READINESS';
 const LIST_LIMIT = 50;
 
 const project = projectId => encodeURIComponent(projectId);
@@ -10,7 +13,7 @@ const tags = [TAG_PROJECT_GOVERNANCE];
 // references, grants and mandates, in project (default) mode for the project's own admins. The server checks every
 // permission again in the project and answers only while governance is enforced.
 export const projectGovernanceApi = eliteaApi
-  .enhanceEndpoints({ addTagTypes: [TAG_PROJECT_GOVERNANCE] })
+  .enhanceEndpoints({ addTagTypes: [TAG_PROJECT_GOVERNANCE, TAG_GOVERNANCE_READINESS] })
   .injectEndpoints({
     endpoints: build => ({
       getProjectBindings: build.query({
@@ -26,7 +29,7 @@ export const projectGovernanceApi = eliteaApi
           method: 'POST',
           body,
         }),
-        invalidatesTags: tags,
+        invalidatesTags: [TAG_PROJECT_GOVERNANCE, TAG_GOVERNANCE_READINESS],
       }),
       getProjectReferences: build.query({
         query: ({ projectId, state }) => ({
@@ -41,7 +44,7 @@ export const projectGovernanceApi = eliteaApi
           method: 'POST',
           body,
         }),
-        invalidatesTags: tags,
+        invalidatesTags: [TAG_PROJECT_GOVERNANCE, TAG_GOVERNANCE_READINESS],
       }),
       getProjectGrants: build.query({
         query: ({ projectId, state }) => ({
@@ -50,13 +53,40 @@ export const projectGovernanceApi = eliteaApi
         }),
         providesTags: tags,
       }),
+      // (#7269) what an agent or pipeline version, a toolkit or a schedule still needs to run governed for the caller;
+      // read again after a save (the toolkit's and the schedule's own tags) and after a request
+      getGovernanceReadiness: build.query({
+        query: ({ projectId, entityKind, entityId }) => ({
+          url: `/elitea_core/governance_readiness/prompt_lib/${project(projectId)}/${entityKind}/${entityId}`,
+        }),
+        providesTags: (_, _error, { entityKind, entityId }) => [
+          TAG_GOVERNANCE_READINESS,
+          ...(entityKind === 'toolkit' ? [{ type: TAG_TYPE_DETAILS_TOOLKITS, id: entityId }] : []),
+          ...(entityKind === 'schedule' ? [{ type: SCHEDULES_TAG, id: entityId }] : []),
+        ],
+      }),
+      // A member's request: what readiness says is requestable, filed as one batch (keys: those only)
+      requestGovernedSetup: build.mutation({
+        query: ({ projectId, entityKind, entityId, keys }) => ({
+          url: `/elitea_core/governance_requests/prompt_lib/${project(projectId)}`,
+          method: 'POST',
+          body: { entity_kind: entityKind, entity_id: entityId, ...(keys && { keys }) },
+        }),
+        invalidatesTags: [TAG_GOVERNANCE_READINESS, TAG_PROJECT_GOVERNANCE],
+      }),
+      // (#7341) which version of each agent external MCP clients reach in the project
+      getMcpExposedVersions: build.query({
+        query: ({ projectId }) => ({
+          url: `/elitea_core/mcp_exposed_versions/prompt_lib/${project(projectId)}`,
+        }),
+      }),
       projectGrantAction: build.mutation({
         query: ({ projectId, grantId, ...body }) => ({
           url: `/secrets/credential_grant_action/default/${project(projectId)}/${encodeURIComponent(grantId)}`,
           method: 'POST',
           body,
         }),
-        invalidatesTags: tags,
+        invalidatesTags: [TAG_PROJECT_GOVERNANCE, TAG_GOVERNANCE_READINESS],
       }),
       getProjectMandates: build.query({
         query: ({ projectId, state }) => ({
@@ -71,7 +101,7 @@ export const projectGovernanceApi = eliteaApi
           method: 'POST',
           body,
         }),
-        invalidatesTags: tags,
+        invalidatesTags: [TAG_PROJECT_GOVERNANCE, TAG_GOVERNANCE_READINESS],
       }),
     }),
   });
@@ -85,4 +115,7 @@ export const {
   useProjectGrantActionMutation,
   useGetProjectMandatesQuery,
   useProjectMandateActionMutation,
+  useGetGovernanceReadinessQuery,
+  useRequestGovernedSetupMutation,
+  useGetMcpExposedVersionsQuery,
 } = projectGovernanceApi;

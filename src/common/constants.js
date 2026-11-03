@@ -1124,6 +1124,8 @@ export const NotificationType = {
   ScheduleDisabled: 'schedule_disabled',
   ScheduleEditedByAdmin: 'schedule_edited_by_admin',
   ScheduleOwnerChanged: 'schedule_owner_changed',
+  // (#7269) an approved grant on a credential that acts with the owner's Microsoft sign-in needs their consent
+  GovernanceConsentNeeded: 'governance_consent_needed',
   ToolSpendThresholdReached: 'tool_spend_threshold_reached',
   ToolSpendLimitReached: 'tool_spend_limit_reached',
   MemberToolSpendThresholdReached: 'member_tool_spend_threshold_reached',

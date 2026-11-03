@@ -23,6 +23,7 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 
 import GovernanceApproveDialog from './GovernanceApproveDialog';
 import GovernanceRowsTable from './GovernanceRowsTable';
+import GrantAlsoToFields from './GrantAlsoToFields';
 
 const { KINDS } = GovernanceHelpers;
 const G = PERMISSIONS.governance;
@@ -54,6 +55,8 @@ const ProjectGovernanceContent = memo(() => {
   const { toastError, toastInfo, toastSuccess } = useToast();
   const [tab, setTab] = useState('inbox');
   const [approving, setApproving] = useState(null);
+  const [alsoMembers, setAlsoMembers] = useState([]);
+  const [alsoRole, setAlsoRole] = useState('');
 
   const tabs = useMemo(
     () => TABS.filter(item => !item.permission || checkPermission(item.permission)),
@@ -121,20 +124,37 @@ const ProjectGovernanceContent = memo(() => {
   );
 
   const handleApprove = useCallback((kind, row, item) => setApproving({ kind, row, item }), []);
-  const handleApproveClose = useCallback(() => setApproving(null), []);
+  const handleApproveClose = useCallback(() => {
+    setApproving(null);
+    setAlsoMembers([]);
+    setAlsoRole('');
+  }, []);
   const handleApproveSubmit = useCallback(
-    approval =>
-      send(
+    approval => {
+      const batch =
+        approving.kind === KINDS.grant
+          ? {
+              ...(alsoMembers.length && { also_grant_to: alsoMembers }),
+              ...(alsoRole && { also_grant_role: alsoRole }),
+            }
+          : {};
+      return send(
         approving.kind,
         approving.row,
-        GovernanceHelpers.actionBody(approving.kind, approving.row, approving.item.action, approval),
-      ),
-    [approving, send],
+        GovernanceHelpers.actionBody(approving.kind, approving.row, approving.item.action, {
+          ...approval,
+          ...batch,
+        }),
+      );
+    },
+    [alsoMembers, alsoRole, approving, send],
   );
   const handleApproveDone = useCallback(
     outcome => {
       const title = approving ? GovernanceHelpers.rowTitle(approving.kind, approving.row) : '';
       setApproving(null);
+      setAlsoMembers([]);
+      setAlsoRole('');
       if (outcome === 'stale') toastInfo(STALE_TEXT);
       else toastSuccess(`${title}: approved.`);
     },
@@ -191,7 +211,17 @@ const ProjectGovernanceContent = memo(() => {
         onSubmit={handleApproveSubmit}
         onClose={handleApproveClose}
         onDone={handleApproveDone}
-      />
+      >
+        {approving?.kind === KINDS.grant && approving.row.credential?.ownership_class !== 'personal' && (
+          <GrantAlsoToFields
+            members={alsoMembers}
+            onMembersChange={setAlsoMembers}
+            role={alsoRole}
+            onRoleChange={setAlsoRole}
+            excludeUserId={approving.row.subject?.user?.id}
+          />
+        )}
+      </GovernanceApproveDialog>
     </>
   );
 });

@@ -210,3 +210,78 @@ export const inboxItems = lists =>
         String(b.row.created_at ?? b.row.updated_at ?? ''),
       ),
     );
+
+// --- the Save card (#7269 phase 2): what an entity still needs to run governed, in words -------------------------
+
+const WAITING_STATES = ['pending', 'validated', 'pending_approval', 'provisioning', 'draft'];
+
+const ITEM_TEXT = {
+  binding: {
+    missing: 'Its identity is not set up yet',
+    changed: 'It changed since its identity was approved',
+    draft: 'Its identity is a draft',
+    provisioning: 'Its identity is being set up',
+    pending_approval: 'Its identity waits for approval',
+    suspended: 'Its identity is suspended',
+  },
+  reference: {
+    missing: 'Not registered for governed use (your own copy is requested)',
+    needs_value: 'Write your value on your Credentials page',
+    pending: 'Waits for a check and an approval',
+    validated: 'Waits for approval',
+    suspended: 'Suspended',
+    changed: 'Changed since it was approved',
+    not_registrable: 'A value typed into the toolkit: store it as a credential first',
+    other_project: 'A credential of another project',
+    personal_to_another: 'Another member’s personal credential',
+    needs_owner_sign_in: 'Acts with a Microsoft sign-in the schedule does not name',
+  },
+  grant: {
+    missing: 'Not granted yet',
+    pending_approval: 'Waits for approval',
+    suspended: 'Suspended',
+    expired: 'Outside its validity',
+    needs_an_agent_grant: 'Needs a grant to you on an agent that uses it (a project admin grants it)',
+  },
+  mandate: {
+    missing: 'The schedule has no mandate yet',
+    draft: 'The mandate is a draft',
+    pending_approval: 'The mandate waits for approval',
+    suspended: 'The mandate is suspended',
+  },
+  consent: { missing: 'Give your consent on the schedule card' },
+  identity: { unlinked: 'Your account has no linked sign-in: nothing can be granted to you' },
+  permission: { not_permitted: 'You may not use credentials in this project' },
+};
+
+export const readinessText = item =>
+  ITEM_TEXT[item.kind]?.[item.state] ?? (item.kind === 'blocking' ? 'Stops a scheduled run' : item.state);
+
+export const isWaitingItem = item => WAITING_STATES.includes(item.state) && Boolean(item.ref);
+
+// What the row's chip says: who has to act now
+export const readinessStatus = item => {
+  if (isWaitingItem(item)) return item.escalated ? ESCALATED_TEXT : 'Pending approval';
+  if (item.requestable) return 'To request';
+  return 'Needed';
+};
+
+// (#7269 item 13) what a governed run created through the internal MCP and requested for you: the tool output carries
+// `governance_requests: { entity_kind, entity_id, filed, items }`; null when it does not
+export const governanceRequestOf = output => {
+  let value = output;
+  if (typeof value === 'string') {
+    if (!value.includes('governance_requests')) return null;
+    try {
+      value = JSON.parse(value);
+    } catch {
+      return null;
+    }
+  }
+  const found = value && typeof value === 'object' ? value.governance_requests : null;
+  return found && found.entity_kind && Number.isInteger(found.entity_id)
+    ? { entityKind: found.entity_kind, entityId: found.entity_id }
+    : null;
+};
+
+export const requestableKeys = items => (items || []).filter(item => item.requestable).map(item => item.key);

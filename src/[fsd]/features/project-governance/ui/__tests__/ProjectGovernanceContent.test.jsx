@@ -49,6 +49,43 @@ vi.mock('@/[fsd]/shared/lib/hooks', async importOriginal => ({
   useTextOverflow: () => ({ textRef: { current: null }, isOverflowing: false }),
 }));
 vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({ useToast: () => api.toast }));
+vi.mock('@/[fsd]/shared/ui/select', () => ({
+  SingleSelect: props => (
+    <select
+      data-testid={props['data-testid']}
+      multiple={props.multiple}
+      value={props.value}
+      onChange={event =>
+        props.onChange({
+          target: {
+            value: props.multiple
+              ? [...event.target.selectedOptions].map(o => Number(o.value))
+              : event.target.value,
+          },
+        })
+      }
+    >
+      {props.options.map(option => (
+        <option
+          key={option.value}
+          value={option.value}
+        >
+          {option.label}
+        </option>
+      ))}
+    </select>
+  ),
+}));
+vi.mock('@/api/admin', () => ({
+  useUserListQuery: () => ({
+    data: {
+      rows: [
+        { id: 5, email: 'member@x' },
+        { id: 8, email: 'other@x' },
+      ],
+    },
+  }),
+}));
 vi.mock('@/hooks/useCheckPermission', () => ({
   default: () => ({ checkPermission: permission => !permission || api.permissions.has(permission) }),
 }));
@@ -167,5 +204,19 @@ describe('project governance view (EL-7269)', () => {
     await waitFor(() =>
       expect(api.grantAction).toHaveBeenCalledWith({ projectId: 12, grantId: 'g1', action: 'revoke' }),
     );
+  });
+
+  it('grants the same use to a project role with the approval (batch granting)', async () => {
+    wrap();
+    fireEvent.click(screen.getByTestId('governance-action-approve-g1'));
+    fireEvent.change(screen.getByTestId('governance-approve-ref'), { target: { value: 'CHG-1' } });
+    fireEvent.change(screen.getByTestId('governance-approve-policy'), { target: { value: 'rev-1' } });
+    fireEvent.change(screen.getByTestId('governance-also-grant-role'), { target: { value: 'editor' } });
+    fireEvent.click(screen.getByTestId('governance-approve-submit'));
+    await waitFor(() =>
+      expect(api.grantAction).toHaveBeenCalledWith(expect.objectContaining({ also_grant_role: 'editor' })),
+    );
+    // the member who asked is not offered again
+    expect(screen.queryByText('member@x', { selector: 'option' })).toBeNull();
   });
 });

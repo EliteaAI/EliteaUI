@@ -112,6 +112,12 @@ export const resolveHref = (eventType, meta, projectId) => {
       return runId ? `${url}?${SearchParams.HistoryRunId}=${encodeURIComponent(runId)}` : url;
     }
 
+    // (#7269) the owner gives consent where it applies: on the schedule card, or for their scoped tokens
+    case NotificationType.GovernanceConsentNeeded:
+      return meta?.target === 'tokens'
+        ? `${base}${RouteDefinitions.SettingsWithTab.replace(':tab', 'tokens')}`
+        : `${base}/${projectId}${RouteDefinitions.Schedules}`;
+
     default:
       return null;
   }

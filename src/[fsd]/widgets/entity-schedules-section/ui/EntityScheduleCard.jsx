@@ -3,6 +3,7 @@ import { memo, useCallback, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { ScheduleMandateConsent } from '@/[fsd]/features/owner-consent';
+import GovernanceReadinessCard from '@/[fsd]/features/project-governance/ui/GovernanceReadinessCard';
 import {
   ScheduleEnabledSwitch,
   ScheduleRowActions,
@@ -106,6 +107,14 @@ const EntityScheduleCard = memo(props => {
           versionId={row.version_id}
           isOwner={isYou}
         />
+        {/* (#7269) the owner's Save card: the mandate, its grants and consent this schedule still needs */}
+        {isYou && (
+          <GovernanceReadinessCard
+            entityKind="schedule"
+            entityId={row.id}
+            testId={`${testId}-readiness-${row.id}`}
+          />
+        )}
       </Box>
       <Box sx={styles.footer}>
         {allowed?.includes('edit') && (

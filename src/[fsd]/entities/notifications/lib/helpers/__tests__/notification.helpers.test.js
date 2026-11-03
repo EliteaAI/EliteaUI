@@ -212,3 +212,14 @@ describe('resolveHref for schedule notifications', () => {
     expect(resolveHref(NotificationType.ScheduleRunFailed, undefined, 5)).toBeNull();
   });
 });
+
+describe('resolveHref for a governance consent notice (EL-7269)', () => {
+  it('opens the schedules of the project, or the personal tokens page', () => {
+    expect(resolveHref(NotificationType.GovernanceConsentNeeded, { target: 'schedules' }, 25)).toBe(
+      `${BASE}/25/settings/schedules`,
+    );
+    expect(resolveHref(NotificationType.GovernanceConsentNeeded, { target: 'tokens' }, 25)).toBe(
+      `${BASE}/settings/tokens`,
+    );
+  });
+});
