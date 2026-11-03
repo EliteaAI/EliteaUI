@@ -208,8 +208,6 @@ const useSaveVersion = ({ isAgent = false } = {}) => {
     resetForm?.({
       values: mergedData,
     });
-    // (#7269) the Save card reads again what the saved version still needs to run governed
-    dispatch(eliteaApi.util.invalidateTags(['GOVERNANCE_READINESS']));
 
     return savedVersionDetails;
   }, [

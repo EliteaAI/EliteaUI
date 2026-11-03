@@ -17,6 +17,14 @@ const TAG_TYPE_APPLICATION_ICONS = 'TAG_TYPE_APPLICATION_ICONS';
 const TAG_TYPE_DOCUMENT_LOADERS = 'TAG_TYPE_DOCUMENT_LOADERS';
 const apiSlicePath = '/elitea_core';
 
+// (#7269) What a version or a toolkit still needs to run governed (the Save card's readiness): read again after every
+// successful change of a version (its settings, tools or relations) or of a toolkit, whichever page saved it
+export const TAG_TYPE_GOVERNANCE_READINESS = 'GOVERNANCE_READINESS';
+export const withReadiness = tags => (result, error, arg) => [
+  ...(typeof tags === 'function' ? tags(result, error, arg) : tags),
+  ...(error ? [] : [TAG_TYPE_GOVERNANCE_READINESS]),
+];
+
 // "545" and 545 must address the same entry, or a save that updates one leaves the other stale
 const normalizeId = value => (typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : value);
 
@@ -64,7 +72,7 @@ const patchApplicationListCache = (state, dispatch, endpointName, applicationId)
 export const apiSlice = eliteaApi
   .enhanceEndpoints({
     //
-    addTagTypes: [TAG_TYPE_APPLICATION_DETAILS, 'PipelineTrigger'],
+    addTagTypes: [TAG_TYPE_APPLICATION_DETAILS, 'PipelineTrigger', TAG_TYPE_GOVERNANCE_READINESS],
   })
   .injectEndpoints({
     endpoints: build => ({
@@ -274,7 +282,7 @@ export const apiSlice = eliteaApi
             body,
           };
         },
-        invalidatesTags: [TAG_TYPE_APPLICATIONS],
+        invalidatesTags: withReadiness([TAG_TYPE_APPLICATIONS]),
       }),
       deleteApplication: build.mutation({
         query: ({ projectId, applicationId }) => ({
@@ -307,7 +315,7 @@ export const apiSlice = eliteaApi
             method: 'DELETE',
           };
         },
-        invalidatesTags: [TAG_TYPE_TOTAL_APPLICATIONS, TAG_TYPE_APPLICATIONS],
+        invalidatesTags: withReadiness([TAG_TYPE_TOTAL_APPLICATIONS, TAG_TYPE_APPLICATIONS]),
       }),
       publishApplication: build.mutation({
         query: ({ projectId, versionId, body }) => {
@@ -465,7 +473,7 @@ export const apiSlice = eliteaApi
             body,
           };
         },
-        invalidatesTags: [],
+        invalidatesTags: withReadiness([]),
         onQueryStarted: async ({ projectId, applicationId }, { dispatch, getState, queryFulfilled }) => {
           try {
             const { data: newVersion } = await queryFulfilled;
@@ -497,7 +505,7 @@ export const apiSlice = eliteaApi
             body,
           };
         },
-        invalidatesTags: [TAG_TYPE_APPLICATIONS], // Only invalidate applications list, not details
+        invalidatesTags: withReadiness([TAG_TYPE_APPLICATIONS]), // Only invalidate applications list, not details
         onQueryStarted: async (args, { dispatch, queryFulfilled }) => {
           // Optimistic update for version fields (e.g., conversation starters, description, etc.)
           const { projectId, applicationId, versionId, ...body } = args;
@@ -807,10 +815,10 @@ export const apiSlice = eliteaApi
             body,
           };
         },
-        invalidatesTags: (result, error, { projectId, application_id, version_id }) => [
+        invalidatesTags: withReadiness((result, error, { projectId, application_id, version_id }) => [
           // Invalidate validation cache to trigger immediate validation after adding agent/pipeline
           { type: 'ApplicationValidation', id: `${projectId}-${application_id}-${version_id}` },
-        ],
+        ]),
       }),
       getRecommendations: build.query({
         query: ({ projectId, limit, days }) => ({

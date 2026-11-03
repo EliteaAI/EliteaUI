@@ -1,9 +1,11 @@
 import { SCHEDULES_TAG } from '@/[fsd]/entities/schedule/api/scheduleApi';
 import { eliteaApi } from '@/api';
+import { TAG_TYPE_GOVERNANCE_READINESS } from '@/api/applications';
 import { TAG_TYPE_DETAILS_TOOLKITS } from '@/api/toolkits';
 
 const TAG_PROJECT_GOVERNANCE = 'PROJECT_GOVERNANCE';
-export const TAG_GOVERNANCE_READINESS = 'GOVERNANCE_READINESS';
+// read again by every successful version or toolkit change (``withReadiness`` in the applications and toolkits APIs)
+export const TAG_GOVERNANCE_READINESS = TAG_TYPE_GOVERNANCE_READINESS;
 const LIST_LIMIT = 50;
 
 const project = projectId => encodeURIComponent(projectId);
