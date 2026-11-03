@@ -43,12 +43,14 @@ const ScheduleLockedEntity = memo(props => {
         {editing
           ? `To change the ${lowerLabel}, create a new schedule in `
           : `To schedule a different ${lowerLabel}, create the schedule in `}
-        <Link
+        <Box
+          component={Link}
           to={RouteDefinitions.Schedules}
           data-testid="schedule-locked-entity-link"
+          sx={styles.link}
         >
           Settings / Schedules
-        </Link>
+        </Box>
         .
       </Typography>
     </Box>
@@ -68,6 +70,7 @@ const scheduleLockedEntityStyles = () => ({
     pointerEvents: 'none',
   }),
   hint: { display: 'block', marginTop: '0.25rem' },
+  link: ({ palette }) => ({ color: palette.text.secondary, textDecoration: 'underline' }),
 });
 
 export default ScheduleLockedEntity;
