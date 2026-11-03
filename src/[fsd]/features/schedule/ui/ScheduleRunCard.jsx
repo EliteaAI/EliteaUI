@@ -15,7 +15,7 @@ const ScheduleRunCard = memo(props => {
     ...run,
     version_label: run.version_label ?? versionNames[run.version_id],
   });
-  const styles = scheduleRunCardStyles(expanded);
+  const styles = scheduleRunCardStyles(expanded, isLatest);
 
   return (
     <Box
@@ -86,11 +86,11 @@ const ScheduleRunCard = memo(props => {
 ScheduleRunCard.displayName = 'ScheduleRunCard';
 
 /** @type {MuiSx} */
-const scheduleRunCardStyles = expanded => ({
+const scheduleRunCardStyles = (expanded, isLatest) => ({
   root: ({ palette }) => ({
     listStyle: 'none',
     borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.border.lines}`,
+    border: `0.0625rem solid ${expanded && isLatest ? palette.secondary.main : palette.border.lines}`,
     backgroundColor: palette.background.surface.interactive.default,
   }),
   header: {

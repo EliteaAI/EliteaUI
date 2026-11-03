@@ -91,7 +91,7 @@ describe('ScheduleRunsCard', () => {
     expect(onRunNow).toHaveBeenCalledTimes(1);
     expect(onTestRun).not.toHaveBeenCalled();
     expect(screen.queryByTestId('schedule-test-run')).not.toBeInTheDocument();
-    expect(screen.getByTestId('schedule-runs-note')).toHaveTextContent(/recorded as Manual/);
+    expect(screen.getByTestId('schedule-run-now')).toHaveAttribute('title', expect.stringMatching(/Manual/));
   });
 
   it('shows only Test Run for a new schedule', () => {
@@ -99,8 +99,11 @@ describe('ScheduleRunsCard', () => {
 
     expect(screen.queryByTestId('schedule-run-now')).not.toBeInTheDocument();
     expect(screen.getByTestId('schedule-test-run')).toBeEnabled();
-    expect(screen.getByTestId('schedule-runs-note')).not.toHaveTextContent(/Manual/);
-    expect(screen.getByText('No runs yet.')).toBeInTheDocument();
+    expect(screen.getByTestId('schedule-test-run')).not.toHaveAttribute(
+      'title',
+      expect.stringMatching(/Manual/),
+    );
+    expect(screen.getByText('No runs yet')).toBeInTheDocument();
   });
 
   it('disables Run Now while a run is active', () => {

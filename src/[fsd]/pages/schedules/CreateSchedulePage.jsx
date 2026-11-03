@@ -82,6 +82,7 @@ const CreateSchedulePage = props => {
       {form => (
         <>
           <ScheduleSettingsSection
+            alignStart
             value={form.values.cron}
             onChange={cron => form.setFieldValue('cron', cron)}
             sourceCron={DEFAULT_SCHEDULE_CRON}

@@ -133,6 +133,7 @@ const ScheduleDetailPage = memo(props => {
       {({ values: formValues, setFieldValue, fieldError }) => (
         <>
           <ScheduleSettingsSection
+            alignStart
             value={convertCronTimezone(formValues.cron, formValues.timezone, browserTimezone)}
             onChange={cron => {
               setFieldValue('cron', cron);

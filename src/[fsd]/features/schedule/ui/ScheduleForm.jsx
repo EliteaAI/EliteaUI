@@ -254,7 +254,9 @@ const ScheduleForm = memo(props => {
           disabled={readOnly}
           sx={styles.section}
         >
-          {children?.({ values, setFieldValue, dirty: formik.dirty, setValues, fieldError })}
+          <Box sx={styles.panel}>
+            {children?.({ values, setFieldValue, dirty: formik.dirty, setValues, fieldError })}
+          </Box>
           <ScheduleApprovalSection
             rule={values.approval_rule}
             ruleChanged={save.ruleChanged}
@@ -388,6 +390,14 @@ const styles = {
   // The header holds one unlabelled tab, so its selected-tab indicator is a stray line under the crumbs
   noTabIndicator: { '& .MuiTabs-indicator': { display: 'none' } },
   accordion: ({ palette }) => ({ background: `${palette.background.default.tertiary} !important` }),
+  panel: ({ palette }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    padding: '1rem',
+    borderRadius: '0.5rem',
+    backgroundColor: palette.background.default.tertiary,
+  }),
   // A fieldset, so `disabled` reaches every input inside; its default border, margin and min width are reset
   section: {
     display: 'flex',

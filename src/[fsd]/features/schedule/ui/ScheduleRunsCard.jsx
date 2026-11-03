@@ -1,5 +1,6 @@
 import { forwardRef, memo } from 'react';
 
+import EventNoteOutlinedIcon from '@mui/icons-material/EventNoteOutlined';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
 import { Box, Typography } from '@mui/material';
@@ -12,14 +13,13 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 import { isRunActive, ownerOnlyRunHint } from '../lib/helpers';
 import ScheduleRunCard from './ScheduleRunCard';
 
-const RUN_NOW_NOTE = 'Run Now runs the saved schedule and is recorded as Manual. It never changes Next run.';
-const TEST_RUN_NOTE =
-  'Test Run runs the form as it is now, without saving it. It never changes Last run or Next run.';
-
 /**
  * The "Runs (count)" card right of the schedule form. `view` is the result of `useScheduleRunsView`.
  * Run Now needs a saved schedule; Test Run is for a new, unsaved one and gives way to Run Now after Save. `schedule` is empty on the Create page.
  */
+const RUN_NOW_NOTE = 'Runs the saved schedule and records it as Manual. Next run does not change.';
+const TEST_RUN_NOTE = 'Runs the form as it is now, without saving. Last run and Next run do not change.';
+
 const ScheduleRunsCard = memo(
   forwardRef((props, ref) => {
     const {
@@ -73,6 +73,7 @@ const ScheduleRunsCard = memo(
             {schedule?.id && (
               <BaseBtn
                 data-testid="schedule-run-now"
+                title={RUN_NOW_NOTE}
                 variant={BUTTON_VARIANTS.elitea}
                 color="secondary"
                 startIcon={<PlayArrowIcon />}
@@ -85,6 +86,7 @@ const ScheduleRunsCard = memo(
             {!schedule?.id && (
               <BaseBtn
                 data-testid="schedule-test-run"
+                title={TEST_RUN_NOTE}
                 variant={BUTTON_VARIANTS.elitea}
                 color="primary"
                 startIcon={<ScienceOutlinedIcon />}
@@ -96,13 +98,6 @@ const ScheduleRunsCard = memo(
             )}
           </Box>
         </Box>
-        <Typography
-          variant="bodySmall"
-          color="text.secondary"
-          data-testid="schedule-runs-note"
-        >
-          {schedule?.id ? RUN_NOW_NOTE : TEST_RUN_NOTE}
-        </Typography>
         {runHint && (
           <Typography
             variant="bodySmall"
@@ -119,13 +114,15 @@ const ScheduleRunsCard = memo(
           />
         )}
         {runs.length === 0 ? (
-          <Typography
-            variant="bodyMedium"
-            color="text.secondary"
-            sx={styles.empty}
-          >
-            No runs yet.
-          </Typography>
+          <Box sx={styles.empty}>
+            <EventNoteOutlinedIcon sx={styles.emptyIcon} />
+            <Typography
+              variant="bodyMedium"
+              color="text.secondary"
+            >
+              No runs yet
+            </Typography>
+          </Box>
         ) : (
           <Box
             component="ul"
@@ -174,7 +171,14 @@ const scheduleRunsCardStyles = () => ({
   count: ({ palette }) => ({ color: palette.text.secondary, fontWeight: 400 }),
   actions: { display: 'flex', gap: '0.5rem', flexWrap: 'wrap' },
   list: { listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' },
-  empty: { padding: '1rem 0', textAlign: 'center' },
+  empty: {
+    padding: '2rem 0',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.75rem',
+  },
+  emptyIcon: ({ palette }) => ({ fontSize: '2.5rem', color: palette.icon.default }),
 });
 
 export default ScheduleRunsCard;
