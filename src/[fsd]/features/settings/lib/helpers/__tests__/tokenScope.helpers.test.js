@@ -1,12 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  SCOPED_TOKEN_MAX_TTL_DAYS,
-  expiryDays,
-  scopeError,
-  scopeLabel,
-  scopePayload,
-} from '../tokenScope.helpers';
+import { SCOPED_TOKEN_MAX_TTL_DAYS } from '../../constants/tokenScope.constants';
+import { expiryDays, scopeError, scopeLabel, scopePayload } from '../tokenScope.helpers';
 
 describe('tokenScope.helpers (#7336)', () => {
   it('counts the expiry in days, "never" as no end', () => {

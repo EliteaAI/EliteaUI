@@ -2,13 +2,12 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, FormControlLabel, Typography } from '@mui/material';
 
-import * as TokenScopeHelpers from '@/[fsd]/features/settings/lib/helpers/tokenScope.helpers';
+import * as TokenScopeConstants from '@/[fsd]/features/settings/lib/constants/tokenScope.constants';
 import { Button, Checkbox } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useProjectListQuery } from '@/api/project';
 
-// "Restrict this token" (#7336): collapsed by default; expanded, the projects and the operations of the token
 const TokenScopeFields = memo(props => {
   const { restricted, projects, operations, error, onToggle, onProjectsChange, onOperationsChange } = props;
   const { data: projectList = [] } = useProjectListQuery(undefined, { skip: !restricted });
@@ -55,10 +54,10 @@ const TokenScopeFields = memo(props => {
             showOptionIcon={false}
           />
           <Box sx={styles.operations}>
-            {TokenScopeHelpers.TOKEN_OPERATIONS.map(operation => (
+            {TokenScopeConstants.TOKEN_OPERATIONS.map(operation => (
               <FormControlLabel
                 key={operation}
-                label={TokenScopeHelpers.OPERATION_LABELS[operation]}
+                label={TokenScopeConstants.TOKEN_OPERATION_LABELS[operation]}
                 control={
                   <Checkbox.BaseCheckbox
                     size="small"
@@ -76,7 +75,7 @@ const TokenScopeFields = memo(props => {
             data-testid="create-personal-token-scope-hint"
           >
             {error ||
-              `A restricted token works only in these projects, for these operations, and expires within ${TokenScopeHelpers.SCOPED_TOKEN_MAX_TTL_DAYS} days.`}
+              `A restricted token works only in these projects, for these operations, and expires within ${TokenScopeConstants.SCOPED_TOKEN_MAX_TTL_DAYS} days.`}
           </Typography>
         </Box>
       )}

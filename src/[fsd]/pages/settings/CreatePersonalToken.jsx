@@ -10,6 +10,7 @@ import {
   DrawerPage,
   DrawerPageHeader,
   GeneratedTokenDialog,
+  TokenScopeConstants,
   TokenScopeFields,
   TokenScopeHelpers,
 } from '@/[fsd]/features/settings';
@@ -38,10 +39,9 @@ const CreatePersonalToken = memo(() => {
   const [createToken, { isLoading: isGenerating }] = useTokenCreateMutation();
   const { refetch } = useTokenListQuery({ skip: true });
   const { toastError } = useToast();
-  // A restricted (scoped) token (#7336): projects, operations, and an expiry of at most 90 days
   const [restricted, setRestricted] = useState(false);
   const [scopeProjects, setScopeProjects] = useState([]);
-  const [scopeOperations, setScopeOperations] = useState(TokenScopeHelpers.DEFAULT_TOKEN_OPERATIONS);
+  const [scopeOperations, setScopeOperations] = useState(TokenScopeConstants.DEFAULT_TOKEN_OPERATIONS);
 
   const formik = useFormik({
     initialValues: {
@@ -68,7 +68,7 @@ const CreatePersonalToken = memo(() => {
         setData(tokenData);
         setOpenTokenDialog(true);
         await refetch();
-      } else if (restricted) {
+      } else {
         toastError(buildErrorMessage(error));
       }
     },
@@ -80,9 +80,12 @@ const CreatePersonalToken = memo(() => {
         name: '',
         measure: EXPIRATION_MEASURES[1],
         expiration: DEFAULT_TOKEN_EXPIRATION_DAYS,
-      }) !== JSON.stringify(formik.values)
+        restricted: false,
+        scopeProjects: [],
+        scopeOperations: TokenScopeConstants.DEFAULT_TOKEN_OPERATIONS,
+      }) !== JSON.stringify({ ...formik.values, restricted, scopeProjects, scopeOperations })
     );
-  }, [formik.values]);
+  }, [formik.values, restricted, scopeProjects, scopeOperations]);
 
   const onCancel = useCallback(() => {
     setWantToCancel(true);
