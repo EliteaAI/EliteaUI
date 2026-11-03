@@ -122,13 +122,15 @@ const CreatePersonalToken = memo(() => {
   const isGenerateDisabled =
     !formik.values.name || nameHasError || isGenerating || !!data.uuid || Boolean(scopeError);
 
+  const { setFieldValue } = formik;
+  const expirationMeasure = formik.values.measure;
   const onToggleRestricted = useCallback(() => {
     // a restricted token always expires: "never" becomes the default number of days
-    if (!restricted && formik.values.measure === EXPIRATION_MEASURES[0]) {
-      formik.setFieldValue('measure', EXPIRATION_MEASURES[1]);
+    if (!restricted && expirationMeasure === EXPIRATION_MEASURES[0]) {
+      setFieldValue('measure', EXPIRATION_MEASURES[1]);
     }
     setRestricted(value => !value);
-  }, [formik, restricted]);
+  }, [expirationMeasure, restricted, setFieldValue]);
 
   const getNameHelperText = useCallback(() => {
     if (formik.touched.name && formik.errors.name) {
