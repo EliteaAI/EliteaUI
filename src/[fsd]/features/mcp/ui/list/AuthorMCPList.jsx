@@ -17,6 +17,8 @@ import CardList from '@/components/CardList';
 import RightInfoPanel from '@/components/RightInfoPanel';
 import { getQueryStatuses } from '@/utils/getQueryStatus';
 
+import McpExposedVersions from './McpExposedVersions';
+
 const AuthorMCPList = memo(props => {
   const { rightPanelOffset, statuses } = props;
   const viewMode = useViewMode();
@@ -81,7 +83,12 @@ const AuthorMCPList = memo(props => {
         isLoading={isToolkitsLoading || isToolkitsFirstFetching}
         isError={isToolkitsError}
         rightPanelOffset={rightPanelOffset}
-        rightPanelContent={<RightInfoPanel tagList={tagList} />}
+        rightPanelContent={
+          <>
+            <McpExposedVersions />
+            <RightInfoPanel tagList={tagList} />
+          </>
+        }
         renderCard={renderCard}
         isLoadingMore={isToolkitsFetching}
         loadMoreFunc={loadMoreItems}

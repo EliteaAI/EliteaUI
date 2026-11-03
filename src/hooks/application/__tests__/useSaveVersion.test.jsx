@@ -37,7 +37,12 @@ vi.mock('@/api/applications', () => ({
   useApplicationEditMutation: () => [mocks.saveFn, { isLoading: false, reset: vi.fn() }],
 }));
 vi.mock('@/api/configurations', () => ({ useListModelsQuery: () => ({ data: { items: [] } }) }));
-vi.mock('@/api/eliteaApi', () => ({ eliteaApi: { util: { updateQueryData: mocks.updateQueryData } } }));
+vi.mock('@/api/eliteaApi', () => ({
+  // (#7269) a save invalidates the Save card's readiness
+  eliteaApi: {
+    util: { updateQueryData: mocks.updateQueryData, invalidateTags: tags => ({ type: 'invalidate', tags }) },
+  },
+}));
 vi.mock('@/pages/Pipelines/useSavePipeline', () => ({
   default: () => ({ isFromPipeline: true, yamlCode: 'nodes: []\n' }),
   calculateNodesAndEdges: () => ({ nodes: [], edges: [] }),

@@ -5,6 +5,7 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
 
 import PipelineEditorWorkspace from './PipelineEditorWorkspace';
+import PipelineReadiness from './PipelineReadiness';
 
 const PipelineEditTab = memo(props => {
   const {
@@ -43,6 +44,7 @@ const PipelineEditTab = memo(props => {
   return (
     <>
       <DirtyDetector setDirty={setDirty} />
+      <PipelineReadiness />
       <PipelineEditorWorkspace
         applicationId={applicationId}
         setYamlDirty={setYamlDirty}
