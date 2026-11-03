@@ -43,11 +43,11 @@ const RISK_STATES_WITHOUT_SAVE = [
  * `onSubmit(body)` returns a promise of the save answer and rejects with the API error;
  * `onSaved(answer)` runs at once after a save without warnings, else when the warnings dialog closes.
  * `schedule` turns on edit mode: read-only Owner and update body. `entityName` names the page.
- * `sidePanel({ values, onRunNow, runNowPending, runNowError, onTestRun, testRunPending, testRunError })` renders a card right of the form, as the
- * Agents editor puts its chat; its `onRunNow` saves a changed form, then calls the `onRunNow()` prop
- * (a promise) in the place of `onSaved` at the same post-save point. `onTestRun` runs the unsaved form through
- * the `onDraftTestRun(body)` prop (a promise) and saves nothing. What `sidePanel` returns (the panel and
- * the Runs section under it) fills the right column from lg, and sits under the form below it.
+ * `sidePanel({ values, onRunNow, runNowPending, runNowError, onTestRun, testRunPending, testRunError })`
+ * renders a card right of the form, as the Agents editor puts its chat. `onRunNow` saves a changed form, then
+ * calls the `onRunNow()` prop at the post-save point. `onTestRun` runs the unsaved form through the
+ * `onDraftTestRun(body)` prop and saves nothing. The card fills the right column from lg, and sits under the
+ * form below it.
  * `sidePanelFirst` puts the panel above the form below lg, for a card the owner must see at once.
  * `headerActions` (a node) sits in the header bar after Cancel, for example the page's 3-dots menu.
  */
@@ -89,15 +89,7 @@ const ScheduleForm = memo(props => {
     scheduleId: schedule?.id,
     approvalRule: values.approval_rule,
   });
-  const save = useScheduleSave({
-    formik,
-    riskCheck,
-    schedule,
-    onSubmit,
-    onSaved,
-    onRunNow,
-    onDraftTestRun,
-  });
+  const save = useScheduleSave({ formik, riskCheck, schedule, onSubmit, onSaved, onRunNow, onDraftTestRun });
   // Without edit in allowed_actions the server refuses a save, so the form only shows the values
   const readOnly = Array.isArray(schedule?.allowed_actions) && !schedule.allowed_actions.includes('edit');
   const riskBlocksSave = RISK_STATES_WITHOUT_SAVE.includes(riskCheck.status);
