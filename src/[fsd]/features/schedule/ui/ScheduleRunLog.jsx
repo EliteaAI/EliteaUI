@@ -13,7 +13,8 @@ const FOLLOW_THRESHOLD_PX = 8;
 const PREVIEW_LENGTH = 120;
 
 // The full tool result of a long or multi-line result, behind a toggle (the API sends it untruncated)
-const ToolResult = memo(({ summary }) => {
+const ToolResult = memo(props => {
+  const { summary } = props;
   const [open, setOpen] = useState(false);
   const styles = scheduleRunLogStyles();
 

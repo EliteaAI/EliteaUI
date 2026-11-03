@@ -22,6 +22,7 @@ const PAST_DATE_MESSAGE = 'Pick today or a later date';
  */
 const StopOnDateField = memo(props => {
   const { value, onChange, error, timezone, testIdPrefix = 'pipeline-schedule' } = props;
+  const styles = stopOnDateFieldStyles();
 
   // Only "checked, no date yet"; a set value keeps the box checked on its own.
   const [awaitingDate, setAwaitingDate] = useState(false);
@@ -52,8 +53,8 @@ const StopOnDateField = memo(props => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+    <Box sx={styles.root}>
+      <Box sx={styles.row}>
         <FormControlLabel
           label="Stop on date"
           control={
@@ -63,7 +64,7 @@ const StopOnDateField = memo(props => {
               data-testid={`${testIdPrefix}-stop-on-date-checkbox`}
             />
           }
-          sx={{ margin: 0 }}
+          sx={styles.checkbox}
         />
         {checked && (
           <Box sx={[datePickerStyles.datePickerField, open && datePickerStyles.datePickerFieldActive]}>
@@ -101,5 +102,12 @@ const StopOnDateField = memo(props => {
 });
 
 StopOnDateField.displayName = 'StopOnDateField';
+
+/** @type {MuiSx} */
+const stopOnDateFieldStyles = () => ({
+  root: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
+  row: { display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' },
+  checkbox: { margin: 0 },
+});
 
 export default StopOnDateField;

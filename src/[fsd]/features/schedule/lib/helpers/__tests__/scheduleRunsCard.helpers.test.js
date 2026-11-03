@@ -13,7 +13,7 @@ const run = (id, extra = {}) => ({
 
 describe('toTriggerLabel', () => {
   it('shows the stored trigger cron as Scheduled', () => {
-    expect(['cron', 'manual', 'test', 'other'].map(toTriggerLabel)).toEqual([
+    expect(['cron', 'manual', 'test', 'other'].map(trigger => toTriggerLabel(trigger))).toEqual([
       'Scheduled',
       'Manual',
       'Test',
