@@ -434,13 +434,15 @@ const CredentialsSelect = memo(props => {
   const onSelectItem = useCallback(
     option => {
       // A uuid-pinned value is never the row that has no uuid; only a legacy saved value
-      // (no uuid yet) falls back to the title + private comparison
+      // (no uuid yet) falls back to the title + private comparison. Another member's private
+      // reference is committed only as the same-title row it resolves to
+      const isSameTitleRow =
+        value?.elitea_title === option.elitea_title && Boolean(value?.private) === option.private;
       const isCommittedValue =
         value?.configuration_uuid && option.uuid
-          ? value.configuration_uuid === option.uuid || isForeignPrivateReference(value, personal_project_id)
-          : !value?.configuration_uuid &&
-            value?.elitea_title === option.elitea_title &&
-            Boolean(value?.private) === option.private;
+          ? value.configuration_uuid === option.uuid ||
+            (isForeignPrivateReference(value, personal_project_id) && isSameTitleRow)
+          : !value?.configuration_uuid && isSameTitleRow;
 
       if (isCommittedValue) {
         commitConfiguration(null);
