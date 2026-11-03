@@ -248,12 +248,12 @@ describe('StopOnDateField', () => {
     expect(screen.getByRole('checkbox', { name: LABEL })).toBeChecked();
   });
 
-  it('the underlined field does not stretch across the form width', () => {
+  it('the date field sits in the same row as the checkbox', () => {
     render(<Harness initialValue={FUTURE_DATE} />);
 
-    const field = screen.getByText('Stop date:').parentElement;
+    const row = screen.getByRole('checkbox', { name: LABEL }).closest('label').parentElement;
 
-    expect(getComputedStyle(field).alignSelf).toBe('flex-start');
+    expect(row).toContainElement(screen.getByLabelText('Stop date'));
   });
 
   it('a day that is still today in the schedule timezone is not marked past', () => {

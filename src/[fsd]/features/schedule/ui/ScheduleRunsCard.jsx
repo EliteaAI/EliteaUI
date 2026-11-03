@@ -172,7 +172,7 @@ const scheduleRunsCardStyles = () => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.75rem',
+    gap: '0.625rem',
     padding: '0 0 1.5rem',
     scrollMarginTop: '4.5rem',
     outline: 'none',

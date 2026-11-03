@@ -2,7 +2,7 @@ import { memo, useState } from 'react';
 
 import { format, isValid, parseISO } from 'date-fns';
 
-import { Box, FormControlLabel, FormHelperText, Typography } from '@mui/material';
+import { Box, FormControlLabel, FormHelperText } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 import { BaseCheckbox } from '@/[fsd]/shared/ui/checkbox';
@@ -53,26 +53,20 @@ const StopOnDateField = memo(props => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-      <FormControlLabel
-        label="Stop on date"
-        control={
-          <BaseCheckbox
-            checked={checked}
-            onChange={handleCheck}
-            data-testid={`${testIdPrefix}-stop-on-date-checkbox`}
-          />
-        }
-      />
-      {checked && (
-        <>
-          <Box
-            sx={[
-              datePickerStyles.datePickerField,
-              { alignSelf: 'flex-start' },
-              open && datePickerStyles.datePickerFieldActive,
-            ]}
-          >
-            <Typography sx={datePickerStyles.datePickerLabel}>Stop date:</Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+        <FormControlLabel
+          label="Stop on date"
+          control={
+            <BaseCheckbox
+              checked={checked}
+              onChange={handleCheck}
+              data-testid={`${testIdPrefix}-stop-on-date-checkbox`}
+            />
+          }
+          sx={{ margin: 0 }}
+        />
+        {checked && (
+          <Box sx={[datePickerStyles.datePickerField, open && datePickerStyles.datePickerFieldActive]}>
             <DatePicker
               value={date}
               minDate={parseISO(today)}
@@ -92,15 +86,15 @@ const StopOnDateField = memo(props => {
               })}
             />
           </Box>
-          {helperText && (
-            <FormHelperText
-              id={helperId}
-              error
-            >
-              {helperText}
-            </FormHelperText>
-          )}
-        </>
+        )}
+      </Box>
+      {checked && helperText && (
+        <FormHelperText
+          id={helperId}
+          error
+        >
+          {helperText}
+        </FormHelperText>
       )}
     </Box>
   );

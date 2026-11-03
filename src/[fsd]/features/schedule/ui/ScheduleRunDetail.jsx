@@ -6,7 +6,6 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Box, Link, Typography } from '@mui/material';
 
 import { buildScheduleHistoryLink } from '@/[fsd]/entities/schedule';
-import { TextLinkConstants } from '@/[fsd]/shared/lib/constants';
 import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 
@@ -133,16 +132,14 @@ const ScheduleRunDetail = memo(props => {
         />
       )}
       <Box sx={styles.footer}>
-        <Link
+        <BaseBtn
           component={RouterLink}
           to={link}
-          variant="bodySmall"
-          underline="none"
-          sx={[TextLinkConstants.TEXT_LINK_SX, styles.history]}
+          variant={BUTTON_VARIANTS.secondary}
           data-testid="schedule-run-open-history"
         >
           Open in Run History
-        </Link>
+        </BaseBtn>
         {failed && onRunAgain && (
           <BaseBtn
             variant={BUTTON_VARIANTS.secondary}
@@ -173,7 +170,6 @@ const scheduleRunDetailStyles = () => ({
   }),
   toggleIcon: open => ({ transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }),
   footer: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' },
-  history: { alignSelf: 'flex-start', textDecoration: 'none' },
 });
 
 export default ScheduleRunDetail;

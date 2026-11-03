@@ -98,7 +98,7 @@ const scheduleRunCardStyles = (expanded, isLatest) => ({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: '0.375rem',
+    gap: 0,
     width: '100%',
     padding: '0.75rem 1.25rem',
     textAlign: 'left',

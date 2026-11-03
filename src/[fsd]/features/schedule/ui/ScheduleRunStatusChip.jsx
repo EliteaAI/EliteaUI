@@ -53,10 +53,10 @@ ScheduleRunStatusChip.displayName = 'ScheduleRunStatusChip';
 /** @type {MuiSx} */
 const scheduleRunStatusChipStyles = statusColor => ({
   chip: ({ palette }) => ({
-    height: '1.5rem',
+    height: '1.625rem',
     color: palette.text.secondary,
     borderColor: palette.border.lines,
-    '& .MuiChip-icon': { fontSize: '0.875rem', color: statusColor },
+    '& .MuiChip-icon': { fontSize: '1rem', color: statusColor },
   }),
   progress: { marginLeft: '0.375rem', color: statusColor },
   // The word takes the status colour, as in the schedule card
