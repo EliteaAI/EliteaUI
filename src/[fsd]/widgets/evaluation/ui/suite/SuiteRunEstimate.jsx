@@ -9,8 +9,9 @@ import { buildRunEstimateSummary } from '../../lib/helpers';
 
 /**
  * What a run of this suite would likely use, shown next to Evaluate (#6716, design Q-S6): the last
- * finished run on the selected version scaled to today's case count, the caller's remaining
- * budget, and an amber warning when the estimate is over it.
+ * finished run on the selected version (or on another one, for a version that has none yet)
+ * scaled to today's case count, the caller's remaining budget, and an amber warning when the
+ * estimate is over it.
  */
 const SuiteRunEstimate = memo(props => {
   const { suiteId, versionId } = props;

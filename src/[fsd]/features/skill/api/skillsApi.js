@@ -157,8 +157,11 @@ const skillsApi = eliteaApi
         },
       }),
       skillCreateVersion: build.mutation({
-        query: ({ projectId, skillId, name, instructions, tags, meta, run_settings }) => {
+        query: ({ projectId, skillId, name, instructions, tags, meta, run_settings, filesFromVersionId }) => {
           const body = { name, instructions };
+          if (filesFromVersionId) {
+            body.files_from_version_id = filesFromVersionId;
+          }
           if (tags) {
             body.tags = tags;
           }

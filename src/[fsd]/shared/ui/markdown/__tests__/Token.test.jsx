@@ -8,7 +8,7 @@ import { ArtifactLinkContext } from '@/[fsd]/shared/lib/context/ArtifactLinkCont
 
 import Token from '../Token';
 
-vi.mock('@/components/CodeBlock', () => ({ default: () => null }));
+vi.mock('@/[fsd]/shared/ui/code-block', () => ({ default: () => null }));
 vi.mock('@/components/MarkdownTableBlock', () => ({ default: () => null }));
 
 describe('Token ordered-list rendering', () => {

@@ -5,17 +5,22 @@ import { useFormikContext } from 'formik';
 import { Box, Typography, useTheme } from '@mui/material';
 
 import { EditableEntityIcon } from '@/[fsd]/features/entity-icon-editor';
-import { SKILL_NAME_MAX_LENGTH } from '@/[fsd]/features/skill/lib/constants';
+import { SKILL_NAME_MAX_LENGTH, SPEC_MAX_DESCRIPTION_LENGTH } from '@/[fsd]/features/skill/lib/constants';
 import { countSkillBodyLength } from '@/[fsd]/features/skill/lib/helpers';
-import { useSkillFrontmatterEditor, useSkillInstructionsMaxLength } from '@/[fsd]/features/skill/lib/hooks';
+import {
+  useSkillFrontmatterEditor,
+  useSkillInstructionsMaxLength,
+  useSkillModels,
+} from '@/[fsd]/features/skill/lib/hooks';
 import { GenerateSkillButton } from '@/[fsd]/features/skill/ui/generate-skill-modal';
 import { AccordionConstants, MarkdownConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
-import { Field, Input, Markdown, Text } from '@/[fsd]/shared/ui';
+import { Field, Input, Markdown, MarkdownEditorActions, Text } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { MarkdownViewToggle } from '@/[fsd]/shared/ui/tab-group-button';
 import { useTagListQuery } from '@/api/tags.js';
 import { ChatParticipantType, MAX_DESCRIPTION_LENGTH, PROMPT_PAYLOAD_KEY } from '@/common/constants';
+import StyledInputModal from '@/components/StyledInputModal';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import TagEditor from '@/pages/Common/Components/TagEditor';
 import { markdown } from '@codemirror/lang-markdown';
@@ -48,9 +53,11 @@ const CreateSkillForm = memo(props => {
   const [instructionsViewMode, setInstructionsViewMode] = useState(
     isCreateMode ? MARKDOWN_VIEW_MODES.edit : MARKDOWN_VIEW_MODES.preview,
   );
+  const [isFullScreenOpen, setIsFullScreenOpen] = useState(false);
   const styles = skillCreateFormStyles();
   const { toggleFieldFocus, isFocused } = useFieldFocus();
-  const { editorText, onEditorChange } = useSkillFrontmatterEditor();
+  const { models } = useSkillModels();
+  const { editorText, onEditorChange, frontmatterErrors } = useSkillFrontmatterEditor({ models });
   const maxInstructionsLength = useSkillInstructionsMaxLength();
 
   const markdownExtensions = useMemo(() => [markdown()], []);
@@ -101,12 +108,33 @@ const CreateSkillForm = memo(props => {
     formik.setFieldTouched('version_details.instructions', true);
   }, [formik]);
 
+  const onOpenFullScreen = useCallback(() => setIsFullScreenOpen(true), []);
+
+  const onCloseFullScreen = useCallback(() => setIsFullScreenOpen(false), []);
+
+  const onFullScreenChange = useCallback(
+    event => {
+      onEditorChange(event.target.value);
+      formik.setFieldTouched('version_details.instructions', true);
+    },
+    [formik, onEditorChange],
+  );
+
   const onChangeSkillIcon = useCallback(
     icon => {
       formik.setFieldValue('version_details.meta.icon_meta', icon);
     },
     [formik],
   );
+
+  const description = formik.values?.description || '';
+  const descriptionError = formik.touched?.description && formik.errors.description;
+  const descriptionHelperText =
+    descriptionError ||
+    (description.length > SPEC_MAX_DESCRIPTION_LENGTH
+      ? `Longer than ${SPEC_MAX_DESCRIPTION_LENGTH} characters: Claude and other Agent Skills tools will reject the exported skill.`
+      : undefined);
+  const license = formik.values?.version_details?.meta?.frontmatter?.license;
 
   const instructions = formik.values?.version_details?.instructions || '';
   const instructionsCharactersLeft = maxInstructionsLength - instructions.length;
@@ -206,8 +234,8 @@ const CreateSkillForm = memo(props => {
                     onFocus={() => toggleFieldFocus(PROMPT_PAYLOAD_KEY.description)}
                     onBlur={handleDescriptionBlur}
                     value={formik.values?.description}
-                    error={formik.touched?.description && Boolean(formik.errors.description)}
-                    helperText={formik.touched?.description && formik.errors.description}
+                    error={Boolean(descriptionError)}
+                    helperText={descriptionHelperText}
                     disabled={disabled}
                     // Lands on the real <textarea> — see the analogous comment
                     // on the Name field's inputProps above.
@@ -227,6 +255,19 @@ const CreateSkillForm = memo(props => {
                     />
                   )}
                 </Box>
+
+                {license && (
+                  <Input.StyledInputEnhancer
+                    autoComplete="off"
+                    id="license"
+                    label="License"
+                    data-testid="skill-license"
+                    value={license}
+                    inputProps={{ readOnly: true, 'data-testid': 'skill-license-input-field' }}
+                    multiline
+                    maxRows={5}
+                  />
+                )}
 
                 <TagEditor
                   id="tags"
@@ -263,6 +304,14 @@ const CreateSkillForm = memo(props => {
                 sx={styles.summaryActions}
                 onClick={e => e.stopPropagation()}
               >
+                {instructionsViewMode === MARKDOWN_VIEW_MODES.edit && (
+                  <MarkdownEditorActions
+                    value={editorText}
+                    onFullScreen={onOpenFullScreen}
+                    copyMessage="The instructions have been copied to the clipboard."
+                    testIdPrefix="skill-instructions"
+                  />
+                )}
                 <MarkdownViewToggle
                   value={instructionsViewMode}
                   onChange={setInstructionsViewMode}
@@ -294,6 +343,22 @@ const CreateSkillForm = memo(props => {
                     </Box>
                     <Box sx={styles.charCounterWrapper}>
                       {instructionsErrorNode}
+                      {frontmatterErrors.length > 0 && (
+                        <Box
+                          sx={styles.frontmatterErrors}
+                          data-testid="skill-frontmatter-error"
+                        >
+                          {frontmatterErrors.map(error => (
+                            <Typography
+                              key={error}
+                              variant="bodySmall"
+                              sx={styles.instructionsError}
+                            >
+                              {error}
+                            </Typography>
+                          ))}
+                        </Box>
+                      )}
                       <Typography
                         variant="bodySmall"
                         sx={styles.charCounter}
@@ -329,6 +394,22 @@ const CreateSkillForm = memo(props => {
         accordionStyle={accordionStyle}
         disabled={disabled}
       />
+
+      {isFullScreenOpen && (
+        <StyledInputModal
+          open
+          title="Instructions"
+          value={editorText}
+          disabled={disabled}
+          specifiedLanguage="markdown"
+          inputProps={{ maxLength: maxInstructionsLength }}
+          countLength={countSkillBodyLength}
+          hasOnChangeCallback
+          onChange={onFullScreenChange}
+          onClose={onCloseFullScreen}
+          data-testid="skill-instructions-full-screen-modal"
+        />
+      )}
     </Box>
   );
 });
@@ -416,6 +497,10 @@ const skillCreateFormStyles = () => ({
     color: palette.text.primary,
     marginLeft: 'auto',
   }),
+  frontmatterErrors: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
   instructionsError: ({ palette }) => ({
     color: palette.error.main,
   }),

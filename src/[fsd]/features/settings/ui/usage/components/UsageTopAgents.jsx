@@ -15,7 +15,16 @@ const BADGE_COLORS = {
 };
 
 const UsageTopAgents = memo(props => {
-  const { topAgents = [], canSeeAmounts, currency, comparisonAgents = [], analyticsUrl, sx = {} } = props;
+  const {
+    topAgents = [],
+    topAgentsByRuns = [],
+    canSeeAmounts,
+    currency,
+    comparisonAgents = [],
+    comparisonAgentsByRuns = [],
+    analyticsUrl,
+    sx = {},
+  } = props;
 
   const { palette } = useTheme();
   const styles = usageTopAgentsStyles();
@@ -23,19 +32,26 @@ const UsageTopAgents = memo(props => {
   const [sortKey, setSortKey] = useState('spend');
   const [sortDir, setSortDir] = useState('desc');
 
+  // When sorting by runs, switch to the server-fetched top-by-runs dataset so the
+  // correct top entities appear — not just a re-order of the top-spend list.
+  const activeDataset = sortKey === 'runs' ? topAgentsByRuns : topAgents;
+
   const prevByName = useMemo(() => {
     const map = new Map();
 
-    comparisonAgents.forEach(a => map.set(a.name || a.id, a));
+    [...comparisonAgents, ...comparisonAgentsByRuns].forEach(a => map.set(a.name || a.id, a));
 
     return map;
-  }, [comparisonAgents]);
+  }, [comparisonAgents, comparisonAgentsByRuns]);
 
-  const totalSpend = useMemo(() => topAgents.reduce((sum, a) => sum + (a.spend || 0), 0), [topAgents]);
+  const totalSpend = useMemo(
+    () => activeDataset.reduce((sum, a) => sum + (a.spend || 0), 0),
+    [activeDataset],
+  );
 
   const enrichedAgents = useMemo(
     () =>
-      topAgents.map((agent, idx) => {
+      activeDataset.map((agent, idx) => {
         const key = agent.name || agent.id || String(idx);
         const prev = prevByName.get(key);
         const delta = UsageHelpers.computeDelta(agent.spend ?? 0, prev?.spend ?? null);
@@ -43,7 +59,7 @@ const UsageTopAgents = memo(props => {
 
         return { ...agent, _key: key, _delta: delta, _perRun: perRun };
       }),
-    [topAgents, prevByName],
+    [activeDataset, prevByName],
   );
 
   const sortedAgents = useMemo(() => {
@@ -86,7 +102,9 @@ const UsageTopAgents = memo(props => {
     [sortKey],
   );
 
-  if (!topAgents.length) return null;
+  const title = sortKey === 'runs' ? 'Top Run Agents/Pipelines' : 'Top Spend Agents/Pipelines';
+
+  if (!topAgents.length && !topAgentsByRuns.length) return null;
 
   const visibleAgents = sortedAgents.slice(0, MAX_ROWS);
 
@@ -100,7 +118,7 @@ const UsageTopAgents = memo(props => {
           variant="labelMedium"
           sx={styles.title}
         >
-          Top agents and pipelines
+          {title}
         </Typography>
         {analyticsUrl && (
           <Link

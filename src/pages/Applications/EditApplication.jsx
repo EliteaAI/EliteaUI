@@ -9,10 +9,11 @@ import { InstructionsInputRefProvider } from '@/[fsd]/shared/lib/context';
 import { useToast, useViewMode } from '@/[fsd]/shared/lib/hooks';
 import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
 import { ApplicationControls } from '@/[fsd]/widgets/application-controls';
-import { ViewMode } from '@/common/constants';
+import { PERMISSIONS, ViewMode } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils';
 import StyledTabs from '@/components/StyledTabs';
 import useCorrectUserNameInUrl from '@/hooks/application/useCorrectUserNameInUrl';
+import useCheckPermission from '@/hooks/useCheckPermission';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import Page404 from '@/pages/Page404.jsx';
 
@@ -22,6 +23,7 @@ import useApplicationInitialValues from './useApplicationInitialValues';
 
 const EditApplication = memo(() => {
   const viewMode = useViewMode();
+  const { checkPermission } = useCheckPermission();
   const fileReaderEnhancerRef = useRef();
 
   const { toastError } = useToast();
@@ -51,9 +53,10 @@ const EditApplication = memo(() => {
 
   const blockOptions = useMemo(
     () => ({
-      blockCondition: viewMode === ViewMode.Owner && dirty,
+      blockCondition:
+        viewMode === ViewMode.Owner && dirty && checkPermission(PERMISSIONS.applications.update),
     }),
-    [dirty, viewMode],
+    [dirty, viewMode, checkPermission],
   );
 
   const { setBlockNav } = useNavBlocker(blockOptions);

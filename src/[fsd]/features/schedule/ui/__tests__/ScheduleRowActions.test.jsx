@@ -271,4 +271,35 @@ describe('ScheduleRowActions', () => {
     expect(onDelete).not.toHaveBeenCalled();
     expect(screen.queryByTestId('delete-confirm-dialog')).not.toBeInTheDocument();
   });
+
+  it('#7254: an admin sees Run now disabled, with who can run it', () => {
+    const onRun = vi.fn();
+    renderMenu(
+      {
+        version_id: 4,
+        owner: { id: 1, name: 'Ann Lee' },
+        allowed_actions: ['edit', 'pause', 'delete', 'change_owner'],
+      },
+      { onRun },
+    );
+    openMenu();
+    const item = screen.getByRole('menuitem', { name: /Run now/ });
+    expect(item).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(item);
+    expect(onRun).not.toHaveBeenCalled();
+    // the menu's tooltip names the item with the hint
+    expect(screen.getByLabelText('Only the schedule owner, Ann Lee, can run it.')).toHaveTextContent(
+      'Run now',
+    );
+  });
+
+  it('#7254: the owner of a schedule without a version gets no Run now, as before', () => {
+    renderMenu({
+      version_id: null,
+      owner: { id: 1, name: 'Ann Lee' },
+      allowed_actions: ['edit', 'change_owner'],
+    });
+    openMenu();
+    expect(screen.queryByText('Run now')).not.toBeInTheDocument();
+  });
 });

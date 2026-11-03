@@ -20,8 +20,17 @@ const PipelineCreateTabBar = memo(() => {
   const { toastError } = useToast();
   const [wantToCancel, setWantToCancel] = useState(false);
   const isYamlCodeDirty = useIsPipelineYamlCodeDirty();
-  const { isLoading, create, error, isError } = useCreateApplication(formik);
   const { stateValidationErrors } = useSelector(selectActivePipeline);
+
+  const blockOptions = useMemo(
+    () => ({ blockCondition: (!!formik.dirty || isYamlCodeDirty) && !wantToCancel }),
+    [formik.dirty, isYamlCodeDirty, wantToCancel],
+  );
+  const { setBlockNav } = useNavBlocker(blockOptions);
+
+  // The redirect after save is deferred; the effect-driven unblock may not land before it
+  const resetBlockNav = useCallback(() => setBlockNav(false), [setBlockNav]);
+  const { isLoading, create, error, isError } = useCreateApplication(formik, resetBlockNav);
 
   const hasStateErrors = useMemo(
     () => Boolean(stateValidationErrors && Object.keys(stateValidationErrors).length),
@@ -33,12 +42,6 @@ const PipelineCreateTabBar = memo(() => {
     () => isLoading || !formik.isValid || !formik.values.name?.trim() || hasStateErrors,
     [formik.isValid, formik.values.name, hasStateErrors, isLoading],
   );
-
-  const blockOptions = useMemo(
-    () => ({ blockCondition: (!!formik.dirty || isYamlCodeDirty) && !wantToCancel }),
-    [formik.dirty, isYamlCodeDirty, wantToCancel],
-  );
-  useNavBlocker(blockOptions);
 
   const onCancel = useCallback(() => {
     setWantToCancel(true);

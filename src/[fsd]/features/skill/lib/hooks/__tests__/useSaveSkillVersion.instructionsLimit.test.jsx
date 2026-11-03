@@ -17,11 +17,11 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
 }));
 vi.mock('../useSkillInstructionsMaxLength.hooks', () => ({ useSkillInstructionsMaxLength: () => 1200 }));
 
-const renderSaveVersion = instructions =>
+const renderSaveVersion = (instructions, versionId = null) =>
   renderHook(() => useSaveSkillVersion(), {
     wrapper: ({ children }) => (
       <Formik
-        initialValues={{ id: 7, version_details: { instructions, tags: [], meta: {} } }}
+        initialValues={{ id: 7, version_details: { id: versionId, instructions, tags: [], meta: {} } }}
         onSubmit={vi.fn()}
       >
         {children}
@@ -61,5 +61,16 @@ describe('useSaveSkillVersion instructions limit', () => {
     expect(spies.createVersion).toHaveBeenCalledWith(
       expect.objectContaining({ instructions: 'i'.repeat(1200) }),
     );
+  });
+
+  it('copies the files of the version being viewed into the new version', async () => {
+    spies.createVersion.mockReturnValue({ unwrap: () => Promise.resolve({ id: 71 }) });
+    const { result } = renderSaveVersion('Fill it.', 70);
+
+    await act(async () => {
+      await result.current.onCreateNewVersion('v2');
+    });
+
+    expect(spies.createVersion).toHaveBeenCalledWith(expect.objectContaining({ filesFromVersionId: 70 }));
   });
 });

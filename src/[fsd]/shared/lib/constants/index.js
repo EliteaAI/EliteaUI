@@ -29,3 +29,4 @@ export * as TextLinkConstants from './textLink.constants.js';
 export * as InputGuardrailConstants from './inputGuardrail.constants.js';
 export * as WindowConstants from './window.constants.js';
 export * as ScheduleSectionConstants from './scheduleSection.constants.js';
+export * as CodeBlockConstants from './codeBlock.constants.js';

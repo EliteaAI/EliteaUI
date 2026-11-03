@@ -257,11 +257,17 @@ const formatRange = (range, format, unit = '') => {
   return `${low === high ? low : `${low}–${high}`}${unit}`;
 };
 
+// A version with no finished run yet is estimated from the suite's last run on another one (#7311).
+const isFromOtherVersion = data =>
+  data.history_application_version_id != null &&
+  data.application_version_id != null &&
+  data.history_application_version_id !== data.application_version_id;
+
 /**
  * What the suite panel shows before launch (#6716, design Q-S6), from the estimate endpoint. The
  * estimate is the last finished run of this suite on the same version scaled to today's case
- * count; with no such run there is no estimate. Cost is preferred; tokens stand in when that run
- * was not priced.
+ * count, or on another version when this one has not finished a run yet (#7311); with no finished
+ * run at all there is no estimate. Cost is preferred; tokens stand in when that run was not priced.
  * @param {object} [data] - `eval_suite_estimate` response
  * @returns {{ available: boolean, label: string, range: string | null, detail: string | null,
  *   budget: string | null, warning: string | null } | null}
@@ -279,7 +285,7 @@ export const buildRunEstimateSummary = data => {
       available: false,
       label: 'No estimate (first run)',
       range: null,
-      detail: 'Estimates come from the last finished run of this suite on the selected version.',
+      detail: 'Estimates come from the last finished run of this suite.',
       budget: budgetText,
       warning: null,
     };
@@ -292,6 +298,7 @@ export const buildRunEstimateSummary = data => {
   const parts = [
     `${estimate.cases} ${estimate.cases === 1 ? 'case' : 'cases'}`,
     `based on run #${data.history_run_id}`,
+    ...(isFromOtherVersion(data) ? ['from another version'] : []),
     estimate.includes_judge ? 'agent + judge' : 'agent only',
   ];
   if (priced && estimate.unpriced_cases) parts.push(`${estimate.unpriced_cases} not priced`);
@@ -321,15 +328,27 @@ const COST_SOURCE_LABEL = {
   usage_event: 'from the usage ledger',
 };
 
+// Every model the case's agents ran on, in the order first seen. The usage row stores only the
+// most-used one, which cannot explain the cost when a sub-agent runs on another model (#7297).
+// One separator for a list of models, so the usage row and the By agent table read the same (#7297).
+const MODEL_SEPARATOR = ' + ';
+
+const agentModels = agents => [
+  ...new Set((Array.isArray(agents) ? agents : []).flatMap(agent => agent?.models ?? [])),
+];
+
 /**
  * What one case spent, one row per role, from the case-executions `usage` list (#6716). Token
  * figures only mean something for a `recorded` row; the others say why there is nothing.
  * @param {Array<object>} [usage] - `eval_case_executions` `usage` rows for one case
+ * @param {Array<object>} [agents] - `metrics.agents` of the case; when its agents ran on more than
+ *   one model, the Agent row names them all
  * @returns {Array<{ role: string, label: string, inputTokens: string, outputTokens: string,
  *   totalTokens: string, cost: string, note: string | null, isRecorded: boolean, isUnpriced: boolean }>}
  */
-export const buildCaseUsageRows = usage =>
-  (Array.isArray(usage) ? usage : [])
+export const buildCaseUsageRows = (usage, agents) => {
+  const models = agentModels(agents);
+  return (Array.isArray(usage) ? usage : [])
     .filter(row => ROLE_LABEL[row?.role])
     .sort((a, b) => (a.role === b.role ? 0 : a.role === 'agent' ? -1 : 1))
     .map(row => {
@@ -337,7 +356,8 @@ export const buildCaseUsageRows = usage =>
       const cost = isRecorded ? formatUsd(row.cost) : null;
       const notes = [];
       if (isRecorded) {
-        if (row.model_name) notes.push(row.model_name);
+        if (row.role === 'agent' && models.length > 1) notes.push(models.join(MODEL_SEPARATOR));
+        else if (row.model_name) notes.push(row.model_name);
         if (row.token_source === 'estimate') notes.push('tokens estimated');
         if (cost != null && COST_SOURCE_LABEL[row.cost_source])
           notes.push(COST_SOURCE_LABEL[row.cost_source]);
@@ -360,6 +380,7 @@ export const buildCaseUsageRows = usage =>
         isUnpriced: isRecorded && cost == null,
       };
     });
+};
 
 const AGENT_SOURCE_NOTE = {
   ledger: 'Tokens and cost per agent come from the usage ledger: each sub-agent ran as its own task.',
@@ -379,8 +400,8 @@ const formatCount = value => (value == null ? '—' : String(value));
  * What each agent of one case did and spent (#7015 P3): the agent under test first, then each
  * sub-agent, from the execution's `metrics.agents`. Empty when the agent called no sub-agent.
  * @param {Array<object>} [agents] - `metrics.agents` of one case execution
- * @returns {{ rows: Array<{ key: string, label: string, llmCalls: string, toolCalls: string,
- *   inputTokens: string, outputTokens: string, cost: string, source: string,
+ * @returns {{ rows: Array<{ key: string, label: string, model: string, llmCalls: string,
+ *   toolCalls: string, inputTokens: string, outputTokens: string, cost: string, source: string,
  *   isUnpriced: boolean }>, note: string | null }}
  */
 export const buildAgentUsageRows = agents => {
@@ -393,6 +414,8 @@ export const buildAgentUsageRows = agents => {
     return {
       key: agent.agent ?? '__agent__',
       label: agent.agent ?? 'Agent under test',
+      // What the row's cost is priced at (#7297); a sub-agent can run on another model.
+      model: agent.models?.length ? agent.models.join(MODEL_SEPARATOR) : '—',
       llmCalls: formatCount(agent.llm_calls),
       toolCalls: formatCount(agent.tool_calls),
       inputTokens: formatTokenCount(agent.input_tokens),

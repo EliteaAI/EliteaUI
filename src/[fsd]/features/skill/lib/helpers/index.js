@@ -41,3 +41,10 @@ export {
   replaceSkillEditorBody,
   writeSkillFrontmatterFields,
 } from './skillFrontmatter.helpers';
+export {
+  ELITEA_METADATA_KEYS,
+  applyEliteaMetadataEdits,
+  composeEditorFrontmatter,
+  encodeEliteaMetadata,
+  splitEditorFrontmatter,
+} from './skillEliteaMetadata.helpers';

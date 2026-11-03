@@ -31,10 +31,11 @@ import {
 import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
 import { SkillTabBar } from '@/[fsd]/widgets/skill-tab-bar';
 import { eliteaApi } from '@/api/eliteaApi';
-import { SkillsTabs, ViewMode } from '@/common/constants';
+import { PERMISSIONS, SkillsTabs, ViewMode } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
 import StyledTabs from '@/components/StyledTabs';
+import useCheckPermission from '@/hooks/useCheckPermission';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import {
   ContentContainer,
@@ -63,6 +64,8 @@ const buildInitialValues = (data, defaultModel) => ({
     run_settings: withDefaultSkillModel(data?.version_details?.run_settings ?? null, defaultModel),
   },
 });
+
+const NAME_TOUCHED = { name: true };
 
 const EditSkill = memo(() => {
   const styles = editSkillStyles();
@@ -166,6 +169,9 @@ const EditSkill = memo(() => {
     [dispatch, navigate, onRunConversationChange, projectId, skillId, tab, toastError],
   );
 
+  const { checkPermission } = useCheckPermission();
+  const hasEditPermission = useMemo(() => checkPermission(PERMISSIONS.skills.update), [checkPermission]);
+
   const { defaultModel, isLoadingModels } = useSkillModels();
   const validationSchema = useSkillValidationSchema(data?.version_details?.instructions);
   const isLoadingForm = isFetching || isLoadingModels;
@@ -186,7 +192,10 @@ const EditSkill = memo(() => {
     return data?.versions?.[0]?.id;
   }, [data?.version_details?.id, data?.versions, version]);
 
-  const blockOptions = useMemo(() => ({ blockCondition: dirty }), [dirty]);
+  const blockOptions = useMemo(
+    () => ({ blockCondition: dirty && hasEditPermission }),
+    [dirty, hasEditPermission],
+  );
   useNavBlocker(blockOptions);
 
   const shouldShowNotFoundPage = isError && isNotFoundError(error);
@@ -275,6 +284,7 @@ const EditSkill = memo(() => {
         key={formKey}
         enableReinitialize
         initialValues={initialValues}
+        initialTouched={NAME_TOUCHED}
         validationSchema={validationSchema}
         onSubmit={() => {}}
       >
@@ -342,6 +352,7 @@ const EditSkill = memo(() => {
                       <ContentContainer height="100%">
                         <CreateSkillForm
                           viewMode={ViewMode.Owner}
+                          disabled={!hasEditPermission}
                           summaryEditAction={<AIEditSkillButton />}
                           instructionsKey={`${skillId}:${currentVersionId}:${
                             (data?.version_details?.instructions ?? data?.instructions ?? '').length

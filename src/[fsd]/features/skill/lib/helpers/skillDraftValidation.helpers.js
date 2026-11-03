@@ -1,7 +1,7 @@
 import { MAX_DESCRIPTION_LENGTH } from '@/common/constants.js';
 
 const SKILL_NAME_MAX_LENGTH = 64;
-const SKILL_NAME_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
+const SKILL_NAME_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 export const instructionsTooLongMessage = (length, maxLength) =>
   `Instructions are ${length} characters long. Maximum allowed is ${maxLength} characters.`;
@@ -17,7 +17,7 @@ export const validateSkillDraft = (draft, maxInstructionsLength) => {
     errors.name = `Name must be ${SKILL_NAME_MAX_LENGTH} characters or less`;
   else if (!SKILL_NAME_RE.test(name))
     errors.name =
-      'Name must be lowercase letters, digits and hyphens only, cannot start or end with a hyphen';
+      'Name must be lowercase letters, digits and hyphens only, cannot start or end with a hyphen or contain consecutive hyphens';
   else if (name.includes('claude') || name.includes('anthropic'))
     errors.name = 'Name cannot contain "claude" or "anthropic"';
 

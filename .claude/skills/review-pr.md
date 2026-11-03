@@ -32,7 +32,7 @@ Review depth, the checks in step 3, and the filtering in step 4 are identical - 
   cannot be described in words.
 - **No summary review message at all.** Submit the review with an empty body.
 - Because GitHub rejects a `COMMENT` review with an empty body, in short mode submit with `APPROVE` (no
-  blocking findings) or `REQUEST_CHANGES` (business logic bug, crash risk, or significant architectural
+  blocking findings) or `REQUEST_CHANGES` (business logic bug, regression, crash risk, or significant architectural
   violation) and `body: ""`. Never use `COMMENT` in short mode.
 - If the API still rejects the empty body, retry with a single short sentence - not a summary of the findings.
 - If there is nothing worth commenting on, post no inline comments and submit an `APPROVE` with an empty body.
@@ -54,6 +54,9 @@ For each changed file in the PR, read the **full file** from the local repo (che
 needed, or read from the head SHA). Understanding the full file context is critical — reviewing only the diff
 leads to shallow feedback.
 
+Then, for every modified (not newly added) export in the PR, search the whole repo for its usages outside the
+PR - including legacy directories - so you can check them in category C below.
+
 ### 3. Review the code
 
 Analyze the changes against these review categories, ordered by priority:
@@ -73,14 +76,29 @@ Analyze the changes against these review categories, ordered by priority:
 - Incorrect event handler wiring
 - Broken imports (wrong paths, missing exports)
 
-#### C. Code reuse and duplication (Important)
+#### C. Regressions in existing behaviour (Critical)
+
+For every modified (not newly added) export - component, hook, helper, constant, API endpoint, serializer,
+slice/selector - check all its consumers found in step 2 (including legacy `src/components/`, `src/pages/`,
+`src/hooks/`, `src/common/`) and verify they still work:
+
+- Changed props, function signatures, default values, or return shapes that existing callers don't account for
+- Removed or renamed exports still imported elsewhere
+- Changed API request/response shape, serializer output, cache tags, or Redux state shape used by other screens
+- Changed constant/enum values that other code compares against
+- Altered conditions or early returns that drop previously handled cases (old data formats, missing fields)
+- Code moved to FSD where not every old call site was switched over
+
+Flag only confirmed breakages (point to the affected consumer file/line), not hypothetical ones.
+
+#### D. Code reuse and duplication (Important)
 
 - Duplicated logic that already exists in `shared/` or another slice
 - Components that are very similar to existing ones and should be consolidated
 - Utility functions that duplicate helpers already in the codebase
 - Hardcoded values that should use existing constants
 
-#### D. FSD architecture compliance (Important — for new code in `src/[fsd]/` only)
+#### E. FSD architecture compliance (Important — for new code in `src/[fsd]/` only)
 
 Run the same checks as the `fsd-check` skill:
 
@@ -89,7 +107,7 @@ Run the same checks as the `fsd-check` skill:
 - Missing barrel files (`index.js`)
 - Cross-slice imports bypassing barrel files
 
-#### E. Component and code conventions (from CLAUDE.md)
+#### F. Component and code conventions (from CLAUDE.md)
 
 - Missing `memo()` wrapper on components
 - Missing `displayName`
@@ -98,7 +116,7 @@ Run the same checks as the `fsd-check` skill:
 - `function` declarations instead of arrow functions
 - Missing `export default` on components
 
-#### F. Styling conventions
+#### G. Styling conventions
 
 - Raw HTML elements (`<div>`, `<span>`, `<button>`, etc.) instead of MUI components
 - `px` units instead of `rem`
@@ -113,14 +131,14 @@ Run the same checks as the `fsd-check` skill:
   - `icon.*` tokens should only be used for `color`/`fill` on icons
   - Example violation: using `palette.background.foo` for `color`, or `palette.text.bar` for `backgroundColor`
 
-#### G. File naming
+#### H. File naming
 
 - Component files not PascalCase
 - Hook files missing `.hooks.js` suffix
 - Helper/constant/slice files with wrong naming pattern
 - Directories not in kebab-case
 
-#### H. General best practices
+#### I. General best practices
 
 - Overly complex logic that could be simplified
 - Missing `useCallback` / `useMemo` where it matters (props passed to children, dependency arrays)
@@ -134,7 +152,7 @@ Run the same checks as the `fsd-check` skill:
 - If the PR is touching legacy code (`src/components/`, `src/pages/`), do NOT demand FSD migration — only flag
   FSD violations if the author explicitly placed new code in `src/[fsd]/`.
 - If a file was only renamed or moved with no logic changes, skip it.
-- Prioritize: business bugs > crashes > duplication > architecture > conventions > style.
+- Prioritize: business bugs > regressions > crashes > duplication > architecture > conventions > style.
 
 ### 5. Post the review on GitHub
 
@@ -176,7 +194,7 @@ Use the GitHub MCP tools to post a formal review:
    Choose the event based on findings:
    - **APPROVE** — no issues found, or only minor suggestions
    - **COMMENT** — minor suggestions or style issues only
-   - **REQUEST_CHANGES** — any business logic bug, crash risk, or significant architectural violation
+   - **REQUEST_CHANGES** — any business logic bug, regression, crash risk, or significant architectural violation
 
    **Full mode:** the summary body should be 2-3 sentences max. Mention what looks good if appropriate, then
    state the main concern if any.
@@ -246,7 +264,7 @@ use `rem` units here, so `0.75rem` instead of `12px`." No preamble, no restating
 
 ## Rules
 
-- Never approve a PR that has business logic bugs or crash risks.
+- Never approve a PR that has business logic bugs, regressions, or crash risks.
 - If the PR has no issues at all, approve with a short positive summary (full mode) or an empty body (short
   mode).
 - Maximum 15 inline comments per review in full mode, 8 in short mode — consolidate if there are more

@@ -136,4 +136,24 @@ describe('SchedulePromptSummary', () => {
     expect(screen.queryByRole('button', { name: 'Show the full prompt' })).not.toBeInTheDocument();
     expect(chipTexts()).toEqual(['v3']);
   });
+
+  it('#7254: a disabled hint disables Run test and describes it', () => {
+    const onTestRun = renderBox({
+      description: 'A note',
+      disabledHint: 'Only the schedule owner, Ann Lee, can run it.',
+    });
+
+    expect(runTest()).toBeDisabled();
+    expect(runTest()).toHaveAccessibleDescription('Only the schedule owner, Ann Lee, can run it.');
+    expect(screen.getByTestId('schedule-test-run-hint')).toBeVisible();
+    fireEvent.click(runTest());
+    expect(onTestRun).not.toHaveBeenCalled();
+  });
+
+  it('#7254: without a hint Run test stays as it was', () => {
+    renderBox({});
+
+    expect(runTest()).toBeEnabled();
+    expect(screen.queryByTestId('schedule-test-run-hint')).not.toBeInTheDocument();
+  });
 });

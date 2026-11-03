@@ -20,6 +20,7 @@ const StyledInputModal = forwardRef((props, ref) => {
     id,
     specifiedLanguage,
     inputProps,
+    countLength,
     disabled,
     enableFStringAutocomplete = false,
     stateVariableOptions = [],
@@ -150,6 +151,7 @@ const StyledInputModal = forwardRef((props, ref) => {
                 onBlur={handleBlur}
                 onKeyDown={onKeyDown}
                 maxLength={maxLength}
+                countLength={countLength}
               />
             </Box>
           )}

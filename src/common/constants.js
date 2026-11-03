@@ -593,6 +593,7 @@ export const PERMISSIONS = {
     delete: 'models.applications.skills.delete',
     update: 'models.applications.skills.update',
     details: 'models.applications.skills.details',
+    create: 'models.applications.skills.create',
   },
   predict: {
     post: 'models.applications.predict.post',
