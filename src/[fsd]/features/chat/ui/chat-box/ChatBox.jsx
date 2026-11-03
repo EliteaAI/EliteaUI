@@ -2040,6 +2040,9 @@ const ChatBox = memo(
             payload.hitl_value = value ?? '';
           } else if (action === 'answer') {
             payload.hitl_value = value ?? {};
+          } else if (action === 'created') {
+            // (#7228) the credential form's answer: the new reference id only (the server replaces it by its record)
+            payload.hitl_value = { reference_id: value?.reference_id };
           }
           if (usesDurablePipelineHistory) {
             payload.hitl_decisions = [

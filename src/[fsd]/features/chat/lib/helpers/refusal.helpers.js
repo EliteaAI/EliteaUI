@@ -13,10 +13,15 @@ const SUPPORT_REFERENCE_PATTERN = /^[A-Za-z0-9-]{1,64}$/;
  * @param {unknown} trace exception as stored on the message (JSON string, or a plain object)
  * @returns {{ message: string, code?: string, supportRef?: string } | undefined}
  */
+// (#7228) refusals that reach the chat as `CODE: readable text` (a tool's refusal on the run token, a refused resume)
+const CODED_TEXT_PATTERN = /^(CREDENTIALS_VIA_FORM|HITL_VALUE_INVALID): (.{1,1000})$/s;
+
 export const parseRefusalPayload = trace => {
   let payload = trace;
 
   if (typeof trace === 'string') {
+    const coded = trace.trim().match(CODED_TEXT_PATTERN);
+    if (coded) return { message: coded[2].trim(), code: coded[1] };
     const text = trace.trim();
     if (!text.startsWith('{') || text.length > MAX_REFUSAL_PAYLOAD_LENGTH) return undefined;
     try {

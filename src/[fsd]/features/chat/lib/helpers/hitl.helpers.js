@@ -76,6 +76,14 @@ export const normalizeHitlInterrupt = (raw = {}, overlay = {}) => {
     resume_strategy: runtimeResumeStrategy || nonEmpty(raw.resume_strategy) || 'single',
     ...hierarchy,
   };
+  // (#7228) a credential form keeps what it asks for (type, title, purpose) and, once created, the server's record of
+  // it: a reload renders the same card (live and reloaded interrupts both pass here)
+  if (interrupt.guardrail_type === 'credential_form') {
+    interrupt.credential_type = raw.credential_type || overlay.credential_type || '';
+    interrupt.title = raw.title || overlay.title || '';
+    interrupt.purpose = raw.purpose || overlay.purpose || '';
+    interrupt.credential_form_result = raw.credential_form_result || overlay.credential_form_result || null;
+  }
   return interrupt;
 };
 

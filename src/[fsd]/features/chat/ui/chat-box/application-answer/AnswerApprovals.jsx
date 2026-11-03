@@ -20,6 +20,7 @@ const AnswerApprovals = memo(props => {
     exception,
     inputGuardrail,
     messageId,
+    conversationUuid,
     onCopy,
     budgetErrorCode,
     realAnswer,
@@ -52,10 +53,12 @@ const AnswerApprovals = memo(props => {
           interruptId={interruptId}
           onHitlResume={onHitlResume}
           disabled={!onHitlResume || Boolean(interrupt?.decided) || Boolean(interrupt?.queued)}
+          messageId={messageId}
+          conversationUuid={conversationUuid}
         />
       );
     },
-    [onHitlResume],
+    [conversationUuid, messageId, onHitlResume],
   );
 
   return (

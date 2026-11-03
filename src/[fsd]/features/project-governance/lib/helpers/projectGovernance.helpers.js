@@ -225,6 +225,26 @@ export const secretFieldsOf = (types, provider, depth = 0, properties = undefine
   });
 };
 
+// (#7228) the fields the chat's credential form shows for a credential type: its top-level text fields (a secret
+// one masked), required as the type's schema says; null when the type is unknown to the schema store. A stored sign-in
+// (`refresh_token`) and nested or selected configurations are never typed into the form.
+const NOT_TYPED = ['refresh_token'];
+export const credentialFormFieldsOf = (types, type) => {
+  const entry = (Array.isArray(types) ? types : []).find(candidate => candidate?.type === type);
+  const data = entry?.config_schema?.properties?.data;
+  if (!isObject(data?.properties)) return null;
+  const required = Array.isArray(data.required) ? data.required : [];
+  return Object.entries(data.properties).flatMap(([name, schema]) => {
+    if (!isObject(schema) || NOT_TYPED.includes(name) || schema.$ref) return [];
+    const secret = isPasswordSchema(schema);
+    const text =
+      secret ||
+      schema.type === 'string' ||
+      (Array.isArray(schema.anyOf) && schema.anyOf.some(option => option?.type === 'string' && !option.$ref));
+    return text ? [{ name, label: schema.title ?? name, secret, required: required.includes(name) }] : [];
+  });
+};
+
 export const isWaitingItem = item => WAITING_STATES.includes(item.state) && Boolean(item.ref);
 
 // What the row's chip says: who has to act now
@@ -248,8 +268,26 @@ export const governanceRequestOf = output => {
   }
   const found = value && typeof value === 'object' ? value.governance_requests : null;
   return found && found.entity_kind && Number.isInteger(found.entity_id)
-    ? { entityKind: found.entity_kind, entityId: found.entity_id }
+    ? {
+        entityKind: found.entity_kind,
+        entityId: found.entity_id,
+        // (#7228) an automatic request that could not be filed reads as a sentence, never as its JSON
+        refused: typeof found.refused === 'string' ? found.refused : null,
+      }
     : null;
 };
+
+// (#7228) an automatic request of a governed run that could not be filed, in words (no code, no JSON): the card below
+// it then offers Request for what is still missing
+const AUTO_REQUEST_REASONS = {
+  STALE_READINESS: 'what it needs changed meanwhile',
+  DEPENDENCY_UNAVAILABLE: 'the service could not be reached',
+  AUDIT_UNAVAILABLE: 'the service could not be reached',
+  FORBIDDEN: 'you may not request it here',
+};
+export const autoRequestRefusedText = code =>
+  `The approval requests for it could not be filed automatically (${
+    AUTO_REQUEST_REASONS[code] ?? 'they were refused'
+  }); request what is missing on the card.`;
 
 export const requestableKeys = items => (items || []).filter(item => item.requestable).map(item => item.key);

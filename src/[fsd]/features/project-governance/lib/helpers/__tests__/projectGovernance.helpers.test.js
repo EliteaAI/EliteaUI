@@ -88,10 +88,11 @@ describe('what a run created (EL-7269)', () => {
       result: {},
       governance_requests: { entity_kind: 'version', entity_id: 7, filed: [] },
     });
-    expect(H.governanceRequestOf(output)).toEqual({ entityKind: 'version', entityId: 7 });
+    expect(H.governanceRequestOf(output)).toEqual({ entityKind: 'version', entityId: 7, refused: null });
     expect(H.governanceRequestOf({ governance_requests: { entity_kind: 'toolkit', entity_id: 3 } })).toEqual({
       entityKind: 'toolkit',
       entityId: 3,
+      refused: null,
     });
     expect(H.governanceRequestOf('plain text')).toBeNull();
     expect(H.governanceRequestOf('{"governance_requests": {"filed": []}}')).toBeNull();
@@ -118,5 +119,51 @@ describe('project governance constants (EL-7269)', () => {
     expect(C.STALE_CODES).toEqual(['CONCURRENT_CHANGE', 'INVALID_STATE']);
     expect(C.INBOX_STATES.reference).toEqual(['pending', 'validated']);
     expect(Object.values(H).every(value => typeof value === 'function')).toBe(true);
+  });
+
+  // --- EL-7228 -----------------------------------------------------------------------------------------------------
+
+  it("EL-7228 lists a credential type's text fields for the chat form, secret ones marked, a stored sign-in never", () => {
+    const types = [
+      {
+        type: 'github',
+        config_schema: {
+          properties: {
+            data: {
+              properties: {
+                base_url: { type: 'string', title: 'Base URL' },
+                access_token: {
+                  anyOf: [{ type: 'string', format: 'password' }, { type: 'null' }],
+                  title: 'Token',
+                },
+                refresh_token: { type: 'string', format: 'password' },
+                options: { type: 'object' },
+                llm: { $ref: '#/x' },
+              },
+              required: ['access_token'],
+            },
+          },
+        },
+      },
+    ];
+    expect(H.credentialFormFieldsOf(types, 'github')).toEqual([
+      { name: 'base_url', label: 'Base URL', secret: false, required: false },
+      { name: 'access_token', label: 'Token', secret: true, required: true },
+    ]);
+    expect(H.credentialFormFieldsOf(types, 'unknown')).toBeNull();
+    expect(H.credentialFormFieldsOf(undefined, 'github')).toBeNull();
+  });
+
+  it('EL-7228 reads a refused automatic request as a sentence, never as its code or JSON', () => {
+    const found = H.governanceRequestOf({
+      governance_requests: { entity_kind: 'version', entity_id: 7, filed: [], refused: 'STALE_READINESS' },
+    });
+    expect(found).toEqual({ entityKind: 'version', entityId: 7, refused: 'STALE_READINESS' });
+    const text = H.autoRequestRefusedText(found.refused);
+    expect(text).toBe(
+      'The approval requests for it could not be filed automatically (what it needs changed meanwhile); request what is missing on the card.',
+    );
+    expect(text).not.toContain('STALE_READINESS');
+    expect(H.autoRequestRefusedText('SOMETHING_NEW')).toContain('(they were refused)');
   });
 });

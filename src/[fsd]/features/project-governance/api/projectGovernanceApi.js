@@ -101,6 +101,18 @@ export const projectGovernanceApi = eliteaApi
         invalidatesTags: (_result, error) =>
           error ? [] : [TAG_GOVERNANCE_READINESS, TAG_PROJECT_GOVERNANCE],
       }),
+      // (#7228) the chat's credential form: the person creates the credential a paused governed run asked for (the
+      // configuration, its governed reference, its value and the run's requests, in one call). The values are sent
+      // once and never read back; the reply holds ids, titles, type and state only.
+      createCredentialFromChat: build.mutation({
+        query: ({ projectId, conversationUuid, ...body }) => ({
+          url: `/elitea_core/credential_form/prompt_lib/${project(projectId)}/${encodeURIComponent(conversationUuid)}`,
+          method: 'POST',
+          body,
+        }),
+        invalidatesTags: (_result, error) =>
+          error ? [] : [TAG_GOVERNANCE_READINESS, TAG_PROJECT_GOVERNANCE],
+      }),
       // (#7341) which version of each agent external MCP clients reach in the project
       getMcpExposedVersions: build.query({
         query: ({ projectId }) => ({
@@ -147,4 +159,5 @@ export const {
   useGetMcpExposedVersionsQuery,
   useLazyGetMyCredentialReferencesQuery,
   usePutMyCredentialValueMutation,
+  useCreateCredentialFromChatMutation,
 } = projectGovernanceApi;

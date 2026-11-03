@@ -80,4 +80,33 @@ describe('ActionView governed creation card (EL-7269)', () => {
     expect(trace.fetch).toHaveBeenCalled();
     expect(await screen.findByTestId('chat-governance-card')).toHaveTextContent('version:41');
   });
+
+  // --- EL-7228 build from chat: one card per created or changed entity, a refused automatic request in words ---
+
+  it('EL-7228 mounts the card of a toolkit a run changed (PUT), one per action', () => {
+    const changed = JSON.stringify({
+      id: 3,
+      governance_requests: {
+        entity_kind: 'toolkit',
+        entity_id: 3,
+        filed: [{ key: 'grant:3:u', kind: 'grant', id: 'g' }],
+        next: 'Requested for approval: your use of the credential.',
+      },
+    });
+    wrap({ ...RELOADED, name: 'put_elitea_core_tool', traceStepId: undefined, toolOutputs: changed });
+    expect(screen.getAllByTestId('chat-governance-card')).toHaveLength(1);
+    expect(screen.getByTestId('chat-governance-card')).toHaveTextContent('toolkit:3');
+    expect(screen.queryByTestId('chat-governance-auto-request-refused')).toBeNull();
+  });
+
+  it('EL-7228 reads a refused automatic request as a sentence beside the card (no code, no JSON)', () => {
+    const refused = JSON.stringify({
+      governance_requests: { entity_kind: 'version', entity_id: 41, filed: [], refused: 'STALE_READINESS' },
+    });
+    wrap({ ...RELOADED, traceStepId: undefined, toolOutputs: refused });
+    const line = screen.getByTestId('chat-governance-auto-request-refused');
+    expect(line).toHaveTextContent('could not be filed automatically (what it needs changed meanwhile)');
+    expect(line.textContent).not.toContain('STALE_READINESS');
+    expect(screen.getByTestId('chat-governance-card')).toHaveTextContent('version:41');
+  });
 });

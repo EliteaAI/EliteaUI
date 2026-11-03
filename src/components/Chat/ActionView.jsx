@@ -459,6 +459,15 @@ const ActionView = memo(props => {
         )}
 
         {/* (#7269) what the run created through the Elitea MCP and requested for you: its status */}
+        {governedCreation?.refused && (
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+            data-testid="chat-governance-auto-request-refused"
+          >
+            {ProjectGovernanceHelpers.autoRequestRefusedText(governedCreation.refused)}
+          </Typography>
+        )}
         {governedCreation && (
           <GovernanceReadinessCard
             entityKind={governedCreation.entityKind}

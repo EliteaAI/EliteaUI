@@ -305,3 +305,31 @@ describe('HITL helpers', () => {
     ).toBeUndefined();
   });
 });
+
+describe('EL-7228 credential form interrupts', () => {
+  it('keep what the form asks for, and its server record, live and after a reload', async () => {
+    const { buildHitlInterruptFromRaw } = await import('../chat.helpers');
+    const raw = {
+      interrupt_id: 'hitl_1',
+      guardrail_type: 'credential_form',
+      credential_type: 'github',
+      title: 'GitHub',
+      purpose: 'list repositories',
+      available_actions: ['created', 'cancel'],
+      credential_form_result: { reference_id: 'r', state: 'pending' },
+    };
+    for (const found of [normalizeHitlInterrupt(raw), buildHitlInterruptFromRaw(raw)]) {
+      expect(found).toMatchObject({
+        guardrail_type: 'credential_form',
+        credential_type: 'github',
+        title: 'GitHub',
+        purpose: 'list repositories',
+        available_actions: ['created', 'cancel'],
+        credential_form_result: { reference_id: 'r', state: 'pending' },
+      });
+    }
+    expect(normalizeHitlInterrupt({ guardrail_type: 'sensitive_tool' })).not.toHaveProperty(
+      'credential_type',
+    );
+  });
+});
