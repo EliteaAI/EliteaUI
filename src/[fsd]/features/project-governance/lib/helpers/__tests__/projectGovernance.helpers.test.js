@@ -17,6 +17,14 @@ describe('project governance helpers (EL-7269)', () => {
     expect(approve.action).toBe('activate');
     expect(approve.disabledReason).toMatch(/another admin/);
     expect(H.rowActions(C.KINDS.binding, binding, 8).find(item => item.approval).disabledReason).toBeNull();
+    // (#7228) a creator who did not make the current request may approve it; its requester may not
+    const reRequested = { ...binding, state_changed_by: { id: 8 } };
+    expect(
+      H.rowActions(C.KINDS.binding, reRequested, ME).find(item => item.approval).disabledReason,
+    ).toBeNull();
+    expect(H.rowActions(C.KINDS.binding, reRequested, 8).find(item => item.approval).disabledReason).toMatch(
+      /made this request/,
+    );
 
     const reference = {
       id: 'r',

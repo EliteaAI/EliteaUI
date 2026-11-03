@@ -102,7 +102,8 @@ const G = PERMISSIONS.governance;
 export const rowActions = (kind, row, userId) => {
   const state = row.state;
   if (kind === KINDS.binding) {
-    const own = isMe(row.created_by, userId) || isMe(row.state_changed_by, userId);
+    // (#7228) four eyes on the current request: whoever made it (last moved it, else its creator) does not approve it
+    const own = isMe(row.state_changed_by ?? row.created_by, userId);
     // (#7228) a waiting identity for an older definition would be refused: it is brought up to date first
     const stale = state === 'pending_approval' && row.digest_status === 'changed';
     return [
@@ -114,7 +115,7 @@ export const rowActions = (kind, row, userId) => {
           disabledReason: stale
             ? 'The agent changed since it was requested: bring it up to date first.'
             : own
-              ? 'You created or last changed it: another admin approves it.'
+              ? 'You made this request: another admin approves it.'
               : null,
         }),
       state === 'active' && action('suspend', 'Suspend', G.bindingsManage),
