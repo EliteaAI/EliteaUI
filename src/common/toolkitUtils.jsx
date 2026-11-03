@@ -22,6 +22,7 @@ import ChromaIcon from '@/assets/chroma-icon.svg?react';
 import ClaudeCodeIcon from '@/assets/claude_code.svg?react';
 import CodexIcon from '@/assets/codex.svg?react';
 import Context7Icon from '@/assets/context7.svg?react';
+import DataverseIcon from '@/assets/dataverse.svg?react';
 import DeepwikiQueryIcon from '@/assets/deepwiki_query.svg?react';
 import DialIcon from '@/assets/dial-icon.svg?react';
 import EliteaFilledIcon from '@/assets/elitea_filled.svg?react';
@@ -263,6 +264,8 @@ const getPredefinedIcon = (type, iconProps) => {
       return <TavilyIcon {...iconProps} />;
     case ToolTypes.sharepoint.value:
       return <SharepointIcon {...iconProps} />;
+    case 'dataverse':
+      return <DataverseIcon {...iconProps} />;
     case 'salesforce':
       return <SalesForceIcon {...iconProps} />;
     case 'vertex_ai':
@@ -477,6 +480,8 @@ export const getToolIcon = toolType => {
       return TavilyIcon;
     case ToolTypes.sharepoint.value:
       return SharepointIcon;
+    case 'dataverse':
+      return DataverseIcon;
     case 'salesforce':
       return SalesForceIcon;
     case 'vertex_ai':
