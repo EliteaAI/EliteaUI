@@ -18,6 +18,7 @@ const FIELDS_WITH_INPUT = [
 const PROMPT_FIELDS = ['prompt', 'variables'];
 // Test Run answers 400 with this code when the project does not allow "Run without asking"
 const DRAFT_TEST_ERROR = { APPROVAL_NOT_ALLOWED: 'approval_rule_not_allowed' };
+const TEST_RUN_UNAVAILABLE = 'Test run is not available on this server yet.';
 
 /**
  * The save flow of the schedule form: the risk review, the save call with its error branches, the warnings
@@ -182,7 +183,9 @@ export const useScheduleSave = ({
         formik.setErrors({ approval_rule: error.data.error });
       else if (error?.status === 400 && Object.keys(toFieldErrors(error)).some(isShownField))
         formik.setErrors(toFieldErrors(error));
-      else if ([400, 404, 409, 500].includes(error?.status)) setDraftTestError(error.data?.error ?? '');
+      else if ([400, 409].includes(error?.status)) setDraftTestError(error.data?.error ?? '');
+      // An older core has no test_run route; a fixed text keeps server detail off the page
+      else if (error?.status === 404) setDraftTestError(TEST_RUN_UNAVAILABLE);
       else toastError('Failed to start the test run');
     } finally {
       setDraftTestPending(false);

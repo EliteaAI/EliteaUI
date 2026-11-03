@@ -90,9 +90,7 @@ describe('useScheduleSave draft Test Run', () => {
 
   it.each([
     [400, 'invalid_input', 'Unknown field'],
-    [404, 'not_found', 'The agent is gone'],
     [409, 'run_active', 'A run is active'],
-    [500, 'run_start_failed', 'The run did not start'],
   ])('shows the text of a %i %s answer in the banner', async (status, code, text) => {
     const onDraftTestRun = vi.fn().mockRejectedValue({ status, data: { code, error: text } });
     const { formik, result } = setup({ onDraftTestRun });
@@ -102,6 +100,26 @@ describe('useScheduleSave draft Test Run', () => {
     expect(result.current.draftTestError).toBe(text);
     expect(formik.setErrors).not.toHaveBeenCalled();
     expect(mocks.toastError).not.toHaveBeenCalled();
+  });
+
+  it('shows a fixed text for a 404 and never the server text', async () => {
+    const onDraftTestRun = vi.fn().mockRejectedValue({ status: 404, data: { error: 'internal detail' } });
+    const { result } = setup({ onDraftTestRun });
+
+    await runTest(result);
+
+    expect(result.current.draftTestError).toBe('Test run is not available on this server yet.');
+    expect(mocks.toastError).not.toHaveBeenCalled();
+  });
+
+  it('shows a toast and no server text for a 500', async () => {
+    const onDraftTestRun = vi.fn().mockRejectedValue({ status: 500, data: { error: 'internal detail' } });
+    const { result } = setup({ onDraftTestRun });
+
+    await runTest(result);
+
+    expect(mocks.toastError).toHaveBeenCalledWith('Failed to start the test run');
+    expect(result.current.draftTestError).toBe('');
   });
 
   it('shows a toast for a 403 or a network error', async () => {
