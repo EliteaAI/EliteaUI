@@ -146,11 +146,10 @@ vi.mock('@/[fsd]/shared/ui/select/LazySelect', () => ({
   },
 }));
 
-vi.mock('@/[fsd]/entities/version', async importOriginal => ({
-  ...(await importOriginal()),
-  VersionSelect: props => {
+vi.mock('../ScheduleVersionField', () => ({
+  default: props => {
     versionProps = props;
-    return <div data-testid="version-select" />;
+    return <div data-testid="version-select">{props.error}</div>;
   },
 }));
 

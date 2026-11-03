@@ -7,8 +7,10 @@ import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
 
 const ownerName = owner => owner?.name || owner?.email || '-';
 
-const ScheduleGeneralSection = memo(
-  ({ showOwner, owner, name, description, nameError, descriptionError, setFieldValue }) => (
+const ScheduleGeneralSection = memo(props => {
+  const { showOwner, owner, name, description, nameError, descriptionError, setFieldValue } = props;
+
+  return (
     <>
       <StyledInputEnhancer
         required
@@ -43,8 +45,8 @@ const ScheduleGeneralSection = memo(
         </Typography>
       )}
     </>
-  ),
-);
+  );
+});
 
 ScheduleGeneralSection.displayName = 'ScheduleGeneralSection';
 

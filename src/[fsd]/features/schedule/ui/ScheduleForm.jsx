@@ -5,7 +5,6 @@ import { useFormik } from 'formik';
 import { Box, Grid } from '@mui/material';
 
 import { GenerateEntityButton } from '@/[fsd]/entities/generate-entity-with-ai';
-import { VersionSelect, getDefaultVersionId } from '@/[fsd]/entities/version';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
@@ -21,17 +20,18 @@ import { RISK_CHECK_STATUS } from '../lib/constants';
 import { resetWhatToRun, scheduleFormSchema } from '../lib/helpers';
 import { useScheduleEntityDetails, useScheduleRiskCheck, useScheduleSave } from '../lib/hooks';
 import BuildScheduleWithAiModal from './BuildScheduleWithAiModal';
-import FieldError from './FieldError';
 import RiskReviewDialog from './RiskReviewDialog';
 import SaveWarningsDialog from './SaveWarningsDialog';
 import ScheduleApprovalSection, { APPROVAL_RULE_ITEMS } from './ScheduleApprovalSection';
 import ScheduleEntitySection from './ScheduleEntitySection';
+import styles from './ScheduleForm.styles';
 import ScheduleFormActions from './ScheduleFormActions';
 import ScheduleGeneralSection from './ScheduleGeneralSection';
 import ScheduleLockedEntity from './ScheduleLockedEntity';
 import SchedulePromptSection from './SchedulePromptSection';
 import ScheduleRiskNotices from './ScheduleRiskNotices';
 import ScheduleSettingsHeader from './ScheduleSettingsHeader';
+import ScheduleVersionField from './ScheduleVersionField';
 
 // The risk check states that keep Save disabled
 const RISK_STATES_WITHOUT_SAVE = [
@@ -232,15 +232,13 @@ const ScheduleForm = memo(props => {
             />
           )}
           {riskNotices}
-          <VersionSelect
-            entityId={values.application_id}
+          <ScheduleVersionField
             versions={details?.versions}
-            defaultVersionID={getDefaultVersionId(details)}
             value={values.version_id}
             onChange={handleVersionChange}
             disabled={!values.application_id || readOnly}
+            error={fieldError('version_id')}
           />
-          <FieldError message={fieldError('version_id')} />
           {promptFields}
         </Box>
       ),
@@ -377,32 +375,3 @@ const ScheduleForm = memo(props => {
 ScheduleForm.displayName = 'ScheduleForm';
 
 export default ScheduleForm;
-
-/** @type {MuiSx} */
-const styles = {
-  root: { order: 1, width: '100%', margin: '0.75rem auto 0', padding: '0 1.5rem', maxWidth: '40.1875rem' },
-  split: { padding: '0 0 1.5rem' },
-  sidePanel: { order: 2 },
-  // Below lg the panel is stacked under the form; an urgent card goes above it, so it is seen first
-  sidePanelFirst: ({ breakpoints }) => ({ order: -1, [breakpoints.up('lg')]: { order: 2 } }),
-  noTabIndicator: { '& .MuiTabs-indicator': { display: 'none' } },
-  accordion: ({ palette }) => ({ background: `${palette.background.default.tertiary} !important` }),
-  panel: ({ palette }) => ({
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    padding: '1rem',
-    borderRadius: '0.5rem',
-    backgroundColor: palette.background.default.tertiary,
-  }),
-  // A fieldset, so `disabled` reaches every input inside; its default border, margin and min width are reset
-  section: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    border: 0,
-    margin: 0,
-    padding: '0 0 1.5rem',
-    minWidth: 0,
-  },
-};

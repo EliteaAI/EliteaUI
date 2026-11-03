@@ -91,8 +91,14 @@ const ScheduleSettingsSection = memo(props => {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      hour12: !alignStart,
     });
-  }, [value, cronState.isValid]);
+  }, [value, cronState.isValid, alignStart]);
+
+  // The schedule pages read as a sentence ("Runs at 08:00."); the legacy modal keeps the quoted text
+  const summaryText = alignStart
+    ? `Runs ${cronState.message.charAt(0).toLowerCase()}${cronState.message.slice(1)}.`
+    : `"${cronState.message}"`;
 
   const errorText = error || (cronState.isValid ? null : cronState.message);
 
@@ -187,7 +193,7 @@ const ScheduleSettingsSection = memo(props => {
           variant="headingSmall"
           sx={styles.previewSummary}
         >
-          {cronState.isValid ? `"${cronState.message}"` : '-'}
+          {cronState.isValid ? summaryText : '-'}
         </Typography>
 
         {nextRun && (
@@ -201,7 +207,9 @@ const ScheduleSettingsSection = memo(props => {
             >
               Next run:
             </Typography>
-            <Typography variant="labelSmall">{`${nextRun} (${browserTimezone})`}</Typography>
+            <Typography variant="labelSmall">
+              {alignStart ? nextRun : `${nextRun} (${browserTimezone})`}
+            </Typography>
           </Box>
         )}
       </Box>
