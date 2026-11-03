@@ -136,6 +136,7 @@ const ScheduleRunDetail = memo(props => {
           component={RouterLink}
           to={link}
           variant={BUTTON_VARIANTS.secondary}
+          sx={styles.historyButton}
           data-testid="schedule-run-open-history"
         >
           Open in Run History
@@ -169,6 +170,7 @@ const scheduleRunDetailStyles = () => ({
     color: palette.text.secondary,
   }),
   toggleIcon: open => ({ transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }),
+  historyButton: { padding: '0 0.75rem' },
   footer: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' },
 });
 
