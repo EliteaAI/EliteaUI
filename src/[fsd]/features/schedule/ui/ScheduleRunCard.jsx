@@ -91,7 +91,7 @@ const scheduleRunCardStyles = (expanded, isLatest) => ({
   root: ({ palette }) => ({
     listStyle: 'none',
     borderRadius: '0.75rem',
-    border: `0.0625rem solid ${expanded && isLatest ? `${palette.primary.main}26` : palette.border.lines}`,
+    border: `0.0625rem solid ${expanded && isLatest ? `${palette.primary.main}59` : palette.border.lines}`,
     backgroundColor: palette.background.surface.interactive.default,
   }),
   header: {
