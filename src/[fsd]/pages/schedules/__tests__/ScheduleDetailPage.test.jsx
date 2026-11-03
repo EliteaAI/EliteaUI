@@ -24,8 +24,6 @@ const mocks = vi.hoisted(() => ({
   params: { scheduleId: '9' },
   state: { returnTo: '/settings/schedules' },
   cardProps: null,
-  startDraftTestRun: vi.fn(),
-  cancelDraftTestRun: vi.fn(),
   testRunProps: { onRunNow: () => {}, runNowPending: true, runNowError: 'Already running' },
   runsView: null,
   runsViewArgs: null,
@@ -50,8 +48,6 @@ vi.mock('@/[fsd]/entities/schedule', async importOriginal => ({
   useGetScheduleQuery: () => mocks.query,
   useUpdateScheduleMutation: () => [mocks.updateSchedule],
   useRunScheduleMutation: () => [mocks.runSchedule],
-  useStartDraftTestRunMutation: () => [mocks.startDraftTestRun],
-  useCancelDraftTestRunMutation: () => [mocks.cancelDraftTestRun],
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: () => mocks.projectId,
@@ -95,7 +91,6 @@ vi.mock('@/[fsd]/features/schedule', async importOriginal => {
         <>
           <button onClick={() => props.onSubmit({ name: 'Renamed' }).then(props.onSaved)}>Save</button>
           <button onClick={() => props.onRunNow()}>Run now</button>
-          <button onClick={() => props.onDraftTestRun({ name: 'Draft' })}>Test run</button>
           <button onClick={() => props.onCancel()}>Cancel</button>
           {props.headerActions}
           {props.children({
@@ -283,23 +278,18 @@ describe('ScheduleDetailPage', () => {
     );
   });
 
-  it('Test Run sends the draft body of the form with the project id', async () => {
+  it('has no Test Run on the Edit page', () => {
     mocks.query = { currentData: schedule };
-    mocks.startDraftTestRun.mockReturnValue({ unwrap: () => Promise.resolve({ run_id: 4 }) });
     render(<ScheduleDetailPage />);
-    fireEvent.click(screen.getByRole('button', { name: 'Test run' }));
 
-    await waitFor(() =>
-      expect(mocks.startDraftTestRun).toHaveBeenCalledWith({ projectId: 5, name: 'Draft' }),
-    );
+    expect(mocks.formProps.onDraftTestRun).toBeUndefined();
   });
 
-  it('Cancel drops the Test draft of the agent and returns to the opening page', () => {
+  it('Cancel returns to the opening page and sends no draft delete', () => {
     mocks.query = { currentData: schedule };
     render(<ScheduleDetailPage />);
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
-    expect(mocks.cancelDraftTestRun).toHaveBeenCalledWith({ projectId: 5, applicationId: 3 });
     expect(mocks.navigate).toHaveBeenCalledWith('/settings/schedules');
   });
 

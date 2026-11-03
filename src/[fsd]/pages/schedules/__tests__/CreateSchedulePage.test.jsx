@@ -170,14 +170,29 @@ describe('CreateSchedulePage', () => {
     );
   });
 
-  it('Cancel drops the Test draft of the chosen agent and returns', () => {
+  it('Cancel drops the Test draft of the chosen agent after this page started a Test run', async () => {
+    mocks.params = { tab: 'all', agentId: '12' };
+    mocks.state = null;
+    mocks.startDraftTestRun.mockReturnValue({ unwrap: () => Promise.resolve({ run_id: 4 }) });
+    render(<CreateSchedulePage entityType="agent" />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Test run' }));
+    await waitFor(() => expect(mocks.startDraftTestRun).toHaveBeenCalled());
+    await Promise.resolve();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(mocks.cancelDraftTestRun).toHaveBeenCalledWith({ projectId: 5, applicationId: 12 });
+    expect(mocks.navigate).toHaveBeenCalledWith('/agents/all/12?viewMode=owner');
+  });
+
+  it('Cancel sends no delete when this page started no Test run', () => {
     mocks.params = { tab: 'all', agentId: '12' };
     mocks.state = null;
     render(<CreateSchedulePage entityType="agent" />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
-    expect(mocks.cancelDraftTestRun).toHaveBeenCalledWith({ projectId: 5, applicationId: 12 });
+    expect(mocks.cancelDraftTestRun).not.toHaveBeenCalled();
     expect(mocks.navigate).toHaveBeenCalledWith('/agents/all/12?viewMode=owner');
   });
 

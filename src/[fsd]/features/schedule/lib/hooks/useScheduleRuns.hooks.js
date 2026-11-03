@@ -115,10 +115,10 @@ export const useScheduleRunConversation = run => {
 
 // The Test runs the caller started from the form. The server keeps them on a hidden draft, so they are
 // not in the runs of the saved schedule; each row is marked `isDraftRun` and loads its detail from the draft route.
-export const useDraftTestRuns = applicationId => {
+export const useDraftTestRuns = (applicationId, skipRequest = false) => {
   const projectId = useSelectedProjectId();
   const args = { projectId, applicationId, ...RUNS_PAGE };
-  const skip = !projectId || applicationId == null;
+  const skip = skipRequest || !projectId || applicationId == null;
   const { currentData, isError } = useGetDraftTestRunsQuery(args, { skip });
   const rows = useMemo(
     () => (currentData?.rows ?? NO_RUNS).map(row => ({ ...row, isDraftRun: true })),
@@ -127,7 +127,8 @@ export const useDraftTestRuns = applicationId => {
   const polling = !isError && isRunning(rows);
   useGetDraftTestRunsQuery(args, { skip, pollingInterval: polling ? POLLING_INTERVAL_MS : 0 });
 
-  return { rows, loaded: !!currentData };
+  // settled: the list arrived or failed, so a Test Run started now cannot land in the baseline
+  return { rows, loaded: !!currentData, settled: skip || !!currentData || isError };
 };
 
 // One draft Test run with its log, polled every 2 seconds while it runs or waits

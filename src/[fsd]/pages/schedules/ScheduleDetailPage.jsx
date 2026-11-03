@@ -5,10 +5,8 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
 
 import {
-  useCancelDraftTestRunMutation,
   useGetScheduleQuery,
   useRunScheduleMutation,
-  useStartDraftTestRunMutation,
   useUpdateScheduleMutation,
 } from '@/[fsd]/entities/schedule';
 import {
@@ -42,8 +40,6 @@ const ScheduleDetailPage = memo(props => {
   } = useGetScheduleQuery({ projectId, scheduleId }, { skip: !projectId });
   const [updateSchedule] = useUpdateScheduleMutation();
   const [runSchedule] = useRunScheduleMutation();
-  const [startDraftTestRun] = useStartDraftTestRunMutation();
-  const [cancelDraftTestRun] = useCancelDraftTestRunMutation();
   const entityRoute = useEntityScheduleRoute(entityType);
   const runsView = useScheduleRunsView(schedule?.id, schedule?.application_id);
 
@@ -65,19 +61,10 @@ const ScheduleDetailPage = memo(props => {
     [updateSchedule, projectId, scheduleId],
   );
   const onSaved = useCallback(() => navigate(returnTo), [navigate, returnTo]);
-  // Leaving without saving drops the hidden Test draft; the server also removes idle drafts
-  const onCancel = useCallback(() => {
-    if (schedule?.application_id != null)
-      cancelDraftTestRun({ projectId, applicationId: schedule.application_id });
-    navigate(returnTo);
-  }, [cancelDraftTestRun, projectId, schedule?.application_id, navigate, returnTo]);
+  const onCancel = useCallback(() => navigate(returnTo), [navigate, returnTo]);
   const onRunNow = useCallback(
     () => runSchedule({ projectId, scheduleId, trigger: 'manual' }).unwrap(),
     [runSchedule, projectId, scheduleId],
-  );
-  const onDraftTestRun = useCallback(
-    body => startDraftTestRun({ projectId, ...body }).unwrap(),
-    [startDraftTestRun, projectId],
   );
   const sidePanel = useCallback(
     runProps => (
@@ -127,7 +114,6 @@ const ScheduleDetailPage = memo(props => {
       onSubmit={onSubmit}
       onSaved={onSaved}
       onRunNow={onRunNow}
-      onDraftTestRun={onDraftTestRun}
       onCancel={onCancel}
     >
       {({ values: formValues, setFieldValue, fieldError }) => (

@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   saved: [],
   draft: [],
   draftLoaded: true,
+  draftSkip: null,
   loaded: true,
   applicationDetails: vi.fn(),
 }));
@@ -20,7 +21,10 @@ vi.mock('../useScheduleRuns.hooks', () => ({
   useScheduleRuns: () => mocks.saved,
   useScheduleRunsLoaded: () => mocks.loaded,
   useScheduleRunsTotal: () => mocks.saved.length,
-  useDraftTestRuns: () => ({ rows: mocks.draft, loaded: mocks.draftLoaded }),
+  useDraftTestRuns: (applicationId, skip) => {
+    mocks.draftSkip = skip;
+    return { rows: mocks.draft, loaded: mocks.draftLoaded, settled: true };
+  },
 }));
 vi.mock('@/[fsd]/features/settings', async () => ({
   AnalyticCommonHelpers: await import('@/[fsd]/features/settings/lib/helpers/analyticsCommon.helpers'),
@@ -115,26 +119,45 @@ describe('useScheduleRunsView', () => {
     expect(result.current.total).toBe(1);
   });
 
-  it('opens a new Test run by itself', () => {
+  it('opens a new Test run by itself after the user started it', () => {
     mocks.saved = [saved];
-    const { result, rerender } = setup();
+    const { result, rerender } = setup('/', null);
 
+    act(() => result.current.expectRun());
     mocks.draft = [testRun(8, '2026-10-23T09:00:00Z')];
     rerender();
 
     expect(result.current.expandedRunId).toBe(8);
   });
 
-  it('takes no baseline before the draft list has loaded', () => {
-    mocks.draftLoaded = false;
-    mocks.draft = [];
+  it('keeps the open card when a scheduled run starts that the user did not ask for', () => {
+    mocks.saved = [saved];
     const { result, rerender } = setup();
+    act(() => result.current.onExpand(1));
 
-    mocks.draftLoaded = true;
-    mocks.draft = [testRun(3, '2026-10-20T09:00:00Z')];
+    mocks.saved = [{ ...waiting, status: 'running' }, saved];
     rerender();
 
-    expect(result.current.runs).toEqual([]);
+    expect(result.current.expandedRunId).toBe(1);
+  });
+
+  it('opens the run that Run Now started', () => {
+    mocks.saved = [saved];
+    const { result, rerender } = setup();
+
+    act(() => result.current.expectRun());
+    mocks.saved = [{ ...waiting, status: 'running' }, saved];
+    rerender();
+
+    expect(result.current.expandedRunId).toBe(2);
+  });
+
+  it('asks for no draft runs on a saved schedule', () => {
+    setup('/', 9);
+    expect(mocks.draftSkip).toBe(true);
+
+    setup('/', null);
+    expect(mocks.draftSkip).toBe(false);
   });
 
   it('scrolls the card into view for a #runs link once the runs are loaded', () => {

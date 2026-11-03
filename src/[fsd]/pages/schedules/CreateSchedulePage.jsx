@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -41,8 +41,13 @@ const CreateSchedulePage = props => {
 
   const onSaved = useCallback(() => navigate(returnTo), [navigate, returnTo]);
 
+  const startedDraft = useRef(false);
   const onDraftTestRun = useCallback(
-    body => startDraftTestRun({ projectId, ...body }).unwrap(),
+    async body => {
+      const result = await startDraftTestRun({ projectId, ...body }).unwrap();
+      startedDraft.current = true;
+      return result;
+    },
     [startDraftTestRun, projectId],
   );
   const sidePanel = useCallback(
@@ -59,10 +64,10 @@ const CreateSchedulePage = props => {
   );
 
   // The hidden draft of a Test Run is dropped when the user leaves without saving; a failed cleanup is harmless
-  // because the server also removes idle drafts
+  // because the server also removes idle drafts. Only a draft this page started goes, never one from another tab
   const onCancel = useCallback(
     formValues => {
-      if (formValues?.application_id)
+      if (startedDraft.current && formValues?.application_id)
         cancelDraftTestRun({ projectId, applicationId: formValues.application_id });
       navigate(returnTo);
     },

@@ -25,7 +25,12 @@ const scrollBehavior = () => (matches('(prefers-reduced-motion: reduce)') ? 'aut
 export const useScheduleRunsView = (scheduleId, applicationId) => {
   const projectId = useSelectedProjectId();
   const savedRuns = useScheduleRuns(scheduleId);
-  const { rows: draftRuns, loaded: draftLoaded } = useDraftTestRuns(applicationId);
+  // A saved schedule has no Test Run on its page, so its page never asks for the draft runs
+  const {
+    rows: draftRuns,
+    loaded: draftLoaded,
+    settled: draftSettled,
+  } = useDraftTestRuns(applicationId, scheduleId != null);
   const runsLoaded = useScheduleRunsLoaded(scheduleId);
   const savedTotal = useScheduleRunsTotal(scheduleId);
   // The approval notice links here with the conversation of the waiting run
@@ -36,10 +41,15 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
 
   // The draft runs of an earlier visit are not part of this page: the newest id seen at the first load is the
   // baseline for this entity
-  const baseline = useRef({ applicationId: null, id: 0 });
-  if (draftLoaded && baseline.current.applicationId !== applicationId) {
-    baseline.current = { applicationId, id: draftRuns.reduce((max, run) => Math.max(max, run.id), 0) };
-  }
+  const [baseline, setBaseline] = useState({ applicationId: null, id: 0 });
+  useEffect(() => {
+    if (!draftLoaded) return;
+    setBaseline(current =>
+      current.applicationId === applicationId
+        ? current
+        : { applicationId, id: draftRuns.reduce((max, run) => Math.max(max, run.id), 0) },
+    );
+  }, [applicationId, draftLoaded, draftRuns]);
 
   const { currentData: details } = useApplicationDetailsQuery(
     { projectId, applicationId },
@@ -51,15 +61,8 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
   );
 
   const runs = useMemo(
-    () =>
-      mergeRuns(
-        savedRuns,
-        baseline.current.applicationId === applicationId ? draftRuns : [],
-        baseline.current.id,
-      ),
-    // The baseline is set during render when the draft list loads, so the loaded flag stands for it
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [savedRuns, draftRuns, applicationId, draftLoaded],
+    () => mergeRuns(savedRuns, baseline.applicationId === applicationId ? draftRuns : [], baseline.id),
+    [savedRuns, draftRuns, applicationId, baseline],
   );
   const draftCount = runs.length - savedRuns.length;
   const total = Number.isFinite(savedTotal)
@@ -68,11 +71,19 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
       ? runs.length
       : undefined;
 
-  // The newest run opens by itself, so a fresh Test Run shows its log at once
+  // A run the user starts (Test Run, Run Now) opens by itself, so its log shows at once. A scheduled run that
+  // starts meanwhile must not close the card the user reads.
   const newestRunId = runs[0]?.id;
   const previousNewestId = useRef(newestRunId);
+  const expectingRun = useRef(false);
+  const expectRun = useCallback(() => {
+    expectingRun.current = true;
+  }, []);
   useEffect(() => {
-    if (newestRunId !== previousNewestId.current && newestRunId != null) setChosenRunId(newestRunId);
+    if (newestRunId !== previousNewestId.current && newestRunId != null && expectingRun.current) {
+      expectingRun.current = false;
+      setChosenRunId(newestRunId);
+    }
     previousNewestId.current = newestRunId;
   }, [newestRunId]);
 
@@ -104,6 +115,8 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
     versionNames,
     expandedRunId,
     onExpand,
+    expectRun,
+    draftSettled,
     cardRef,
   };
 };
