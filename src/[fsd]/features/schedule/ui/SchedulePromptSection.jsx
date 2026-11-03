@@ -110,7 +110,12 @@ SchedulePromptSection.displayName = 'SchedulePromptSection';
 /** @type {MuiSx} */
 const styles = {
   // the outlined variant grows the box to 25rem; the mockup keeps it at the 8.25rem minimum and scrolls the text
-  prompt: { '& .MuiInputBase-inputMultiline': { maxHeight: '8.25rem' } },
+  prompt: {
+    '& .MuiOutlinedInput-input.MuiInputBase-inputMultiline': {
+      height: '8.25rem !important',
+      maxHeight: '8.25rem',
+    },
+  },
   runMode: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
   runModeLabel: { display: 'flex', alignItems: 'center', gap: '0.25rem' },
 };
