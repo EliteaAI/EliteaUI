@@ -35,6 +35,13 @@ vi.mock('@/[fsd]/features/chat/ui', () => {
   return { ChatBox };
 });
 
+vi.mock('@/[fsd]/widgets/entity-test-panel', async () => {
+  const { default: EntityTestPanelShell } =
+    await import('@/[fsd]/widgets/entity-test-panel/ui/EntityTestPanelShell');
+  const { isTestChatClearDisabled } = await import('@/[fsd]/widgets/entity-test-panel/lib/helpers');
+  return { EntityTestPanelUI: { EntityTestPanelShell }, isTestChatClearDisabled };
+});
+
 vi.mock('../TestPanelControls', () => ({
   default: ({ onClear, onClose, isClearDisabled }) => (
     <div>

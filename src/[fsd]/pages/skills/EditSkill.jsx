@@ -10,11 +10,7 @@ import { CompareVersionsModal } from '@/[fsd]/entities/compare-versions';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { SetDefaultVersionDialog } from '@/[fsd]/entities/version/ui';
 import {
-  AIEditSkillButton,
-  CreateSkillForm,
   SkillControls,
-  SkillInformation,
-  SkillRunPane,
   useCompareSkillVersions,
   useSetSkillDefaultVersionMutation,
   useSkillDetailsQuery,
@@ -29,20 +25,16 @@ import {
   useToast,
 } from '@/[fsd]/shared/lib/hooks';
 import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
+import { useEntityTestPanel } from '@/[fsd]/widgets/entity-test-panel';
+import { SkillEditorWorkspace } from '@/[fsd]/widgets/skill-editor';
 import { SkillTabBar } from '@/[fsd]/widgets/skill-tab-bar';
 import { eliteaApi } from '@/api/eliteaApi';
-import { PERMISSIONS, SkillsTabs, ViewMode } from '@/common/constants';
+import { PERMISSIONS, SkillsTabs } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
 import StyledTabs from '@/components/StyledTabs';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import useNavBlocker from '@/hooks/useNavBlocker';
-import {
-  ContentContainer,
-  LeftGridItem,
-  RightGridItem,
-  StyledGridContainer,
-} from '@/pages/Common/Components/StyledComponents';
 import Page404 from '@/pages/Page404.jsx';
 import RouteDefinitions from '@/routes';
 
@@ -81,6 +73,12 @@ const EditSkill = memo(() => {
   const [runFocusRequest, setRunFocusRequest] = useState(0);
   const [searchParams, setSearchParams] = useSearchParams();
   const runConversationId = readRunConversationId(searchParams);
+  const { isOpen: isTestPanelOpen, open: openTestPanel, close: closeTestPanel } = useEntityTestPanel();
+
+  const handleCloseTestPanel = useCallback(() => {
+    setIsFullScreenChat(false);
+    closeTestPanel();
+  }, [closeTestPanel]);
 
   const { goToRunHistory } = useRunHistoryNavigation({
     entityId: skillId,
@@ -104,7 +102,10 @@ const EditSkill = memo(() => {
     [setSearchParams],
   );
 
-  const focusRunPane = useCallback(() => setRunFocusRequest(request => request + 1), []);
+  const focusRunPane = useCallback(() => {
+    openTestPanel();
+    setRunFocusRequest(request => request + 1);
+  }, [openTestPanel]);
   const onRunFocusHandled = useCallback(() => setRunFocusRequest(0), []);
 
   useEffect(() => {
@@ -122,18 +123,23 @@ const EditSkill = memo(() => {
 
   useEffect(() => {
     if (!restoredConversationID) return;
+    openTestPanel();
     onRunConversationChange(restoredConversationID);
     toastSuccess('Chat has been restored successfully.');
     onRestoreConversationComplete();
-  }, [onRestoreConversationComplete, onRunConversationChange, restoredConversationID, toastSuccess]);
+  }, [
+    onRestoreConversationComplete,
+    onRunConversationChange,
+    openTestPanel,
+    restoredConversationID,
+    toastSuccess,
+  ]);
 
   const [setDefaultVersion, { isLoading: isSettingDefault, reset: resetDefaultMutation }] =
     useSetSkillDefaultVersionMutation();
 
   const [isDefaultDialogOpen, setIsDefaultDialogOpen] = useState(false);
   const [pendingDefaultVersionId, setPendingDefaultVersionId] = useState(null);
-
-  const lgGridColumns = useMemo(() => (isFullScreenChat ? 12 : 6), [isFullScreenChat]);
 
   const {
     loadVersions: loadSkillVersions,
@@ -339,50 +345,26 @@ const EditSkill = memo(() => {
                   sx={styles.form}
                 >
                   <DirtyDetector setDirty={setDirty} />
-                  <StyledGridContainer
-                    sx={styles.gridContainer}
-                    columnSpacing="2rem"
-                    container
-                  >
-                    <LeftGridItem
-                      size={{ xs: 12, lg: lgGridColumns }}
-                      hidden={isFullScreenChat}
-                      sx={styles.leftGridItem}
-                    >
-                      <ContentContainer height="100%">
-                        <CreateSkillForm
-                          viewMode={ViewMode.Owner}
-                          disabled={!hasEditPermission}
-                          summaryEditAction={<AIEditSkillButton />}
-                          instructionsKey={`${skillId}:${currentVersionId}:${
-                            (data?.version_details?.instructions ?? data?.instructions ?? '').length
-                          }`}
-                        />
-                        <Box sx={styles.informationWrapper}>
-                          <SkillInformation
-                            id={data?.id}
-                            versionId={data?.version_details?.id}
-                            meta={data?.version_details?.meta}
-                          />
-                        </Box>
-                      </ContentContainer>
-                    </LeftGridItem>
-                    <RightGridItem
-                      size={{ xs: 12, lg: lgGridColumns }}
-                      sx={styles.rightGridItem}
-                    >
-                      <SkillRunPane
-                        isFullScreenChat={isFullScreenChat}
-                        setIsFullScreenChat={setIsFullScreenChat}
-                        runConversationId={runConversationId}
-                        onRunConversationChange={onRunConversationChange}
-                        onOpenRunVersion={onOpenRunVersion}
-                        onShowHistory={goToRunHistory}
-                        focusRequest={runFocusRequest}
-                        onFocusHandled={onRunFocusHandled}
-                      />
-                    </RightGridItem>
-                  </StyledGridContainer>
+                  <SkillEditorWorkspace
+                    skillId={data?.id}
+                    versionId={data?.version_details?.id}
+                    meta={data?.version_details?.meta}
+                    disabled={!hasEditPermission}
+                    instructionsKey={`${skillId}:${currentVersionId}:${
+                      (data?.version_details?.instructions ?? data?.instructions ?? '').length
+                    }`}
+                    isTestPanelOpen={isTestPanelOpen}
+                    onOpenTestPanel={openTestPanel}
+                    onCloseTestPanel={handleCloseTestPanel}
+                    isFullScreen={isFullScreenChat}
+                    setIsFullScreen={setIsFullScreenChat}
+                    onShowHistory={goToRunHistory}
+                    runConversationId={runConversationId}
+                    onRunConversationChange={onRunConversationChange}
+                    onOpenRunVersion={onOpenRunVersion}
+                    focusRequest={runFocusRequest}
+                    onFocusHandled={onRunFocusHandled}
+                  />
                 </Box>
               ),
             },
@@ -463,23 +445,6 @@ const editSkillStyles = () => ({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  gridContainer: {
-    paddingBottom: '1.5rem',
-    paddingTop: '0.75rem',
-    paddingRight: '1.5rem',
-    paddingLeft: '1.5rem',
-    height: '100%',
-  },
-  leftGridItem: {
-    height: '100%',
-    overflowY: 'scroll',
-  },
-  rightGridItem: {
-    height: '100%',
-  },
-  informationWrapper: {
-    marginTop: '0.75rem',
   },
 });
 

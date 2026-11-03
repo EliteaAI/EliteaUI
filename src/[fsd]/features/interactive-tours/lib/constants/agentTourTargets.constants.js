@@ -14,4 +14,5 @@ export const AGENT_TOUR_TARGETS = {
   versions: buildTourSelector(AGENT_TOUR_TARGET_IDS.versions),
   publish: buildTourSelector(AGENT_TOUR_TARGET_IDS.publish),
   testChat: buildTourSelector(AGENT_TOUR_TARGET_IDS.testChat),
+  actionsMenu: buildTourSelector(AGENT_TOUR_TARGET_IDS.actionsMenu),
 };

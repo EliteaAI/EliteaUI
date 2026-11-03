@@ -8,7 +8,9 @@ import { useIsVersionNotFound } from '@/[fsd]/entities/version/lib/hooks';
 import { InstructionsInputRefProvider } from '@/[fsd]/shared/lib/context';
 import { useToast, useViewMode } from '@/[fsd]/shared/lib/hooks';
 import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
+import { AgentEditTab } from '@/[fsd]/widgets/agent-editor';
 import { ApplicationControls } from '@/[fsd]/widgets/application-controls';
+import { useEntityTestPanel } from '@/[fsd]/widgets/entity-test-panel';
 import { PERMISSIONS, ViewMode } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils';
 import StyledTabs from '@/components/StyledTabs';
@@ -18,7 +20,6 @@ import useNavBlocker from '@/hooks/useNavBlocker';
 import Page404 from '@/pages/Page404.jsx';
 
 import getValidateSchema from './Components/Applications/ApplicationCreationValidateSchema';
-import ConfigurationTab from './Components/Applications/ConfigurationTab';
 import useApplicationInitialValues from './useApplicationInitialValues';
 
 const EditApplication = memo(() => {
@@ -33,6 +34,14 @@ const EditApplication = memo(() => {
   const isFromCreation = searchParams.get('isFromCreation') === 'true';
   const [dirty, setDirty] = useState(false);
   const [unsavedLLMSettings, setUnsavedLLMSettings] = useState();
+  // Kept above the loading state, so a refetch of the agent doesn't close the Test panel
+  const [isFullScreenChat, setIsFullScreenChat] = useState(false);
+  const { isOpen: isTestPanelOpen, open: openTestPanel, close: closeTestPanel } = useEntityTestPanel();
+
+  const handleCloseTestPanel = useCallback(() => {
+    setIsFullScreenChat(false);
+    closeTestPanel();
+  }, [closeTestPanel]);
 
   // Reset per-session LLM override when navigating to a different version,
   // so a model change on one version cannot bleed into execution of another (#6676).
@@ -95,24 +104,31 @@ const EditApplication = memo(() => {
           />
         ),
         content: (
-          <ConfigurationTab
-            totalToolCount={initialValues?.version_details?.tools?.length || 0}
+          <AgentEditTab
             isFetching={isFetching}
             isError={isError}
             applicationId={applicationId}
             setDirty={setDirty}
             unsavedLLMSettings={unsavedLLMSettings}
             setUnsavedLLMSettings={setUnsavedLLMSettings}
+            isTestPanelOpen={isTestPanelOpen}
+            onOpenTestPanel={openTestPanel}
+            onCloseTestPanel={handleCloseTestPanel}
+            isFullScreen={isFullScreenChat}
+            setIsFullScreen={setIsFullScreenChat}
           />
         ),
       },
     ],
     [
-      initialValues?.version_details?.tools?.length,
       isFetching,
       isError,
       applicationId,
       unsavedLLMSettings,
+      isTestPanelOpen,
+      openTestPanel,
+      handleCloseTestPanel,
+      isFullScreenChat,
       handleSuccess,
       handleDiscard,
       setBlockNav,

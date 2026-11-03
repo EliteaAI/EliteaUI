@@ -1,4 +1,4 @@
-import { memo, useRef } from 'react';
+import { forwardRef, memo, useRef } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -13,56 +13,59 @@ import UnsavedChangesTestBanner from './UnsavedChangesTestBanner';
 
 const UNSAVED_CHANGES_BANNER = <UnsavedChangesTestBanner />;
 
-const SkillRunPane = memo(props => {
-  const {
-    isFullScreenChat,
-    setIsFullScreenChat,
-    runConversationId,
-    onRunConversationChange,
-    onOpenRunVersion,
-    onShowHistory,
-    focusRequest,
-    onFocusHandled,
-  } = props;
-  const { values, initialValues } = useFormikContext();
-  const paneRef = useRef(null);
-  const canRunSkill = useCanRunSkill();
-  const isTestingUnsavedChanges = hasUnsavedRunChanges(values, initialValues);
-  const showsTestPanel = isTestingUnsavedChanges || !canRunSkill;
-  const styles = skillRunPaneStyles();
+/**
+ * Chat of the skill Test panel: the persisted run of the saved version, or a stateless test of unsaved
+ * changes. `ref` reaches the shown chat, so the panel toolbar can clear it.
+ */
+const SkillRunPane = memo(
+  forwardRef((props, ref) => {
+    const {
+      runConversationId,
+      onRunConversationChange,
+      onOpenRunVersion,
+      onClearStateChange,
+      focusRequest,
+      onFocusHandled,
+    } = props;
+    const { values, initialValues } = useFormikContext();
+    const paneRef = useRef(null);
+    const canRunSkill = useCanRunSkill();
+    const isTestingUnsavedChanges = hasUnsavedRunChanges(values, initialValues);
+    const showsTestPanel = isTestingUnsavedChanges || !canRunSkill;
+    const styles = skillRunPaneStyles();
 
-  useFocusRunInput({ containerRef: paneRef, focusRequest, isReady: showsTestPanel, onFocusHandled });
+    useFocusRunInput({ containerRef: paneRef, focusRequest, isReady: showsTestPanel, onFocusHandled });
 
-  return (
-    <Box
-      ref={paneRef}
-      sx={styles.pane}
-      data-testid="skill-run-pane"
-    >
-      {showsTestPanel ? (
-        <SkillTestPanel
-          isFullScreenChat={isFullScreenChat}
-          setIsFullScreenChat={setIsFullScreenChat}
-          banner={isTestingUnsavedChanges ? UNSAVED_CHANGES_BANNER : null}
-        />
-      ) : (
-        <SkillRunPanel
-          skillId={initialValues.id}
-          skillName={initialValues.name}
-          versionDetails={initialValues.version_details}
-          runConversationId={runConversationId}
-          onRunConversationChange={onRunConversationChange}
-          onOpenRunVersion={onOpenRunVersion}
-          isFullScreenChat={isFullScreenChat}
-          setIsFullScreenChat={setIsFullScreenChat}
-          onShowHistory={onShowHistory}
-          focusRequest={focusRequest}
-          onFocusHandled={onFocusHandled}
-        />
-      )}
-    </Box>
-  );
-});
+    return (
+      <Box
+        ref={paneRef}
+        sx={styles.pane}
+        data-testid="skill-run-pane"
+      >
+        {showsTestPanel ? (
+          <SkillTestPanel
+            ref={ref}
+            banner={isTestingUnsavedChanges ? UNSAVED_CHANGES_BANNER : null}
+            onClearStateChange={onClearStateChange}
+          />
+        ) : (
+          <SkillRunPanel
+            ref={ref}
+            skillId={initialValues.id}
+            skillName={initialValues.name}
+            versionDetails={initialValues.version_details}
+            runConversationId={runConversationId}
+            onRunConversationChange={onRunConversationChange}
+            onOpenRunVersion={onOpenRunVersion}
+            onClearStateChange={onClearStateChange}
+            focusRequest={focusRequest}
+            onFocusHandled={onFocusHandled}
+          />
+        )}
+      </Box>
+    );
+  }),
+);
 
 SkillRunPane.displayName = 'SkillRunPane';
 

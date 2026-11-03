@@ -14,18 +14,19 @@ import {
   useUnpublishVersionMenu,
 } from '@/[fsd]/entities/version';
 import { useCompareAgentVersions } from '@/[fsd]/features/agent/lib/hooks';
-import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
+import { PinEntityConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import { useInstructionsInputRefContext } from '@/[fsd]/shared/lib/context';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import {
   useIsFromPipelineDetail,
   useProjectEntityLink,
   useProjectType,
+  useRunHistoryNavigation,
   useSelectedProjectId,
   useViewMode,
 } from '@/[fsd]/shared/lib/hooks';
 import { Controls } from '@/[fsd]/shared/ui';
-import { EvaluateIcon } from '@/[fsd]/shared/ui/icon';
+import { EvaluateIcon, RunHistoryIcon } from '@/[fsd]/shared/ui/icon';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
 import { PERMISSIONS, ViewMode } from '@/common/constants';
 import { useCopyLinkMenu } from '@/components/CopyLinkToEntityButton.jsx';
@@ -38,6 +39,8 @@ import { useDeleteApplicationMenu } from '@/pages/Applications/Components/Applic
 import { useExportApplicationMenu } from '@/pages/Applications/Components/Applications/ExportApplicationButton';
 import { AuthorsButton } from '@/pages/Common';
 import RouteDefinitions from '@/routes';
+
+const { AGENT_TOUR_TARGET_IDS } = TourTargetConstants;
 
 const ApplicationControls = memo(props => {
   const { setBlockNav, onSuccess } = props;
@@ -57,6 +60,13 @@ const ApplicationControls = memo(props => {
   const [compareVersionsOpen, setCompareVersionsOpen] = useState(false);
 
   const { values: { id } = {} } = formik;
+
+  const { goToRunHistory } = useRunHistoryNavigation({
+    entityId: id,
+    historyRoute: isFromPipeline
+      ? RouteDefinitions.PipelineRunHistory
+      : RouteDefinitions.ApplicationsRunHistory,
+  });
 
   const {
     loadVersions: loadAgentVersions,
@@ -246,6 +256,19 @@ const ApplicationControls = memo(props => {
       },
       shareAgentMenuItem,
       pinMenuItem,
+      ...(id && viewMode !== ViewMode.Public
+        ? [
+            {
+              key: 'run-history',
+              label: 'Run History',
+              icon: <RunHistoryIcon sx={{ fontSize: '1rem' }} />,
+              onClick: goToRunHistory,
+              slotProps: {
+                MenuItem: { 'data-testid': `${isFromPipeline ? 'pipeline' : 'agent'}-run-history-menu-item` },
+              },
+            },
+          ]
+        : []),
       ...(canDeleteApplication
         ? [{ ...deleteApplicationMenuItem, label: `Delete ${isFromPipeline ? 'pipeline' : 'agent'}` }]
         : []),
@@ -276,6 +299,8 @@ const ApplicationControls = memo(props => {
     location.search,
     tab,
     agentId,
+    id,
+    goToRunHistory,
   ]);
 
   return (
@@ -292,6 +317,7 @@ const ApplicationControls = memo(props => {
       <Controls.ControlsDropdown
         id="agent-actions"
         menuItems={menuItems}
+        anchorButtonProps={isFromPipeline ? undefined : { 'data-tour': AGENT_TOUR_TARGET_IDS.actionsMenu }}
       />
       <VersionDelete
         ref={versionDeleteRef}

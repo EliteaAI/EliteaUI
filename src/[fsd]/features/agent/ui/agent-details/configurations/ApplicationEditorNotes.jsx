@@ -14,6 +14,7 @@ const ApplicationEditorNotes = memo(props => {
   const {
     style,
     disabled,
+    defaultExpanded = true,
     // Optional stable test hooks (testid-only locator policy). No-op when
     // omitted, so the Agent call site (no case exercises Editor Notes there
     // yet) is unaffected — canon #511 scope discipline.
@@ -72,6 +73,7 @@ const ApplicationEditorNotes = memo(props => {
       style={style}
       showMode={AccordionConstants.AccordionShowMode.LeftMode}
       accordionSX={styles.accordion}
+      defaultExpanded={defaultExpanded}
       items={accordionItems}
     />
   );

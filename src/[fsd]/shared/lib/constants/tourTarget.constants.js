@@ -17,4 +17,5 @@ export const AGENT_TOUR_TARGET_IDS = {
   versions: 'agent-versions',
   publish: 'agent-publish',
   testChat: 'agent-test-chat',
+  actionsMenu: 'agent-actions-menu',
 };

@@ -1,6 +1,7 @@
 import { forwardRef, memo } from 'react';
 
-import { TestPanelUI, usePipelineTestChat, useTestPanelWidth } from '@/[fsd]/features/pipelines/test-panel';
+import { TestPanelUI, usePipelineTestChat } from '@/[fsd]/features/pipelines/test-panel';
+import { EntityTestPanelUI, useTestPanelWidth } from '@/[fsd]/widgets/entity-test-panel';
 import useAgentMCPToolsStatusMonitor from '@/hooks/application/useAgentMCPToolsStatusMonitor';
 
 /**
@@ -44,7 +45,12 @@ const PipelineTestRegion = memo(
         onShowHistory={goToRunHistory}
         onClose={onClose}
         resizeHandle={
-          !isSmallWindow && <TestPanelUI.TestPanelResizeHandle onResizeStart={handleResizeStart} />
+          !isSmallWindow && (
+            <EntityTestPanelUI.TestPanelResizeHandle
+              onResizeStart={handleResizeStart}
+              testId="pipeline-test-panel-resize-handle"
+            />
+          )
         }
       />
     );

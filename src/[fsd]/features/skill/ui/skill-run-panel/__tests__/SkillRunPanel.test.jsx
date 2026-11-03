@@ -5,33 +5,24 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import lightPalette from '@/lightPalette';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { act, cleanup, render, screen } from '@testing-library/react';
 
 import SkillRunPanel from '../SkillRunPanel';
 
 const fixture = vi.hoisted(() => ({ runChat: {} }));
 
 vi.hoisted(() => vi.stubEnv('VITE_SERVER_URL', 'http://localhost/api/v2/'));
-vi.mock('@/[fsd]/features/chat/ui', async () => ({
+vi.mock('@/[fsd]/features/chat/ui', () => ({
   ChatBox: () => <div data-testid="chat-box" />,
-  ChatButton: {
-    ClearChatButton: (await import('@/[fsd]/features/chat/ui/chat-button/ClearChatButton')).default,
-  },
 }));
 vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
   useSkillRunChat: () => fixture.runChat,
   useFocusRunInput: () => {},
   useSkillVersionModel: () => ({ canEditVersionModel: false }),
 }));
-vi.mock('@/[fsd]/shared/ui/button', async importOriginal => ({
-  ...(await importOriginal()),
-  ViewRunHistoryButton: () => <div data-testid="skill-run-history-button" />,
-}));
 vi.mock('@/[fsd]/widgets/context-budget', () => ({
   ContextBudgetUI: { ContextBudgetInfo: () => null },
 }));
-vi.mock('@/components/Chat/FullScreenToggle', () => ({ default: () => null }));
 vi.mock('@/hooks/chat/useUploadAttachments', () => ({ default: () => ({}) }));
 vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));
 
@@ -56,16 +47,27 @@ const setRunChat = overrides => {
   };
 };
 
-const renderPanel = () =>
+const renderPanel = () => {
+  const ref = { current: null };
+  const onClearStateChange = vi.fn();
   render(
     <ThemeProvider theme={theme}>
       <SkillRunPanel
+        ref={ref}
         skillId={601}
         skillName="Reviewer"
-        onShowHistory={vi.fn()}
+        onClearStateChange={onClearStateChange}
       />
     </ThemeProvider>,
   );
+  return { ref, onClearStateChange };
+};
+
+const clear = ref => {
+  act(() => {
+    ref.current.clear();
+  });
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -74,64 +76,61 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('SkillRunPanel clear the chat', () => {
-  it('shows the shared Clear the chat button next to Run History, without a separate New run', async () => {
+  it('leaves the chat controls to the Test panel toolbar', () => {
     renderPanel();
 
     expect(screen.queryByTestId('skill-run-new-run-button')).not.toBeInTheDocument();
-
-    const clearButton = screen.getByTestId('chat-clear-button');
-    expect(clearButton).toHaveAccessibleName('clear the chat');
-    expect(screen.getByTestId('skill-run-history-button')).toBeInTheDocument();
-
-    await userEvent.hover(clearButton);
-    expect(await screen.findByRole('tooltip')).toHaveTextContent('Clear the chat');
+    expect(screen.queryByTestId('chat-clear-button')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('skill-run-history-button')).not.toBeInTheDocument();
   });
 
-  it('starts a fresh run like agents do, without deleting the messages', async () => {
-    renderPanel();
+  it('starts a fresh run like agents do, without deleting the messages', () => {
+    const { ref } = renderPanel();
 
-    await userEvent.click(screen.getByTestId('chat-clear-button'));
+    clear(ref);
 
     expect(fixture.runChat.onStartNewRun).toHaveBeenCalledTimes(1);
     expect(fixture.runChat.onDeleteAllMessages).not.toHaveBeenCalled();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('lets a read-only run be cleared to start an own run', async () => {
+  it('lets a read-only run be cleared to start an own run', () => {
     setRunChat({ isReadOnly: true });
-    renderPanel();
+    const { ref, onClearStateChange } = renderPanel();
 
-    await userEvent.click(screen.getByTestId('chat-clear-button'));
+    expect(onClearStateChange).toHaveBeenLastCalledWith(false);
+    clear(ref);
 
     expect(fixture.runChat.onStartNewRun).toHaveBeenCalledTimes(1);
   });
 
   it('disables clearing while the skill is answering', () => {
     setRunChat({ isStreaming: true });
-    renderPanel();
+    const { onClearStateChange } = renderPanel();
 
-    expect(screen.getByTestId('chat-clear-button')).toBeDisabled();
+    expect(onClearStateChange).toHaveBeenLastCalledWith(true);
   });
 
   it('disables clearing on a fresh chat with no messages', () => {
     setRunChat({ activeConversation: { chat_history: [] } });
-    renderPanel();
+    const { onClearStateChange } = renderPanel();
 
-    expect(screen.getByTestId('chat-clear-button')).toBeDisabled();
+    expect(onClearStateChange).toHaveBeenLastCalledWith(true);
   });
 
   it('enables clearing once a new run has messages, before it is saved', () => {
     setRunChat({ activeConversation: { chat_history: runWithMessages.chat_history } });
-    renderPanel();
+    const { onClearStateChange } = renderPanel();
 
-    expect(screen.getByTestId('chat-clear-button')).toBeEnabled();
+    expect(onClearStateChange).toHaveBeenLastCalledWith(false);
   });
 
-  it('lets a saved run without messages be cleared to start a fresh run', async () => {
+  it('lets a saved run without messages be cleared to start a fresh run', () => {
     setRunChat({ activeConversation: { id: 1780, chat_history: [] }, isReadOnly: true });
-    renderPanel();
+    const { ref, onClearStateChange } = renderPanel();
 
-    await userEvent.click(screen.getByTestId('chat-clear-button'));
+    expect(onClearStateChange).toHaveBeenLastCalledWith(false);
+    clear(ref);
 
     expect(fixture.runChat.onStartNewRun).toHaveBeenCalledTimes(1);
   });

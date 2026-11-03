@@ -26,7 +26,7 @@ const WEBHOOK_TYPE_LABELS = {
 };
 
 const ApplicationInformation = memo(props => {
-  const { style, showPipeline = false } = props;
+  const { style, showPipeline = false, defaultExpanded = true } = props;
   const {
     values: { id, version_details },
   } = useFormikContext();
@@ -171,6 +171,7 @@ const ApplicationInformation = memo(props => {
         style={style}
         showMode={AccordionConstants.AccordionShowMode.LeftMode}
         accordionSX={styles.accordion}
+        defaultExpanded={defaultExpanded}
         items={accordionItems}
       />
       {showPipeline && showPipelineModal && (

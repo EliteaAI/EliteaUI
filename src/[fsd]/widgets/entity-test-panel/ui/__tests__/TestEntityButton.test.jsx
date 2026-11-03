@@ -7,18 +7,22 @@ import darkPalette from '@/darkPalette';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
-import TestPipelineButton from '../TestPipelineButton';
+import TestEntityButton from '../TestEntityButton';
 
 const theme = createTheme({ palette: darkPalette });
 
 const renderButton = (props = {}) =>
   render(
     <ThemeProvider theme={theme}>
-      <TestPipelineButton {...props} />
+      <TestEntityButton
+        label="Test Pipeline"
+        testId="pipeline-test-button"
+        {...props}
+      />
     </ThemeProvider>,
   );
 
-describe('TestPipelineButton', () => {
+describe('TestEntityButton', () => {
   beforeEach(() => vi.clearAllMocks());
   afterEach(() => cleanup());
 
@@ -40,5 +44,11 @@ describe('TestPipelineButton', () => {
     expect(button).toBeEnabled();
     fireEvent.click(button);
     expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders the given label', () => {
+    renderButton({ label: 'Test Agent', testId: 'agent-test-button' });
+
+    expect(screen.getByTestId('agent-test-button')).toHaveTextContent('Test Agent');
   });
 });

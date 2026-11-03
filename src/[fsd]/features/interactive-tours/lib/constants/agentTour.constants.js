@@ -1,5 +1,4 @@
 import { AGENT_TOUR_TARGETS } from '@/[fsd]/features/interactive-tours/lib/constants/agentTourTargets.constants';
-import { SHARED_TOUR_TARGETS } from '@/[fsd]/features/interactive-tours/lib/constants/interactiveTour.constants';
 
 export const AGENT_TOUR_ID = 'agent';
 
@@ -106,17 +105,17 @@ Once submitted, a published version goes through a moderation review. You will r
   {
     id: 'test-chat',
     target: AGENT_TOUR_TARGETS.testChat,
-    placement: 'center',
+    placement: 'bottom',
     title: 'Embedded Test Chat',
-    content: `The agent configuration page includes a live chat panel so you can test the agent as you build it — no need to navigate away. Any change to the instructions, toolkits, or model settings takes effect immediately in the next message you send.
+    content: `Click **Test Agent** to open a live chat panel next to the configuration, so you can test the agent as you build it — no need to navigate away. Opening the panel does not run the agent. Any change to the instructions, toolkits, or model settings takes effect immediately in the next message you send. Closing the panel keeps the conversation.
 
 **Voice input** — click the **microphone** icon in the test chat to dictate instead of type. Speech is converted to text in real time at the cursor position. Stop recording at any time to finalize the transcript.`,
   },
   {
     id: 'run-history',
-    target: SHARED_TOUR_TARGETS.runHistory,
-    placement: 'left',
+    target: AGENT_TOUR_TARGETS.actionsMenu,
+    placement: 'bottom',
     title: 'Run History',
-    content: `Every agent execution is logged automatically. Open the **Run History** panel to browse past runs, inspect inputs and outputs, replay conversations step by step, and restore a previous run's message history to the test chat for further debugging.`,
+    content: `Every agent execution is logged automatically. Open **Run History** from this actions menu or from the test panel to browse past runs, inspect inputs and outputs, replay conversations step by step, and restore a previous run's message history to the test chat for further debugging.`,
   },
 ];

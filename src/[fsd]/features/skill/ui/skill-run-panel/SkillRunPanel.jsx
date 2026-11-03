@@ -1,14 +1,12 @@
-import { memo, useEffect, useMemo, useRef } from 'react';
+import { forwardRef, memo, useEffect, useImperativeHandle, useRef } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { ChatBox, ChatButton } from '@/[fsd]/features/chat/ui';
+import { ChatBox } from '@/[fsd]/features/chat/ui';
 import { withRunStepsLimit } from '@/[fsd]/features/skill/lib/helpers';
 import { useFocusRunInput, useSkillRunChat, useSkillVersionModel } from '@/[fsd]/features/skill/lib/hooks';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
-import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
 import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
-import FullScreenToggle from '@/components/Chat/FullScreenToggle';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents';
 
@@ -17,177 +15,172 @@ const NO_CONTEXT_STRATEGY = {};
 const NO_LLM_SETTINGS = {};
 const NOOP = () => {};
 
-const SkillRunPanel = memo(props => {
-  const {
-    skillId,
-    skillName,
-    versionDetails,
-    runConversationId,
-    onRunConversationChange,
-    onOpenRunVersion,
-    isFullScreenChat,
-    setIsFullScreenChat,
-    onShowHistory,
-    focusRequest,
-    onFocusHandled,
-  } = props;
-  const projectId = useSelectedProjectId();
-  const panelRef = useRef(null);
-  const {
-    llmSettings: versionLLMSettings,
-    canEditVersionModel,
-    unsavedVersionLLMSettings,
-    onSetLLMSettings: onSetVersionLLMSettings,
-  } = useSkillVersionModel();
+/**
+ * Persisted run of the saved skill version. The Test panel toolbar clears it through the ref and
+ * learns whether clearing is allowed from `onClearStateChange`.
+ */
+const SkillRunPanel = memo(
+  forwardRef((props, ref) => {
+    const {
+      skillId,
+      skillName,
+      versionDetails,
+      runConversationId,
+      onRunConversationChange,
+      onOpenRunVersion,
+      onClearStateChange,
+      focusRequest,
+      onFocusHandled,
+    } = props;
+    const projectId = useSelectedProjectId();
+    const panelRef = useRef(null);
+    const {
+      llmSettings: versionLLMSettings,
+      canEditVersionModel,
+      unsavedVersionLLMSettings,
+      onSetLLMSettings: onSetVersionLLMSettings,
+    } = useSkillVersionModel();
 
-  const {
-    activeConversation,
-    activeParticipant,
-    activeParticipantDetails,
-    isStreaming,
-    isReadOnly,
-    isLoadingConversation,
-    llmSettings,
-    unsavedLLMSettings,
-    setUnsavedLLMSettings,
-    setChatHistory,
-    setActiveConversation,
-    onSend,
-    onStartNewRun,
-    onDeleteAllMessages,
-    onDeleteMessage,
-    onStopStreaming,
-    onSetLLMSettings,
-    attachments,
-    onAttachFiles,
-    onDeleteAttachment,
-    onClearAttachments,
-  } = useSkillRunChat({
-    projectId,
-    skillId,
-    skillName,
-    versionDetails,
-    runConversationId,
-    onRunConversationChange,
-    onOpenRunVersion,
-  });
-  const hasUnsavedVersionModel = Boolean(unsavedVersionLLMSettings);
-  useEffect(() => {
-    if (canEditVersionModel && !hasUnsavedVersionModel) setUnsavedLLMSettings(null);
-  }, [canEditVersionModel, hasUnsavedVersionModel, setUnsavedLLMSettings]);
-  const { uploadAttachments, isUploading: isUploadingAttachments, uploadProgress } = useUploadAttachments();
+    const {
+      activeConversation,
+      activeParticipant,
+      activeParticipantDetails,
+      isStreaming,
+      isReadOnly,
+      isLoadingConversation,
+      llmSettings,
+      unsavedLLMSettings,
+      setUnsavedLLMSettings,
+      setChatHistory,
+      setActiveConversation,
+      onSend,
+      onStartNewRun,
+      onDeleteAllMessages,
+      onDeleteMessage,
+      onStopStreaming,
+      onSetLLMSettings,
+      attachments,
+      onAttachFiles,
+      onDeleteAttachment,
+      onClearAttachments,
+    } = useSkillRunChat({
+      projectId,
+      skillId,
+      skillName,
+      versionDetails,
+      runConversationId,
+      onRunConversationChange,
+      onOpenRunVersion,
+    });
+    const hasUnsavedVersionModel = Boolean(unsavedVersionLLMSettings);
+    useEffect(() => {
+      if (canEditVersionModel && !hasUnsavedVersionModel) setUnsavedLLMSettings(null);
+    }, [canEditVersionModel, hasUnsavedVersionModel, setUnsavedLLMSettings]);
+    const { uploadAttachments, isUploading: isUploadingAttachments, uploadProgress } = useUploadAttachments();
 
-  const hasMessages = Boolean(activeConversation?.chat_history?.length);
-  const isChatReady = Boolean(activeConversation && activeParticipant);
+    const hasMessages = Boolean(activeConversation?.chat_history?.length);
+    const isChatReady = Boolean(activeConversation && activeParticipant);
+    const isClearDisabled = isStreaming || !(hasMessages || activeConversation?.id);
 
-  useFocusRunInput({ containerRef: panelRef, focusRequest, isReady: isChatReady, onFocusHandled });
-  const styles = useMemo(() => skillRunPanelStyles(isFullScreenChat), [isFullScreenChat]);
+    useImperativeHandle(ref, () => ({ clear: onStartNewRun }), [onStartNewRun]);
 
-  return (
-    <ContentContainer
-      ref={panelRef}
-      data-testid="skill-run-panel"
-      sx={styles.container}
-    >
-      <Box sx={styles.mainContainer}>
-        <Box sx={styles.topBarContainer}>
+    useEffect(() => {
+      onClearStateChange?.(isClearDisabled);
+    }, [isClearDisabled, onClearStateChange]);
+
+    useFocusRunInput({ containerRef: panelRef, focusRequest, isReady: isChatReady, onFocusHandled });
+    const styles = skillRunPanelStyles();
+
+    return (
+      <ContentContainer
+        ref={panelRef}
+        data-testid="skill-run-panel"
+        sx={styles.container}
+      >
+        <Box sx={styles.mainContainer}>
           {activeConversation?.id && (
-            <ContextBudgetUI.ContextBudgetInfo
-              conversationId={activeConversation.id}
-              compact
-              contextStrategy={activeConversation?.meta?.context_strategy ?? NO_CONTEXT_STRATEGY}
-              setActiveConversation={setActiveConversation}
-              conversationInstructions={activeConversation?.instructions}
-            />
-          )}
-          <Box sx={styles.controlsContainer}>
-            <FullScreenToggle
-              isFullScreenChat={isFullScreenChat}
-              setIsFullScreenChat={setIsFullScreenChat}
-            />
-            <ChatButton.ClearChatButton
-              disabled={isStreaming || !(hasMessages || activeConversation?.id)}
-              onClear={onStartNewRun}
-            />
-            {onShowHistory && (
-              <ViewRunHistoryButton
-                onShowHistory={onShowHistory}
-                testId="skill-run-history-button"
+            <Box sx={styles.topBarContainer}>
+              <ContextBudgetUI.ContextBudgetInfo
+                conversationId={activeConversation.id}
+                compact
+                contextStrategy={activeConversation?.meta?.context_strategy ?? NO_CONTEXT_STRATEGY}
+                setActiveConversation={setActiveConversation}
+                conversationInstructions={activeConversation?.instructions}
               />
-            )}
-          </Box>
-        </Box>
+            </Box>
+          )}
 
-        {isReadOnly && (
-          <Typography
-            variant="bodySmall"
-            color="text.secondary"
-            data-testid="skill-run-read-only"
-          >
-            This run belongs to another user, so it is read-only. Clear the chat to start your own run.
-          </Typography>
-        )}
-        {isChatReady ? (
-          <Box sx={styles.chatBoxContainer}>
-            <ChatBox
-              inputPlaceholder="Type your message..."
-              conversationStarters={NO_STARTERS}
-              llmSettings={canEditVersionModel ? (versionLLMSettings ?? NO_LLM_SETTINGS) : llmSettings}
-              activeParticipant={activeParticipant}
-              activeConversation={activeConversation}
-              setActiveConversation={setActiveConversation}
-              activeParticipantDetails={activeParticipantDetails}
-              onSelectThisParticipant={NOOP}
-              onClearActiveParticipant={NOOP}
-              isStreaming={isStreaming}
-              setChatHistory={setChatHistory}
-              onDeleteMessage={onDeleteMessage}
-              onDeleteAllMessages={onDeleteAllMessages}
-              onStopStreaming={onStopStreaming}
-              enableMentions={false}
-              isLoadingConversation={isLoadingConversation}
-              isAgentsPage
-              onSetLLMSettings={canEditVersionModel ? onSetVersionLLMSettings : onSetLLMSettings}
-              showWebhookSecret={false}
-              onSend={onSend}
-              attachments={attachments}
-              disableAttachments={false}
-              onAttachFiles={onAttachFiles}
-              onDeleteAttachment={onDeleteAttachment}
-              onClearAttachments={onClearAttachments}
-              uploadAttachments={uploadAttachments}
-              isUploadingAttachments={isUploadingAttachments}
-              uploadProgress={uploadProgress}
-              unsavedLLMSettings={
-                canEditVersionModel
-                  ? withRunStepsLimit(unsavedVersionLLMSettings, unsavedLLMSettings)
-                  : unsavedLLMSettings
-              }
-              setUnsavedLLMSettings={setUnsavedLLMSettings}
-              isReadOnly={isReadOnly}
-            />
-          </Box>
-        ) : (
-          <Box sx={styles.initializingContainer}>
+          {isReadOnly && (
             <Typography
-              variant="bodyMedium"
+              variant="bodySmall"
               color="text.secondary"
+              data-testid="skill-run-read-only"
             >
-              Initializing run...
+              This run belongs to another user, so it is read-only. Clear the chat to start your own run.
             </Typography>
-          </Box>
-        )}
-      </Box>
-    </ContentContainer>
-  );
-});
+          )}
+          {isChatReady ? (
+            <Box sx={styles.chatBoxContainer}>
+              <ChatBox
+                inputPlaceholder="Type your message..."
+                conversationStarters={NO_STARTERS}
+                llmSettings={canEditVersionModel ? (versionLLMSettings ?? NO_LLM_SETTINGS) : llmSettings}
+                activeParticipant={activeParticipant}
+                activeConversation={activeConversation}
+                setActiveConversation={setActiveConversation}
+                activeParticipantDetails={activeParticipantDetails}
+                onSelectThisParticipant={NOOP}
+                onClearActiveParticipant={NOOP}
+                isStreaming={isStreaming}
+                setChatHistory={setChatHistory}
+                onDeleteMessage={onDeleteMessage}
+                onDeleteAllMessages={onDeleteAllMessages}
+                onStopStreaming={onStopStreaming}
+                enableMentions={false}
+                isLoadingConversation={isLoadingConversation}
+                isAgentsPage
+                onSetLLMSettings={canEditVersionModel ? onSetVersionLLMSettings : onSetLLMSettings}
+                showWebhookSecret={false}
+                onSend={onSend}
+                attachments={attachments}
+                disableAttachments={false}
+                onAttachFiles={onAttachFiles}
+                onDeleteAttachment={onDeleteAttachment}
+                onClearAttachments={onClearAttachments}
+                uploadAttachments={uploadAttachments}
+                isUploadingAttachments={isUploadingAttachments}
+                uploadProgress={uploadProgress}
+                unsavedLLMSettings={
+                  canEditVersionModel
+                    ? withRunStepsLimit(unsavedVersionLLMSettings, unsavedLLMSettings)
+                    : unsavedLLMSettings
+                }
+                setUnsavedLLMSettings={setUnsavedLLMSettings}
+                isReadOnly={isReadOnly}
+              />
+            </Box>
+          ) : (
+            <Box sx={styles.initializingContainer}>
+              <Typography
+                variant="bodyMedium"
+                color="text.secondary"
+              >
+                Initializing run...
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      </ContentContainer>
+    );
+  }),
+);
 
 SkillRunPanel.displayName = 'SkillRunPanel';
 
 /** @type {MuiSx} */
-const skillRunPanelStyles = isFullScreenChat => ({
+const skillRunPanelStyles = () => ({
   container: {
-    height: isFullScreenChat ? 'calc(100vh - 6.5625rem)' : '100% !important',
+    height: '100% !important',
   },
   mainContainer: {
     display: 'flex',
@@ -201,14 +194,6 @@ const skillRunPanelStyles = isFullScreenChat => ({
     justifyContent: 'space-between',
     gap: '1rem',
     width: '100%',
-  },
-  controlsContainer: {
-    display: 'flex',
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: '0.5rem',
   },
   initializingContainer: {
     display: 'flex',

@@ -2,10 +2,10 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { RESIZE_GRIP_IMAGE } from '../lib/constants/testPanel.constants';
+import { RESIZE_GRIP_IMAGE } from '../lib/constants/entityTestPanel.constants';
 
 const TestPanelResizeHandle = memo(props => {
-  const { onResizeStart } = props;
+  const { onResizeStart, testId = 'test-panel-resize-handle' } = props;
 
   const styles = testPanelResizeHandleStyles();
 
@@ -16,7 +16,7 @@ const TestPanelResizeHandle = memo(props => {
       aria-label="Resize test panel"
       sx={styles.root}
       onMouseDown={onResizeStart}
-      data-testid="pipeline-test-panel-resize-handle"
+      data-testid={testId}
     />
   );
 });

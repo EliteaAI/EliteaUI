@@ -286,7 +286,7 @@ const ScheduleForm = memo(props => {
               />
             ),
             content: (
-              // With a side panel: the Agents editor split (ConfigurationTab). The Settings menu takes about
+              // With a side panel: the Agents editor split. The Settings menu takes about
               // 30 rem more than the Agents page, so the split starts at xl (1536 px), not lg, and the card
               // goes under the form below it, where each half would be narrower than the Agents halves.
               <StyledGridContainer
@@ -365,7 +365,7 @@ export default ScheduleForm;
 const styles = {
   // the New Agent form column (CreateAgentForm)
   root: { order: 1, width: '100%', margin: '0.75rem auto 0', maxWidth: '40.1875rem' },
-  // the ConfigurationTab grid padding
+  // the agent editor workspace padding
   split: { padding: '0 1.5rem 1.5rem' },
   sidePanel: { order: 2, paddingTop: '0.75rem' },
   // Below xl the panel is stacked under the form; an urgent card goes above it, so it is seen first
