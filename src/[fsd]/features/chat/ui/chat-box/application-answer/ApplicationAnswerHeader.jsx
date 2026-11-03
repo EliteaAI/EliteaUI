@@ -14,6 +14,7 @@ const ApplicationAnswerHeader = memo(
     const {
       participant,
       participantName: participantNameOverride,
+      importedAuthorParticipant,
       created_at,
       isSwarmChild,
       swarmAgentName,
@@ -26,7 +27,8 @@ const ApplicationAnswerHeader = memo(
 
     const defaultParticipantName = useParticipantName(participant);
     const participantName = participantNameOverride || defaultParticipantName;
-    const entityIcon = useParticipantEntityIcon(participant);
+    const authorParticipant = importedAuthorParticipant || participant;
+    const entityIcon = useParticipantEntityIcon(authorParticipant);
 
     if (isSwarmChild && swarmAgentName) {
       return (
@@ -67,15 +69,15 @@ const ApplicationAnswerHeader = memo(
               forMessage
               icon={entityIcon}
               entityType={
-                participant.entity_settings?.agent_type !== ChatParticipantType.Pipelines
-                  ? participant.entity_name
+                authorParticipant.entity_settings?.agent_type !== ChatParticipantType.Pipelines
+                  ? authorParticipant.entity_name
                   : ChatParticipantType.Pipelines
               }
-              agentType={participant.entity_settings?.agent_type}
+              agentType={authorParticipant.entity_settings?.agent_type}
               editable={false}
               sx={styles.entityIcon}
               imageStyle={styles.imageStyle}
-              showBackgroundColor={participant.entity_name !== ChatParticipantType.Dummy}
+              showBackgroundColor={authorParticipant.entity_name !== ChatParticipantType.Dummy}
               specifiedFontSize={15}
             />
             <Typography

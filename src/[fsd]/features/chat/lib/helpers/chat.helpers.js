@@ -56,6 +56,16 @@ export const getParticipantById = (conversation, participantId) => {
   );
 };
 
+export const getImportedAuthorParticipant = importedAuthor =>
+  importedAuthor?.entity_name
+    ? {
+        entity_name: importedAuthor.entity_name,
+        entity_meta: {},
+        entity_settings: { agent_type: importedAuthor.agent_type },
+        meta: { name: importedAuthor.name },
+      }
+    : undefined;
+
 export const canDeleteThisAIMessage = (chat_history, message, userId) => {
   const { question_id } = message;
   const foundQuestion = chat_history.find(item => item.id === question_id);

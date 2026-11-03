@@ -66,9 +66,13 @@ const ChatMessageWrapper = memo(props => {
     [activeConversation, message.participant_id, message.role],
   );
 
-  // Imported chats map agents missing in this project to the default participant; keep their original names
+  // Imported chats and deleted participants hand their messages to the default participant; keep the original author
   const importedParticipantName =
     messageParticipant?.entity_name === ChatParticipantType.Dummy ? message.importedAuthorName : undefined;
+  const importedAuthorParticipant =
+    messageParticipant?.entity_name === ChatParticipantType.Dummy
+      ? message.importedAuthorParticipant
+      : undefined;
   const importedSentToName =
     message.sentTo?.entity_name === ChatParticipantType.Dummy ? message.importedSentToName : undefined;
 
@@ -149,6 +153,7 @@ const ChatMessageWrapper = memo(props => {
       created_at={message.created_at}
       participant={messageParticipant}
       participantName={importedParticipantName}
+      importedAuthorParticipant={importedAuthorParticipant}
       onClickReplyTo={onReplyTo}
       onCopy={onCopyToClipboard ? onCopy : undefined}
       onDelete={
