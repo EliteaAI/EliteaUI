@@ -80,6 +80,7 @@ const TYPES = [
         data: {
           properties: {
             site_url: { type: 'string', title: 'Site URL' },
+            client_id: { type: 'string', title: 'Client ID' },
             client_secret: { type: 'string', format: 'password', title: 'Client secret' },
           },
           required: ['site_url'],
@@ -223,6 +224,7 @@ describe('CredentialFormControl (#7228)', () => {
     const onHitlResume = wrap(interrupt({ credential_type: 'sharepoint', title: 'SharePoint' }));
     expect(screen.getByTestId('credential-form-sign-in')).toBeInTheDocument();
     expect(screen.queryByTestId('credential-form-field-client_secret')).toBeNull();
+    expect(screen.queryByTestId('credential-form-field-client_id')).toBeNull(); // the platform's app, not typed
     expect(screen.queryByTestId('credential-form-ownership-shared')).toBeNull();
     expect(screen.getByTestId('credential-form-create')).toBeDisabled(); // the site URL is required
     type('site_url', 'https://example.sharepoint.com/sites/a');

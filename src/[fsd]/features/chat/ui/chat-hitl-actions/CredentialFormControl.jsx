@@ -55,8 +55,9 @@ const CredentialFormControl = memo(props => {
     [types, credentialType],
   );
   const isSignIn = SIGN_IN_TYPES.includes(credentialType);
+  // a sign-in type asks for what it requires only (its site, say): the app and the sign-in are the platform's
   const shownFields = useMemo(
-    () => (fields ?? []).filter(field => !(isSignIn && field.secret)),
+    () => (fields ?? []).filter(field => !isSignIn || (field.required && !field.secret)),
     [fields, isSignIn],
   );
   const offersOwnership = !isSignIn && projectId !== personalProjectId;
