@@ -36,6 +36,10 @@ vi.mock('@/[fsd]/shared/ui/input/StyledInputEnhancer', () => ({
     </label>
   ),
 }));
+vi.mock('@/[fsd]/shared/ui/tooltip/InfoTooltip', () => ({
+  default: () => <span data-testid="info-tooltip" />,
+}));
+
 vi.mock('@/components/VariableList', () => ({
   default: props => {
     variableProps = props;

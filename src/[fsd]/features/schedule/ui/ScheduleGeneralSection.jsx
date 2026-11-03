@@ -31,11 +31,11 @@ const ScheduleGeneralSection = memo(props => {
       />
       {showOwner && (
         <Typography
-          variant="bodyMedium"
-          color="text.secondary"
+          variant="bodySmall"
+          color="text.primary"
           data-testid="schedule-owner"
         >
-          {'Owner: '}
+          {'Owner:  '}
           <Box
             component="span"
             sx={styles.ownerName}
@@ -54,5 +54,5 @@ export default ScheduleGeneralSection;
 
 /** @type {MuiSx} */
 const styles = {
-  ownerName: ({ palette }) => ({ color: palette.text.primary }),
+  ownerName: ({ palette }) => ({ color: palette.text.secondary, fontWeight: 600 }),
 };

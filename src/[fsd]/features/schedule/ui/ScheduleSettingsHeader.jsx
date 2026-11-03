@@ -37,7 +37,7 @@ const scheduleSettingsHeaderStyles = () => ({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: '1rem',
-    minHeight: '3.5rem',
+    minHeight: '3.3125rem',
     padding: '0 1.5rem',
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
   }),

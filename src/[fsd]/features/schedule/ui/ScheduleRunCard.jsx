@@ -55,10 +55,7 @@ const ScheduleRunCard = memo(props => {
             sx={styles.trigger}
           />
           <Box sx={styles.status}>
-            <ScheduleRunStatusChip
-              status={run.status}
-              variant="card"
-            />
+            <ScheduleRunStatusChip status={run.status} />
           </Box>
           <ExpandMoreIcon
             fontSize="small"
@@ -68,7 +65,7 @@ const ScheduleRunCard = memo(props => {
         <Typography
           data-testid="schedule-run-facts"
           variant="bodySmall"
-          color="text.secondary"
+          color="text.primary"
           noWrap
         >
           {facts}
@@ -94,7 +91,7 @@ const scheduleRunCardStyles = (expanded, isLatest) => ({
   root: ({ palette }) => ({
     listStyle: 'none',
     borderRadius: '0.75rem',
-    border: `0.0625rem solid ${expanded && isLatest ? palette.secondary.main : palette.border.lines}`,
+    border: `0.0625rem solid ${expanded && isLatest ? `${palette.primary.main}26` : palette.border.lines}`,
     backgroundColor: palette.background.surface.interactive.default,
   }),
   header: {
@@ -108,6 +105,7 @@ const scheduleRunCardStyles = (expanded, isLatest) => ({
     '&:focus-visible': { outline: '0.125rem solid currentColor', outlineOffset: '-0.125rem' },
   },
   line: { display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 },
+  // In this theme text.secondary is the bright tone and text.primary the muted one, as in the mockups
   started: ({ palette }) => ({ fontWeight: 600, color: palette.text.primary }),
   status: { marginLeft: 'auto' },
   chevron: { transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' },
@@ -115,7 +113,8 @@ const scheduleRunCardStyles = (expanded, isLatest) => ({
     alignSelf: 'flex-start',
     height: '1.25rem',
     fontSize: '0.6875rem',
-    color: palette.secondary.main,
+    color: palette.primary.main,
+    backgroundColor: `${palette.primary.main}1a`,
   }),
   trigger: ({ palette }) => ({ color: palette.text.secondary }),
 });

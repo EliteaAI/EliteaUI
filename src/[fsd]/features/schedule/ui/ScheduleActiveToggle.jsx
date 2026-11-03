@@ -21,8 +21,8 @@ const ScheduleActiveToggle = memo(props => {
       sx={styles.root}
     >
       <Typography
-        variant="bodyMedium"
-        color="text.secondary"
+        variant="bodySmall"
+        color="text.primary"
       >
         Active
       </Typography>

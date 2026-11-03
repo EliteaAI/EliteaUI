@@ -82,6 +82,7 @@ const ScheduleRunsCard = memo(
                 data-testid="schedule-run-now"
                 title={RUN_NOW_NOTE}
                 variant={BUTTON_VARIANTS.secondary}
+                sx={styles.runNow}
                 startIcon={<PlayArrowOutlinedIcon />}
                 disabled={busy || !canRunNow || !!runHint}
                 onClick={onRunNow}
@@ -180,7 +181,7 @@ const scheduleRunsCardStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.75rem',
-    minHeight: '3.5rem',
+    minHeight: '3.3125rem',
     padding: '0 1.5rem',
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
   }),
@@ -191,6 +192,11 @@ const scheduleRunsCardStyles = () => ({
     color: palette.text.primary,
   }),
   count: ({ palette }) => ({ color: palette.text.secondary, fontWeight: 400 }),
+  // The mockup draws Run Now as an outlined pill without a fill
+  runNow: ({ palette }) => ({
+    backgroundColor: 'transparent',
+    border: `0.0625rem solid ${palette.border.lines}`,
+  }),
   actions: { display: 'flex', gap: '0.5rem', flexWrap: 'wrap' },
   list: {
     listStyle: 'none',

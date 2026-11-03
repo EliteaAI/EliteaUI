@@ -3,6 +3,7 @@ import { memo, useCallback } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import StyledInputEnhancer from '@/[fsd]/shared/ui/input/StyledInputEnhancer';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import VariableList from '@/components/VariableList';
 
 import { isPromptShown, syncPromptVariables } from '../lib/helpers';
@@ -13,6 +14,9 @@ const RUN_MODE_ITEMS = [
   { value: 'entry_point', label: 'Entrypoint' },
   { value: 'prompt', label: 'Prompt' },
 ];
+
+const RUN_MODE_INFO =
+  'Entrypoint starts the pipeline from its entry point. Prompt sends the text below as the first message.';
 
 const SchedulePromptSection = memo(props => {
   const { type, runMode, prompt, variables, promptError, variablesError, setFieldValue, setValues } = props;
@@ -47,12 +51,19 @@ const SchedulePromptSection = memo(props => {
     <>
       {type === 'pipeline' && (
         <Box sx={styles.runMode}>
-          <Typography
-            variant="bodySmall"
-            color="text.secondary"
-          >
-            Starting input *
-          </Typography>
+          <Box sx={styles.runModeLabel}>
+            <Typography
+              variant="bodySmall"
+              color="text.secondary"
+            >
+              Starting input *
+            </Typography>
+            <InfoTooltip
+              infoTooltip={RUN_MODE_INFO}
+              pinnable
+              label="More info about Starting input"
+            />
+          </Box>
           <ScheduleSegmentedToggle
             testId="schedule-run-mode"
             items={RUN_MODE_ITEMS}
@@ -88,6 +99,7 @@ SchedulePromptSection.displayName = 'SchedulePromptSection';
 /** @type {MuiSx} */
 const styles = {
   runMode: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
+  runModeLabel: { display: 'flex', alignItems: 'center', gap: '0.25rem' },
 };
 
 export default SchedulePromptSection;

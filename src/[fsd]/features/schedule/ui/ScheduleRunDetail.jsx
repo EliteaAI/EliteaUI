@@ -161,7 +161,7 @@ ScheduleRunDetail.displayName = 'ScheduleRunDetail';
 
 /** @type {MuiSx} */
 const scheduleRunDetailStyles = () => ({
-  root: { display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '0.5rem 1rem 1rem' },
+  root: { display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '0 1rem 1rem' },
   section: { display: 'flex', flexDirection: 'column', gap: '0.25rem' },
   answer: { whiteSpace: 'pre-line' },
   toggle: ({ palette }) => ({
