@@ -82,6 +82,25 @@ export const projectGovernanceApi = eliteaApi
         }),
         invalidatesTags: [TAG_GOVERNANCE_READINESS, TAG_PROJECT_GOVERNANCE],
       }),
+      // A member's own personal references (``mine=true``): the generation and type of the one whose value they write
+      getMyCredentialReferences: build.query({
+        query: ({ projectId }) => ({
+          url: `/secrets/credential_references/default/${project(projectId)}`,
+          params: { mine: 'true', limit: 100 },
+        }),
+        providesTags: [TAG_GOVERNANCE_READINESS],
+      }),
+      // The owner writes the value of their personal reference (write-only; it goes back to pending for a check and an
+      // approval). The value is sent once and never read back.
+      putMyCredentialValue: build.mutation({
+        query: ({ projectId, referenceId, fields, expectedGeneration }) => ({
+          url: `/secrets/credential_material/default/${project(projectId)}/${encodeURIComponent(referenceId)}`,
+          method: 'PUT',
+          body: { fields, expected_generation: expectedGeneration },
+        }),
+        invalidatesTags: (_result, error) =>
+          error ? [] : [TAG_GOVERNANCE_READINESS, TAG_PROJECT_GOVERNANCE],
+      }),
       // (#7341) which version of each agent external MCP clients reach in the project
       getMcpExposedVersions: build.query({
         query: ({ projectId }) => ({
@@ -126,4 +145,6 @@ export const {
   useGetGovernanceReadinessQuery,
   useRequestGovernedSetupMutation,
   useGetMcpExposedVersionsQuery,
+  useLazyGetMyCredentialReferencesQuery,
+  usePutMyCredentialValueMutation,
 } = projectGovernanceApi;

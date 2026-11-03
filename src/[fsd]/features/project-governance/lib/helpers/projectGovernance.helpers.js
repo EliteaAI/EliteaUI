@@ -245,7 +245,7 @@ const ITEM_TEXT = {
   },
   reference: {
     missing: 'Not registered for governed use (your own copy is requested)',
-    needs_value: 'Write your value on your Credentials page',
+    needs_value: 'Your value is still to be written',
     pending: 'Waits for a check and an approval',
     validated: 'Waits for approval',
     suspended: 'Suspended',
@@ -276,6 +276,33 @@ const ITEM_TEXT = {
 
 export const readinessText = item =>
   ITEM_TEXT[item.kind]?.[item.state] ?? (item.kind === 'blocking' ? 'Stops a scheduled run' : item.state);
+
+// A personal reference of the person's own whose value is still to be written: the card writes it inline
+export const isValueItem = item =>
+  item?.kind === 'reference' && item.state === 'needs_value' && item.for === 'me' && Boolean(item.ref);
+
+const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+const isPasswordSchema = schema =>
+  schema.format === 'password' ||
+  (Array.isArray(schema.anyOf) &&
+    schema.anyOf.some(option => isObject(option) && option.format === 'password'));
+
+// The secret fields of a credential type, from its schema (`/configurations/available/`): `[{ path, label }]`, nested
+// objects joined with `.` as the server checks them; maps of secrets are left out (their keys are not known here)
+export const secretFieldsOf = (types, provider, depth = 0, properties = undefined, prefix = '') => {
+  const props =
+    properties ??
+    (Array.isArray(types) ? types : []).find(entry => entry?.type === provider)?.config_schema?.properties
+      ?.data?.properties;
+  return Object.entries(isObject(props) ? props : {}).flatMap(([name, schema]) => {
+    if (!isObject(schema)) return [];
+    const path = `${prefix}${name}`;
+    if (isPasswordSchema(schema)) return [{ path, label: schema.title ?? path }];
+    if (isObject(schema.properties) && depth < 4)
+      return secretFieldsOf(types, provider, depth + 1, schema.properties, `${path}.`);
+    return [];
+  });
+};
 
 export const isWaitingItem = item => WAITING_STATES.includes(item.state) && Boolean(item.ref);
 

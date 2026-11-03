@@ -98,6 +98,11 @@ describe('readiness is read again after a successful save (EL-7269)', () => {
       { projectId: 8, toolkitId: 1, entity_id: 1, entity_version_id: 1 },
     ],
     ['the toolkit page Save', () => toolkitsApi.endpoints.toolkitEdit, { projectId: 8, toolId: 1 }],
+    [
+      'your own credential value written from the card',
+      () => projectGovernanceApi.endpoints.putMyCredentialValue,
+      { projectId: 8, referenceId: 'ref-1', fields: { token: 't' }, expectedGeneration: 0 },
+    ],
   ])('%s', async (_label, mutation, args) => {
     expect(await run(mutation(), args)).toBe(2);
   });

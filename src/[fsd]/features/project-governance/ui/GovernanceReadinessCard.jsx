@@ -11,6 +11,8 @@ import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
+import ReadinessValueFields from './ReadinessValueFields';
+
 // The Save card (C-1009, #7269): what an agent or pipeline version, a toolkit or a schedule still needs to run
 // governed for you, read after a save and whenever you open it, with one Request for everything you may request (one
 // batch for the project's admins). Shared parts (identity, registration, mandate) show once; your own grant and consent
@@ -21,6 +23,7 @@ const GovernanceReadinessCard = memo(props => {
   const projectId = useSelectedProjectId();
   const { toastError, toastSuccess } = useToast();
   const [wasNeeded, setWasNeeded] = useState(false);
+  const [writing, setWriting] = useState(null); // the key of the row whose value is being written
   const seenFor = useRef(null);
 
   const { data, isFetching } = useGetGovernanceReadinessQuery(
@@ -81,30 +84,54 @@ const GovernanceReadinessCard = memo(props => {
       {items.map(item => (
         <Box
           key={item.key}
-          sx={styles.row}
-          data-testid={`${testId}-item`}
+          sx={styles.item}
         >
-          <Typography
-            variant="bodySmall"
-            sx={styles.title}
+          <Box
+            sx={styles.row}
+            data-testid={`${testId}-item`}
           >
-            {item.title}
-          </Typography>
-          <Typography
-            variant="bodySmall"
-            color="text.secondary"
-            sx={styles.text}
-          >
-            {GovernanceHelpers.readinessText(item)}
-            {item.for === 'me' ? ' (for you)' : ''}
-          </Typography>
-          <Typography
-            variant="bodySmall2"
-            color={item.escalated ? 'warning.main' : 'text.secondary'}
-            data-testid={`${testId}-status-${item.key}`}
-          >
-            {GovernanceHelpers.readinessStatus(item)}
-          </Typography>
+            <Typography
+              variant="bodySmall"
+              sx={styles.title}
+            >
+              {item.title}
+            </Typography>
+            <Typography
+              variant="bodySmall"
+              color="text.secondary"
+              sx={styles.text}
+            >
+              {GovernanceHelpers.readinessText(item)}
+              {item.for === 'me' ? ' (for you)' : ''}
+            </Typography>
+            <Typography
+              variant="bodySmall2"
+              color={item.escalated ? 'warning.main' : 'text.secondary'}
+              data-testid={`${testId}-status-${item.key}`}
+            >
+              {GovernanceHelpers.readinessStatus(item)}
+            </Typography>
+            {GovernanceHelpers.isValueItem(item) && (
+              <Button.BaseBtn
+                variant={BUTTON_VARIANTS.tertiary}
+                size="small"
+                onClick={() => setWriting(writing === item.key ? null : item.key)}
+                data-testid={`${testId}-write-${item.key}`}
+              >
+                {writing === item.key ? 'Cancel' : 'Write value'}
+              </Button.BaseBtn>
+            )}
+          </Box>
+          {writing === item.key && GovernanceHelpers.isValueItem(item) && (
+            <ReadinessValueFields
+              item={item}
+              testId={`${testId}-value`}
+              onDone={() => {
+                setWriting(null);
+                toastSuccess('Stored: a project admin checks and approves it.');
+              }}
+            />
+          )}
         </Box>
       ))}
       {keys.length > 0 && (
@@ -142,9 +169,14 @@ const governanceReadinessCardStyles = () => ({
     borderRadius: '0.5rem',
     border: `0.0625rem solid ${palette.border.lines}`,
   }),
+  item: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.375rem',
+  },
   row: {
     display: 'grid',
-    gridTemplateColumns: 'minmax(8rem, 1fr) 2fr auto',
+    gridTemplateColumns: 'minmax(8rem, 1fr) 2fr auto auto',
     alignItems: 'center',
     gap: '0.75rem',
     minWidth: 0,

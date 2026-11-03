@@ -13,11 +13,25 @@ vi.hoisted(() => vi.stubEnv('VITE_SERVER_URL', 'http://localhost/api/v2/'));
 const api = vi.hoisted(() => ({
   readiness: vi.fn(),
   request: vi.fn(),
+  readOwn: vi.fn(),
+  own: { rows: [] },
+  putValue: vi.fn(),
+  types: [],
   toast: { toastSuccess: vi.fn(), toastError: vi.fn(), toastInfo: vi.fn() },
 }));
 vi.mock('@/[fsd]/features/project-governance/api/projectGovernanceApi', () => ({
   useGetGovernanceReadinessQuery: (...args) => api.readiness(...args),
   useRequestGovernedSetupMutation: () => [api.request, { isLoading: false }],
+  useLazyGetMyCredentialReferencesQuery: () => [
+    api.readOwn,
+    { data: api.own, isFetching: false, isError: false },
+  ],
+  usePutMyCredentialValueMutation: () => [api.putValue, { isLoading: false }],
+}));
+vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({ useToast: () => api.toast }));
+vi.mock('@/[fsd]/shared/config/store', () => ({ default: { getState: () => ({}), dispatch: () => {} } }));
+vi.mock('@/api/configurations', () => ({
+  useGetAvailableConfigurationsTypeQuery: () => ({ data: api.types, isFetching: false }),
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', async importOriginal => ({
   ...(await importOriginal()),
@@ -146,6 +160,107 @@ describe('Save card (EL-7269)', () => {
     fireEvent.click(screen.getByTestId('governance-readiness-request'));
     await waitFor(() =>
       expect(api.toast.toastError).toHaveBeenCalledWith('What this needs has changed (STALE_READINESS)'),
+    );
+  });
+});
+
+describe('Save card: writing your own value inline (EL-7269)', () => {
+  const VALUE_ITEM = {
+    key: 'reference:cfg-1',
+    kind: 'reference',
+    ref: 'ref-1',
+    title: 'p7269-member-jira',
+    state: 'needs_value',
+    requestable: false,
+    for: 'me',
+  };
+  const JIRA = {
+    type: 'jira',
+    config_schema: {
+      properties: {
+        data: {
+          properties: {
+            base_url: { type: 'string', title: 'Base Url' },
+            api_key: { title: 'Api Key', anyOf: [{ type: 'string', format: 'password' }, { type: 'null' }] },
+            token: { title: 'Token', anyOf: [{ type: 'string', format: 'password' }, { type: 'null' }] },
+          },
+        },
+      },
+    },
+  };
+
+  beforeEach(() => {
+    api.types = [JIRA];
+    api.own = { rows: [{ id: 'ref-1', provider: 'jira', generation: 0, state: 'pending' }] };
+    api.putValue.mockReturnValue({ unwrap: () => Promise.resolve({ generation: 1, state: 'pending' }) });
+  });
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  it('offers Write value only on your own reference whose value is still to be written', () => {
+    api.readiness.mockReturnValue({
+      data: {
+        items: [
+          VALUE_ITEM,
+          { ...VALUE_ITEM, key: 'reference:cfg-2', for: 'shared' },
+          { ...VALUE_ITEM, key: 'reference:cfg-3', state: 'pending' },
+          { ...VALUE_ITEM, key: 'reference:cfg-4', ref: null },
+        ],
+      },
+      isFetching: false,
+    });
+    wrap();
+    expect(screen.getByTestId('governance-readiness-write-reference:cfg-1')).toBeInTheDocument();
+    expect(screen.queryAllByText('Write value')).toHaveLength(1);
+  });
+
+  it('stores the secret fields of its type with the generation you last saw, masked, and never shows them', async () => {
+    api.readiness.mockReturnValue({ data: { items: [VALUE_ITEM] }, isFetching: false });
+    wrap();
+    fireEvent.click(screen.getByTestId('governance-readiness-write-reference:cfg-1'));
+    expect(api.readOwn).toHaveBeenCalledWith({ projectId: 12 });
+    const token = screen.getByTestId('governance-readiness-value-field-token');
+    expect(token).toHaveAttribute('type', 'password');
+    expect(screen.getByTestId('governance-readiness-value-field-api_key')).toBeInTheDocument();
+    expect(screen.queryByTestId('governance-readiness-value-field-base_url')).toBeNull(); // secret fields only
+    expect(screen.getByTestId('governance-readiness-value-store')).toBeDisabled();
+    fireEvent.change(token, { target: { value: 'typed-test-value' } });
+    fireEvent.click(screen.getByTestId('governance-readiness-value-store'));
+    await waitFor(() =>
+      expect(api.putValue).toHaveBeenCalledWith({
+        projectId: 12,
+        referenceId: 'ref-1',
+        fields: { token: 'typed-test-value' },
+        expectedGeneration: 0,
+      }),
+    );
+    await waitFor(() => expect(api.toast.toastSuccess).toHaveBeenCalled());
+    expect(screen.queryByTestId('governance-readiness-value')).toBeNull();
+    expect(document.body.textContent).not.toContain('typed-test-value');
+  });
+
+  it('reads a refusal inline, with its code', async () => {
+    api.readiness.mockReturnValue({ data: { items: [VALUE_ITEM] }, isFetching: false });
+    api.putValue.mockReturnValue({
+      unwrap: () =>
+        Promise.reject({
+          status: 409,
+          data: {
+            error: 'The value changed in the meantime; read it again.',
+            code: 'STORE_VERSION_CONFLICT',
+          },
+        }),
+    });
+    wrap();
+    fireEvent.click(screen.getByTestId('governance-readiness-write-reference:cfg-1'));
+    fireEvent.change(screen.getByTestId('governance-readiness-value-field-api_key'), {
+      target: { value: 'v' },
+    });
+    fireEvent.click(screen.getByTestId('governance-readiness-value-store'));
+    expect(await screen.findByTestId('governance-readiness-value-error')).toHaveTextContent(
+      'The value changed in the meantime; read it again. (STORE_VERSION_CONFLICT)',
     );
   });
 });
