@@ -23,6 +23,12 @@ const STORED_LOGIN_TOOLKITS = {
     getAuthority: authorityFromDiscoveryEndpoint,
     keepBrowserToken: true,
   },
+  sharepoint: {
+    configurationType: 'sharepoint',
+    settingsKey: 'sharepoint_configuration',
+    getAuthority: authorityFromDiscoveryEndpoint,
+    keepBrowserToken: true,
+  },
 };
 
 export const getStoredLoginConfig = toolkitType => STORED_LOGIN_TOOLKITS[toolkitType] ?? null;
