@@ -201,6 +201,22 @@ describe('ScheduleWaitingCard', () => {
     expect(screen.getByText('Only the owner can approve or reject this run')).toBeInTheDocument();
   });
 
+  it('shows one short notice and the two buttons for a plain pause', () => {
+    mocks.detail = {
+      ...run,
+      approval_expires_at: '2026-10-22T10:42:19Z',
+      events: [paused({ text: 'Paused for approval: create_pull_request' })],
+    };
+    renderCard();
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'This run will not start until you approve it. Paused for approval: create_pull_request',
+    );
+    expect(screen.queryByText('Action needed: this run is waiting for you')).not.toBeInTheDocument();
+    expect(button('Approve')).toBeEnabled();
+    expect(button('Reject')).toBeEnabled();
+  });
+
   it('shows the runs from the header button', () => {
     const onShowTest = renderCard();
 

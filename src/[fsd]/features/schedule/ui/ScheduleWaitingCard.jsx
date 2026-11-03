@@ -1,5 +1,6 @@
 import { forwardRef, memo, useId, useMemo } from 'react';
 
+import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import { Box, Chip, Typography } from '@mui/material';
 
 import { buildEntityEditorLink } from '@/[fsd]/entities/schedule';
@@ -125,6 +126,57 @@ const ScheduleWaitingCard = memo(
       </Box>
     );
     const buttonProps = useActionButtonProps();
+    const approval = (
+      <ScheduleRunApproval
+        compact
+        plain={!isCredential && !isSignIn}
+        schedule={schedule}
+        runId={shownRun.id}
+        hasChat={shownRun.conversation_id != null}
+        conversationUuid={conversation.conversationUuid}
+        pausedMessageId={conversation.pausedMessageId}
+        authAction={authAction}
+        pausedAt={pausedEvent?.at}
+        blockedReason={
+          isCredential && credentialState !== CREDENTIAL_CHECK_STATE.READY ? BLOCKED_REASON : undefined
+        }
+      />
+    );
+
+    // A plain pause needs no steps: one short notice and the two decision buttons
+    if (!isCredential && !isSignIn)
+      return (
+        <Box
+          ref={ref}
+          data-testid="schedule-waiting-card"
+          component="section"
+          aria-label="Action needed: this run is waiting for you"
+          sx={styles.plain}
+        >
+          <Box
+            role="status"
+            sx={styles.notice}
+          >
+            <WarningAmberOutlinedIcon sx={styles.noticeIcon} />
+            <Typography
+              variant="bodySmall"
+              sx={styles.noticeText}
+            >
+              {`This run will not start until you approve it. ${description} ${STEP2_NOTE}`}
+            </Typography>
+          </Box>
+          {expiry && (
+            <Typography
+              data-testid="schedule-waiting-expiry"
+              variant="bodySmall"
+              color="text.primary"
+            >
+              {expiry}
+            </Typography>
+          )}
+          {approval}
+        </Box>
+      );
 
     return (
       <Box
@@ -217,19 +269,7 @@ const ScheduleWaitingCard = memo(
             sx={styles.panel}
             titleSx={styles.panelTitle}
           >
-            <ScheduleRunApproval
-              compact
-              schedule={schedule}
-              runId={shownRun.id}
-              hasChat={shownRun.conversation_id != null}
-              conversationUuid={conversation.conversationUuid}
-              pausedMessageId={conversation.pausedMessageId}
-              authAction={authAction}
-              pausedAt={pausedEvent?.at}
-              blockedReason={
-                isCredential && credentialState !== CREDENTIAL_CHECK_STATE.READY ? BLOCKED_REASON : undefined
-              }
-            />
+            {approval}
           </ToolkitActionPanel>
         </Box>
       </Box>
@@ -264,6 +304,18 @@ const scheduleWaitingCardStyles = () => ({
   }),
   panelTitle: ({ palette }) => ({ color: palette.warning.scheduleCard }),
   button: { width: 'auto !important' },
+  plain: { display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '0 1.25rem 1.25rem' },
+  notice: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    padding: '0.625rem 0.75rem',
+    borderRadius: '0.5rem',
+    border: `0.0625rem solid ${palette.warning.scheduleCard}`,
+    backgroundColor: palette.background.default.tertiary,
+  }),
+  noticeIcon: ({ palette }) => ({ fontSize: '1.25rem', flexShrink: 0, color: palette.warning.scheduleCard }),
+  noticeText: ({ palette }) => ({ color: palette.text.secondary }),
   header: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' },
   title: ({ palette }) => ({
     flex: '1 1 auto',

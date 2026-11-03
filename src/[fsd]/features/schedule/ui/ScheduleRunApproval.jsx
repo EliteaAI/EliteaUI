@@ -17,6 +17,11 @@ import { useNow } from '../lib/hooks/useNow.hooks';
 import { useWaitingRunDecision } from '../lib/hooks/useWaitingRunDecision.hooks';
 import ScheduleRunSignIn from './ScheduleRunSignIn';
 
+const PAGE_BUTTON_PROPS = {
+  primary: { variant: 'elitea', color: 'primary' },
+  secondary: { variant: 'elitea', color: 'secondary' },
+};
+
 /**
  * Approve and Reject at the paused line of a waiting run.
  * The same owner-only decision call as the Runs table; the server still checks the owner.
@@ -24,6 +29,7 @@ import ScheduleRunSignIn from './ScheduleRunSignIn';
  * then Approve resumes the run with the fresh tokens. Reject skips the sign-in.
  * `blockedReason` keeps Approve off and names why. `compact` is the form for the Action needed card: no
  * left offset, no sign-in button and no expiry text, because the card shows them itself.
+ * `plain` is the page button look (primary Approve, secondary Reject, no icons) of the short waiting notice.
  */
 const ScheduleRunApproval = memo(props => {
   const {
@@ -36,6 +42,7 @@ const ScheduleRunApproval = memo(props => {
     authAction,
     blockedReason,
     compact = false,
+    plain = false,
   } = props;
 
   const dispatch = useDispatch();
@@ -87,7 +94,8 @@ const ScheduleRunApproval = memo(props => {
   const needsSignIn = Boolean(authAction) && !signedIn;
   const approveNoteId = blockedReason ? blockedNoteId : signInNoteId;
   const approveDescribed = !disabled && (blockedReason || needsSignIn);
-  const buttonProps = useActionButtonProps();
+  const themeButtonProps = useActionButtonProps();
+  const buttonProps = plain ? PAGE_BUTTON_PROPS : themeButtonProps;
   const styles = scheduleRunApprovalStyles();
 
   return (
@@ -105,7 +113,7 @@ const ScheduleRunApproval = memo(props => {
       <BaseBtn
         {...(needsSignIn ? buttonProps.secondary : buttonProps.primary)}
         sx={styles.button}
-        startIcon={<CheckedIcon />}
+        startIcon={plain ? undefined : <CheckedIcon />}
         disabled={disabled || needsSignIn || !!blockedReason}
         aria-describedby={approveDescribed ? approveNoteId : undefined}
         onClick={() => decide('approve')}
@@ -115,7 +123,7 @@ const ScheduleRunApproval = memo(props => {
       <BaseBtn
         {...buttonProps.secondary}
         sx={styles.button}
-        startIcon={<ArrowForwardIcon />}
+        startIcon={plain ? undefined : <ArrowForwardIcon />}
         disabled={disabled}
         onClick={() => decide('reject')}
       >
