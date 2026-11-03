@@ -8,6 +8,7 @@ import { Box, CircularProgress, FormControlLabel, Tooltip, Typography } from '@m
 
 import {
   ConsentCredentialPicker,
+  OwnerConsentConstants,
   OwnerConsentHelpers,
   useGetOwnerConsentStatusQuery,
   useTokenConsentActionMutation,
@@ -296,7 +297,7 @@ const CreatePersonalToken = memo(() => {
               {canOfferConsent && (
                 <Box sx={styles.consentField}>
                   <FormControlLabel
-                    label={OwnerConsentHelpers.TOKEN_CHECKBOX_LABEL}
+                    label={OwnerConsentConstants.TOKEN_CHECKBOX_LABEL}
                     control={
                       <Checkbox.BaseCheckbox
                         size="small"
@@ -318,7 +319,7 @@ const CreatePersonalToken = memo(() => {
                     variant="bodySmall"
                     sx={styles.consentHint}
                   >
-                    {OwnerConsentHelpers.TOKEN_CHECKBOX_HINT}
+                    {OwnerConsentConstants.TOKEN_CHECKBOX_HINT}
                   </Typography>
                 </Box>
               )}
@@ -328,7 +329,7 @@ const CreatePersonalToken = memo(() => {
                   sx={styles.consentField}
                   data-testid="create-personal-token-no-delegated-credentials"
                 >
-                  {OwnerConsentHelpers.NO_DELEGATED_CREDENTIALS_TEXT}
+                  {OwnerConsentConstants.NO_DELEGATED_CREDENTIALS_TEXT}
                 </Typography>
               )}
             </Box>

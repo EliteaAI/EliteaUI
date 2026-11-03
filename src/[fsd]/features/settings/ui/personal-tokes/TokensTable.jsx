@@ -33,7 +33,7 @@ const TOKENS_COLUMNS = [
   { field: 'scope', label: 'Scope', width: '1fr', sortable: false },
   { field: 'actions', label: 'Actions', width: '9.375rem', sortable: false },
 ];
-// Shown only where the platform lets a restricted token act with its owner's Microsoft sign-in (#7337)
+// Shown only where the platform lets a restricted token act with its owner's Microsoft sign-in
 const CONSENT_COLUMN = { field: 'consent', label: 'Microsoft sign-in', width: '1.5fr', sortable: false };
 
 const TokensTable = memo(props => {

@@ -197,7 +197,7 @@ const entityScheduleCardStyles = () => ({
     color: palette.icon.secondary,
     whiteSpace: 'pre-line',
   }),
-  // the owner's consent when the schedule acts with their Microsoft sign-in (#7337); empty otherwise
+  // the owner's consent when the schedule acts with their Microsoft sign-in; empty otherwise
   consent: {
     gridArea: 'consent',
     minWidth: 0,

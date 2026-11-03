@@ -6,13 +6,13 @@ import {
   useMandateConsentActionMutation,
 } from '@/[fsd]/features/owner-consent/api/ownerConsentApi';
 import * as OwnerConsentHelpers from '@/[fsd]/features/owner-consent/lib/helpers/ownerConsent.helpers';
-import { OWNER_CONSENT_TEXT, useOwnerConsentAction } from '@/[fsd]/features/owner-consent/lib/hooks';
+import { useOwnerConsentAction } from '@/[fsd]/features/owner-consent/lib/hooks';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 
 import OwnerConsentInline from './OwnerConsentInline';
 
 // The schedule card's consent line for its owner: when the owner's mandate for the schedule's version acts with
-// their Microsoft sign-in (C-1009, #7131/#7337). Nothing is asked of a schedule that is not the viewer's own
+// their Microsoft sign-in. Nothing is asked of a schedule that is not the viewer's own
 const ScheduleMandateConsent = memo(props => {
   const { versionId, isOwner } = props;
   const projectId = useSelectedProjectId();
@@ -22,7 +22,7 @@ const ScheduleMandateConsent = memo(props => {
     { skip: !isOwner || !projectId || !status?.mandates },
   );
   const [mutate, { isLoading }] = useMandateConsentActionMutation();
-  const act = useOwnerConsentAction(mutate, OWNER_CONSENT_TEXT);
+  const act = useOwnerConsentAction(mutate, OwnerConsentHelpers.consentActionText);
   const mandate = OwnerConsentHelpers.mandateForVersion(mine?.rows, versionId);
   const onConsent = useCallback(
     () => act({ projectId, mandateId: mandate?.id, action: 'consent' }),

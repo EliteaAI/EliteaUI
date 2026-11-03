@@ -2,12 +2,12 @@ import { memo } from 'react';
 
 import { Box, CircularProgress, Typography } from '@mui/material';
 
-import * as OwnerConsentHelpers from '@/[fsd]/features/owner-consent/lib/helpers/ownerConsent.helpers';
+import * as OwnerConsentConstants from '@/[fsd]/features/owner-consent/lib/constants/ownerConsent.constants';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
 // One consent line for every holder that runs without its owner (a scoped token, a schedule's mandate): the state
-// in words and the owner's one action, Give consent or Withdraw (C-1009, #7337)
+// in words and the owner's one action, Give consent or Withdraw
 const OwnerConsentInline = memo(props => {
   const {
     consented,
@@ -17,6 +17,7 @@ const OwnerConsentInline = memo(props => {
     testId = 'owner-consent',
     givenText,
     children,
+    actionDisabled = false,
   } = props;
   const styles = ownerConsentInlineStyles();
 
@@ -30,15 +31,15 @@ const OwnerConsentInline = memo(props => {
         sx={styles.text}
       >
         {consented
-          ? givenText || OwnerConsentHelpers.CONSENT_GIVEN_TEXT
-          : OwnerConsentHelpers.CONSENT_NEEDED_TEXT}
+          ? givenText || OwnerConsentConstants.CONSENT_GIVEN_TEXT
+          : OwnerConsentConstants.CONSENT_NEEDED_TEXT}
       </Typography>
       {children}
       <Button.BaseBtn
         data-testid={`${testId}-${consented ? 'withdraw' : 'give'}`}
         variant={BUTTON_VARIANTS.tertiary}
         size="small"
-        disabled={isBusy || props.actionDisabled}
+        disabled={isBusy || actionDisabled}
         onClick={consented ? onWithdraw : onConsent}
       >
         {consented ? 'Withdraw' : 'Give consent'}
