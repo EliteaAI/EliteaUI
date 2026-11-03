@@ -9,6 +9,14 @@ import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 import DeleteParticipantButton from './DeleteParticipantButton';
 import EditParticipantButton from './EditParticipantButton';
 
+const getEditLabel = participant => {
+  if (participant.entity_settings?.agent_type === 'pipeline') return 'Edit pipeline';
+  if (participant.entity_name === ChatParticipantType.Applications) return 'Edit agent';
+  if (participant.meta?.mcp || participant?.entity_settings?.toolkit_type === 'mcp') return 'Edit mcp';
+  if (participant.entity_name === ChatParticipantType.Skills) return 'Edit skill';
+  return 'Edit toolkit';
+};
+
 const ParticipantActions = memo(props => {
   const {
     participant,
@@ -41,15 +49,7 @@ const ParticipantActions = memo(props => {
           }}
           participant={participant}
           onEdit={onEdit}
-          tooltip={
-            participant.entity_settings?.agent_type === 'pipeline'
-              ? 'Edit pipeline'
-              : participant.entity_name === ChatParticipantType.Applications
-                ? 'Edit agent'
-                : participant.meta?.mcp || participant?.entity_settings?.toolkit_type === 'mcp'
-                  ? 'Edit mcp'
-                  : 'Edit toolkit'
-          }
+          tooltip={getEditLabel(participant)}
           disabled={disabledEdit}
           isPublic={isPublic}
         />

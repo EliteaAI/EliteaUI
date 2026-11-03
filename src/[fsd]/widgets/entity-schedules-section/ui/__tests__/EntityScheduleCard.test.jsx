@@ -12,6 +12,8 @@ import EntityScheduleCard from '../EntityScheduleCard';
 
 // one schedule card of the editor Schedules section
 
+vi.hoisted(() => vi.stubEnv('VITE_SERVER_URL', 'http://localhost/api/v2/'));
+
 const mocks = vi.hoisted(() => ({
   actions: { onRun: vi.fn(), onPause: vi.fn(), onResume: vi.fn(), onDelete: vi.fn(), isBusy: false },
 }));
@@ -26,6 +28,21 @@ vi.mock('@/[fsd]/shared/lib/helpers/schedule.helpers', async importOriginal => (
 }));
 vi.mock('@/[fsd]/shared/lib/hooks/useDeleteConfirmationDisabled.hooks', () => ({
   useDeleteConfirmationDisabled: () => false,
+}));
+// the owner's mandate consent line has its own tests: here only what the card hands it
+vi.mock('@/[fsd]/features/owner-consent', () => ({
+  ScheduleMandateConsent: props => (
+    <span data-testid="schedule-mandate-consent-stub">{`${props.versionId}:${props.isOwner}`}</span>
+  ),
+}));
+
+// the governance readiness card has its own tests: here only who sees it; it renders nothing unless something is missing
+const readiness = vi.hoisted(() => ({ shown: false }));
+vi.mock('@/[fsd]/features/project-governance', () => ({
+  GovernanceReadinessCard: props =>
+    readiness.shown ? (
+      <span data-testid="schedule-readiness-stub">{`${props.entityKind}:${props.entityId}`}</span>
+    ) : null,
 }));
 
 const theme = createTheme(getDesignTokens('light'));
@@ -51,6 +68,7 @@ const renderCard = (row = {}, props = {}) => {
       <EntityScheduleCard
         row={{ ...ROW, ...row }}
         entityType="agent"
+        currentUserId={3}
         onOpenForm={onOpenForm}
         onOpenRunHistory={onOpenRunHistory}
         {...props}
@@ -97,6 +115,28 @@ describe('EntityScheduleCard', () => {
     );
     expect(controls).toEqual(['Enable Daily digest', 'More actions']);
     expect(screen.getByTestId('agent-schedule-card-state-7')).toHaveTextContent('Active');
+  });
+
+  it('hands the consent line its version and whether the viewer owns the schedule', () => {
+    renderCard({ version_id: 70 });
+    expect(screen.getByTestId('schedule-mandate-consent-stub')).toHaveTextContent('70:true');
+    cleanup();
+    renderCard({ version_id: 70, owner: { id: 4, name: 'Bo' } });
+    expect(screen.getByTestId('schedule-mandate-consent-stub')).toHaveTextContent('70:false');
+  });
+
+  it('shows the readiness card to the owner only, and only when it has something to show', () => {
+    readiness.shown = false;
+    renderCard();
+    expect(screen.queryByTestId('schedule-readiness-stub')).toBeNull();
+    cleanup();
+    readiness.shown = true;
+    renderCard();
+    expect(screen.getByTestId('schedule-readiness-stub')).toHaveTextContent('schedule:7');
+    cleanup();
+    renderCard({}, { currentUserId: 1 });
+    expect(screen.queryByTestId('schedule-readiness-stub')).toBeNull();
+    readiness.shown = false;
   });
 
   it('shows no owner on the card, whoever owns the schedule', () => {

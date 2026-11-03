@@ -7,6 +7,7 @@ import { Box, Collapse, Tooltip, Typography, useTheme } from '@mui/material';
 import { useSelectedChatModelContext } from '@/[fsd]/features/chat/lib/context/SelectedChatModelContext';
 import { resolveModelChipLabel } from '@/[fsd]/features/chat/lib/helpers/modelChip.helpers';
 import { DurationLabel } from '@/[fsd]/features/chat/ui/duration-label';
+import { GovernanceReadinessCard, ProjectGovernanceHelpers } from '@/[fsd]/features/project-governance';
 import { DurationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useGetComponentWidth, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
@@ -286,6 +287,15 @@ const ActionView = memo(props => {
     return result;
   }, [fetchedDetail, action.toolOutputs, action.content, action.originalContent, thinking]);
 
+  // A reloaded action carries no tool output until its trace detail is fetched (as ``modalOutput`` reads it)
+  const governedCreation = useMemo(
+    () =>
+      ProjectGovernanceHelpers.governanceRequestOf(
+        fetchedDetail?.tool_output || action.toolOutputs || action.content,
+      ),
+    [fetchedDetail?.tool_output, action.toolOutputs, action.content],
+  );
+
   const contentBoxWidth = useMemo(
     () => (componentWidth ? `${componentWidth - 24}px` : '100%'),
     [componentWidth],
@@ -446,6 +456,15 @@ const ActionView = memo(props => {
               </Button.BaseBtn>
             )}
           </Box>
+        )}
+
+        {/* (#7269) what the run created through the Elitea MCP and requested for you: its status */}
+        {governedCreation && (
+          <GovernanceReadinessCard
+            entityKind={governedCreation.entityKind}
+            entityId={governedCreation.entityId}
+            testId="chat-governance-readiness"
+          />
         )}
 
         {/* Previous executions from merged same-name actions - thinking collapsed, content shown */}

@@ -3,6 +3,8 @@ import { Fragment, memo, useCallback, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { formatRunTimestamp } from '@/[fsd]/entities/run-history';
+import { ScheduleMandateConsent } from '@/[fsd]/features/owner-consent';
+import { GovernanceReadinessCard } from '@/[fsd]/features/project-governance';
 import {
   ScheduleEnabledSwitch,
   ScheduleRowActions,
@@ -28,7 +30,7 @@ const lastRunText = row => {
 };
 
 const EntityScheduleCard = memo(props => {
-  const { row, entityType, onOpenForm, onOpenRunHistory } = props;
+  const { row, entityType, currentUserId, onOpenForm, onOpenRunHistory } = props;
   const actions = useScheduleRowActions(row);
   const skipConfirmation = useDeleteConfirmationDisabled();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -49,6 +51,8 @@ const EntityScheduleCard = memo(props => {
   const rule = ScheduleHelpers.getCronSummaryInBrowserTimezone(row.cron, row.timezone);
   const timezone = ScheduleHelpers.getBrowserTimezone() ?? row.timezone;
   const nextRun = row.enabled ? (row.next_run && formatCardDate(row.next_run)) || '-' : 'Not scheduled';
+  // The list API sends only the user's own rows to a non-admin
+  const isYou = row.owner?.id != null && row.owner.id === currentUserId;
   const showChip = Boolean(row.last_run && row.last_run_status);
   const testId = `${entityType}-schedule-card`;
 
@@ -99,6 +103,18 @@ const EntityScheduleCard = memo(props => {
           text={nextRun}
           testId={`${testId}-next-${row.id}`}
         />
+        <ScheduleMandateConsent
+          versionId={row.version_id}
+          isOwner={isYou}
+        />
+        {/* The owner's Save card: the mandate, its grants and consent this schedule still needs */}
+        {isYou && (
+          <GovernanceReadinessCard
+            entityKind="schedule"
+            entityId={row.id}
+            testId={`${testId}-readiness-${row.id}`}
+          />
+        )}
         {/* The footer keeps its clicks (the menu and the dialogs render in portals) away from the card click */}
         <Box
           sx={styles.footer}

@@ -57,6 +57,9 @@ const EnvironmentSettings = ChunkHelpers.lazyWithRetry(
 );
 const TokensSettings = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/PersonalTokens'));
 const Secrets = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/Secrets'));
+const ProjectGovernance = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/pages/settings/ProjectGovernance'),
+);
 const ProjectContext = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/ProjectContext'));
 const ProjectContextEdit = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/pages/settings/ProjectContextEdit'),
@@ -506,6 +509,10 @@ const ProtectedRoutes = memo(() => {
             <Route
               path="secrets"
               element={<Secrets />}
+            />
+            <Route
+              path="governance"
+              element={<ProjectGovernance />}
             />
             <Route
               path={RouteDefinitions.Schedules}

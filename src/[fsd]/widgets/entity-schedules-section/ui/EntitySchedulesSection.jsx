@@ -1,5 +1,6 @@
 import { memo, useCallback } from 'react';
 
+import { useSelector } from 'react-redux';
 import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Box, Link, Skeleton, Typography } from '@mui/material';
@@ -31,6 +32,7 @@ const BASE_VERSION_NAME = 'base';
 const EntitySchedulesSection = memo(props => {
   const { entityType, entityId, entityName, versionId, versionName, isChatView = false, style } = props;
   const { checkPermission } = useCheckPermission();
+  const currentUserId = useSelector(state => state.user.id);
   const canCreate = checkPermission(PERMISSIONS.schedules.create);
   const isHidden = isChatView || !entityId || !checkPermission(PERMISSIONS.schedules.list);
   const { rows, total, isError, error, isFetching, refetch, loadMore, hasMore } = useEntitySchedules({
@@ -144,6 +146,7 @@ const EntitySchedulesSection = memo(props => {
               key={row.id}
               row={row}
               entityType={entityType}
+              currentUserId={currentUserId}
               onOpenForm={openForm}
               onOpenRunHistory={openRunHistory}
             />

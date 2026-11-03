@@ -16,3 +16,4 @@ export * as SkillAnalyticsHelpers from './skillAnalytics.helpers.js';
 export * as AgentAnalyticsHelpers from './agentAnalytics.helpers.js';
 export * as AnalyticsUrlStateHelpers from './analyticsUrlState.helpers.js';
 export * as PeriodHelpers from './period.helpers.js';
+export * as TokenScopeHelpers from './tokenScope.helpers.js';

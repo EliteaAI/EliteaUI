@@ -10,6 +10,7 @@ import { CredentialWarningHelpers } from '@/[fsd]/entities/credential-warning/li
 import { ConfigurationTitlesConstants } from '@/[fsd]/features/credentials/lib/constants';
 import { useGetCurrentConfigurationAsSchemas } from '@/[fsd]/features/credentials/lib/hooks';
 import { McpAuthHelpers, McpPatBanner } from '@/[fsd]/features/mcp';
+import { GovernanceReadinessCard } from '@/[fsd]/features/project-governance';
 import { ToolkitFormConstants, ToolkitLayoutConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { ToolComponentHelpers, ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import {
@@ -572,6 +573,14 @@ export const ToolkitForm = memo(props => {
             projectId={selectedProjectId}
             toolkitType={editToolDetail?.type || values?.type || toolkitType}
           />
+          {/* (#7269) what this toolkit still needs to run governed for you; read again after a save */}
+          {isEditing && (
+            <GovernanceReadinessCard
+              entityKind="toolkit"
+              entityId={editToolDetail?.id}
+              testId="toolkit-governance-readiness"
+            />
+          )}
           {!hideOperationButtons && (
             <ToolkitsOperationButtons
               isAdding={!isEditing}
