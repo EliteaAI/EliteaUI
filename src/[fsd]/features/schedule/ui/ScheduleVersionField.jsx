@@ -1,5 +1,7 @@
 import { memo, useMemo } from 'react';
 
+import { Typography } from '@mui/material';
+
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 
@@ -20,18 +22,28 @@ const ScheduleVersionField = memo(props => {
   );
 
   return (
-    <SingleSelect
-      data-testid="schedule-version"
-      required
-      label="Version"
-      value={value}
-      options={options}
-      onValueChange={onChange}
-      disabled={disabled}
-      error={!!error}
-      helperText={error}
-      showEmptyPlaceholder={false}
-    />
+    <>
+      <SingleSelect
+        data-testid="schedule-version"
+        required
+        label="Version"
+        value={value}
+        options={options}
+        onValueChange={onChange}
+        disabled={disabled}
+        error={!!error}
+        helperText={error}
+        showEmptyPlaceholder={false}
+      />
+      {disabled && !error && !value && (
+        <Typography
+          variant="bodySmall"
+          color="text.primary"
+        >
+          Select what to run first to choose a version.
+        </Typography>
+      )}
+    </>
   );
 });
 

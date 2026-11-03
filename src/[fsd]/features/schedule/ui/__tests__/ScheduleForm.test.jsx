@@ -225,7 +225,8 @@ const renderForm = (props = {}, path = '/settings/schedules/create') => {
 };
 
 const pickEntity = id => act(() => selectProps.onValueChange(id));
-const typePrompt = text => fireEvent.change(screen.getByLabelText(/Prompt/), { target: { value: text } });
+const typePrompt = text =>
+  fireEvent.change(screen.getByLabelText(/^Starting input/), { target: { value: text } });
 const CLEAR = {
   blocking: [],
   sensitive: [],
@@ -423,12 +424,12 @@ describe('ScheduleForm', () => {
     fireEvent.click(screen.getByTestId('schedule-type-pipeline'));
 
     expect(screen.getByTestId('schedule-run-mode-entry_point')).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.queryByLabelText(/Prompt/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Starting input/)).not.toBeInTheDocument();
     expect(screen.queryByTestId('variables')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('schedule-run-mode-prompt'));
 
-    expect(screen.getByLabelText(/Prompt/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Starting input/)).toBeInTheDocument();
   });
 
   it('keeps Save from sending and shows "Prompt is required"', async () => {
@@ -595,7 +596,7 @@ describe('ScheduleForm', () => {
     const { onSubmit } = renderForm();
     act(() => {
       selectProps.onValueChange(7);
-      fireEvent.change(screen.getByLabelText(/Prompt/), { target: { value: 'Hi' } });
+      fireEvent.change(screen.getByLabelText(/^Starting input/), { target: { value: 'Hi' } });
     });
     await waitFor(() => expect(versionProps.value).toBe(71));
 
@@ -952,7 +953,7 @@ describe('ScheduleForm', () => {
       const { onSubmit } = renderFromPipeline();
 
       expect(screen.getByTestId('schedule-run-mode-entry_point')).toHaveAttribute('aria-pressed', 'true');
-      expect(screen.queryByLabelText(/Prompt/)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/^Starting input/)).not.toBeInTheDocument();
       await save();
 
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
@@ -1019,7 +1020,7 @@ describe('ScheduleForm', () => {
     it('TC-US58-15 shows Prompt and Variables under General for an agent', () => {
       renderLocked();
 
-      expectUnderGeneral(screen.getByLabelText(/Prompt/));
+      expectUnderGeneral(screen.getByLabelText(/^Starting input/));
       expectUnderGeneral(screen.getByTestId('variables'));
       expect(screen.queryByTestId('schedule-run-mode')).not.toBeInTheDocument();
     });
@@ -1129,7 +1130,7 @@ describe('ScheduleForm', () => {
 
       expect(screen.getByLabelText('Name')).toBeDisabled();
       expect(screen.getByLabelText('Description')).toBeDisabled();
-      expect(screen.getByLabelText(/Prompt/)).toBeDisabled();
+      expect(screen.getByLabelText(/^Starting input/)).toBeDisabled();
       expect(screen.getByTestId('schedule-approval-rule-pause_and_ask')).toBeDisabled();
       expect(versionProps.disabled).toBe(true);
       expect(saveButton()).toBeDisabled();

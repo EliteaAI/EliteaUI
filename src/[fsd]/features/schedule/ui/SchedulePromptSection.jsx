@@ -18,6 +18,9 @@ const RUN_MODE_ITEMS = [
 const RUN_MODE_INFO =
   'Entrypoint starts the pipeline from its entry point. Prompt sends the text below as the first message.';
 
+const PROMPT_PLACEHOLDER = "e.g. Summarize yesterday's new requests and list those that need a reply.";
+const PROMPT_INFO = 'The text the run receives as its first message. Use {{name}} to add a variable.';
+
 const SchedulePromptSection = memo(props => {
   const { type, runMode, prompt, variables, promptError, variablesError, setFieldValue, setValues } = props;
 
@@ -77,7 +80,11 @@ const SchedulePromptSection = memo(props => {
           <StyledInputEnhancer
             required
             multiline
-            label="Prompt"
+            label="Starting input"
+            placeholder={PROMPT_PLACEHOLDER}
+            tooltipDescription={PROMPT_INFO}
+            tooltipPinnable
+            minRows={4}
             value={prompt}
             onChange={handlePromptChange}
             error={!!promptError}
