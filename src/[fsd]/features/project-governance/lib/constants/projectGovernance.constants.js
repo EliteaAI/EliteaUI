@@ -73,6 +73,8 @@ export const ITEM_TEXT = {
     suspended: 'Suspended',
     changed: 'Changed since it was approved',
     not_registrable: 'A value typed into the toolkit: store it as a credential first',
+    // (#7228) the toolkit selects a credential by name and none of that name is yours or this project's
+    not_found: 'The selected credential was not found for you: choose it again in the toolkit',
     other_project: 'A credential of another project',
     personal_to_another: 'Another member’s personal credential',
     needs_owner_sign_in: 'Acts with a Microsoft sign-in the schedule does not name',

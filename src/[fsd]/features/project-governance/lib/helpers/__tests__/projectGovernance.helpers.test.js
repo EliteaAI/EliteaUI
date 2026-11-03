@@ -279,6 +279,12 @@ describe('project governance constants (EL-7269)', () => {
     expect(other.filter(field => field.primary).map(field => field.name)).toEqual(['url', 'key']);
   });
 
+  it('EL-7228 says a credential selected by a name that is not found as such, never as a typed value', () => {
+    expect(H.readinessText({ kind: 'reference', state: 'not_found' })).toBe(
+      'The selected credential was not found for you: choose it again in the toolkit',
+    );
+  });
+
   it('EL-7228 an approval of an identity names the definition the admin reviewed; a changed one is a stale view', () => {
     const row = { state: 'pending_approval', definition_digest_full: 'adv1:' + 'a'.repeat(64) };
     expect(
