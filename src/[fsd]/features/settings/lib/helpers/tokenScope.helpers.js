@@ -1,15 +1,9 @@
-// Scoped, expiring API tokens (C-1009, #7336). The server checks the same rules again (auth_core add_token).
-export const TOKEN_OPERATIONS = ['run', 'build', 'admin'];
-export const DEFAULT_TOKEN_OPERATIONS = ['run'];
-export const SCOPED_TOKEN_MAX_TTL_DAYS = 90;
+import {
+  SCOPED_TOKEN_MAX_TTL_DAYS,
+  TOKEN_OPERATIONS,
+} from '@/[fsd]/features/settings/lib/constants/tokenScope.constants';
 
 const DAYS_PER = { days: 1, weeks: 7, hours: 1 / 24, minutes: 1 / 1440 };
-
-export const OPERATION_LABELS = {
-  run: 'Run agents and tools',
-  build: 'Create and change entities',
-  admin: 'Administer',
-};
 
 // How many days an expiry of `value` `measure` is; Infinity for "never"
 export const expiryDays = (measure, value) => {

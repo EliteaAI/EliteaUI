@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import * as OwnerConsentConstants from '../../constants/ownerConsent.constants';
 import * as OwnerConsentHelpers from '../ownerConsent.helpers';
 
 const NOW = new Date('2026-11-02T12:00:00Z').getTime();
@@ -30,7 +31,7 @@ describe('ownerConsent.helpers (EL-7337)', () => {
   });
 
   it('says that signing out does not end the consent', () => {
-    expect(OwnerConsentHelpers.CONSENT_GIVEN_TEXT).toMatch(/Signing out does not end it; withdraw here/);
+    expect(OwnerConsentConstants.CONSENT_GIVEN_TEXT).toMatch(/Signing out does not end it; withdraw here/);
   });
 
   it('names the covered credentials and sends only picked candidates', () => {

@@ -5,7 +5,7 @@ const apiSlicePath = '/elitea_core';
 const TAG_OWNER_CONSENT = 'OWNER_CONSENT';
 const TAG_MY_MANDATES = 'MY_MANDATES';
 
-// The owner's consent to a holder that runs without them acting with their Microsoft sign-in (C-1009, #7337):
+// The owner's consent to a holder that runs without them acting with their Microsoft sign-in:
 // a scoped API token, or an autonomous mandate (a schedule's or a webhook's). Always the owner's own act, in their
 // own session; the server checks it again.
 export const ownerConsentApi = eliteaApi

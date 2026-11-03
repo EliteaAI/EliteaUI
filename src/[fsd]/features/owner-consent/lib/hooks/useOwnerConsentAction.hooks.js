@@ -19,8 +19,3 @@ export const useOwnerConsentAction = (mutate, successText) => {
     [mutate, successText, toastSuccess, toastError],
   );
 };
-
-const consentText = ({ action }) =>
-  action === 'consent' || action === undefined ? 'Consent given' : 'Consent withdrawn';
-
-export const OWNER_CONSENT_TEXT = consentText;

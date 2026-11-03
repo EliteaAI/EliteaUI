@@ -102,20 +102,20 @@ const EntityScheduleCard = memo(props => {
           text={owner}
         />
       )}
-      <Box sx={styles.consent}>
-        <ScheduleMandateConsent
-          versionId={row.version_id}
-          isOwner={isYou}
+      <ScheduleMandateConsent
+        versionId={row.version_id}
+        isOwner={isYou}
+        sx={styles.consent}
+      />
+      {/* (#7269) the owner's Save card: the mandate, its grants and consent this schedule still needs */}
+      {isYou && (
+        <GovernanceReadinessCard
+          entityKind="schedule"
+          entityId={row.id}
+          testId={`${testId}-readiness-${row.id}`}
+          sx={styles.readiness}
         />
-        {/* (#7269) the owner's Save card: the mandate, its grants and consent this schedule still needs */}
-        {isYou && (
-          <GovernanceReadinessCard
-            entityKind="schedule"
-            entityId={row.id}
-            testId={`${testId}-readiness-${row.id}`}
-          />
-        )}
-      </Box>
+      )}
       <Box sx={styles.footer}>
         {allowed?.includes('edit') && (
           <Button.BaseBtn
@@ -181,6 +181,7 @@ const entityScheduleCardStyles = () => ({
       "name"
       "owner"
       "consent"
+      "readiness"
       "footer"`,
     alignItems: 'center',
     rowGap: '0.25rem',
@@ -194,7 +195,8 @@ const entityScheduleCardStyles = () => ({
         "shown shown footer"
         "last  next  footer"
         "name  owner footer"
-        "consent consent footer"`,
+        "consent consent footer"
+        "readiness readiness footer"`,
       columnGap: '1rem',
     },
   }),
@@ -206,9 +208,14 @@ const entityScheduleCardStyles = () => ({
     color: palette.icon.secondary,
     whiteSpace: 'pre-line',
   }),
-  // the owner's consent when the schedule acts with their Microsoft sign-in (#7337); empty otherwise
+  // the owner's consent when the schedule acts with their Microsoft sign-in; empty otherwise
   consent: {
     gridArea: 'consent',
+    minWidth: 0,
+  },
+  // (#7269) what the schedule still needs to run governed for its owner; empty otherwise
+  readiness: {
+    gridArea: 'readiness',
     minWidth: 0,
   },
   footer: {

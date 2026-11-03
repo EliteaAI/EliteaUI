@@ -5,7 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material';
 
+import * as OwnerConsentConstants from '@/[fsd]/features/owner-consent/lib/constants/ownerConsent.constants';
 import * as OwnerConsentHelpers from '@/[fsd]/features/owner-consent/lib/helpers/ownerConsent.helpers';
+import * as TokenScopeConstants from '@/[fsd]/features/settings/lib/constants/tokenScope.constants';
 import * as TokenScopeHelpers from '@/[fsd]/features/settings/lib/helpers/tokenScope.helpers';
 import { store } from '@/[fsd]/shared/config';
 import lightPalette from '@/lightPalette';
@@ -40,6 +42,7 @@ vi.mock('@/api/auth', async importOriginal => ({
   useTokenListQuery: () => ({ refetch: vi.fn() }),
 }));
 vi.mock('@/[fsd]/features/owner-consent', async () => ({
+  OwnerConsentConstants,
   OwnerConsentHelpers,
   ConsentCredentialPicker: (await import('@/[fsd]/features/owner-consent/ui/ConsentCredentialPicker'))
     .default,
@@ -68,6 +71,7 @@ vi.mock('@/[fsd]/shared/ui/select', () => ({
   ),
 }));
 vi.mock('@/[fsd]/features/settings', () => ({
+  TokenScopeConstants,
   TokenScopeHelpers,
   DrawerPage: props => <div>{props.children}</div>,
   DrawerPageHeader: props => <div>{props.extraContent}</div>,
@@ -116,6 +120,7 @@ const CANDIDATES = [
 const statusWith = (base, candidates = CANDIDATES) =>
   m.status.mockImplementation(args => ({
     data: args?.projects ? { ...base, candidates } : base,
+    currentData: args?.projects ? { ...base, candidates } : base,
     isFetching: false,
   }));
 

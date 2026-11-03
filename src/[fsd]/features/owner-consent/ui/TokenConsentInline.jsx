@@ -1,17 +1,20 @@
 import { memo, useCallback, useState } from 'react';
 
+import { Typography } from '@mui/material';
+
 import {
   useGetOwnerConsentStatusQuery,
   useTokenConsentActionMutation,
 } from '@/[fsd]/features/owner-consent/api/ownerConsentApi';
+import * as OwnerConsentConstants from '@/[fsd]/features/owner-consent/lib/constants/ownerConsent.constants';
 import * as OwnerConsentHelpers from '@/[fsd]/features/owner-consent/lib/helpers/ownerConsent.helpers';
-import { OWNER_CONSENT_TEXT, useOwnerConsentAction } from '@/[fsd]/features/owner-consent/lib/hooks';
+import { useOwnerConsentAction } from '@/[fsd]/features/owner-consent/lib/hooks';
 
 import ConsentCredentialPicker from './ConsentCredentialPicker';
 import OwnerConsentInline from './OwnerConsentInline';
 
 // The token list's consent line of one token, only where the platform allows it: the credentials a consent covers
-// with Withdraw; for a restricted live token without one, Give consent with the credentials to name (#7337)
+// with Withdraw; for a restricted live token without one, Give consent with the credentials to name
 const TokenConsentInline = memo(props => {
   const { token } = props;
   const { data: status } = useGetOwnerConsentStatusQuery();
@@ -24,7 +27,7 @@ const TokenConsentInline = memo(props => {
     { skip: !choosing || !canConsent || Boolean(consent) },
   );
   const [mutate, { isLoading }] = useTokenConsentActionMutation();
-  const act = useOwnerConsentAction(mutate, OWNER_CONSENT_TEXT);
+  const act = useOwnerConsentAction(mutate, OwnerConsentHelpers.consentActionText);
   const candidates = offered?.candidates;
   const onConsent = useCallback(async () => {
     if (!choosing) {
@@ -50,7 +53,9 @@ const TokenConsentInline = memo(props => {
       onWithdraw={onWithdraw}
       testId="token-consent"
     >
-      {!consent && choosing && candidates?.length === 0 && OwnerConsentHelpers.NO_DELEGATED_CREDENTIALS_TEXT}
+      {!consent && choosing && candidates?.length === 0 && (
+        <Typography variant="bodySmall">{OwnerConsentConstants.NO_DELEGATED_CREDENTIALS_TEXT}</Typography>
+      )}
       {!consent && choosing && candidates?.length > 0 && (
         <ConsentCredentialPicker
           candidates={candidates}

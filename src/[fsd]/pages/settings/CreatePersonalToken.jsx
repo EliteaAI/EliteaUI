@@ -8,6 +8,7 @@ import { Box, CircularProgress, FormControlLabel, Tooltip, Typography } from '@m
 
 import {
   ConsentCredentialPicker,
+  OwnerConsentConstants,
   OwnerConsentHelpers,
   useGetOwnerConsentStatusQuery,
   useTokenConsentActionMutation,
@@ -16,6 +17,7 @@ import {
   DrawerPage,
   DrawerPageHeader,
   GeneratedTokenDialog,
+  TokenScopeConstants,
   TokenScopeFields,
   TokenScopeHelpers,
 } from '@/[fsd]/features/settings';
@@ -44,15 +46,14 @@ const CreatePersonalToken = memo(() => {
   const [createToken, { isLoading: isGenerating }] = useTokenCreateMutation();
   const { refetch } = useTokenListQuery({ skip: true });
   const { toastError } = useToast();
-  // A restricted (scoped) token (#7336): projects, operations, and an expiry of at most 90 days
   const [restricted, setRestricted] = useState(false);
   const [scopeProjects, setScopeProjects] = useState([]);
-  const [scopeOperations, setScopeOperations] = useState(TokenScopeHelpers.DEFAULT_TOKEN_OPERATIONS);
-  // (#7337) a restricted token may act with the owner's Microsoft sign-in for the delegated credentials they name:
-  // the owner's consent, given here
+  const [scopeOperations, setScopeOperations] = useState(TokenScopeConstants.DEFAULT_TOKEN_OPERATIONS);
+  // a restricted token may act with the owner's Microsoft sign-in for the delegated credentials they name
   const { data: consentStatus } = useGetOwnerConsentStatusQuery();
   const consentPossible = restricted && Boolean(consentStatus?.allowed && consentStatus?.linked);
-  const { data: offered, isFetching: isFetchingOffered } = useGetOwnerConsentStatusQuery(
+  // currentData: the candidates of the projects selected now, not the previous selection's while they load
+  const { currentData: offered, isFetching: isFetchingOffered } = useGetOwnerConsentStatusQuery(
     { projects: scopeProjects },
     { skip: !consentPossible || !scopeProjects.length },
   );
@@ -60,6 +61,13 @@ const CreatePersonalToken = memo(() => {
   const [giveConsent] = useTokenConsentActionMutation();
   const [actWithSignIn, setActWithSignIn] = useState(false);
   const [pickedCredentials, setPickedCredentials] = useState([]);
+  useEffect(() => {
+    // a pick of a project that is no longer selected goes
+    const keys = (candidates || []).map(OwnerConsentHelpers.credentialKey);
+    setPickedCredentials(picked =>
+      picked.every(key => keys.includes(key)) ? picked : picked.filter(key => keys.includes(key)),
+    );
+  }, [candidates]);
   const canOfferConsent = consentPossible && candidates?.length > 0;
   const noDelegatedCredentials =
     consentPossible && scopeProjects.length > 0 && !isFetchingOffered && candidates?.length === 0;
@@ -99,7 +107,7 @@ const CreatePersonalToken = memo(() => {
         setData(tokenData);
         setOpenTokenDialog(true);
         await refetch();
-      } else if (restricted) {
+      } else {
         toastError(buildErrorMessage(error));
       }
     },
@@ -111,9 +119,12 @@ const CreatePersonalToken = memo(() => {
         name: '',
         measure: EXPIRATION_MEASURES[1],
         expiration: DEFAULT_TOKEN_EXPIRATION_DAYS,
-      }) !== JSON.stringify(formik.values)
+        restricted: false,
+        scopeProjects: [],
+        scopeOperations: TokenScopeConstants.DEFAULT_TOKEN_OPERATIONS,
+      }) !== JSON.stringify({ ...formik.values, restricted, scopeProjects, scopeOperations })
     );
-  }, [formik.values]);
+  }, [formik.values, restricted, scopeProjects, scopeOperations]);
 
   const onCancel = useCallback(() => {
     setWantToCancel(true);
@@ -157,13 +168,15 @@ const CreatePersonalToken = memo(() => {
 
   const onToggleActWithSignIn = useCallback(event => setActWithSignIn(event.target.checked), []);
 
+  const { setFieldValue } = formik;
+  const expirationMeasure = formik.values.measure;
   const onToggleRestricted = useCallback(() => {
     // a restricted token always expires: "never" becomes the default number of days
-    if (!restricted && formik.values.measure === EXPIRATION_MEASURES[0]) {
-      formik.setFieldValue('measure', EXPIRATION_MEASURES[1]);
+    if (!restricted && expirationMeasure === EXPIRATION_MEASURES[0]) {
+      setFieldValue('measure', EXPIRATION_MEASURES[1]);
     }
     setRestricted(value => !value);
-  }, [formik, restricted]);
+  }, [expirationMeasure, restricted, setFieldValue]);
 
   const getNameHelperText = useCallback(() => {
     if (formik.touched.name && formik.errors.name) {
@@ -292,7 +305,7 @@ const CreatePersonalToken = memo(() => {
               {canOfferConsent && (
                 <Box sx={styles.consentField}>
                   <FormControlLabel
-                    label={OwnerConsentHelpers.TOKEN_CHECKBOX_LABEL}
+                    label={OwnerConsentConstants.TOKEN_CHECKBOX_LABEL}
                     control={
                       <Checkbox.BaseCheckbox
                         size="small"
@@ -314,7 +327,7 @@ const CreatePersonalToken = memo(() => {
                     variant="bodySmall"
                     sx={styles.consentHint}
                   >
-                    {OwnerConsentHelpers.TOKEN_CHECKBOX_HINT}
+                    {OwnerConsentConstants.TOKEN_CHECKBOX_HINT}
                   </Typography>
                 </Box>
               )}
@@ -324,7 +337,7 @@ const CreatePersonalToken = memo(() => {
                   sx={styles.consentField}
                   data-testid="create-personal-token-no-delegated-credentials"
                 >
-                  {OwnerConsentHelpers.NO_DELEGATED_CREDENTIALS_TEXT}
+                  {OwnerConsentConstants.NO_DELEGATED_CREDENTIALS_TEXT}
                 </Typography>
               )}
             </Box>
