@@ -8,7 +8,7 @@ import {
 } from '../storedLogin.helpers';
 
 describe('storedLogin helpers', () => {
-  it('knows the four toolkit types that keep a Microsoft login on the credential', () => {
+  it('knows the toolkit types that keep a Microsoft login on the credential', () => {
     expect(getStoredLoginConfig('dataverse')).toMatchObject({
       settingsKey: 'dataverse_configuration',
       keepBrowserToken: false,
@@ -19,6 +19,10 @@ describe('storedLogin helpers', () => {
     });
     expect(getStoredLoginConfig('teams')).toMatchObject({
       settingsKey: 'teams_configuration',
+      keepBrowserToken: true,
+    });
+    expect(getStoredLoginConfig('sharepoint')).toMatchObject({
+      settingsKey: 'sharepoint_configuration',
       keepBrowserToken: true,
     });
     expect(getStoredLoginConfig('jira')).toBeNull();
@@ -34,6 +38,11 @@ describe('storedLogin helpers', () => {
     ).toBe('A');
     expect(getStoredLoginConfig('outlook').getAuthority(credential, errorData)).toBe(
       'https://login.microsoftonline.com/t',
+    );
+    // EL-7345: SharePoint keys its login by the credential's own endpoint, with or without /v2.0
+    const v2 = { data: { oauth_discovery_endpoint: 'https://login.microsoftonline.com/t/v2.0' } };
+    expect(getStoredLoginConfig('sharepoint').getAuthority(v2, errorData)).toBe(
+      'https://login.microsoftonline.com/t/v2.0',
     );
   });
 
