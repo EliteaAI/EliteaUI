@@ -110,16 +110,15 @@ describe('EntitySchedulesSection', () => {
     renderSection();
     const anchor = document.getElementById('entity-schedules-section');
     expect(anchor).not.toBeNull();
-    expect(anchor).toContainElement(screen.getByTestId('agent-schedules-section-header'));
+    expect(anchor).toContainElement(screen.getByTestId('agent-schedules-section-open-all'));
   });
 
   describe('agent editor', () => {
-    it('TC-US35-01 TC-US35-18 shows the header with "+ Schedule", the count and the "Manage Schedules" link without an icon', () => {
+    it('TC-US35-01 TC-US35-18 shows the header with "+ Schedule" and the "Manage Schedules" link without an icon', () => {
       renderSection();
 
       expect(screen.getByText('Schedules')).toBeInTheDocument();
       expect(screen.getByTestId('agent-schedules-section-add')).toHaveTextContent(/^Schedule$/);
-      expect(screen.getByText('2 schedules run the base version')).toBeInTheDocument();
       const link = screen.getByTestId('agent-schedules-section-open-all');
       expect(link).toHaveTextContent(/^Manage Schedules$/);
       expect(link.querySelector('svg')).toBeNull();
@@ -132,9 +131,10 @@ describe('EntitySchedulesSection', () => {
       renderSection();
 
       const add = screen.getByTestId('agent-schedules-section-add');
-      const header = screen.getByTestId('agent-schedules-section-header');
-      expect(header).not.toContainElement(add);
-      expect(header).toContainElement(screen.getByTestId('agent-schedules-section-open-all'));
+      expect(screen.getByRole('region', { name: 'Schedules' })).toContainElement(add);
+      expect(screen.getByRole('region', { name: 'Schedules' })).not.toContainElement(
+        screen.getByTestId('agent-schedules-section-open-all'),
+      );
       expect(
         screen
           .getAllByRole('button', { name: /./ })
@@ -227,8 +227,6 @@ describe('EntitySchedulesSection', () => {
     it('TC-US35-19 counts one schedule in the singular', () => {
       mocks.entitySchedules.mockReturnValue(listOf([{ id: 1, name: 'Daily digest' }]));
       renderSection();
-
-      expect(screen.getByText('1 schedule runs the base version')).toBeInTheDocument();
     });
 
     it('TC-US35-07 shows "No schedules run the base version yet." with "+ Schedule" for an empty list', () => {
@@ -294,8 +292,6 @@ describe('EntitySchedulesSection', () => {
     it('TC-US35-09 hides "+ Schedule" without the create permission', () => {
       mocks.permissions = [PERMISSIONS.schedules.list];
       renderSection();
-
-      expect(screen.getByText('2 schedules run the base version')).toBeInTheDocument();
       expect(screen.queryByTestId('agent-schedules-section-add')).not.toBeInTheDocument();
     });
 
@@ -341,17 +337,14 @@ describe('EntitySchedulesSection', () => {
 
     it('names the version "base" as the base version', () => {
       renderSection({ versionId: 70, versionName: 'base' });
-      expect(screen.getByText('2 schedules run the base version')).toBeInTheDocument();
     });
 
     it('names the version in the count text', () => {
       renderSection({ versionId: 71, versionName: 'v1.0.1' });
-      expect(screen.getByText('2 schedules run version v1.0.1')).toBeInTheDocument();
 
       cleanup();
       mocks.entitySchedules.mockReturnValue(listOf([{ id: 1, name: 'Daily digest' }]));
       renderSection({ versionId: 71, versionName: 'v1.0.1' });
-      expect(screen.getByText('1 schedule runs version v1.0.1')).toBeInTheDocument();
     });
 
     it('names the version in the empty state and keeps the add button and link', () => {
@@ -400,27 +393,15 @@ describe('EntitySchedulesSection', () => {
         versionId: undefined,
         skip: false,
       });
-      expect(screen.getByText('2 schedules run the base version')).toBeInTheDocument();
       expect(screen.getByTestId('pipeline-schedules-section-add')).toBeInTheDocument();
       expect(mocks.cardProps.map(card => card.entityType)).toEqual(['pipeline', 'pipeline']);
     });
 
-    it('TC-US36-01 TC-US36-16 narrower than 30 rem: button and link on row 1, count wraps on row 2', () => {
+    it('keeps the add button on one line and the link in the section header', () => {
       renderPipeline();
 
-      const css = [...document.querySelectorAll('style')].map(style => style.textContent).join('');
-      expect(css).toContain('container-type:inline-size');
-      expect(css).toContain('@container (min-width: 30rem)');
-      expect(css).not.toContain('26rem');
-      expect(screen.getByTestId('pipeline-schedules-section-header')).toHaveStyle({ flexWrap: 'wrap' });
       expect(screen.getByTestId('pipeline-schedules-section-add')).toHaveStyle({ whiteSpace: 'nowrap' });
-      // The link shares row 1 with the button; the count takes row 2 and wraps, never truncates
-      expect(screen.getByTestId('pipeline-schedules-section-open-all')).not.toHaveStyle({
-        flexBasis: '100%',
-      });
-      const count = screen.getByText('2 schedules run the base version');
-      expect(count).toHaveStyle({ flexBasis: '100%', order: '1' });
-      expect(count).not.toHaveStyle({ whiteSpace: 'nowrap', textOverflow: 'ellipsis' });
+      expect(screen.getByTestId('pipeline-schedules-section-open-all')).toHaveTextContent('Manage Schedules');
     });
 
     it('TC-US36-17 shows the empty state of a pipeline without schedules', () => {

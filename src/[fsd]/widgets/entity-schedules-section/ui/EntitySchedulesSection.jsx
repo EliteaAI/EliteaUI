@@ -27,9 +27,6 @@ const WIDE = '@container (min-width: 30rem)';
 // The name every agent and pipeline gives its first version
 const BASE_VERSION_NAME = 'base';
 
-const countText = (total, version) =>
-  total === 1 ? `1 schedule runs ${version}` : `${total} schedules run ${version}`;
-
 // The last section of the agent and pipeline editors; entityType is 'agent' or 'pipeline'; versionId is the editor version, versionName its label (none or 'base': the base version)
 const EntitySchedulesSection = memo(props => {
   const { entityType, entityId, entityName, versionId, versionName, isChatView = false, style } = props;
@@ -88,35 +85,25 @@ const EntitySchedulesSection = memo(props => {
     {
       title: 'Schedules',
       testId,
+      summaryAction: (
+        <Link
+          component={RouterLink}
+          to={buildSchedulesListLink({ entityType, entityId })}
+          // The Schedules page names the entity chip with it when the list has no rows
+          state={{ entityName }}
+          variant="bodySmall"
+          sx={[TextLinkConstants.TEXT_LINK_SX, styles.link]}
+          data-testid={`${testId}-open-all`}
+        >
+          Manage Schedules
+        </Link>
+      ),
       content: (
         <Box
           role="region"
           aria-label="Schedules"
           sx={styles.content}
         >
-          <Box
-            sx={styles.header}
-            data-testid={`${testId}-header`}
-          >
-            <Typography
-              variant="bodyMedium"
-              color="text.secondary"
-              sx={styles.count}
-            >
-              {total > 0 ? countText(total, version) : ''}
-            </Typography>
-            <Link
-              component={RouterLink}
-              to={buildSchedulesListLink({ entityType, entityId })}
-              // The Schedules page names the entity chip with it when the list has no rows
-              state={{ entityName }}
-              variant="bodyMedium"
-              sx={[TextLinkConstants.TEXT_LINK_SX, styles.link]}
-              data-testid={`${testId}-open-all`}
-            >
-              Manage Schedules
-            </Link>
-          </Box>
           {isError && (
             <Box sx={styles.header}>
               <Typography
@@ -216,21 +203,11 @@ const entitySchedulesSectionStyles = () => ({
     gap: '0.75rem',
     containerType: 'inline-size',
   },
-  // Below 30 rem: the link on row 1, the count on row 2; from 30 rem: the count and the link on one row
   header: {
     display: 'flex',
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: '0.5rem',
-  },
-  // The count wraps and never truncates
-  count: {
-    flexBasis: '100%',
-    order: 1,
-    [WIDE]: {
-      flex: '1 1 0',
-      order: 0,
-    },
   },
   add: {
     alignSelf: 'flex-start',
