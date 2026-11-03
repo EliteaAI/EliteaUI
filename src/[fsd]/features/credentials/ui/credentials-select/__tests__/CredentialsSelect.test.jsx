@@ -650,6 +650,8 @@ describe('CredentialsSelect', () => {
         configurations: [{ ...CREDENTIAL_CONFIGURATIONS[0], project_id: PERSONAL_PROJECT_ID }],
       });
 
+      // No row is selected: the select echoes the saved reference, not the same-title row's uuid
+      expect(JSON.parse(singleSelectProps.value).configuration_uuid).toBe('uuid-deleted');
       expect(singleSelectProps.value).not.toBe(savedOptions()[0].value);
     });
 
@@ -664,6 +666,8 @@ describe('CredentialsSelect', () => {
         configurations: [{ ...CREDENTIAL_CONFIGURATIONS[0], project_id: PERSONAL_PROJECT_ID }],
       });
 
+      // No row is selected: the select echoes the saved reference, not the same-title row's uuid
+      expect(JSON.parse(singleSelectProps.value).configuration_uuid).toBe('uuid-deleted');
       expect(singleSelectProps.value).not.toBe(savedOptions()[0].value);
     });
 
