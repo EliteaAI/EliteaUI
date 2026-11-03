@@ -23,4 +23,4 @@ export const PAT_GATE_COPY = {
 };
 
 export const PAT_GOVERNED_NOTE =
-  "In governed runs this toolkit acts with the run's own identity; no personal access token is needed.";
+  "In governed runs this toolkit acts with the run's own identity; no personal access token is needed. To call Elitea from outside (the API or an MCP client), use a restricted token: scoped to its projects and operations, and expiring.";
