@@ -15,6 +15,8 @@ import ScheduleWaitingCard from './ScheduleWaitingCard';
 
 const NO_EVENTS = [];
 const NO_SCHEDULE_ID = null;
+// The raw error of a tool stays in the run log; the response of a failed run is a short, plain line
+const FAILED_RESPONSE = 'The run did not finish. Open the run logs for details.';
 
 // What a run shows once it is open, by status: the waiting run asks for a decision, a running run shows its
 // log, an ended run shows the response, and every ended run can open its log and the Run History.
@@ -37,7 +39,7 @@ const ScheduleRunDetail = memo(props => {
       />
     );
 
-  const response = toPlainText(conversation.answer);
+  const response = shown.status === 'failed' ? FAILED_RESPONSE : toPlainText(conversation.answer);
   const showLog = active || logOpen;
   // A Test run of the form sits on a hidden draft, so its link filters by the Test trigger, not by a schedule
   const link = buildScheduleHistoryLink(

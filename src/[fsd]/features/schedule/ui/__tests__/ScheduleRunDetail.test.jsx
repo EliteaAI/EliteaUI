@@ -89,6 +89,12 @@ describe('ScheduleRunDetail', () => {
     expect(screen.getByTestId('schedule-run-reason')).toHaveTextContent('Model quota exceeded');
   });
 
+  it('shows a short response for a failed run, not the raw tool error', () => {
+    renderDetail({ ...ended, status: 'failed' });
+
+    expect(screen.getByTestId('schedule-run-answer')).toHaveTextContent(/did not finish/);
+  });
+
   it('offers a retry when the run detail fails to load', () => {
     mocks.detail = { run: undefined, isError: true, refetch: vi.fn() };
     renderDetail();
