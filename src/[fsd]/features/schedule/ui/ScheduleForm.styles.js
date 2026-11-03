@@ -1,6 +1,6 @@
 /** @type {MuiSx} */
 const scheduleFormStyles = {
-  root: { order: 1, width: '100%', margin: '0.75rem auto 0', padding: '0 1.5rem', maxWidth: '40.1875rem' },
+  root: { order: 1, width: '100%', margin: '1rem auto 0', padding: '0 1.5rem', maxWidth: '40.1875rem' },
   // StyledTabs pads its content by 1.5rem; the header bars of both columns run to the edges, so the grid cancels it
   split: { margin: '0 -1.5rem', width: 'calc(100% + 3rem)', padding: 0 },
   sidePanel: ({ palette }) => ({
@@ -27,7 +27,7 @@ const scheduleFormStyles = {
     gap: '1rem',
     border: 0,
     margin: 0,
-    padding: '0 0 1.5rem',
+    padding: '0.5625rem 0 1.5rem',
     minWidth: 0,
   },
 };
