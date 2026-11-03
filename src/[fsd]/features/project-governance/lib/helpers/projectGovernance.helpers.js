@@ -3,6 +3,7 @@ import {
   ITEM_TEXT,
   KINDS,
   MAX_SCHEMA_DEPTH,
+  PRIMARY_CREDENTIAL_FIELDS,
   REFERENCE_PATTERN,
   STATE_LABELS,
   WAITING_STATES,
@@ -60,7 +61,11 @@ export const rowDetails = (kind, row) => {
       return [
         row.identity_mode,
         operationsLabel(row.platform_operations),
-        row.digest_status === 'changed' ? 'Agent changed since approval' : null,
+        row.digest_status === 'changed'
+          ? row.state === 'pending_approval'
+            ? 'Agent changed since it was requested: bring it up to date before approving'
+            : 'Agent changed since approval'
+          : null,
         `by ${personName(row.created_by)}`,
       ];
     case KINDS.reference:
@@ -98,12 +103,19 @@ export const rowActions = (kind, row, userId) => {
   const state = row.state;
   if (kind === KINDS.binding) {
     const own = isMe(row.created_by, userId) || isMe(row.state_changed_by, userId);
+    // (#7228) a waiting identity for an older definition would be refused: it is brought up to date first
+    const stale = state === 'pending_approval' && row.digest_status === 'changed';
     return [
       state === 'draft' && action('submit', 'Submit for approval', G.bindingsManage),
+      stale && action('rebind', 'Bring up to date with the agent as it is', G.bindingsManage),
       state === 'pending_approval' &&
         action('activate', 'Approve', G.bindingsApprove, {
           approval: true,
-          disabledReason: own ? 'You created or last changed it: another admin approves it.' : null,
+          disabledReason: stale
+            ? 'The agent changed since it was requested: bring it up to date first.'
+            : own
+              ? 'You created or last changed it: another admin approves it.'
+              : null,
         }),
       state === 'active' && action('suspend', 'Suspend', G.bindingsManage),
       state === 'suspended' && action('resume', 'Resume', G.bindingsManage),
@@ -264,7 +276,7 @@ export const credentialFormFieldsOf = (types, type) => {
   const data = entry?.config_schema?.properties?.data;
   if (!isObject(data?.properties)) return null;
   const required = Array.isArray(data.required) ? data.required : [];
-  return Object.entries(data.properties).flatMap(([name, schema]) => {
+  const fields = Object.entries(data.properties).flatMap(([name, schema]) => {
     if (!isObject(schema) || NOT_TYPED.includes(name) || schema.$ref) return [];
     const secret = isPasswordSchema(schema);
     const options = secret ? null : optionsOf(schema);
@@ -287,6 +299,17 @@ export const credentialFormFieldsOf = (types, type) => {
       },
     ];
   });
+  // (#7228) shown at first: the required fields and the type's primary sign-in field(s); the rest is folded
+  const listed = (PRIMARY_CREDENTIAL_FIELDS[type] ?? []).filter(name =>
+    fields.some(field => field.name === name),
+  );
+  const primary = listed.length
+    ? listed
+    : fields
+        .filter(field => field.secret)
+        .slice(0, 1)
+        .map(field => field.name);
+  return fields.map(field => ({ ...field, primary: field.required || primary.includes(field.name) }));
 };
 
 // (#7228) what the card says after Create, from the credential's state and its check: who acts next, in words
@@ -337,12 +360,14 @@ export const governanceRequestOf = output => {
   if (!main) return null;
   // (#7228) a changed toolkit also files for every agent version using it: one card per changed entity, once each
   const seen = new Set();
-  const entities = [main, ...(Array.isArray(found.versions) ? found.versions.map(entityOf) : [])].filter(entity => {
-    const key = entity && `${entity.entityKind}:${entity.entityId}`;
-    if (!key || seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  const entities = [main, ...(Array.isArray(found.versions) ? found.versions.map(entityOf) : [])].filter(
+    entity => {
+      const key = entity && `${entity.entityKind}:${entity.entityId}`;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    },
+  );
   return { ...main, entities };
 };
 

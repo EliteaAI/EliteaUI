@@ -88,8 +88,14 @@ describe('what a run created (EL-7269)', () => {
       result: {},
       governance_requests: { entity_kind: 'version', entity_id: 7, filed: [] },
     });
-    expect(H.governanceRequestOf(output)).toMatchObject({ entityKind: 'version', entityId: 7, refused: null });
-    expect(H.governanceRequestOf({ governance_requests: { entity_kind: 'toolkit', entity_id: 3 } })).toMatchObject({
+    expect(H.governanceRequestOf(output)).toMatchObject({
+      entityKind: 'version',
+      entityId: 7,
+      refused: null,
+    });
+    expect(
+      H.governanceRequestOf({ governance_requests: { entity_kind: 'toolkit', entity_id: 3 } }),
+    ).toMatchObject({
       entityKind: 'toolkit',
       entityId: 3,
       refused: null,
@@ -165,6 +171,7 @@ describe('project governance constants (EL-7269)', () => {
         defaultValue: 'https://api.github.com',
         description: 'Base API URL',
         options: null,
+        primary: false,
       },
       {
         name: 'hosting',
@@ -174,6 +181,7 @@ describe('project governance constants (EL-7269)', () => {
         defaultValue: 'Auto',
         description: 'Select the hosting type.',
         options: ['Auto', 'Cloud'],
+        primary: false,
       },
       {
         name: 'access_token',
@@ -183,6 +191,7 @@ describe('project governance constants (EL-7269)', () => {
         defaultValue: '',
         description: '',
         options: null,
+        primary: true,
       },
     ]);
     expect(H.credentialFormResultText({ title: 'G', credential_type: 'github', state: 'active' })).toBe(
@@ -224,6 +233,71 @@ describe('project governance constants (EL-7269)', () => {
       { entityKind: 'version', entityId: 41, refused: null },
       { entityKind: 'version', entityId: 43, refused: 'FORBIDDEN' },
     ]);
+  });
+
+  it('EL-7228 marks the fields the credential card shows first: required ones and the primary sign-in field', () => {
+    const schema = properties => [
+      { type: 'github', config_schema: { properties: { data: { properties, required: ['base_url'] } } } },
+    ];
+    const github = H.credentialFormFieldsOf(
+      schema({
+        base_url: { type: 'string' },
+        app_id: { type: 'string' },
+        app_private_key: { type: 'string', format: 'password' },
+        access_token: { type: 'string', format: 'password' },
+        username: { type: 'string' },
+        password: { type: 'string', format: 'password' },
+      }),
+      'github',
+    );
+    expect(github.filter(field => field.primary).map(field => field.name)).toEqual([
+      'base_url',
+      'access_token',
+    ]);
+    // a type not listed: its required fields and its first secret field (the generic rule)
+    const other = H.credentialFormFieldsOf(
+      [
+        {
+          type: 'acme',
+          config_schema: {
+            properties: {
+              data: {
+                properties: {
+                  url: { type: 'string' },
+                  note: { type: 'string' },
+                  key: { type: 'string', format: 'password' },
+                  spare: { type: 'string', format: 'password' },
+                },
+                required: ['url'],
+              },
+            },
+          },
+        },
+      ],
+      'acme',
+    );
+    expect(other.filter(field => field.primary).map(field => field.name)).toEqual(['url', 'key']);
+  });
+
+  it('EL-7228 never shows a waiting identity for an edited agent as merely waiting: it is brought up to date first', () => {
+    const stale = { id: 'b', state: 'pending_approval', digest_status: 'changed', created_by: { id: 3 } };
+    const actions = H.rowActions(C.KINDS.binding, stale, 8);
+    expect(actions.map(item => item.action)).toEqual(['rebind', 'activate', 'retire']);
+    expect(actions.find(item => item.approval).disabledReason).toBe(
+      'The agent changed since it was requested: bring it up to date first.',
+    );
+    expect(H.rowDetails(C.KINDS.binding, stale)).toContain(
+      'Agent changed since it was requested: bring it up to date before approving',
+    );
+    const current = { ...stale, digest_status: 'match' };
+    expect(H.rowActions(C.KINDS.binding, current, 8).map(item => item.action)).toEqual([
+      'activate',
+      'retire',
+    ]);
+    expect(H.rowDetails(C.KINDS.binding, { ...stale, state: 'active' })).toContain(
+      'Agent changed since approval',
+    );
+    expect(C.ITEM_TEXT.binding.changed).toBe('It changed since its identity was requested or approved');
   });
 
   it('EL-7228 names the operations of an identity, and offers them to trim on its approval only', () => {

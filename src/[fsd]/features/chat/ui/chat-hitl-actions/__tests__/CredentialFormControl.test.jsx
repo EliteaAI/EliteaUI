@@ -161,6 +161,7 @@ describe('CredentialFormControl (#7228)', () => {
 
   it('masks the secret fields, never offers a stored sign-in field, and keeps Create off until required ones are filled', () => {
     wrap();
+    fireEvent.click(screen.getByTestId('credential-form-more-fields'));
     expect(screen.getByTestId('credential-form-field-access_token')).toHaveAttribute('type', 'password');
     expect(screen.getByTestId('credential-form-field-base_url')).toHaveAttribute('type', 'text');
     expect(screen.queryByTestId('credential-form-field-refresh_token')).toBeNull();
@@ -310,8 +311,21 @@ describe('CredentialFormControl (#7228)', () => {
     expect(screen.getByText('**bold** `code`')).toBeInTheDocument();
   });
 
+  it('EL-7228 shows the required and primary sign-in fields first and folds the rest behind More fields', () => {
+    wrap();
+    expect(screen.getByTestId('credential-form-field-access_token')).toBeInTheDocument();
+    expect(screen.queryByTestId('credential-form-field-base_url')).toBeNull();
+    expect(screen.queryByTestId('credential-form-field-hosting')).toBeNull();
+    expect(screen.getByTestId('credential-form-more-fields')).toHaveTextContent('More fields (2)');
+    fireEvent.click(screen.getByTestId('credential-form-more-fields'));
+    expect(screen.queryByTestId('credential-form-more-fields')).toBeNull();
+    expect(screen.getByTestId('credential-form-field-base_url')).toBeInTheDocument();
+    expect(screen.getByTestId('credential-form-field-hosting')).toBeInTheDocument();
+  });
+
   it("prefills the schema's defaults and offers an enum as a select", () => {
     wrap();
+    fireEvent.click(screen.getByTestId('credential-form-more-fields'));
     expect(screen.getByTestId('credential-form-field-base_url')).toHaveValue('https://api.github.com');
     expect(screen.getByTestId('credential-form-field-hosting')).toBeInTheDocument();
     expect(screen.getByTestId('credential-form-field-hosting')).toHaveTextContent('Auto');

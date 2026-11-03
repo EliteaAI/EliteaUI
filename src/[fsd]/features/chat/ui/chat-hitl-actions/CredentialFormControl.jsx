@@ -63,6 +63,14 @@ const CredentialFormControl = memo(props => {
     () => (fields ?? []).filter(field => !isSignIn || (field.required && !field.secret)),
     [fields, isSignIn],
   );
+  // (#7228) the required fields and the type's primary sign-in field(s) first; the other optional ones folded
+  const [showMore, setShowMore] = useState(false);
+  const foldedCount = useMemo(() => shownFields.filter(field => !field.primary).length, [shownFields]);
+  const visibleFields = useMemo(
+    () => shownFields.filter(field => field.primary || showMore),
+    [shownFields, showMore],
+  );
+  const handleShowMore = useCallback(() => setShowMore(true), []);
 
   // the schema's defaults prefill the form (nothing secret has one)
   useEffect(() => {
@@ -243,7 +251,7 @@ const CredentialFormControl = memo(props => {
               It uses your own Microsoft sign-in: nothing secret is typed here, and it stays private to you.
             </Typography>
           )}
-          {shownFields.map(field =>
+          {visibleFields.map(field =>
             field.options ? (
               <Box
                 key={field.name}
@@ -272,6 +280,17 @@ const CredentialFormControl = memo(props => {
                 inputProps={{ 'data-testid': `${testId}-field-${field.name}` }}
               />
             ),
+          )}
+          {foldedCount > 0 && !showMore && (
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.text}
+              size="small"
+              onClick={handleShowMore}
+              disabled={disabled || isCreating}
+              data-testid={`${testId}-more-fields`}
+            >
+              {`More fields (${foldedCount})`}
+            </Button.BaseBtn>
           )}
           {offersOwnership && (
             <TabGroupButton

@@ -55,7 +55,8 @@ export const WAITING_STATES = ['pending', 'validated', 'pending_approval', 'prov
 export const ITEM_TEXT = {
   binding: {
     missing: 'Its identity is not set up yet',
-    changed: 'It changed since its identity was approved',
+    // (#7228) also a waiting identity for an older definition: it is requested again for the agent as it is
+    changed: 'It changed since its identity was requested or approved',
     draft: 'Its identity is a draft',
     provisioning: 'Its identity is being set up',
     pending_approval: 'Its identity waits for approval',
@@ -100,6 +101,14 @@ export const MAX_SCHEMA_DEPTH = 4;
 // Credential types whose material is the person's own Microsoft sign-in (the server's DELEGATED_TYPES): never typed,
 // never shared
 export const SIGN_IN_CREDENTIAL_TYPES = ['sharepoint'];
+
+// (#7228) the fields the credential card shows at first for a known type: its simplest way to sign in. Every other
+// optional field is folded behind "More fields". A type not listed shows its required fields and its first secret one.
+export const PRIMARY_CREDENTIAL_FIELDS = {
+  github: ['access_token'],
+  jira: ['username', 'api_key'],
+  confluence: ['username', 'api_key'],
+};
 // The check's code when the person's Elitea sign-in carries no Microsoft identity
 export const SIGN_IN_NOT_MICROSOFT = 'DENIED_ASSERTION_SOURCE_UNSUPPORTED';
 export const SIGN_IN_NOT_MICROSOFT_TEXT =
