@@ -95,7 +95,9 @@ LLMToolsSelect.displayName = 'LLMToolsSelect';
 
 /** @type {MuiSx} */
 const getStyles = () => ({
-  accordion: ({ palette }) => ({ background: `${palette.background.default.tertiary} !important` }),
+  accordion: {
+    background: 'transparent !important',
+  },
   accordionSummary: ({ palette }) => ({
     background: palette.background.surface.interactive.default,
     borderRadius: '.5rem',
