@@ -192,6 +192,8 @@ const Settings = memo(() => {
             if (item.id === 'project-context') return projectId !== PUBLIC_PROJECT_ID;
             if (item.id === 'analytics' && platformSettings?.analytics_enabled === false) return false;
             if (item.id === 'usage' && !platformSettings?.cost_budgets_enabled) return false;
+            // (#7269) only while credential governance is enforced: under off the settings are as before
+            if (item.id === 'governance' && !platformSettings?.governance_enforced) return false;
             if (item.id === 'users' && !showUsersSection) return false;
 
             return true;
@@ -202,6 +204,7 @@ const Settings = memo(() => {
       projectId,
       platformSettings?.analytics_enabled,
       platformSettings?.cost_budgets_enabled,
+      platformSettings?.governance_enforced,
       showUsersSection,
     ],
   );
@@ -261,6 +264,13 @@ const Settings = memo(() => {
   // Guard: redirect away from usage when cost tracking is off (wait for settings to load)
   useEffect(() => {
     if (tab === 'usage' && platformSettings && !platformSettings.cost_budgets_enabled) {
+      handleSettingsItemClick(DEFAULT_TAB);
+    }
+  }, [handleSettingsItemClick, platformSettings, tab]);
+
+  // Guard: redirect away from governance while it is not enforced (wait for settings to load)
+  useEffect(() => {
+    if (tab === 'governance' && platformSettings && !platformSettings.governance_enforced) {
       handleSettingsItemClick(DEFAULT_TAB);
     }
   }, [handleSettingsItemClick, platformSettings, tab]);

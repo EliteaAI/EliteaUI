@@ -4,6 +4,7 @@ import { Box, Typography } from '@mui/material';
 
 import { useGetMcpExposedVersionsQuery } from '@/[fsd]/features/project-governance/api/projectGovernanceApi';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 
 const MAX_SHOWN = 8;
 const RULE_TEXT = {
@@ -12,15 +13,18 @@ const RULE_TEXT = {
   stored: 'first version',
 };
 
-// Which version of each agent external MCP clients reach through this project's MCP server (C-1009, #7341): the
-// version with an approved identity under governance, else the latest published one
+// Which version of each agent external MCP clients reach through this project's MCP server (C-1009, #7341), while
+// credential governance is enforced: the version with an approved identity, else the latest published one, else the
+// first. Under off and audit only nothing is shown or read (the first version is reached, as before).
 const McpExposedVersions = memo(() => {
   const projectId = useSelectedProjectId();
   const styles = mcpExposedVersionsStyles();
-  const { data } = useGetMcpExposedVersionsQuery({ projectId }, { skip: !projectId });
+  const { data: platformSettings } = useGetPlatformSettingsQuery();
+  const enforced = Boolean(platformSettings?.governance_enforced);
+  const { data } = useGetMcpExposedVersionsQuery({ projectId }, { skip: !projectId || !enforced });
   const rows = data?.rows ?? [];
 
-  if (!rows.length) return null;
+  if (!enforced || !rows.length) return null;
 
   return (
     <Box

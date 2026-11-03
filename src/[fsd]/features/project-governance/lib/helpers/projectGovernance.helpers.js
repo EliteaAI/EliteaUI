@@ -201,6 +201,25 @@ export const isWaiting = (kind, row) => {
   return row.state === 'pending_approval';
 };
 
+// "Also grant to" applies to a shared credential's grant for a person: a personal credential and a mandate's grant
+// have no siblings (the server answers NO_SIBLINGS)
+export const takesSiblings = approving =>
+  approving?.kind === KINDS.grant &&
+  approving.row.credential?.ownership_class !== 'personal' &&
+  !String(approving.row.subject?.ref ?? '').startsWith('mandate:');
+
+// The states the inbox asks each list for (the server filters, so no waiting row is lost behind newer ones)
+export const INBOX_STATES = {
+  [KINDS.binding]: ['pending_approval'],
+  [KINDS.reference]: ['pending', 'validated'],
+  [KINDS.grant]: ['pending_approval'],
+  [KINDS.mandate]: ['pending_approval'],
+};
+
+// How many rows of these pages the server has but did not send (a page holds at most its limit)
+export const hiddenCount = pages =>
+  pages.reduce((sum, page) => sum + Math.max(0, (page?.total ?? 0) - (page?.rows?.length ?? 0)), 0);
+
 // The project inbox: every waiting row of the four kinds, oldest first
 export const inboxItems = lists =>
   Object.entries(lists)
@@ -245,6 +264,7 @@ const ITEM_TEXT = {
   },
   mandate: {
     missing: 'The schedule has no mandate yet',
+    held_by_another: "Another member's schedule holds this agent version's mandate",
     draft: 'The mandate is a draft',
     pending_approval: 'The mandate waits for approval',
     suspended: 'The mandate is suspended',

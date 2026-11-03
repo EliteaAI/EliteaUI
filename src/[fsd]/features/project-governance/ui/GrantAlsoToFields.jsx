@@ -15,9 +15,10 @@ const ROLE_OPTIONS = [
 ];
 
 // "Also grant to" of a grant's approval (C-1009, #7269): the same use for other members, or for every member of a
-// project role, approved with this one in one change (each filed under the request being approved)
+// project role, approved with this one in one change (each filed under the request being approved). Nobody grants a
+// use to themselves: the approver is never offered, and a role leaves them out (the server refuses it as well)
 const GrantAlsoToFields = memo(props => {
-  const { members, onMembersChange, role, onRoleChange, excludeUserId } = props;
+  const { members, onMembersChange, role, onRoleChange, excludeUserIds } = props;
   const projectId = useSelectedProjectId();
   const styles = grantAlsoToFieldsStyles();
 
@@ -28,9 +29,9 @@ const GrantAlsoToFields = memo(props => {
   const options = useMemo(
     () =>
       (data?.rows ?? [])
-        .filter(user => user.id !== excludeUserId)
+        .filter(user => !(excludeUserIds || []).includes(user.id))
         .map(user => ({ label: user.email || user.name || `User ${user.id}`, value: user.id })),
-    [data?.rows, excludeUserId],
+    [data?.rows, excludeUserIds],
   );
   const handleMembers = useCallback(event => onMembersChange(event.target.value || []), [onMembersChange]);
   const handleRole = useCallback(event => onRoleChange(event.target.value || ''), [onRoleChange]);

@@ -25,7 +25,7 @@ import GovernanceApproveDialog from './GovernanceApproveDialog';
 import GovernanceRowsTable from './GovernanceRowsTable';
 import GrantAlsoToFields from './GrantAlsoToFields';
 
-const { KINDS } = GovernanceHelpers;
+const { INBOX_STATES, KINDS } = GovernanceHelpers;
 const G = PERMISSIONS.governance;
 const TABS = [
   { value: 'inbox', label: 'Inbox' },
@@ -62,14 +62,32 @@ const ProjectGovernanceContent = memo(() => {
     () => TABS.filter(item => !item.permission || checkPermission(item.permission)),
     [checkPermission],
   );
-  const queryOptions = permission => ({
-    skip: !projectId || !checkPermission(permission),
+  const isInbox = tab === 'inbox';
+  const queryOptions = (permission, kind) => ({
+    skip: !projectId || !checkPermission(permission) || (kind ? tab !== kind : !isInbox),
     refetchOnMountOrArgChange: true,
   });
-  const bindings = useGetProjectBindingsQuery({ projectId }, queryOptions(G.bindingsView));
-  const references = useGetProjectReferencesQuery({ projectId }, queryOptions(G.credentialsView));
-  const grants = useGetProjectGrantsQuery({ projectId }, queryOptions(G.credentialsView));
-  const mandates = useGetProjectMandatesQuery({ projectId }, queryOptions(G.mandatesView));
+  const waiting = (kind, index = 0) => ({ projectId, state: INBOX_STATES[kind][index], inbox: true });
+  // the inbox: the waiting rows of each kind, asked from the server by state, oldest first
+  const waitingBindings = useGetProjectBindingsQuery(waiting(KINDS.binding), queryOptions(G.bindingsView));
+  const pendingReferences = useGetProjectReferencesQuery(
+    waiting(KINDS.reference),
+    queryOptions(G.credentialsView),
+  );
+  const validatedReferences = useGetProjectReferencesQuery(
+    waiting(KINDS.reference, 1),
+    queryOptions(G.credentialsView),
+  );
+  const waitingGrants = useGetProjectGrantsQuery(waiting(KINDS.grant), queryOptions(G.credentialsView));
+  const waitingMandates = useGetProjectMandatesQuery(waiting(KINDS.mandate), queryOptions(G.mandatesView));
+  // a kind's tab: its newest rows
+  const bindings = useGetProjectBindingsQuery({ projectId }, queryOptions(G.bindingsView, KINDS.binding));
+  const references = useGetProjectReferencesQuery(
+    { projectId },
+    queryOptions(G.credentialsView, KINDS.reference),
+  );
+  const grants = useGetProjectGrantsQuery({ projectId }, queryOptions(G.credentialsView, KINDS.grant));
+  const mandates = useGetProjectMandatesQuery({ projectId }, queryOptions(G.mandatesView, KINDS.mandate));
 
   const [bindingAction, bindingState] = useProjectBindingActionMutation();
   const [referenceAction, referenceState] = useProjectReferenceActionMutation();
@@ -78,25 +96,55 @@ const ProjectGovernanceContent = memo(() => {
   const isBusy =
     bindingState.isLoading || referenceState.isLoading || grantState.isLoading || mandateState.isLoading;
 
-  const lists = useMemo(
-    () => ({
-      [KINDS.binding]: bindings.data?.rows ?? [],
-      [KINDS.reference]: references.data?.rows ?? [],
-      [KINDS.grant]: grants.data?.rows ?? [],
-      [KINDS.mandate]: mandates.data?.rows ?? [],
-    }),
-    [bindings.data, grants.data, mandates.data, references.data],
-  );
-  const isLoading = bindings.isLoading || references.isLoading || grants.isLoading || mandates.isLoading;
-  const failed = [bindings, references, grants, mandates].find(query => query.isError);
+  const inboxPages = [
+    waitingBindings,
+    pendingReferences,
+    validatedReferences,
+    waitingGrants,
+    waitingMandates,
+  ];
+  const kindPages = {
+    [KINDS.binding]: bindings,
+    [KINDS.reference]: references,
+    [KINDS.grant]: grants,
+    [KINDS.mandate]: mandates,
+  };
+  const shown = isInbox ? inboxPages : [kindPages[tab]];
+  const isLoading = shown.some(query => query?.isLoading);
+  const failed = shown.find(query => query?.isError);
+  const hidden = GovernanceHelpers.hiddenCount(shown.map(query => query?.data));
 
-  const items = useMemo(
-    () =>
-      tab === 'inbox'
-        ? GovernanceHelpers.inboxItems(lists)
-        : (lists[tab] ?? []).map(row => ({ kind: tab, row })),
-    [lists, tab],
-  );
+  const items = useMemo(() => {
+    if (isInbox)
+      return GovernanceHelpers.inboxItems({
+        [KINDS.binding]: waitingBindings.data?.rows,
+        [KINDS.reference]: [
+          ...(pendingReferences.data?.rows ?? []),
+          ...(validatedReferences.data?.rows ?? []),
+        ],
+        [KINDS.grant]: waitingGrants.data?.rows,
+        [KINDS.mandate]: waitingMandates.data?.rows,
+      });
+    const rows = {
+      [KINDS.binding]: bindings.data?.rows,
+      [KINDS.reference]: references.data?.rows,
+      [KINDS.grant]: grants.data?.rows,
+      [KINDS.mandate]: mandates.data?.rows,
+    }[tab];
+    return (rows ?? []).map(row => ({ kind: tab, row }));
+  }, [
+    isInbox,
+    tab,
+    waitingBindings.data,
+    pendingReferences.data,
+    validatedReferences.data,
+    waitingGrants.data,
+    waitingMandates.data,
+    bindings.data,
+    references.data,
+    grants.data,
+    mandates.data,
+  ]);
 
   const send = useCallback(
     (kind, row, body) => {
@@ -190,17 +238,30 @@ const ProjectGovernanceContent = memo(() => {
               {GovernanceHelpers.toGovernanceError(failed.error, 'Governance could not be read.').message}
             </Typography>
           ) : (
-            <GovernanceRowsTable
-              items={items}
-              showKind={tab === 'inbox'}
-              isLoading={isLoading}
-              emptyMessage={EMPTY[tab]}
-              userId={userId}
-              checkPermission={checkPermission}
-              onRun={handleRun}
-              onApprove={handleApprove}
-              isBusy={isBusy}
-            />
+            <>
+              {hidden > 0 && (
+                <Typography
+                  variant="bodySmall"
+                  color="text.secondary"
+                  data-testid="project-governance-more"
+                >
+                  {isInbox
+                    ? `${hidden} more waiting ${hidden === 1 ? 'item is' : 'items are'} not shown; the oldest are listed first.`
+                    : `${hidden} older ${hidden === 1 ? 'row is' : 'rows are'} not shown; the newest are listed.`}
+                </Typography>
+              )}
+              <GovernanceRowsTable
+                items={items}
+                showKind={isInbox}
+                isLoading={isLoading}
+                emptyMessage={EMPTY[tab]}
+                userId={userId}
+                checkPermission={checkPermission}
+                onRun={handleRun}
+                onApprove={handleApprove}
+                isBusy={isBusy}
+              />
+            </>
           )}
         </Box>
       </DrawerPageBody>
@@ -212,13 +273,13 @@ const ProjectGovernanceContent = memo(() => {
         onClose={handleApproveClose}
         onDone={handleApproveDone}
       >
-        {approving?.kind === KINDS.grant && approving.row.credential?.ownership_class !== 'personal' && (
+        {GovernanceHelpers.takesSiblings(approving) && (
           <GrantAlsoToFields
             members={alsoMembers}
             onMembersChange={setAlsoMembers}
             role={alsoRole}
             onRoleChange={setAlsoRole}
-            excludeUserId={approving.row.subject?.user?.id}
+            excludeUserIds={[approving.row.subject?.user?.id, userId]}
           />
         )}
       </GovernanceApproveDialog>

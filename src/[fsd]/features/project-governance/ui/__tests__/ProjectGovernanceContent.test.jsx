@@ -82,6 +82,7 @@ vi.mock('@/api/admin', () => ({
       rows: [
         { id: 5, email: 'member@x' },
         { id: 8, email: 'other@x' },
+        { id: 9, email: 'me@x' },
       ],
     },
   }),
@@ -165,7 +166,28 @@ describe('project governance view (EL-7269)', () => {
     expect(screen.getByTestId('governance-escalated-binding:b1')).toHaveTextContent(
       'Needs a platform operator',
     );
-    expect(api.grants).toHaveBeenCalledWith({ projectId: 12 }, expect.objectContaining({ skip: false }));
+    // the inbox asks the server for the waiting rows, oldest first (never the newest page filtered here)
+    expect(api.grants).toHaveBeenCalledWith(
+      { projectId: 12, state: 'pending_approval', inbox: true },
+      expect.objectContaining({ skip: false }),
+    );
+    expect(api.references).toHaveBeenCalledWith(
+      { projectId: 12, state: 'validated', inbox: true },
+      expect.objectContaining({ skip: false }),
+    );
+    expect(screen.queryByTestId('project-governance-more')).toBeNull();
+  });
+
+  it('says how many waiting rows the server holds beyond the page', () => {
+    api.grants.mockReturnValue({
+      data: { total: 61, rows: [PENDING_GRANT] },
+      isLoading: false,
+      isError: false,
+    });
+    wrap();
+    expect(screen.getByTestId('project-governance-more')).toHaveTextContent(
+      '60 more waiting items are not shown',
+    );
   });
 
   it("keeps the approval of the admin who asked for it disabled, and approves another member's grant", async () => {
@@ -190,7 +212,10 @@ describe('project governance view (EL-7269)', () => {
   it('reads only what the admin may see and hides actions the admin may not take', () => {
     api.permissions = new Set(['credentials.view']);
     wrap();
-    expect(api.bindings).toHaveBeenCalledWith({ projectId: 12 }, expect.objectContaining({ skip: true }));
+    expect(api.bindings).toHaveBeenCalledWith(
+      { projectId: 12, state: 'pending_approval', inbox: true },
+      expect.objectContaining({ skip: true }),
+    );
     expect(screen.queryByTestId('governance-action-approve-g1')).toBeNull();
   });
 
@@ -218,5 +243,21 @@ describe('project governance view (EL-7269)', () => {
     );
     // the member who asked is not offered again
     expect(screen.queryByText('member@x', { selector: 'option' })).toBeNull();
+  });
+
+  it('never offers the approver as a sibling of their own approval', () => {
+    wrap();
+    fireEvent.click(screen.getByTestId('governance-action-approve-g1'));
+    const offered = [...screen.getByTestId('governance-also-grant-members').options].map(o =>
+      Number(o.value),
+    );
+    expect(offered).toEqual([8]); // the subject (5) and the approver (9) are left out
+  });
+
+  it("offers no siblings for a mandate's grant", () => {
+    api.grants.mockReturnValue(list([{ ...PENDING_GRANT, subject: { ref: 'mandate:m1', user: null } }]));
+    wrap();
+    fireEvent.click(screen.getByTestId('governance-action-approve-g1'));
+    expect(screen.queryByTestId('governance-also-grant')).toBeNull();
   });
 });

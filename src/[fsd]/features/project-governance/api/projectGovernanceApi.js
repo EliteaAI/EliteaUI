@@ -8,6 +8,12 @@ const LIST_LIMIT = 50;
 
 const project = projectId => encodeURIComponent(projectId);
 const tags = [TAG_PROJECT_GOVERNANCE];
+// A list's page: its newest rows, or (the inbox) the rows waiting in one state, oldest first, filtered by the server
+const listParams = ({ state, inbox }) => ({
+  limit: LIST_LIMIT,
+  ...(state && { state }),
+  ...(inbox && { sort_by: 'created_at', sort_order: 'asc' }),
+});
 
 // The project operator view (C-1009, #7269): the administration lists and actions of agent identities, credential
 // references, grants and mandates, in project (default) mode for the project's own admins. The server checks every
@@ -17,9 +23,9 @@ export const projectGovernanceApi = eliteaApi
   .injectEndpoints({
     endpoints: build => ({
       getProjectBindings: build.query({
-        query: ({ projectId, state }) => ({
+        query: ({ projectId, state, inbox }) => ({
           url: `/elitea_core/agent_identities/default/${project(projectId)}`,
-          params: { limit: LIST_LIMIT, ...(state && { state }) },
+          params: listParams({ state, inbox }),
         }),
         providesTags: tags,
       }),
@@ -32,9 +38,9 @@ export const projectGovernanceApi = eliteaApi
         invalidatesTags: [TAG_PROJECT_GOVERNANCE, TAG_GOVERNANCE_READINESS],
       }),
       getProjectReferences: build.query({
-        query: ({ projectId, state }) => ({
+        query: ({ projectId, state, inbox }) => ({
           url: `/secrets/credential_references/default/${project(projectId)}`,
-          params: { limit: LIST_LIMIT, ...(state && { state }) },
+          params: listParams({ state, inbox }),
         }),
         providesTags: tags,
       }),
@@ -47,9 +53,9 @@ export const projectGovernanceApi = eliteaApi
         invalidatesTags: [TAG_PROJECT_GOVERNANCE, TAG_GOVERNANCE_READINESS],
       }),
       getProjectGrants: build.query({
-        query: ({ projectId, state }) => ({
+        query: ({ projectId, state, inbox }) => ({
           url: `/secrets/credential_grants/default/${project(projectId)}`,
-          params: { limit: LIST_LIMIT, ...(state && { state }) },
+          params: listParams({ state, inbox }),
         }),
         providesTags: tags,
       }),
@@ -89,9 +95,9 @@ export const projectGovernanceApi = eliteaApi
         invalidatesTags: [TAG_PROJECT_GOVERNANCE, TAG_GOVERNANCE_READINESS],
       }),
       getProjectMandates: build.query({
-        query: ({ projectId, state }) => ({
+        query: ({ projectId, state, inbox }) => ({
           url: `/elitea_core/autonomous_mandates/default/${project(projectId)}`,
-          params: { limit: LIST_LIMIT, ...(state && { state }) },
+          params: listParams({ state, inbox }),
         }),
         providesTags: tags,
       }),
