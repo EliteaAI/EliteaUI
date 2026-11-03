@@ -4,10 +4,11 @@ import { Typography } from '@mui/material';
 
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import BannerMessage from '@/[fsd]/shared/ui/banner-message/BannerMessage';
-import RadioButtonGroup from '@/[fsd]/shared/ui/checkbox/RadioButtonGroup';
 import EntityTypeIcon from '@/[fsd]/shared/ui/icon/EntityTypeIcon';
 import LazySelect from '@/[fsd]/shared/ui/select/LazySelect';
 import { useApplicationListQuery } from '@/api/applications';
+
+import ScheduleSegmentedToggle from './ScheduleSegmentedToggle';
 
 const TYPE_ITEMS = [
   { value: 'agent', label: 'Agent' },
@@ -68,7 +69,7 @@ const ScheduleEntitySection = memo(
             variant="warning"
           />
         )}
-        <RadioButtonGroup
+        <ScheduleSegmentedToggle
           testId="schedule-type"
           items={TYPE_ITEMS}
           value={type}

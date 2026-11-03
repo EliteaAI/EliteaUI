@@ -15,7 +15,7 @@ vi.mock('@/[fsd]/shared/ui/icon/EntityTypeIcon', () => ({ default: () => null })
 vi.mock('@/[fsd]/shared/ui/banner-message/BannerMessage', () => ({
   default: ({ message }) => <div data-testid="banner">{message}</div>,
 }));
-vi.mock('@/[fsd]/shared/ui/checkbox/RadioButtonGroup', () => ({
+vi.mock('../ScheduleSegmentedToggle', () => ({
   default: ({ items, onChange, disabled, testId }) => (
     <div data-testid={testId}>
       {items.map(item => (

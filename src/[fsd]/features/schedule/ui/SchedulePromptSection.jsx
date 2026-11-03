@@ -1,14 +1,14 @@
 import { memo, useCallback } from 'react';
 
-import RadioButtonGroup from '@/[fsd]/shared/ui/checkbox/RadioButtonGroup';
 import StyledInputEnhancer from '@/[fsd]/shared/ui/input/StyledInputEnhancer';
 import VariableList from '@/components/VariableList';
 
 import { isPromptShown, syncPromptVariables } from '../lib/helpers';
 import FieldError from './FieldError';
+import ScheduleSegmentedToggle from './ScheduleSegmentedToggle';
 
 const RUN_MODE_ITEMS = [
-  { value: 'entry_point', label: 'Entry point' },
+  { value: 'entry_point', label: 'Entrypoint' },
   { value: 'prompt', label: 'Prompt' },
 ];
 
@@ -43,7 +43,7 @@ const SchedulePromptSection = memo(
     return (
       <>
         {type === 'pipeline' && (
-          <RadioButtonGroup
+          <ScheduleSegmentedToggle
             testId="schedule-run-mode"
             items={RUN_MODE_ITEMS}
             value={runMode}
