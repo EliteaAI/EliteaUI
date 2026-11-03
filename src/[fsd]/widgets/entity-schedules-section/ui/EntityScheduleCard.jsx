@@ -181,7 +181,6 @@ const entityScheduleCardStyles = () => ({
       "name"
       "owner"
       "consent"
-      "readiness"
       "footer"`,
     alignItems: 'center',
     rowGap: '0.25rem',
@@ -195,8 +194,7 @@ const entityScheduleCardStyles = () => ({
         "shown shown footer"
         "last  next  footer"
         "name  owner footer"
-        "consent consent footer"
-        "readiness readiness footer"`,
+        "consent consent footer"`,
       columnGap: '1rem',
     },
   }),
@@ -213,9 +211,10 @@ const entityScheduleCardStyles = () => ({
     gridArea: 'consent',
     minWidth: 0,
   },
-  // (#7269) what the schedule still needs to run governed for its owner; empty otherwise
+  // (#7269) what the schedule still needs to run governed for its owner: no area of the template, so the card takes a
+  // row of its own (the full width, after the others) only when it renders; with nothing to show nothing is there
   readiness: {
-    gridArea: 'readiness',
+    gridColumn: '1 / -1',
     minWidth: 0,
   },
   footer: {

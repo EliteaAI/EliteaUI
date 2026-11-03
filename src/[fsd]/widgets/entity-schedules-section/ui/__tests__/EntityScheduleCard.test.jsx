@@ -12,6 +12,8 @@ import EntityScheduleCard from '../EntityScheduleCard';
 
 // one schedule card of the editor Schedules section
 
+vi.hoisted(() => vi.stubEnv('VITE_SERVER_URL', 'http://localhost/api/v2/'));
+
 const mocks = vi.hoisted(() => ({
   actions: { onRun: vi.fn(), onPause: vi.fn(), onResume: vi.fn(), onDelete: vi.fn(), isBusy: false },
 }));
@@ -32,6 +34,16 @@ vi.mock('@/[fsd]/features/owner-consent', () => ({
   ScheduleMandateConsent: props => (
     <span data-testid="schedule-mandate-consent-stub">{`${props.versionId}:${props.isOwner}`}</span>
   ),
+}));
+
+// the governance readiness card (#7269) has its own tests: here only where the card puts it; it renders nothing
+// unless something is missing
+const readiness = vi.hoisted(() => ({ shown: false }));
+vi.mock('@/[fsd]/features/project-governance/ui/GovernanceReadinessCard', () => ({
+  default: props =>
+    readiness.shown ? (
+      <span data-testid="schedule-readiness-stub">{`${props.entityKind}:${props.entityId}`}</span>
+    ) : null,
 }));
 
 const theme = createTheme(getDesignTokens('light'));
@@ -118,6 +130,23 @@ describe('EntityScheduleCard', () => {
     cleanup();
     renderCard({ version_id: 70, owner: { id: 4, name: 'Bo' } });
     expect(screen.getByTestId('schedule-mandate-consent-stub')).toHaveTextContent('70:false');
+  });
+
+  it('EL-7269 keeps no row for the readiness card when it has nothing to show, and gives it one when it has', () => {
+    readiness.shown = false;
+    renderCard();
+    expect(screen.queryByTestId('schedule-readiness-stub')).toBeNull();
+    expect(getComputedStyle(screen.getByTestId('agent-schedule-card-7')).gridTemplateAreas).not.toContain(
+      'readiness',
+    );
+    cleanup();
+    readiness.shown = true;
+    renderCard();
+    expect(screen.getByTestId('schedule-readiness-stub')).toHaveTextContent('schedule:7');
+    cleanup();
+    renderCard({}, { currentUserId: 1 }); // not the owner: not asked
+    expect(screen.queryByTestId('schedule-readiness-stub')).toBeNull();
+    readiness.shown = false;
   });
 
   it('TC-US35-05 shows the owner name on a card of another owner', () => {
