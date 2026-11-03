@@ -47,8 +47,8 @@ const RISK_STATES_WITHOUT_SAVE = [
  * Agents editor puts its chat; its `onRunNow` saves a changed form, then calls the `onRunNow()` prop
  * (a promise) in the place of `onSaved` at the same post-save point. `onTestRun` runs the unsaved form through
  * the `onDraftTestRun(body)` prop (a promise) and saves nothing. What `sidePanel` returns (the panel and
- * the Runs section under it) fills the right column from xl, and sits under the form below it.
- * `sidePanelFirst` puts the panel above the form below xl, for a card the owner must see at once.
+ * the Runs section under it) fills the right column from lg, and sits under the form below it.
+ * `sidePanelFirst` puts the panel above the form below lg, for a card the owner must see at once.
  * `headerActions` (a node) sits in the header bar after Cancel, for example the page's 3-dots menu.
  */
 const ScheduleForm = memo(props => {
@@ -299,16 +299,16 @@ const ScheduleForm = memo(props => {
               />
             ),
             content: (
-              // With a side panel: the Agents editor split (ConfigurationTab). The Settings menu takes about
-              // 30 rem more than the Agents page, so the split starts at xl (1536 px), not lg, and the card
-              // goes under the form below it, where each half would be narrower than the Agents halves.
+              // With a side panel: the Agents editor split (ConfigurationTab). The split starts at lg (1200 px),
+              // so a 1366 px laptop shows the settings and the Runs card side by side; below it the card goes
+              // under the form, where each half would be too narrow.
               <StyledGridContainer
                 container
                 columnSpacing="2rem"
                 rowSpacing="1.5rem"
                 sx={sidePanel && styles.split}
               >
-                <Grid size={{ xs: 12, xl: sidePanel ? 6 : 12 }}>
+                <Grid size={{ xs: 12, lg: sidePanel ? 6 : 12 }}>
                   <Box
                     component="form"
                     noValidate
@@ -330,7 +330,7 @@ const ScheduleForm = memo(props => {
                 </Grid>
                 {sidePanel && (
                   <Grid
-                    size={{ xs: 12, xl: 6 }}
+                    size={{ xs: 12, lg: 6 }}
                     sx={[styles.sidePanel, sidePanelFirst && styles.sidePanelFirst]}
                   >
                     {sidePanel({
@@ -385,8 +385,8 @@ const styles = {
   // the ConfigurationTab grid padding
   split: { padding: '0 1.5rem 1.5rem' },
   sidePanel: { order: 2, paddingTop: '0.75rem' },
-  // Below xl the panel is stacked under the form; an urgent card goes above it, so it is seen first
-  sidePanelFirst: ({ breakpoints }) => ({ order: -1, [breakpoints.up('xl')]: { order: 2 } }),
+  // Below lg the panel is stacked under the form; an urgent card goes above it, so it is seen first
+  sidePanelFirst: ({ breakpoints }) => ({ order: -1, [breakpoints.up('lg')]: { order: 2 } }),
   // The header holds one unlabelled tab, so its selected-tab indicator is a stray line under the crumbs
   noTabIndicator: { '& .MuiTabs-indicator': { display: 'none' } },
   accordion: ({ palette }) => ({ background: `${palette.background.default.tertiary} !important` }),

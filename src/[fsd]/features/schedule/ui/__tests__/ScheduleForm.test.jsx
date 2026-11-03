@@ -1118,13 +1118,13 @@ describe('ScheduleForm', () => {
       expect(screen.getByTestId('side-panel')).toBeInTheDocument();
     });
 
-    it('puts the side panel right of the form only from the xl breakpoint', () => {
+    it('puts the side panel right of the form only from the lg breakpoint', () => {
       renderEdit();
       const panelColumn = screen.getByTestId('side-panel').parentElement;
       const formColumn = panelColumn.previousElementSibling;
       [panelColumn, formColumn].forEach(column => {
-        expect(column).toHaveClass('MuiGrid-grid-xs-12', 'MuiGrid-grid-xl-6');
-        expect(column).not.toHaveClass('MuiGrid-grid-lg-6');
+        expect(column).toHaveClass('MuiGrid-grid-xs-12', 'MuiGrid-grid-lg-6');
+        expect(column).not.toHaveClass('MuiGrid-grid-xl-6');
       });
     });
 
@@ -1141,7 +1141,7 @@ describe('ScheduleForm', () => {
       const runs = screen.getByTestId('runs-section');
       expect(runs.closest('form')).toBeNull();
       expect(runs.parentElement).toBe(screen.getByTestId('side-panel').parentElement);
-      expect(runs.parentElement).toHaveClass('MuiGrid-grid-xs-12', 'MuiGrid-grid-xl-6');
+      expect(runs.parentElement).toHaveClass('MuiGrid-grid-xs-12', 'MuiGrid-grid-lg-6');
       expect(screen.getByLabelText('Name').closest('form').parentElement).not.toContainElement(runs);
     });
 
