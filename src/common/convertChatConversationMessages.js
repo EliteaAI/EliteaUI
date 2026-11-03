@@ -416,6 +416,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
     created_at: new Date(convertTime(displayTime)).getTime(),
     participant_id: author_participant_id,
     importedAuthorName: meta?.imported_author?.name,
+    importedAuthorParticipant: ChatHelpers.getImportedAuthorParticipant(meta?.imported_author),
     question_id: foundQuestion?.uuid || foundQuestion?.id,
     replyTo: foundQuestion,
     isStreaming: is_streaming,

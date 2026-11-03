@@ -30,6 +30,7 @@ const ApplicationAnswer = memo(
       created_at,
       participant,
       participantName,
+      importedAuthorParticipant,
       onCopy,
       onCopyToMessages,
       onDelete,
@@ -166,6 +167,7 @@ const ApplicationAnswer = memo(
             ref={headerRef}
             participant={participant}
             participantName={participantName}
+            importedAuthorParticipant={importedAuthorParticipant}
             created_at={created_at}
             isSwarmChild={isSwarmChild}
             swarmAgentName={swarmAgentName}

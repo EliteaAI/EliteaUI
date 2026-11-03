@@ -175,6 +175,39 @@ describe('imported chat authors', () => {
   });
 });
 
+describe('deleted participant authors (#7332)', () => {
+  const answer = importedAuthor =>
+    convertToAIAnswer(
+      {
+        author_participant_id: 2,
+        message_items: [],
+        created_at: '2026-11-03T00:00:00',
+        uuid: 'a1',
+        is_streaming: false,
+        meta: { imported_author: importedAuthor },
+      },
+      [],
+      [],
+    );
+
+  it('keeps the name and type of the participant that wrote the answer', () => {
+    const converted = answer({ entity_name: 'application', name: 'flow', agent_type: 'pipeline' });
+
+    expect(converted.importedAuthorName).toBe('flow');
+    expect(converted.importedAuthorParticipant).toEqual({
+      entity_name: 'application',
+      entity_meta: {},
+      entity_settings: { agent_type: 'pipeline' },
+      meta: { name: 'flow' },
+    });
+  });
+
+  it('has no author participant when only a name was kept', () => {
+    expect(answer({ name: 'Jane' }).importedAuthorParticipant).toBeUndefined();
+    expect(answer(undefined).importedAuthorParticipant).toBeUndefined();
+  });
+});
+
 describe('input guardrail history conversion (#6886)', () => {
   it('carries a stored redaction verdict on the user message', () => {
     const verdict = { action: 'redact', categories: ['credentials'], rules: ['github_pat'] };
