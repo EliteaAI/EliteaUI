@@ -660,7 +660,8 @@ const ToolBase = memo(props => {
           onLoginChange={onCredentialReload}
         />
       )}
-      {storedLogin && (
+      {/* SharePoint has its own bar above, which also saves the login */}
+      {storedLogin && !isSharepointToolkit && (
         <StoredLoginStatus
           {...storedLogin}
           loginExpired={StoredLoginHelpers.isLoginExpired(toolErrors[storedLogin.settingsKey])}
