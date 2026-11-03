@@ -89,14 +89,14 @@ describe('ScheduleRunsCard', () => {
     ]);
   });
 
-  it('Run Now and Test Run call their handlers for a saved schedule', () => {
+  it('Run Now calls its handler for a saved schedule, which has no Test Run', () => {
     const { onRunNow, onTestRun } = renderCard();
 
     fireEvent.click(screen.getByTestId('schedule-run-now'));
-    fireEvent.click(screen.getByTestId('schedule-test-run'));
 
     expect(onRunNow).toHaveBeenCalledTimes(1);
-    expect(onTestRun).toHaveBeenCalledTimes(1);
+    expect(onTestRun).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('schedule-test-run')).not.toBeInTheDocument();
     expect(screen.getByTestId('schedule-runs-note')).toHaveTextContent(/recorded as Manual/);
   });
 
@@ -110,18 +110,28 @@ describe('ScheduleRunsCard', () => {
     expect(screen.queryByTestId('filters-stub')).not.toBeInTheDocument();
   });
 
-  it('disables both buttons while a run is active', () => {
+  it('disables Run Now while a run is active', () => {
     renderCard({ view: makeView([run(2, { status: 'running' })]) });
 
     expect(screen.getByTestId('schedule-run-now')).toBeDisabled();
+  });
+
+  it('disables Test Run of a new schedule while its test run is active', () => {
+    renderCard({ schedule: undefined, view: makeView([run(2, { status: 'running' })]) });
+
     expect(screen.getByTestId('schedule-test-run')).toBeDisabled();
   });
 
-  it('disables Run Now without the run action and Test Run without the run permission', () => {
-    mocks.canRun = false;
+  it('disables Run Now without the run action', () => {
     renderCard({ schedule: { id: 9, allowed_actions: [] } });
 
     expect(screen.getByTestId('schedule-run-now')).toBeDisabled();
+  });
+
+  it('disables Test Run of a new schedule without the run permission', () => {
+    mocks.canRun = false;
+    renderCard({ schedule: undefined, view: makeView([]) });
+
     expect(screen.getByTestId('schedule-test-run')).toBeDisabled();
   });
 
@@ -130,7 +140,7 @@ describe('ScheduleRunsCard', () => {
     expect(screen.getByText('Run Now failed')).toBeInTheDocument();
     cleanup();
 
-    renderCard({ testRunError: 'Test failed' });
+    renderCard({ schedule: undefined, view: makeView([]), testRunError: 'Test failed' });
     expect(screen.getByText('Test failed')).toBeInTheDocument();
   });
 

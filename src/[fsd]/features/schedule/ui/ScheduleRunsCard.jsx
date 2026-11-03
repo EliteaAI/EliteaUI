@@ -19,7 +19,7 @@ const TEST_RUN_NOTE =
 
 /**
  * The "Runs (count)" card right of the schedule form. `view` is the result of `useScheduleRunsView`.
- * Run Now needs a saved schedule; Test Run also works on a new, unsaved one. `schedule` is empty on the Create page.
+ * Run Now needs a saved schedule; Test Run is for a new, unsaved one and gives way to Run Now after Save. `schedule` is empty on the Create page.
  */
 const ScheduleRunsCard = memo(
   forwardRef((props, ref) => {
@@ -83,16 +83,18 @@ const ScheduleRunsCard = memo(
                 Run Now
               </BaseBtn>
             )}
-            <BaseBtn
-              data-testid="schedule-test-run"
-              variant={BUTTON_VARIANTS.elitea}
-              color={schedule?.id ? 'secondary' : 'primary'}
-              startIcon={<ScienceOutlinedIcon />}
-              disabled={busy || !canTest || !!runHint}
-              onClick={onTestRun}
-            >
-              Test Run
-            </BaseBtn>
+            {!schedule?.id && (
+              <BaseBtn
+                data-testid="schedule-test-run"
+                variant={BUTTON_VARIANTS.elitea}
+                color="primary"
+                startIcon={<ScienceOutlinedIcon />}
+                disabled={busy || !canTest || !!runHint}
+                onClick={onTestRun}
+              >
+                Test Run
+              </BaseBtn>
+            )}
           </Box>
         </Box>
         <Typography
@@ -100,7 +102,7 @@ const ScheduleRunsCard = memo(
           color="text.secondary"
           data-testid="schedule-runs-note"
         >
-          {schedule?.id ? `${RUN_NOW_NOTE} ${TEST_RUN_NOTE}` : TEST_RUN_NOTE}
+          {schedule?.id ? RUN_NOW_NOTE : TEST_RUN_NOTE}
         </Typography>
         {runHint && (
           <Typography
