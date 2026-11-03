@@ -29,5 +29,6 @@ export { FilePreviewNavigationProvider } from './file-preview-navigation';
 export { default as BrandLogo } from './brand-logo';
 export { InfoPopover, infoPopoverTextSx } from './info-popover';
 export * as Mention from './mention';
+export { MarkdownEditorActions } from './markdown-editor-actions';
 export * as SecretField from './secret-field';
 export * as Schedule from './schedule';
