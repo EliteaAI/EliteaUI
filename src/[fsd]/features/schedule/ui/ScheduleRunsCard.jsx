@@ -1,10 +1,13 @@
 import { forwardRef, memo, useState } from 'react';
 
+import { Link as RouterLink } from 'react-router-dom';
+
 import PendingActionsOutlinedIcon from '@mui/icons-material/PendingActionsOutlined';
 import PlayArrowOutlinedIcon from '@mui/icons-material/PlayArrowOutlined';
 import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
-import { Box, Typography } from '@mui/material';
+import { Box, Link, Typography } from '@mui/material';
 
+import { buildScheduleHistoryLink } from '@/[fsd]/entities/schedule';
 import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { PERMISSIONS } from '@/common/constants';
@@ -14,13 +17,13 @@ import { isRunActive, ownerOnlyRunHint } from '../lib/helpers';
 import ScheduleRunCard from './ScheduleRunCard';
 import ScheduleRunsFilters, { ALL_RUNS } from './ScheduleRunsFilters';
 
+const RUN_NOW_NOTE = 'Runs the saved schedule and records it as Manual. Next run does not change.';
+const TEST_RUN_NOTE = 'Runs the form as it is now, without saving. Last run and Next run do not change.';
+
 /**
  * The "Runs (count)" card right of the schedule form. `view` is the result of `useScheduleRunsView`.
  * Run Now needs a saved schedule; Test Run is for a new, unsaved one and gives way to Run Now after Save. `schedule` is empty on the Create page.
  */
-const RUN_NOW_NOTE = 'Runs the saved schedule and records it as Manual. Next run does not change.';
-const TEST_RUN_NOTE = 'Runs the form as it is now, without saving. Last run and Next run do not change.';
-
 const ScheduleRunsCard = memo(
   forwardRef((props, ref) => {
     const {
@@ -42,7 +45,12 @@ const ScheduleRunsCard = memo(
     const canRunNow = Boolean(schedule?.id) && Boolean(schedule?.allowed_actions?.includes('run'));
     const canTest = checkPermission(PERMISSIONS.schedules.run);
     const runHint = schedule?.id ? ownerOnlyRunHint(schedule) : null;
+    const { expectRun, draftSettled = true } = view;
     const busy = hasActiveRun || runNowPending || testRunPending;
+    const startRun = start => () => {
+      expectRun?.();
+      start?.();
+    };
     const newestId = runs[0]?.id;
     const [trigger, setTrigger] = useState(ALL_RUNS);
     const [status, setStatus] = useState(ALL_RUNS);
@@ -50,6 +58,10 @@ const ScheduleRunsCard = memo(
       run =>
         (trigger === ALL_RUNS || run.trigger === trigger) && (status === ALL_RUNS || run.status === status),
     );
+    // The list API sends the newest rows only; a filter works on those, so the card says so
+    const savedLoaded = runs.filter(item => !item.isDraftRun).length;
+    const savedTotal = Number.isFinite(total) ? total - (runs.length - savedLoaded) : savedLoaded;
+    const hiddenRuns = schedule?.id ? Math.max(0, savedTotal - savedLoaded) : 0;
     const styles = scheduleRunsCardStyles();
 
     return (
@@ -85,7 +97,7 @@ const ScheduleRunsCard = memo(
                 sx={styles.runNow}
                 startIcon={<PlayArrowOutlinedIcon />}
                 disabled={busy || !canRunNow || !!runHint}
-                onClick={onRunNow}
+                onClick={startRun(onRunNow)}
               >
                 Run Now
               </BaseBtn>
@@ -97,8 +109,8 @@ const ScheduleRunsCard = memo(
                 variant={BUTTON_VARIANTS.elitea}
                 color="primary"
                 startIcon={<ScienceOutlinedIcon />}
-                disabled={busy || !canTest || !!runHint}
-                onClick={onTestRun}
+                disabled={busy || !canTest || !!runHint || !draftSettled}
+                onClick={startRun(onTestRun)}
               >
                 Test Run
               </BaseBtn>
@@ -129,6 +141,27 @@ const ScheduleRunsCard = memo(
             onStatusChange={setStatus}
           />
         )}
+        {hiddenRuns > 0 && (
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+            data-testid="schedule-runs-limit-note"
+            sx={styles.limitNote}
+          >
+            {`Showing the latest ${savedLoaded} of ${savedTotal} runs. `}
+            <Link
+              component={RouterLink}
+              to={buildScheduleHistoryLink({
+                id: schedule.id,
+                entity_type: entityType,
+                application_id: applicationId,
+              })}
+              variant="bodySmall"
+            >
+              Open Run History
+            </Link>
+          </Typography>
+        )}
         {runs.length === 0 ? (
           <Box sx={styles.empty}>
             <PendingActionsOutlinedIcon sx={styles.emptyIcon} />
@@ -155,7 +188,7 @@ const ScheduleRunsCard = memo(
                 entityType={entityType}
                 applicationId={applicationId}
                 onToggle={onExpand}
-                onRunAgain={canRunNow && !busy ? onRunNow : undefined}
+                onRunAgain={canRunNow && !busy ? startRun(onRunNow) : undefined}
               />
             ))}
           </Box>
@@ -197,6 +230,7 @@ const scheduleRunsCardStyles = () => ({
     backgroundColor: 'transparent',
     border: `0.0625rem solid ${palette.border.lines}`,
   }),
+  limitNote: { padding: '0 1.5rem' },
   actions: { display: 'flex', gap: '0.5rem', flexWrap: 'wrap' },
   list: {
     listStyle: 'none',

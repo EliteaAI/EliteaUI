@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material';
@@ -45,16 +46,18 @@ const makeView = (runs = [run(2), run(1)], extra = {}) => ({
 const renderCard = (props = {}) => {
   const handlers = { onRunNow: vi.fn(), onTestRun: vi.fn() };
   render(
-    <ThemeProvider theme={theme}>
-      <ScheduleRunsCard
-        schedule={saved}
-        entityType="agent"
-        applicationId={3}
-        view={makeView()}
-        {...handlers}
-        {...props}
-      />
-    </ThemeProvider>,
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>
+        <ScheduleRunsCard
+          schedule={saved}
+          entityType="agent"
+          applicationId={3}
+          view={makeView()}
+          {...handlers}
+          {...props}
+        />
+      </ThemeProvider>
+    </MemoryRouter>,
   );
   return handlers;
 };
@@ -83,6 +86,24 @@ describe('ScheduleRunsCard', () => {
     expect(screen.getByTestId('schedule-runs-filter-trigger')).toBeInTheDocument();
     expect(screen.getByTestId('schedule-runs-filter-status')).toBeInTheDocument();
     expect(screen.getAllByTestId('run-card-stub')).toHaveLength(3);
+  });
+
+  it('says the list is cut and links to Run History when the total exceeds the loaded runs', () => {
+    renderCard({ view: makeView([run(2), run(1)], { total: 150 }) });
+
+    expect(screen.getByTestId('schedule-runs-limit-note')).toHaveTextContent(
+      'Showing the latest 2 of 150 runs.',
+    );
+    expect(screen.getByRole('link', { name: 'Open Run History' })).toHaveAttribute(
+      'href',
+      expect.stringContaining('schedule_id=9'),
+    );
+  });
+
+  it('shows no limit note when every run is loaded', () => {
+    renderCard();
+
+    expect(screen.queryByTestId('schedule-runs-limit-note')).not.toBeInTheDocument();
   });
 
   it('opens the card that the view names', () => {
