@@ -57,6 +57,7 @@ const scheduleRunStatusChipStyles = statusColor => ({
     color: palette.text.secondary,
     borderColor: palette.border.lines,
     '& .MuiChip-icon': { fontSize: '1rem', color: statusColor },
+    '& .MuiChip-label': { paddingLeft: '0.5rem', paddingRight: '0.5rem' },
   }),
   progress: { marginLeft: '0.375rem', color: statusColor },
   // The word takes the status colour, as in the schedule card
