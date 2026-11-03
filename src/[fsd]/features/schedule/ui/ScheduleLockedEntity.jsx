@@ -29,6 +29,7 @@ const ScheduleLockedEntity = memo(props => {
           required
           label={label}
           value={name ?? ''}
+          sx={styles.input}
         />
         <LockOutlinedIcon
           fontSize="small"
@@ -62,6 +63,11 @@ ScheduleLockedEntity.displayName = 'ScheduleLockedEntity';
 /** @type {MuiSx} */
 const scheduleLockedEntityStyles = () => ({
   field: { position: 'relative' },
+  // a disabled field dims its label and text; the mockup keeps them at the normal tone
+  input: ({ palette }) => ({
+    '& .MuiInputLabel-root, & .MuiInputLabel-root.Mui-disabled': { color: palette.text.primary },
+    '& .MuiInputBase-input.Mui-disabled': { WebkitTextFillColor: palette.text.secondary },
+  }),
   lock: ({ palette }) => ({
     position: 'absolute',
     right: '0.25rem',

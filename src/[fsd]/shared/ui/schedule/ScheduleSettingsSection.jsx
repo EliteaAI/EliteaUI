@@ -158,6 +158,7 @@ const ScheduleSettingsSection = memo(props => {
             value={value}
             onChange={onChange}
             invalidField={cronState.isValid ? null : cronState.field}
+            alignStart={alignStart}
           />
           {errorRow}
         </Box>

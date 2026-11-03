@@ -18,8 +18,8 @@ const {
 } = CronBuilderHelpers;
 
 const CronBuilder = memo(props => {
-  const { value, onChange, invalidField } = props;
-  const styles = cronBuilderStyles();
+  const { value, onChange, invalidField, alignStart = false } = props;
+  const styles = cronBuilderStyles(alignStart);
 
   const parsed = useMemo(() => parseCron(value) ?? DEFAULT_CRON_STATE, [value]);
 
@@ -193,12 +193,12 @@ const CronBuilder = memo(props => {
 CronBuilder.displayName = 'CronBuilder';
 
 /** @type {MuiSx} */
-const cronBuilderStyles = () => ({
+const cronBuilderStyles = alignStart => ({
   row: {
     display: 'flex',
     alignItems: 'center',
     flexWrap: 'wrap',
-    justifyContent: 'center',
+    justifyContent: alignStart ? 'flex-start' : 'center',
     rowGap: '1rem',
     columnGap: '0.5rem',
     width: '100%',
