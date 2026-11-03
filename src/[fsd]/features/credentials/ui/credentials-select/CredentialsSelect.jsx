@@ -47,9 +47,10 @@ const toSavedCredential = row => ({
   }),
 });
 
-// Saved value (or select-value payload) -> menu row. A saved reference resolves by uuid only (the backend
-// resolves it the same way, so a stale uuid must show as missing, not as a same-title row); legacy values
-// without a reference keep the title + private match.
+// Saved value (or select-value payload) -> menu row. Two paths: a saved reference resolves by uuid only (the
+// backend resolves it the same way, so a stale uuid must show as missing, not as a same-title row); a legacy
+// value without a reference, or a private reference saved by another member (its uuid points into their
+// personal project), resolves by title + private flag.
 const findSavedOption = (options, saved, personalProjectId) => {
   const savedUuid = saved?.[credentialMenuItemValue.keyConfigurationUuid];
   const savedProjectId = saved?.[credentialMenuItemValue.keyConfigurationProjectId];
