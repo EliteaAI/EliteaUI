@@ -140,9 +140,11 @@ export const useScheduleSave = ({
     setRunNowPending(true);
     try {
       await onRunNow();
+      return true;
     } catch (error) {
       if (error?.status === 400 || error?.status === 409) setRunNowError(error.data?.error ?? '');
       else toastError('Failed to start the run');
+      return false;
     } finally {
       setRunNowPending(false);
     }
@@ -151,11 +153,16 @@ export const useScheduleSave = ({
   const handleRunNow = async () => {
     setRunNowError('');
     setRunNowPending(true);
+    // true only when the run started; a failed or invalid save never reaches the run
+    let started = false;
     try {
       if (formik.dirty) {
-        afterSave.current = runNow;
+        afterSave.current = async () => {
+          started = await runNow();
+        };
         await formik.submitForm();
-      } else await runNow();
+      } else started = await runNow();
+      return started;
     } finally {
       afterSave.current = null;
       setRunNowPending(false);
@@ -172,11 +179,12 @@ export const useScheduleSave = ({
     const formErrors = await formik.validateForm();
     if (Object.keys(formErrors).length) {
       await formik.submitForm();
-      return;
+      return false;
     }
     setDraftTestPending(true);
     try {
       await onDraftTestRun(toCreateBody(formik.values));
+      return true;
     } catch (error) {
       const code = error?.data?.code;
       if (error?.status === 400 && code === DRAFT_TEST_ERROR.APPROVAL_NOT_ALLOWED)
@@ -187,6 +195,7 @@ export const useScheduleSave = ({
       // An older core has no test_run route; a fixed text keeps server detail off the page
       else if (error?.status === 404) setDraftTestError(TEST_RUN_UNAVAILABLE);
       else toastError('Failed to start the test run');
+      return false;
     } finally {
       setDraftTestPending(false);
     }

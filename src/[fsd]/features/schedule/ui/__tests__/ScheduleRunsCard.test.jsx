@@ -6,7 +6,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import getDesignTokens from '@/MainTheme';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import ScheduleRunsCard from '../ScheduleRunsCard';
 
@@ -124,6 +124,29 @@ describe('ScheduleRunsCard', () => {
     expect(onTestRun).not.toHaveBeenCalled();
     expect(screen.queryByTestId('schedule-test-run')).not.toBeInTheDocument();
     expect(screen.getByTestId('schedule-run-now')).toHaveAttribute('title', expect.stringMatching(/Manual/));
+  });
+
+  it('stops waiting for a new run when the start fails', async () => {
+    const cancelExpectRun = vi.fn();
+    const expectRun = vi.fn();
+    const onRunNow = vi.fn().mockResolvedValue(false);
+    renderCard({ onRunNow, view: makeView(undefined, { expectRun, cancelExpectRun }) });
+
+    fireEvent.click(screen.getByTestId('schedule-run-now'));
+
+    await waitFor(() => expect(cancelExpectRun).toHaveBeenCalledTimes(1));
+    expect(expectRun).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps waiting for a new run when the start works', async () => {
+    const cancelExpectRun = vi.fn();
+    const onRunNow = vi.fn().mockResolvedValue(true);
+    renderCard({ onRunNow, view: makeView(undefined, { expectRun: vi.fn(), cancelExpectRun }) });
+
+    fireEvent.click(screen.getByTestId('schedule-run-now'));
+
+    await waitFor(() => expect(onRunNow).toHaveBeenCalled());
+    expect(cancelExpectRun).not.toHaveBeenCalled();
   });
 
   it('shows only Test Run for a new schedule', () => {

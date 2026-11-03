@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   saved: [],
   draft: [],
   draftLoaded: true,
+  draftFailed: false,
   draftSkip: null,
   loaded: true,
   applicationDetails: vi.fn(),
@@ -23,7 +24,7 @@ vi.mock('../useScheduleRuns.hooks', () => ({
   useScheduleRunsTotal: () => mocks.saved.length,
   useDraftTestRuns: (applicationId, skip) => {
     mocks.draftSkip = skip;
-    return { rows: mocks.draft, loaded: mocks.draftLoaded, settled: true };
+    return { rows: mocks.draft, loaded: mocks.draftLoaded, failed: mocks.draftFailed, settled: true };
   },
 }));
 vi.mock('@/[fsd]/features/settings', async () => ({
@@ -74,6 +75,7 @@ describe('useScheduleRunsView', () => {
     mocks.saved = [];
     mocks.draft = [];
     mocks.draftLoaded = true;
+    mocks.draftFailed = false;
     mocks.loaded = true;
   });
 
@@ -128,6 +130,31 @@ describe('useScheduleRunsView', () => {
     rerender();
 
     expect(result.current.expandedRunId).toBe(8);
+  });
+
+  it('does not open a later run after the start failed', () => {
+    mocks.saved = [saved];
+    const { result, rerender } = setup();
+
+    act(() => result.current.expectRun());
+    act(() => result.current.cancelExpectRun());
+    mocks.saved = [{ ...waiting, status: 'running' }, saved];
+    rerender();
+
+    expect(result.current.expandedRunId).toBeUndefined();
+  });
+
+  it('counts a failed first draft list as empty, so the next Test run shows', () => {
+    mocks.draftLoaded = false;
+    mocks.draftFailed = true;
+    const { result, rerender } = setup('/', null);
+
+    mocks.draftLoaded = true;
+    mocks.draftFailed = false;
+    mocks.draft = [testRun(5, '2026-10-23T09:00:00Z')];
+    rerender();
+
+    expect(result.current.runs.map(run => run.id)).toEqual([5]);
   });
 
   it('keeps the open card when a scheduled run starts that the user did not ask for', () => {

@@ -128,7 +128,7 @@ export const useDraftTestRuns = (applicationId, skipRequest = false) => {
   useGetDraftTestRunsQuery(args, { skip, pollingInterval: polling ? POLLING_INTERVAL_MS : 0 });
 
   // settled: the list arrived or failed, so a Test Run started now cannot land in the baseline
-  return { rows, loaded: !!currentData, settled: skip || !!currentData || isError };
+  return { rows, loaded: !!currentData, failed: isError, settled: skip || !!currentData || isError };
 };
 
 // One draft Test run with its log, polled every 2 seconds while it runs or waits

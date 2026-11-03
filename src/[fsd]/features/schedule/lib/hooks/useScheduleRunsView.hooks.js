@@ -29,6 +29,7 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
   const {
     rows: draftRuns,
     loaded: draftLoaded,
+    failed: draftFailed,
     settled: draftSettled,
   } = useDraftTestRuns(applicationId, scheduleId != null);
   const runsLoaded = useScheduleRunsLoaded(scheduleId);
@@ -43,13 +44,14 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
   // baseline for this entity
   const [baseline, setBaseline] = useState({ applicationId: null, id: 0 });
   useEffect(() => {
-    if (!draftLoaded) return;
+    // A failed first list counts as an empty one, so every later run is new
+    if (!draftLoaded && !draftFailed) return;
     setBaseline(current =>
       current.applicationId === applicationId
         ? current
         : { applicationId, id: draftRuns.reduce((max, run) => Math.max(max, run.id), 0) },
     );
-  }, [applicationId, draftLoaded, draftRuns]);
+  }, [applicationId, draftLoaded, draftFailed, draftRuns]);
 
   const { currentData: details } = useApplicationDetailsQuery(
     { projectId, applicationId },
@@ -78,6 +80,10 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
   const expectingRun = useRef(false);
   const expectRun = useCallback(() => {
     expectingRun.current = true;
+  }, []);
+  // A start that failed must not leave the card waiting for a run
+  const cancelExpectRun = useCallback(() => {
+    expectingRun.current = false;
   }, []);
   useEffect(() => {
     if (newestRunId !== previousNewestId.current && newestRunId != null && expectingRun.current) {
@@ -116,6 +122,7 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
     expandedRunId,
     onExpand,
     expectRun,
+    cancelExpectRun,
     draftSettled,
     cardRef,
   };

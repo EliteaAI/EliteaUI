@@ -45,11 +45,11 @@ const ScheduleRunsCard = memo(
     const canRunNow = Boolean(schedule?.id) && Boolean(schedule?.allowed_actions?.includes('run'));
     const canTest = checkPermission(PERMISSIONS.schedules.run);
     const runHint = schedule?.id ? ownerOnlyRunHint(schedule) : null;
-    const { expectRun, draftSettled = true } = view;
+    const { expectRun, cancelExpectRun, draftSettled = true } = view;
     const busy = hasActiveRun || runNowPending || testRunPending;
-    const startRun = start => () => {
+    const startRun = start => async () => {
       expectRun?.();
-      start?.();
+      if ((await start?.()) === false) cancelExpectRun?.();
     };
     const newestId = runs[0]?.id;
     const [trigger, setTrigger] = useState(ALL_RUNS);
