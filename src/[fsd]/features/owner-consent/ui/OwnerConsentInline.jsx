@@ -18,12 +18,13 @@ const OwnerConsentInline = memo(props => {
     givenText,
     children,
     actionDisabled = false,
+    sx,
   } = props;
   const styles = ownerConsentInlineStyles();
 
   return (
     <Box
-      sx={styles.root}
+      sx={[styles.root, sx]}
       data-testid={testId}
     >
       <Typography

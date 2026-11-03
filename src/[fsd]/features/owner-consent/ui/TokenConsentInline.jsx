@@ -1,5 +1,7 @@
 import { memo, useCallback, useState } from 'react';
 
+import { Typography } from '@mui/material';
+
 import {
   useGetOwnerConsentStatusQuery,
   useTokenConsentActionMutation,
@@ -51,10 +53,9 @@ const TokenConsentInline = memo(props => {
       onWithdraw={onWithdraw}
       testId="token-consent"
     >
-      {!consent &&
-        choosing &&
-        candidates?.length === 0 &&
-        OwnerConsentConstants.NO_DELEGATED_CREDENTIALS_TEXT}
+      {!consent && choosing && candidates?.length === 0 && (
+        <Typography variant="bodySmall">{OwnerConsentConstants.NO_DELEGATED_CREDENTIALS_TEXT}</Typography>
+      )}
       {!consent && choosing && candidates?.length > 0 && (
         <ConsentCredentialPicker
           candidates={candidates}

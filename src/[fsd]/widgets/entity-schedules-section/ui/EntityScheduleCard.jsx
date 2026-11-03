@@ -101,12 +101,11 @@ const EntityScheduleCard = memo(props => {
           text={owner}
         />
       )}
-      <Box sx={styles.consent}>
-        <ScheduleMandateConsent
-          versionId={row.version_id}
-          isOwner={isYou}
-        />
-      </Box>
+      <ScheduleMandateConsent
+        versionId={row.version_id}
+        isOwner={isYou}
+        sx={styles.consent}
+      />
       <Box sx={styles.footer}>
         {allowed?.includes('edit') && (
           <Button.BaseBtn

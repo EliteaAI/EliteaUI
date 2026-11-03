@@ -120,6 +120,7 @@ const CANDIDATES = [
 const statusWith = (base, candidates = CANDIDATES) =>
   m.status.mockImplementation(args => ({
     data: args?.projects ? { ...base, candidates } : base,
+    currentData: args?.projects ? { ...base, candidates } : base,
     isFetching: false,
   }));
 

@@ -14,7 +14,7 @@ import OwnerConsentInline from './OwnerConsentInline';
 // The schedule card's consent line for its owner: when the owner's mandate for the schedule's version acts with
 // their Microsoft sign-in. Nothing is asked of a schedule that is not the viewer's own
 const ScheduleMandateConsent = memo(props => {
-  const { versionId, isOwner } = props;
+  const { versionId, isOwner, sx } = props;
   const projectId = useSelectedProjectId();
   const { data: status } = useGetOwnerConsentStatusQuery(undefined, { skip: !isOwner });
   const { data: mine } = useGetMyMandatesQuery(
@@ -41,6 +41,7 @@ const ScheduleMandateConsent = memo(props => {
       onConsent={onConsent}
       onWithdraw={onWithdraw}
       testId="schedule-mandate-consent"
+      sx={sx}
     />
   );
 });

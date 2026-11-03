@@ -52,7 +52,8 @@ const CreatePersonalToken = memo(() => {
   // a restricted token may act with the owner's Microsoft sign-in for the delegated credentials they name
   const { data: consentStatus } = useGetOwnerConsentStatusQuery();
   const consentPossible = restricted && Boolean(consentStatus?.allowed && consentStatus?.linked);
-  const { data: offered, isFetching: isFetchingOffered } = useGetOwnerConsentStatusQuery(
+  // currentData: the candidates of the projects selected now, not the previous selection's while they load
+  const { currentData: offered, isFetching: isFetchingOffered } = useGetOwnerConsentStatusQuery(
     { projects: scopeProjects },
     { skip: !consentPossible || !scopeProjects.length },
   );
@@ -60,6 +61,13 @@ const CreatePersonalToken = memo(() => {
   const [giveConsent] = useTokenConsentActionMutation();
   const [actWithSignIn, setActWithSignIn] = useState(false);
   const [pickedCredentials, setPickedCredentials] = useState([]);
+  useEffect(() => {
+    // a pick of a project that is no longer selected goes
+    const keys = (candidates || []).map(OwnerConsentHelpers.credentialKey);
+    setPickedCredentials(picked =>
+      picked.every(key => keys.includes(key)) ? picked : picked.filter(key => keys.includes(key)),
+    );
+  }, [candidates]);
   const canOfferConsent = consentPossible && candidates?.length > 0;
   const noDelegatedCredentials =
     consentPossible && scopeProjects.length > 0 && !isFetchingOffered && candidates?.length === 0;
