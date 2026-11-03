@@ -124,7 +124,7 @@ describe('EntitySchedulesSection', () => {
       expect(link.querySelector('svg')).toBeNull();
       expect(link).toHaveAttribute('href', '/settings/schedules?entityType=agent&entityId=12');
       // the app link colour, not the brand colour
-      expect(link).toHaveStyle({ color: theme.palette.text.link });
+      expect(link).toHaveStyle({ color: theme.palette.text.secondary, textDecoration: 'underline' });
     });
 
     it('puts the add button after the last card and the link in the header', () => {

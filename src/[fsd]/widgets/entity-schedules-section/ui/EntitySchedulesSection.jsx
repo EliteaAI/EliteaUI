@@ -11,7 +11,7 @@ import {
   buildSchedulesListLink,
   useEntitySchedules,
 } from '@/[fsd]/entities/schedule';
-import { ScheduleSectionConstants, TextLinkConstants } from '@/[fsd]/shared/lib/constants';
+import { ScheduleSectionConstants } from '@/[fsd]/shared/lib/constants';
 import { Button } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button';
@@ -94,7 +94,7 @@ const EntitySchedulesSection = memo(props => {
           // The Schedules page names the entity chip with it when the list has no rows
           state={{ entityName }}
           variant="bodySmall"
-          sx={[TextLinkConstants.TEXT_LINK_SX, styles.link]}
+          sx={styles.link}
           data-testid={`${testId}-open-all`}
         >
           Manage Schedules
@@ -216,12 +216,15 @@ const entitySchedulesSectionStyles = () => ({
     alignSelf: 'flex-start',
     whiteSpace: 'nowrap',
   },
-  link: {
+  link: ({ palette }) => ({
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.25rem',
     minWidth: 0,
-  },
+    color: palette.text.secondary,
+    textDecoration: 'underline',
+    '&:hover': { color: palette.text.secondary },
+  }),
   // The heights of the stacked and the one-line card
   skeleton: {
     height: '9rem',
