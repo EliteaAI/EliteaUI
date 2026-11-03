@@ -1,7 +1,7 @@
 import { convertToJson, removeDuplicateObjects } from '@/common/utils.jsx';
 
 // Import TAG_TYPE_APPLICATION_DETAILS from applications.js to invalidate application cache when toolkit is associated
-import { TAG_TYPE_APPLICATION_DETAILS } from './applications.js';
+import { TAG_TYPE_APPLICATION_DETAILS, withReadiness } from './applications.js';
 import { eliteaApi } from './eliteaApi.js';
 
 export const TAG_TYPE_TOOLKITS = 'TAG_TYPE_TOOLKITS';
@@ -158,7 +158,7 @@ export const toolkitsApi = eliteaApi
           }
           return [TAG_TYPE_DETAILS_TOOLKITS, { type: TAG_TYPE_DETAILS_TOOLKITS, id: result?.id }];
         },
-        invalidatesTags: [TAG_TYPE_TOTAL_TOOLKITS, TAG_TYPE_TOOLKITS],
+        invalidatesTags: withReadiness([TAG_TYPE_TOTAL_TOOLKITS, TAG_TYPE_TOOLKITS]),
       }),
 
       toolkitEdit: build.mutation({
@@ -170,7 +170,7 @@ export const toolkitsApi = eliteaApi
             body,
           };
         },
-        invalidatesTags: (result, error, { toolId, ignoreInvalidateApplicationDetails }) =>
+        invalidatesTags: withReadiness((result, error, { toolId, ignoreInvalidateApplicationDetails }) =>
           !ignoreInvalidateApplicationDetails
             ? [
                 TAG_TYPE_APPLICATION_DETAILS,
@@ -185,6 +185,7 @@ export const toolkitsApi = eliteaApi
                 { type: TAG_TYPE_DETAILS_TOOLKITS, id: toolId },
                 { type: TAG_TYPE_TOOLKIT_AVAILABLE_TOOLS, id: toolId },
               ],
+        ),
       }),
 
       toolkitDelete: build.mutation({
@@ -194,13 +195,13 @@ export const toolkitsApi = eliteaApi
             method: 'DELETE',
           };
         },
-        invalidatesTags: [
+        invalidatesTags: withReadiness([
           TAG_TYPE_TOTAL_TOOLKITS,
           TAG_TYPE_TOOLKITS,
           TAG_TYPE_TOOLKIT_DETAILS,
           { type: 'EntityFolder', id: 'LIST_toolkit' },
           { type: 'EntityFolder', id: 'LIST_mcp' },
-        ],
+        ]),
         onQueryStarted: async (args, { dispatch, getState, queryFulfilled }) => {
           const {
             eliteaApi: { queries },
@@ -412,7 +413,7 @@ export const toolkitsApi = eliteaApi
           };
         },
         // Invalidate application version detail cache when toolkit is added or removed
-        invalidatesTags: (result, error, args) => {
+        invalidatesTags: withReadiness((result, error, args) => {
           const { projectId, entity_id, entity_version_id } = args || {};
           const tags = [TAG_TYPE_TOTAL_TOOLKITS, TAG_TYPE_TOOLKITS];
           if (projectId && entity_id && entity_version_id) {
@@ -422,7 +423,7 @@ export const toolkitsApi = eliteaApi
             });
           }
           return tags;
-        },
+        }),
         async onQueryStarted(args, { dispatch, queryFulfilled }) {
           // Optimistic update for toolkit add/remove
           const {

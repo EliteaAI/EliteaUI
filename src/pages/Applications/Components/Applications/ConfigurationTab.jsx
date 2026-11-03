@@ -7,6 +7,7 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import { useApplicationChat } from '@/[fsd]/features/agent/lib/hooks';
 import { ChatBox, ChatButton } from '@/[fsd]/features/chat/ui';
 import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { GovernanceReadinessCard } from '@/[fsd]/features/project-governance';
 import {
   useRestoredConversation,
   useRunHistoryNavigation,
@@ -336,6 +337,12 @@ const ConfigurationTab = memo(props => {
           data-tour={AGENT_TOUR_TARGET_IDS.workspace}
         >
           <ContentContainer height="100%">
+            {/* (#7269) what this version still needs to run governed for you; read again after a Save */}
+            <GovernanceReadinessCard
+              entityKind="version"
+              entityId={version_details?.id}
+              sx={styles.readinessCard}
+            />
             <ApplicationConfigurationForm
               applicationId={applicationId}
               viewMode={viewMode}
@@ -415,6 +422,9 @@ const configurationRightContentStyles = isFullScreenChat => ({
 
 /** @type {MuiSx} */
 const configurationTabStyles = () => ({
+  readinessCard: {
+    marginBottom: '1rem',
+  },
   errorContainer: {
     display: 'flex',
     justifyContent: 'center',

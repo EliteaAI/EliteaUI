@@ -576,6 +576,20 @@ export const PERMISSIONS = {
     // webhook: 'models.applications.webhook.post', // According to Mikhail's comment, this permission is not used
     delete: 'models.applications.application.delete',
   },
+  // Project governance (C-1009, #7269): the project's admins operate it; members request it
+  governance: {
+    bindingsView: 'governance.bindings.view',
+    bindingsManage: 'governance.bindings.manage',
+    bindingsApprove: 'governance.bindings.approve',
+    mandatesView: 'governance.mandates.view',
+    mandatesManage: 'governance.mandates.manage',
+    mandatesApprove: 'governance.mandates.approve',
+    credentialsView: 'credentials.view',
+    credentialsManage: 'credentials.manage',
+    credentialsProbe: 'credentials.probe',
+    credentialsApprove: 'credentials.approve',
+    request: 'governance.request',
+  },
   schedules: {
     list: 'models.applications.schedules.list',
     details: 'models.applications.schedules.details',
@@ -1110,6 +1124,8 @@ export const NotificationType = {
   ScheduleDisabled: 'schedule_disabled',
   ScheduleEditedByAdmin: 'schedule_edited_by_admin',
   ScheduleOwnerChanged: 'schedule_owner_changed',
+  // (#7269) an approved grant on a credential that acts with the owner's Microsoft sign-in needs their consent
+  GovernanceConsentNeeded: 'governance_consent_needed',
   ToolSpendThresholdReached: 'tool_spend_threshold_reached',
   ToolSpendLimitReached: 'tool_spend_limit_reached',
   MemberToolSpendThresholdReached: 'member_tool_spend_threshold_reached',
