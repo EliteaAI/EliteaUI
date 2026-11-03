@@ -67,6 +67,7 @@ const LEGACY_CONFIGURATION = { id: 4, elitea_title: GITHUB_TITLE, project_id: TE
 let singleSelectProps;
 let credentialsData;
 let hasAutoSelectedRef;
+let personalProjectIdInStore = PERSONAL_PROJECT_ID;
 
 const onSelectConfiguration = vi.fn();
 const onRefresh = vi.fn();
@@ -139,7 +140,7 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
 vi.mock('@/GA', () => ({ useTrackEvent: () => trackEvent }));
 
 vi.mock('react-redux', () => ({
-  useSelector: selector => selector({ user: { personal_project_id: PERSONAL_PROJECT_ID } }),
+  useSelector: selector => selector({ user: { personal_project_id: personalProjectIdInStore } }),
 }));
 
 vi.mock('@/routes', async importOriginal => {
@@ -177,6 +178,7 @@ vi.mock('@/assets/refresh-icon.svg?react', () => ({ default: () => null }));
 beforeEach(() => {
   singleSelectProps = undefined;
   hasAutoSelectedRef = { current: false };
+  personalProjectIdInStore = PERSONAL_PROJECT_ID;
   onSelectConfiguration.mockClear();
   onRefresh.mockClear();
   trackEvent.mockClear();
@@ -620,6 +622,49 @@ describe('CredentialsSelect', () => {
 
       expect(JSON.parse(savedOptions()[0].value)).not.toHaveProperty('configuration_uuid');
       expect(singleSelectProps.value).toBe(optionValueFor(GITHUB_TITLE));
+    });
+
+    // #7333: a private credential is per user. A team toolkit saved by another member carries the creator's
+    // uuid and personal project; this user must see their own same-title private credential selected.
+    it("selects the user's own private credential for another member's private reference", () => {
+      renderSelect({
+        section: 'credentials',
+        value: savedCredential(GITHUB_TITLE, 'uuid-creators-private', {
+          private: true,
+          configuration_project_id: 'creators-personal-project',
+        }),
+        configurations: [{ ...CREDENTIAL_CONFIGURATIONS[0], project_id: PERSONAL_PROJECT_ID }],
+      });
+
+      expect(singleSelectProps.value).toBe(savedOptions()[0].value);
+      expect(JSON.parse(savedOptions()[0].value).configuration_uuid).toBe(GITHUB_UUID);
+    });
+
+    it("keeps the uuid-only match for the user's own private reference", () => {
+      renderSelect({
+        section: 'credentials',
+        value: savedCredential(GITHUB_TITLE, 'uuid-deleted', {
+          private: true,
+          configuration_project_id: PERSONAL_PROJECT_ID,
+        }),
+        configurations: [{ ...CREDENTIAL_CONFIGURATIONS[0], project_id: PERSONAL_PROJECT_ID }],
+      });
+
+      expect(singleSelectProps.value).not.toBe(savedOptions()[0].value);
+    });
+
+    it('stays on the uuid-only match while the personal project is not loaded yet', () => {
+      personalProjectIdInStore = undefined;
+      renderSelect({
+        section: 'credentials',
+        value: savedCredential(GITHUB_TITLE, 'uuid-deleted', {
+          private: true,
+          configuration_project_id: PERSONAL_PROJECT_ID,
+        }),
+        configurations: [{ ...CREDENTIAL_CONFIGURATIONS[0], project_id: PERSONAL_PROJECT_ID }],
+      });
+
+      expect(singleSelectProps.value).not.toBe(savedOptions()[0].value);
     });
 
     it('still matches a legacy saved value that has no uuid by title and private flag', () => {
