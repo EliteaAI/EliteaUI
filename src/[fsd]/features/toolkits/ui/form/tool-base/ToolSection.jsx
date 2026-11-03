@@ -93,14 +93,15 @@ const ToolSection = memo(props => {
     () => subsections.find(subsection => subsection.name === selectedOption) || { fields: [] },
     [selectedOption, subsections],
   );
-  // Fields the selected subsection shares with others (e.g. scopes) stay selected
+  // Fields the selected subsection shares with others (e.g. scopes) stay selected. Subsections hidden
+  // by the admin's OAuth apps count as not selected too, so an error set before they were hidden clears.
   const notSelectedFields = useMemo(
     () =>
-      subsections
+      (schemaSubsections || [])
         .filter(subsection => subsection.name !== selectedOption)
         .reduce((acc, subsection) => [...acc, ...(subsection.fields || [])], [])
         .filter(field => !fields.includes(field)),
-    [fields, selectedOption, subsections],
+    [fields, schemaSubsections, selectedOption],
   );
 
   useEffect(() => {

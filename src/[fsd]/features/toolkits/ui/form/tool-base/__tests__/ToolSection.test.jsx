@@ -4,12 +4,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material';
 
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import ToolSection from '../ToolSection';
 
+const oauthApps = { resolve: ({ subsections }) => ({ subsections, isResolving: false, mode: null }) };
+
 vi.mock('@/[fsd]/features/credentials/lib/hooks', () => ({
-  useOAuthAppSubsections: ({ subsections }) => ({ subsections, isResolving: false, mode: null }),
+  useOAuthAppSubsections: args => oauthApps.resolve(args),
 }));
 vi.mock('@/[fsd]/features/toolkits/ui', () => ({
   ToolkitForm: { ToolBaseProperty: props => <span data-testid={`field-${props.k}`} /> },
@@ -90,5 +92,59 @@ describe('ToolSection with fields shared between subsections', () => {
     const cleared = editField.mock.calls.filter(([, value]) => value === null).map(([field]) => field);
     expect(cleared).toEqual(['settings.scopes']);
     expect(screen.getByTestId('field-client_id')).toBeInTheDocument();
+  });
+});
+
+describe('ToolSection when the admin has no OAuth app (Custom app only)', () => {
+  const APP_SUBSECTIONS = [
+    { name: 'Default app', key_fields: ['oauth_app_id'], fields: ['oauth_app_id'] },
+    { name: 'Custom app', key_fields: ['client_id'], fields: ['client_id', 'client_secret'] },
+  ];
+  const APP_SCHEMA = {
+    properties: {
+      oauth_app_id: { type: 'string' },
+      client_id: { type: 'string' },
+      client_secret: { type: 'string' },
+    },
+  };
+
+  afterEach(() => {
+    cleanup();
+    oauthApps.resolve = ({ subsections }) => ({ subsections, isResolving: false, mode: null });
+  });
+
+  it('a filled Custom app form has no error left from the hidden Default app field', () => {
+    let errors = {};
+    const collectErrors = update => {
+      errors = typeof update === 'function' ? update(errors) : update;
+    };
+    const ui = settings => (
+      <ThemeProvider theme={createTheme()}>
+        <ToolSection
+          sectionKey="auth"
+          subsections={APP_SUBSECTIONS}
+          required
+          schema={APP_SCHEMA}
+          settings={settings}
+          editField={vi.fn()}
+          setToolErrors={collectErrors}
+          setEditToolDetail={vi.fn()}
+          credentialType="teams"
+        />
+      </ThemeProvider>
+    );
+    // While the admin's apps load the form starts on Default app: oauth_app_id is required
+    oauthApps.resolve = ({ subsections }) => ({ subsections, isResolving: true, mode: null });
+    const { rerender } = render(ui({}));
+    // No app: only Custom app is offered
+    oauthApps.resolve = ({ subsections }) => ({
+      subsections: subsections.filter(subsection => subsection.name === 'Custom app'),
+      isResolving: false,
+      mode: 'custom',
+    });
+    act(() => rerender(ui({})));
+    act(() => rerender(ui({ client_id: 'id', client_secret: 'secret' })));
+
+    expect(Object.entries(errors).filter(([, value]) => value)).toEqual([]);
   });
 });
