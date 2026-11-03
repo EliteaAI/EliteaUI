@@ -38,6 +38,9 @@ vi.mock('@/[fsd]/entities/run-history', async () => ({
 }));
 
 vi.mock('@/[fsd]/features/chat', () => ({ ChatMessageList: () => null }));
+vi.mock('@/[fsd]/features/schedule', () => ({
+  ScheduleRunStatusChip: ({ status }) => <span data-testid="status-chip">{status}</span>,
+}));
 
 vi.mock('@/[fsd]/features/settings', () => ({ DrawerPageHeader: () => null }));
 
@@ -65,10 +68,9 @@ vi.mock('@/[fsd]/shared/ui/button', () => ({
 }));
 
 vi.mock('@/[fsd]/shared/ui/select', () => ({
-  SingleSelect: ({ label, options, value, onValueChange, displayEmpty, shrinkLabel }) => (
+  SingleSelect: ({ label, options, value, onValueChange, displayEmpty }) => (
     <select
       data-display-empty={String(Boolean(displayEmpty))}
-      data-shrink-label={String(Boolean(shrinkLabel))}
       aria-label={label}
       value={value}
       onChange={event => onValueChange(event.target.value)}
@@ -226,7 +228,6 @@ describe('RunHistoryPage schedule filter and links', () => {
     expect(select).toHaveValue('');
     expect(select).toHaveAttribute('data-display-empty', 'true');
     // the label sits above the shown "All", not on top of it
-    expect(select).toHaveAttribute('data-shrink-label', 'true');
     expect(screen.queryByRole('option', { name: 'All schedules' })).not.toBeInTheDocument();
   });
 

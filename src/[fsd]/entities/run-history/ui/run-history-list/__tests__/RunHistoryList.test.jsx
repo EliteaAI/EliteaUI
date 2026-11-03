@@ -138,7 +138,7 @@ describe('RunHistoryList extra columns', () => {
       ],
     });
 
-    expect(screen.getByTestId('header')).toHaveTextContent('Date|Schedule|Status|Event|Duration');
+    expect(screen.getByTestId('header')).toHaveTextContent('Date|Event|Schedule|Status|Duration');
     const [chat, run] = screen.getAllByTestId('run-history-list-item');
     expect(within(run).getByText('Daily')).toBeInTheDocument();
     expect(within(run).getByText('Success')).toBeInTheDocument();

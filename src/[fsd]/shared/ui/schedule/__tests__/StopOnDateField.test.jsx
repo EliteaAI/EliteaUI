@@ -14,7 +14,7 @@ import userEvent from '@testing-library/user-event';
 
 import StopOnDateField from '../StopOnDateField';
 
-const LABEL = 'Stop on a date';
+const LABEL = 'Stop on date';
 const PAST_DATE_MESSAGE = 'Pick today or a later date';
 const PAST_DATE = '2020-01-01';
 const FUTURE_DATE = '2999-12-31';

@@ -38,7 +38,8 @@ const ScheduleRunsFilters = memo(props => {
     <Box sx={styles.root}>
       <SingleSelect
         data-testid="schedule-runs-filter-trigger"
-        label="Type:"
+        label="Type"
+        labelSX={styles.label}
         separateLabel
         showEmptyPlaceholder={false}
         value={trigger}
@@ -47,7 +48,8 @@ const ScheduleRunsFilters = memo(props => {
       />
       <SingleSelect
         data-testid="schedule-runs-filter-status"
-        label="Status:"
+        label="Status"
+        labelSX={styles.label}
         separateLabel
         showEmptyPlaceholder={false}
         value={status}
@@ -63,6 +65,7 @@ ScheduleRunsFilters.displayName = 'ScheduleRunsFilters';
 /** @type {MuiSx} */
 const scheduleRunsFiltersStyles = () => ({
   root: { display: 'flex', gap: '1.5rem', padding: '0 1.5rem' },
+  label: { '&::after': { content: '":"' } },
 });
 
 export { ALL as ALL_RUNS };

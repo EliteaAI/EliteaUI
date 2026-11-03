@@ -255,6 +255,18 @@ const ScheduleForm = memo(props => {
           <Box sx={styles.panel}>
             {children?.({ values, setFieldValue, dirty: formik.dirty, setValues, fieldError })}
           </Box>
+        </Box>
+      ),
+    },
+    {
+      title: 'APPROVAL RULE',
+      testId: 'schedule-section-approval',
+      content: (
+        <Box
+          component="fieldset"
+          disabled={readOnly}
+          sx={styles.section}
+        >
           <ScheduleApprovalSection
             rule={values.approval_rule}
             ruleChanged={save.ruleChanged}

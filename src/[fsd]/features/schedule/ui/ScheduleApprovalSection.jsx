@@ -15,17 +15,17 @@ import FieldError from './FieldError';
 export const APPROVAL_RULE_ITEMS = [
   {
     value: APPROVAL_RULE.PAUSE_AND_ASK,
-    label: 'Pause and ask me',
+    label: 'Ask me first',
     info: APPROVAL_RULE_INFO[APPROVAL_RULE.PAUSE_AND_ASK],
     infoPinnable: true,
-    infoLabel: 'More info about Pause and ask me',
+    infoLabel: 'More info about Ask me first',
   },
   {
     value: APPROVAL_RULE.RUN_WITHOUT_ASKING,
-    label: 'Run without asking',
+    label: 'Run automatically',
     info: APPROVAL_RULE_INFO[APPROVAL_RULE.RUN_WITHOUT_ASKING],
     infoPinnable: true,
-    infoLabel: 'More info about Run without asking',
+    infoLabel: 'More info about Run automatically',
   },
 ];
 // "21 Oct 2026" for the line of who confirmed "Run without asking"
@@ -56,6 +56,7 @@ const ScheduleApprovalSection = memo(props => {
       <Typography
         id="schedule-approval-rule-label"
         variant="labelMedium"
+        sx={styles.srOnly}
       >
         Approval rule
       </Typography>
@@ -105,5 +106,16 @@ const ScheduleApprovalSection = memo(props => {
 });
 
 ScheduleApprovalSection.displayName = 'ScheduleApprovalSection';
+
+// The section title above names the group; the label stays for screen readers and aria-labelledby
+const styles = {
+  srOnly: {
+    position: 'absolute',
+    width: '0.0625rem',
+    height: '0.0625rem',
+    overflow: 'hidden',
+    clip: 'rect(0 0 0 0)',
+  },
+};
 
 export default ScheduleApprovalSection;

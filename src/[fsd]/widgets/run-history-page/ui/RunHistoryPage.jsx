@@ -11,6 +11,7 @@ import {
   useAllEntitySchedules,
 } from '@/[fsd]/entities/schedule';
 import { ChatMessageList } from '@/[fsd]/features/chat';
+import { ScheduleRunStatusChip } from '@/[fsd]/features/schedule';
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
 import { NavigationConstants, TextLinkConstants } from '@/[fsd]/shared/lib/constants';
@@ -80,7 +81,20 @@ const RunHistoryPage = memo(props => {
         </Link>
       );
     };
-    return [{ ...scheduleColumn, render: renderSchedule }, ...rest];
+    // The status reads with its icon and colour, as in the Runs card
+    const renderStatus = row =>
+      row.schedule_run ? (
+        <ScheduleRunStatusChip
+          status={row.schedule_run.status}
+          variant="text"
+        />
+      ) : (
+        '-'
+      );
+    return [
+      { ...scheduleColumn, render: renderSchedule },
+      ...rest.map(column => (column.id === 'status' ? { ...column, render: renderStatus } : column)),
+    ];
   }, [scheduleEntityType, schedules, agentId, tab]);
 
   const handleRestoreConversation = useCallback(

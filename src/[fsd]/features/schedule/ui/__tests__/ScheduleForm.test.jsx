@@ -311,6 +311,7 @@ describe('ScheduleForm', () => {
       'GENERAL',
       'WHAT TO RUN',
       'SCHEDULE SETTINGS',
+      'APPROVAL RULE',
     ]);
   });
 
@@ -707,7 +708,7 @@ describe('ScheduleForm', () => {
     expect(header).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('shows Approval rule with Pause and ask me selected and sends it', async () => {
+  it('shows Approval rule with Ask me first selected and sends it', async () => {
     const { onSubmit } = renderForm();
 
     expect(screen.getByTestId('schedule-approval-rule-pause_and_ask')).toHaveAttribute(
@@ -731,7 +732,7 @@ describe('ScheduleForm', () => {
     );
   });
 
-  it('disables Run without asking with a hint when the project does not allow it', () => {
+  it('disables Run automatically with a hint when the project does not allow it', () => {
     runAllowed = false;
     renderForm();
 
@@ -739,7 +740,7 @@ describe('ScheduleForm', () => {
     expect(screen.getByText(/does not allow/)).toBeInTheDocument();
   });
 
-  it('keeps Run without asking disabled with no hint while the project data loads', () => {
+  it('keeps Run automatically disabled with no hint while the project data loads', () => {
     runAllowed = undefined;
     renderForm();
 
@@ -747,7 +748,7 @@ describe('ScheduleForm', () => {
     expect(screen.queryByText(/does not allow/)).not.toBeInTheDocument();
   });
 
-  it('keeps Run without asking disabled with no hint when the project data fails', () => {
+  it('keeps Run automatically disabled with no hint when the project data fails', () => {
     runAllowed = undefined;
     listFailed = true;
     renderForm();
@@ -805,7 +806,7 @@ describe('ScheduleForm', () => {
     expect(onSaved).toHaveBeenCalledWith(result);
   });
 
-  it('enables Run without asking when the project allows it', () => {
+  it('enables Run automatically when the project allows it', () => {
     renderForm();
 
     expect(screen.getByTestId('schedule-approval-rule-run_without_asking')).toBeEnabled();
@@ -818,7 +819,7 @@ describe('ScheduleForm', () => {
         status: 400,
         data: {
           code: 'approval_rule_not_allowed',
-          error: 'Run without asking is not allowed here.',
+          error: 'Run automatically is not allowed here.',
           field: 'approval_rule',
         },
       }),
@@ -828,7 +829,7 @@ describe('ScheduleForm', () => {
 
     await save();
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Run without asking is not allowed here.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Run automatically is not allowed here.');
   });
 
   it('shows the returned rule and the hint when the save answers a different rule', async () => {
@@ -1003,6 +1004,7 @@ describe('ScheduleForm', () => {
         'GENERAL',
         'WHAT TO RUN',
         'SCHEDULE SETTINGS',
+        'APPROVAL RULE',
       ]);
       expect(screen.getByTestId('schedule-locked-entity')).toBeInTheDocument();
       expect(screen.getByTestId('schedule-locked-entity-link')).toHaveAttribute(
@@ -1456,7 +1458,7 @@ describe('ScheduleForm', () => {
       expect(onSubmit).not.toHaveBeenCalled();
     });
 
-    it('shows a personal sign-in as a warning under "Pause and ask me" and saves', async () => {
+    it('shows a personal sign-in as a warning under "Ask me first" and saves', async () => {
       checkRisk.mockReturnValue(answer({ ...CLEAR, blocking: [SIGNIN] }));
       const { onSubmit } = renderForm();
       await fillAgent();
@@ -1470,7 +1472,7 @@ describe('ScheduleForm', () => {
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     });
 
-    it('turns the warning into a block box when the rule changes to "Run without asking"', async () => {
+    it('turns the warning into a block box when the rule changes to "Run automatically"', async () => {
       checkRisk.mockReturnValue(answer({ ...CLEAR, blocking: [SIGNIN] }));
       renderForm();
       await fillAgent();
@@ -1483,7 +1485,7 @@ describe('ScheduleForm', () => {
       expect(saveButton()).toBeDisabled();
     });
 
-    it('keeps a human-input step blocking under "Pause and ask me"', async () => {
+    it('keeps a human-input step blocking under "Ask me first"', async () => {
       checkRisk.mockReturnValue(
         answer({
           ...CLEAR,
@@ -1528,7 +1530,7 @@ describe('ScheduleForm', () => {
       expect(onSubmit).not.toHaveBeenCalled();
     });
 
-    it('Pause and ask me saves with the fingerprint and no typed name', async () => {
+    it('Ask me first saves with the fingerprint and no typed name', async () => {
       checkRisk.mockReturnValue(answer(RISKY));
       const onSaved = vi.fn();
       const { onSubmit } = renderForm({ onSaved });
@@ -1548,7 +1550,7 @@ describe('ScheduleForm', () => {
       expect(onSaved).toHaveBeenCalledTimes(1);
     });
 
-    it('Run without asking sets the form rule and saves with the typed name', async () => {
+    it('Run automatically sets the form rule and saves with the typed name', async () => {
       checkRisk.mockReturnValue(answer(RISKY));
       const { onSubmit } = renderForm();
       await fillAgent();
@@ -1748,7 +1750,7 @@ describe('ScheduleForm', () => {
       expect(screen.getByRole('alert')).toHaveTextContent('risk_changed');
     });
 
-    it('shows who confirmed Run without asking and when on the edit page', () => {
+    it('shows who confirmed Run automatically and when on the edit page', () => {
       renderForm({
         initialValues: { ...INITIAL, application_id: 7, version_id: 71, approval_rule: 'run_without_asking' },
         schedule: {
@@ -1784,7 +1786,7 @@ describe('ScheduleForm', () => {
       expect(screen.queryByText(/Confirmed by/)).not.toBeInTheDocument();
     });
 
-    // an edit that keeps a confirmed "Run without asking" saves without a new review
+    // an edit that keeps a confirmed "Run automatically" saves without a new review
     const renderConfirmedEdit = rule =>
       renderForm({
         initialValues: { ...INITIAL, application_id: 7, version_id: 71, prompt: 'Hi', approval_rule: rule },
@@ -1807,7 +1809,7 @@ describe('ScheduleForm', () => {
       expect(screen.queryByTestId('risk-dialog')).not.toBeInTheDocument();
     });
 
-    it('still opens the review when the rule is Pause and ask me', async () => {
+    it('still opens the review when the rule is Ask me first', async () => {
       checkRisk.mockReturnValue(answer({ ...RISKY, confirmed: true }));
       const { onSubmit } = renderConfirmedEdit('pause_and_ask');
       typePrompt('Hi again');

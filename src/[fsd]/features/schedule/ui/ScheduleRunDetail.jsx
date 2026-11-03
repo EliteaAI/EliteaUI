@@ -2,6 +2,7 @@ import { memo, useState } from 'react';
 
 import { Link as RouterLink } from 'react-router-dom';
 
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Box, Link, Typography } from '@mui/material';
 
 import { buildScheduleHistoryLink } from '@/[fsd]/entities/schedule';
@@ -91,6 +92,7 @@ const ScheduleRunDetail = memo(props => {
           <Typography
             data-testid="schedule-run-answer"
             variant="bodyMedium"
+            color="text.primary"
             sx={styles.answer}
           >
             {response || 'No response.'}
@@ -104,8 +106,13 @@ const ScheduleRunDetail = memo(props => {
           variant="bodySmall"
           aria-expanded={logOpen}
           onClick={() => setLogOpen(open => !open)}
+          underline="none"
           sx={styles.toggle}
         >
+          <ChevronRightIcon
+            fontSize="small"
+            sx={styles.toggleIcon(logOpen)}
+          />
           {logOpen ? 'Hide run logs' : 'Run logs'}
         </Link>
       )}
@@ -119,7 +126,8 @@ const ScheduleRunDetail = memo(props => {
       <Link
         component={RouterLink}
         to={link}
-        variant="bodyMedium"
+        variant="bodySmall"
+        underline="none"
         sx={[TextLinkConstants.TEXT_LINK_SX, styles.history]}
         data-testid="schedule-run-open-history"
       >
@@ -136,8 +144,15 @@ const scheduleRunDetailStyles = () => ({
   root: { display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '0.5rem 1rem 1rem' },
   section: { display: 'flex', flexDirection: 'column', gap: '0.25rem' },
   answer: { whiteSpace: 'pre-line' },
-  toggle: { alignSelf: 'flex-start' },
-  history: { alignSelf: 'flex-start', textDecoration: 'underline', textUnderlineOffset: '0.25rem' },
+  toggle: ({ palette }) => ({
+    alignSelf: 'flex-start',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    color: palette.text.secondary,
+  }),
+  toggleIcon: open => ({ transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }),
+  history: { alignSelf: 'flex-start', textDecoration: 'none' },
 });
 
 export default ScheduleRunDetail;

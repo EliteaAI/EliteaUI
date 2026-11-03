@@ -50,12 +50,14 @@ const ScheduleRunCard = memo(props => {
           <Chip
             data-testid="schedule-run-trigger"
             size="small"
-            variant="outlined"
             label={toTriggerLabel(run.trigger)}
             sx={styles.trigger}
           />
           <Box sx={styles.status}>
-            <ScheduleRunStatusChip status={run.status} />
+            <ScheduleRunStatusChip
+              status={run.status}
+              variant="card"
+            />
           </Box>
           <ExpandMoreIcon
             fontSize="small"
@@ -89,7 +91,7 @@ ScheduleRunCard.displayName = 'ScheduleRunCard';
 const scheduleRunCardStyles = (expanded, isLatest) => ({
   root: ({ palette }) => ({
     listStyle: 'none',
-    borderRadius: '0.5rem',
+    borderRadius: '0.75rem',
     border: `0.0625rem solid ${expanded && isLatest ? palette.secondary.main : palette.border.lines}`,
     backgroundColor: palette.background.surface.interactive.default,
   }),
@@ -97,14 +99,14 @@ const scheduleRunCardStyles = (expanded, isLatest) => ({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: '0.25rem',
+    gap: '0.375rem',
     width: '100%',
-    padding: '0.625rem 1rem',
+    padding: '1rem',
     textAlign: 'left',
     '&:focus-visible': { outline: '0.125rem solid currentColor', outlineOffset: '-0.125rem' },
   },
   line: { display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 },
-  started: { fontWeight: 600 },
+  started: ({ palette }) => ({ fontWeight: 600, color: palette.text.primary }),
   status: { marginLeft: 'auto' },
   chevron: { transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' },
   latest: ({ palette }) => ({
@@ -112,10 +114,8 @@ const scheduleRunCardStyles = (expanded, isLatest) => ({
     height: '1.25rem',
     fontSize: '0.6875rem',
     color: palette.secondary.main,
-    backgroundColor: 'transparent',
-    border: `0.0625rem solid ${palette.secondary.main}`,
   }),
-  trigger: ({ palette }) => ({ color: palette.text.secondary, borderColor: palette.border.lines }),
+  trigger: ({ palette }) => ({ color: palette.text.secondary }),
 });
 
 export default ScheduleRunCard;

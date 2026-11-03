@@ -15,6 +15,16 @@ const { canConvertCronTimezone, getBrowserTimezone, getNextCronRun, validateCron
   ScheduleHelpers;
 const { canBuildCron, describeCron, parseCron } = CronBuilderHelpers;
 
+// "Europe/Kyiv" and "Europe/Kiev" are one zone; the runtime resolves both to one canonical name
+const canonicalZone = zone => {
+  try {
+    return new Intl.DateTimeFormat(undefined, { timeZone: zone }).resolvedOptions().timeZone;
+  } catch {
+    return zone;
+  }
+};
+const isSameTimezone = (a, b) => a === b || canonicalZone(a) === canonicalZone(b);
+
 const BUILDER_BLOCKED_HINT =
   'The Builder cannot show this expression. Edit it as text, or enter a daily time.';
 
@@ -25,7 +35,7 @@ const getViewButtons = (builderBlocked, hintId) => [
     // A disabled tab cannot take focus, so the hint is linked to it for screen readers
     buttonProps: { disabled: builderBlocked, 'aria-describedby': builderBlocked ? hintId : undefined },
   },
-  { value: 'cron', label: 'Cron expression' },
+  { value: 'cron', label: 'Cron Expression' },
 ];
 
 /**
@@ -72,7 +82,7 @@ const ScheduleSettingsSection = memo(props => {
 
   // Decided from the stored cron, never from the edited value, which is already converted.
   const timezoneNotice = useMemo(() => {
-    if (!sourceTimezone || !browserTimezone || sourceTimezone === browserTimezone) return null;
+    if (!sourceTimezone || !browserTimezone || isSameTimezone(sourceTimezone, browserTimezone)) return null;
 
     if (!canConvertCronTimezone(sourceCron, sourceTimezone, browserTimezone)) {
       return `This schedule was configured in ${sourceTimezone} and its expression cannot be converted automatically, so the times below are shown as configured. Saving will reinterpret them in your timezone (${browserTimezone}).`;

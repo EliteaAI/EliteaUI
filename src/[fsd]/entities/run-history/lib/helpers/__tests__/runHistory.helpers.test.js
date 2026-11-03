@@ -223,7 +223,7 @@ describe('schedule runs in Agent and Pipeline Run History', () => {
     // Review r8, from live measures: a row grid has 736 px (768 px list minus the 2 x 16 px row padding).
     // The minimum sum is 120 + 120 + 92 + 168 + 112 + 120 = 732 px, and every header label fits.
     const template = resolveRunHistoryColumns(false, true, SCHEDULE_RUN_COLUMNS);
-    expect(template).toBe('7.5rem 7.5rem 5.75rem 10.5rem 7rem minmax(7.5rem, 1fr)');
+    expect(template).toBe('7.5rem 9.25rem 7.5rem 7rem 7rem minmax(7.5rem, 1fr)');
     const minRem = template
       .split(/[\s(),]+/)
       .filter(token => token.endsWith('rem'))
@@ -231,7 +231,7 @@ describe('schedule runs in Agent and Pipeline Run History', () => {
       .reduce((sum, rem) => sum + rem, 0);
     expect(minRem * 16).toBeLessThanOrEqual(768 - 32);
     expect(resolveRunHistoryColumns(true, true, SCHEDULE_RUN_COLUMNS)).toBe(
-      '7.5rem 7.5rem 5.75rem 10.5rem minmax(7.5rem, 1fr)',
+      '7.5rem 9.25rem 7.5rem 7rem minmax(7.5rem, 1fr)',
     );
     expect(resolveRunHistoryColumns(false, true)).toBe('1.5fr 1.5fr 1.5fr 1fr');
   });

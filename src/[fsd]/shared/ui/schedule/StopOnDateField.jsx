@@ -54,7 +54,7 @@ const StopOnDateField = memo(props => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
       <FormControlLabel
-        label="Stop on a date"
+        label="Stop on date"
         control={
           <BaseCheckbox
             checked={checked}

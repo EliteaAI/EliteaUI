@@ -5,7 +5,7 @@ import { Box, Chip, CircularProgress } from '@mui/material';
 import { toRunStatusMeta } from '../lib/helpers';
 
 const ScheduleRunStatusChip = memo(props => {
-  // variant: 'chip' (outlined, default), 'text' (icon and word in the status colour, no border) or 'icon' (icon only)
+  // variant: 'chip' (outlined, default), 'card' (larger, status-colour border, for a run card), 'text' (icon and word in the status colour, no border) or 'icon' (icon only)
   const { status, variant = 'chip' } = props;
 
   const { Icon, color, label: statusLabel, isSpinner } = toRunStatusMeta(status);
@@ -42,7 +42,7 @@ const ScheduleRunStatusChip = memo(props => {
       variant="outlined"
       icon={icon || undefined}
       label={label}
-      sx={[styles.chip, variant === 'text' && styles.text]}
+      sx={[styles.chip, variant === 'text' && styles.text, variant === 'card' && styles.card]}
     />
   );
 });
@@ -58,9 +58,18 @@ const scheduleRunStatusChipStyles = statusColor => ({
     borderColor: palette.border.lines,
     '& .MuiChip-icon': { fontSize: '0.875rem', color: statusColor },
   }),
+  card: ({ palette }) => ({
+    height: '2rem',
+    borderRadius: '1rem',
+    borderColor: statusColor,
+    color: palette.text.primary,
+    backgroundColor: palette.background.default.tertiary,
+    '& .MuiChip-icon': { fontSize: '1.125rem', color: statusColor },
+    '& .MuiChip-label': { fontSize: '0.875rem', padding: '0 0.75rem 0 0.5rem' },
+  }),
   progress: { marginLeft: '0.375rem', color: statusColor },
   // The word takes the status colour, as in the schedule card
-  text: { border: 'none', color: statusColor },
+  text: { border: 'none', color: statusColor, '& .MuiChip-label': { paddingLeft: '0.25rem' } },
   // A 20 px hit area around the icon
   iconOnly: ({ palette }) => ({
     display: 'inline-flex',

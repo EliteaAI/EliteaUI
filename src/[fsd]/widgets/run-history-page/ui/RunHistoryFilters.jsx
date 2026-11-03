@@ -5,11 +5,12 @@ import { Box } from '@mui/material';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 
+// The order and the inline "Label: All" form of the Run History mockup
 const FILTERS = [
-  { key: 'schedule', label: 'Schedule' },
-  { key: 'status', label: 'Status' },
   { key: 'trigger', label: 'Trigger type' },
+  { key: 'status', label: 'Status' },
   { key: 'version', label: 'Version' },
+  { key: 'schedule', label: 'Schedule' },
 ];
 
 const RunHistoryFilters = memo(props => {
@@ -28,14 +29,14 @@ const RunHistoryFilters = memo(props => {
           data-testid={`run-history-filter-${key}`}
         >
           <SingleSelect
-            showBorder
+            separateLabel
             label={label}
+            labelSX={styles.label}
             options={options[key]}
             value={values[key]}
             onValueChange={handlers[key]}
             // The empty value is "All": show its label instead of a blank select
             displayEmpty
-            shrinkLabel
             showEmptyPlaceholder={false}
             inputProps={{ 'aria-label': label }}
           />
@@ -62,11 +63,14 @@ const runHistoryFiltersStyles = () => ({
     display: 'flex',
     flexWrap: 'wrap',
     alignItems: 'center',
-    gap: '0.75rem',
+    gap: '1.5rem',
+    padding: '0 0.5rem',
   },
   select: {
-    width: '12rem',
+    minWidth: '9rem',
   },
+  // the inline "Label: All" form
+  label: { '&::after': { content: '":"' } },
 });
 
 export default RunHistoryFilters;

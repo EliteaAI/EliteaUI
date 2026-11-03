@@ -59,6 +59,13 @@ const RunHistoryListItem = memo(props => {
           width={noVersions ? '50%' : '70%'}
           height={20}
         />
+        {hasEvent && (
+          <Skeleton
+            variant="text"
+            width="50%"
+            height="1.25rem"
+          />
+        )}
         {extraColumns.map(column => (
           <Skeleton
             key={column.id}
@@ -67,13 +74,6 @@ const RunHistoryListItem = memo(props => {
             height="1.25rem"
           />
         ))}
-        {hasEvent && (
-          <Skeleton
-            variant="text"
-            width="50%"
-            height="1.25rem"
-          />
-        )}
         {!noVersions && (
           <Skeleton
             variant="text"
@@ -101,6 +101,13 @@ const RunHistoryListItem = memo(props => {
         text={date}
         trigger={tooltipTrigger}
       />
+      {hasEvent && (
+        <RunHistoryTooltipCell
+          text={item.event_label ?? '-'}
+          tooltipText={item.event_tooltip ?? ''}
+          trigger={tooltipTrigger}
+        />
+      )}
       {extraColumns.map(column => {
         const cell = column.render(item);
         // A text cell gets the overflow tooltip; a node (for example a link) renders as it is
@@ -121,13 +128,6 @@ const RunHistoryListItem = memo(props => {
           </Box>
         );
       })}
-      {hasEvent && (
-        <RunHistoryTooltipCell
-          text={item.event_label ?? '-'}
-          tooltipText={item.event_tooltip ?? ''}
-          trigger={tooltipTrigger}
-        />
-      )}
       {!noVersions && (
         <RunHistoryTooltipCell
           text={version}
