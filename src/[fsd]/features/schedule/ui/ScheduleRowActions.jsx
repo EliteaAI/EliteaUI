@@ -49,7 +49,7 @@ const ScheduleRowActions = memo(props => {
       [
         (allowed?.includes('run') || runHint) && {
           key: 'run',
-          label: 'Run Now',
+          label: 'Run now',
           icon: (
             <PlayIcon
               fill="currentColor"
@@ -92,7 +92,7 @@ const ScheduleRowActions = memo(props => {
         onOpenRunHistory &&
           allowed?.includes('edit') && {
             key: 'history',
-            label: 'Run History',
+            label: 'Run history',
             icon: <ClockIcon style={SVG_ICON_STYLE} />,
             onClick: onOpenRunHistory,
           },

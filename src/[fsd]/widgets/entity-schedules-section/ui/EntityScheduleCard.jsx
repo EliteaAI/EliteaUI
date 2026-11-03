@@ -2,11 +2,11 @@ import { Fragment, memo, useCallback, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { formatRunTimestamp } from '@/[fsd]/entities/run-history';
 import {
   ScheduleEnabledSwitch,
   ScheduleRowActions,
   ScheduleRunStatusChip,
-  formatRunStarted,
   useScheduleRowActions,
 } from '@/[fsd]/features/schedule';
 import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
@@ -15,12 +15,16 @@ import { Modal } from '@/[fsd]/shared/ui';
 
 import EntityScheduleCardLine from './EntityScheduleCardLine';
 
+// The card shows the day only, as the mockup does
+const CARD_DATE_FORMAT = 'dd.MM.yyyy';
+const formatCardDate = value => formatRunTimestamp(value, CARD_DATE_FORMAT);
+
 const stopPropagation = event => event.stopPropagation();
 
 // A running schedule has no finished run time to show, only the status
 const lastRunText = row => {
   if (!row.last_run) return 'Never run';
-  return row.last_run_status === 'running' ? '' : formatRunStarted(row.last_run);
+  return row.last_run_status === 'running' ? '' : formatCardDate(row.last_run);
 };
 
 const EntityScheduleCard = memo(props => {
@@ -44,7 +48,7 @@ const EntityScheduleCard = memo(props => {
   const isOpenable = Boolean(row.allowed_actions?.includes('edit'));
   const rule = ScheduleHelpers.getCronSummaryInBrowserTimezone(row.cron, row.timezone);
   const timezone = ScheduleHelpers.getBrowserTimezone() ?? row.timezone;
-  const nextRun = row.enabled ? (row.next_run && formatRunStarted(row.next_run)) || '-' : 'Not scheduled';
+  const nextRun = row.enabled ? (row.next_run && formatCardDate(row.next_run)) || '-' : 'Not scheduled';
   const showChip = Boolean(row.last_run && row.last_run_status);
   const testId = `${entityType}-schedule-card`;
 
@@ -120,7 +124,6 @@ const EntityScheduleCard = memo(props => {
             onEdit={onEdit}
             onDelete={onDeleteClick}
             onOpenRunHistory={onHistory}
-            hideEdit
             hideToggle
             hideChangeOwner
           />

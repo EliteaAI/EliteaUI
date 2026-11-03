@@ -83,8 +83,8 @@ describe('EntityScheduleCard', () => {
     expect(ruleLine()).toHaveTextContent('Rule of 0 9 * * * from UTC');
     expect(screen.getByTestId('agent-schedule-card-timezone-7')).toHaveTextContent('· Europe/Kyiv');
     expect(card).toHaveTextContent('Daily digest');
-    expect(card).toHaveTextContent(/Last run:\s*19 Oct, 09:00/);
-    expect(card).toHaveTextContent(/Next run:\s*20 Oct, 09:00/);
+    expect(card).toHaveTextContent(/Last run:\s*19.10.2026/);
+    expect(card).toHaveTextContent(/Next run:\s*20.10.2026/);
     expect(statusChip()).toHaveTextContent('Success');
   });
 
@@ -110,7 +110,7 @@ describe('EntityScheduleCard', () => {
     renderCard({ enabled: false });
 
     expect(cardText()).toMatch(/Next run:\s*Not scheduled/);
-    expect(cardText()).not.toContain('20 Oct');
+    expect(cardText()).not.toContain('20.10.2026');
     expect(screen.getByTestId('agent-schedule-card-state-7')).toHaveTextContent('Paused');
   });
 
@@ -210,7 +210,7 @@ describe('EntityScheduleCard', () => {
     renderCard({ last_run_status: 'running' });
     expect(statusChip()).toHaveTextContent('Running...');
     expect(within(statusChip()).getByRole('progressbar')).toBeInTheDocument();
-    expect(cardText()).not.toMatch(/Last run:\s*19 Oct/);
+    expect(cardText()).not.toMatch(/Last run:\s*19.10.2026/);
   });
 
   it('the toggle of an enabled schedule pauses it', () => {
@@ -230,11 +230,11 @@ describe('EntityScheduleCard', () => {
 
   const menuItems = () => screen.getAllByRole('menuitem').map(item => item.textContent);
 
-  it('the menu lists Run Now, Run History and Delete, without Edit, Pause or Change owner', () => {
+  it('the menu lists Run now, Edit, Run history and Delete, without Pause or Change owner', () => {
     renderCard();
     openMenu();
 
-    expect(menuItems()).toEqual(['Run Now', 'Run History', 'Delete']);
+    expect(menuItems()).toEqual(['Run now', 'Edit', 'Run history', 'Delete']);
   });
 
   it('the menu lists Export before Delete with the export permission', () => {
@@ -244,24 +244,24 @@ describe('EntityScheduleCard', () => {
     renderCard();
     openMenu();
 
-    expect(menuItems()).toEqual(['Run Now', 'Run History', 'Export', 'Delete']);
+    expect(menuItems()).toEqual(['Run now', 'Edit', 'Run history', 'Export', 'Delete']);
     fireEvent.click(screen.getByText('Export'));
     expect(onExport).toHaveBeenCalledTimes(1);
     delete mocks.actions.onExport;
   });
 
-  it('hides Run Now and Delete without their keys', () => {
+  it('hides Run now and Delete without their keys', () => {
     renderCard({ allowed_actions: ['edit', 'pause'] });
     openMenu();
 
-    expect(menuItems()).toEqual(['Run History']);
+    expect(menuItems()).toEqual(['Edit', 'Run history']);
   });
 
-  it('Run History opens the Runs section of the schedule without opening the details page', () => {
+  it('Run history opens the Runs section of the schedule without opening the details page', () => {
     const { onOpenForm, onOpenRunHistory } = renderCard();
 
     openMenu();
-    fireEvent.click(screen.getByText('Run History'));
+    fireEvent.click(screen.getByText('Run history'));
 
     expect(onOpenRunHistory.mock.calls).toEqual([[7]]);
     expect(onOpenForm).not.toHaveBeenCalled();
@@ -293,14 +293,14 @@ describe('EntityScheduleCard', () => {
       renderCard({ allowed_actions: ['edit', 'pause', 'delete'] }, { entityType: 'pipeline' });
       openMenu();
 
-      expect(menuItems()).toEqual(['Run History', 'Delete']);
+      expect(menuItems()).toEqual(['Edit', 'Run history', 'Delete']);
     });
 
-    it('hides Run History without the edit action', () => {
+    it('hides Run history without the edit action', () => {
       renderCard({ allowed_actions: ['run', 'delete'] }, { entityType: 'pipeline' });
       openMenu();
 
-      expect(menuItems()).toEqual(['Run Now', 'Delete']);
+      expect(menuItems()).toEqual(['Run now', 'Delete']);
     });
   });
 });

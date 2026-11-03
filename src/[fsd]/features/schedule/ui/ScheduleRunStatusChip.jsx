@@ -60,7 +60,14 @@ const scheduleRunStatusChipStyles = statusColor => ({
   }),
   progress: { marginLeft: '0.375rem', color: statusColor },
   // The word takes the status colour, as in the schedule card
-  text: { border: 'none', color: statusColor, '& .MuiChip-label': { paddingLeft: '0.25rem' } },
+  text: {
+    border: 'none',
+    height: 'auto',
+    backgroundColor: 'transparent',
+    color: statusColor,
+    '& .MuiChip-label': { padding: '0 0 0 0.25rem' },
+    '& .MuiChip-icon': { marginLeft: 0 },
+  },
   // A 20 px hit area around the icon
   iconOnly: ({ palette }) => ({
     display: 'inline-flex',
