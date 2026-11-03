@@ -266,14 +266,14 @@ describe('RunHistoryListItem re-rendering', () => {
 describe('RunHistoryListItem schedule run cells', () => {
   const COLUMNS = [
     { id: 'schedule', label: 'Schedule', width: '7.5rem', render: () => 'Sched Monday digest for the squad' },
-    { id: 'status', label: 'Status', width: '5.75rem', render: () => 'Waiting for input' },
+    { id: 'status', label: 'Status', width: '5.75rem', render: () => 'Waiting for approval' },
     { id: 'empty', label: 'Empty', width: '5rem', render: () => '-' },
   ];
 
   it('gives a cut Status or Schedule value its full text in a tooltip', () => {
     renderItem(CONVERSATION_ROW, { extraColumns: COLUMNS });
 
-    expect(screen.getByText('Waiting for input')).toHaveAttribute('data-tooltip', 'Waiting for input');
+    expect(screen.getByText('Waiting for approval')).toHaveAttribute('data-tooltip', 'Waiting for approval');
     expect(screen.getByText('Sched Monday digest for the squad')).toHaveAttribute(
       'data-tooltip',
       'Sched Monday digest for the squad',

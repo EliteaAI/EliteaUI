@@ -6,7 +6,7 @@ import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
 import { buildErrorMessage } from '@/common/utils.jsx';
 
-import { findRunAnswer, isRunActive } from '../helpers';
+import { findPendingAuthAction, findRunAnswer, isRunActive } from '../helpers';
 
 const POLLING_INTERVAL_MS = 3000;
 const RUN_POLLING_INTERVAL_MS = 2000;
@@ -102,6 +102,7 @@ export const useScheduleRunConversation = run => {
     return {
       conversationUuid: currentData?.uuid,
       pausedMessageId: messages.at(-1)?.id,
+      authAction: findPendingAuthAction(messages.at(-1)),
       answer: findRunAnswer(messages),
     };
   }, [currentData]);

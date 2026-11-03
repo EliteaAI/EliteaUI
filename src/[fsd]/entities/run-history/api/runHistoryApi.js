@@ -76,11 +76,31 @@ export const runHistoryApi = eliteaApi
         ],
       }),
       // action is 'approve' or 'reject'; await_task_timeout -1 returns without waiting for the run.
+      // A sign-in pause (`mcpAuth` set) resumes with the mcp_auth fields; a sensitive-tool pause with hitl_*.
       decideWaitingRun: build.mutation({
-        query: ({ projectId, conversationUuid, messageId, action }) => ({
+        query: ({ projectId, conversationUuid, messageId, action, mcpAuth }) => ({
           url: `/elitea_core/continue_predict/prompt_lib/${projectId}/${conversationUuid}`,
           method: 'POST',
-          body: { message_id: messageId, hitl_resume: true, hitl_action: action, await_task_timeout: -1 },
+          body: mcpAuth
+            ? {
+                message_id: messageId,
+                mcp_auth_resume: true,
+                mcp_auth_action: action === 'approve' ? 'authorize' : 'skip',
+                authorization_request_id: mcpAuth.authorizationRequestId,
+                mcp_auth_decisions: [
+                  {
+                    interrupt_id: mcpAuth.authorizationRequestId,
+                    tool_call_id: mcpAuth.toolCallId,
+                    child_thread_id: mcpAuth.childThreadId,
+                    action: action === 'approve' ? 'authorize' : 'skip',
+                    value: '',
+                  },
+                ],
+                // Fresh tokens only for an approval; a rejection needs none
+                ...(action === 'approve' && { mcp_tokens: mcpAuth.mcpTokens }),
+                await_task_timeout: -1,
+              }
+            : { message_id: messageId, hitl_resume: true, hitl_action: action, await_task_timeout: -1 },
         }),
         invalidatesTags: [LIST_TAG],
       }),
