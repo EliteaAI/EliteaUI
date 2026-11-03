@@ -4,8 +4,15 @@ import { useFormik } from 'formik';
 import { useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
 
-import { Box, CircularProgress, Tooltip } from '@mui/material';
+import { Box, CircularProgress, FormControlLabel, Tooltip, Typography } from '@mui/material';
 
+import {
+  ConsentCredentialPicker,
+  OwnerConsentConstants,
+  OwnerConsentHelpers,
+  useGetOwnerConsentStatusQuery,
+  useTokenConsentActionMutation,
+} from '@/[fsd]/features/owner-consent';
 import {
   DrawerPage,
   DrawerPageHeader,
@@ -15,7 +22,7 @@ import {
   TokenScopeHelpers,
 } from '@/[fsd]/features/settings';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
-import { Button, Input } from '@/[fsd]/shared/ui';
+import { Button, Checkbox, Input } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useTokenCreateMutation, useTokenListQuery } from '@/api/auth';
 import { DEFAULT_TOKEN_EXPIRATION_DAYS, EXPIRATION_MEASURES, MAX_VARIABLES_LENGTH } from '@/common/constants';
@@ -42,6 +49,29 @@ const CreatePersonalToken = memo(() => {
   const [restricted, setRestricted] = useState(false);
   const [scopeProjects, setScopeProjects] = useState([]);
   const [scopeOperations, setScopeOperations] = useState(TokenScopeConstants.DEFAULT_TOKEN_OPERATIONS);
+  // a restricted token may act with the owner's Microsoft sign-in for the delegated credentials they name
+  const { data: consentStatus } = useGetOwnerConsentStatusQuery();
+  const consentPossible = restricted && Boolean(consentStatus?.allowed && consentStatus?.linked);
+  // currentData: the candidates of the projects selected now, not the previous selection's while they load
+  const { currentData: offered, isFetching: isFetchingOffered } = useGetOwnerConsentStatusQuery(
+    { projects: scopeProjects },
+    { skip: !consentPossible || !scopeProjects.length },
+  );
+  const candidates = offered?.candidates;
+  const [giveConsent] = useTokenConsentActionMutation();
+  const [actWithSignIn, setActWithSignIn] = useState(false);
+  const [pickedCredentials, setPickedCredentials] = useState([]);
+  useEffect(() => {
+    // a pick of a project that is no longer selected goes
+    const keys = (candidates || []).map(OwnerConsentHelpers.credentialKey);
+    setPickedCredentials(picked =>
+      picked.every(key => keys.includes(key)) ? picked : picked.filter(key => keys.includes(key)),
+    );
+  }, [candidates]);
+  const canOfferConsent = consentPossible && candidates?.length > 0;
+  const noDelegatedCredentials =
+    consentPossible && scopeProjects.length > 0 && !isFetchingOffered && candidates?.length === 0;
+  const consentWanted = canOfferConsent && actWithSignIn;
 
   const formik = useFormik({
     initialValues: {
@@ -65,6 +95,15 @@ const CreatePersonalToken = memo(() => {
         }),
       });
       if (!error) {
+        if (consentWanted && tokenData?.id) {
+          // the token exists either way; a refused consent is said and can be given again from the token list
+          const { error: consentError } = await giveConsent({
+            tokenId: tokenData.id,
+            action: 'consent',
+            credentials: OwnerConsentHelpers.pickedCredentials(candidates, pickedCredentials),
+          });
+          if (consentError) toastError(buildErrorMessage(consentError));
+        }
         setData(tokenData);
         setOpenTokenDialog(true);
         await refetch();
@@ -120,7 +159,14 @@ const CreatePersonalToken = memo(() => {
     : '';
 
   const isGenerateDisabled =
-    !formik.values.name || nameHasError || isGenerating || !!data.uuid || Boolean(scopeError);
+    !formik.values.name ||
+    nameHasError ||
+    isGenerating ||
+    !!data.uuid ||
+    Boolean(scopeError) ||
+    (consentWanted && !OwnerConsentHelpers.pickedCredentials(candidates, pickedCredentials).length);
+
+  const onToggleActWithSignIn = useCallback(event => setActWithSignIn(event.target.checked), []);
 
   const { setFieldValue } = formik;
   const expirationMeasure = formik.values.measure;
@@ -256,6 +302,44 @@ const CreatePersonalToken = memo(() => {
                 onProjectsChange={setScopeProjects}
                 onOperationsChange={setScopeOperations}
               />
+              {canOfferConsent && (
+                <Box sx={styles.consentField}>
+                  <FormControlLabel
+                    label={OwnerConsentConstants.TOKEN_CHECKBOX_LABEL}
+                    control={
+                      <Checkbox.BaseCheckbox
+                        size="small"
+                        checked={actWithSignIn}
+                        onChange={onToggleActWithSignIn}
+                        inputProps={{ 'data-testid': 'create-personal-token-act-with-sign-in' }}
+                      />
+                    }
+                  />
+                  {actWithSignIn && (
+                    <ConsentCredentialPicker
+                      candidates={candidates}
+                      picked={pickedCredentials}
+                      onChange={setPickedCredentials}
+                      testId="create-personal-token-consent-credentials"
+                    />
+                  )}
+                  <Typography
+                    variant="bodySmall"
+                    sx={styles.consentHint}
+                  >
+                    {OwnerConsentConstants.TOKEN_CHECKBOX_HINT}
+                  </Typography>
+                </Box>
+              )}
+              {noDelegatedCredentials && (
+                <Typography
+                  variant="bodySmall"
+                  sx={styles.consentField}
+                  data-testid="create-personal-token-no-delegated-credentials"
+                >
+                  {OwnerConsentConstants.NO_DELEGATED_CREDENTIALS_TEXT}
+                </Typography>
+              )}
             </Box>
           </Box>
         </Box>
@@ -343,6 +427,14 @@ const createPersonalTokenStyles = () => ({
     width: '5.375rem',
     paddingTop: '0.125rem',
   },
+  consentField: {
+    width: '30rem',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  consentHint: ({ palette }) => ({
+    color: palette.text.secondary,
+  }),
 });
 
 export default memo(CreatePersonalToken);
