@@ -2,6 +2,7 @@ import { memo, useCallback } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { INPUT_VARIANTS } from '@/[fsd]/shared/ui/input';
 import StyledInputEnhancer from '@/[fsd]/shared/ui/input/StyledInputEnhancer';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import VariableList from '@/components/VariableList';
@@ -85,6 +86,8 @@ const SchedulePromptSection = memo(props => {
             tooltipDescription={PROMPT_INFO}
             tooltipPinnable
             minRows={4}
+            variantInput={INPUT_VARIANTS.outlined}
+            InputLabelProps={{ shrink: true }}
             value={prompt}
             onChange={handlePromptChange}
             error={!!promptError}
