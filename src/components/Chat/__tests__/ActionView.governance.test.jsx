@@ -109,4 +109,28 @@ describe('ActionView governed creation card (EL-7269)', () => {
     expect(line.textContent).not.toContain('STALE_READINESS');
     expect(screen.getByTestId('chat-governance-card')).toHaveTextContent('version:41');
   });
+
+  it('EL-7228 shows one card per changed entity: the toolkit and each version using it, once each', () => {
+    const linked = JSON.stringify({
+      governance_requests: {
+        entity_kind: 'toolkit',
+        entity_id: 3,
+        filed: [],
+        versions: [
+          { entity_kind: 'version', entity_id: 41, filed: [{ key: 'binding:41', kind: 'binding', id: 'b' }] },
+          { entity_kind: 'version', entity_id: 42, filed: [], refused: 'DEPENDENCY_UNAVAILABLE' },
+          { entity_kind: 'version', entity_id: 41, filed: [] },
+        ],
+      },
+    });
+    wrap({ ...RELOADED, name: 'patch_elitea_core_tool', traceStepId: undefined, toolOutputs: linked });
+    expect(screen.getAllByTestId('chat-governance-card').map(card => card.textContent)).toEqual([
+      'toolkit:3',
+      'version:41',
+      'version:42',
+    ]);
+    const refused = screen.getAllByTestId('chat-governance-auto-request-refused');
+    expect(refused).toHaveLength(1);
+    expect(refused[0]).toHaveTextContent('the service could not be reached');
+  });
 });

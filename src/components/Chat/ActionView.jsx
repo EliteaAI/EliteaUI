@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -459,22 +459,24 @@ const ActionView = memo(props => {
         )}
 
         {/* (#7269) what the run created through the Elitea MCP and requested for you: its status */}
-        {governedCreation?.refused && (
-          <Typography
-            variant="bodySmall"
-            color="text.secondary"
-            data-testid="chat-governance-auto-request-refused"
-          >
-            {ProjectGovernanceHelpers.autoRequestRefusedText(governedCreation.refused)}
-          </Typography>
-        )}
-        {governedCreation && (
-          <GovernanceReadinessCard
-            entityKind={governedCreation.entityKind}
-            entityId={governedCreation.entityId}
-            testId="chat-governance-readiness"
-          />
-        )}
+        {governedCreation?.entities.map(entity => (
+          <Fragment key={`${entity.entityKind}:${entity.entityId}`}>
+            {entity.refused && (
+              <Typography
+                variant="bodySmall"
+                color="text.secondary"
+                data-testid="chat-governance-auto-request-refused"
+              >
+                {ProjectGovernanceHelpers.autoRequestRefusedText(entity.refused)}
+              </Typography>
+            )}
+            <GovernanceReadinessCard
+              entityKind={entity.entityKind}
+              entityId={entity.entityId}
+              testId="chat-governance-readiness"
+            />
+          </Fragment>
+        ))}
 
         {/* Previous executions from merged same-name actions - thinking collapsed, content shown */}
         {previousExecutions.map((execution, idx) => (

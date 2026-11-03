@@ -22,6 +22,7 @@ import { Tab } from '@/[fsd]/shared/ui';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
+import BindingOperationsFields from './BindingOperationsFields';
 import GovernanceApproveDialog from './GovernanceApproveDialog';
 import GovernanceRowsTable from './GovernanceRowsTable';
 import GrantAlsoToFields from './GrantAlsoToFields';
@@ -56,6 +57,7 @@ const ProjectGovernanceContent = memo(() => {
   const { toastError, toastInfo, toastSuccess } = useToast();
   const [tab, setTab] = useState('inbox');
   const [approving, setApproving] = useState(null);
+  const [keptOperations, setKeptOperations] = useState([]);
   const [alsoMembers, setAlsoMembers] = useState([]);
   const [alsoRole, setAlsoRole] = useState('');
 
@@ -172,7 +174,10 @@ const ProjectGovernanceContent = memo(() => {
     [send, toastError, toastInfo, toastSuccess],
   );
 
-  const handleApprove = useCallback((kind, row, item) => setApproving({ kind, row, item }), []);
+  const handleApprove = useCallback((kind, row, item) => {
+    setApproving({ kind, row, item });
+    setKeptOperations(Array.isArray(row.platform_operations) ? row.platform_operations : []);
+  }, []);
   const handleApproveClose = useCallback(() => {
     setApproving(null);
     setAlsoMembers([]);
@@ -186,7 +191,9 @@ const ProjectGovernanceContent = memo(() => {
               ...(alsoMembers.length && { also_grant_to: alsoMembers }),
               ...(alsoRole && { also_grant_role: alsoRole }),
             }
-          : {};
+          : GovernanceHelpers.takesOperations(approving)
+            ? { platform_operations: keptOperations }
+            : {};
       return send(
         approving.kind,
         approving.row,
@@ -196,7 +203,7 @@ const ProjectGovernanceContent = memo(() => {
         }),
       );
     },
-    [alsoMembers, alsoRole, approving, send],
+    [alsoMembers, alsoRole, approving, keptOperations, send],
   );
   const handleApproveDone = useCallback(
     outcome => {
@@ -274,6 +281,13 @@ const ProjectGovernanceContent = memo(() => {
         onClose={handleApproveClose}
         onDone={handleApproveDone}
       >
+        {GovernanceHelpers.takesOperations(approving) && (
+          <BindingOperationsFields
+            proposed={approving.row.platform_operations}
+            kept={keptOperations}
+            onChange={setKeptOperations}
+          />
+        )}
         {GovernanceHelpers.takesSiblings(approving) && (
           <GrantAlsoToFields
             members={alsoMembers}

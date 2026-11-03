@@ -88,8 +88,8 @@ describe('what a run created (EL-7269)', () => {
       result: {},
       governance_requests: { entity_kind: 'version', entity_id: 7, filed: [] },
     });
-    expect(H.governanceRequestOf(output)).toEqual({ entityKind: 'version', entityId: 7, refused: null });
-    expect(H.governanceRequestOf({ governance_requests: { entity_kind: 'toolkit', entity_id: 3 } })).toEqual({
+    expect(H.governanceRequestOf(output)).toMatchObject({ entityKind: 'version', entityId: 7, refused: null });
+    expect(H.governanceRequestOf({ governance_requests: { entity_kind: 'toolkit', entity_id: 3 } })).toMatchObject({
       entityKind: 'toolkit',
       entityId: 3,
       refused: null,
@@ -196,12 +196,52 @@ describe('project governance constants (EL-7269)', () => {
     const found = H.governanceRequestOf({
       governance_requests: { entity_kind: 'version', entity_id: 7, filed: [], refused: 'STALE_READINESS' },
     });
-    expect(found).toEqual({ entityKind: 'version', entityId: 7, refused: 'STALE_READINESS' });
+    expect(found).toMatchObject({ entityKind: 'version', entityId: 7, refused: 'STALE_READINESS' });
+    expect(found.entities).toEqual([{ entityKind: 'version', entityId: 7, refused: 'STALE_READINESS' }]);
     const text = H.autoRequestRefusedText(found.refused);
     expect(text).toBe(
       'The approval requests for it could not be filed automatically (what it needs changed meanwhile); request what is missing on the card.',
     );
     expect(text).not.toContain('STALE_READINESS');
     expect(H.autoRequestRefusedText('SOMETHING_NEW')).toContain('(they were refused)');
+  });
+
+  it('EL-7228 lists a changed toolkit and every version using it once each, skipping malformed rows', () => {
+    const found = H.governanceRequestOf({
+      governance_requests: {
+        entity_kind: 'toolkit',
+        entity_id: 3,
+        versions: [
+          { entity_kind: 'version', entity_id: 41 },
+          { entity_kind: 'version', entity_id: '42' },
+          { entity_kind: 'version', entity_id: 41, refused: 'FORBIDDEN' },
+          { entity_kind: 'version', entity_id: 43, refused: 'FORBIDDEN' },
+        ],
+      },
+    });
+    expect(found.entities).toEqual([
+      { entityKind: 'toolkit', entityId: 3, refused: null },
+      { entityKind: 'version', entityId: 41, refused: null },
+      { entityKind: 'version', entityId: 43, refused: 'FORBIDDEN' },
+    ]);
+  });
+
+  it('EL-7228 names the operations of an identity, and offers them to trim on its approval only', () => {
+    expect(H.operationsLabel(['read', 'build'])).toBe('Operations: read, build');
+    expect(H.operationsLabel(null)).toBe('Read only');
+    const row = { platform_operations: ['read', 'build'] };
+    expect(H.takesOperations({ kind: 'binding', row, item: { action: 'activate' } })).toBe(true);
+    expect(H.takesOperations({ kind: 'binding', row, item: { action: 'suspend' } })).toBe(false);
+    expect(H.takesOperations({ kind: 'binding', row: {}, item: { action: 'activate' } })).toBe(false);
+    expect(
+      H.readinessText({
+        kind: 'binding',
+        state: 'pending_approval',
+        operations: ['read', 'build', 'credentials', 'run'],
+      }),
+    ).toBe('Its identity (read, build, credentials, run) waits for approval');
+    expect(H.readinessText({ kind: 'binding', state: 'pending_approval' })).toBe(
+      'Its identity waits for approval',
+    );
   });
 });

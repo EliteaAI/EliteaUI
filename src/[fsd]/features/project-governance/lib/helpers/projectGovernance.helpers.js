@@ -43,11 +43,23 @@ export const rowTitle = (kind, row) => {
 };
 
 // What a row of a list shows in its columns (besides its title and state)
+// (#7228) what an agent identity lets the agent do on the platform through the internal Elitea tools
+export const operationsLabel = operations =>
+  Array.isArray(operations) && operations.length ? `Operations: ${operations.join(', ')}` : 'Read only';
+
+// (#7228) an agent identity's approval keeps the proposed operations, or part of them (never more)
+export const takesOperations = approving =>
+  approving?.kind === KINDS.binding &&
+  approving?.item?.action === 'activate' &&
+  Array.isArray(approving?.row?.platform_operations) &&
+  approving.row.platform_operations.length > 0;
+
 export const rowDetails = (kind, row) => {
   switch (kind) {
     case KINDS.binding:
       return [
         row.identity_mode,
+        operationsLabel(row.platform_operations),
         row.digest_status === 'changed' ? 'Agent changed since approval' : null,
         `by ${personName(row.created_by)}`,
       ];
@@ -195,8 +207,14 @@ export const inboxItems = lists =>
 
 // --- the Save card (#7269 phase 2): what an entity still needs to run governed, in words -------------------------
 
-export const readinessText = item =>
-  ITEM_TEXT[item.kind]?.[item.state] ?? (item.kind === 'blocking' ? 'Stops a scheduled run' : item.state);
+export const readinessText = item => {
+  const text =
+    ITEM_TEXT[item.kind]?.[item.state] ?? (item.kind === 'blocking' ? 'Stops a scheduled run' : item.state);
+  // (#7228) an identity names what its agent may do: "Its identity (read, build, credentials, run) waits for approval"
+  return item.kind === 'binding' && Array.isArray(item.operations) && item.operations.length
+    ? text.replace(/^Its identity/, `Its identity (${item.operations.join(', ')})`)
+    : text;
+};
 
 // A personal reference of the person's own whose value is still to be written: the card writes it inline
 export const isValueItem = item =>
@@ -306,14 +324,26 @@ export const governanceRequestOf = output => {
     }
   }
   const found = value && typeof value === 'object' ? value.governance_requests : null;
-  return found && found.entity_kind && Number.isInteger(found.entity_id)
-    ? {
-        entityKind: found.entity_kind,
-        entityId: found.entity_id,
-        // (#7228) an automatic request that could not be filed reads as a sentence, never as its JSON
-        refused: typeof found.refused === 'string' ? found.refused : null,
-      }
-    : null;
+  const entityOf = part =>
+    part && part.entity_kind && Number.isInteger(part.entity_id)
+      ? {
+          entityKind: part.entity_kind,
+          entityId: part.entity_id,
+          // (#7228) an automatic request that could not be filed reads as a sentence, never as its JSON
+          refused: typeof part.refused === 'string' ? part.refused : null,
+        }
+      : null;
+  const main = entityOf(found);
+  if (!main) return null;
+  // (#7228) a changed toolkit also files for every agent version using it: one card per changed entity, once each
+  const seen = new Set();
+  const entities = [main, ...(Array.isArray(found.versions) ? found.versions.map(entityOf) : [])].filter(entity => {
+    const key = entity && `${entity.entityKind}:${entity.entityId}`;
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  return { ...main, entities };
 };
 
 // (#7228) an automatic request of a governed run that could not be filed, in words (no code, no JSON): the card below
