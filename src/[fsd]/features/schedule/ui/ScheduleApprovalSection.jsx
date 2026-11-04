@@ -9,7 +9,7 @@ import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import RadioButtonGroup from '@/[fsd]/shared/ui/checkbox/RadioButtonGroup';
 import RouteDefinitions from '@/routes';
 
-import { APPROVAL_RULE, APPROVAL_RULE_INFO } from '../lib/constants';
+import { APPROVAL_RULE, APPROVAL_RULE_INFO, VISUALLY_HIDDEN } from '../lib/constants';
 import FieldError from './FieldError';
 
 export const APPROVAL_RULE_ITEMS = [
@@ -56,7 +56,7 @@ const ScheduleApprovalSection = memo(props => {
       <Typography
         id="schedule-approval-rule-label"
         variant="labelMedium"
-        sx={styles.srOnly}
+        sx={VISUALLY_HIDDEN}
       >
         Approval rule
       </Typography>
@@ -106,16 +106,5 @@ const ScheduleApprovalSection = memo(props => {
 });
 
 ScheduleApprovalSection.displayName = 'ScheduleApprovalSection';
-
-// The section title above names the group; the label stays for screen readers and aria-labelledby
-const styles = {
-  srOnly: {
-    position: 'absolute',
-    width: '0.0625rem',
-    height: '0.0625rem',
-    overflow: 'hidden',
-    clip: 'rect(0 0 0 0)',
-  },
-};
 
 export default ScheduleApprovalSection;
