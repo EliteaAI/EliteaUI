@@ -63,7 +63,7 @@ const TOOL_MENU_CONSTANTS = {
 };
 
 const ToolMenu = memo(props => {
-  const { applicationId } = props;
+  const { applicationId, children } = props;
 
   const styles = useMemo(() => toolMenuStyles(), []);
 
@@ -675,6 +675,7 @@ const ToolMenu = memo(props => {
             </BaseBtn>
           </Box>
         </Tooltip>
+        {children}
       </Box>
 
       {/* Toolkit Dropdown */}

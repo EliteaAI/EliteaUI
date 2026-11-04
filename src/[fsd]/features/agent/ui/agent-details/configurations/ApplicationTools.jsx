@@ -1,10 +1,10 @@
-import { memo, useMemo, useRef, useState } from 'react';
+import { memo, useMemo, useRef } from 'react';
 
 import { useFormikContext } from 'formik';
 
 import { Box, Typography } from '@mui/material';
 
-import { Switch } from '@/[fsd]/features/agent/ui/agent-details/configurations';
+import { Modules, Switch } from '@/[fsd]/features/agent/ui/agent-details/configurations';
 import {
   ToolkitsHelpers,
   useAvailableInternalTools,
@@ -36,10 +36,6 @@ const ApplicationTools = memo(props => {
   const isVersionLocked = versionStatus === 'published' || versionStatus === 'embedded';
   const { toolkitSchemas } = useGetCurrentToolkitSchemas();
   const isMcpVisible = useIsMcpVisible();
-  // Use POC approach: get available internal tools based on toolkit availability
-  // Include agent-only tools since this is agent configuration
-  const [showAllInternalTools, setShowAllInternalTools] = useState(false);
-
   const currentInternalTools = useMemo(
     () => values?.version_details?.meta?.internal_tools || [],
     [values?.version_details?.meta?.internal_tools],
@@ -71,36 +67,20 @@ const ApplicationTools = memo(props => {
     return sorted;
   }, [availableInternalTools, currentInternalTools]);
 
-  const { displayedInternalTools, canToggleTools } = useMemo(() => {
-    const totalTools = sortedInternalTools.length;
-    const selectedCount = currentInternalTools.length;
-
-    // Minimum tools to show: at least 4, or all selected tools if more than 4 are selected
-    const minToolsToShow = Math.max(4, selectedCount);
-    const canToggle = totalTools > minToolsToShow;
-
-    if (showAllInternalTools || !canToggle) {
-      return {
-        displayedInternalTools: sortedInternalTools,
-        canToggleTools: canToggle,
-      };
-    }
-
-    return {
-      displayedInternalTools: sortedInternalTools.slice(0, minToolsToShow),
-      canToggleTools: canToggle,
-    };
-  }, [sortedInternalTools, showAllInternalTools, currentInternalTools.length]);
-
-  // For pipeline pages show only the attachments card; for agent pages show all available tools.
+  // For pipeline pages show only the attachments card; agent pages use the Modules dropdown.
   const pipelineVisibleTools = useMemo(
-    () => (isPipeline ? sortedInternalTools.filter(t => t.name === 'attachments') : displayedInternalTools),
-    [isPipeline, sortedInternalTools, displayedInternalTools],
+    () => (isPipeline ? sortedInternalTools.filter(t => t.name === 'attachments') : []),
+    [isPipeline, sortedInternalTools],
   );
 
-  const shouldShowInternalTools = isPipeline
-    ? pipelineVisibleTools.length > 0
-    : !hidePythonSandbox && sortedInternalTools.length > 0;
+  const shouldShowModulesMenu = !isPipeline && !hidePythonSandbox && sortedInternalTools.length > 0;
+
+  const modulesMenu = shouldShowModulesMenu && (
+    <Modules.AgentModulesMenu
+      modules={sortedInternalTools}
+      readOnly={disabled}
+    />
+  );
 
   const markedDuplicateTools = useMemo(
     () =>
@@ -129,13 +109,15 @@ const ApplicationTools = memo(props => {
           title,
           content: (
             <Box sx={[styles.containerStyles, containerSX]}>
-              {!disabled && (
+              {!disabled ? (
                 <Box
-                  sx={{ margin: '.75rem 0' }}
+                  sx={styles.actionsRow}
                   data-tour={TourTargetConstants.AGENT_TOUR_TARGET_IDS.tools}
                 >
-                  <ToolMenu applicationId={applicationId} />
+                  <ToolMenu applicationId={applicationId}>{modulesMenu}</ToolMenu>
                 </Box>
+              ) : (
+                modulesMenu && <Box sx={styles.actionsRow}>{modulesMenu}</Box>
               )}
 
               {markedDuplicateTools.map((markedDuplicateTool, index) => (
@@ -151,11 +133,8 @@ const ApplicationTools = memo(props => {
                 />
               ))}
 
-              {shouldShowInternalTools && (
-                <Box
-                  sx={styles.internalToolsContainer}
-                  data-tour={TourTargetConstants.AGENT_TOUR_TARGET_IDS.advancedSettings}
-                >
+              {pipelineVisibleTools.length > 0 && (
+                <Box sx={styles.internalToolsContainer}>
                   <Typography sx={styles.internalToolsTitle}>MODULES</Typography>
                   <Box sx={styles.internalToolsGrid}>
                     {pipelineVisibleTools.map(tool => (
@@ -170,16 +149,6 @@ const ApplicationTools = memo(props => {
                       />
                     ))}
                   </Box>
-                  {!isPipeline && canToggleTools && (
-                    <Box sx={styles.showMoreContainer}>
-                      <Typography
-                        onClick={() => setShowAllInternalTools(!showAllInternalTools)}
-                        sx={styles.showMoreButton}
-                      >
-                        {showAllInternalTools ? 'Show less' : 'Show all'}
-                      </Typography>
-                    </Box>
-                  )}
                 </Box>
               )}
             </Box>
@@ -201,6 +170,12 @@ const styles = {
     flexDirection: 'column',
     gap: 1,
   },
+  actionsRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0.5rem',
+    margin: '0.75rem 0',
+  },
   internalToolsTitle: {
     margin: '0.5rem 0 1rem',
     fontWeight: 500,
@@ -219,23 +194,6 @@ const styles = {
     gap: '0.5rem',
     width: '100%',
   },
-  showMoreContainer: {
-    display: 'flex',
-    justifyContent: 'flex-start',
-    marginTop: '0.75rem',
-  },
-  showMoreButton: ({ palette }) => ({
-    color: palette.text.showMore,
-    fontSize: '0.75rem',
-    fontWeight: 400,
-    padding: '0.375rem 0',
-
-    '&:hover': {
-      backgroundColor: 'transparent',
-      opacity: 0.8,
-      cursor: 'pointer',
-    },
-  }),
 };
 
 export default ApplicationTools;
