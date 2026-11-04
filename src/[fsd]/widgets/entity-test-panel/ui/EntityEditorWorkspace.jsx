@@ -8,6 +8,9 @@ import EntityTestPanel from './EntityTestPanel';
 
 /**
  * Editor page layout: configuration with a Test button on top, plus an on-demand Test panel on the right.
+ * While the panel is open the Test button is hidden, as for Pipelines, and the other toolbar actions move
+ * into the panel header row, so the configuration gets that row back. Small windows stack the panel
+ * below, so there the actions stay above the configuration.
  * `renderConfig({ isConfigStacked })` lays the sections out in one column while the panel is open.
  * Opening, closing or going full screen only changes styles, so nothing inside is remounted.
  */
@@ -28,6 +31,7 @@ const EntityEditorWorkspace = memo(props => {
   const { isSmallWindow } = useIsSmallWindow();
   const isConfigHidden = isTestPanelOpen && isFullScreen;
   const isConfigStacked = isTestPanelOpen || isSmallWindow;
+  const isToolbarInPanel = isTestPanelOpen && !isSmallWindow;
 
   // Same element while the inputs are unchanged, so chat updates don't re-render the configuration
   const config = useMemo(() => renderConfig({ isConfigStacked }), [renderConfig, isConfigStacked]);
@@ -41,10 +45,12 @@ const EntityEditorWorkspace = memo(props => {
       data-testid={`${testIdPrefix}-editor-workspace`}
     >
       <Box sx={styles.configArea}>
-        <Box sx={styles.toolbar}>
-          {toolbarActions}
-          {testButton}
-        </Box>
+        {!isToolbarInPanel && (
+          <Box sx={styles.toolbar}>
+            {toolbarActions}
+            {!isTestPanelOpen && testButton}
+          </Box>
+        )}
         <Box sx={styles.configBody}>{config}</Box>
       </Box>
       <EntityTestPanel
@@ -52,6 +58,7 @@ const EntityEditorWorkspace = memo(props => {
         isFullWidth={isSmallWindow || isFullScreen}
         workspaceRef={workspaceRef}
         storageKeyPrefix={storageKeyPrefix}
+        headerActions={isToolbarInPanel ? toolbarActions : null}
         controls={testPanelControls}
         testIdPrefix={testIdPrefix}
       >

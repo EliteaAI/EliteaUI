@@ -5,7 +5,16 @@ import EntityTestPanelShell from './EntityTestPanelShell';
 import TestPanelResizeHandle from './TestPanelResizeHandle';
 
 const EntityTestPanel = memo(props => {
-  const { isOpen, isFullWidth, workspaceRef, storageKeyPrefix, controls, children, testIdPrefix } = props;
+  const {
+    isOpen,
+    isFullWidth,
+    workspaceRef,
+    storageKeyPrefix,
+    headerActions,
+    controls,
+    children,
+    testIdPrefix,
+  } = props;
 
   const { containerRef, width, handleResizeStart } = useTestPanelWidth({ workspaceRef, storageKeyPrefix });
 
@@ -15,6 +24,7 @@ const EntityTestPanel = memo(props => {
       isOpen={isOpen}
       width={width}
       isFullWidth={isFullWidth}
+      headerActions={headerActions}
       controls={controls}
       testId={`${testIdPrefix}-test-panel`}
       resizeHandle={

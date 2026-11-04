@@ -13,6 +13,7 @@ const EntityTestPanelShell = memo(props => {
     panelRef,
     isFullWidth = false,
     resizeHandle,
+    headerActions,
     controls,
     children,
     testId = 'test-panel',
@@ -28,7 +29,10 @@ const EntityTestPanelShell = memo(props => {
       data-testid={testId}
     >
       {resizeHandle}
-      <Box sx={styles.header}>{controls}</Box>
+      <Box sx={styles.header}>
+        {headerActions && <Box sx={styles.headerActions}>{headerActions}</Box>}
+        {controls}
+      </Box>
       <Box sx={styles.body}>{children}</Box>
     </Box>
   );
@@ -58,6 +62,12 @@ const entityTestPanelShellStyles = (isOpen, width, isFullWidth) => ({
     height: '1.75rem',
     marginTop: '0.25rem',
     marginBottom: '1rem',
+  },
+  headerActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    marginRight: 'auto',
   },
   // The chat draws the bordered card itself, so this is layout only
   body: {

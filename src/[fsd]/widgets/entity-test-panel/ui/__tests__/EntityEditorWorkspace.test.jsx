@@ -77,6 +77,7 @@ describe('EntityEditorWorkspace', () => {
     expect(screen.getByTestId('config-root')).toBeVisible();
     expect(screen.getByTestId('config-root')).toHaveAttribute('data-stacked', 'false');
     expect(screen.getByTestId('test-button')).toBeVisible();
+    expect(screen.getByTestId('agent-test-panel')).not.toContainElement(screen.getByTestId('edit-with-ai'));
     expect(screen.getByTestId('edit-with-ai').nextSibling).toBe(screen.getByTestId('test-button'));
     expect(screen.getByTestId('agent-test-panel')).toHaveAttribute('aria-hidden', 'true');
     expect(screen.getByTestId('agent-test-panel')).not.toBeVisible();
@@ -87,11 +88,15 @@ describe('EntityEditorWorkspace', () => {
 
     rerenderWith({ isTestPanelOpen: true });
     expect(screen.getByTestId('agent-test-panel')).toBeVisible();
+    expect(screen.queryByTestId('test-button')).not.toBeInTheDocument();
+    expect(screen.getByTestId('agent-test-panel')).toContainElement(screen.getByTestId('edit-with-ai'));
+    expect(screen.getByTestId('edit-with-ai').parentElement.nextSibling).toBe(screen.getByTestId('close'));
     expect(screen.getByTestId('agent-test-panel-resize-handle')).toBeInTheDocument();
     expect(screen.getByTestId('config-root')).toHaveAttribute('data-stacked', 'true');
 
     rerenderWith({ isTestPanelOpen: false });
     expect(screen.getByTestId('agent-test-panel')).not.toBeVisible();
+    expect(screen.getByTestId('test-button')).toBeVisible();
     expect(screen.getByTestId('config-root')).toHaveAttribute('data-stacked', 'false');
 
     expect(mounts).toEqual({ config: 1, chat: 1 });
@@ -110,5 +115,13 @@ describe('EntityEditorWorkspace', () => {
     renderWorkspace();
 
     expect(screen.getByTestId('config-root')).toHaveAttribute('data-stacked', 'true');
+  });
+
+  it('keeps Edit with AI above the configuration when the open panel stacks below on small windows', () => {
+    smallWindow.value = true;
+    renderWorkspace({ isTestPanelOpen: true });
+
+    expect(screen.getByTestId('agent-test-panel')).not.toContainElement(screen.getByTestId('edit-with-ai'));
+    expect(screen.queryByTestId('test-button')).not.toBeInTheDocument();
   });
 });
