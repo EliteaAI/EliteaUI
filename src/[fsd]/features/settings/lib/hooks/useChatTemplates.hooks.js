@@ -11,7 +11,10 @@ import {
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 
 export const useChatTemplates = projectId => {
-  const { data: templates = [], isLoading } = useGetChatTemplatesQuery({ projectId }, { skip: !projectId });
+  const { data: templates = [], isLoading } = useGetChatTemplatesQuery(
+    { projectId },
+    { skip: !projectId, refetchOnMountOrArgChange: true },
+  );
 
   const [selectedId, setSelectedId] = useState(null);
   const [isNewDraft, setIsNewDraft] = useState(false);
