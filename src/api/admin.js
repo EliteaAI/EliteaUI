@@ -1,5 +1,5 @@
 import { PAGE_SIZE } from '@/common/constants.js';
-import { removeDuplicateObjects } from '@/common/utils.jsx';
+import { convertToJson, removeDuplicateObjects } from '@/common/utils.jsx';
 
 import { eliteaApi } from './eliteaApi.js';
 
@@ -112,7 +112,39 @@ export const apis = eliteaApi
             body,
           };
         },
-        invalidatesTags: [TAG_TYPE_USERS],
+        onQueryStarted: async ({ projectId, id, ids, roles }, { dispatch, getState, queryFulfilled }) => {
+          const updatedIds = ids ?? (id != null ? [id] : []);
+          const idSet = new Set(updatedIds);
+          const {
+            eliteaApi: { queries },
+          } = getState();
+          const patchResults = Object.keys(queries || {})
+            .filter(key => {
+              if (queries[key].endpointName !== 'userList') return false;
+              const args = convertToJson(key.replace('userList', ''));
+              return args?.projectId === projectId;
+            })
+            .map(key =>
+              dispatch(
+                eliteaApi.util.updateQueryData(
+                  'userList',
+                  convertToJson(key.replace('userList', '')),
+                  draft => {
+                    draft.rows?.forEach(row => {
+                      if (idSet.has(row.id)) {
+                        row.roles = roles;
+                      }
+                    });
+                  },
+                ),
+              ),
+            );
+          try {
+            await queryFulfilled;
+          } catch {
+            patchResults.forEach(patch => patch.undo());
+          }
+        },
       }),
       userDelete: build.mutation({
         query: ({ projectId, params }) => {
