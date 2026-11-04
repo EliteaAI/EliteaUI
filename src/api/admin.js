@@ -112,6 +112,7 @@ export const apis = eliteaApi
             body,
           };
         },
+        invalidatesTags: [TAG_TYPE_USERS],
         onQueryStarted: async ({ projectId, id, ids, roles }, { dispatch, getState, queryFulfilled }) => {
           const updatedIds = ids ?? (id != null ? [id] : []);
           const idSet = new Set(updatedIds);
