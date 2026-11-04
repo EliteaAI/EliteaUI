@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 
 import { Link as RouterLink } from 'react-router-dom';
 
@@ -30,8 +30,11 @@ const ScheduleRunDetail = memo(props => {
   const events = detail?.events ?? NO_EVENTS;
   const active = isRunActive(shown.status);
   const failed = shown.status === 'failed';
-  // A failed run opens with its log, as the log explains the error
+  // A run that fails while its card is open opens its log too, as the log explains the error
   const [logOpen, setLogOpen] = useState(failed);
+  useEffect(() => {
+    if (failed) setLogOpen(true);
+  }, [failed]);
   const styles = scheduleRunDetailStyles();
 
   if (shown.status === 'waiting_for_approval' && (schedule || run.isDraftRun))

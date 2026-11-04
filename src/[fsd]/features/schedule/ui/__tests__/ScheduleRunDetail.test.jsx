@@ -62,6 +62,29 @@ describe('ScheduleRunDetail', () => {
     expect(screen.getByRole('button', { name: 'Hide run logs' })).toBeInTheDocument();
   });
 
+  it('opens the log when a run fails while its card is open', () => {
+    const view = renderDetail({ id: 2, status: 'running' });
+    const rerenderWith = run =>
+      view.rerender(
+        <ThemeProvider theme={theme}>
+          <MemoryRouter>
+            <ScheduleRunDetail
+              run={run}
+              schedule={schedule}
+              entityType="agent"
+              applicationId={3}
+            />
+          </MemoryRouter>
+        </ThemeProvider>,
+      );
+    rerenderWith({ id: 2, status: 'success' });
+    expect(screen.queryByTestId('log-stub')).not.toBeInTheDocument();
+
+    rerenderWith({ id: 2, status: 'failed' });
+    expect(screen.getByTestId('log-stub')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Hide run logs' })).toBeInTheDocument();
+  });
+
   it('says there is no response when the run has none', () => {
     mocks.answer = '';
     renderDetail();
