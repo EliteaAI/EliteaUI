@@ -164,8 +164,14 @@ const AgentNode = memo(props => {
         <FlowEditorNodePanel.NodeConfigSection>
           {isOrphan && (
             <Box sx={agentNodeStyles.orphanWarning}>
-              <WarningAmberIcon fontSize="small" />
-              <Typography variant="caption">
+              <WarningAmberIcon
+                fontSize="small"
+                sx={agentNodeStyles.orphanWarningIcon}
+              />
+              <Typography
+                variant="caption"
+                sx={agentNodeStyles.orphanWarningText}
+              >
                 Agent not found — select a replacement or delete this node
               </Typography>
             </Box>
@@ -230,10 +236,17 @@ const agentNodeStyles = {
     gap: '.375rem',
     padding: '.375rem .75rem',
     borderRadius: '.375rem',
-    backgroundColor: palette.warning.light,
-    color: palette.warning.dark,
+    backgroundColor: palette.background.warning,
+    border: `0.0625rem solid ${palette.border.attention}`,
     width: '100%',
     boxSizing: 'border-box',
+  }),
+  orphanWarningIcon: ({ palette }) => ({
+    flexShrink: 0,
+    color: palette.icon.warning,
+  }),
+  orphanWarningText: ({ palette }) => ({
+    color: palette.text.attention,
   }),
 };
 
