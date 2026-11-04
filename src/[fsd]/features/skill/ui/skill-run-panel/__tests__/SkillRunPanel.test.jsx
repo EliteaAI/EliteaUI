@@ -20,9 +20,6 @@ vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
   useFocusRunInput: () => {},
   useSkillVersionModel: () => ({ canEditVersionModel: false }),
 }));
-vi.mock('@/[fsd]/widgets/context-budget', () => ({
-  ContextBudgetUI: { ContextBudgetInfo: () => null },
-}));
 vi.mock('@/hooks/chat/useUploadAttachments', () => ({ default: () => ({}) }));
 vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));
 
@@ -50,17 +47,19 @@ const setRunChat = overrides => {
 const renderPanel = () => {
   const ref = { current: null };
   const onClearStateChange = vi.fn();
-  render(
+  const onContextConversationChange = vi.fn();
+  const view = render(
     <ThemeProvider theme={theme}>
       <SkillRunPanel
         ref={ref}
         skillId={601}
         skillName="Reviewer"
         onClearStateChange={onClearStateChange}
+        onContextConversationChange={onContextConversationChange}
       />
     </ThemeProvider>,
   );
-  return { ref, onClearStateChange };
+  return { ref, onClearStateChange, onContextConversationChange, unmount: view.unmount };
 };
 
 const clear = ref => {
@@ -133,5 +132,44 @@ describe('SkillRunPanel clear the chat', () => {
     clear(ref);
 
     expect(fixture.runChat.onStartNewRun).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('SkillRunPanel context pill', () => {
+  it('hands the saved run to the Test panel toolbar', () => {
+    const setActiveConversation = vi.fn();
+    setRunChat({
+      activeConversation: {
+        ...runWithMessages,
+        meta: { context_strategy: { max_context_tokens: 64000 } },
+        instructions: 'Be brief',
+      },
+      setActiveConversation,
+    });
+    const { onContextConversationChange } = renderPanel();
+
+    expect(onContextConversationChange).toHaveBeenLastCalledWith({
+      activeConversation: {
+        id: 1780,
+        meta: { context_strategy: { max_context_tokens: 64000 } },
+        instructions: 'Be brief',
+      },
+      setActiveConversation,
+    });
+  });
+
+  it('reports no run before the chat is saved', () => {
+    setRunChat({ activeConversation: { chat_history: [] } });
+    const { onContextConversationChange } = renderPanel();
+
+    expect(onContextConversationChange).toHaveBeenLastCalledWith(null);
+  });
+
+  it('clears the toolbar run when the panel goes away', () => {
+    const { onContextConversationChange, unmount } = renderPanel();
+
+    unmount();
+
+    expect(onContextConversationChange).toHaveBeenLastCalledWith(null);
   });
 });

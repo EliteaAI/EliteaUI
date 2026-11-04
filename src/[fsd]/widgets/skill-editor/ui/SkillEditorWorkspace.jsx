@@ -40,6 +40,7 @@ const SkillEditorWorkspace = memo(props => {
 
   const runPaneRef = useRef();
   const [isClearDisabled, setIsClearDisabled] = useState(true);
+  const [contextConversation, setContextConversation] = useState(null);
 
   const handleClearChat = useCallback(() => {
     runPaneRef.current?.clear();
@@ -92,6 +93,8 @@ const SkillEditorWorkspace = memo(props => {
       }
       testPanelControls={
         <EntityTestPanelUI.EntityTestPanelControls
+          activeConversation={contextConversation?.activeConversation}
+          setActiveConversation={contextConversation?.setActiveConversation}
           isFullScreen={isFullScreen}
           setIsFullScreen={setIsFullScreen}
           isClearDisabled={isClearDisabled}
@@ -108,6 +111,7 @@ const SkillEditorWorkspace = memo(props => {
           onRunConversationChange={onRunConversationChange}
           onOpenRunVersion={onOpenRunVersion}
           onClearStateChange={setIsClearDisabled}
+          onContextConversationChange={setContextConversation}
           focusRequest={focusRequest}
           onFocusHandled={onFocusHandled}
         />

@@ -6,18 +6,17 @@ import { ChatBox } from '@/[fsd]/features/chat/ui';
 import { withRunStepsLimit } from '@/[fsd]/features/skill/lib/helpers';
 import { useFocusRunInput, useSkillRunChat, useSkillVersionModel } from '@/[fsd]/features/skill/lib/hooks';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
-import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents';
 
 const NO_STARTERS = [];
-const NO_CONTEXT_STRATEGY = {};
 const NO_LLM_SETTINGS = {};
 const NOOP = () => {};
 
 /**
- * Persisted run of the saved skill version. The Test panel toolbar clears it through the ref and
- * learns whether clearing is allowed from `onClearStateChange`.
+ * Persisted run of the saved skill version. The Test panel toolbar clears it through the ref, learns
+ * whether clearing is allowed from `onClearStateChange` and gets the run for its context pill from
+ * `onContextConversationChange`.
  */
 const SkillRunPanel = memo(
   forwardRef((props, ref) => {
@@ -29,6 +28,7 @@ const SkillRunPanel = memo(
       onRunConversationChange,
       onOpenRunVersion,
       onClearStateChange,
+      onContextConversationChange,
       focusRequest,
       onFocusHandled,
     } = props;
@@ -88,6 +88,33 @@ const SkillRunPanel = memo(
       onClearStateChange?.(isClearDisabled);
     }, [isClearDisabled, onClearStateChange]);
 
+    const conversationId = activeConversation?.id;
+    const contextStrategy = activeConversation?.meta?.context_strategy;
+    const conversationInstructions = activeConversation?.instructions;
+
+    useEffect(() => {
+      onContextConversationChange?.(
+        conversationId
+          ? {
+              activeConversation: {
+                id: conversationId,
+                meta: { context_strategy: contextStrategy },
+                instructions: conversationInstructions,
+              },
+              setActiveConversation,
+            }
+          : null,
+      );
+    }, [
+      contextStrategy,
+      conversationId,
+      conversationInstructions,
+      onContextConversationChange,
+      setActiveConversation,
+    ]);
+
+    useEffect(() => () => onContextConversationChange?.(null), [onContextConversationChange]);
+
     useFocusRunInput({ containerRef: panelRef, focusRequest, isReady: isChatReady, onFocusHandled });
     const styles = skillRunPanelStyles();
 
@@ -98,18 +125,6 @@ const SkillRunPanel = memo(
         sx={styles.container}
       >
         <Box sx={styles.mainContainer}>
-          {activeConversation?.id && (
-            <Box sx={styles.topBarContainer}>
-              <ContextBudgetUI.ContextBudgetInfo
-                conversationId={activeConversation.id}
-                compact
-                contextStrategy={activeConversation?.meta?.context_strategy ?? NO_CONTEXT_STRATEGY}
-                setActiveConversation={setActiveConversation}
-                conversationInstructions={activeConversation?.instructions}
-              />
-            </Box>
-          )}
-
           {isReadOnly && (
             <Typography
               variant="bodySmall"
@@ -187,13 +202,6 @@ const skillRunPanelStyles = () => ({
     flexDirection: 'column',
     height: '100%',
     gap: '0.75rem',
-  },
-  topBarContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '1rem',
-    width: '100%',
   },
   initializingContainer: {
     display: 'flex',

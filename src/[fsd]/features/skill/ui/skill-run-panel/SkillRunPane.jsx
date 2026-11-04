@@ -24,6 +24,7 @@ const SkillRunPane = memo(
       onRunConversationChange,
       onOpenRunVersion,
       onClearStateChange,
+      onContextConversationChange,
       focusRequest,
       onFocusHandled,
     } = props;
@@ -58,6 +59,7 @@ const SkillRunPane = memo(
             onRunConversationChange={onRunConversationChange}
             onOpenRunVersion={onOpenRunVersion}
             onClearStateChange={onClearStateChange}
+            onContextConversationChange={onContextConversationChange}
             focusRequest={focusRequest}
             onFocusHandled={onFocusHandled}
           />
