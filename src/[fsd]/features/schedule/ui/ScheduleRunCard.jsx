@@ -1,7 +1,7 @@
 import { memo } from 'react';
 
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Box, ButtonBase, Chip, Typography } from '@mui/material';
+import { Box, ButtonBase, Chip, Typography, alpha } from '@mui/material';
 
 import { describeRunFacts, formatRunStarted, toTriggerLabel } from '../lib/helpers';
 import ScheduleRunDetail from './ScheduleRunDetail';
@@ -91,7 +91,7 @@ const scheduleRunCardStyles = (expanded, isLatest) => ({
   root: ({ palette }) => ({
     listStyle: 'none',
     borderRadius: '0.75rem',
-    border: `0.0625rem solid ${expanded && isLatest ? `${palette.primary.main}59` : palette.border.lines}`,
+    border: `0.0625rem solid ${expanded && isLatest ? alpha(palette.primary.main, 0.35) : palette.border.lines}`,
     backgroundColor: palette.background.surface.interactive.default,
   }),
   header: {
@@ -114,7 +114,7 @@ const scheduleRunCardStyles = (expanded, isLatest) => ({
     height: '1.25rem',
     fontSize: '0.6875rem',
     color: palette.primary.main,
-    backgroundColor: `${palette.primary.main}1a`,
+    backgroundColor: alpha(palette.primary.main, 0.1),
   }),
   trigger: ({ palette }) => ({
     color: palette.text.subtle,
