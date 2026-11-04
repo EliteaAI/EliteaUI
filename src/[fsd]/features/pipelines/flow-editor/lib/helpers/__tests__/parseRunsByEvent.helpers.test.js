@@ -337,3 +337,61 @@ describe('code node in a pipeline run timeline', () => {
     expect(data.timeline[1].error).toBe('boom');
   });
 });
+
+describe('active node of a run with a duplicated node', () => {
+  const MCP_TOOLKIT = 'test-github-mcp';
+  const mcpNode = id => ({ id, type: 'mcp', toolkit_name: MCP_TOOLKIT, tool: 'get_me', transition: 'END' });
+  const llmNode = id => ({ id, type: 'llm', transition: 'END' });
+
+  const activeNodeAfter = (nodes, event) => {
+    const activeNodeIdRef = { current: '' };
+    parseRunEvent(
+      event,
+      nodes,
+      [],
+      [],
+      true,
+      vi.fn(),
+      { current: '' },
+      activeNodeIdRef,
+      { current: { data: { status: FlowEditorConstants.PipelineStatus.InProgress, timeline: [] } } },
+      'Run 1 details',
+    );
+    return activeNodeIdRef.current;
+  };
+
+  const mcpToolStart = langgraph_node => ({
+    type: SocketMessageType.AgentToolStart,
+    response_metadata: {
+      tool_name: 'get_me',
+      tool_run_id: 'mcp-call',
+      metadata: { langgraph_node, toolkit_name: MCP_TOOLKIT },
+    },
+  });
+
+  it('highlights the duplicate MCP node that runs the tool, not the original', () => {
+    const nodes = [mcpNode('MCP 1'), mcpNode('MCP 1_copy')];
+
+    expect(activeNodeAfter(nodes, mcpToolStart('MCP1_copy'))).toBe('MCP 1_copy');
+    expect(activeNodeAfter(nodes, mcpToolStart('MCP1'))).toBe('MCP 1');
+  });
+
+  it('highlights the duplicate llm node whose id extends the original id', () => {
+    const nodes = [llmNode('LLM 1'), llmNode('LLM 1_copy')];
+
+    expect(activeNodeAfter(nodes, llmStart({ langgraph_node: 'LLM1_copy' }, 'llm-call'))).toBe('LLM 1_copy');
+    expect(activeNodeAfter(nodes, llmStart({ langgraph_node: 'LLM1' }, 'llm-call'))).toBe('LLM 1');
+  });
+
+  it('highlights the duplicate when the run passes over its transitional edge', () => {
+    const nodes = [llmNode('LLM 1'), llmNode('LLM 1_copy')];
+
+    expect(activeNodeAfter(nodes, edge({ langgraph_node: 'LLM1_copy' }, 'LLM 1', {}, 'edge'))).toBe(
+      'LLM 1_copy',
+    );
+  });
+
+  it('still resolves an MCP node by its toolkit when the event has no node id', () => {
+    expect(activeNodeAfter([mcpNode('MCP 1')], mcpToolStart(undefined))).toBe('MCP 1');
+  });
+});

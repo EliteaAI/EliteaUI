@@ -55,6 +55,14 @@ const findNode = (nodes, tool_name) =>
     }
   });
 
+const findExactNode = (nodes, name) =>
+  name ? nodes.find(node => node.id === name || node.id.replaceAll(' ', '') === name) : undefined;
+
+// An exact node id wins over the loose match, so a `<name>_copy` duplicate sharing the original's
+// toolkit or id prefix is not resolved to the original
+const findRunNode = (nodes, tool_name, langgraph_node) =>
+  findExactNode(nodes, langgraph_node) || findExactNode(nodes, tool_name) || findNode(nodes, tool_name);
+
 const isNestedAgentEvent = event =>
   Boolean(
     ExecutionHierarchyHelpers.normalizeExecutionHierarchy(event.response_metadata?.metadata)
@@ -109,7 +117,11 @@ export const parseRunEvent = (
             created_at: new Date().getTime(),
             tool_run_id: event.response_metadata.tool_run_id,
           });
-          activeNodeIdRef.current = findNode(nodes, tool_name)?.id;
+          activeNodeIdRef.current = findRunNode(
+            nodes,
+            tool_name,
+            event.response_metadata.metadata?.langgraph_node,
+          )?.id;
         }
       }
       break;
@@ -145,7 +157,11 @@ export const parseRunEvent = (
             created_at: new Date().getTime(),
             tool_run_id: event.response_metadata.tool_run_id,
           });
-          activeNodeIdRef.current = findNode(nodes, real_tool_name)?.id;
+          activeNodeIdRef.current = findRunNode(
+            nodes,
+            real_tool_name,
+            event.response_metadata.metadata?.langgraph_node,
+          )?.id;
         }
       }
       break;
@@ -197,7 +213,7 @@ export const parseRunEvent = (
             state: {},
             created_at: new Date().getTime(),
           });
-          activeNodeIdRef.current = findNode(nodes, nodeId)?.id;
+          activeNodeIdRef.current = findRunNode(nodes, nodeId)?.id;
         }
       }
       break;
@@ -231,7 +247,7 @@ export const parseRunEvent = (
               runPipelineStatus.current.data.timeline[runPipelineStatus.current.data.timeline.length - 1]?.id;
             const target = event.response_metadata?.next_step;
             if (interrupt_after.includes(source) || interrupt_before.includes(target)) {
-              const foundTargetId = findNode(nodes, target)?.id;
+              const foundTargetId = findRunNode(nodes, target)?.id;
               runPipelineStatus.current.data.timeline.push({
                 id: 'interrupt',
                 source,
@@ -256,7 +272,11 @@ export const parseRunEvent = (
               event.response_metadata.metadata?.original_name ||
               event.response_metadata.metadata?.langgraph_node;
             if (tool_name) {
-              const foundNode = findNode(nodes, tool_name);
+              const foundNode = findRunNode(
+                nodes,
+                tool_name,
+                event.response_metadata.metadata?.langgraph_node,
+              );
               if (foundNode) {
                 runPipelineStatus.current.data.timeline.push({
                   id: tool_name,
