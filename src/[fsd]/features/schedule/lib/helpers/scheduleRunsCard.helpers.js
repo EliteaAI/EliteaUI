@@ -7,7 +7,7 @@ export const TRIGGER_LABELS = { cron: 'Scheduled', manual: 'Manual', test: 'Test
 
 export const toTriggerLabel = trigger => TRIGGER_LABELS[trigger] ?? trigger;
 
-const newestFirst = (a, b) => compareRunTimestamp(b.started_at, a.started_at);
+const newestFirst = (a, b) => compareRunTimestamp(b.started_at, a.started_at) || b.id - a.id;
 
 /**
  * The rows of the Runs card: the saved schedule's runs and the Test runs of the unsaved form, newest first.

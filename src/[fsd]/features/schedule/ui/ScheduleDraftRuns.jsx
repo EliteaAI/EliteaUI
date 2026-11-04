@@ -11,6 +11,7 @@ const ScheduleDraftRuns = memo(props => {
 
   return (
     <ScheduleRunsCard
+      ref={view.cardRef}
       entityType={entityType}
       applicationId={applicationId}
       view={view}

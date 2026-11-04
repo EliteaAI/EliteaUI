@@ -49,7 +49,12 @@ const ScheduleRunsCard = memo(
     const busy = hasActiveRun || runNowPending || testRunPending;
     const startRun = start => async () => {
       expectRun?.();
-      if ((await start?.()) === false) cancelExpectRun?.();
+      try {
+        if ((await start?.()) === false) cancelExpectRun?.();
+      } catch {
+        // The click handler has no caller to catch; the save hook already shows the error
+        cancelExpectRun?.();
+      }
     };
     const newestId = runs[0]?.id;
     const [trigger, setTrigger] = useState(ALL_RUNS);

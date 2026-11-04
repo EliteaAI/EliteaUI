@@ -34,6 +34,17 @@ describe('mergeRuns', () => {
     ]);
   });
 
+  it('puts the run with the higher id first when two runs started at the same time', () => {
+    const sameTime = { started_at: '2026-10-21T09:00:00Z' };
+    const merged = mergeRuns(
+      [run(1, sameTime), run(3, sameTime)],
+      [run(2, { ...sameTime, trigger: 'test' })],
+      0,
+    );
+
+    expect(merged.map(item => item.id)).toEqual([3, 2, 1]);
+  });
+
   it('leaves out the draft runs that were there before the page opened', () => {
     const merged = mergeRuns([], [run(4, { trigger: 'test' }), run(7, { trigger: 'test' })], 4);
 

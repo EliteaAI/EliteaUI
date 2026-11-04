@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { createRef } from 'react';
+
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -136,6 +138,23 @@ describe('ScheduleRunsCard', () => {
 
     await waitFor(() => expect(cancelExpectRun).toHaveBeenCalledTimes(1));
     expect(expectRun).toHaveBeenCalledTimes(1);
+  });
+
+  it('stops waiting for a new run when the start throws', async () => {
+    const cancelExpectRun = vi.fn();
+    const onRunNow = vi.fn().mockRejectedValue(new Error('boom'));
+    renderCard({ onRunNow, view: makeView(undefined, { expectRun: vi.fn(), cancelExpectRun }) });
+
+    fireEvent.click(screen.getByTestId('schedule-run-now'));
+
+    await waitFor(() => expect(cancelExpectRun).toHaveBeenCalledTimes(1));
+  });
+
+  it('hands the ref to the card element', () => {
+    const ref = createRef();
+    renderCard({ ref });
+
+    expect(ref.current).toBe(screen.getByTestId('schedule-runs-card'));
   });
 
   it('keeps waiting for a new run when the start works', async () => {
