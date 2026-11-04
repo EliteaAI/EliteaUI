@@ -2,7 +2,6 @@ import { Suspense, lazy, memo, useCallback } from 'react';
 
 import { Highlight, themes } from 'prism-react-renderer';
 
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Box, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
@@ -11,6 +10,7 @@ import { useCheckIsBlockEditing, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import EditingPlaceholder from '@/components/Chat/EditingPlaceholder';
+import CopyIcon from '@/components/Icons/CopyIcon';
 import DownloadIcon from '@/components/Icons/DownloadIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 import { useShouldDisableEditCanvas } from '@/components/MarkdownTableBlock';
@@ -150,7 +150,7 @@ const CodeBlock = memo(props => {
                 variant={BUTTON_VARIANTS.icon}
                 onClick={onClickCopy}
               >
-                <ContentCopyIcon sx={styles.copyIcon} />
+                <CopyIcon sx={styles.copyIcon} />
               </Button.BaseBtn>
             </Tooltip>
           </Box>

@@ -1,10 +1,10 @@
 import { memo, useMemo } from 'react';
 
 import { AskUserAnswerSummary } from '@/[fsd]/features/chat/ui';
+import Canvas from '@/[fsd]/features/chat/ui/canvas';
 import { formatJsonBlock } from '@/[fsd]/shared/lib/utils';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import { convertJsonToString, isNullOrUndefined } from '@/common/utils';
-import Canvas from '@/components/Canvas';
 
 const AnswerMessageItems = memo(props => {
   const {
