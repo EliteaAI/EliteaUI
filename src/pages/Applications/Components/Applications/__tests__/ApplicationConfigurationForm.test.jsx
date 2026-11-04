@@ -26,6 +26,7 @@ vi.mock('@/[fsd]/widgets/entity-schedules-section', () => ({
 }));
 vi.mock('@/components/ApplicationVariables.jsx', () => ({ default: stub('variables') }));
 vi.mock('@/components/ConversationStarters', () => ({ default: stub('starters') }));
+vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => true }) }));
 vi.mock('@/pages/Applications/Components/Applications/ApplicationEditForm', () => ({
   default: stub('edit-form'),
 }));

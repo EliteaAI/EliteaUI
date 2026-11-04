@@ -48,7 +48,12 @@ vi.mock('@/api/applications', () => {
     if (!options?.skip) requests.applications.push(args.params);
     return EMPTY_RESULT;
   };
-  return { useApplicationListQuery: record, usePublicApplicationsListQuery: record };
+  return {
+    TAG_TYPE_GOVERNANCE_READINESS: 'GOVERNANCE_READINESS',
+    withReadiness: tags => tags,
+    useApplicationListQuery: record,
+    usePublicApplicationsListQuery: record,
+  };
 });
 
 vi.mock('@/api/toolkits', () => ({
