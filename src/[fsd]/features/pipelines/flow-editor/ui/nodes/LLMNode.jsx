@@ -20,6 +20,7 @@ import {
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
 import {
   AttachmentToolHelpers,
+  PipelineToolUsageHelpers,
   ToolPickerUI,
   usePipelineAttachments,
 } from '@/[fsd]/features/pipelines/tool-picker';
@@ -171,15 +172,26 @@ const LLMNode = memo(props => {
           data-testid="pipeline-llm-node-toolkits-select"
         />
         {Object.keys(yamlNode?.tool_names || {}).map(toolkitName => {
-          const toolkitObj = allToolkits.find(
-            tk => (tk.toolkit_name || getToolkitNameFromSchema(tk)) === toolkitName,
+          const toolkitObj = PipelineToolUsageHelpers.findAttachedToolkit(
+            allToolkits,
+            toolkitName,
+            getToolkitNameFromSchema,
           );
+          // A deleted toolkit or MCP drops out of the attachments while the node still names it
+          if (!toolkitObj) {
+            return (
+              <FlowEditorNodePanel.NodeNotFoundWarning
+                key={toolkitName}
+                message={`"${toolkitName}" not found — remove it or select a replacement`}
+                data-testid="pipeline-llm-node-toolkit-not-found"
+              />
+            );
+          }
           // The pipeline narrows `selected_tools` to the tools its nodes use, so offer everything the toolkit has
           const allTools = (
-            toolkitObj?.tools ||
-            (toolkitObj ? AttachmentToolHelpers.getToolkitAvailableTools(toolkitObj) : [])
+            toolkitObj.tools || AttachmentToolHelpers.getToolkitAvailableTools(toolkitObj)
           ).map(tool => (typeof tool === 'string' ? tool : tool.name));
-          const availableTools = getSelectedTools(toolkitObj?.type);
+          const availableTools = getSelectedTools(toolkitObj.type);
           const tools =
             Array.isArray(availableTools) && availableTools.length > 0
               ? allTools.filter(tool => availableTools.includes(tool))

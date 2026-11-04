@@ -2,9 +2,6 @@ import { memo, useCallback, useContext, useMemo, useRef } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import { Box, Typography } from '@mui/material';
-
 import {
   FlowEditorConstants,
   NodeFieldInfoConstants,
@@ -163,18 +160,10 @@ const AgentNode = memo(props => {
       >
         <FlowEditorNodePanel.NodeConfigSection>
           {isOrphan && (
-            <Box sx={agentNodeStyles.orphanWarning}>
-              <WarningAmberIcon
-                fontSize="small"
-                sx={agentNodeStyles.orphanWarningIcon}
-              />
-              <Typography
-                variant="caption"
-                sx={agentNodeStyles.orphanWarningText}
-              >
-                Agent not found — select a replacement or delete this node
-              </Typography>
-            </Box>
+            <FlowEditorNodePanel.NodeNotFoundWarning
+              message="Agent not found — select a replacement or delete this node"
+              data-testid={`${AGENT_NODE_TESTID_PREFIX}-not-found`}
+            />
           )}
           <ToolPickerUI.ProjectAgentPicker
             tooltip={getAgentFieldInfo(NODE_FIELD_KEYS.agent)}
@@ -227,27 +216,5 @@ const AgentNode = memo(props => {
 });
 
 AgentNode.displayName = 'AgentNode';
-
-/** @type {MuiSx} */
-const agentNodeStyles = {
-  orphanWarning: ({ palette }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    gap: '.375rem',
-    padding: '.375rem .75rem',
-    borderRadius: '.375rem',
-    backgroundColor: palette.background.warning,
-    border: `0.0625rem solid ${palette.border.attention}`,
-    width: '100%',
-    boxSizing: 'border-box',
-  }),
-  orphanWarningIcon: ({ palette }) => ({
-    flexShrink: 0,
-    color: palette.icon.warning,
-  }),
-  orphanWarningText: ({ palette }) => ({
-    color: palette.text.attention,
-  }),
-};
 
 export default AgentNode;

@@ -30,6 +30,19 @@ export const getAttachmentRefKey = (tool, getToolkitName) =>
     getAttachmentRefName(tool, getToolkitName),
   );
 
+/**
+ * The toolkit or MCP attachment a node binds to by `toolkitName`, or `undefined` when it is missing.
+ * Also matches `name`, as the Toolkit/MCP node lookup always has (`useFunctionInputMapping`).
+ */
+export const findAttachedToolkit = (tools, toolkitName, getToolkitName) =>
+  toolkitName
+    ? (tools || []).find(
+        tool =>
+          !isApplicationTool(tool) &&
+          (getAttachmentRefName(tool, getToolkitName) === toolkitName || tool.name === toolkitName),
+      )
+    : undefined;
+
 const addReference = (refs, kind, name, nodeId, toolNames = []) => {
   if (!name || typeof name !== 'string') return;
   const key = getToolRefKey(kind, name);
