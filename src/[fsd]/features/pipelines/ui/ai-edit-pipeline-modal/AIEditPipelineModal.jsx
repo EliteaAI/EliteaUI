@@ -27,6 +27,7 @@ import {
   useToolkitAssociateMutation,
   useUpdateApplicationRelationMutation,
 } from '@/api';
+import { eliteaApi } from '@/api/eliteaApi';
 import { buildErrorMessage } from '@/common/utils';
 import { mapAssociationError } from '@/hooks/application/useAgentPipelineAssociation';
 import useSaveNewVersion from '@/hooks/application/useSaveNewVersion';
@@ -35,12 +36,6 @@ import { actions as editorActions } from '@/slices/pipelineEditor';
 
 import PipelineToolsDiffStep from './PipelineToolsDiffStep';
 import PipelineYamlDiffStep from './PipelineYamlDiffStep';
-
-const PIPELINE_EDIT_STEPS = [
-  { key: 'yaml', label: 'Pipeline YAML' },
-  { key: 'run-settings', label: 'Run settings' },
-  { key: 'tools-skills', label: 'Tools & Skills' },
-];
 
 const AIEditPipelineModal = memo(props => {
   const { open, onClose, isCreateMode = false } = props;
@@ -79,6 +74,21 @@ const AIEditPipelineModal = memo(props => {
   const handleToggleAddPipeline = useCallback(id => toggleSet(setAddPipelineIds)(id), []);
   const handleToggleAddSkill = useCallback(id => toggleSet(setAddSkillIds)(id), []);
   const handleToggleRemoveTool = useCallback(id => toggleSet(setRemoveToolRecordIds)(id), []);
+
+  const steps = useMemo(
+    () =>
+      isCreateMode
+        ? [
+            { key: 'yaml', label: 'Pipeline YAML' },
+            { key: 'run-settings', label: 'Run settings' },
+          ]
+        : [
+            { key: 'yaml', label: 'Pipeline YAML' },
+            { key: 'run-settings', label: 'Run settings' },
+            { key: 'tools-skills', label: 'Tools & Skills' },
+          ],
+    [isCreateMode],
+  );
 
   const currentTools = useMemo(
     () => formik.values?.version_details?.tools || [],
@@ -343,15 +353,35 @@ const AIEditPipelineModal = memo(props => {
           );
         }
 
-        // Refetch to sync Formik tools with the backend state so the tools panel
-        // reflects additions/removals immediately, and so the subsequent Save diff
-        // (initialTools vs current tools) starts from a correct baseline.
+        // Fetch fresh tools without triggering Formik reinitialization.
+        // fetchApplicationDetails updates the global RTK cache; with enableReinitialize on the
+        // parent Formik the cache update would recompute initialValues from the stale server YAML
+        // and overwrite the AI-applied YAML that was just dispatched to Redux.
+        // Instead, fetch once then patch only version_details.tools in the existing cache entry
+        // while preserving the AI-applied YAML, so the cache key stays consistent with what
+        // lastInitYamlRef already guards.
         const { data: freshData } = await fetchApplicationDetails({
           projectId,
           applicationId: entityId,
         });
-        if (freshData) {
-          await formik.setFieldValue('version_details.tools', freshData.version_details?.tools ?? []);
+        if (freshData?.version_details?.tools) {
+          const freshTools = freshData.version_details.tools;
+          await formik.setFieldValue('version_details.tools', freshTools);
+          dispatch(
+            eliteaApi.util.updateQueryData(
+              'applicationDetails',
+              { projectId, applicationId: entityId },
+              draft => {
+                if (draft?.version_details) {
+                  draft.version_details.tools = freshTools;
+                  // Keep the AI-applied YAML so the cache key matches lastInitYamlRef and
+                  // the useApplicationInitialValues guard skips re-initialization.
+                  draft.version_details.instructions =
+                    formik.values?.version_details?.instructions ?? draft.version_details.instructions;
+                }
+              },
+            ),
+          );
         }
       }
     },
@@ -387,18 +417,13 @@ const AIEditPipelineModal = memo(props => {
 
     setIsSavingAsVersion(true);
     try {
-      const patchedFormik = {
-        ...formik,
-        values: {
-          ...formik.values,
-          version_details: {
-            ...formik.values?.version_details,
-            instructions: draftData.pipeline_yaml,
-            name: versionName || formik.values?.version_details?.name,
-          },
-        },
-      };
-      await onCreateNewVersionRef.current?.(patchedFormik);
+      // Apply the draft to Formik and Redux first (same as "Apply to Editor") so that
+      // useSavePipeline's yamlCode selector and pipeline_settings reflect the AI-applied YAML
+      // when onCreateNewVersion reads them.
+      await handleSave(draftData);
+      // onCreateNewVersion reads yamlCode from Redux (via useSavePipeline) and versionDetails
+      // from its own hook props, so passing only the version name is sufficient.
+      await onCreateNewVersionRef.current?.(versionName || formik.values?.version_details?.name);
       setShowVersionModal(false);
       onClose();
     } catch {
@@ -406,7 +431,7 @@ const AIEditPipelineModal = memo(props => {
     } finally {
       setIsSavingAsVersion(false);
     }
-  }, [formik, versionName, onClose]);
+  }, [handleSave, formik.values, versionName, onClose]);
 
   const renderStep = useCallback(
     (stepKey, draftData) => {
@@ -568,7 +593,7 @@ const AIEditPipelineModal = memo(props => {
         generateError={generateError}
         resetGenerate={resetGenerate}
         onDraftGenerated={handleDraftGenerated}
-        steps={PIPELINE_EDIT_STEPS}
+        steps={steps}
         renderStep={renderStep}
         onSave={handleSave}
         onSaveAsVersion={handleSaveAsVersion}
