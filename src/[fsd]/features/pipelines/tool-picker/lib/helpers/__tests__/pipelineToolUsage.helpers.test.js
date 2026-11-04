@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   collectToolReferences,
+  findAttachedToolkit,
   getAttachmentRefKey,
   groupAttachmentsByKind,
 } from '../pipelineToolUsage.helpers';
@@ -90,5 +91,26 @@ describe('groupAttachmentsByKind', () => {
       hiddenKinds: ['mcp'],
     });
     expect(groups.map(group => group.kind)).toEqual(['toolkit']);
+  });
+});
+
+describe('findAttachedToolkit', () => {
+  const tools = [
+    { id: 1, type: 'github', toolkit_name: 'GithubClaude' },
+    { id: 2, type: 'jira', name: 'jira', settings: { alias: 'JiraProd' } },
+    { id: 3, type: 'application', name: 'Reviewer' },
+  ];
+
+  it('finds a toolkit by its toolkit name, resolved name or name', () => {
+    expect(findAttachedToolkit(tools, 'GithubClaude', getToolkitName)).toBe(tools[0]);
+    expect(findAttachedToolkit(tools, 'JiraProd', getToolkitName)).toBe(tools[1]);
+    expect(findAttachedToolkit(tools, 'jira', getToolkitName)).toBe(tools[1]);
+  });
+
+  it('returns undefined for a deleted toolkit, an agent name or no name', () => {
+    expect(findAttachedToolkit(tools, 'DeletedToolkit', getToolkitName)).toBeUndefined();
+    expect(findAttachedToolkit(tools, 'Reviewer', getToolkitName)).toBeUndefined();
+    expect(findAttachedToolkit(tools, undefined, getToolkitName)).toBeUndefined();
+    expect(findAttachedToolkit(undefined, 'GithubClaude', getToolkitName)).toBeUndefined();
   });
 });

@@ -1,4 +1,4 @@
-import { memo, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   FlowEditorConstants,
@@ -19,6 +19,7 @@ import {
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
 import {
   AttachmentToolHelpers,
+  PipelineToolUsageHelpers,
   ToolPickerUI,
   usePipelineAttachments,
 } from '@/[fsd]/features/pipelines/tool-picker';
@@ -79,13 +80,26 @@ const BaseToolNode = memo(props => {
   } = useFunctionInputMapping({ id, isMCP: nodeType === FlowEditorConstants.PipelineNodeTypes.Mcp });
 
   const { getToolkitNameFromSchema, getSelectedTools } = useGetToolkitNameFromSchema();
-  const { attachToolkit } = usePipelineAttachments();
+  const { tools, addToolWithNode, prepareToolkitAttachment } = usePipelineAttachments();
   const isMcpNode = nodeType === FlowEditorConstants.PipelineNodeTypes.Mcp;
   const toolkitInfo = NodeFieldInfoHelpers.getNodeFieldInfo(
     nodeType,
     isMcpNode ? NODE_FIELD_KEYS.mcp : NODE_FIELD_KEYS.toolkit,
   );
   const usesProjectPicker = isMcpNode || nodeType === FlowEditorConstants.PipelineNodeTypes.Toolkit;
+
+  // A deleted toolkit or MCP drops out of the attachments while the node still names it
+  const isOrphan = useMemo(
+    () =>
+      usesProjectPicker &&
+      Boolean(yamlNode?.toolkit_name) &&
+      !PipelineToolUsageHelpers.findAttachedToolkit(tools, yamlNode.toolkit_name, getToolkitNameFromSchema),
+    [getToolkitNameFromSchema, tools, usesProjectPicker, yamlNode?.toolkit_name],
+  );
+
+  // Attaching may wait for the toolkit details, so the YAML write must use the YAML as it is by then
+  const yamlJsonObjectRef = useRef(yamlJsonObject);
+  yamlJsonObjectRef.current = yamlJsonObject;
 
   const functionOptions = useMemo(() => {
     // The pipeline narrows `selected_tools` to the tools its nodes use, so offer everything the toolkit has
@@ -121,7 +135,7 @@ const BaseToolNode = memo(props => {
         FlowEditorHelpers.batchUpdateYamlNode(
           id,
           { toolkit_name: undefined, tool: undefined, input_mapping: undefined },
-          yamlJsonObject,
+          yamlJsonObjectRef.current,
           setYamlJsonObject,
         );
         return;
@@ -129,7 +143,7 @@ const BaseToolNode = memo(props => {
       const { mapping } = getDefaultInputMappingOfTool(
         toolkitTypes,
         undefined,
-        yamlNode?.input_mapping,
+        yamlJsonObjectRef.current.nodes?.find(node => node.id === id)?.input_mapping,
         newToolkit,
       );
 
@@ -140,20 +154,21 @@ const BaseToolNode = memo(props => {
           tool: undefined,
           input_mapping: { ...mapping },
         },
-        yamlJsonObject,
+        yamlJsonObjectRef.current,
         setYamlJsonObject,
       );
     },
-    [getToolkitNameFromSchema, id, setYamlJsonObject, toolkitTypes, yamlJsonObject, yamlNode?.input_mapping],
+    [getToolkitNameFromSchema, id, setYamlJsonObject, toolkitTypes],
   );
 
   // Any project toolkit can be picked; one the pipeline doesn't have yet is attached on Save
   const onPickProjectToolkit = useCallback(
-    (source, toolkitName) => {
-      onSelectToolkit({ ...source, toolkit_name: toolkitName });
-      attachToolkit(source, { mcp: isMcpNode, toolkitName });
+    async (source, toolkitName) => {
+      const prepared = await prepareToolkitAttachment(source, { mcp: isMcpNode, toolkitName });
+      if (!prepared) return;
+      addToolWithNode(prepared, () => onSelectToolkit({ ...source, toolkit_name: toolkitName }));
     },
-    [attachToolkit, isMcpNode, onSelectToolkit],
+    [addToolWithNode, isMcpNode, onSelectToolkit, prepareToolkitAttachment],
   );
 
   const onClearProjectToolkit = useCallback(() => onSelectToolkit(null), [onSelectToolkit]);
@@ -355,6 +370,12 @@ const BaseToolNode = memo(props => {
       ) : (
         <>
           <FlowEditorNodePanel.NodeConfigSection>
+            {isOrphan && (
+              <FlowEditorNodePanel.NodeNotFoundWarning
+                message={`${isMcpNode ? 'MCP' : 'Toolkit'} not found — select a replacement or delete this node`}
+                data-testid={testIdPrefix ? `${testIdPrefix}-not-found` : undefined}
+              />
+            )}
             {toolkitSelect}
             {toolSelect}
             <FlowEditorSettings.InputMappingFields
