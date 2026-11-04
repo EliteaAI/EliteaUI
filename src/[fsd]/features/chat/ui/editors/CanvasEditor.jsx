@@ -16,6 +16,7 @@ import { Typography } from '@mui/material';
 import { Box, useTheme } from '@mui/system';
 
 import { useTrackEvent } from '@/GA';
+import { extraCodeFromBlock } from '@/[fsd]/features/chat/lib/helpers';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import {
   SERVICE_PROMPT_KEYS,
@@ -31,7 +32,6 @@ import { useListModelsQuery } from '@/api/configurations.js';
 import { useGenerateContentBlockingMutation } from '@/api/llm.js';
 import { CANVAS_ADMIN_USER, CANVAS_SYSTEM_USER, PUBLIC_PROJECT_ID } from '@/common/constants';
 import { buildErrorMessage, handleCopy, isNullOrUndefined } from '@/common/utils';
-import { extraCodeFromBlock } from '@/components/Canvas';
 import MarkdownTableEditor, { parseMarkdownTable } from '@/components/MarkdownTableEditor';
 import MermaidDiagramOutput from '@/components/MermaidDiagramOutput/DiagramOutput';
 import { getMermaidQuickFixModelInfo } from '@/components/MermaidDiagramOutput/mermaidQuickFixModel.helpers';
