@@ -102,13 +102,29 @@ describe('useScheduleSave draft Test Run', () => {
     expect(mocks.toastError).not.toHaveBeenCalled();
   });
 
-  it('shows a fixed text for a 404 and never the server text', async () => {
-    const onDraftTestRun = vi.fn().mockRejectedValue({ status: 404, data: { error: 'internal detail' } });
+  it('shows the server text of a 404', async () => {
+    const onDraftTestRun = vi
+      .fn()
+      .mockRejectedValue({ status: 404, data: { code: 'run_not_found', error: 'Run not found' } });
     const { result } = setup({ onDraftTestRun });
 
     await runTest(result);
 
-    expect(result.current.draftTestError).toBe('Test run is not available on this server yet.');
+    expect(result.current.draftTestError).toBe('Run not found');
+    expect(mocks.toastError).not.toHaveBeenCalled();
+  });
+
+  it('shows a fixed message for a 503 test_run_unavailable and never the server text', async () => {
+    const onDraftTestRun = vi
+      .fn()
+      .mockRejectedValue({ status: 503, data: { code: 'test_run_unavailable', error: 'internal detail' } });
+    const { result } = setup({ onDraftTestRun });
+
+    await runTest(result);
+
+    expect(result.current.draftTestError).toBe(
+      'Test Run is not ready on this server yet. Ask an administrator to run the schedule migration.',
+    );
     expect(mocks.toastError).not.toHaveBeenCalled();
   });
 

@@ -1,12 +1,8 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
-import {
-  useCancelDraftTestRunMutation,
-  useCreateScheduleMutation,
-  useStartDraftTestRunMutation,
-} from '@/[fsd]/entities/schedule';
+import { useCreateScheduleMutation, useStartDraftTestRunMutation } from '@/[fsd]/entities/schedule';
 import {
   DEFAULT_SCHEDULE_CRON,
   ScheduleDraftRuns,
@@ -26,7 +22,6 @@ const CreateSchedulePage = props => {
   const { state } = useLocation();
   const [createSchedule] = useCreateScheduleMutation();
   const [startDraftTestRun] = useStartDraftTestRunMutation();
-  const [cancelDraftTestRun] = useCancelDraftTestRunMutation();
   const entityRoute = useEntityScheduleRoute(entityType);
 
   const { values, urlEntity, returnTo } = useMemo(
@@ -41,13 +36,8 @@ const CreateSchedulePage = props => {
 
   const onSaved = useCallback(() => navigate(returnTo), [navigate, returnTo]);
 
-  const startedDraft = useRef(false);
   const onDraftTestRun = useCallback(
-    async body => {
-      const result = await startDraftTestRun({ projectId, ...body }).unwrap();
-      startedDraft.current = true;
-      return result;
-    },
+    body => startDraftTestRun({ projectId, ...body }).unwrap(),
     [startDraftTestRun, projectId],
   );
   const sidePanel = useCallback(
@@ -63,16 +53,7 @@ const CreateSchedulePage = props => {
     [],
   );
 
-  // The hidden draft of a Test Run is dropped when the user leaves without saving; a failed cleanup is harmless
-  // because the server also removes idle drafts. Only a draft this page started goes, never one from another tab
-  const onCancel = useCallback(
-    formValues => {
-      if (startedDraft.current && formValues?.application_id)
-        cancelDraftTestRun({ projectId, applicationId: formValues.application_id });
-      navigate(returnTo);
-    },
-    [cancelDraftTestRun, projectId, navigate, returnTo],
-  );
+  const onCancel = useCallback(() => navigate(returnTo), [navigate, returnTo]);
 
   return (
     <ScheduleForm

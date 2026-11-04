@@ -154,7 +154,6 @@ const EXECUTION_TYPE_LABELS = new Map([
   ['manual', 'Manual (legacy)'],
   ['scheduled', 'Scheduled'],
   ['schedule_manual', 'Manual'],
-  ['schedule_test', 'Test'],
   ['chat', 'Chat'],
   ['api', 'API'],
   ['mcp', 'MCP'],

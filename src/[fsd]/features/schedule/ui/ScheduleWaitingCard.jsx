@@ -15,7 +15,7 @@ import RouteDefinitions from '@/routes';
 import { WAITING_NEED, formatApprovalExpiry, getWaitingRunNeed } from '../lib/helpers';
 import { useActionButtonProps } from '../lib/hooks/useActionButtonProps.hooks';
 import { useNow } from '../lib/hooks/useNow.hooks';
-import { useScheduleRun, useScheduleRunConversation } from '../lib/hooks/useScheduleRuns.hooks';
+import { useRunDetail, useScheduleRunConversation } from '../lib/hooks/useScheduleRuns.hooks';
 import {
   CREDENTIAL_CHECK_STATE,
   useWaitingRunCredentialCheck,
@@ -47,16 +47,28 @@ const describeNeed = ({ need, toolkit, credential }, pausedText) => {
  * The "Action needed" card of the schedule page. It opens inside a run of the Runs card that waits for approval. A run that waits for a credential gets two steps: provide the credential, then approve.
  * Approve stays off until the risk check of the schedule finds the credential. A run that waits for a sign-in
  * has the sign-in button as step 1. `run` is a row of the runs list; `onShowTest` (optional) goes back to the Runs card.
+ * A Test run (`run.isDraftRun`) has no `schedule`: `entityType` and `applicationId` name the entity instead.
  */
 const ScheduleWaitingCard = memo(
   forwardRef((props, ref) => {
-    const { schedule, run, onShowTest } = props;
+    const { schedule, run, entityType, applicationId, onShowTest } = props;
     const projectId = useSelectedProjectId();
     const styles = scheduleWaitingCardStyles();
     const now = useNow();
     const statusId = useId();
-    const { run: detail } = useScheduleRun(schedule.id, run.id);
+    const { run: detail } = useRunDetail(schedule?.id, applicationId, run);
     const shownRun = detail ?? run;
+    // A Test run has no schedule row: the entity comes from the page and the version from the run
+    const target = useMemo(
+      () =>
+        schedule ?? {
+          entity_type: entityType,
+          application_id: applicationId,
+          version_id: shownRun.version_id,
+          approval_rule: detail?.approval_rule,
+        },
+      [schedule, entityType, applicationId, shownRun.version_id, detail?.approval_rule],
+    );
     const conversation = useScheduleRunConversation(shownRun);
     const pausedEvent = useMemo(() => detail?.events?.findLast(event => event.kind === 'paused'), [detail]);
     const waiting = useMemo(() => getWaitingRunNeed(pausedEvent), [pausedEvent]);
@@ -69,7 +81,7 @@ const ScheduleWaitingCard = memo(
       recheck,
       toolkitName,
     } = useWaitingRunCredentialCheck({
-      schedule,
+      schedule: target,
       toolkit: waiting.toolkit,
       enabled: isCredential,
     });
@@ -88,14 +100,14 @@ const ScheduleWaitingCard = memo(
       RouteDefinitions.CreateCredentialFromMain,
     );
     const entityLink = buildEntityEditorLink({
-      entityType: schedule.entity_type,
-      entityId: schedule.application_id,
+      entityType: target.entity_type,
+      entityId: target.application_id,
     });
     const editorLink = NavigationHelpers.buildAbsoluteAppUrl(
       projectId,
-      `${schedule.version_id ? `${entityLink}/${schedule.version_id}` : entityLink}?${SearchParams.ViewMode}=${ViewMode.Owner}`,
+      `${target.version_id ? `${entityLink}/${target.version_id}` : entityLink}?${SearchParams.ViewMode}=${ViewMode.Owner}`,
     );
-    const entityLabel = ENTITY_LABELS[schedule.entity_type] ?? 'agent';
+    const entityLabel = ENTITY_LABELS[target.entity_type] ?? 'agent';
     const expiry = formatApprovalExpiry(
       { expiresAt: shownRun.approval_expires_at, pausedAt: pausedEvent?.at },
       now,
@@ -131,6 +143,7 @@ const ScheduleWaitingCard = memo(
         compact
         plain={!isCredential && !isSignIn}
         schedule={schedule}
+        run={shownRun}
         runId={shownRun.id}
         hasChat={shownRun.conversation_id != null}
         conversationUuid={conversation.conversationUuid}

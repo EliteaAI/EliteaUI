@@ -17,8 +17,12 @@ const FIELDS_WITH_INPUT = [
 ];
 const PROMPT_FIELDS = ['prompt', 'variables'];
 // Test Run answers 400 with this code when the project does not allow "Run without asking"
-const DRAFT_TEST_ERROR = { APPROVAL_NOT_ALLOWED: 'approval_rule_not_allowed' };
-const TEST_RUN_UNAVAILABLE = 'Test run is not available on this server yet.';
+const DRAFT_TEST_ERROR = {
+  APPROVAL_NOT_ALLOWED: 'approval_rule_not_allowed',
+  UNAVAILABLE: 'test_run_unavailable',
+};
+const TEST_RUN_UNAVAILABLE =
+  'Test Run is not ready on this server yet. Ask an administrator to run the schedule migration.';
 
 /**
  * The save flow of the schedule form: the risk review, the save call with its error branches, the warnings
@@ -168,7 +172,7 @@ export const useScheduleSave = ({
       setRunNowPending(false);
     }
   };
-  // Test Run starts from the unsaved form: nothing is saved, and the server runs a hidden draft copy.
+  // Test Run starts from the unsaved form: nothing is saved, and the server runs it as a run with no schedule.
   // An invalid form shows its field errors, as a Save would, and sends nothing.
   const handleDraftTestRun = async () => {
     setDraftTestError('');
@@ -191,9 +195,10 @@ export const useScheduleSave = ({
         formik.setErrors({ approval_rule: error.data.error });
       else if (error?.status === 400 && Object.keys(toFieldErrors(error)).some(isShownField))
         formik.setErrors(toFieldErrors(error));
-      else if ([400, 409].includes(error?.status)) setDraftTestError(error.data?.error ?? '');
-      // An older core has no test_run route; a fixed text keeps server detail off the page
-      else if (error?.status === 404) setDraftTestError(TEST_RUN_UNAVAILABLE);
+      else if ([400, 404, 409].includes(error?.status)) setDraftTestError(error.data?.error ?? '');
+      // The server has not run the schedule migration yet; a fixed text keeps server detail off the page
+      else if (error?.status === 503 && code === DRAFT_TEST_ERROR.UNAVAILABLE)
+        setDraftTestError(TEST_RUN_UNAVAILABLE);
       else toastError('Failed to start the test run');
       return false;
     } finally {

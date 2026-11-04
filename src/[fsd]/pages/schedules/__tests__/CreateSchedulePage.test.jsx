@@ -12,7 +12,6 @@ const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   createSchedule: vi.fn(),
   startDraftTestRun: vi.fn(),
-  cancelDraftTestRun: vi.fn(),
   draftRunsProps: null,
   settingsProps: null,
   stopProps: null,
@@ -32,7 +31,6 @@ vi.mock('@/[fsd]/entities/schedule', async importOriginal => ({
   ...(await importOriginal()),
   useCreateScheduleMutation: () => [mocks.createSchedule],
   useStartDraftTestRunMutation: () => [mocks.startDraftTestRun],
-  useCancelDraftTestRunMutation: () => [mocks.cancelDraftTestRun],
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 5, useViewMode: () => 'owner' }));
 vi.mock('@/[fsd]/shared/ui/schedule', () => ({
@@ -170,7 +168,7 @@ describe('CreateSchedulePage', () => {
     );
   });
 
-  it('Cancel drops the Test draft of the chosen agent after this page started a Test run', async () => {
+  it('Cancel after a Test run only navigates', async () => {
     mocks.params = { tab: 'all', agentId: '12' };
     mocks.state = null;
     mocks.startDraftTestRun.mockReturnValue({ unwrap: () => Promise.resolve({ run_id: 4 }) });
@@ -181,19 +179,8 @@ describe('CreateSchedulePage', () => {
     await Promise.resolve();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
-    expect(mocks.cancelDraftTestRun).toHaveBeenCalledWith({ projectId: 5, applicationId: 12 });
     expect(mocks.navigate).toHaveBeenCalledWith('/agents/all/12?viewMode=owner');
-  });
-
-  it('Cancel sends no delete when this page started no Test run', () => {
-    mocks.params = { tab: 'all', agentId: '12' };
-    mocks.state = null;
-    render(<CreateSchedulePage entityType="agent" />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-
-    expect(mocks.cancelDraftTestRun).not.toHaveBeenCalled();
-    expect(mocks.navigate).toHaveBeenCalledWith('/agents/all/12?viewMode=owner');
+    expect(mocks.navigate).toHaveBeenCalledTimes(1);
   });
 
   it('Cancel without a chosen entity only returns', () => {
@@ -201,7 +188,6 @@ describe('CreateSchedulePage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
-    expect(mocks.cancelDraftTestRun).not.toHaveBeenCalled();
     expect(mocks.navigate).toHaveBeenCalledWith('/agents/3');
   });
 });

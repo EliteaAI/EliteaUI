@@ -146,8 +146,7 @@ export const scheduleApi = eliteaApi
         invalidatesTags: (_, error, { scheduleId }) => (error ? [] : scheduleTags(scheduleId)),
       }),
 
-      // Test Run of an unsaved form: the server runs the Save body from a hidden draft, so nothing is saved.
-      // The server finds the draft by the caller and application_id, so the client sends no draft id.
+      // Test Run of an unsaved form: the server runs the Save body as a run with no schedule, so nothing is saved.
       startDraftTestRun: build.mutation({
         query: ({ projectId, ...body }) => ({
           url: `${schedulesPath(projectId)}/test_run`,
@@ -157,7 +156,7 @@ export const scheduleApi = eliteaApi
         invalidatesTags: (_, error) => (error ? [] : [{ type: SCHEDULE_RUNS_TAG, id: DRAFT_RUNS_ID }]),
       }),
 
-      // The caller's runs from the hidden draft, newest first
+      // The caller's Test runs of one application, newest first
       getDraftTestRuns: build.query({
         query: ({ projectId, applicationId, page = 0, pageSize = PAGE_SIZE }) => ({
           url: `${schedulesPath(projectId)}/test_run`,
@@ -166,7 +165,7 @@ export const scheduleApi = eliteaApi
         providesTags: [{ type: SCHEDULE_RUNS_TAG, id: DRAFT_RUNS_ID }],
       }),
 
-      // One draft run with its log `events` and `summary`
+      // One Test run with its log `events` and `summary`
       getDraftTestRun: build.query({
         query: ({ projectId, applicationId, runId }) => ({
           url: `${schedulesPath(projectId)}/test_run/${runId}`,
@@ -175,13 +174,14 @@ export const scheduleApi = eliteaApi
         providesTags: [{ type: SCHEDULE_RUNS_TAG, id: DRAFT_RUNS_ID }],
       }),
 
-      // Cancel on the form drops the hidden draft; the server answers 204 also when there is none
-      cancelDraftTestRun: build.mutation({
-        query: ({ projectId, applicationId }) => ({
-          url: `${schedulesPath(projectId)}/test_run`,
-          method: 'DELETE',
-          params: { application_id: applicationId },
+      // The caller's answer on a waiting Test run that has no chat; the run has no schedule, so the route has no id
+      decideTestRunWithoutChat: build.mutation({
+        query: ({ projectId, runId, action }) => ({
+          url: `${schedulesPath(projectId)}/test_run/${runId}/decision`,
+          method: 'POST',
+          body: { action },
         }),
+        invalidatesTags: (_, error) => (error ? [] : [{ type: SCHEDULE_RUNS_TAG, id: DRAFT_RUNS_ID }]),
       }),
 
       // The owner's answer on a waiting run that has no chat (it waits for credentials)
@@ -304,7 +304,7 @@ export const {
   useDecideRunWithoutChatMutation,
   useRunScheduleMutation,
   useStartDraftTestRunMutation,
-  useCancelDraftTestRunMutation,
+  useDecideTestRunWithoutChatMutation,
   useGetDraftTestRunsQuery,
   useGetDraftTestRunQuery,
   useUpdateScheduleMutation,

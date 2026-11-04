@@ -20,7 +20,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('../../lib/hooks/useScheduleRuns.hooks', () => ({
-  useScheduleRun: () => ({ run: mocks.detail }),
+  useRunDetail: () => ({ run: mocks.detail }),
   useScheduleRunConversation: () => mocks.conversation,
 }));
 vi.mock('../../lib/hooks/useWaitingRunCredentialCheck.hooks', () => ({
@@ -214,6 +214,33 @@ describe('ScheduleWaitingCard', () => {
     );
     expect(screen.queryByText('Action needed: this run is waiting for you')).not.toBeInTheDocument();
     expect(button('Approve')).toBeEnabled();
+    expect(button('Reject')).toBeEnabled();
+  });
+
+  it('renders a Test run without a schedule from the entity and the run version', () => {
+    mocks.detail = {
+      ...mocks.detail,
+      isDraftRun: true,
+      version_id: 6,
+      approval_rule: 'ask_me',
+    };
+    renderCard({
+      schedule: undefined,
+      run: { ...run, isDraftRun: true },
+      entityType: 'agent',
+      applicationId: 3,
+    });
+
+    expect(mocks.checkArgs.schedule).toMatchObject({
+      entity_type: 'agent',
+      application_id: 3,
+      version_id: 6,
+      approval_rule: 'ask_me',
+    });
+    expect(screen.getByRole('link', { name: 'Open agent editor' }).getAttribute('href')).toMatch(
+      /\/5\/agents\/all\/3\/6\?viewMode=owner$/,
+    );
+    expect(button('Approve')).toBeDisabled();
     expect(button('Reject')).toBeEnabled();
   });
 

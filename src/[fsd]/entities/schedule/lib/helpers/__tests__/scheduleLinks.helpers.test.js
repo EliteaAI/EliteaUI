@@ -82,20 +82,14 @@ describe('buildScheduleHistoryLink', () => {
 
   it('filters by the extra params when the schedule has no id yet', () => {
     expect(
-      buildScheduleHistoryLink(
-        { id: null, entity_type: 'agent', application_id: 7 },
-        { trigger_type: 'test' },
-      ),
-    ).toBe('/agents/all/7/history?trigger_type=test&viewMode=owner');
+      buildScheduleHistoryLink({ id: null, entity_type: 'agent', application_id: 7 }, { trigger: 'test' }),
+    ).toBe('/agents/all/7/history?trigger=test&viewMode=owner');
   });
 
   it('keeps the schedule id next to the extra params', () => {
     expect(
-      buildScheduleHistoryLink(
-        { id: 5, entity_type: 'agent', application_id: 7 },
-        { trigger_type: 'manual' },
-      ),
-    ).toBe('/agents/all/7/history?schedule_id=5&trigger_type=manual&viewMode=owner');
+      buildScheduleHistoryLink({ id: 5, entity_type: 'agent', application_id: 7 }, { trigger: 'manual' }),
+    ).toBe('/agents/all/7/history?schedule_id=5&trigger=manual&viewMode=owner');
   });
 });
 

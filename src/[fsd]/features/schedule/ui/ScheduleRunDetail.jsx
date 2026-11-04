@@ -34,24 +34,26 @@ const ScheduleRunDetail = memo(props => {
   const [logOpen, setLogOpen] = useState(failed);
   const styles = scheduleRunDetailStyles();
 
-  if (shown.status === 'waiting_for_approval' && schedule)
+  if (shown.status === 'waiting_for_approval' && (schedule || run.isDraftRun))
     return (
       <ScheduleWaitingCard
         schedule={schedule}
         run={shown}
+        entityType={entityType}
+        applicationId={applicationId}
       />
     );
 
   const response = toPlainText(conversation.answer);
   const showLog = active || logOpen;
-  // A Test run of the form sits on a hidden draft, so its link filters by the Test trigger, not by a schedule
+  // A Test run of the form has no schedule row, so its link filters by the Test trigger, not by a schedule
   const link = buildScheduleHistoryLink(
     {
       id: run.isDraftRun ? NO_SCHEDULE_ID : (schedule?.id ?? NO_SCHEDULE_ID),
       entity_type: entityType,
       application_id: applicationId,
     },
-    run.isDraftRun ? { trigger_type: 'test' } : undefined,
+    run.isDraftRun ? { trigger: 'test' } : undefined,
   );
 
   return (

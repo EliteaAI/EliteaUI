@@ -119,7 +119,7 @@ describe('ScheduleRunDetail', () => {
 
     expect(screen.getByTestId('schedule-run-open-history')).toHaveAttribute(
       'href',
-      '/agents/all/3/history?trigger_type=test&viewMode=owner',
+      '/agents/all/3/history?trigger=test&viewMode=owner',
     );
   });
 });

@@ -183,7 +183,6 @@ describe('toExecutionTypeRow', () => {
 
   it.each([
     ['schedule_manual', 'Manual'],
-    ['schedule_test', 'Test'],
     ['chat', 'Chat'],
     ['api', 'API'],
     ['mcp', 'MCP'],

@@ -4,7 +4,7 @@ export const NO_QUERY_PARAMS = {};
 export const FILTER_PARAMS = {
   schedule: 'schedule_id',
   status: 'status',
-  trigger: 'trigger_type',
+  trigger: 'trigger',
   version: 'version_id',
 };
 
@@ -12,7 +12,7 @@ export const FILTER_PARAMS = {
 export const STATUS_VALUES = ['running', 'waiting_for_approval', 'success', 'failed', 'skipped', 'blocked'];
 
 export const TRIGGER_OPTIONS = [
-  { label: 'Scheduled', value: 'scheduled' },
+  { label: 'Scheduled', value: 'cron' },
   { label: 'Manual', value: 'manual' },
   { label: 'Test', value: 'test' },
 ];

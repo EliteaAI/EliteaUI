@@ -24,7 +24,8 @@ const PAGE_BUTTON_PROPS = {
 
 /**
  * Approve and Reject at the paused line of a waiting run.
- * The same owner-only decision call as the Runs table; the server still checks the owner.
+ * The same owner-only decision call as the Runs table; the server still checks the owner. A Test run (`run.isDraftRun`)
+ * has no schedule: the user who started it decides.
  * `authAction` is the toolkit sign-in the run waits for: the owner signs in first (the chat sign-in window),
  * then Approve resumes the run with the fresh tokens. Reject skips the sign-in.
  * `blockedReason` keeps Approve off and names why. `compact` is the form for the Action needed card: no
@@ -34,6 +35,7 @@ const PAGE_BUTTON_PROPS = {
 const ScheduleRunApproval = memo(props => {
   const {
     schedule,
+    run,
     runId,
     hasChat = true,
     conversationUuid,
@@ -62,7 +64,7 @@ const ScheduleRunApproval = memo(props => {
     () => dispatch(scheduleApi.util.invalidateTags([SCHEDULE_RUNS_TAG])),
     [dispatch],
   );
-  const onHitlResume = useWaitingRunDecision({ schedule, onDecided });
+  const onHitlResume = useWaitingRunDecision({ schedule, run, onDecided });
 
   const decide = useCallback(
     async action => {

@@ -113,8 +113,8 @@ export const useScheduleRunConversation = run => {
   }, [currentData]);
 };
 
-// The Test runs the caller started from the form. The server keeps them on a hidden draft, so they are
-// not in the runs of the saved schedule; each row is marked `isDraftRun` and loads its detail from the draft route.
+// The Test runs the caller started from the form. A Test run has no schedule row, so it is not in the runs
+// of a saved schedule; each row is marked `isDraftRun` and loads its detail from the test run route.
 export const useDraftTestRuns = (applicationId, skipRequest = false) => {
   const projectId = useSelectedProjectId();
   const args = { projectId, applicationId, ...RUNS_PAGE };
@@ -131,7 +131,7 @@ export const useDraftTestRuns = (applicationId, skipRequest = false) => {
   return { rows, loaded: !!currentData, failed: isError, settled: skip || !!currentData || isError };
 };
 
-// One draft Test run with its log, polled every 2 seconds while it runs or waits
+// One Test run with its log, polled every 2 seconds while it runs or waits
 const useDraftTestRun = (applicationId, runId) => {
   const projectId = useSelectedProjectId();
   const args = { projectId, applicationId, runId };
@@ -143,7 +143,7 @@ const useDraftTestRun = (applicationId, runId) => {
   return { run: currentData, isError, refetch };
 };
 
-// The detail of a row of the merged Runs list, from the saved schedule or from the draft
+// The detail of a row of the merged Runs list, from the saved schedule or from the test run route
 export const useRunDetail = (scheduleId, applicationId, row) => {
   const saved = useScheduleRun(scheduleId, row?.isDraftRun ? undefined : row?.id);
   const draft = useDraftTestRun(applicationId, row?.isDraftRun ? row.id : undefined);

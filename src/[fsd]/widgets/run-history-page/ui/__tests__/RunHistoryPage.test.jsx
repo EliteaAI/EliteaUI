@@ -232,14 +232,14 @@ describe('RunHistoryPage schedule filter and links', () => {
   });
 
   it('sends status, trigger type and version together with the schedule', () => {
-    renderAt('/agents/all/127/history?schedule_id=4&status=failed&trigger_type=test&version_id=9', {
+    renderAt('/agents/all/127/history?schedule_id=4&status=failed&trigger=test&version_id=9', {
       scheduleEntityType: 'agent',
     });
 
     expect(containerProps.current.queryParams).toEqual({
       schedule_id: 4,
       status: 'failed',
-      trigger_type: 'test',
+      trigger: 'test',
       version_id: 9,
     });
     expect(screen.getByLabelText('Status')).toHaveValue('failed');
@@ -252,14 +252,28 @@ describe('RunHistoryPage schedule filter and links', () => {
 
     fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'success' } });
     fireEvent.change(screen.getByLabelText('Trigger Type'), { target: { value: 'manual' } });
-    expect(containerProps.current.queryParams).toEqual({ status: 'success', trigger_type: 'manual' });
+    expect(containerProps.current.queryParams).toEqual({ status: 'success', trigger: 'manual' });
 
     fireEvent.click(screen.getByTestId('run-history-filters-clear'));
     expect(containerProps.current.queryParams).toEqual({});
   });
 
+  it('sends trigger=cron for the Scheduled option', () => {
+    renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
+
+    fireEvent.change(screen.getByLabelText('Trigger Type'), { target: { value: 'cron' } });
+
+    expect(containerProps.current.queryParams).toEqual({ trigger: 'cron' });
+  });
+
+  it('ignores the old trigger_type param in the link', () => {
+    renderAt('/agents/all/127/history?trigger_type=test', { scheduleEntityType: 'agent' });
+
+    expect(containerProps.current.queryParams).toEqual({});
+  });
+
   it('offers the three trigger types and ignores an unknown value in the link', () => {
-    renderAt('/agents/all/127/history?trigger_type=bogus&status=bogus', { scheduleEntityType: 'agent' });
+    renderAt('/agents/all/127/history?trigger=bogus&status=bogus', { scheduleEntityType: 'agent' });
 
     expect(containerProps.current.queryParams).toEqual({});
     const select = screen.getByLabelText('Trigger Type');
