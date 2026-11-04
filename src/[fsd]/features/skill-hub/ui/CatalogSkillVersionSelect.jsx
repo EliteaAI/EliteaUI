@@ -1,5 +1,7 @@
 import { memo, useMemo } from 'react';
 
+import { Box } from '@mui/material';
+
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 
 const VERSION_SELECT_INPUT_PROPS = {
@@ -17,14 +19,16 @@ const CatalogSkillVersionSelect = memo(props => {
   );
 
   return (
-    <SingleSelect
-      label=""
-      value={value ?? ''}
-      options={versionOptions}
-      onValueChange={onChange}
-      sx={styles.select}
-      inputProps={VERSION_SELECT_INPUT_PROPS}
-    />
+    <Box>
+      <SingleSelect
+        label=""
+        value={value ?? ''}
+        options={versionOptions}
+        onValueChange={onChange}
+        sx={styles.select}
+        inputProps={VERSION_SELECT_INPUT_PROPS}
+      />
+    </Box>
   );
 });
 
@@ -33,7 +37,7 @@ CatalogSkillVersionSelect.displayName = 'CatalogSkillVersionSelect';
 /** @type {MuiSx} */
 const catalogSkillVersionSelectStyles = () => ({
   select: {
-    minWidth: '8rem',
+    width: 'fit-content',
     marginRight: 'auto',
   },
 });
