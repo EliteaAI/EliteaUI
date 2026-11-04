@@ -15,7 +15,7 @@ import { MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH, PROMPT_PAYLOAD_KEY } from '@/c
 import TagEditor from '@/pages/Common/Components/TagEditor';
 
 const ApplicationEditForm = memo(props => {
-  const { style, showAIEditButton = true } = props;
+  const { style, showAIEditButton = true, summaryAction = null } = props;
 
   const styles = applicationEditFormStyles();
   const theme = useTheme();
@@ -91,7 +91,7 @@ const ApplicationEditForm = memo(props => {
       items={[
         {
           title: 'General',
-          summaryAction: showAIEditButton && !isFromPipeline ? <AIEditAgentButton /> : null,
+          summaryAction: showAIEditButton && !isFromPipeline ? <AIEditAgentButton /> : summaryAction,
           content: (
             <Box>
               <Box sx={styles.nameContainer}>

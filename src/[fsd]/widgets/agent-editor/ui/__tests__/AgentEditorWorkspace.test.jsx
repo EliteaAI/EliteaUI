@@ -12,7 +12,9 @@ const { section, openTestPanel, onSend } = vi.hoisted(() => ({
     <div
       data-testid={name}
       data-default-expanded={String(props.defaultExpanded ?? true)}
-    />
+    >
+      {props.summaryAction}
+    </div>
   ),
   openTestPanel: vi.fn(),
   onSend: vi.fn(),
@@ -49,7 +51,6 @@ vi.mock('@/[fsd]/shared/ui', async () => ({
   EditorLayout: await import('@/[fsd]/shared/ui/editor-layout'),
 }));
 vi.mock('@/[fsd]/widgets/entity-test-panel', () => ({
-  EntityTestPanelConstants: { TEST_PANEL_STORAGE_KEYS: { agent: 'agentTestPanelWidth' } },
   EntityTestPanelUI: {
     EntityEditorWorkspace: ({ renderConfig, toolbarActions, testButton }) => (
       <>
@@ -57,7 +58,7 @@ vi.mock('@/[fsd]/widgets/entity-test-panel', () => ({
           {toolbarActions}
           {testButton}
         </div>
-        {renderConfig({ isConfigStacked: false })}
+        {renderConfig({ isConfigStacked: false, toolbar: <span data-testid="inline-toolbar" /> })}
       </>
     ),
     TestEntityButton: ({ label, onClick, testId }) => (
@@ -86,7 +87,9 @@ vi.mock('@/pages/Applications/Components/Applications/ApplicationEditForm', () =
       data-testid="general"
       data-default-expanded="true"
       data-show-ai-edit={String(props.showAIEditButton)}
-    />
+    >
+      {props.summaryAction}
+    </div>
   ),
 }));
 vi.mock('@/pages/Applications/Components/Applications/ApplicationInformation', () => ({
@@ -163,6 +166,13 @@ describe('AgentEditorWorkspace', () => {
     );
     expect(buttons).toEqual(['edit-agent-with-ai-button', 'agent-test-button']);
     expect(screen.getByTestId('general')).toHaveAttribute('data-show-ai-edit', 'false');
+  });
+
+  it('puts the inline toolbar on the General header line', () => {
+    renderWorkspace();
+
+    expect(screen.getByTestId('general')).toContainElement(screen.getByTestId('inline-toolbar'));
+    expect(screen.getByTestId('tools')).toBeEmptyDOMElement();
   });
 
   it('opens the Test panel without sending anything', () => {

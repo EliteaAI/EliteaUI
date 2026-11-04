@@ -6,12 +6,12 @@ import { useResizableDrawer } from '@/[fsd]/features/pipelines/flow-editor/lib/h
 
 import { TEST_PANEL_STORAGE_KEYS, TEST_PANEL_WIDTH } from '../constants/entityTestPanel.constants';
 
-const readStoredWidth = storageKey => {
+const readStoredWidth = (storageKey, defaultWidth) => {
   try {
     const stored = Number(localStorage.getItem(storageKey));
-    return Number.isFinite(stored) && stored >= TEST_PANEL_WIDTH.MIN ? stored : TEST_PANEL_WIDTH.DEFAULT;
+    return Number.isFinite(stored) && stored >= TEST_PANEL_WIDTH.MIN ? stored : defaultWidth;
   } catch {
-    return TEST_PANEL_WIDTH.DEFAULT;
+    return defaultWidth;
   }
 };
 
@@ -34,11 +34,12 @@ export const useTestPanelWidth = ({
   workspaceRef,
   onResized,
   storageKeyPrefix = TEST_PANEL_STORAGE_KEYS.pipeline,
+  defaultWidth = TEST_PANEL_WIDTH.DEFAULT,
 } = {}) => {
   const userId = useSelector(state => state.user?.id);
   const storageKey = `${storageKeyPrefix}:${userId ?? 'anonymous'}`;
 
-  const [initialWidth] = useState(() => readStoredWidth(storageKey));
+  const [initialWidth] = useState(() => readStoredWidth(storageKey, defaultWidth));
   const [maxWidth, setMaxWidth] = useState(() => getTestPanelMaxWidth(window.innerWidth));
 
   const {

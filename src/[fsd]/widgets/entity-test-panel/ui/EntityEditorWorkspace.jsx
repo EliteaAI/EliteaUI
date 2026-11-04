@@ -7,10 +7,11 @@ import { useIsSmallWindow } from '@/[fsd]/shared/lib/hooks';
 import EntityTestPanel from './EntityTestPanel';
 
 /**
- * Editor page layout: configuration with a Test button on top, plus an on-demand Test panel on the right.
- * While the panel is open the Test button is hidden, as for Pipelines, and the other toolbar actions move
- * into the panel header row, so the configuration gets that row back. Small windows stack the panel
- * below, so there the actions stay above the configuration.
+ * Editor page layout: configuration plus an on-demand Test panel on the right.
+ * The toolbar (Edit with AI + Test button) goes where it takes no extra row:
+ * - two config columns: `renderConfig({ toolbar })` puts it in the left column's first section header
+ * - panel open: the Test button is hidden, as for Pipelines, and the actions move into the panel header
+ * - small windows: a row above the configuration, since the panel stacks below
  * `renderConfig({ isConfigStacked })` lays the sections out in one column while the panel is open.
  * Opening, closing or going full screen only changes styles, so nothing inside is remounted.
  */
@@ -23,7 +24,6 @@ const EntityEditorWorkspace = memo(props => {
     testPanelContent,
     isTestPanelOpen,
     isFullScreen = false,
-    storageKeyPrefix,
     testIdPrefix,
   } = props;
 
@@ -33,10 +33,27 @@ const EntityEditorWorkspace = memo(props => {
   const isConfigStacked = isTestPanelOpen || isSmallWindow;
   const isToolbarInPanel = isTestPanelOpen && !isSmallWindow;
 
-  // Same element while the inputs are unchanged, so chat updates don't re-render the configuration
-  const config = useMemo(() => renderConfig({ isConfigStacked }), [renderConfig, isConfigStacked]);
+  const styles = useMemo(
+    () => entityEditorWorkspaceStyles(isSmallWindow, isConfigHidden),
+    [isSmallWindow, isConfigHidden],
+  );
 
-  const styles = entityEditorWorkspaceStyles(isSmallWindow, isConfigHidden);
+  const inlineToolbar = useMemo(
+    () =>
+      isConfigStacked ? null : (
+        <Box sx={styles.inlineToolbar}>
+          {toolbarActions}
+          {testButton}
+        </Box>
+      ),
+    [isConfigStacked, styles.inlineToolbar, testButton, toolbarActions],
+  );
+
+  // Same element while the inputs are unchanged, so chat updates don't re-render the configuration
+  const config = useMemo(
+    () => renderConfig({ isConfigStacked, toolbar: inlineToolbar }),
+    [renderConfig, isConfigStacked, inlineToolbar],
+  );
 
   return (
     <Box
@@ -45,7 +62,7 @@ const EntityEditorWorkspace = memo(props => {
       data-testid={`${testIdPrefix}-editor-workspace`}
     >
       <Box sx={styles.configArea}>
-        {!isToolbarInPanel && (
+        {isSmallWindow && (
           <Box sx={styles.toolbar}>
             {toolbarActions}
             {!isTestPanelOpen && testButton}
@@ -57,7 +74,6 @@ const EntityEditorWorkspace = memo(props => {
         isOpen={isTestPanelOpen}
         isFullWidth={isSmallWindow || isFullScreen}
         workspaceRef={workspaceRef}
-        storageKeyPrefix={storageKeyPrefix}
         headerActions={isToolbarInPanel ? toolbarActions : null}
         controls={testPanelControls}
         testIdPrefix={testIdPrefix}
@@ -98,6 +114,11 @@ const entityEditorWorkspaceStyles = (isSmallWindow, isConfigHidden) => ({
     height: '1.75rem',
     marginTop: '0.25rem',
     marginBottom: '1rem',
+  },
+  inlineToolbar: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
   },
   configBody: {
     flex: 1,

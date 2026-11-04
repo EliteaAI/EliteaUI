@@ -14,7 +14,7 @@ import { ApplicationSkills } from '@/[fsd]/features/skill/ui';
 import { useRunHistoryNavigation } from '@/[fsd]/shared/lib/hooks';
 import { EditorLayout } from '@/[fsd]/shared/ui';
 import { EntitySchedulesSection } from '@/[fsd]/widgets/entity-schedules-section';
-import { EntityTestPanelConstants, EntityTestPanelUI } from '@/[fsd]/widgets/entity-test-panel';
+import { EntityTestPanelUI } from '@/[fsd]/widgets/entity-test-panel';
 import { PERMISSIONS, ViewMode } from '@/common/constants';
 import ApplicationVariables from '@/components/ApplicationVariables.jsx';
 import ConversationStarters from '@/components/ConversationStarters';
@@ -26,8 +26,6 @@ import RouteDefinitions from '@/routes';
 
 import { useAgentTestChat } from '../lib/hooks';
 import AgentTestChat from './AgentTestChat';
-
-const { TEST_PANEL_STORAGE_KEYS } = EntityTestPanelConstants;
 
 const TEST_ID_PREFIX = 'agent';
 
@@ -72,8 +70,25 @@ const AgentEditorWorkspace = memo(props => {
     chatBoxRef.current?.onClear();
   }, []);
 
+  const toolbarActions = useMemo(() => <AIEditAgentButton />, []);
+  const testButton = useMemo(
+    () => (
+      <Box
+        component="span"
+        data-tour={AGENT_TOUR_TARGET_IDS.testChat}
+      >
+        <EntityTestPanelUI.TestEntityButton
+          label="Test Agent"
+          onClick={onOpenTestPanel}
+          testId="agent-test-button"
+        />
+      </Box>
+    ),
+    [onOpenTestPanel],
+  );
+
   const renderConfig = useCallback(
-    ({ isConfigStacked }) => (
+    ({ isConfigStacked, toolbar }) => (
       <EditorLayout.ConfigPanels
         isStacked={isConfigStacked}
         testId="agent-config-panels"
@@ -85,7 +100,10 @@ const AgentEditorWorkspace = memo(props => {
               entityId={values?.version_details?.id}
               testId="agent-governance-readiness"
             />
-            <ApplicationEditForm showAIEditButton={false} />
+            <ApplicationEditForm
+              showAIEditButton={false}
+              summaryAction={toolbar}
+            />
             <AgentInput.InstructionsInput
               disabled={isDisabled}
               applicationId={applicationId}
@@ -149,21 +167,9 @@ const AgentEditorWorkspace = memo(props => {
         renderConfig={renderConfig}
         isTestPanelOpen={isTestPanelOpen}
         isFullScreen={isFullScreen}
-        storageKeyPrefix={TEST_PANEL_STORAGE_KEYS.agent}
         testIdPrefix={TEST_ID_PREFIX}
-        toolbarActions={<AIEditAgentButton />}
-        testButton={
-          <Box
-            component="span"
-            data-tour={AGENT_TOUR_TARGET_IDS.testChat}
-          >
-            <EntityTestPanelUI.TestEntityButton
-              label="Test Agent"
-              onClick={onOpenTestPanel}
-              testId="agent-test-button"
-            />
-          </Box>
-        }
+        toolbarActions={toolbarActions}
+        testButton={testButton}
         testPanelControls={
           <EntityTestPanelUI.EntityTestPanelControls
             activeConversation={activeConversation}

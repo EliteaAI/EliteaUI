@@ -130,16 +130,30 @@ describe('useTestPanelWidth', () => {
     expect(() => drag(result, 1000, 950)).not.toThrow();
   });
 
-  it('remembers the width per entity type', () => {
+  it('remembers the width per storage key', () => {
     localStorage.setItem(STORAGE_KEY, '450');
-    localStorage.setItem(`${TEST_PANEL_STORAGE_KEYS.agent}:7`, '500');
+    localStorage.setItem(`${TEST_PANEL_STORAGE_KEYS.chat}:7`, '500');
     const workspaceRef = { current: { clientWidth: 1600 } };
 
     const { result } = renderHook(() =>
-      useTestPanelWidth({ workspaceRef, storageKeyPrefix: TEST_PANEL_STORAGE_KEYS.agent }),
+      useTestPanelWidth({ workspaceRef, storageKeyPrefix: TEST_PANEL_STORAGE_KEYS.chat }),
     );
 
     expect(result.current.width).toBe(500);
+  });
+
+  it('starts from the given default width until one is stored', () => {
+    const workspaceRef = { current: { clientWidth: 1600 } };
+
+    const { result } = renderHook(() =>
+      useTestPanelWidth({
+        workspaceRef,
+        storageKeyPrefix: TEST_PANEL_STORAGE_KEYS.chat,
+        defaultWidth: TEST_PANEL_WIDTH.CHAT_DEFAULT,
+      }),
+    );
+
+    expect(result.current.width).toBe(TEST_PANEL_WIDTH.CHAT_DEFAULT);
   });
 });
 

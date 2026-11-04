@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
 import {
   AIEditSkillButton,
@@ -8,10 +8,8 @@ import {
   SkillRunSettings,
 } from '@/[fsd]/features/skill';
 import { EditorLayout } from '@/[fsd]/shared/ui';
-import { EntityTestPanelConstants, EntityTestPanelUI } from '@/[fsd]/widgets/entity-test-panel';
+import { EntityTestPanelUI } from '@/[fsd]/widgets/entity-test-panel';
 import { ViewMode } from '@/common/constants';
-
-const { TEST_PANEL_STORAGE_KEYS } = EntityTestPanelConstants;
 
 const TEST_ID_PREFIX = 'skill';
 
@@ -46,8 +44,20 @@ const SkillEditorWorkspace = memo(props => {
     runPaneRef.current?.clear();
   }, []);
 
+  const toolbarActions = useMemo(() => <AIEditSkillButton />, []);
+  const testButton = useMemo(
+    () => (
+      <EntityTestPanelUI.TestEntityButton
+        label="Test Skill"
+        onClick={onOpenTestPanel}
+        testId="skill-test-button"
+      />
+    ),
+    [onOpenTestPanel],
+  );
+
   const renderConfig = useCallback(
-    ({ isConfigStacked }) => (
+    ({ isConfigStacked, toolbar }) => (
       <EditorLayout.ConfigPanels
         isStacked={isConfigStacked}
         testId="skill-config-panels"
@@ -58,6 +68,7 @@ const SkillEditorWorkspace = memo(props => {
               disabled={disabled}
               instructionsKey={instructionsKey}
               showRunSettings={false}
+              summaryEditAction={toolbar}
             />
           </EditorLayout.ConfigColumn>
         }
@@ -81,16 +92,9 @@ const SkillEditorWorkspace = memo(props => {
       renderConfig={renderConfig}
       isTestPanelOpen={isTestPanelOpen}
       isFullScreen={isFullScreen}
-      storageKeyPrefix={TEST_PANEL_STORAGE_KEYS.skill}
       testIdPrefix={TEST_ID_PREFIX}
-      toolbarActions={<AIEditSkillButton />}
-      testButton={
-        <EntityTestPanelUI.TestEntityButton
-          label="Test Skill"
-          onClick={onOpenTestPanel}
-          testId="skill-test-button"
-        />
-      }
+      toolbarActions={toolbarActions}
+      testButton={testButton}
       testPanelControls={
         <EntityTestPanelUI.EntityTestPanelControls
           activeConversation={contextConversation?.activeConversation}

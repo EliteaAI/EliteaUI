@@ -32,12 +32,13 @@ const MountCounter = props => {
   return <div data-testid={name} />;
 };
 
-const renderConfig = ({ isConfigStacked }) => (
+const renderConfig = ({ isConfigStacked, toolbar }) => (
   <div
     data-testid="config-root"
     data-stacked={isConfigStacked}
   >
     <MountCounter name="config" />
+    <div data-testid="config-section-header">{toolbar}</div>
   </div>
 );
 
@@ -51,7 +52,6 @@ const renderWorkspace = (props = {}) => {
         testPanelControls={<button data-testid="close" />}
         testPanelContent={<MountCounter name="chat" />}
         isTestPanelOpen={false}
-        storageKeyPrefix="agentTestPanelWidth"
         testIdPrefix="agent"
         {...props}
         {...overrides}
@@ -76,7 +76,7 @@ describe('EntityEditorWorkspace', () => {
 
     expect(screen.getByTestId('config-root')).toBeVisible();
     expect(screen.getByTestId('config-root')).toHaveAttribute('data-stacked', 'false');
-    expect(screen.getByTestId('test-button')).toBeVisible();
+    expect(screen.getByTestId('config-section-header')).toContainElement(screen.getByTestId('test-button'));
     expect(screen.getByTestId('agent-test-panel')).not.toContainElement(screen.getByTestId('edit-with-ai'));
     expect(screen.getByTestId('edit-with-ai').nextSibling).toBe(screen.getByTestId('test-button'));
     expect(screen.getByTestId('agent-test-panel')).toHaveAttribute('aria-hidden', 'true');
@@ -115,6 +115,8 @@ describe('EntityEditorWorkspace', () => {
     renderWorkspace();
 
     expect(screen.getByTestId('config-root')).toHaveAttribute('data-stacked', 'true');
+    expect(screen.getByTestId('config-section-header')).toBeEmptyDOMElement();
+    expect(screen.getByTestId('edit-with-ai').nextSibling).toBe(screen.getByTestId('test-button'));
   });
 
   it('keeps Edit with AI above the configuration when the open panel stacks below on small windows', () => {
@@ -122,6 +124,7 @@ describe('EntityEditorWorkspace', () => {
     renderWorkspace({ isTestPanelOpen: true });
 
     expect(screen.getByTestId('agent-test-panel')).not.toContainElement(screen.getByTestId('edit-with-ai'));
+    expect(screen.getByTestId('config-section-header')).toBeEmptyDOMElement();
     expect(screen.queryByTestId('test-button')).not.toBeInTheDocument();
   });
 });

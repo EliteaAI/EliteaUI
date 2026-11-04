@@ -16,7 +16,9 @@ const { section, clearRun, controlsProps } = vi.hoisted(() => ({
       data-default-expanded="true"
       data-show-run-settings={String(props.showRunSettings ?? '')}
       data-has-summary-action={String(Boolean(props.summaryEditAction))}
-    />
+    >
+      {props.summaryEditAction}
+    </div>
   ),
   clearRun: vi.fn(),
   controlsProps: { current: null },
@@ -46,7 +48,6 @@ vi.mock('@/[fsd]/shared/ui', async () => ({
   EditorLayout: await import('@/[fsd]/shared/ui/editor-layout'),
 }));
 vi.mock('@/[fsd]/widgets/entity-test-panel', () => ({
-  EntityTestPanelConstants: { TEST_PANEL_STORAGE_KEYS: { skill: 'skillTestPanelWidth' } },
   EntityTestPanelUI: {
     EntityEditorWorkspace: ({
       renderConfig,
@@ -61,7 +62,7 @@ vi.mock('@/[fsd]/widgets/entity-test-panel', () => ({
           {testButton}
         </div>
         {testPanelControls}
-        {renderConfig({ isConfigStacked: false })}
+        {renderConfig({ isConfigStacked: false, toolbar: <span data-testid="inline-toolbar" /> })}
         {testPanelContent}
       </>
     ),
@@ -123,17 +124,22 @@ describe('SkillEditorWorkspace', () => {
     expect(childTestIds('skill-config-panels-right')).toEqual(['run-settings', 'information']);
   });
 
-  it('puts Edit with AI before Test Skill in the toolbar, not in General', () => {
+  it('puts Edit with AI before Test Skill in the toolbar', () => {
     renderWorkspace();
 
     const buttons = [...screen.getByTestId('toolbar').querySelectorAll('button')].map(
       el => el.dataset.testid,
     );
     expect(buttons).toEqual(['edit-skill-with-ai-button', 'skill-test-button']);
-    expect(screen.getByTestId('general-and-instructions')).toHaveAttribute(
-      'data-has-summary-action',
-      'false',
+  });
+
+  it('puts the inline toolbar on the General header line', () => {
+    renderWorkspace();
+
+    expect(screen.getByTestId('general-and-instructions')).toContainElement(
+      screen.getByTestId('inline-toolbar'),
     );
+    expect(screen.getByTestId('run-settings')).toBeEmptyDOMElement();
   });
 
   it('opens the Test panel from Test Skill', () => {
