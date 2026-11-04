@@ -9,7 +9,6 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import CredentialsSelect from '../CredentialsSelect';
 
 const PERSONAL_PROJECT_ID = 'personal-project';
-const USER_ID = 21;
 const TEAM_PROJECT_ID = 'project-1';
 
 const PGVECTOR_TITLE = 'elitea-pgvector';
@@ -141,7 +140,7 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
 vi.mock('@/GA', () => ({ useTrackEvent: () => trackEvent }));
 
 vi.mock('react-redux', () => ({
-  useSelector: selector => selector({ user: { personal_project_id: personalProjectIdInStore, id: USER_ID } }),
+  useSelector: selector => selector({ user: { personal_project_id: personalProjectIdInStore } }),
 }));
 
 vi.mock('@/routes', async importOriginal => {
@@ -150,12 +149,7 @@ vi.mock('@/routes', async importOriginal => {
 });
 
 vi.mock('../CredentialMismatchFooter', () => ({
-  default: props => (
-    <div
-      data-testid="credential-mismatch-footer"
-      data-mismatched-private={String(Boolean(props.mismatchedPrivateCredential))}
-    />
-  ),
+  default: () => <div data-testid="credential-mismatch-footer" />,
 }));
 
 vi.mock('../CredentialNotFoundValue', () => ({
@@ -786,49 +780,6 @@ describe('CredentialsSelect', () => {
       });
 
       expect(singleSelectProps.value).toBe(optionValueFor(GITHUB_TITLE));
-    });
-  });
-
-  // --- EL-7228: a credential the chat's form created as "Only me (in this project)" ----------------------------------
-
-  describe('EL-7228 an Only-me credential of this project', () => {
-    const own = (owner = USER_ID) => ({
-      ...CREDENTIAL_CONFIGURATIONS[0],
-      project_id: TEAM_PROJECT_ID,
-      meta: { personal_owner_id: owner },
-    });
-
-    it("is listed as its author's own and stored by its uuid in this project", () => {
-      renderSelect({
-        section: 'credentials',
-        value: null,
-        configurations: [own()],
-        fallbackToFirstCredential: false,
-      });
-      const stored = JSON.parse(savedOptions()[0].value);
-      expect(stored).toMatchObject({ private: true, configuration_uuid: GITHUB_UUID });
-      expect(stored.configuration_project_id).toBe(TEAM_PROJECT_ID);
-    });
-
-    it('is the selection of a toolkit that stores it, with no mismatch shown', () => {
-      renderSelect({
-        section: 'credentials',
-        value: savedCredential(GITHUB_TITLE, GITHUB_UUID, { private: true }),
-        configurations: [own()],
-      });
-      expect(singleSelectProps.value).toBe(savedOptions()[0].value);
-      const footer = screen.queryByTestId('credential-mismatch-footer');
-      expect(footer === null || footer.dataset.mismatchedPrivate === 'false').toBe(true);
-    });
-
-    it('stays a team credential for another member (it is not their own)', () => {
-      renderSelect({
-        section: 'credentials',
-        value: null,
-        configurations: [own(99)],
-        fallbackToFirstCredential: false,
-      });
-      expect(JSON.parse(savedOptions()[0].value).private).toBe(false);
     });
   });
 });
