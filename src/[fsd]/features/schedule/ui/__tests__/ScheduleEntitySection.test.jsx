@@ -15,7 +15,7 @@ vi.mock('@/[fsd]/shared/ui/icon/EntityTypeIcon', () => ({ default: () => null })
 vi.mock('@/[fsd]/shared/ui/banner-message/BannerMessage', () => ({
   default: ({ message }) => <div data-testid="banner">{message}</div>,
 }));
-vi.mock('@/[fsd]/shared/ui/checkbox/RadioButtonGroup', () => ({
+vi.mock('../ScheduleSegmentedToggle', () => ({
   default: ({ items, onChange, disabled, testId }) => (
     <div data-testid={testId}>
       {items.map(item => (
@@ -99,11 +99,10 @@ describe('ScheduleEntitySection', () => {
     expect(screen.getByText('Choose an agent or a pipeline')).toBeInTheDocument();
   });
 
-  it('disables the type switch and the select when the entity is locked', () => {
+  it('disables the select of a read-only schedule', () => {
     listQuery.mockReturnValue({ data: { rows: [], total: 0 } });
-    renderSection({ lockActive: true });
+    renderSection({ readOnly: true });
 
-    expect(screen.getByTestId('schedule-type-agent')).toBeDisabled();
     expect(selectProps.disabled).toBe(true);
   });
 });

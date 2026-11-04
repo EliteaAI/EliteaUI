@@ -1,19 +1,31 @@
 // @vitest-environment jsdom
-import { MemoryRouter, useNavigate } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { act, renderHook } from '@testing-library/react';
 
 import { useScheduleRunsView } from '../useScheduleRunsView.hooks';
 
-// the Runs section in the right block and the run the panel shows
+// the Runs card state: merged runs, filters and the one open run
 
-const mocks = vi.hoisted(() => ({ runs: [], loaded: true, applicationDetails: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  saved: [],
+  draft: [],
+  draftLoaded: true,
+  draftFailed: false,
+  draftSkip: null,
+  loaded: true,
+  applicationDetails: vi.fn(),
+}));
 
 vi.mock('../useScheduleRuns.hooks', () => ({
-  useScheduleRuns: () => mocks.runs,
+  useScheduleRuns: () => mocks.saved,
   useScheduleRunsLoaded: () => mocks.loaded,
-  useScheduleRunsTotal: () => mocks.runs.length,
+  useScheduleRunsTotal: () => mocks.saved.length,
+  useDraftTestRuns: (applicationId, skip) => {
+    mocks.draftSkip = skip;
+    return { rows: mocks.draft, loaded: mocks.draftLoaded, failed: mocks.draftFailed, settled: true };
+  },
 }));
 vi.mock('@/[fsd]/features/settings', async () => ({
   AnalyticCommonHelpers: await import('@/[fsd]/features/settings/lib/helpers/analyticsCommon.helpers'),
@@ -23,7 +35,7 @@ vi.mock('@/[fsd]/entities/run-history', async () => await import('@/[fsd]/entiti
 vi.mock('@/api/applications', () => ({ useApplicationDetailsQuery: mocks.applicationDetails }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 5 }));
 
-const cron = {
+const saved = {
   id: 1,
   trigger: 'cron',
   status: 'success',
@@ -37,250 +49,154 @@ const waiting = {
   conversation_id: 90,
   started_at: '2026-10-21T10:00:00Z',
 };
-
-// A section element with one button per run, like the rendered list
-const makeSection = runs => {
-  const section = document.createElement('div');
-  section.focus = vi.fn();
-  section.scrollIntoView = vi.fn();
-  runs.forEach(run => {
-    const row = document.createElement('button');
-    row.dataset.runId = String(run.id);
-    row.focus = vi.fn();
-    row.scrollIntoView = vi.fn();
-    section.append(row);
-  });
-  return section;
-};
-const rowOf = (section, run) => section.querySelector(`[data-run-id="${run.id}"]`);
+const testRun = (id, startedAt) => ({
+  id,
+  trigger: 'test',
+  status: 'success',
+  isDraftRun: true,
+  started_at: startedAt,
+});
 
 const wrapperFor = entry =>
   function Wrapper({ children }) {
     return <MemoryRouter initialEntries={[entry]}>{children}</MemoryRouter>;
   };
-const setup = (entry = '/', scheduleId = 9) =>
-  renderHook(() => useScheduleRunsView(scheduleId, 3), { wrapper: wrapperFor(entry) });
-const mount = (result, section) => act(() => result.current.runsSectionRef(section));
+const setup = (entry = '/', scheduleId = 9, applicationId = 3) =>
+  renderHook(() => useScheduleRunsView(scheduleId, applicationId), { wrapper: wrapperFor(entry) });
 
 describe('useScheduleRunsView', () => {
-  beforeEach(() => mocks.applicationDetails.mockReturnValue({}));
+  beforeEach(() => {
+    mocks.applicationDetails.mockReturnValue({
+      currentData: { versions: [{ id: 4, name: 'base' }] },
+    });
+  });
   afterEach(() => {
     vi.clearAllMocks();
-    mocks.runs = [];
+    mocks.saved = [];
+    mocks.draft = [];
+    mocks.draftLoaded = true;
+    mocks.draftFailed = false;
     mocks.loaded = true;
   });
 
-  it('Run History expands a collapsed Runs section, scrolls to it and focuses the newest row', () => {
-    mocks.runs = [cron, waiting];
-    const section = makeSection(mocks.runs);
+  it('names the versions of the application', () => {
     const { result } = setup();
-    mount(result, section);
-    act(() => result.current.setRunsExpanded(false));
 
-    act(() => result.current.showRunHistory());
-
-    expect(result.current.runsExpanded).toBe(true);
-    expect(section.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
-    expect(rowOf(section, waiting).focus).toHaveBeenCalledWith({ preventScroll: true });
-    expect(result.current.viewedRun).toBeUndefined();
+    expect(result.current.versionNames).toEqual({ 4: 'base' });
   });
 
-  it('Run History with a run id selects the run, focuses its row and announces it', () => {
-    mocks.runs = [cron, waiting];
-    const section = makeSection(mocks.runs);
+  it('opens the run that waits for a decision when nothing is chosen', () => {
+    mocks.saved = [waiting, saved];
     const { result } = setup();
-    mount(result, section);
 
-    act(() => result.current.showRunHistory({ runId: 2 }));
-
-    expect(result.current.viewedRun).toBe(waiting);
-    expect(rowOf(section, waiting).focus).toHaveBeenCalledWith({ preventScroll: true });
-    expect(rowOf(section, waiting).scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' });
-    expect(result.current.announcement).toMatch(/^Showing run .*, cron, Waiting for approval$/);
+    expect(result.current.expandedRunId).toBe(2);
   });
 
-  it('Run History called with a click event shows the list and selects no run', () => {
-    mocks.runs = [cron];
-    const section = makeSection(mocks.runs);
+  it('opens the run named by the history_run_id link', () => {
+    mocks.saved = [waiting, saved];
+    const { result } = setup('/?history_run_id=70');
+
+    expect(result.current.expandedRunId).toBe(1);
+  });
+
+  it('closes the open card on a second click and opens another on a click', () => {
+    mocks.saved = [waiting, saved];
     const { result } = setup();
-    mount(result, section);
 
-    act(() => result.current.showRunHistory({ type: 'click', runId: undefined, target: {} }));
-
-    expect(result.current.viewedRun).toBeUndefined();
-    expect(result.current.announcement).toBe('Showing the runs of this schedule');
-    expect(() => act(() => result.current.showRunHistory(null))).not.toThrow();
+    act(() => result.current.onExpand(1));
+    expect(result.current.expandedRunId).toBe(1);
+    act(() => result.current.onExpand(1));
+    expect(result.current.expandedRunId).toBeNull();
   });
 
-  it('#runs scrolls once the Runs section mounts, even when it mounts after the schedule', () => {
-    mocks.runs = [cron];
-    const section = makeSection(mocks.runs);
-    const { result } = setup('/#runs');
+  it('keeps the Test runs of an earlier visit out of the card and shows new ones', () => {
+    mocks.draft = [testRun(3, '2026-10-20T09:00:00Z')];
+    const { result, rerender } = setup();
+    expect(result.current.runs).toEqual([]);
 
-    // The schedule is there, the section is not yet
-    expect(section.scrollIntoView).not.toHaveBeenCalled();
-    mount(result, section);
-
-    expect(section.scrollIntoView).toHaveBeenCalledTimes(1);
-    expect(rowOf(section, cron).focus).toHaveBeenCalled();
-  });
-
-  it('#runs waits for the schedule, then scrolls only once', () => {
-    mocks.runs = [cron];
-    const section = makeSection(mocks.runs);
-    const { result, rerender } = renderHook(({ id }) => useScheduleRunsView(id, 3), {
-      initialProps: { id: undefined },
-      wrapper: wrapperFor('/#runs'),
-    });
-    mount(result, section);
-    expect(section.scrollIntoView).not.toHaveBeenCalled();
-
-    rerender({ id: 9 });
-    rerender({ id: 9 });
-
-    expect(section.scrollIntoView).toHaveBeenCalledTimes(1);
-  });
-
-  it('#runs waits for the runs to load before it picks a row', () => {
-    mocks.loaded = false;
-    mocks.runs = [];
-    const section = makeSection([cron]);
-    const { result, rerender } = setup('/#runs');
-    mount(result, section);
-    expect(section.scrollIntoView).not.toHaveBeenCalled();
-
-    mocks.loaded = true;
-    mocks.runs = [cron];
+    mocks.draft = [testRun(4, '2026-10-22T09:00:00Z'), testRun(3, '2026-10-20T09:00:00Z')];
     rerender();
 
-    expect(rowOf(section, cron).focus).toHaveBeenCalled();
+    expect(result.current.runs.map(run => run.id)).toEqual([4]);
+    expect(result.current.total).toBe(1);
   });
 
-  it('does not scroll or move focus without #runs and without history_run_id', () => {
-    mocks.runs = [cron];
-    const section = makeSection(mocks.runs);
-    const { result } = setup('/');
-    mount(result, section);
+  it('opens a new Test run by itself after the user started it', () => {
+    mocks.saved = [saved];
+    const { result, rerender } = setup('/', null);
 
-    expect(section.scrollIntoView).not.toHaveBeenCalled();
-    expect(rowOf(section, cron).focus).not.toHaveBeenCalled();
+    act(() => result.current.expectRun());
+    mocks.draft = [testRun(8, '2026-10-23T09:00:00Z')];
+    rerender();
+
+    expect(result.current.expandedRunId).toBe(8);
   });
 
-  it('history_run_id selects the linked run, scrolls to its row and announces it', () => {
-    mocks.runs = [cron, waiting];
-    const section = makeSection(mocks.runs);
-    const { result } = setup('/?history_run_id=90');
-    expect(result.current.viewedRun).toBe(waiting);
-    mount(result, section);
+  it('does not open a later run after the start failed', () => {
+    mocks.saved = [saved];
+    const { result, rerender } = setup();
 
-    expect(section.scrollIntoView).toHaveBeenCalled();
-    expect(rowOf(section, waiting).focus).toHaveBeenCalledWith({ preventScroll: true });
-    expect(result.current.announcement).toMatch(/^Showing run .*, cron, Waiting for approval$/);
-    expect(result.current.runNotFound).toBe(false);
+    act(() => result.current.expectRun());
+    act(() => result.current.cancelExpectRun());
+    mocks.saved = [{ ...waiting, status: 'running' }, saved];
+    rerender();
+
+    expect(result.current.expandedRunId).toBeUndefined();
   });
 
-  it('an unknown history_run_id shows no run, flags it and focuses the section', () => {
-    mocks.runs = [cron, waiting];
-    const section = makeSection(mocks.runs);
-    const { result } = setup('/?history_run_id=5');
-    mount(result, section);
+  it('counts a failed first draft list as empty, so the next Test run shows', () => {
+    mocks.draftLoaded = false;
+    mocks.draftFailed = true;
+    const { result, rerender } = setup('/', null);
 
-    expect(result.current.viewedRun).toBeUndefined();
-    expect(result.current.runNotFound).toBe(true);
-    expect(section.focus).toHaveBeenCalledWith({ preventScroll: true });
-    expect(rowOf(section, cron).focus).not.toHaveBeenCalled();
+    mocks.draftLoaded = true;
+    mocks.draftFailed = false;
+    mocks.draft = [testRun(5, '2026-10-23T09:00:00Z')];
+    rerender();
+
+    expect(result.current.runs.map(run => run.id)).toEqual([5]);
   });
 
-  it('a new #runs request after the hash changes scrolls again', () => {
-    mocks.runs = [cron];
-    const section = makeSection(mocks.runs);
-    const holder = { current: null };
-    const { result } = renderHook(() => useScheduleRunsView(9, 3), {
-      wrapper: ({ children }) => (
-        <MemoryRouter initialEntries={['/#runs']}>
-          <HashLink holder={holder} />
-          {children}
-        </MemoryRouter>
-      ),
-    });
-    mount(result, section);
-    expect(section.scrollIntoView).toHaveBeenCalledTimes(1);
+  it('keeps the open card when a scheduled run starts that the user did not ask for', () => {
+    mocks.saved = [saved];
+    const { result, rerender } = setup();
+    act(() => result.current.onExpand(1));
 
-    act(() => holder.current('/'));
-    act(() => holder.current('/#runs'));
+    mocks.saved = [{ ...waiting, status: 'running' }, saved];
+    rerender();
 
-    expect(section.scrollIntoView).toHaveBeenCalledTimes(2);
+    expect(result.current.expandedRunId).toBe(1);
   });
 
-  it('Open shows that run in the panel and scrolls to the panel below xl; Back to test returns', () => {
-    mocks.runs = [cron, waiting];
-    const { result } = setup();
-    const scrollIntoView = vi.fn();
-    result.current.panelRef.current = { scrollIntoView };
-    expect(result.current.viewedRun).toBeUndefined();
+  it('opens the run that Run Now started', () => {
+    mocks.saved = [saved];
+    const { result, rerender } = setup();
 
-    act(() => result.current.openRun(cron));
-    expect(result.current.viewedRun).toBe(cron);
-    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+    act(() => result.current.expectRun());
+    mocks.saved = [{ ...waiting, status: 'running' }, saved];
+    rerender();
 
-    act(() => result.current.backToTest());
-    expect(result.current.viewedRun).toBeUndefined();
+    expect(result.current.expandedRunId).toBe(2);
   });
 
-  it('Open does not scroll the page at xl, where the panel and the list are both in view', () => {
-    mocks.runs = [cron];
-    window.matchMedia = vi.fn(query => ({ matches: query.includes('min-width') }));
-    const { result } = setup();
-    const scrollIntoView = vi.fn();
-    result.current.panelRef.current = { scrollIntoView };
+  it('asks for no draft runs on a saved schedule', () => {
+    setup('/', 9);
+    expect(mocks.draftSkip).toBe(true);
 
-    act(() => result.current.openRun(cron));
-
-    expect(scrollIntoView).not.toHaveBeenCalled();
-    delete window.matchMedia;
+    setup('/', null);
+    expect(mocks.draftSkip).toBe(false);
   });
 
-  it('uses no smooth scroll when the person prefers reduced motion', () => {
-    mocks.runs = [cron];
-    window.matchMedia = vi.fn(query => ({ matches: query.includes('prefers-reduced-motion') }));
-    const section = makeSection(mocks.runs);
-    const { result } = setup();
-    mount(result, section);
+  it('scrolls the card into view for a #runs link once the runs are loaded', () => {
+    const card = { scrollIntoView: vi.fn(), focus: vi.fn() };
+    mocks.loaded = false;
+    const { result, rerender } = setup('/#runs');
+    result.current.cardRef.current = card;
 
-    act(() => result.current.showRunHistory());
+    mocks.loaded = true;
+    rerender();
 
-    expect(section.scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
-    delete window.matchMedia;
-  });
-
-  it('TC-US41-04 shows the run of the notice link (history_run_id) in the panel', () => {
-    mocks.runs = [cron, waiting];
-    expect(setup('/?history_run_id=90').result.current.viewedRun).toBe(waiting);
-    expect(setup('/?history_run_id=5').result.current.viewedRun).toBeUndefined();
-  });
-
-  it('names the versions of the schedule agent for the Version column and the prompt chip', () => {
-    mocks.applicationDetails.mockReturnValue({
-      currentData: {
-        versions: [
-          { id: 4, name: 'v3' },
-          { id: 5, name: 'base' },
-        ],
-      },
-    });
-    const { result } = setup();
-
-    expect(mocks.applicationDetails).toHaveBeenCalledWith(
-      { projectId: 5, applicationId: 3 },
-      { skip: false },
-    );
-    expect(result.current.versionNames).toEqual({ 4: 'v3', 5: 'base' });
+    expect(card.scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(card.focus).toHaveBeenCalledWith({ preventScroll: true });
   });
 });
-
-// Navigates the test router, as a menu entry does on the open page
-function HashLink({ holder }) {
-  const navigate = useNavigate();
-  holder.current = navigate;
-  return null;
-}

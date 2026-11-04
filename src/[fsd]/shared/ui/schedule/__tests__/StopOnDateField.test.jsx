@@ -14,7 +14,7 @@ import userEvent from '@testing-library/user-event';
 
 import StopOnDateField from '../StopOnDateField';
 
-const LABEL = 'Stop on a date';
+const LABEL = 'Stop on date';
 const PAST_DATE_MESSAGE = 'Pick today or a later date';
 const PAST_DATE = '2020-01-01';
 const FUTURE_DATE = '2999-12-31';
@@ -248,12 +248,12 @@ describe('StopOnDateField', () => {
     expect(screen.getByRole('checkbox', { name: LABEL })).toBeChecked();
   });
 
-  it('the underlined field does not stretch across the form width', () => {
+  it('the date field sits in the same row as the checkbox', () => {
     render(<Harness initialValue={FUTURE_DATE} />);
 
-    const field = screen.getByText('Stop date:').parentElement;
+    const row = screen.getByRole('checkbox', { name: LABEL }).closest('label').parentElement;
 
-    expect(getComputedStyle(field).alignSelf).toBe('flex-start');
+    expect(row).toContainElement(screen.getByLabelText('Stop date'));
   });
 
   it('a day that is still today in the schedule timezone is not marked past', () => {

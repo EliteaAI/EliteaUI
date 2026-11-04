@@ -1,25 +1,33 @@
-import { memo, useCallback, useState } from 'react';
+import { Fragment, memo, useCallback, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { formatRunTimestamp } from '@/[fsd]/entities/run-history';
 import { ScheduleMandateConsent } from '@/[fsd]/features/owner-consent';
 import { GovernanceReadinessCard } from '@/[fsd]/features/project-governance';
 import {
   ScheduleEnabledSwitch,
   ScheduleRowActions,
   ScheduleRunStatusChip,
-  formatRunStarted,
   useScheduleRowActions,
 } from '@/[fsd]/features/schedule';
 import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks';
-import { Button, Modal } from '@/[fsd]/shared/ui';
-import DeleteIcon from '@/components/Icons/DeleteIcon';
-import EditIcon from '@/components/Icons/EditIcon';
+import { Modal } from '@/[fsd]/shared/ui';
 
 import EntityScheduleCardLine from './EntityScheduleCardLine';
 
-const WIDE = '@container (min-width: 30rem)';
+// The card shows the day only, as the mockup does
+const CARD_DATE_FORMAT = 'dd.MM.yyyy';
+const formatCardDate = value => formatRunTimestamp(value, CARD_DATE_FORMAT);
+
+const stopPropagation = event => event.stopPropagation();
+
+// A running schedule has no finished run time to show, only the status
+const lastRunText = row => {
+  if (!row.last_run) return 'Never run';
+  return row.last_run_status === 'running' ? '' : formatCardDate(row.last_run);
+};
 
 const EntityScheduleCard = memo(props => {
   const { row, entityType, currentUserId, onOpenForm, onOpenRunHistory } = props;
@@ -38,117 +46,109 @@ const EntityScheduleCard = memo(props => {
     actions.onDelete();
   }, [actions]);
 
-  const allowed = row.allowed_actions;
+  // The card opens the details page for a user who may edit; the list API sends other rows read-only
+  const isOpenable = Boolean(row.allowed_actions?.includes('edit'));
   const rule = ScheduleHelpers.getCronSummaryInBrowserTimezone(row.cron, row.timezone);
   const timezone = ScheduleHelpers.getBrowserTimezone() ?? row.timezone;
-  const lastRun = row.last_run ? formatRunStarted(row.last_run) : 'Never run';
-  const nextRun = row.enabled ? (row.next_run && formatRunStarted(row.next_run)) || '-' : 'Paused';
-  // The list API sends only the user's own rows to a non-admin, so another owner shows for admins only
+  const nextRun = row.enabled ? (row.next_run && formatCardDate(row.next_run)) || '-' : 'Not scheduled';
+  // The list API sends only the user's own rows to a non-admin
   const isYou = row.owner?.id != null && row.owner.id === currentUserId;
-  const owner = isYou ? 'You' : row.owner?.name;
+  const showChip = Boolean(row.last_run && row.last_run_status);
   const testId = `${entityType}-schedule-card`;
 
-  const styles = entityScheduleCardStyles();
+  const styles = entityScheduleCardStyles(isOpenable);
 
   return (
-    <Box
-      role="group"
-      aria-label={row.name}
-      sx={styles.card}
-      data-testid={`${testId}-${row.id}`}
-    >
-      <EntityScheduleCardLine
-        area="title"
-        text={rule}
-        testId={`${testId}-rule-${row.id}`}
-        isTitle
-      />
-      <Typography
-        component="span"
-        sx={styles.timezoneHint}
+    <Fragment>
+      <Box
+        role="group"
+        aria-label={row.name}
+        sx={styles.card}
+        data-testid={`${testId}-${row.id}`}
+        onClick={isOpenable ? onEdit : undefined}
       >
-        {`Shown: ${timezone}`}
-      </Typography>
-      <EntityScheduleCardLine
-        area="last"
-        label="Last run"
-        text={lastRun}
-        chip={
-          // A status without a run time is stale data: "Never run" carries no chip
-          row.last_run &&
-          row.last_run_status && (
-            <ScheduleRunStatusChip
-              status={row.last_run_status}
-              variant="text"
-            />
-          )
-        }
-      />
-      <EntityScheduleCardLine
-        area="next"
-        label="Next run"
-        text={nextRun}
-        testId={`${testId}-next-${row.id}`}
-      />
-      <EntityScheduleCardLine
-        area="name"
-        label="Name"
-        text={row.name}
-      />
-      {owner && (
+        <Box sx={styles.heading}>
+          <EntityScheduleCardLine
+            text={rule}
+            testId={`${testId}-rule-${row.id}`}
+            onActivate={isOpenable ? onEdit : undefined}
+            isTitle
+          />
+          <Typography
+            variant="bodySmall2"
+            component="span"
+            color="text.secondary"
+            sx={styles.timezone}
+            data-testid={`${testId}-timezone-${row.id}`}
+          >
+            {`· ${timezone}`}
+          </Typography>
+        </Box>
+        <EntityScheduleCardLine text={row.name} />
         <EntityScheduleCardLine
-          area="owner"
-          label="Owner"
-          text={owner}
+          label="Last run"
+          text={lastRunText(row)}
+          chip={
+            // A status without a run time is stale data: "Never run" carries no chip
+            showChip && (
+              <ScheduleRunStatusChip
+                status={row.last_run_status}
+                variant="text"
+              />
+            )
+          }
         />
-      )}
-      <ScheduleMandateConsent
-        versionId={row.version_id}
-        isOwner={isYou}
-        sx={styles.consent}
-      />
-      {/* (#7269) the owner's Save card: the mandate, its grants and consent this schedule still needs */}
-      {isYou && (
-        <GovernanceReadinessCard
-          entityKind="schedule"
-          entityId={row.id}
-          testId={`${testId}-readiness-${row.id}`}
-          sx={styles.readiness}
+        <EntityScheduleCardLine
+          label="Next run"
+          text={nextRun}
+          testId={`${testId}-next-${row.id}`}
         />
-      )}
-      <Box sx={styles.footer}>
-        {allowed?.includes('edit') && (
-          <Button.BaseBtn
-            variant={Button.BUTTON_VARIANTS.tertiary}
-            size="small"
-            aria-label={`Edit ${row.name}`}
-            disabled={actions.isBusy}
-            startIcon={<EditIcon fill="currentColor" />}
-            onClick={onEdit}
+        {/* Buttons inside the consent and the readiness card must not open the schedule */}
+        <Box onClick={stopPropagation}>
+          <ScheduleMandateConsent
+            versionId={row.version_id}
+            isOwner={isYou}
           />
+        </Box>
+        {/* The owner's Save card: the mandate, its grants and consent this schedule still needs */}
+        {isYou && (
+          <Box onClick={stopPropagation}>
+            <GovernanceReadinessCard
+              entityKind="schedule"
+              entityId={row.id}
+              testId={`${testId}-readiness-${row.id}`}
+            />
+          </Box>
         )}
-        {allowed?.includes('delete') && (
-          <Button.BaseBtn
-            variant={Button.BUTTON_VARIANTS.tertiary}
-            size="small"
-            aria-label={`Delete ${row.name}`}
-            disabled={actions.isBusy}
-            startIcon={<DeleteIcon fill="currentColor" />}
-            onClick={onDeleteClick}
+        {/* The footer keeps its clicks (the menu and the dialogs render in portals) away from the card click */}
+        <Box
+          sx={styles.footer}
+          onClick={stopPropagation}
+        >
+          <Box sx={styles.toggle}>
+            <ScheduleEnabledSwitch
+              row={row}
+              testId={`${testId}-toggle-${row.id}`}
+            />
+            <Typography
+              variant="bodySmall2"
+              component="span"
+              color="text.secondary"
+              data-testid={`${testId}-state-${row.id}`}
+            >
+              {row.enabled ? 'Active' : 'Paused'}
+            </Typography>
+          </Box>
+          <ScheduleRowActions
+            row={row}
+            {...actions}
+            onEdit={onEdit}
+            onDelete={onDeleteClick}
+            onOpenRunHistory={onHistory}
+            hideToggle
+            hideChangeOwner
           />
-        )}
-        <ScheduleEnabledSwitch
-          row={row}
-          testId={`${testId}-toggle-${row.id}`}
-        />
-        <ScheduleRowActions
-          row={row}
-          {...actions}
-          onEdit={onEdit}
-          // The edit page shows the runs of the schedule beside the form
-          onOpenRunHistory={onHistory}
-          hideChangeOwner
-        />
+        </Box>
       </Box>
       {isDeleteOpen && (
         <Modal.DeleteEntityModal
@@ -159,67 +159,40 @@ const EntityScheduleCard = memo(props => {
           onConfirm={confirmDelete}
         />
       )}
-    </Box>
+    </Fragment>
   );
 });
 
 EntityScheduleCard.displayName = 'EntityScheduleCard';
 
 /** @type {MuiSx} */
-const entityScheduleCardStyles = () => ({
-  // The toolkit Schedule card look. The section is the container: below 30 rem each item has its own line
-  // and the actions sit in a right-aligned footer; from 30 rem the lines use two columns, actions at the right.
+const entityScheduleCardStyles = isOpenable => ({
   card: ({ palette }) => ({
-    containerType: 'inline-size',
-    display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1fr)',
-    gridTemplateAreas: `
-      "title"
-      "shown"
-      "last"
-      "next"
-      "name"
-      "owner"
-      "consent"
-      "footer"`,
-    alignItems: 'center',
-    rowGap: '0.25rem',
-    padding: '0.5rem 1rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    padding: '0.75rem 1rem',
     borderRadius: '0.5rem',
+    border: `0.0625rem solid ${palette.border.lines}`,
     backgroundColor: palette.background.surface.interactive.default,
-    [WIDE]: {
-      gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) auto',
-      gridTemplateAreas: `
-        "title title footer"
-        "shown shown footer"
-        "last  next  footer"
-        "name  owner footer"
-        "consent consent footer"`,
-      columnGap: '1rem',
-    },
+    cursor: isOpenable ? 'pointer' : 'default',
+    '&:hover': isOpenable ? { backgroundColor: palette.background.surface.interactive.active } : undefined,
   }),
-  // The timezoneHint of the toolkit Schedule card (RunIndexScheduleContent): same size, italic, wraps
-  timezoneHint: ({ palette }) => ({
-    gridArea: 'shown',
-    fontStyle: 'italic',
-    fontSize: '0.675rem',
-    color: palette.icon.secondary,
-    whiteSpace: 'pre-line',
-  }),
-  // the owner's consent when the schedule acts with their Microsoft sign-in; empty otherwise
-  consent: {
-    gridArea: 'consent',
+  heading: {
+    display: 'flex',
+    alignItems: 'baseline',
+    columnGap: '0.375rem',
     minWidth: 0,
   },
-  // (#7269) what the schedule still needs to run governed for its owner: no area of the template, so the card takes a
-  // row of its own (the full width, after the others) only when it renders; with nothing to show nothing is there
-  readiness: {
-    gridColumn: '1 / -1',
-    minWidth: 0,
-  },
+  timezone: { flexShrink: 0, whiteSpace: 'nowrap' },
   footer: {
-    gridArea: 'footer',
-    justifySelf: 'end',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: '0.25rem',
+    cursor: 'default',
+  },
+  toggle: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',

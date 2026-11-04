@@ -2,7 +2,7 @@ import { memo, useState } from 'react';
 
 import { format, isValid, parseISO } from 'date-fns';
 
-import { Box, FormControlLabel, FormHelperText, Typography } from '@mui/material';
+import { Box, FormControlLabel, FormHelperText } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 import { BaseCheckbox } from '@/[fsd]/shared/ui/checkbox';
@@ -22,6 +22,7 @@ const PAST_DATE_MESSAGE = 'Pick today or a later date';
  */
 const StopOnDateField = memo(props => {
   const { value, onChange, error, timezone, testIdPrefix = 'pipeline-schedule' } = props;
+  const styles = stopOnDateFieldStyles();
 
   // Only "checked, no date yet"; a set value keeps the box checked on its own.
   const [awaitingDate, setAwaitingDate] = useState(false);
@@ -52,27 +53,21 @@ const StopOnDateField = memo(props => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-      <FormControlLabel
-        label="Stop on a date"
-        control={
-          <BaseCheckbox
-            checked={checked}
-            onChange={handleCheck}
-            data-testid={`${testIdPrefix}-stop-on-date-checkbox`}
-          />
-        }
-      />
-      {checked && (
-        <>
-          <Box
-            sx={[
-              datePickerStyles.datePickerField,
-              { alignSelf: 'flex-start' },
-              open && datePickerStyles.datePickerFieldActive,
-            ]}
-          >
-            <Typography sx={datePickerStyles.datePickerLabel}>Stop date:</Typography>
+    <Box sx={styles.root}>
+      <Box sx={styles.row}>
+        <FormControlLabel
+          label="Stop on date"
+          control={
+            <BaseCheckbox
+              checked={checked}
+              onChange={handleCheck}
+              data-testid={`${testIdPrefix}-stop-on-date-checkbox`}
+            />
+          }
+          sx={styles.checkbox}
+        />
+        {checked && (
+          <Box sx={[datePickerStyles.datePickerField, open && datePickerStyles.datePickerFieldActive]}>
             <DatePicker
               value={date}
               minDate={parseISO(today)}
@@ -92,20 +87,27 @@ const StopOnDateField = memo(props => {
               })}
             />
           </Box>
-          {helperText && (
-            <FormHelperText
-              id={helperId}
-              error
-            >
-              {helperText}
-            </FormHelperText>
-          )}
-        </>
+        )}
+      </Box>
+      {checked && helperText && (
+        <FormHelperText
+          id={helperId}
+          error
+        >
+          {helperText}
+        </FormHelperText>
       )}
     </Box>
   );
 });
 
 StopOnDateField.displayName = 'StopOnDateField';
+
+/** @type {MuiSx} */
+const stopOnDateFieldStyles = () => ({
+  root: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
+  row: { display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' },
+  checkbox: { margin: 0 },
+});
 
 export default StopOnDateField;

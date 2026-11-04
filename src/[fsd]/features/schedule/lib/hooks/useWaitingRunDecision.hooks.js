@@ -3,7 +3,10 @@ import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
-import { useDecideRunWithoutChatMutation } from '@/[fsd]/entities/schedule';
+import {
+  useDecideRunWithoutChatMutation,
+  useDecideTestRunWithoutChatMutation,
+} from '@/[fsd]/entities/schedule';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { buildErrorMessage } from '@/common/utils';
@@ -16,19 +19,23 @@ import { buildErrorMessage } from '@/common/utils';
 // A 409 with `credential_missing` is not a stale run: the run still waits, so the server text is shown.
 const CREDENTIAL_MISSING = 'credential_missing';
 
-export const useWaitingRunDecision = ({ schedule, onDecided }) => {
+// A Test run has no schedule: the user who started it (`requested_by`) decides it, through the test run route.
+export const useWaitingRunDecision = ({ schedule, run, onDecided }) => {
   const projectId = useSelectedProjectId();
   const userId = useSelector(state => state.user.id);
   const { toastError, toastInfo } = useToast();
   const [decideWaitingRun] = RunHistoryApi.useDecideWaitingRunMutation();
   const [decideRunWithoutChat] = useDecideRunWithoutChatMutation();
+  const [decideTestRunWithoutChat] = useDecideTestRunWithoutChatMutation();
+  const isTestRun = Boolean(run?.isDraftRun);
 
   const onHitlResume = useCallback(
     async ({ action, conversationUuid, messageId, authRequest, runId }) => {
       try {
         if (!conversationUuid) {
-          // A run that waits for credentials has no chat; the schedule route decides it
-          await decideRunWithoutChat({ projectId, scheduleId: schedule?.id, runId, action }).unwrap();
+          // A run that waits for credentials has no chat; a route without a chat decides it
+          if (isTestRun) await decideTestRunWithoutChat({ projectId, runId, action }).unwrap();
+          else await decideRunWithoutChat({ projectId, scheduleId: schedule?.id, runId, action }).unwrap();
           onDecided?.();
           return;
         }
@@ -57,8 +64,19 @@ export const useWaitingRunDecision = ({ schedule, onDecided }) => {
         }
       }
     },
-    [decideWaitingRun, decideRunWithoutChat, projectId, schedule?.id, onDecided, toastError, toastInfo],
+    [
+      decideWaitingRun,
+      decideRunWithoutChat,
+      decideTestRunWithoutChat,
+      isTestRun,
+      projectId,
+      schedule?.id,
+      onDecided,
+      toastError,
+      toastInfo,
+    ],
   );
 
-  return schedule?.owner?.id === userId ? onHitlResume : undefined;
+  const mayDecide = isTestRun ? run?.requested_by === userId : schedule?.owner?.id === userId;
+  return mayDecide ? onHitlResume : undefined;
 };

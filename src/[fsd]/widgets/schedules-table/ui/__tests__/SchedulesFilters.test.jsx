@@ -83,9 +83,9 @@ describe('SchedulesFilters', () => {
     expect(onChange).toHaveBeenCalledWith({ ...EMPTY, status: 'failed' });
   });
 
-  it('the approval wait option reads "Waiting for approval" and emits waiting_for_approval', () => {
+  it('the approval wait option reads "Awaiting approval" and emits waiting_for_approval', () => {
     const onChange = renderBar();
-    pick('status', 'Waiting for approval');
+    pick('status', 'Awaiting approval');
     expect(onChange).toHaveBeenCalledWith({ ...EMPTY, status: 'waiting_for_approval' });
   });
 

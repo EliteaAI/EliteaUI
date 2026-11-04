@@ -91,3 +91,26 @@ export const canBuildCron = expression => {
     return false;
   }
 };
+
+const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+const joinWithAnd = items =>
+  items.length > 1 ? `${items.slice(0, -1).join(', ')} and ${items.at(-1)}` : items[0];
+
+const ordinal = day => {
+  const rest = day % 100;
+  if (rest >= 11 && rest <= 13) return `${day}th`;
+  return `${day}${{ 1: 'st', 2: 'nd', 3: 'rd' }[day % 10] ?? 'th'}`;
+};
+
+/** One sentence for a cron the Builder can show ("Runs every week at 00:00 on Saturday."); '' for any other. */
+export const describeCron = expression => {
+  const state = parseCron(expression);
+  if (!state) return '';
+  const time = `${String(state.hours).padStart(2, '0')}:${String(state.minutes).padStart(2, '0')}`;
+  const days = joinWithAnd(state.weekDays.map(day => WEEKDAY_NAMES[day]).filter(Boolean));
+  if (state.period === 'day') return `Runs every day at ${time}.`;
+  if (state.period === 'week') return `Runs every week at ${time}${days ? ` on ${days}` : ''}.`;
+  const monthDays = state.monthDays.length ? ` on the ${joinWithAnd(state.monthDays.map(ordinal))}` : '';
+  return `Runs every month at ${time}${monthDays}${days ? `, only on ${days}` : ''}.`;
+};

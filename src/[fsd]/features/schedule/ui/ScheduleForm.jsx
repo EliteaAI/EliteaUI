@@ -5,7 +5,6 @@ import { useFormik } from 'formik';
 import { Box, Grid } from '@mui/material';
 
 import { GenerateEntityButton } from '@/[fsd]/entities/generate-entity-with-ai';
-import { VersionSelect, getDefaultVersionId } from '@/[fsd]/entities/version';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
@@ -21,15 +20,17 @@ import { RISK_CHECK_STATUS } from '../lib/constants';
 import { resetWhatToRun, scheduleFormSchema } from '../lib/helpers';
 import { useScheduleEntityDetails, useScheduleRiskCheck, useScheduleSave } from '../lib/hooks';
 import BuildScheduleWithAiModal from './BuildScheduleWithAiModal';
-import FieldError from './FieldError';
 import RiskReviewDialog from './RiskReviewDialog';
 import SaveWarningsDialog from './SaveWarningsDialog';
 import ScheduleApprovalSection, { APPROVAL_RULE_ITEMS } from './ScheduleApprovalSection';
 import ScheduleEntitySection from './ScheduleEntitySection';
 import ScheduleFormActions from './ScheduleFormActions';
 import ScheduleGeneralSection from './ScheduleGeneralSection';
+import ScheduleLockedEntity from './ScheduleLockedEntity';
 import SchedulePromptSection from './SchedulePromptSection';
 import ScheduleRiskNotices from './ScheduleRiskNotices';
+import ScheduleSettingsHeader from './ScheduleSettingsHeader';
+import ScheduleVersionField from './ScheduleVersionField';
 
 // The risk check states that keep Save disabled
 const RISK_STATES_WITHOUT_SAVE = [
@@ -43,11 +44,12 @@ const RISK_STATES_WITHOUT_SAVE = [
  * `onSubmit(body)` returns a promise of the save answer and rejects with the API error;
  * `onSaved(answer)` runs at once after a save without warnings, else when the warnings dialog closes.
  * `schedule` turns on edit mode: read-only Owner and update body. `entityName` names the page.
- * `sidePanel({ onTestRun, testRunPending, testRunError })` renders a card right of the form, as the
- * Agents editor puts its chat; its `onTestRun` saves a changed form, then calls the `onTestRun()` prop
- * (a promise) in the place of `onSaved` at the same post-save point. What `sidePanel` returns (the panel and
- * the Runs section under it) fills the right column from xl, and sits under the form below it.
- * `sidePanelFirst` puts the panel above the form below xl, for a card the owner must see at once.
+ * `sidePanel({ values, onRunNow, runNowPending, runNowError, onTestRun, testRunPending, testRunError })`
+ * renders a card right of the form, as the Agents editor puts its chat. `onRunNow` saves a changed form, then
+ * calls the `onRunNow()` prop at the post-save point. `onTestRun` runs the unsaved form through the
+ * `onDraftTestRun(body)` prop and saves nothing. The card fills the right column from lg, and sits under the
+ * form below it.
+ * `sidePanelFirst` puts the panel above the form below lg, for a card the owner must see at once.
  * `headerActions` (a node) sits in the header bar after Cancel, for example the page's 3-dots menu.
  */
 const ScheduleForm = memo(props => {
@@ -58,7 +60,8 @@ const ScheduleForm = memo(props => {
     entityName,
     onSubmit,
     onSaved,
-    onTestRun,
+    onRunNow,
+    onDraftTestRun,
     onCancel,
     sidePanel,
     sidePanelFirst = false,
@@ -66,6 +69,7 @@ const ScheduleForm = memo(props => {
     children,
   } = props;
 
+  const styles = scheduleFormStyles();
   const projectId = useSelectedProjectId();
   const { checkPermission } = useCheckPermission();
   // Only a project admin can change the setting, so only an admin gets the link to it
@@ -87,7 +91,7 @@ const ScheduleForm = memo(props => {
     scheduleId: schedule?.id,
     approvalRule: values.approval_rule,
   });
-  const save = useScheduleSave({ formik, riskCheck, schedule, onSubmit, onSaved, onTestRun });
+  const save = useScheduleSave({ formik, riskCheck, schedule, onSubmit, onSaved, onRunNow, onDraftTestRun });
   // Without edit in allowed_actions the server refuses a save, so the form only shows the values
   const readOnly = Array.isArray(schedule?.allowed_actions) && !schedule.allowed_actions.includes('edit');
   const riskBlocksSave = RISK_STATES_WITHOUT_SAVE.includes(riskCheck.status);
@@ -98,9 +102,9 @@ const ScheduleForm = memo(props => {
     [formik.dirty, formik.isSubmitting],
   );
   useNavBlocker(blockOptions);
-  // Messages show after the first Save, so a half-filled form shows no required errors
   const fieldError = name => (submitCount ? errors[name] : '');
 
+  // An editor route or a saved schedule fixes the entity: it is shown, not changeable
   const { details, lockActive } = useScheduleEntityDetails({
     projectId,
     formik,
@@ -126,6 +130,10 @@ const ScheduleForm = memo(props => {
     [setFieldValue],
   );
   const handleRuleChange = useCallback(rule => setFieldValue('approval_rule', rule), [setFieldValue]);
+  const handleEnabledChange = useCallback(enabled => setFieldValue('enabled', enabled), [setFieldValue]);
+
+  // The page drops the hidden Test draft of this form when the user leaves without saving
+  const handleCancel = useCallback(() => onCancel?.(values), [onCancel, values]);
 
   const ruleNote = save.ruleChanged
     ? `The schedule was saved with the rule "${APPROVAL_RULE_ITEMS.find(item => item.value === save.savedRule)?.label ?? save.savedRule}".`
@@ -160,10 +168,6 @@ const ScheduleForm = memo(props => {
       setValues={setValues}
     />
   );
-  // A form nested in an editor takes the entity and version from the route: its selectors and WHAT TO RUN
-  // are hidden and the prompt fields move under GENERAL
-  const hideWhatToRun = lockActive;
-
   const sections = [
     {
       title: 'GENERAL',
@@ -197,16 +201,10 @@ const ScheduleForm = memo(props => {
             descriptionError={fieldError('description')}
             setFieldValue={setFieldValue}
           />
-          {hideWhatToRun && (
-            <>
-              {riskNotices}
-              {promptFields}
-            </>
-          )}
         </Box>
       ),
     },
-    !hideWhatToRun && {
+    {
       title: 'WHAT TO RUN',
       testId: 'schedule-section-what-to-run',
       content: (
@@ -215,27 +213,32 @@ const ScheduleForm = memo(props => {
           disabled={readOnly}
           sx={styles.section}
         >
-          <ScheduleEntitySection
-            type={values.type}
-            applicationId={values.application_id}
-            details={details}
-            lockActive={lockActive}
-            lockFailed={lockFailed}
-            readOnly={readOnly}
-            error={fieldError('application_id')}
-            onTypeChange={handleTypeChange}
-            onEntityChange={handleEntityChange}
-          />
+          {lockActive || (schedule?.id && values.application_id) ? (
+            <ScheduleLockedEntity
+              type={values.type}
+              name={details?.name}
+              editing={!!schedule}
+            />
+          ) : (
+            <ScheduleEntitySection
+              type={values.type}
+              applicationId={values.application_id}
+              details={details}
+              lockFailed={lockFailed}
+              readOnly={readOnly}
+              error={fieldError('application_id')}
+              onTypeChange={handleTypeChange}
+              onEntityChange={handleEntityChange}
+            />
+          )}
           {riskNotices}
-          <VersionSelect
-            entityId={values.application_id}
+          <ScheduleVersionField
             versions={details?.versions}
-            defaultVersionID={getDefaultVersionId(details)}
             value={values.version_id}
             onChange={handleVersionChange}
             disabled={!values.application_id || readOnly}
+            error={fieldError('version_id')}
           />
-          <FieldError message={fieldError('version_id')} />
           {promptFields}
         </Box>
       ),
@@ -249,7 +252,21 @@ const ScheduleForm = memo(props => {
           disabled={readOnly}
           sx={styles.section}
         >
-          {children?.({ values, setFieldValue, dirty: formik.dirty, setValues, fieldError })}
+          <Box sx={styles.panel}>
+            {children?.({ values, setFieldValue, dirty: formik.dirty, setValues, fieldError })}
+          </Box>
+        </Box>
+      ),
+    },
+    {
+      title: 'APPROVAL RULE',
+      testId: 'schedule-section-approval',
+      content: (
+        <Box
+          component="fieldset"
+          disabled={readOnly}
+          sx={styles.section}
+        >
           <ScheduleApprovalSection
             rule={values.approval_rule}
             ruleChanged={save.ruleChanged}
@@ -262,7 +279,7 @@ const ScheduleForm = memo(props => {
         </Box>
       ),
     },
-  ].filter(Boolean);
+  ];
 
   // The same header bar, column and collapsible sections as New Agent (CreateApplication)
   return (
@@ -281,21 +298,27 @@ const ScheduleForm = memo(props => {
                   formik.isSubmitting || riskBlocksSave || readOnly || (!!schedule && !formik.dirty)
                 }
                 onSave={formik.handleSubmit}
-                onCancel={onCancel}
+                onCancel={handleCancel}
                 headerActions={headerActions}
               />
             ),
             content: (
-              // With a side panel: the Agents editor split (ConfigurationTab). The Settings menu takes about
-              // 30 rem more than the Agents page, so the split starts at xl (1536 px), not lg, and the card
-              // goes under the form below it, where each half would be narrower than the Agents halves.
+              // With a side panel: the Agents editor split (ConfigurationTab). The split starts at lg (1200 px),
+              // so a 1366 px laptop shows the settings and the Runs card side by side; below it the card goes
+              // under the form, where each half would be too narrow.
               <StyledGridContainer
                 container
-                columnSpacing="2rem"
+                columnSpacing={0}
                 rowSpacing="1.5rem"
                 sx={sidePanel && styles.split}
               >
-                <Grid size={{ xs: 12, xl: sidePanel ? 6 : 12 }}>
+                <Grid size={{ xs: 12, lg: sidePanel ? 6 : 12 }}>
+                  <ScheduleSettingsHeader
+                    schedule={schedule}
+                    enabled={values.enabled}
+                    readOnly={readOnly}
+                    onEnabledChange={handleEnabledChange}
+                  />
                   <Box
                     component="form"
                     noValidate
@@ -317,13 +340,17 @@ const ScheduleForm = memo(props => {
                 </Grid>
                 {sidePanel && (
                   <Grid
-                    size={{ xs: 12, xl: 6 }}
+                    size={{ xs: 12, lg: 6 }}
                     sx={[styles.sidePanel, sidePanelFirst && styles.sidePanelFirst]}
                   >
                     {sidePanel({
-                      onTestRun: save.handleTestRun,
-                      testRunPending: formik.isSubmitting || save.testRunPending,
-                      testRunError: save.testRunError,
+                      values,
+                      onRunNow: save.handleRunNow,
+                      runNowPending: formik.isSubmitting || save.runNowPending,
+                      runNowError: save.runNowError,
+                      onTestRun: save.handleDraftTestRun,
+                      testRunPending: save.draftTestPending,
+                      testRunError: save.draftTestError,
                     })}
                   </Grid>
                 )}
@@ -359,20 +386,28 @@ const ScheduleForm = memo(props => {
 
 ScheduleForm.displayName = 'ScheduleForm';
 
-export default ScheduleForm;
-
 /** @type {MuiSx} */
-const styles = {
-  // the New Agent form column (CreateAgentForm)
-  root: { order: 1, width: '100%', margin: '0.75rem auto 0', maxWidth: '40.1875rem' },
-  // the ConfigurationTab grid padding
-  split: { padding: '0 1.5rem 1.5rem' },
-  sidePanel: { order: 2, paddingTop: '0.75rem' },
-  // Below xl the panel is stacked under the form; an urgent card goes above it, so it is seen first
-  sidePanelFirst: ({ breakpoints }) => ({ order: -1, [breakpoints.up('xl')]: { order: 2 } }),
-  // The header holds one unlabelled tab, so its selected-tab indicator is a stray line under the crumbs
+const scheduleFormStyles = () => ({
+  root: { order: 1, width: '100%', margin: '1rem auto 0', padding: '0 1.5rem', maxWidth: '40.1875rem' },
+  // StyledTabs pads its content by 1.5rem; the header bars of both columns run to the edges, so the grid cancels it
+  split: { margin: '0 -1.5rem', width: 'calc(100% + 3rem)', padding: 0 },
+  sidePanel: ({ palette }) => ({
+    order: 2,
+    minHeight: '100%',
+    borderLeft: `0.0625rem solid ${palette.border.lines}`,
+  }),
+  // Below lg the panel is stacked under the form; an urgent card goes above it, so it is seen first
+  sidePanelFirst: ({ breakpoints }) => ({ order: -1, [breakpoints.up('lg')]: { order: 2 } }),
   noTabIndicator: { '& .MuiTabs-indicator': { display: 'none' } },
   accordion: ({ palette }) => ({ background: `${palette.background.default.tertiary} !important` }),
+  panel: ({ palette }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    padding: '1rem',
+    borderRadius: '0.5rem',
+    backgroundColor: palette.background.surface.interactive.default,
+  }),
   // A fieldset, so `disabled` reaches every input inside; its default border, margin and min width are reset
   section: {
     display: 'flex',
@@ -380,7 +415,9 @@ const styles = {
     gap: '1rem',
     border: 0,
     margin: 0,
-    padding: '0 0 1.5rem',
+    padding: '0.5625rem 0 1.5rem',
     minWidth: 0,
   },
-};
+});
+
+export default ScheduleForm;

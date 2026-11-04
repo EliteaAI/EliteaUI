@@ -13,7 +13,17 @@ import CronBuilder from './CronBuilder';
 
 const { canConvertCronTimezone, getBrowserTimezone, getNextCronRun, validateCronExpression } =
   ScheduleHelpers;
-const { canBuildCron, parseCron } = CronBuilderHelpers;
+const { canBuildCron, describeCron, parseCron } = CronBuilderHelpers;
+
+// "Europe/Kyiv" and "Europe/Kiev" are one zone; the runtime resolves both to one canonical name
+const canonicalZone = zone => {
+  try {
+    return new Intl.DateTimeFormat(undefined, { timeZone: zone }).resolvedOptions().timeZone;
+  } catch {
+    return zone;
+  }
+};
+const isSameTimezone = (a, b) => a === b || canonicalZone(a) === canonicalZone(b);
 
 const BUILDER_BLOCKED_HINT =
   'The Builder cannot show this expression. Edit it as text, or enter a daily time.';
@@ -25,7 +35,7 @@ const getViewButtons = (builderBlocked, hintId) => [
     // A disabled tab cannot take focus, so the hint is linked to it for screen readers
     buttonProps: { disabled: builderBlocked, 'aria-describedby': builderBlocked ? hintId : undefined },
   },
-  { value: 'cron', label: 'Cron expression' },
+  { value: 'cron', label: 'Cron Expression' },
 ];
 
 /**
@@ -35,9 +45,17 @@ const getViewButtons = (builderBlocked, hintId) => [
  * `error` is a server error for the cron.
  */
 const ScheduleSettingsSection = memo(props => {
-  const { value, onChange, sourceCron, sourceTimezone, error, testIdPrefix = 'pipeline-schedule' } = props;
+  const {
+    value,
+    onChange,
+    sourceCron,
+    sourceTimezone,
+    error,
+    testIdPrefix = 'pipeline-schedule',
+    alignStart = false,
+  } = props;
 
-  const styles = scheduleSettingsSectionStyles();
+  const styles = scheduleSettingsSectionStyles(alignStart);
 
   // A saved cron the Builder cannot show opens as text, so the form never shows another schedule
   const [cronType, setCronType] = useState(() => (!value || canBuildCron(value) ? 'builder' : 'cron'));
@@ -64,7 +82,7 @@ const ScheduleSettingsSection = memo(props => {
 
   // Decided from the stored cron, never from the edited value, which is already converted.
   const timezoneNotice = useMemo(() => {
-    if (!sourceTimezone || !browserTimezone || sourceTimezone === browserTimezone) return null;
+    if (!sourceTimezone || !browserTimezone || isSameTimezone(sourceTimezone, browserTimezone)) return null;
 
     if (!canConvertCronTimezone(sourceCron, sourceTimezone, browserTimezone)) {
       return `This schedule was configured in ${sourceTimezone} and its expression cannot be converted automatically, so the times below are shown as configured. Saving will reinterpret them in your timezone (${browserTimezone}).`;
@@ -83,8 +101,14 @@ const ScheduleSettingsSection = memo(props => {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      hour12: !alignStart,
     });
-  }, [value, cronState.isValid]);
+  }, [value, cronState.isValid, alignStart]);
+
+  // The schedule pages read as a sentence ("Runs at 08:00."); the legacy modal keeps the quoted text
+  const summaryText = alignStart
+    ? describeCron(value) || `Runs ${cronState.message.charAt(0).toLowerCase()}${cronState.message.slice(1)}.`
+    : `"${cronState.message}"`;
 
   const errorText = error || (cronState.isValid ? null : cronState.message);
 
@@ -134,6 +158,7 @@ const ScheduleSettingsSection = memo(props => {
             value={value}
             onChange={onChange}
             invalidField={cronState.isValid ? null : cronState.field}
+            alignStart={alignStart}
           />
           {errorRow}
         </Box>
@@ -179,7 +204,7 @@ const ScheduleSettingsSection = memo(props => {
           variant="headingSmall"
           sx={styles.previewSummary}
         >
-          {cronState.isValid ? `"${cronState.message}"` : '-'}
+          {cronState.isValid ? summaryText : '-'}
         </Typography>
 
         {nextRun && (
@@ -193,7 +218,9 @@ const ScheduleSettingsSection = memo(props => {
             >
               Next run:
             </Typography>
-            <Typography variant="labelSmall">{`${nextRun} (${browserTimezone})`}</Typography>
+            <Typography variant="labelSmall">
+              {alignStart ? nextRun : `${nextRun} (${browserTimezone})`}
+            </Typography>
           </Box>
         )}
       </Box>
@@ -220,7 +247,7 @@ const ScheduleSettingsSection = memo(props => {
 ScheduleSettingsSection.displayName = 'ScheduleSettingsSection';
 
 /** @type {MuiSx} */
-const scheduleSettingsSectionStyles = () => ({
+const scheduleSettingsSectionStyles = alignStart => ({
   contentWrapper: {
     display: 'flex',
     flexDirection: 'column',
@@ -230,7 +257,7 @@ const scheduleSettingsSectionStyles = () => ({
   },
   tabRow: {
     display: 'flex',
-    justifyContent: 'center',
+    justifyContent: alignStart ? 'flex-start' : 'center',
   },
   builderBlockedHint: ({ palette }) => ({
     textAlign: 'center',
@@ -242,7 +269,7 @@ const scheduleSettingsSectionStyles = () => ({
     background: ({ palette }) => palette.background.surface.interactive.default,
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center',
+    alignItems: alignStart ? 'flex-start' : 'center',
     gap: '0.625rem',
     width: '100%',
   },
@@ -250,11 +277,11 @@ const scheduleSettingsSectionStyles = () => ({
     padding: '0',
     width: '100%',
     '& input': {
-      textAlign: 'center',
+      textAlign: alignStart ? 'left' : 'center',
     },
   },
   previewSummary: {
-    textAlign: 'center',
+    textAlign: alignStart ? 'left' : 'center',
     fontWeight: 500,
   },
   previewSummaryError: {
@@ -262,20 +289,20 @@ const scheduleSettingsSectionStyles = () => ({
   },
   nextRunContainer: {
     display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
+    flexDirection: alignStart ? 'row' : 'column',
+    alignItems: alignStart ? 'baseline' : 'center',
     gap: '0.25rem',
   },
   descriptionContainer: {
     display: 'flex',
-    justifyContent: 'center',
+    justifyContent: alignStart ? 'flex-start' : 'center',
     alignItems: 'center',
     gap: '0.25rem',
   },
   cronDescription: ({ palette }) => ({
     color: palette.secondary.main,
     fontSize: '0.75rem',
-    textAlign: 'center',
+    textAlign: alignStart ? 'left' : 'center',
   }),
   noticeContainer: {
     display: 'flex',
