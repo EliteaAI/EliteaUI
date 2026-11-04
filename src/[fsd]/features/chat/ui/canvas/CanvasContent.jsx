@@ -32,6 +32,7 @@ const CanvasContent = memo(props => {
   const { checkPermission } = useCheckPermission();
   const styles = canvasContentStyles();
   const theme = useTheme();
+  const isEditDisabled = isStreaming || !checkPermission(PERMISSIONS.chat.canvas.update);
 
   return (
     <>
@@ -69,12 +70,12 @@ const CanvasContent = memo(props => {
             <Box component="span">
               <Button.BaseBtn
                 variant={BUTTON_VARIANTS.icon}
-                disabled={isStreaming || !checkPermission(PERMISSIONS.chat.canvas.update)}
+                disabled={isEditDisabled}
                 onClick={onClickEdit}
               >
                 <EditIcon
                   sx={styles.icon}
-                  fill={theme.palette.icon.default}
+                  fill={isEditDisabled ? theme.palette.icon.disabled : theme.palette.icon.default}
                 />
               </Button.BaseBtn>
             </Box>
