@@ -103,17 +103,22 @@ const EntityScheduleCard = memo(props => {
           text={nextRun}
           testId={`${testId}-next-${row.id}`}
         />
-        <ScheduleMandateConsent
-          versionId={row.version_id}
-          isOwner={isYou}
-        />
+        {/* Buttons inside the consent and the readiness card must not open the schedule */}
+        <Box onClick={stopPropagation}>
+          <ScheduleMandateConsent
+            versionId={row.version_id}
+            isOwner={isYou}
+          />
+        </Box>
         {/* The owner's Save card: the mandate, its grants and consent this schedule still needs */}
         {isYou && (
-          <GovernanceReadinessCard
-            entityKind="schedule"
-            entityId={row.id}
-            testId={`${testId}-readiness-${row.id}`}
-          />
+          <Box onClick={stopPropagation}>
+            <GovernanceReadinessCard
+              entityKind="schedule"
+              entityId={row.id}
+              testId={`${testId}-readiness-${row.id}`}
+            />
+          </Box>
         )}
         {/* The footer keeps its clicks (the menu and the dialogs render in portals) away from the card click */}
         <Box

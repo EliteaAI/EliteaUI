@@ -162,6 +162,17 @@ describe('EntityScheduleCard', () => {
     expect(onOpenForm.mock.calls).toEqual([[7]]);
   });
 
+  it('does not open the details page on a click inside the consent line or the readiness card', () => {
+    readiness.shown = true;
+    const { onOpenForm } = renderCard();
+
+    fireEvent.click(screen.getByTestId('schedule-mandate-consent-stub'));
+    fireEvent.click(screen.getByTestId('schedule-readiness-stub'));
+
+    expect(onOpenForm).not.toHaveBeenCalled();
+    readiness.shown = false;
+  });
+
   it('opens the details page from the keyboard on the rule line', () => {
     const { onOpenForm } = renderCard();
 
