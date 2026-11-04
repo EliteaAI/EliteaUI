@@ -1,66 +1,24 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-
-import { useFormikContext } from 'formik';
+import { memo, useCallback, useMemo } from 'react';
 
 import { Box, FormControlLabel, Typography } from '@mui/material';
 
+import { INTERNAL_TOOL_ICONS } from '@/[fsd]/features/agent/lib/constants';
+import { useAgentInternalToolToggle } from '@/[fsd]/features/agent/lib/hooks';
 import { Switch, Text } from '@/[fsd]/shared/ui';
 import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
-import AttachSvgIcon from '@/assets/attach-icon.svg?react';
-import CalendarIcon from '@/assets/calendar.svg?react';
-import ImageSvgIcon from '@/assets/image.svg?react';
-import McpIconSVG from '@/assets/mcp-icon.svg?react';
-import PieChartIcon from '@/assets/pie-chart-icon.svg?react';
-import PythonIcon from '@/assets/python.svg?react';
-import SwarmIconSVG from '@/assets/swarm-icon.svg?react';
-import ToolsIcon from '@/assets/tools-icon.svg?react';
-import WebSearchIcon from '@/assets/web_search.svg?react';
 
 const AgentInternalToolSwitch = memo(props => {
   const { title, name, disabled, unavailable = false, infoTooltip, icon } = props;
-  const { values, setFieldValue } = useFormikContext();
 
   const styles = agentInternalToolSwitchStyles();
 
-  const internal_tools = useMemo(
-    () => values?.version_details?.meta?.internal_tools || [],
-    [values?.version_details?.meta],
-  );
-  const [allowTool, setAllowTool] = useState(!!values?.version_details?.meta?.attachment_toolkit_id);
+  const { checked, onToggle } = useAgentInternalToolToggle({ name, unavailable });
 
-  const onChange = useCallback(
-    (_, checkedValue) => {
-      if (unavailable) return;
-      setFieldValue(
-        'version_details.meta.internal_tools',
-        checkedValue ? [...new Set([...internal_tools, name])] : internal_tools.filter(t => t !== name),
-      );
-    },
-    [setFieldValue, internal_tools, name, unavailable],
-  );
-
-  useEffect(() => {
-    setAllowTool(internal_tools.includes(name));
-  }, [internal_tools, name]);
-
-  const iconMap = useMemo(
-    () => ({
-      GearIcon: ToolsIcon,
-      CodeIcon: PythonIcon,
-      DatabaseIcon: PieChartIcon,
-      CalendarIcon,
-      ImageSvgIcon,
-      UsersIcon: SwarmIconSVG,
-      AttachSvgIcon,
-      McpIcon: McpIconSVG,
-      GlobeIcon: WebSearchIcon,
-    }),
-    [],
-  );
+  const onChange = useCallback((_, checkedValue) => onToggle(checkedValue), [onToggle]);
 
   const toolIcon = useMemo(() => {
-    const IconComponent = iconMap[icon];
+    const IconComponent = INTERNAL_TOOL_ICONS[icon];
     if (!IconComponent) return null;
     return {
       component: (
@@ -70,7 +28,7 @@ const AgentInternalToolSwitch = memo(props => {
         />
       ),
     };
-  }, [icon, iconMap, styles.toolSvgIcon]);
+  }, [icon, styles.toolSvgIcon]);
 
   return (
     <Box sx={styles.container}>
@@ -92,7 +50,7 @@ const AgentInternalToolSwitch = memo(props => {
       <FormControlLabel
         control={
           <Switch.BaseSwitch
-            checked={allowTool && !unavailable}
+            checked={checked}
             onChange={onChange}
             disabled={disabled || unavailable}
             // NOTE: the legacy `inputProps` prop on MUI v7's <Switch> is

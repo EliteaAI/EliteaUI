@@ -44,14 +44,15 @@ Once configured, an agent can autonomously execute complex, multi-step tasks suc
 - **+ Toolkit** — attach an external integration (GitHub, Jira, SQL, etc.); select from existing or create a new one inline
 - **+ MCP** — attach a Model Context Protocol server for additional tool capabilities
 - **+ Agent** — delegate tasks to another agent within this agent's workflow
-- **+ Pipeline** — invoke a pipeline as a step in the agent's execution`,
+- **+ Pipeline** — invoke a pipeline as a step in the agent's execution
+- **+ Modules** — enable built-in modules such as Attachments, Python Sandbox, or Web Search`,
   },
   {
     id: 'advanced-settings',
     target: AGENT_TOUR_TARGETS.advancedSettings,
     placement: 'right',
     title: 'Modules & AI Model',
-    content: `**Modules** are built-in capabilities available to every agent without external credentials. Enable them directly from the agent configuration:
+    content: `**Modules** are built-in capabilities available to every agent without external credentials. Search and enable them from the **+ Modules** dropdown in the Tools section:
 
 - **Attachments** — lets users upload files and images for the agent to analyze
 - **Data Analysis** — processes CSV/Excel files, runs statistical analysis, creates charts
