@@ -27,6 +27,7 @@ const normaliseSuggestedTools = draftData => [
   ...(draftData?.suggested_mcp || []).map(t => ({ ...t, entityType: 'mcp' })),
   ...(draftData?.suggested_agents || []).map(a => ({ ...a, entityType: 'agent' })),
   ...(draftData?.suggested_pipelines || []).map(p => ({ ...p, entityType: 'pipeline' })),
+  ...(draftData?.suggested_skills || []).map(s => ({ ...s, entityType: 'skill' })),
 ];
 
 const toolKey = t => `${t.entityType}:${t.id}`;
@@ -64,6 +65,8 @@ const PipelineToolsDiffStep = memo(props => {
     onToggleAddAgent,
     addPipelineIds,
     onToggleAddPipeline,
+    addSkillIds,
+    onToggleAddSkill,
     removeToolRecordIds,
     onToggleRemoveTool,
   } = props;
@@ -83,6 +86,7 @@ const PipelineToolsDiffStep = memo(props => {
     if (item.entityType === 'agent') return addAgentIds.has(item.id);
     if (item.entityType === 'pipeline') return addPipelineIds.has(item.id);
     if (item.entityType === 'mcp') return addMcpIds.has(item.id);
+    if (item.entityType === 'skill') return (addSkillIds ?? new Set()).has(item.id);
     return addToolkitIds.has(item.id);
   };
 
@@ -91,6 +95,7 @@ const PipelineToolsDiffStep = memo(props => {
     if (item.entityType === 'agent') return onToggleAddAgent(getAddId(item));
     if (item.entityType === 'pipeline') return onToggleAddPipeline(getAddId(item));
     if (item.entityType === 'mcp') return onToggleAddMcp(getAddId(item));
+    if (item.entityType === 'skill') return onToggleAddSkill?.(getAddId(item));
     return onToggleAddToolkit(getAddId(item));
   };
 

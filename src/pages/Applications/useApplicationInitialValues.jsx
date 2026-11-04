@@ -263,21 +263,23 @@ const useApplicationInitialValues = forPipeline => {
     }
   }, [applicationData, forPipeline]);
 
-  // Tracks the yamlCode last dispatched via this effect so that a cache update
-  // from fetchApplicationDetails (e.g. after AI apply) returning the same stale
-  // server YAML does not overwrite a manually-dispatched initThePipeline.
+  // Tracks the (versionId, yamlCode) pair last dispatched via this effect so that a cache
+  // update from fetchApplicationDetails (e.g. after AI apply) returning the same stale server
+  // YAML does not overwrite a newer pipeline state applied directly to Redux.
+  // Keyed on version id + YAML so switching to another version with the same YAML content
+  // (e.g. two empty versions) still triggers re-initialization.
   const lastInitYamlRef = useRef(undefined);
 
   useEffect(() => {
     if (forPipeline && Object.keys(applicationData).length && initialPipeline) {
-      // Skip if the server returned the same YAML we already initialized from.
-      // This prevents a background refetch (e.g. after AI tool associations) from
-      // overwriting a newer pipeline state that was applied directly to Redux.
+      // Skip if the server returned the exact (versionId, yamlCode) pair we already initialized from.
       const currentYaml = initialPipeline.yamlCode ?? '';
-      if (lastInitYamlRef.current !== undefined && currentYaml === lastInitYamlRef.current) {
+      const currentVersionId = applicationData?.version_details?.id;
+      const cacheKey = `${currentVersionId}|${currentYaml}`;
+      if (lastInitYamlRef.current !== undefined && cacheKey === lastInitYamlRef.current) {
         return;
       }
-      lastInitYamlRef.current = currentYaml;
+      lastInitYamlRef.current = cacheKey;
       // Claim the default key before writing pipeline data so selectActivePipeline
       // always reads from the correct slot even when navigating from a Canvas tab
       // that left activePipelineKey pointing at a per-tab key.

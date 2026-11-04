@@ -18,6 +18,7 @@ import {
   ParsePipelineHelpers,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { toggleSet } from '@/[fsd]/features/pipelines/lib/helpers';
+import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd]/features/skill/api';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Input, Modal } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -55,7 +56,9 @@ const AIEditPipelineModal = memo(props => {
 
   const [associateToolkit] = useToolkitAssociateMutation();
   const [updateApplicationRelation] = useUpdateApplicationRelationMutation();
+  const [updateSkillRelation] = useUpdateSkillRelationMutation();
   const [fetchApplicationDetails] = useLazyApplicationDetailsQuery();
+  const [fetchSkillDetails] = useLazySkillDetailsQuery();
 
   const [showVersionModal, setShowVersionModal] = useState(false);
   const [versionName, setVersionName] = useState('');
@@ -67,12 +70,14 @@ const AIEditPipelineModal = memo(props => {
   const [addMcpIds, setAddMcpIds] = useState(new Set());
   const [addAgentIds, setAddAgentIds] = useState(new Set());
   const [addPipelineIds, setAddPipelineIds] = useState(new Set());
+  const [addSkillIds, setAddSkillIds] = useState(new Set());
   const [removeToolRecordIds, setRemoveToolRecordIds] = useState(new Set());
 
   const handleToggleAddToolkit = useCallback(id => toggleSet(setAddToolkitIds)(id), []);
   const handleToggleAddMcp = useCallback(id => toggleSet(setAddMcpIds)(id), []);
   const handleToggleAddAgent = useCallback(id => toggleSet(setAddAgentIds)(id), []);
   const handleToggleAddPipeline = useCallback(id => toggleSet(setAddPipelineIds)(id), []);
+  const handleToggleAddSkill = useCallback(id => toggleSet(setAddSkillIds)(id), []);
   const handleToggleRemoveTool = useCallback(id => toggleSet(setRemoveToolRecordIds)(id), []);
 
   const currentTools = useMemo(
@@ -200,6 +205,10 @@ const AIEditPipelineModal = memo(props => {
           (draftData?.suggested_pipelines || []).filter(p => !currentPipelineAppIds.has(p.id)).map(p => p.id),
         ),
       );
+      // Skills are tracked separately — select any suggested skill not already attached.
+      // (current skills come from formik as a separate skills list, but we don't have that here;
+      // pre-select all suggested skills and let the user deselect.)
+      setAddSkillIds(new Set((draftData?.suggested_skills || []).map(s => s.id)));
       setRemoveToolRecordIds(new Set());
       return draftData;
     },
@@ -210,6 +219,14 @@ const AIEditPipelineModal = memo(props => {
     async draftData => {
       const newYaml = draftData.pipeline_yaml ?? '';
       await formik.setFieldValue('version_details.instructions', newYaml);
+
+      // Apply proposed name/description when present so the Run Settings diff is not cosmetic-only.
+      if (draftData.name) {
+        await formik.setFieldValue('name', draftData.name);
+      }
+      if (draftData.description != null) {
+        await formik.setFieldValue('description', draftData.description);
+      }
 
       // Re-initialize the Redux pipeline slice so the flow canvas re-renders with the new YAML.
       // setFieldValue alone only updates Formik; the canvas reads from Redux (selectActivePipeline).
@@ -257,6 +274,7 @@ const AIEditPipelineModal = memo(props => {
         const mcpsToAdd = (draftData.suggested_mcp || []).filter(m => addMcpIds.has(m.id));
         const agentsToAdd = (draftData.suggested_agents || []).filter(a => addAgentIds.has(a.id));
         const pipelinesToAdd = (draftData.suggested_pipelines || []).filter(p => addPipelineIds.has(p.id));
+        const skillsToAdd = (draftData.suggested_skills || []).filter(s => addSkillIds.has(s.id));
 
         // Disassociate tools the user chose to remove
         const tools = formik.values?.version_details?.tools || [];
@@ -270,6 +288,27 @@ const AIEditPipelineModal = memo(props => {
 
         await associateToolkits(versionId, entityId, [...toolkitsToAdd, ...mcpsToAdd]);
         await associateApplications(versionId, entityId, [...agentsToAdd, ...pipelinesToAdd]);
+
+        // Associate selected skills
+        if (skillsToAdd.length) {
+          await Promise.allSettled(
+            skillsToAdd.map(async skill => {
+              const skillProjectId = skill.project_id ?? projectId;
+              const { data: skillDetails } = await fetchSkillDetails({
+                projectId: skillProjectId,
+                skillId: skill.id,
+              });
+              if (!skillDetails?.version_details?.id) return;
+              return updateSkillRelation({
+                projectId,
+                skillId: skill.id,
+                entity_version_id: versionId,
+                skill_version_id: skillDetails.version_details.id,
+                has_relation: true,
+              }).unwrap();
+            }),
+          );
+        }
 
         // Disassociate: toolkit/mcp records use has_relation: false
         if (toolkitsToRemove.length || mcpsToRemove.length) {
@@ -323,12 +362,15 @@ const AIEditPipelineModal = memo(props => {
       associateApplications,
       associateToolkit,
       updateApplicationRelation,
+      updateSkillRelation,
       fetchApplicationDetails,
+      fetchSkillDetails,
       projectId,
       addToolkitIds,
       addMcpIds,
       addAgentIds,
       addPipelineIds,
+      addSkillIds,
       removeToolRecordIds,
     ],
   );
@@ -485,6 +527,8 @@ const AIEditPipelineModal = memo(props => {
               onToggleAddAgent={handleToggleAddAgent}
               addPipelineIds={addPipelineIds}
               onToggleAddPipeline={handleToggleAddPipeline}
+              addSkillIds={addSkillIds}
+              onToggleAddSkill={handleToggleAddSkill}
               removeToolRecordIds={removeToolRecordIds}
               onToggleRemoveTool={handleToggleRemoveTool}
             />
@@ -505,6 +549,8 @@ const AIEditPipelineModal = memo(props => {
       handleToggleAddAgent,
       addPipelineIds,
       handleToggleAddPipeline,
+      addSkillIds,
+      handleToggleAddSkill,
       removeToolRecordIds,
       handleToggleRemoveTool,
     ],
