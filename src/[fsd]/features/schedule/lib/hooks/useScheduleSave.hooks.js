@@ -195,7 +195,9 @@ export const useScheduleSave = ({
         formik.setErrors({ approval_rule: error.data.error });
       else if (error?.status === 400 && Object.keys(toFieldErrors(error)).some(isShownField))
         formik.setErrors(toFieldErrors(error));
-      else if ([400, 404, 409].includes(error?.status)) setDraftTestError(error.data?.error ?? '');
+      // An older server answers a 404 with no text; the toast below tells the user, as for any other failure
+      else if ([400, 404, 409].includes(error?.status) && error.data?.error)
+        setDraftTestError(error.data.error);
       // The server has not run the schedule migration yet; a fixed text keeps server detail off the page
       else if (error?.status === 503 && code === DRAFT_TEST_ERROR.UNAVAILABLE)
         setDraftTestError(TEST_RUN_UNAVAILABLE);

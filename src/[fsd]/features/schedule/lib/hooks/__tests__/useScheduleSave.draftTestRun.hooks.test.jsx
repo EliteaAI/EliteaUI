@@ -114,6 +114,16 @@ describe('useScheduleSave draft Test Run', () => {
     expect(mocks.toastError).not.toHaveBeenCalled();
   });
 
+  it('shows a toast for a 404 with no server text, as an older server gives', async () => {
+    const onDraftTestRun = vi.fn().mockRejectedValue({ status: 404, data: {} });
+    const { result } = setup({ onDraftTestRun });
+
+    await runTest(result);
+
+    expect(result.current.draftTestError).toBe('');
+    expect(mocks.toastError).toHaveBeenCalledWith('Failed to start the test run');
+  });
+
   it('shows a fixed message for a 503 test_run_unavailable and never the server text', async () => {
     const onDraftTestRun = vi
       .fn()
