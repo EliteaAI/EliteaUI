@@ -11,7 +11,7 @@ const PROJECT_MODE = 'default';
 
 export const apis = eliteaApi
   .enhanceEndpoints({
-    addTagTypes: [],
+    addTagTypes: [TAG_TYPE_USERS],
   })
   .injectEndpoints({
     endpoints: build => ({
