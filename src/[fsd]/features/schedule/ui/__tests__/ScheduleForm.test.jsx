@@ -63,6 +63,20 @@ vi.mock('@/[fsd]/entities/schedule', async () => ({
   }),
   useCheckScheduleRiskMutation: () => [checkRisk],
 }));
+vi.mock('../ScheduleActiveToggle', () => ({
+  default: props => (
+    <input
+      type="checkbox"
+      role="switch"
+      aria-label="Active"
+      data-testid="schedule-active-switch"
+      data-saved={String(!!props.schedule?.id)}
+      checked={Boolean(props.value)}
+      disabled={props.disabled}
+      onChange={event => props.onChange?.(event.target.checked)}
+    />
+  ),
+}));
 vi.mock('../RiskReviewDialog', () => ({
   default: props => {
     reviewProps = props;
@@ -132,11 +146,10 @@ vi.mock('@/[fsd]/shared/ui/select/LazySelect', () => ({
   },
 }));
 
-vi.mock('@/[fsd]/entities/version', async importOriginal => ({
-  ...(await importOriginal()),
-  VersionSelect: props => {
+vi.mock('../ScheduleVersionField', () => ({
+  default: props => {
     versionProps = props;
-    return <div data-testid="version-select" />;
+    return <div data-testid="version-select">{props.error}</div>;
   },
 }));
 
@@ -190,6 +203,7 @@ const INITIAL = {
   timezone: 'Europe/Kyiv',
   expires_at: null,
   approval_rule: 'pause_and_ask',
+  enabled: true,
 };
 
 const theme = createTheme(getDesignTokens('dark'));
@@ -211,7 +225,8 @@ const renderForm = (props = {}, path = '/settings/schedules/create') => {
 };
 
 const pickEntity = id => act(() => selectProps.onValueChange(id));
-const typePrompt = text => fireEvent.change(screen.getByLabelText(/Prompt/), { target: { value: text } });
+const typePrompt = text =>
+  fireEvent.change(screen.getByLabelText(/^Starting input/), { target: { value: text } });
 const CLEAR = {
   blocking: [],
   sensitive: [],
@@ -293,10 +308,27 @@ describe('ScheduleForm', () => {
     renderForm();
 
     expect(screen.getAllByRole('heading').map(h => h.textContent)).toEqual([
+      'Settings',
       'GENERAL',
       'WHAT TO RUN',
       'SCHEDULE SETTINGS',
+      'APPROVAL RULE',
     ]);
+  });
+
+  describe('Active switch', () => {
+    it('sends enabled with a new schedule and starts on', async () => {
+      const { onSubmit } = renderForm();
+      expect(screen.getByTestId('schedule-active-switch')).toBeChecked();
+
+      fireEvent.click(screen.getByTestId('schedule-active-switch'));
+      pickEntity(7);
+      typePrompt('Hi');
+      await save();
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+      expect(onSubmit.mock.calls[0][0]).toMatchObject({ enabled: false });
+    });
   });
 
   it('shows Name and a multiline Description capped at 2304, and no tags field', () => {
@@ -392,12 +424,12 @@ describe('ScheduleForm', () => {
     fireEvent.click(screen.getByTestId('schedule-type-pipeline'));
 
     expect(screen.getByTestId('schedule-run-mode-entry_point')).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.queryByLabelText(/Prompt/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Starting input/)).not.toBeInTheDocument();
     expect(screen.queryByTestId('variables')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('schedule-run-mode-prompt'));
 
-    expect(screen.getByLabelText(/Prompt/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Starting input/)).toBeInTheDocument();
   });
 
   it('keeps Save from sending and shows "Prompt is required"', async () => {
@@ -564,7 +596,7 @@ describe('ScheduleForm', () => {
     const { onSubmit } = renderForm();
     act(() => {
       selectProps.onValueChange(7);
-      fireEvent.change(screen.getByLabelText(/Prompt/), { target: { value: 'Hi' } });
+      fireEvent.change(screen.getByLabelText(/^Starting input/), { target: { value: 'Hi' } });
     });
     await waitFor(() => expect(versionProps.value).toBe(71));
 
@@ -677,7 +709,7 @@ describe('ScheduleForm', () => {
     expect(header).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('shows Approval rule with Pause and ask me selected and sends it', async () => {
+  it('shows Approval rule with Ask me first selected and sends it', async () => {
     const { onSubmit } = renderForm();
 
     expect(screen.getByTestId('schedule-approval-rule-pause_and_ask')).toHaveAttribute(
@@ -701,7 +733,7 @@ describe('ScheduleForm', () => {
     );
   });
 
-  it('disables Run without asking with a hint when the project does not allow it', () => {
+  it('disables Run automatically with a hint when the project does not allow it', () => {
     runAllowed = false;
     renderForm();
 
@@ -709,7 +741,7 @@ describe('ScheduleForm', () => {
     expect(screen.getByText(/does not allow/)).toBeInTheDocument();
   });
 
-  it('keeps Run without asking disabled with no hint while the project data loads', () => {
+  it('keeps Run automatically disabled with no hint while the project data loads', () => {
     runAllowed = undefined;
     renderForm();
 
@@ -717,7 +749,7 @@ describe('ScheduleForm', () => {
     expect(screen.queryByText(/does not allow/)).not.toBeInTheDocument();
   });
 
-  it('keeps Run without asking disabled with no hint when the project data fails', () => {
+  it('keeps Run automatically disabled with no hint when the project data fails', () => {
     runAllowed = undefined;
     listFailed = true;
     renderForm();
@@ -775,7 +807,7 @@ describe('ScheduleForm', () => {
     expect(onSaved).toHaveBeenCalledWith(result);
   });
 
-  it('enables Run without asking when the project allows it', () => {
+  it('enables Run automatically when the project allows it', () => {
     renderForm();
 
     expect(screen.getByTestId('schedule-approval-rule-run_without_asking')).toBeEnabled();
@@ -788,7 +820,7 @@ describe('ScheduleForm', () => {
         status: 400,
         data: {
           code: 'approval_rule_not_allowed',
-          error: 'Run without asking is not allowed here.',
+          error: 'Run automatically is not allowed here.',
           field: 'approval_rule',
         },
       }),
@@ -798,7 +830,7 @@ describe('ScheduleForm', () => {
 
     await save();
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Run without asking is not allowed here.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Run automatically is not allowed here.');
   });
 
   it('shows the returned rule and the hint when the save answers a different rule', async () => {
@@ -921,7 +953,7 @@ describe('ScheduleForm', () => {
       const { onSubmit } = renderFromPipeline();
 
       expect(screen.getByTestId('schedule-run-mode-entry_point')).toHaveAttribute('aria-pressed', 'true');
-      expect(screen.queryByLabelText(/Prompt/)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/^Starting input/)).not.toBeInTheDocument();
       await save();
 
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
@@ -965,22 +997,30 @@ describe('ScheduleForm', () => {
       expect(after(element, screen.getByTestId('schedule-section-settings'))).toBe(true);
     };
 
-    it('TC-US58-14 hides the type switch, the entity, the version and WHAT TO RUN', () => {
+    it('shows the locked entity, the version and the Settings link, without the type switch', () => {
       renderLocked();
 
       expect(screen.getAllByRole('heading').map(h => h.textContent)).toEqual([
+        'Settings',
         'GENERAL',
+        'WHAT TO RUN',
         'SCHEDULE SETTINGS',
+        'APPROVAL RULE',
       ]);
+      expect(screen.getByTestId('schedule-locked-entity')).toBeInTheDocument();
+      expect(screen.getByTestId('schedule-locked-entity-link')).toHaveAttribute(
+        'href',
+        '/settings/schedules',
+      );
       expect(screen.queryByTestId('schedule-type')).not.toBeInTheDocument();
       expect(screen.queryByTestId('entity-select')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('version-select')).not.toBeInTheDocument();
+      expect(screen.getByTestId('version-select')).toBeInTheDocument();
     });
 
     it('TC-US58-15 shows Prompt and Variables under General for an agent', () => {
       renderLocked();
 
-      expectUnderGeneral(screen.getByLabelText(/Prompt/));
+      expectUnderGeneral(screen.getByLabelText(/^Starting input/));
       expectUnderGeneral(screen.getByTestId('variables'));
       expect(screen.queryByTestId('schedule-run-mode')).not.toBeInTheDocument();
     });
@@ -1019,30 +1059,41 @@ describe('ScheduleForm', () => {
     };
     const EDIT_INITIAL = { ...INITIAL, application_id: 7, version_id: 71, prompt: 'Hi' };
     // The edit page's side panel holds Test run; this stand-in shows what the form passes
-    const sidePanel = ({ onTestRun, testRunPending, testRunError }) => (
+    const sidePanel = ({ onRunNow, runNowPending, runNowError }) => (
       <div data-testid="side-panel">
         <button
           type="button"
           data-testid="schedule-form-test-run"
-          disabled={testRunPending}
-          onClick={onTestRun}
+          disabled={runNowPending}
+          onClick={onRunNow}
         >
           Test run
         </button>
-        {testRunError && <p data-testid="test-run-error">{testRunError}</p>}
+        {runNowError && <p data-testid="test-run-error">{runNowError}</p>}
       </div>
     );
     const renderEdit = (props = {}) =>
       renderForm({
         initialValues: EDIT_INITIAL,
         schedule: SCHEDULE,
-        onTestRun: vi.fn().mockResolvedValue(undefined),
+        onRunNow: vi.fn().mockResolvedValue(undefined),
         sidePanel,
         ...props,
       });
     const testRun = () => fireEvent.click(screen.getByTestId('schedule-form-test-run'));
     const edit = () => fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Changed' } });
     const saveButton = () => screen.getByTestId('schedule-save-button');
+
+    it('does not send enabled when a saved schedule is edited', async () => {
+      const { onSubmit } = renderEdit();
+      expect(screen.getByTestId('schedule-active-switch')).toHaveAttribute('data-saved', 'true');
+
+      edit();
+      await save();
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+      expect(onSubmit.mock.calls[0][0]).not.toHaveProperty('enabled');
+    });
 
     it('keeps Save disabled on the edit page until a value changes', async () => {
       renderEdit();
@@ -1064,14 +1115,13 @@ describe('ScheduleForm', () => {
       expect(saveButton()).toBeEnabled();
     });
 
-    it('shows the Owner as read-only text only for a saved schedule', () => {
+    it('shows the Owner as a line of text only for a saved schedule', () => {
       renderEdit();
-      expect(screen.getByLabelText('Owner')).toHaveValue('Ann Lee');
-      expect(screen.getByLabelText('Owner')).toBeDisabled();
+      expect(screen.getByTestId('schedule-owner')).toHaveTextContent('Owner: Ann Lee');
       cleanup();
 
       renderForm();
-      expect(screen.queryByLabelText('Owner')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('schedule-owner')).not.toBeInTheDocument();
     });
 
     it('disables the fields and Save when allowed_actions has no edit', async () => {
@@ -1080,10 +1130,8 @@ describe('ScheduleForm', () => {
 
       expect(screen.getByLabelText('Name')).toBeDisabled();
       expect(screen.getByLabelText('Description')).toBeDisabled();
-      expect(screen.getByLabelText(/Prompt/)).toBeDisabled();
-      expect(screen.getByTestId('schedule-type-agent')).toBeDisabled();
+      expect(screen.getByLabelText(/^Starting input/)).toBeDisabled();
       expect(screen.getByTestId('schedule-approval-rule-pause_and_ask')).toBeDisabled();
-      expect(selectProps.disabled).toBe(true);
       expect(versionProps.disabled).toBe(true);
       expect(saveButton()).toBeDisabled();
       expect(screen.getByTestId('schedule-cancel-button')).toBeEnabled();
@@ -1094,14 +1142,14 @@ describe('ScheduleForm', () => {
       await act(async () => {});
 
       expect(screen.getByLabelText('Name')).toBeEnabled();
-      expect(selectProps.disabled).toBe(false);
+      expect(versionProps.disabled).toBe(false);
     });
 
-    it('keeps Type and the entity editable without a URL entity', () => {
+    it('shows the entity of a saved schedule locked, without a URL entity', () => {
       renderEdit();
 
-      expect(screen.getByTestId('schedule-type-agent')).toBeEnabled();
-      expect(selectProps.disabled).toBeFalsy();
+      expect(screen.getByTestId('schedule-locked-entity')).toBeInTheDocument();
+      expect(screen.queryByTestId('schedule-type-agent')).not.toBeInTheDocument();
     });
 
     it('has no Test run in the header; only the side panel holds it', () => {
@@ -1118,13 +1166,13 @@ describe('ScheduleForm', () => {
       expect(screen.getByTestId('side-panel')).toBeInTheDocument();
     });
 
-    it('puts the side panel right of the form only from the xl breakpoint', () => {
+    it('puts the side panel right of the form only from the lg breakpoint', () => {
       renderEdit();
       const panelColumn = screen.getByTestId('side-panel').parentElement;
       const formColumn = panelColumn.previousElementSibling;
       [panelColumn, formColumn].forEach(column => {
-        expect(column).toHaveClass('MuiGrid-grid-xs-12', 'MuiGrid-grid-xl-6');
-        expect(column).not.toHaveClass('MuiGrid-grid-lg-6');
+        expect(column).toHaveClass('MuiGrid-grid-xs-12', 'MuiGrid-grid-lg-6');
+        expect(column).not.toHaveClass('MuiGrid-grid-xl-6');
       });
     });
 
@@ -1141,20 +1189,20 @@ describe('ScheduleForm', () => {
       const runs = screen.getByTestId('runs-section');
       expect(runs.closest('form')).toBeNull();
       expect(runs.parentElement).toBe(screen.getByTestId('side-panel').parentElement);
-      expect(runs.parentElement).toHaveClass('MuiGrid-grid-xs-12', 'MuiGrid-grid-xl-6');
+      expect(runs.parentElement).toHaveClass('MuiGrid-grid-xs-12', 'MuiGrid-grid-lg-6');
       expect(screen.getByLabelText('Name').closest('form').parentElement).not.toContainElement(runs);
     });
 
     it('saves a changed form first, then starts the run', async () => {
       const calls = [];
       const onSubmit = vi.fn().mockImplementation(async () => calls.push('save'));
-      const onTestRun = vi.fn().mockImplementation(async () => calls.push('run'));
-      renderEdit({ onSubmit, onTestRun });
+      const onRunNow = vi.fn().mockImplementation(async () => calls.push('run'));
+      renderEdit({ onSubmit, onRunNow });
       edit();
 
       testRun();
 
-      await waitFor(() => expect(onTestRun).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(onRunNow).toHaveBeenCalledTimes(1));
       expect(calls).toEqual(['save', 'run']);
       expect(onSubmit.mock.calls[0][0]).toMatchObject({ name: 'Changed' });
     });
@@ -1170,13 +1218,13 @@ describe('ScheduleForm', () => {
 
     it('disables Test run while the run is pending, so a double click sends one run', async () => {
       let finish;
-      const onTestRun = vi.fn(() => new Promise(resolve => (finish = resolve)));
-      renderEdit({ onTestRun });
+      const onRunNow = vi.fn(() => new Promise(resolve => (finish = resolve)));
+      renderEdit({ onRunNow });
 
       testRun();
       await waitFor(() => expect(screen.getByTestId('schedule-form-test-run')).toBeDisabled());
       testRun();
-      expect(onTestRun).toHaveBeenCalledTimes(1);
+      expect(onRunNow).toHaveBeenCalledTimes(1);
 
       await act(async () => finish());
       expect(screen.getByTestId('schedule-form-test-run')).toBeEnabled();
@@ -1195,9 +1243,9 @@ describe('ScheduleForm', () => {
     });
 
     it('sends no run when the save fails', async () => {
-      const onTestRun = vi.fn();
+      const onRunNow = vi.fn();
       renderEdit({
-        onTestRun,
+        onRunNow,
         onSubmit: vi.fn().mockRejectedValue({ status: 400, data: { field: 'name', error: 'Name is taken' } }),
       });
       edit();
@@ -1205,7 +1253,7 @@ describe('ScheduleForm', () => {
       testRun();
 
       expect(await screen.findByText('Name is taken')).toBeInTheDocument();
-      expect(onTestRun).not.toHaveBeenCalled();
+      expect(onRunNow).not.toHaveBeenCalled();
     });
 
     it('sends no run when the form is invalid', async () => {
@@ -1220,7 +1268,7 @@ describe('ScheduleForm', () => {
 
     it('passes the server reason of a 409 run to the side panel, not the form banner', async () => {
       renderEdit({
-        onTestRun: vi.fn().mockRejectedValue({ status: 409, data: { error: 'Already running' } }),
+        onRunNow: vi.fn().mockRejectedValue({ status: 409, data: { error: 'Already running' } }),
       });
 
       testRun();
@@ -1230,11 +1278,11 @@ describe('ScheduleForm', () => {
     });
 
     it('clears the run reason when the next Test run starts', async () => {
-      const onTestRun = vi
+      const onRunNow = vi
         .fn()
         .mockRejectedValueOnce({ status: 409, data: { error: 'Already running' } })
         .mockResolvedValue(undefined);
-      renderEdit({ onTestRun });
+      renderEdit({ onRunNow });
 
       testRun();
       await screen.findByTestId('test-run-error');
@@ -1256,20 +1304,20 @@ describe('ScheduleForm', () => {
 
     it('starts the run after the warnings dialog closes, not before, and skips onSaved', async () => {
       const onSaved = vi.fn();
-      const onTestRun = vi.fn().mockResolvedValue(undefined);
+      const onRunNow = vi.fn().mockResolvedValue(undefined);
       renderEdit({
         onSubmit: vi.fn().mockResolvedValue({ id: 3, warnings: [{ code: 'x', message: 'm' }] }),
         onSaved,
-        onTestRun,
+        onRunNow,
       });
       edit();
 
       testRun();
 
       await screen.findByTestId('warnings-dialog');
-      expect(onTestRun).not.toHaveBeenCalled();
+      expect(onRunNow).not.toHaveBeenCalled();
       fireEvent.click(screen.getByRole('button', { name: 'OK' }));
-      await waitFor(() => expect(onTestRun).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(onRunNow).toHaveBeenCalledTimes(1));
       expect(onSaved).not.toHaveBeenCalled();
     });
 
@@ -1411,7 +1459,7 @@ describe('ScheduleForm', () => {
       expect(onSubmit).not.toHaveBeenCalled();
     });
 
-    it('shows a personal sign-in as a warning under "Pause and ask me" and saves', async () => {
+    it('shows a personal sign-in as a warning under "Ask me first" and saves', async () => {
       checkRisk.mockReturnValue(answer({ ...CLEAR, blocking: [SIGNIN] }));
       const { onSubmit } = renderForm();
       await fillAgent();
@@ -1425,7 +1473,7 @@ describe('ScheduleForm', () => {
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     });
 
-    it('turns the warning into a block box when the rule changes to "Run without asking"', async () => {
+    it('turns the warning into a block box when the rule changes to "Run automatically"', async () => {
       checkRisk.mockReturnValue(answer({ ...CLEAR, blocking: [SIGNIN] }));
       renderForm();
       await fillAgent();
@@ -1438,7 +1486,7 @@ describe('ScheduleForm', () => {
       expect(saveButton()).toBeDisabled();
     });
 
-    it('keeps a human-input step blocking under "Pause and ask me"', async () => {
+    it('keeps a human-input step blocking under "Ask me first"', async () => {
       checkRisk.mockReturnValue(
         answer({
           ...CLEAR,
@@ -1483,7 +1531,7 @@ describe('ScheduleForm', () => {
       expect(onSubmit).not.toHaveBeenCalled();
     });
 
-    it('Pause and ask me saves with the fingerprint and no typed name', async () => {
+    it('Ask me first saves with the fingerprint and no typed name', async () => {
       checkRisk.mockReturnValue(answer(RISKY));
       const onSaved = vi.fn();
       const { onSubmit } = renderForm({ onSaved });
@@ -1503,7 +1551,7 @@ describe('ScheduleForm', () => {
       expect(onSaved).toHaveBeenCalledTimes(1);
     });
 
-    it('Run without asking sets the form rule and saves with the typed name', async () => {
+    it('Run automatically sets the form rule and saves with the typed name', async () => {
       checkRisk.mockReturnValue(answer(RISKY));
       const { onSubmit } = renderForm();
       await fillAgent();
@@ -1627,14 +1675,14 @@ describe('ScheduleForm', () => {
 
     it('starts a pending Test run only after the confirmed save', async () => {
       checkRisk.mockReturnValue(answer(RISKY));
-      const onTestRun = vi.fn().mockResolvedValue(undefined);
+      const onRunNow = vi.fn().mockResolvedValue(undefined);
       const onSubmit = vi.fn().mockResolvedValue({ id: 3 });
       renderForm({
         initialValues: { ...INITIAL, application_id: 7, version_id: 71, prompt: 'Hi' },
         schedule: { id: 3, owner: { name: 'Ann Lee' } },
         onSubmit,
-        onTestRun,
-        sidePanel: ({ onTestRun: run }) => (
+        onRunNow,
+        sidePanel: ({ onRunNow: run }) => (
           <button
             type="button"
             onClick={run}
@@ -1649,11 +1697,11 @@ describe('ScheduleForm', () => {
 
       fireEvent.click(screen.getByRole('button', { name: 'Test run' }));
       await screen.findByTestId('risk-dialog');
-      expect(onTestRun).not.toHaveBeenCalled();
+      expect(onRunNow).not.toHaveBeenCalled();
 
       await act(async () => reviewProps.onConfirm({ rule: 'pause_and_ask' }));
 
-      await waitFor(() => expect(onTestRun).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(onRunNow).toHaveBeenCalledTimes(1));
     });
 
     it('400 risk_name_mismatch keeps the dialog open and shows the server text at the typed name', async () => {
@@ -1703,7 +1751,7 @@ describe('ScheduleForm', () => {
       expect(screen.getByRole('alert')).toHaveTextContent('risk_changed');
     });
 
-    it('shows who confirmed Run without asking and when on the edit page', () => {
+    it('shows who confirmed Run automatically and when on the edit page', () => {
       renderForm({
         initialValues: { ...INITIAL, application_id: 7, version_id: 71, approval_rule: 'run_without_asking' },
         schedule: {
@@ -1739,7 +1787,7 @@ describe('ScheduleForm', () => {
       expect(screen.queryByText(/Confirmed by/)).not.toBeInTheDocument();
     });
 
-    // an edit that keeps a confirmed "Run without asking" saves without a new review
+    // an edit that keeps a confirmed "Run automatically" saves without a new review
     const renderConfirmedEdit = rule =>
       renderForm({
         initialValues: { ...INITIAL, application_id: 7, version_id: 71, prompt: 'Hi', approval_rule: rule },
@@ -1762,7 +1810,7 @@ describe('ScheduleForm', () => {
       expect(screen.queryByTestId('risk-dialog')).not.toBeInTheDocument();
     });
 
-    it('still opens the review when the rule is Pause and ask me', async () => {
+    it('still opens the review when the rule is Ask me first', async () => {
       checkRisk.mockReturnValue(answer({ ...RISKY, confirmed: true }));
       const { onSubmit } = renderConfirmedEdit('pause_and_ask');
       typePrompt('Hi again');

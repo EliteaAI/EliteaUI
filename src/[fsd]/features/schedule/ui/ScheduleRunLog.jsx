@@ -13,7 +13,8 @@ const FOLLOW_THRESHOLD_PX = 8;
 const PREVIEW_LENGTH = 120;
 
 // The full tool result of a long or multi-line result, behind a toggle (the API sends it untruncated)
-const ToolResult = memo(({ summary }) => {
+const ToolResult = memo(props => {
+  const { summary } = props;
   const [open, setOpen] = useState(false);
   const styles = scheduleRunLogStyles();
 
@@ -133,15 +134,13 @@ const scheduleRunLogStyles = () => ({
     overflowY: 'auto',
     padding: '0.75rem 1rem',
     borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.border.lines}`,
-    backgroundColor: palette.background.default.secondary,
+    backgroundColor: palette.background.default.primary,
   }),
   line: {
     display: 'grid',
-    gridTemplateColumns: '5.5rem 1fr',
-    fontFamily: 'monospace',
-    fontSize: '0.75rem',
-    lineHeight: '1.375rem',
+    gridTemplateColumns: '4.5rem 1fr',
+    fontSize: '0.875rem',
+    lineHeight: '1.5rem',
   },
   time: ({ palette }) => ({ color: palette.text.secondary }),
   result: { display: 'block' },

@@ -11,7 +11,7 @@ import {
   buildSchedulesListLink,
   useEntitySchedules,
 } from '@/[fsd]/entities/schedule';
-import { ScheduleSectionConstants, TextLinkConstants } from '@/[fsd]/shared/lib/constants';
+import { ScheduleSectionConstants } from '@/[fsd]/shared/lib/constants';
 import { Button } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button';
@@ -28,13 +28,11 @@ const WIDE = '@container (min-width: 30rem)';
 // The name every agent and pipeline gives its first version
 const BASE_VERSION_NAME = 'base';
 
-const countText = (total, version) =>
-  total === 1 ? `1 schedule runs ${version}` : `${total} schedules run ${version}`;
-
 // The last section of the agent and pipeline editors; entityType is 'agent' or 'pipeline'; versionId is the editor version, versionName its label (none or 'base': the base version)
 const EntitySchedulesSection = memo(props => {
   const { entityType, entityId, entityName, versionId, versionName, isChatView = false, style } = props;
   const { checkPermission } = useCheckPermission();
+  const currentUserId = useSelector(state => state.user.id);
   const canCreate = checkPermission(PERMISSIONS.schedules.create);
   const isHidden = isChatView || !entityId || !checkPermission(PERMISSIONS.schedules.list);
   const { rows, total, isError, error, isFetching, refetch, loadMore, hasMore } = useEntitySchedules({
@@ -43,7 +41,6 @@ const EntitySchedulesSection = memo(props => {
     versionId,
     skip: isHidden,
   });
-  const currentUserId = useSelector(state => state.user.id);
   const navigate = useNavigate();
   const { tab } = useParams();
   const { pathname, search } = useLocation();
@@ -90,46 +87,25 @@ const EntitySchedulesSection = memo(props => {
     {
       title: 'Schedules',
       testId,
+      summaryAction: (
+        <Link
+          component={RouterLink}
+          to={buildSchedulesListLink({ entityType, entityId })}
+          // The Schedules page names the entity chip with it when the list has no rows
+          state={{ entityName }}
+          variant="bodySmall"
+          sx={styles.link}
+          data-testid={`${testId}-open-all`}
+        >
+          Manage Schedules
+        </Link>
+      ),
       content: (
         <Box
           role="region"
           aria-label="Schedules"
           sx={styles.content}
         >
-          <Box
-            sx={styles.header}
-            data-testid={`${testId}-header`}
-          >
-            {canCreate && (
-              <Button.BaseBtn
-                variant={BUTTON_VARIANTS.iconLabel}
-                startIcon={<PlusIcon />}
-                onClick={onAdd}
-                sx={styles.noWrap}
-                data-testid={`${testId}-add`}
-              >
-                Schedule
-              </Button.BaseBtn>
-            )}
-            <Typography
-              variant="bodyMedium"
-              color="text.secondary"
-              sx={styles.count}
-            >
-              {total > 0 ? countText(total, version) : ''}
-            </Typography>
-            <Link
-              component={RouterLink}
-              to={buildSchedulesListLink({ entityType, entityId })}
-              // The Schedules page names the entity chip with it when the list has no rows
-              state={{ entityName }}
-              variant="bodyMedium"
-              sx={[TextLinkConstants.TEXT_LINK_SX, styles.link]}
-              data-testid={`${testId}-open-all`}
-            >
-              Manage Schedules
-            </Link>
-          </Box>
           {isError && (
             <Box sx={styles.header}>
               <Typography
@@ -175,6 +151,17 @@ const EntitySchedulesSection = memo(props => {
               onOpenRunHistory={openRunHistory}
             />
           ))}
+          {canCreate && !isError && (
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.iconLabel}
+              startIcon={<PlusIcon />}
+              onClick={onAdd}
+              sx={styles.add}
+              data-testid={`${testId}-add`}
+            >
+              Schedule
+            </Button.BaseBtn>
+          )}
           {hasMore && (
             <Button.BaseBtn
               variant={BUTTON_VARIANTS.text}
@@ -219,32 +206,25 @@ const entitySchedulesSectionStyles = () => ({
     gap: '0.75rem',
     containerType: 'inline-size',
   },
-  // Below 30 rem: the button and the link on row 1, the count on row 2; from 30 rem: one row
   header: {
     display: 'flex',
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: '0.5rem',
   },
-  // The count wraps and never truncates
-  count: {
-    flexBasis: '100%',
-    order: 1,
-    [WIDE]: {
-      flex: '1 1 0',
-      order: 0,
-    },
-  },
-  noWrap: {
+  add: {
+    alignSelf: 'flex-start',
     whiteSpace: 'nowrap',
-    flexShrink: 0,
   },
-  link: {
+  link: ({ palette }) => ({
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.25rem',
     minWidth: 0,
-  },
+    color: palette.text.secondary,
+    textDecoration: 'underline',
+    '&:hover': { color: palette.text.secondary },
+  }),
   // The heights of the stacked and the one-line card
   skeleton: {
     height: '9rem',

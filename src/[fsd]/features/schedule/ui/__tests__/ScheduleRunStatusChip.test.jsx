@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material';
 
+import { toRunStatusLabel } from '@/[fsd]/entities/schedule';
 import lightPalette from '@/lightPalette';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
@@ -29,6 +30,12 @@ describe('ScheduleRunStatusChip', () => {
     expect(chip.querySelector('.MuiChip-icon')).not.toBeNull();
   });
 
+  it('adds the ellipsis to the label of a running chip only', () => {
+    renderChip({ status: 'running' });
+    expect(screen.getByTestId('schedule-run-status')).toHaveTextContent('Running...');
+    expect(toRunStatusLabel('running')).toBe('Running');
+  });
+
   it('shows the icon and the word with no border for the text variant', () => {
     renderChip({ status: 'success', variant: 'text' });
     const chip = screen.getByTestId('schedule-run-status');
@@ -38,9 +45,9 @@ describe('ScheduleRunStatusChip', () => {
 
   it('shows only the icon, named by the status word, for the icon variant', () => {
     renderChip({ status: 'waiting_for_approval', variant: 'icon' });
-    const icon = screen.getByRole('img', { name: 'Waiting for approval' });
+    const icon = screen.getByRole('img', { name: 'Awaiting approval' });
     expect(icon).toHaveAttribute('data-testid', 'schedule-run-status');
-    expect(icon).not.toHaveTextContent('Waiting for approval');
+    expect(icon).not.toHaveTextContent('Awaiting approval');
     expect(icon.querySelector('svg')).not.toBeNull();
   });
 });

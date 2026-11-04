@@ -23,7 +23,7 @@ const saveWith = async (answer, { risk = {}, formValues = values } = {}) => {
       schedule: null,
       onSubmit,
       onSaved,
-      onTestRun: vi.fn(),
+      onRunNow: vi.fn(),
     }),
   );
   await act(async () => {

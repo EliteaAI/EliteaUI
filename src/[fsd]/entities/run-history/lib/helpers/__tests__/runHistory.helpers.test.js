@@ -182,7 +182,7 @@ describe('toExecutionTypeRow', () => {
   });
 
   it.each([
-    ['schedule_manual', 'Run now'],
+    ['schedule_manual', 'Manual'],
     ['chat', 'Chat'],
     ['api', 'API'],
     ['mcp', 'MCP'],
@@ -203,26 +203,26 @@ describe('toExecutionTypeRow', () => {
 });
 
 describe('schedule runs in Agent and Pipeline Run History', () => {
-  it('a test-trigger schedule run reads Test, also in the Execution type column', () => {
+  it('a test-trigger schedule run reads Test, also in the Trigger Type column', () => {
     const row = { id: 9, execution_type: 'schedule_manual', schedule_run: { trigger: 'test' } };
     expect(toExecutionTypeRow(row).event_label).toBe('Test');
-    expect(toExecutionTypeRow({ ...row, schedule_run: { trigger: 'manual' } }).event_label).toBe('Run now');
+    expect(toExecutionTypeRow({ ...row, schedule_run: { trigger: 'manual' } }).event_label).toBe('Manual');
   });
 
   it('the Schedule and Status cells read the run record, or "-" without one', () => {
     const [schedule, status] = SCHEDULE_RUN_COLUMNS;
     const run = { schedule_run: { schedule_name: 'Daily digest', status: 'waiting_for_approval' } };
     expect([schedule.label, status.label]).toEqual(['Schedule', 'Status']);
-    expect([schedule.render(run), status.render(run)]).toEqual(['Daily digest', 'Waiting for approval']);
+    expect([schedule.render(run), status.render(run)]).toEqual(['Daily digest', 'Awaiting approval']);
     expect([schedule.render({ schedule_run: null }), status.render({})]).toEqual(['-', '-']);
   });
 
   it('D7 extra columns use fixed rem widths after Date; without them the tracks stay fractional', () => {
-    // Execution type and Version fit their header labels with the sort icon (live check at 1536 px)
+    // Trigger Type and Version fit their header labels with the sort icon (live check at 1536 px)
     // Review r8, from live measures: a row grid has 736 px (768 px list minus the 2 x 16 px row padding).
     // The minimum sum is 120 + 120 + 92 + 168 + 112 + 120 = 732 px, and every header label fits.
     const template = resolveRunHistoryColumns(false, true, SCHEDULE_RUN_COLUMNS);
-    expect(template).toBe('7.5rem 7.5rem 5.75rem 10.5rem 7rem minmax(7.5rem, 1fr)');
+    expect(template).toBe('7.5rem 9.25rem 7.5rem 7rem 7rem minmax(7.5rem, 1fr)');
     const minRem = template
       .split(/[\s(),]+/)
       .filter(token => token.endsWith('rem'))
@@ -230,7 +230,7 @@ describe('schedule runs in Agent and Pipeline Run History', () => {
       .reduce((sum, rem) => sum + rem, 0);
     expect(minRem * 16).toBeLessThanOrEqual(768 - 32);
     expect(resolveRunHistoryColumns(true, true, SCHEDULE_RUN_COLUMNS)).toBe(
-      '7.5rem 7.5rem 5.75rem 10.5rem minmax(7.5rem, 1fr)',
+      '7.5rem 9.25rem 7.5rem 7rem minmax(7.5rem, 1fr)',
     );
     expect(resolveRunHistoryColumns(false, true)).toBe('1.5fr 1.5fr 1.5fr 1fr');
   });

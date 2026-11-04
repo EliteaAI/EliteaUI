@@ -1,5 +1,6 @@
 import { forwardRef, memo, useId, useMemo } from 'react';
 
+import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import { Box, Chip, Typography } from '@mui/material';
 
 import { buildEntityEditorLink } from '@/[fsd]/entities/schedule';
@@ -14,7 +15,7 @@ import RouteDefinitions from '@/routes';
 import { WAITING_NEED, formatApprovalExpiry, getWaitingRunNeed } from '../lib/helpers';
 import { useActionButtonProps } from '../lib/hooks/useActionButtonProps.hooks';
 import { useNow } from '../lib/hooks/useNow.hooks';
-import { useScheduleRun, useScheduleRunConversation } from '../lib/hooks/useScheduleRuns.hooks';
+import { useRunDetail, useScheduleRunConversation } from '../lib/hooks/useScheduleRuns.hooks';
 import {
   CREDENTIAL_CHECK_STATE,
   useWaitingRunCredentialCheck,
@@ -43,20 +44,31 @@ const describeNeed = ({ need, toolkit, credential }, pausedText) => {
 };
 
 /**
- * The "Action needed" card of the schedule page. It takes the place of the Test schedule panel while a run
- * waits for approval. A run that waits for a credential gets two steps: provide the credential, then approve.
+ * The "Action needed" card of the schedule page. It opens inside a run of the Runs card that waits for approval. A run that waits for a credential gets two steps: provide the credential, then approve.
  * Approve stays off until the risk check of the schedule finds the credential. A run that waits for a sign-in
- * has the sign-in button as step 1. `run` is a row of the runs list; `onShowTest` switches back to the Test panel.
+ * has the sign-in button as step 1. `run` is a row of the runs list; `onShowTest` (optional) goes back to the Runs card.
+ * A Test run (`run.isDraftRun`) has no `schedule`: `entityType` and `applicationId` name the entity instead.
  */
 const ScheduleWaitingCard = memo(
   forwardRef((props, ref) => {
-    const { schedule, run, onShowTest } = props;
+    const { schedule, run, entityType, applicationId, onShowTest } = props;
     const projectId = useSelectedProjectId();
     const styles = scheduleWaitingCardStyles();
     const now = useNow();
     const statusId = useId();
-    const { run: detail } = useScheduleRun(schedule.id, run.id);
+    const { run: detail } = useRunDetail(schedule?.id, applicationId, run);
     const shownRun = detail ?? run;
+    // A Test run has no schedule row: the entity comes from the page and the version from the run
+    const target = useMemo(
+      () =>
+        schedule ?? {
+          entity_type: entityType,
+          application_id: applicationId,
+          version_id: shownRun.version_id,
+          approval_rule: detail?.approval_rule,
+        },
+      [schedule, entityType, applicationId, shownRun.version_id, detail?.approval_rule],
+    );
     const conversation = useScheduleRunConversation(shownRun);
     const pausedEvent = useMemo(() => detail?.events?.findLast(event => event.kind === 'paused'), [detail]);
     const waiting = useMemo(() => getWaitingRunNeed(pausedEvent), [pausedEvent]);
@@ -69,7 +81,7 @@ const ScheduleWaitingCard = memo(
       recheck,
       toolkitName,
     } = useWaitingRunCredentialCheck({
-      schedule,
+      schedule: target,
       toolkit: waiting.toolkit,
       enabled: isCredential,
     });
@@ -88,14 +100,14 @@ const ScheduleWaitingCard = memo(
       RouteDefinitions.CreateCredentialFromMain,
     );
     const entityLink = buildEntityEditorLink({
-      entityType: schedule.entity_type,
-      entityId: schedule.application_id,
+      entityType: target.entity_type,
+      entityId: target.application_id,
     });
     const editorLink = NavigationHelpers.buildAbsoluteAppUrl(
       projectId,
-      `${schedule.version_id ? `${entityLink}/${schedule.version_id}` : entityLink}?${SearchParams.ViewMode}=${ViewMode.Owner}`,
+      `${target.version_id ? `${entityLink}/${target.version_id}` : entityLink}?${SearchParams.ViewMode}=${ViewMode.Owner}`,
     );
-    const entityLabel = ENTITY_LABELS[schedule.entity_type] ?? 'agent';
+    const entityLabel = ENTITY_LABELS[target.entity_type] ?? 'agent';
     const expiry = formatApprovalExpiry(
       { expiresAt: shownRun.approval_expires_at, pausedAt: pausedEvent?.at },
       now,
@@ -126,6 +138,58 @@ const ScheduleWaitingCard = memo(
       </Box>
     );
     const buttonProps = useActionButtonProps();
+    const approval = (
+      <ScheduleRunApproval
+        compact
+        plain={!isCredential && !isSignIn}
+        schedule={schedule}
+        run={shownRun}
+        runId={shownRun.id}
+        hasChat={shownRun.conversation_id != null}
+        conversationUuid={conversation.conversationUuid}
+        pausedMessageId={conversation.pausedMessageId}
+        authAction={authAction}
+        pausedAt={pausedEvent?.at}
+        blockedReason={
+          isCredential && credentialState !== CREDENTIAL_CHECK_STATE.READY ? BLOCKED_REASON : undefined
+        }
+      />
+    );
+
+    // A plain pause needs no steps: one short notice and the two decision buttons
+    if (!isCredential && !isSignIn)
+      return (
+        <Box
+          ref={ref}
+          data-testid="schedule-waiting-card"
+          component="section"
+          aria-label="Action needed: this run is waiting for you"
+          sx={styles.plain}
+        >
+          <Box
+            role="status"
+            sx={styles.notice}
+          >
+            <WarningAmberOutlinedIcon sx={styles.noticeIcon} />
+            <Typography
+              variant="bodySmall"
+              sx={styles.noticeText}
+            >
+              {`This run will not start until you approve it. ${description} ${STEP2_NOTE}`}
+            </Typography>
+          </Box>
+          {expiry && (
+            <Typography
+              data-testid="schedule-waiting-expiry"
+              variant="bodySmall"
+              color="text.primary"
+            >
+              {expiry}
+            </Typography>
+          )}
+          {approval}
+        </Box>
+      );
 
     return (
       <Box
@@ -143,13 +207,15 @@ const ScheduleWaitingCard = memo(
           >
             Action needed: this run is waiting for you
           </Typography>
-          <BaseBtn
-            variant="elitea"
-            color="secondary"
-            onClick={onShowTest}
-          >
-            Test schedule
-          </BaseBtn>
+          {onShowTest && (
+            <BaseBtn
+              variant="elitea"
+              color="secondary"
+              onClick={onShowTest}
+            >
+              Show runs
+            </BaseBtn>
+          )}
         </Box>
         <Box sx={styles.body}>
           {expiry && (
@@ -216,19 +282,7 @@ const ScheduleWaitingCard = memo(
             sx={styles.panel}
             titleSx={styles.panelTitle}
           >
-            <ScheduleRunApproval
-              compact
-              schedule={schedule}
-              runId={shownRun.id}
-              hasChat={shownRun.conversation_id != null}
-              conversationUuid={conversation.conversationUuid}
-              pausedMessageId={conversation.pausedMessageId}
-              authAction={authAction}
-              pausedAt={pausedEvent?.at}
-              blockedReason={
-                isCredential && credentialState !== CREDENTIAL_CHECK_STATE.READY ? BLOCKED_REASON : undefined
-              }
-            />
+            {approval}
           </ToolkitActionPanel>
         </Box>
       </Box>
@@ -263,6 +317,18 @@ const scheduleWaitingCardStyles = () => ({
   }),
   panelTitle: ({ palette }) => ({ color: palette.warning.scheduleCard }),
   button: { width: 'auto !important' },
+  plain: { display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '0 1.25rem 1.25rem' },
+  notice: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    padding: '0.625rem 0.75rem',
+    borderRadius: '0.5rem',
+    border: `0.0625rem solid ${palette.warning.scheduleCard}`,
+    backgroundColor: palette.background.default.tertiary,
+  }),
+  noticeIcon: ({ palette }) => ({ fontSize: '1.25rem', flexShrink: 0, color: palette.warning.scheduleCard }),
+  noticeText: ({ palette }) => ({ color: palette.text.secondary }),
   header: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' },
   title: ({ palette }) => ({
     flex: '1 1 auto',

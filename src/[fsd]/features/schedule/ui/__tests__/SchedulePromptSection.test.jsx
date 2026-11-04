@@ -36,6 +36,10 @@ vi.mock('@/[fsd]/shared/ui/input/StyledInputEnhancer', () => ({
     </label>
   ),
 }));
+vi.mock('@/[fsd]/shared/ui/tooltip/InfoTooltip', () => ({
+  default: () => <span data-testid="info-tooltip" />,
+}));
+
 vi.mock('@/components/VariableList', () => ({
   default: props => {
     variableProps = props;
@@ -71,14 +75,14 @@ describe('SchedulePromptSection', () => {
   it('shows the prompt field for an agent and no run mode switch', () => {
     renderSection();
 
-    expect(screen.getByLabelText('Prompt')).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Starting input/)).toBeInTheDocument();
     expect(screen.queryByTestId('schedule-run-mode')).not.toBeInTheDocument();
   });
 
   it('syncs the variables with the typed prompt', () => {
     const { setFieldValue } = renderSection();
 
-    fireEvent.change(screen.getByLabelText('Prompt'), { target: { value: 'Hello {{name}}' } });
+    fireEvent.change(screen.getByLabelText(/^Starting input/), { target: { value: 'Hello {{name}}' } });
 
     expect(setFieldValue).toHaveBeenCalledWith('prompt', 'Hello {{name}}');
     expect(setFieldValue).toHaveBeenCalledWith('variables', [expect.objectContaining({ name: 'name' })]);
@@ -102,7 +106,7 @@ describe('SchedulePromptSection', () => {
   it('hides the prompt for a pipeline in entry point mode and clears the fields on a mode change', () => {
     const { setValues } = renderSection({ type: 'pipeline', runMode: 'entry_point' });
 
-    expect(screen.queryByLabelText('Prompt')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Starting input/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId('schedule-run-mode-prompt'));
 
     const update = setValues.mock.calls[0][0];

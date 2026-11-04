@@ -19,12 +19,13 @@ const STATUS_OPTIONS = [
   { label: 'Failed', value: 'failed' },
   { label: 'Skipped', value: 'skipped' },
   { label: 'Blocked', value: 'blocked' },
-  { label: 'Waiting for approval', value: 'waiting_for_approval' },
+  { label: 'Awaiting approval', value: 'waiting_for_approval' },
 ];
 // The select keeps string values; the list API takes a boolean
 const ENABLED_OPTIONS = [ALL, { label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }];
 
-const SchedulesFilters = memo(({ value, onChange, onClear, hasFilters, isAdmin, hideEntityType = false }) => {
+const SchedulesFilters = memo(props => {
+  const { value, onChange, onClear, hasFilters, isAdmin, hideEntityType = false } = props;
   const styles = schedulesFiltersStyles();
   const [searchText, setSearchText] = useState(value.search);
   // The value only carries ids; the Owner filter needs the user objects for its chips

@@ -68,11 +68,11 @@ const renderSection = props =>
     </ThemeProvider>,
   );
 
-const openCronTab = () => fireEvent.click(screen.getByText('Cron expression'));
+const openCronTab = () => fireEvent.click(screen.getByText('Cron Expression'));
 
 describe('ScheduleSettingsSection', () => {
   describe('one cron value for both tabs', () => {
-    it('passes the Builder cron to the caller and shows it on the Cron expression tab (TC-US30-01)', () => {
+    it('passes the Builder cron to the caller and shows it on the Cron Expression tab (TC-US30-01)', () => {
       const onChange = vi.fn();
       renderSection({ initial: '15 3 * * 1', onChange });
 
@@ -97,7 +97,7 @@ describe('ScheduleSettingsSection', () => {
   });
 
   describe('cron tab field and hint', () => {
-    it('shows a text field and the hint on the Cron expression tab (TC-US30-05)', () => {
+    it('shows a text field and the hint on the Cron Expression tab (TC-US30-05)', () => {
       renderSection();
 
       openCronTab();
@@ -238,7 +238,7 @@ describe('ScheduleSettingsSection', () => {
 });
 
 describe('ScheduleSettingsSection opening tab', () => {
-  it('opens a saved cron the Builder cannot show on the Cron expression tab, with its error', () => {
+  it('opens a saved cron the Builder cannot show on the Cron Expression tab, with its error', () => {
     renderSection({ initial: '0 * * * *' });
 
     expect(screen.getByTestId('pipeline-schedule-cron-input')).toHaveValue('0 * * * *');

@@ -411,7 +411,15 @@ describe('update body', () => {
       prompt: 'Summarize {{team}}',
       variables: [{ name: 'team', value: 'core' }],
     });
-    expect(toUpdateBody(values)).toEqual(toCreateBody(values));
+    expect(toUpdateBody(values)).toEqual(toCreateBody({ ...values, enabled: undefined }));
+  });
+
+  it('leaves enabled out of the update body and sends it with a new schedule', () => {
+    const { values } = buildEditValues(saved, undefined);
+
+    expect(toUpdateBody({ ...values, enabled: false })).not.toHaveProperty('enabled');
+    expect(toCreateBody({ ...values, enabled: false })).toMatchObject({ enabled: false });
+    expect(toCreateBody({ ...values, enabled: undefined })).not.toHaveProperty('enabled');
   });
 });
 

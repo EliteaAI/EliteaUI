@@ -2,13 +2,15 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSearchParams } from 'react-router-dom';
 
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, Link, Typography } from '@mui/material';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { byNewestRunFirst } from '@/[fsd]/entities/run-history/lib/helpers';
 import { RunHistoryChat, RunHistoryList } from '@/[fsd]/entities/run-history/ui';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useIsSmallWindow, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
+import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SearchParams } from '@/common/constants';
 import CloseIcon from '@/components/Icons/CloseIcon';
 
@@ -53,7 +55,7 @@ const RunHistoryContainer = memo(props => {
   const handledSharedRunId = useRef(null);
   const [mergedData, setMergedData] = useState();
 
-  const [fetchRunList, { data, isLoading, isFetching, isUninitialized }] =
+  const [fetchRunList, { data, isLoading, isFetching, isUninitialized, isError, error }] =
     RunHistoryApi.useLazyGetRunHistoryListQuery();
 
   // Not part of server-side pagination, so they are merged into every page.
@@ -130,7 +132,7 @@ const RunHistoryContainer = memo(props => {
     toastInfo,
   ]);
 
-  useEffect(() => {
+  const loadRunList = useCallback(() => {
     if (projectId && entityId) {
       fetchRunList({
         source,
@@ -142,6 +144,10 @@ const RunHistoryContainer = memo(props => {
       });
     }
   }, [projectId, entityId, entityProjectId, page, fetchRunList, source, queryParams]);
+
+  useEffect(() => {
+    loadRunList();
+  }, [loadRunList]);
 
   useEffect(() => {
     if (!data?.isLoadMore) {
@@ -186,15 +192,14 @@ const RunHistoryContainer = memo(props => {
     <Box sx={onClose ? styles.outerWrapper : undefined}>
       {onClose && (
         <Box sx={styles.header}>
-          <IconButton
+          <BaseBtn
             data-testid="run-history-close-button"
-            variant="elitea"
-            color="tertiary"
+            variant={BUTTON_VARIANTS.tertiary}
             aria-label="close run history"
             onClick={onClose}
           >
             <CloseIcon sx={styles.iconClose} />
-          </IconButton>
+          </BaseBtn>
           <Typography
             variant="headingSmall"
             color="text.secondary"
@@ -211,6 +216,27 @@ const RunHistoryContainer = memo(props => {
           data-testid="run-history-list-column"
           sx={styles.historyList}
         >
+          {isError && (
+            // A 400 names the filter the server refused, so the user can change it
+            <BannerMessage variant="error">
+              <Typography
+                variant="bodySmall"
+                data-testid="run-history-error"
+              >
+                {error?.status === 400 && error?.data?.error
+                  ? error.data.error
+                  : 'Failed to load the run history.'}{' '}
+                <Link
+                  component="button"
+                  type="button"
+                  variant="bodySmall"
+                  onClick={loadRunList}
+                >
+                  Retry
+                </Link>
+              </Typography>
+            </BannerMessage>
+          )}
           <RunHistoryList
             conversations={historyRows}
             versions={versions}
