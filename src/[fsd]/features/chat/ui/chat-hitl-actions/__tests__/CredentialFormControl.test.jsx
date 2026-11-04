@@ -21,6 +21,7 @@ const api = vi.hoisted(() => ({
   retry: vi.fn(),
   user: { personal_project_id: 5 },
   projectId: 12,
+  projectName: 'Team Alpha',
 }));
 vi.mock('@/[fsd]/features/project-governance', async () => ({
   ProjectGovernanceHelpers:
@@ -51,6 +52,7 @@ vi.mock('@/api/configurations', () => ({
 vi.mock('@/[fsd]/shared/lib/hooks', async importOriginal => ({
   ...(await importOriginal()),
   useSelectedProjectId: () => api.projectId,
+  useSelectedProjectName: () => api.projectName,
   useToast: () => ({ toastSuccess: vi.fn(), toastError: vi.fn(), toastInfo: vi.fn() }),
 }));
 vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
@@ -183,8 +185,7 @@ describe('CredentialFormControl (#7228)', () => {
       credential_type: 'github',
       title: 'GitHub',
       fields: { access_token: SECRET, base_url: 'https://api.github.com', hosting: 'Auto' }, // defaults prefilled
-      ownership: 'personal',
-    });
+    }); // (round 5) no ownership: the server derives it from the project
     expect(onHitlResume).toHaveBeenCalledWith({
       action: 'created',
       value: { reference_id: REF },
@@ -225,32 +226,30 @@ describe('CredentialFormControl (#7228)', () => {
     expect(api.create).not.toHaveBeenCalled();
   });
 
-  it('offers Only me (preselected) or Shared with the team for a regular type in a team project', async () => {
+  it('says a team project credential is the project one, approved by an admin, and offers no choice', async () => {
     wrap();
-    expect(screen.getByTestId('credential-form-ownership-private')).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByTestId('credential-form-ownership-private')).toHaveTextContent(
-      'Only me (in this project)',
+    expect(screen.getByTestId('credential-form-ownership')).toHaveTextContent(
+      'Shared with the project Team Alpha; a project admin approves it',
     );
-    expect(screen.getByTestId('credential-form-ownership-shared')).toHaveTextContent('Shared with the team');
-    fireEvent.click(screen.getByTestId('credential-form-ownership-shared'));
+    expect(screen.queryByRole('button', { name: /only me|shared with the team/i })).toBeNull();
     type('access_token', SECRET);
     fireEvent.click(screen.getByTestId('credential-form-create'));
     await waitFor(() => expect(api.create).toHaveBeenCalled());
-    expect(api.create.mock.calls[0][0].ownership).toBe('project_shared');
+    expect(api.create.mock.calls[0][0]).not.toHaveProperty('ownership');
   });
 
-  it('offers no ownership choice in a personal project', () => {
+  it('says a personal project credential is private to you', () => {
     api.projectId = 5;
     wrap();
-    expect(screen.queryByTestId('credential-form-ownership-shared')).toBeNull();
+    expect(screen.getByTestId('credential-form-ownership')).toHaveTextContent('Private to you');
   });
 
-  it('a sign-in type shows its non-secret fields only, no choice, and creates a delegated private credential', async () => {
+  it('a sign-in type shows its non-secret fields only, says private to you, and creates a delegated credential', async () => {
     const onHitlResume = wrap(interrupt({ credential_type: 'sharepoint', title: 'SharePoint' }));
     expect(screen.getByTestId('credential-form-sign-in')).toBeInTheDocument();
     expect(screen.queryByTestId('credential-form-field-client_secret')).toBeNull();
     expect(screen.queryByTestId('credential-form-field-client_id')).toBeNull(); // the platform's app, not typed
-    expect(screen.queryByTestId('credential-form-ownership-shared')).toBeNull();
+    expect(screen.getByTestId('credential-form-ownership')).toHaveTextContent('Private to you'); // team project too
     expect(screen.getByTestId('credential-form-create')).toBeDisabled(); // the site URL is required
     type('site_url', 'https://example.sharepoint.com/sites/a');
     fireEvent.click(screen.getByTestId('credential-form-create'));
@@ -258,9 +257,9 @@ describe('CredentialFormControl (#7228)', () => {
     expect(api.create.mock.calls[0][0]).toMatchObject({
       credential_type: 'sharepoint',
       fields: { site_url: 'https://example.sharepoint.com/sites/a' },
-      ownership: 'personal',
       auth_mode: 'entra_delegated',
     });
+    expect(api.create.mock.calls[0][0]).not.toHaveProperty('ownership');
   });
 
   it('an unknown credential type offers Cancel only', () => {

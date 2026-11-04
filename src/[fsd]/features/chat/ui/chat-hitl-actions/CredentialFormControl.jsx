@@ -9,33 +9,18 @@ import {
   ProjectGovernanceHelpers,
   useCreateCredentialFromChatMutation,
 } from '@/[fsd]/features/project-governance';
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useSelectedProjectName } from '@/[fsd]/shared/lib/hooks';
 import { Button, Input, Select } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { useGetAvailableConfigurationsTypeQuery } from '@/api/configurations';
-
-const PRIVATE = 'personal';
-const SHARED = 'project_shared';
-const OWNERSHIP_TABS = [
-  {
-    value: PRIVATE,
-    label: 'Only me (in this project)',
-    buttonProps: { 'data-testid': 'credential-form-ownership-private' },
-  },
-  {
-    value: SHARED,
-    label: 'Shared with the team',
-    buttonProps: { 'data-testid': 'credential-form-ownership-shared' },
-  },
-];
 
 // (#7228) The chat's credential form: what a governed agent asked for (a type and a title) as one inline card. The
 // person types the values here, never into the chat; Create stores them as a governed credential (the server also
 // files what the agent needs for approval) and resumes the run with the new reference id only. The typed values live
 // in this card's state until the request settles, then are gone (nothing of them reaches Redux, the message or the
 // socket). What the agent chose (title, type, purpose) is shown as plain text, never rendered. A sign-in type shows its
-// required non-secret fields only and uses the person's own Microsoft sign-in.
+// required non-secret fields only and uses the person's own Microsoft sign-in. Who it belongs to is the project's, never
+// chosen here (round 5): a team project's credential is the project's; the personal project's, or a sign-in, is private.
 const CredentialFormControl = memo(props => {
   const { hitlInterrupt, interruptId, messageId, conversationUuid, onHitlResume, disabled, testId } = props;
   const { credential_type: credentialType, title, purpose } = hitlInterrupt || {};
@@ -43,9 +28,9 @@ const CredentialFormControl = memo(props => {
     ProjectGovernanceConstants;
   const styles = credentialFormControlStyles();
   const projectId = useSelectedProjectId();
+  const projectName = useSelectedProjectName();
   const personalProjectId = useSelector(state => state.user?.personal_project_id);
   const [values, setValues] = useState({});
-  const [ownership, setOwnership] = useState(PRIVATE);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(hitlInterrupt?.credential_form_result ?? null);
 
@@ -88,7 +73,10 @@ const CredentialFormControl = memo(props => {
   }, [shownFields]);
   useEffect(() => () => setValues({}), []);
 
-  const offersOwnership = !isSignIn && projectId !== personalProjectId;
+  const ownershipText =
+    isSignIn || projectId === personalProjectId
+      ? 'Private to you'
+      : `Shared with the project ${projectName}; a project admin approves it`;
   const missingRequired = shownFields.some(field => field.required && !(values[field.name] ?? '').trim());
   const hasSecret = isSignIn || shownFields.some(field => field.secret && (values[field.name] ?? '') !== '');
   const canCreate = !disabled && !isCreating && !missingRequired && hasSecret && Boolean(conversationUuid);
@@ -98,7 +86,6 @@ const CredentialFormControl = memo(props => {
     [],
   );
   const handleSelect = useCallback(name => value => setValues(prev => ({ ...prev, [name]: value })), []);
-  const handleOwnership = useCallback((_, value) => value && setOwnership(value), []);
 
   const handleCancel = useCallback(() => {
     setValues({});
@@ -121,7 +108,6 @@ const CredentialFormControl = memo(props => {
         credential_type: credentialType,
         title,
         fields: typed,
-        ownership: offersOwnership ? ownership : PRIVATE,
         ...(isSignIn && { auth_mode: 'entra_delegated' }),
       }).unwrap();
       setValues({});
@@ -139,9 +125,7 @@ const CredentialFormControl = memo(props => {
     interruptId,
     isSignIn,
     messageId,
-    offersOwnership,
     onHitlResume,
-    ownership,
     projectId,
     reset,
     shownFields,
@@ -204,6 +188,13 @@ const CredentialFormControl = memo(props => {
         >
           {`The agent asks you to create the credential "${title || credentialType}" (${credentialType}).`}
         </Typography>
+        <Typography
+          variant="bodySmall"
+          color="text.secondary"
+          data-testid={`${testId}-ownership`}
+        >
+          {ownershipText}
+        </Typography>
         {purpose && (
           <Typography
             variant="bodySmall"
@@ -252,7 +243,7 @@ const CredentialFormControl = memo(props => {
               color="text.secondary"
               data-testid={`${testId}-sign-in`}
             >
-              It uses your own Microsoft sign-in: nothing secret is typed here, and it stays private to you.
+              It uses your own Microsoft sign-in: nothing secret is typed here.
             </Typography>
           )}
           {visibleFields.map(field =>
@@ -295,15 +286,6 @@ const CredentialFormControl = memo(props => {
             >
               {`More fields (${foldedCount})`}
             </Button.BaseBtn>
-          )}
-          {offersOwnership && (
-            <TabGroupButton
-              arrayBtn={OWNERSHIP_TABS}
-              value={ownership}
-              onChange={handleOwnership}
-              disabled={disabled || isCreating}
-              disableTooltip
-            />
           )}
         </Box>
       )}

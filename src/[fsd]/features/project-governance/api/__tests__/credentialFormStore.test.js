@@ -52,7 +52,6 @@ const ARGS = {
   credential_type: 'github',
   title: 'GitHub',
   fields: { access_token: SECRET },
-  ownership: 'personal',
 };
 
 describe('the credential form leaves no typed value in the store (EL-7228)', () => {
