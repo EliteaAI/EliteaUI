@@ -90,7 +90,7 @@ const AgentNode = memo(props => {
     typeTestIdPrefix: `${AGENT_NODE_TESTID_PREFIX}-input-mapping-type`,
   };
 
-  const { addTool, prepareApplicationAttachment, getAttachedApplication } = usePipelineAttachments();
+  const { addToolWithNode, prepareApplicationAttachment, getAttachedApplication } = usePipelineAttachments();
   const attachedTool = useMemo(
     () => (yamlNode?.tool ? getAttachedApplication(yamlNode.tool) : undefined),
     [getAttachedApplication, yamlNode?.tool],
@@ -123,10 +123,9 @@ const AgentNode = memo(props => {
       }
       const tool = await prepareApplicationAttachment(item.source);
       if (!tool) return;
-      // Same tick, so reconcile never sees the attachment without the node that uses it
-      setAgentName(addTool(tool).name);
+      addToolWithNode(tool, attached => setAgentName(attached.name));
     },
-    [addTool, prepareApplicationAttachment, setAgentName],
+    [addToolWithNode, prepareApplicationAttachment, setAgentName],
   );
 
   const onClearAgent = useCallback(() => setAgentName(null), [setAgentName]);
@@ -165,8 +164,14 @@ const AgentNode = memo(props => {
         <FlowEditorNodePanel.NodeConfigSection>
           {isOrphan && (
             <Box sx={agentNodeStyles.orphanWarning}>
-              <WarningAmberIcon fontSize="small" />
-              <Typography variant="caption">
+              <WarningAmberIcon
+                fontSize="small"
+                sx={agentNodeStyles.orphanWarningIcon}
+              />
+              <Typography
+                variant="caption"
+                sx={agentNodeStyles.orphanWarningText}
+              >
                 Agent not found — select a replacement or delete this node
               </Typography>
             </Box>
@@ -231,10 +236,17 @@ const agentNodeStyles = {
     gap: '.375rem',
     padding: '.375rem .75rem',
     borderRadius: '.375rem',
-    backgroundColor: palette.warning.light,
-    color: palette.warning.dark,
+    backgroundColor: palette.background.warning,
+    border: `0.0625rem solid ${palette.border.attention}`,
     width: '100%',
     boxSizing: 'border-box',
+  }),
+  orphanWarningIcon: ({ palette }) => ({
+    flexShrink: 0,
+    color: palette.icon.warning,
+  }),
+  orphanWarningText: ({ palette }) => ({
+    color: palette.text.attention,
   }),
 };
 
