@@ -71,7 +71,6 @@ const CredentialFormControl = memo(props => {
       ...prev,
     }));
   }, [shownFields]);
-  useEffect(() => () => setValues({}), []);
 
   const ownershipText =
     isSignIn || projectId === personalProjectId
