@@ -4,14 +4,14 @@ import { useSelector } from 'react-redux';
 
 import { useResizableDrawer } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 
-import { TEST_PANEL_STORAGE_KEY, TEST_PANEL_WIDTH } from '../constants/testPanel.constants';
+import { TEST_PANEL_STORAGE_KEYS, TEST_PANEL_WIDTH } from '../constants/entityTestPanel.constants';
 
-const readStoredWidth = storageKey => {
+const readStoredWidth = (storageKey, defaultWidth) => {
   try {
     const stored = Number(localStorage.getItem(storageKey));
-    return Number.isFinite(stored) && stored >= TEST_PANEL_WIDTH.MIN ? stored : TEST_PANEL_WIDTH.DEFAULT;
+    return Number.isFinite(stored) && stored >= TEST_PANEL_WIDTH.MIN ? stored : defaultWidth;
   } catch {
-    return TEST_PANEL_WIDTH.DEFAULT;
+    return defaultWidth;
   }
 };
 
@@ -27,14 +27,19 @@ export const getTestPanelMaxWidth = containerWidth =>
   Math.max(TEST_PANEL_WIDTH.MIN, Math.floor((containerWidth || 0) * TEST_PANEL_WIDTH.MAX_RATIO));
 
 /**
- * Resizable Test panel width, remembered per user in this browser.
+ * Resizable Test panel width, remembered per user and entity type in this browser.
  * `workspaceRef` is the element the 50% max is measured against.
  */
-export const useTestPanelWidth = ({ workspaceRef, onResized } = {}) => {
+export const useTestPanelWidth = ({
+  workspaceRef,
+  onResized,
+  storageKeyPrefix = TEST_PANEL_STORAGE_KEYS.pipeline,
+  defaultWidth = TEST_PANEL_WIDTH.DEFAULT,
+} = {}) => {
   const userId = useSelector(state => state.user?.id);
-  const storageKey = `${TEST_PANEL_STORAGE_KEY}:${userId ?? 'anonymous'}`;
+  const storageKey = `${storageKeyPrefix}:${userId ?? 'anonymous'}`;
 
-  const [initialWidth] = useState(() => readStoredWidth(storageKey));
+  const [initialWidth] = useState(() => readStoredWidth(storageKey, defaultWidth));
   const [maxWidth, setMaxWidth] = useState(() => getTestPanelMaxWidth(window.innerWidth));
 
   const {

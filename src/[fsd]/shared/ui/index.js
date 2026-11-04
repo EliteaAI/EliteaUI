@@ -32,3 +32,4 @@ export * as Mention from './mention';
 export { MarkdownEditorActions } from './markdown-editor-actions';
 export * as SecretField from './secret-field';
 export * as Schedule from './schedule';
+export * as EditorLayout from './editor-layout';

@@ -1,13 +1,11 @@
 import { memo } from 'react';
 
-import { Box, Divider, Tooltip } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { ChatButton } from '@/[fsd]/features/chat/ui';
-import { Button } from '@/[fsd]/shared/ui';
 import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
-import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
-import CloseIcon from '@/components/Icons/CloseIcon';
+import { EntityTestPanelUI } from '@/[fsd]/widgets/entity-test-panel';
 
 const TestPanelControls = memo(props => {
   const { onShowHistory, activeConversation, setActiveConversation, isClearDisabled, onClear, onClose } =
@@ -40,25 +38,10 @@ const TestPanelControls = memo(props => {
         disabled={isClearDisabled}
         onClear={onClear}
       />
-      <Divider
-        orientation="vertical"
-        flexItem
-        sx={styles.divider}
+      <EntityTestPanelUI.TestPanelCloseButton
+        onClose={onClose}
+        testId="pipeline-test-panel-close"
       />
-      <Tooltip
-        title="Close"
-        placement="top"
-      >
-        <Box component="span">
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.secondary}
-            startIcon={<CloseIcon sx={styles.closeIcon} />}
-            onClick={onClose}
-            aria-label="Close test panel"
-            data-testid="pipeline-test-panel-close"
-          />
-        </Box>
-      </Tooltip>
     </Box>
   );
 });
@@ -72,13 +55,6 @@ const testPanelControlsStyles = () => ({
     alignItems: 'center',
     justifyContent: 'flex-end',
     gap: '0.5rem',
-  },
-  divider: ({ palette }) => ({
-    marginY: '0.25rem',
-    borderColor: palette.border.lines,
-  }),
-  closeIcon: {
-    fontSize: '1rem',
   },
 });
 

@@ -13,6 +13,7 @@ const ApplicationAdvanceSettings = memo(props => {
   const {
     style,
     disabled,
+    defaultExpanded = true,
     showIgnoreProjectContext = false,
     // Optional stable test hook (testid-only locator policy). No-op when
     // omitted, so the Agent call site (no case exercises Step limit there
@@ -154,6 +155,7 @@ const ApplicationAdvanceSettings = memo(props => {
       style={style}
       showMode={AccordionConstants.AccordionShowMode.LeftMode}
       accordionSX={styles.accordion}
+      defaultExpanded={defaultExpanded}
       items={accordionItems}
     />
   );

@@ -42,7 +42,6 @@ vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
   }),
 }));
 vi.mock('@/[fsd]/shared/ui/button', () => ({ ViewRunHistoryButton: () => null }));
-vi.mock('@/[fsd]/widgets/context-budget', () => ({ ContextBudgetUI: { ContextBudgetInfo: () => null } }));
 vi.mock('@/components/Chat/FullScreenToggle', () => ({ default: () => null }));
 vi.mock('@/hooks/chat/useUploadAttachments', () => ({ default: () => ({}) }));
 vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));

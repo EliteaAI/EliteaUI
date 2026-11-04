@@ -21,8 +21,8 @@ import {
   useToast,
 } from '@/[fsd]/shared/lib/hooks';
 import { Controls } from '@/[fsd]/shared/ui';
+import { RunHistoryIcon } from '@/[fsd]/shared/ui/icon';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler';
-import ClockIcon from '@/assets/clock_icon.svg?react';
 import { PERMISSIONS, SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { useCopyLinkMenu } from '@/components/CopyLinkToEntityButton.jsx';
@@ -35,8 +35,6 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 import RouteDefinitions from '@/routes';
 
 import { useDeleteSkillMutation } from '../api';
-
-const HISTORY_ICON_STYLE = { width: '1rem', height: '1rem' };
 
 const sectionLabelSx = ({ palette }) => ({
   color: palette.text.primary,
@@ -228,15 +226,15 @@ const SkillControls = memo(props => {
           addSeparator: true,
           slotProps: { MenuItem: { sx: { pointerEvents: 'none' } } },
         },
+        shareSkillMenuItem,
+        { ...pinMenuItem, key: 'pin-toggle-skill' },
         onShowHistory && {
           key: 'run-history',
           label: 'Run History',
-          icon: <ClockIcon style={HISTORY_ICON_STYLE} />,
+          icon: <RunHistoryIcon sx={{ fontSize: '1rem' }} />,
           onClick: onShowHistory,
           slotProps: { MenuItem: { 'data-testid': 'skill-run-history-menu-item' } },
         },
-        shareSkillMenuItem,
-        { ...pinMenuItem, key: 'pin-toggle-skill' },
         canDeleteSkill && {
           key: 'delete-skill',
           label: 'Delete skill',

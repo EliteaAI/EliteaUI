@@ -14,9 +14,10 @@ vi.mock('@/[fsd]/features/pipelines/flow-editor/lib/hooks', async () => {
 });
 
 const { getTestPanelMaxWidth, useTestPanelWidth } = await import('../useTestPanelWidth.hooks');
-const { TEST_PANEL_STORAGE_KEY, TEST_PANEL_WIDTH } = await import('../../constants/testPanel.constants');
+const { TEST_PANEL_STORAGE_KEYS, TEST_PANEL_WIDTH } =
+  await import('../../constants/entityTestPanel.constants');
 
-const STORAGE_KEY = `${TEST_PANEL_STORAGE_KEY}:7`;
+const STORAGE_KEY = `${TEST_PANEL_STORAGE_KEYS.pipeline}:7`;
 
 const renderWidthHook = (workspaceWidth = 1600, onResized = vi.fn()) => {
   const workspaceRef = { current: { clientWidth: workspaceWidth } };
@@ -127,6 +128,32 @@ describe('useTestPanelWidth', () => {
     const { result } = renderWidthHook();
     expect(result.current.width).toBe(TEST_PANEL_WIDTH.DEFAULT);
     expect(() => drag(result, 1000, 950)).not.toThrow();
+  });
+
+  it('remembers the width per storage key', () => {
+    localStorage.setItem(STORAGE_KEY, '450');
+    localStorage.setItem(`${TEST_PANEL_STORAGE_KEYS.chat}:7`, '500');
+    const workspaceRef = { current: { clientWidth: 1600 } };
+
+    const { result } = renderHook(() =>
+      useTestPanelWidth({ workspaceRef, storageKeyPrefix: TEST_PANEL_STORAGE_KEYS.chat }),
+    );
+
+    expect(result.current.width).toBe(500);
+  });
+
+  it('starts from the given default width until one is stored', () => {
+    const workspaceRef = { current: { clientWidth: 1600 } };
+
+    const { result } = renderHook(() =>
+      useTestPanelWidth({
+        workspaceRef,
+        storageKeyPrefix: TEST_PANEL_STORAGE_KEYS.chat,
+        defaultWidth: TEST_PANEL_WIDTH.CHAT_DEFAULT,
+      }),
+    );
+
+    expect(result.current.width).toBe(TEST_PANEL_WIDTH.CHAT_DEFAULT);
   });
 });
 

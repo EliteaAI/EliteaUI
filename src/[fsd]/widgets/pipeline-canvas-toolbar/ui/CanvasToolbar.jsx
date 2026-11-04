@@ -2,7 +2,8 @@ import { memo, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { FlowEditorAddNode, FlowEditorTestPipeline } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import { FlowEditorAddNode } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import { EntityTestPanelUI } from '@/[fsd]/widgets/entity-test-panel';
 import { PipelineEditorMode } from '@/common/constants';
 import GroupedButton from '@/components/GroupedButton';
 
@@ -40,9 +41,11 @@ const CanvasToolbar = memo(props => {
           />
         )}
         {onTestPipeline && (
-          <FlowEditorTestPipeline.TestPipelineButton
+          <EntityTestPanelUI.TestEntityButton
+            label="Test Pipeline"
             onClick={onTestPipeline}
             disabledReason={testDisabledReason}
+            testId="pipeline-test-button"
           />
         )}
       </Box>
