@@ -9,6 +9,11 @@ import TestPanelCloseButton from './TestPanelCloseButton';
 
 const NO_CONTEXT_STRATEGY = {};
 
+/**
+ * Test panel toolbar. Full Screen, Clear and Close always render; optional parts:
+ * - context budget pill — needs both `activeConversation` (with `id`) and `setActiveConversation`
+ * - Run History button — needs `onShowHistory`
+ */
 const EntityTestPanelControls = memo(props => {
   const {
     activeConversation,
