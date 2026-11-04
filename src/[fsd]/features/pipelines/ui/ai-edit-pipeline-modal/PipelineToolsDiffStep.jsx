@@ -1,0 +1,227 @@
+import { memo, useMemo } from 'react';
+
+import { Box, Typography } from '@mui/material';
+
+import { EditEntityComparisonLayout, ToolItemCard } from '@/[fsd]/entities/edit-entity-with-ai';
+import BaseCheckbox from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
+
+// Build a normalised tools list from current formik tools (same shape matchDependencies expects)
+const normaliseCurrentTools = tools =>
+  (tools || []).map(t => {
+    if (t.type === 'application') {
+      return {
+        ...t,
+        id: t.settings?.application_id ?? t.id,
+        entityType: t.agent_type === 'pipeline' ? 'pipeline' : 'agent',
+      };
+    }
+    return {
+      ...t,
+      entityType: t.entity_type ?? (t.type?.toLowerCase() === 'mcp' ? 'mcp' : 'toolkit'),
+    };
+  });
+
+// Build a normalised tools list from draft suggestions
+const normaliseSuggestedTools = draftData => [
+  ...(draftData?.suggested_toolkits || []).map(t => ({ ...t, entityType: 'toolkit' })),
+  ...(draftData?.suggested_mcp || []).map(t => ({ ...t, entityType: 'mcp' })),
+  ...(draftData?.suggested_agents || []).map(a => ({ ...a, entityType: 'agent' })),
+  ...(draftData?.suggested_pipelines || []).map(p => ({ ...p, entityType: 'pipeline' })),
+];
+
+const toolKey = t => `${t.entityType}:${t.id}`;
+
+const matchTools = (leftTools, rightTools) => {
+  const allKeys = [...new Set([...leftTools.map(toolKey), ...rightTools.map(toolKey)])];
+  return allKeys.map(k => ({
+    key: k,
+    left: leftTools.find(t => toolKey(t) === k) ?? null,
+    right: rightTools.find(t => toolKey(t) === k) ?? null,
+  }));
+};
+
+// Returns the set-state id for a suggested (right) item
+const getAddId = item => {
+  if (item.entityType === 'agent' || item.entityType === 'pipeline') {
+    // suggested_agents/pipelines have the platform id directly as item.id
+    return item.id;
+  }
+  return item.id;
+};
+
+// Returns the record id used for removal (keyed on the current tool's record id)
+const getRemoveId = item => item.id;
+
+const PipelineToolsDiffStep = memo(props => {
+  const {
+    currentTools,
+    draftData,
+    addToolkitIds,
+    onToggleAddToolkit,
+    addMcpIds,
+    onToggleAddMcp,
+    addAgentIds,
+    onToggleAddAgent,
+    addPipelineIds,
+    onToggleAddPipeline,
+    removeToolRecordIds,
+    onToggleRemoveTool,
+  } = props;
+
+  const leftTools = useMemo(() => normaliseCurrentTools(currentTools), [currentTools]);
+  const rightTools = useMemo(() => normaliseSuggestedTools(draftData), [draftData]);
+
+  const matchedRows = useMemo(() => matchTools(leftTools, rightTools), [leftTools, rightTools]);
+
+  const noDiff = useMemo(
+    () => matchedRows.length > 0 && matchedRows.every(row => row.left && row.right),
+    [matchedRows],
+  );
+
+  const isAddChecked = item => {
+    if (!item) return false;
+    if (item.entityType === 'agent') return addAgentIds.has(item.id);
+    if (item.entityType === 'pipeline') return addPipelineIds.has(item.id);
+    if (item.entityType === 'mcp') return addMcpIds.has(item.id);
+    return addToolkitIds.has(item.id);
+  };
+
+  const handleToggleAdd = item => {
+    if (!item) return;
+    if (item.entityType === 'agent') return onToggleAddAgent(getAddId(item));
+    if (item.entityType === 'pipeline') return onToggleAddPipeline(getAddId(item));
+    if (item.entityType === 'mcp') return onToggleAddMcp(getAddId(item));
+    return onToggleAddToolkit(getAddId(item));
+  };
+
+  if (matchedRows.length === 0) return null;
+
+  return (
+    <EditEntityComparisonLayout
+      currentContent={
+        <Box sx={styles.column}>
+          {noDiff && <Typography sx={styles.noDiffNote}>No differences in this section.</Typography>}
+          {matchedRows.map(row =>
+            row.left ? (
+              <Box
+                key={row.key}
+                sx={[styles.rowSlot, !row.right && styles.removeSlot]}
+              >
+                <Box sx={styles.removeRow}>
+                  {!row.right && (
+                    <BaseCheckbox
+                      size="small"
+                      checked={removeToolRecordIds.has(getRemoveId(row.left))}
+                      onChange={() => onToggleRemoveTool(getRemoveId(row.left))}
+                      sx={styles.checkbox}
+                    />
+                  )}
+                  <ToolItemCard
+                    item={row.left}
+                    entityType={row.left.entityType}
+                  />
+                </Box>
+              </Box>
+            ) : (
+              <Box
+                key={row.key}
+                sx={styles.emptySlot}
+              />
+            ),
+          )}
+        </Box>
+      }
+      suggestedContent={
+        <Box sx={styles.column}>
+          {noDiff && <Typography sx={styles.noDiffNote}>No differences in this section.</Typography>}
+          {matchedRows.map(row =>
+            row.right ? (
+              <Box
+                key={row.key}
+                sx={[styles.rowSlot, !row.left && styles.addSlot]}
+              >
+                <Box sx={styles.addRow}>
+                  {!row.left && (
+                    <BaseCheckbox
+                      size="small"
+                      checked={isAddChecked(row.right)}
+                      onChange={() => handleToggleAdd(row.right)}
+                      sx={styles.checkbox}
+                    />
+                  )}
+                  <ToolItemCard
+                    item={row.right}
+                    entityType={row.right.entityType}
+                  />
+                </Box>
+              </Box>
+            ) : (
+              <Box
+                key={row.key}
+                sx={styles.emptySlot}
+              />
+            ),
+          )}
+          {matchedRows.length === 0 && <Typography sx={styles.emptyText}>No tools suggested</Typography>}
+        </Box>
+      }
+    />
+  );
+});
+
+PipelineToolsDiffStep.displayName = 'PipelineToolsDiffStep';
+
+/** @type {MuiSx} */
+const styles = {
+  column: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    padding: '1.5rem 2rem',
+  },
+  rowSlot: {
+    minHeight: '3.75rem',
+  },
+  removeSlot: ({ palette }) => ({
+    borderRadius: '0.5rem',
+    backgroundColor: `${palette.error.main}18`,
+    padding: '0.25rem',
+  }),
+  addSlot: ({ palette }) => ({
+    borderRadius: '0.5rem',
+    backgroundColor: palette.diff.added,
+    padding: '0.25rem',
+  }),
+  emptySlot: ({ palette }) => ({
+    minHeight: '3.75rem',
+    borderRadius: '0.5rem',
+    border: `0.0625rem dashed ${palette.border.lines}`,
+  }),
+  removeRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  addRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  checkbox: {
+    padding: '0.25rem',
+    flexShrink: 0,
+  },
+  emptyText: {
+    fontSize: '0.75rem',
+    color: 'text.primary',
+    fontStyle: 'italic',
+  },
+  noDiffNote: {
+    fontSize: '0.75rem',
+    color: 'text.primary',
+    fontStyle: 'italic',
+    marginBottom: '0.5rem',
+  },
+};
+
+export default PipelineToolsDiffStep;

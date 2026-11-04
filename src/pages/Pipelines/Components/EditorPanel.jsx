@@ -21,6 +21,7 @@ import {
   ParsePipelineHelpers,
   PipelineReadinessHelpers,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { AIEditPipelineButton } from '@/[fsd]/features/pipelines/ui/ai-edit-pipeline-modal';
 import { YamlCodeEditor } from '@/[fsd]/features/pipelines/yaml-editor/ui';
 import { ChunkHelpers, FunctionHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useIsFrom, useIsPipelineLayoutDirty, useIsSmallWindow } from '@/[fsd]/shared/lib/hooks';
@@ -63,6 +64,7 @@ const EditorPanel = forwardRef((props, ref) => {
     testDisabledReason,
     isTestPanelOpen = false,
     onCanvasNodeInteraction,
+    isCreateMode = false,
   } = props;
   const dispatch = useDispatch();
   const { isSmallWindow } = useIsSmallWindow();
@@ -205,6 +207,14 @@ const EditorPanel = forwardRef((props, ref) => {
         testDisabledReason={testDisabledReason || flowTestDisabledReason}
         disabled={disabled}
         isCompact={isFromChat}
+        extraActions={
+          !isFromChat ? (
+            <AIEditPipelineButton
+              label={isCreateMode ? 'Build with AI' : 'Edit with AI'}
+              isCreateMode={isCreateMode}
+            />
+          ) : undefined
+        }
       />
       <Box sx={styles.editorContainer}>
         {
