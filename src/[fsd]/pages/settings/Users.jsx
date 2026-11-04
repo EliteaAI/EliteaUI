@@ -50,16 +50,6 @@ const Users = memo(() => {
     return searchParams.get('inviteUsers') === '1';
   }, [searchParams]);
 
-  // If navigated with ?inviteUser=1, trigger creation of a new secret row
-  useEffect(() => {
-    if (shouldInvite) {
-      setOpenInviteDialog(true);
-      // Remove the flag from URL to avoid re-triggering
-      const newParams = new URLSearchParams(location.search);
-      newParams.delete('inviteUsers');
-      setSearchParams(newParams, { replace: true });
-    }
-  }, [location.search, setSearchParams, shouldInvite]);
   const { data, isFetching, isError, error } = useUserListQuery(
     {
       projectId,
@@ -89,8 +79,22 @@ const Users = memo(() => {
   );
 
   const rolesOptions = useMemo(() => roles.map(({ name }) => ({ label: name, value: name })), [roles]);
-  // SCIM projects: members follow the IdP group; only ELITEA admins (Admin UI) change roles or add admins
+  // SCIM projects: members follow the IdP group, so they can't be invited or removed here; roles can change
   const { rows: users = [], total, scim_managed: isScimManaged = false } = data || {};
+
+  // If navigated with ?inviteUsers=1, open the invite dialog once the list says whether invites are allowed
+  // (a skipped or failed list request can't say, and the backend still refuses invites to SCIM projects)
+  const canView = checkPermission(PERMISSIONS.users.view);
+  const isListSettled = Boolean(data) || isError || !projectId || !canView;
+  useEffect(() => {
+    if (shouldInvite && isListSettled) {
+      if (!isScimManaged) setOpenInviteDialog(true);
+      // Remove the flag from URL to avoid re-triggering
+      const newParams = new URLSearchParams(location.search);
+      newParams.delete('inviteUsers');
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [isListSettled, isScimManaged, location.search, setSearchParams, shouldInvite]);
 
   const visibleRows = useMemo(
     () => users.slice(visiblePage * pageSize, visiblePage * pageSize + pageSize),
@@ -214,7 +218,7 @@ const Users = memo(() => {
           }}
           extraContent={
             <>
-              {checkPermission(PERMISSIONS.users.edit) && !isScimManaged && (
+              {checkPermission(PERMISSIONS.users.edit) && (
                 <EditUsersButton
                   users={selectedUsers}
                   disabled={!selectedUsers.length}
@@ -263,7 +267,7 @@ const Users = memo(() => {
                 toastSuccess={toastSuccess}
                 rolesOptions={rolesOptions}
                 setSelectedUsers={setSelectedUsers}
-                isReadOnly={isScimManaged}
+                canDeleteUsers={!isScimManaged}
               />
             </Box>
           </>
@@ -271,7 +275,7 @@ const Users = memo(() => {
       </DrawerPage>
       <InviteUserDialog
         title="Invite users"
-        open={openInviteDialog && !isScimManaged}
+        open={openInviteDialog}
         onClose={handleCloseInviteDialog}
         onCancel={handleCloseInviteDialog}
         onConfirm={handleConfirmInvite}
