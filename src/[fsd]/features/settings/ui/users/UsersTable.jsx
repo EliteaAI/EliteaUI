@@ -47,6 +47,7 @@ const UsersTable = memo(props => {
     onSelectRow,
     rolesOptions,
     setSelectedUsers,
+    canDeleteUsers = true,
   } = props;
 
   const styles = usersTableStyles();
@@ -153,7 +154,7 @@ const UsersTable = memo(props => {
               testId="user-row-edit-button"
             />
           )}
-          {checkPermission(PERMISSIONS.users.delete) && (
+          {checkPermission(PERMISSIONS.users.delete) && canDeleteUsers && (
             <DeleteUserButton
               users={[row]}
               setSelectedUsers={setSelectedUsers}
@@ -163,7 +164,7 @@ const UsersTable = memo(props => {
         </Box>
       );
     },
-    [checkPermission, rolesOptions, setSelectedUsers, styles.actionsContainer],
+    [canDeleteUsers, checkPermission, rolesOptions, setSelectedUsers, styles.actionsContainer],
   );
 
   return !isFetching ? (
