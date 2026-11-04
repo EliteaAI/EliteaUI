@@ -2,10 +2,10 @@ import { compareRunTimestamp, formatRunTimestamp } from '@/[fsd]/entities/run-hi
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings';
 import { ROLES, ToolActionStatus } from '@/common/constants';
 
-const RUN_STARTED_FORMAT = 'd MMM, HH:mm';
+const RUN_STARTED_FORMAT = 'MMM d, HH:mm';
 
 // The labels live in the schedule entity, so the run history list can use them too
-export { toRunStatusLabel, toWord } from '@/[fsd]/entities/schedule';
+export { toRunStatusLabel, toRunStatusMeta, toWord } from '@/[fsd]/entities/schedule';
 
 export const formatRunStarted = value => formatRunTimestamp(value, RUN_STARTED_FORMAT);
 
@@ -30,8 +30,8 @@ export const formatRunDuration = durationMs => {
   if (durationMs == null) return '–';
   const seconds = Math.round(durationMs / 1000);
   return seconds < 60
-    ? `${seconds} s`
-    : `${Math.floor(seconds / 60)} m ${String(seconds % 60).padStart(2, '0')} s`;
+    ? `${seconds}s`
+    : `${Math.floor(seconds / 60)}m ${String(seconds % 60).padStart(2, '0')}s`;
 };
 
 const NO_DURATION_TEXT = {
@@ -50,7 +50,7 @@ const MAX_ROUNDED_COST = 0.01;
 
 // The Analytics format, except that a small cost rounds to the nearest 4th decimal (0.00161 reads $0.0016)
 // A zero cost has nothing to show, and a cost below the 4th decimal reads "< $0.0001" instead of a long decimal
-const formatRunCost = costUsd => {
+export const formatRunCost = costUsd => {
   if (!(costUsd > 0)) return '';
   if (costUsd < MIN_ROUNDED_COST) return `< $${MIN_ROUNDED_COST}`;
   return costUsd < MAX_ROUNDED_COST ? `$${costUsd.toFixed(4)}` : AnalyticCommonHelpers.fmtCost(costUsd);

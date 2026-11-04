@@ -68,6 +68,7 @@ export const buildInitialValues = (searchParams, locationState, entityRoute = {}
       timezone: ScheduleHelpers.getBrowserTimezone(),
       expires_at: null,
       approval_rule: DEFAULT_APPROVAL_RULE,
+      enabled: true,
     },
     urlEntity,
     returnTo: IN_APP_PATH.test(returnTo) ? returnTo : (entityRoute.returnTo ?? RouteDefinitions.Schedules),
@@ -122,6 +123,7 @@ export const toCreateBody = ({
   timezone,
   expires_at,
   approval_rule = DEFAULT_APPROVAL_RULE,
+  enabled,
 }) => {
   const mode = type === 'agent' ? null : run_mode;
   const sendsPrompt = isPromptShown({ type, run_mode: mode });
@@ -139,10 +141,17 @@ export const toCreateBody = ({
     timezone,
     expires_at,
     approval_rule,
+    // set on a new schedule only; a saved one pauses and resumes through its own calls
+    ...(enabled !== undefined && { enabled }),
   };
 };
 
-export const toUpdateBody = toCreateBody;
+// The PUT body has no `enabled`: a saved schedule pauses and resumes through its own calls
+export const toUpdateBody = values => {
+  const body = toCreateBody(values);
+  delete body.enabled;
+  return body;
+};
 
 // The schedule API answers one broken field at a time: { error, field }; a message without a field goes to the banner
 export const toFieldErrors = error => {

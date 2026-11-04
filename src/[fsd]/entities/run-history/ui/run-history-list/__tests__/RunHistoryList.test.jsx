@@ -67,11 +67,11 @@ describe('RunHistoryList event column title', () => {
     render(
       <RunHistoryList
         hasEvent
-        eventColumnLabel="Execution type"
+        eventColumnLabel="Trigger Type"
       />,
     );
 
-    expect(screen.getByTestId('header')).toHaveTextContent('Date|Execution type|Version|Duration');
+    expect(screen.getByTestId('header')).toHaveTextContent('Date|Trigger Type|Version|Duration');
   });
 
   it('keeps the Event title when no title is given', () => {
@@ -83,13 +83,13 @@ describe('RunHistoryList event column title', () => {
 
 describe('RunHistoryList event column rows', () => {
   it('sorts rows by the event label when the title is clicked', () => {
-    renderList({ conversations: RUNS, eventColumnLabel: 'Execution type' });
+    renderList({ conversations: RUNS, eventColumnLabel: 'Trigger Type' });
 
-    fireEvent.click(screen.getByText('sort Execution type'));
+    fireEvent.click(screen.getByText('sort Trigger Type'));
 
     expect(rowTexts()).toEqual(['Chat', 'Schedule']);
 
-    fireEvent.click(screen.getByText('sort Execution type'));
+    fireEvent.click(screen.getByText('sort Trigger Type'));
 
     expect(rowTexts()).toEqual(['Schedule', 'Chat']);
   });
@@ -138,7 +138,7 @@ describe('RunHistoryList extra columns', () => {
       ],
     });
 
-    expect(screen.getByTestId('header')).toHaveTextContent('Date|Schedule|Status|Event|Duration');
+    expect(screen.getByTestId('header')).toHaveTextContent('Date|Event|Schedule|Status|Duration');
     const [chat, run] = screen.getAllByTestId('run-history-list-item');
     expect(within(run).getByText('Daily')).toBeInTheDocument();
     expect(within(run).getByText('Success')).toBeInTheDocument();

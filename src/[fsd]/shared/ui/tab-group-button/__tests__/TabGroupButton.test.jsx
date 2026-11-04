@@ -22,7 +22,7 @@ describe('TabGroupButton', () => {
           disableTooltip
           arrayBtn={[
             { value: 'builder', label: 'Builder' },
-            { value: 'cron', label: 'Cron expression' },
+            { value: 'cron', label: 'Cron Expression' },
           ]}
         />
       </ThemeProvider>,

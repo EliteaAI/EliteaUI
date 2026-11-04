@@ -2,9 +2,10 @@ import { useCallback, useMemo } from 'react';
 
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
-import { useCreateScheduleMutation } from '@/[fsd]/entities/schedule';
+import { useCreateScheduleMutation, useStartDraftTestRunMutation } from '@/[fsd]/entities/schedule';
 import {
   DEFAULT_SCHEDULE_CRON,
+  ScheduleDraftRuns,
   ScheduleForm,
   buildInitialValues,
   useEntityScheduleRoute,
@@ -20,6 +21,7 @@ const CreateSchedulePage = props => {
   const [searchParams] = useSearchParams();
   const { state } = useLocation();
   const [createSchedule] = useCreateScheduleMutation();
+  const [startDraftTestRun] = useStartDraftTestRunMutation();
   const entityRoute = useEntityScheduleRoute(entityType);
 
   const { values, urlEntity, returnTo } = useMemo(
@@ -28,11 +30,28 @@ const CreateSchedulePage = props => {
   );
 
   const onSubmit = useCallback(
-    body => createSchedule({ projectId, enabled: true, ...body }).unwrap(),
+    body => createSchedule({ projectId, ...body }).unwrap(),
     [createSchedule, projectId],
   );
 
   const onSaved = useCallback(() => navigate(returnTo), [navigate, returnTo]);
+
+  const onDraftTestRun = useCallback(
+    body => startDraftTestRun({ projectId, ...body }).unwrap(),
+    [startDraftTestRun, projectId],
+  );
+  const sidePanel = useCallback(
+    ({ values: formValues, onTestRun, testRunPending, testRunError }) => (
+      <ScheduleDraftRuns
+        entityType={formValues.type}
+        applicationId={formValues.application_id || undefined}
+        onTestRun={onTestRun}
+        testRunPending={testRunPending}
+        testRunError={testRunError}
+      />
+    ),
+    [],
+  );
 
   const onCancel = useCallback(() => navigate(returnTo), [navigate, returnTo]);
 
@@ -41,12 +60,15 @@ const CreateSchedulePage = props => {
       initialValues={values}
       lockedEntity={urlEntity}
       onSubmit={onSubmit}
+      sidePanel={sidePanel}
       onSaved={onSaved}
+      onDraftTestRun={onDraftTestRun}
       onCancel={onCancel}
     >
       {form => (
         <>
           <ScheduleSettingsSection
+            alignStart
             value={form.values.cron}
             onChange={cron => form.setFieldValue('cron', cron)}
             sourceCron={DEFAULT_SCHEDULE_CRON}

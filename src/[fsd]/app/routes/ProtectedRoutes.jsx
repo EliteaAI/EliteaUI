@@ -512,7 +512,18 @@ const ProtectedRoutes = memo(() => {
             />
             <Route
               path="governance"
-              element={<ProjectGovernance />}
+              element={
+                <ProtectedRoute
+                  requiredPermissions={[
+                    PERMISSIONS.governance.bindingsView,
+                    PERMISSIONS.governance.mandatesView,
+                    PERMISSIONS.governance.credentialsView,
+                    PERMISSIONS.governance.request,
+                  ]}
+                >
+                  <ProjectGovernance />
+                </ProtectedRoute>
+              }
             />
             <Route
               path={RouteDefinitions.Schedules}

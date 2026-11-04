@@ -1,15 +1,22 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
-// One labelled line of the editor schedule card: the value truncates and shows its full text in a tooltip
+// One line of the editor schedule card, with an optional label: the value truncates and shows its full text in a tooltip
 // on hover and on keyboard focus; the label stays whole, as on the toolkit Schedule card
 const EntityScheduleCardLine = memo(props => {
-  const { label, area, testId, isTitle, text, chip } = props;
+  const { label, testId, isTitle, text, chip, onActivate } = props;
+  // The card click is for the mouse; the keyboard opens the card from its title line
+  const onKeyDown = useCallback(
+    event => {
+      if (onActivate && event.key === 'Enter') onActivate();
+    },
+    [onActivate],
+  );
   const styles = entityScheduleCardLineStyles();
 
   return (
-    <Box sx={[styles.row, { gridArea: area }, chip && styles.wrapChip]}>
+    <Box sx={[styles.row, chip && styles.wrapChip]}>
       {label && (
         <Typography
           variant="bodySmall2"
@@ -29,6 +36,7 @@ const EntityScheduleCardLine = memo(props => {
           component="span"
           color="text.secondary"
           tabIndex={0}
+          onKeyDown={onKeyDown}
           sx={styles.value}
           data-testid={testId}
         >

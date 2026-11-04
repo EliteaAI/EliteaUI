@@ -10,6 +10,7 @@ import { useWaitingRunDecision } from '../useWaitingRunDecision.hooks';
 const mocks = vi.hoisted(() => ({
   decide: vi.fn(),
   decideWithoutChat: vi.fn(),
+  decideTestRun: vi.fn(),
   user: { id: 5 },
   toastError: vi.fn(),
   toastInfo: vi.fn(),
@@ -33,6 +34,7 @@ vi.mock('@/[fsd]/entities/run-history/api', () => ({
 }));
 vi.mock('@/[fsd]/entities/schedule', () => ({
   useDecideRunWithoutChatMutation: () => [mocks.decideWithoutChat],
+  useDecideTestRunWithoutChatMutation: () => [mocks.decideTestRun],
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: () => 3,
@@ -174,6 +176,36 @@ describe('useWaitingRunDecision', () => {
     });
     expect(mocks.decide).not.toHaveBeenCalled();
     expect(mocks.refetch).toHaveBeenCalled();
+  });
+
+  describe('Test run without a schedule', () => {
+    const testRun = { isDraftRun: true, requested_by: 5 };
+    const setupTest = (run = testRun) =>
+      renderHook(() => useWaitingRunDecision({ run, onDecided: mocks.refetch })).result;
+
+    it.each(['approve', 'reject'])(
+      'sends %s through the test run route without a schedule id',
+      async action => {
+        mocks.decideTestRun.mockReturnValue(ok());
+        const result = setupTest();
+        await act(() => result.current({ action, runId: 41 }));
+        expect(mocks.decideTestRun).toHaveBeenCalledWith({ projectId: 3, runId: 41, action });
+        expect(mocks.decideTestRun.mock.calls[0][0]).not.toHaveProperty('scheduleId');
+        expect(mocks.decideWithoutChat).not.toHaveBeenCalled();
+        expect(mocks.refetch).toHaveBeenCalledTimes(1);
+      },
+    );
+
+    it('gives another user no handler', () => {
+      expect(setupTest({ isDraftRun: true, requested_by: 9 }).current).toBeUndefined();
+    });
+
+    it('shows the notice on a 409 run_not_waiting', async () => {
+      mocks.decideTestRun.mockReturnValue(fail({ status: 409, data: { code: 'run_not_waiting' } }));
+      const result = setupTest();
+      await act(() => result.current({ action: 'approve', runId: 41 }));
+      expect(mocks.toastInfo).toHaveBeenCalledWith('The run no longer waits for approval.');
+    });
   });
 
   it('shows the notice when a run without a chat no longer waits', async () => {

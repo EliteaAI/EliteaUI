@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import '@testing-library/jest-dom/vitest';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import ScheduleDetailPage from '../ScheduleDetailPage';
 
@@ -23,10 +23,8 @@ const mocks = vi.hoisted(() => ({
   fieldErrors: {},
   params: { scheduleId: '9' },
   state: { returnTo: '/settings/schedules' },
-  panelProps: null,
-  waitingProps: null,
-  sectionProps: null,
-  testRunProps: { onTestRun: () => {}, testRunPending: true, testRunError: 'Already running' },
+  cardProps: null,
+  testRunProps: { onRunNow: () => {}, runNowPending: true, runNowError: 'Already running' },
   runsView: null,
   runsViewArgs: null,
   menuProps: null,
@@ -74,33 +72,26 @@ vi.mock('@/[fsd]/shared/ui/schedule', () => ({
 }));
 vi.mock('@/[fsd]/features/schedule', async importOriginal => {
   const { forwardRef } = await import('react');
-  // The page gives the panel a ref for the scroll to it
-  const ScheduleRunsPanel = forwardRef(props => {
-    mocks.panelProps = props;
+  // The page gives the card a ref for the scroll to it
+  const ScheduleRunsCard = forwardRef(props => {
+    mocks.cardProps = props;
     return null;
   });
-  ScheduleRunsPanel.displayName = 'ScheduleRunsPanel';
+  ScheduleRunsCard.displayName = 'ScheduleRunsCard';
   return {
     ...(await importOriginal()),
     useScheduleRunsView: (...args) => {
       mocks.runsViewArgs = args;
       return mocks.runsView;
     },
-    ScheduleRunsSection: forwardRef(props => {
-      mocks.sectionProps = props;
-      return null;
-    }),
-    ScheduleRunsPanel,
-    ScheduleWaitingCard: forwardRef(props => {
-      mocks.waitingProps = props;
-      return <div data-testid="waiting-card" />;
-    }),
+    ScheduleRunsCard,
     ScheduleForm: props => {
       mocks.formProps = props;
       return (
         <>
           <button onClick={() => props.onSubmit({ name: 'Renamed' }).then(props.onSaved)}>Save</button>
-          <button onClick={() => props.onTestRun()}>Test</button>
+          <button onClick={() => props.onRunNow()}>Run now</button>
+          <button onClick={() => props.onCancel()}>Cancel</button>
           {props.headerActions}
           {props.children({
             values: props.initialValues,
@@ -129,17 +120,12 @@ const schedule = {
 const listLink = () => screen.getByRole('link', { name: 'Schedules' });
 const makeRunsView = () => ({
   runs: [{ id: 1 }],
-  viewedRun: { id: 1 },
+  shownRuns: [{ id: 1 }],
+  total: 1,
   versionNames: { 4: 'v3' },
-  runsExpanded: true,
-  setRunsExpanded: vi.fn(),
-  runsSectionRef: { current: null },
-  panelRef: { current: null },
-  openRun: vi.fn(),
-  backToTest: vi.fn(),
-  showRunHistory: vi.fn(),
-  announcement: 'Showing run 21 Oct, 09:00, cron, Success',
-  runNotFound: false,
+  expandedRunId: 1,
+  onExpand: vi.fn(),
+  cardRef: { current: null },
 });
 
 describe('ScheduleDetailPage', () => {
@@ -152,9 +138,7 @@ describe('ScheduleDetailPage', () => {
     mocks.formProps = null;
     mocks.menuProps = null;
     mocks.settingsProps = null;
-    mocks.panelProps = null;
-    mocks.waitingProps = null;
-    mocks.sectionProps = null;
+    mocks.cardProps = null;
     mocks.query = {};
     mocks.params = { scheduleId: '9' };
     mocks.state = { returnTo: '/settings/schedules' };
@@ -172,93 +156,19 @@ describe('ScheduleDetailPage', () => {
     expect(mocks.formProps.initialValues.name).toBe('Nightly');
   });
 
-  it('TC-US32-15 shows the test panel next to the form and the Runs section under it', () => {
+  it('shows the Runs card next to the form with the view of the saved schedule', () => {
     mocks.query = { currentData: schedule };
     render(<ScheduleDetailPage />);
-    const view = mocks.runsView;
 
     expect(mocks.runsViewArgs).toEqual([9, 3]);
-    expect(mocks.panelProps).toEqual({
+    expect(mocks.cardProps).toMatchObject({
       schedule,
-      runs: view.runs,
-      viewedRun: view.viewedRun,
-      versionNames: view.versionNames,
-      onRunHistory: view.showRunHistory,
-      onBackToTest: view.backToTest,
+      entityType: 'agent',
+      applicationId: 3,
+      view: mocks.runsView,
       ...mocks.testRunProps,
     });
-  });
-
-  it('shows the Action needed card instead of the test panel while a run waits, and switches back', () => {
-    mocks.query = { currentData: schedule };
-    const waiting = { id: 5, status: 'waiting_for_approval' };
-    mocks.runsView = { ...makeRunsView(), runs: [waiting], viewedRun: undefined };
-    render(<ScheduleDetailPage />);
-
-    expect(screen.getByTestId('waiting-card')).toBeInTheDocument();
-    expect(mocks.panelProps).toBeNull();
-    expect(mocks.waitingProps).toMatchObject({ schedule, run: waiting });
-
-    act(() => mocks.waitingProps.onShowTest());
-
-    expect(screen.queryByTestId('waiting-card')).not.toBeInTheDocument();
-    expect(mocks.panelProps.schedule).toBe(schedule);
-    expect(mocks.runsView.backToTest).toHaveBeenCalled();
-  });
-
-  it('keeps the test panel when no run waits', () => {
-    mocks.query = { currentData: schedule };
-    render(<ScheduleDetailPage />);
-
-    expect(screen.queryByTestId('waiting-card')).not.toBeInTheDocument();
-    expect(mocks.panelProps).not.toBeNull();
-  });
-
-  it('TC-US32-20 renders the Runs section in the right block, with no afterForm', () => {
-    mocks.query = { currentData: schedule };
-    render(<ScheduleDetailPage />);
-    const view = mocks.runsView;
-
     expect(mocks.formProps.afterForm).toBeUndefined();
-    expect(mocks.sectionProps).toEqual({
-      runs: view.runs,
-      versionNames: view.versionNames,
-      selectedRunId: 1,
-      onOpen: view.openRun,
-      expanded: true,
-      onExpandedChange: view.setRunsExpanded,
-      announcement: view.announcement,
-      runNotFound: false,
-      fullHistoryLink: '/agents/all/3/history?schedule_id=9&viewMode=owner',
-    });
-  });
-
-  it('TC-US32-20 stacks the panel and the Runs section in one block, sticky from xl in a tall window', () => {
-    mocks.query = { currentData: schedule };
-    render(<ScheduleDetailPage />);
-    const block = screen.getByTestId('schedule-right-block');
-
-    expect(getComputedStyle(block).display).toBe('flex');
-    expect(getComputedStyle(block).flexDirection).toBe('column');
-    // jsdom does not match media queries, so the sticky rule is read from the emitted CSS
-    const css = [...document.querySelectorAll('style')].map(tag => tag.textContent).join('');
-    expect(css).toMatch(
-      /@media \(min-width:1536px\) and \(min-height: ?46rem\)\{[^}]*position:sticky[^}]*height:calc\(100dvh - 6rem\)/,
-    );
-    expect(getComputedStyle(block).position).not.toBe('sticky');
-  });
-
-  it('gives the block the full window height minus 6 rem from xl, so the runs card is 40 % of it', () => {
-    mocks.query = { currentData: schedule };
-    render(<ScheduleDetailPage />);
-    screen.getByTestId('schedule-right-block');
-
-    const css = [...document.querySelectorAll('style')].map(tag => tag.textContent).join('');
-    const sticky = css.match(
-      /@media \(min-width:1536px\) and \(min-height: ?46rem\)\{[^}]*position:sticky[^}]*\}/,
-    )[0];
-    // A fixed height, not only a maximum: with max-height alone the block shrinks to its content (live check)
-    expect(sticky).toMatch(/[{;]height:calc\(100dvh - 6rem\)/);
   });
 
   it('puts the schedule menu in the form header', () => {
@@ -357,15 +267,30 @@ describe('ScheduleDetailPage', () => {
     expect(mocks.stopProps.timezone).toBe('Asia/Tokyo');
   });
 
-  it('TC-US32-15 starts a test run through the run endpoint', async () => {
+  it('Run Now starts a manual run through the run endpoint', async () => {
     mocks.query = { currentData: schedule };
     mocks.runSchedule.mockReturnValue({ unwrap: () => Promise.resolve({ id: 1 }) });
     render(<ScheduleDetailPage />);
-    fireEvent.click(screen.getByRole('button', { name: 'Test' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Run now' }));
 
     await waitFor(() =>
-      expect(mocks.runSchedule).toHaveBeenCalledWith({ projectId: 5, scheduleId: '9', trigger: 'test' }),
+      expect(mocks.runSchedule).toHaveBeenCalledWith({ projectId: 5, scheduleId: '9', trigger: 'manual' }),
     );
+  });
+
+  it('has no Test Run on the Edit page', () => {
+    mocks.query = { currentData: schedule };
+    render(<ScheduleDetailPage />);
+
+    expect(mocks.formProps.onDraftTestRun).toBeUndefined();
+  });
+
+  it('Cancel returns to the opening page and sends no draft delete', () => {
+    mocks.query = { currentData: schedule };
+    render(<ScheduleDetailPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(mocks.navigate).toHaveBeenCalledWith('/settings/schedules');
   });
 
   it('TC-US35-10 nested in the agent editor, locks the agent, names it in the crumbs and returns to it', async () => {

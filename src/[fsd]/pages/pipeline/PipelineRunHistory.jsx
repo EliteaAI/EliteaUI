@@ -12,7 +12,7 @@ const PipelineRunHistory = memo(() => (
     source={ParticipantEntityTypes.Pipeline}
     detailRoute={RouteDefinitions.PipelineDetail}
     analyticsRoute={RouteDefinitions.PipelineRunAnalytics}
-    eventColumnLabel="Execution type"
+    eventColumnLabel="Trigger Type"
     decorateRow={toExecutionTypeRow}
     scheduleEntityType="pipeline"
   />

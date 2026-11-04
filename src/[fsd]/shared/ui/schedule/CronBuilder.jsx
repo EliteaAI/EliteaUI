@@ -18,8 +18,8 @@ const {
 } = CronBuilderHelpers;
 
 const CronBuilder = memo(props => {
-  const { value, onChange, invalidField } = props;
-  const styles = cronBuilderStyles();
+  const { value, onChange, invalidField, alignStart = false } = props;
+  const styles = cronBuilderStyles(alignStart);
 
   const parsed = useMemo(() => parseCron(value) ?? DEFAULT_CRON_STATE, [value]);
 
@@ -193,12 +193,12 @@ const CronBuilder = memo(props => {
 CronBuilder.displayName = 'CronBuilder';
 
 /** @type {MuiSx} */
-const cronBuilderStyles = () => ({
+const cronBuilderStyles = alignStart => ({
   row: {
     display: 'flex',
     alignItems: 'center',
     flexWrap: 'wrap',
-    justifyContent: 'center',
+    justifyContent: alignStart ? 'flex-start' : 'center',
     rowGap: '1rem',
     columnGap: '0.5rem',
     width: '100%',
@@ -216,11 +216,17 @@ const cronBuilderStyles = () => ({
     gap: '0.5rem',
     flexShrink: 0,
   },
+  // the mockup selects are 2.25rem high
   wideSelect: {
     width: '8.75rem',
+    '& .MuiOutlinedInput-root': { minHeight: '2.25rem' },
   },
+  // the two digits must fit next to the arrow, so the side paddings are smaller
   narrowSelect: {
-    width: '5rem',
+    width: alignStart ? '4.25rem' : '5rem',
+    '& .MuiOutlinedInput-root': { minHeight: '2.25rem' },
+    '&.MuiAutocomplete-hasPopupIcon .MuiOutlinedInput-root': { paddingRight: '1.75rem !important' },
+    '& .MuiAutocomplete-input': { paddingLeft: '0.375rem !important' },
   },
 });
 
