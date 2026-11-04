@@ -13,3 +13,4 @@ export * from './mcpAuthorization.helpers';
 export * from './mentionSkillTrace.helpers';
 export * as BudgetWarningHelpers from './budgetWarning.helpers.js';
 export { findNoticeAgent } from './scheduleRunNotice.helpers.js';
+export * from './canvas.helpers';
