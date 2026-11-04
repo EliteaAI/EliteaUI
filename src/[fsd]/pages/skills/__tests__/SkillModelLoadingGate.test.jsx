@@ -45,11 +45,23 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
 }));
 vi.mock('@/[fsd]/shared/ui', () => ({ Breadcrumbs: () => null, BreadcrumbsOrTitle: () => null }));
 vi.mock('@/[fsd]/widgets/skill-tab-bar', () => ({ SkillTabBar: () => null }));
+vi.mock('@/[fsd]/widgets/entity-test-panel', () => ({
+  useEntityTestPanel: () => ({ isOpen: false, open: vi.fn(), close: vi.fn() }),
+}));
+vi.mock('@/[fsd]/widgets/skill-editor', async () => {
+  const { CreateSkillForm } = await import('@/[fsd]/features/skill');
+  return { SkillEditorWorkspace: () => <CreateSkillForm /> };
+});
 vi.mock('@/api/eliteaApi', () => ({ eliteaApi: { endpoints: {} } }));
-vi.mock('@/common/constants', () => ({ SkillsTabs: ['all'], ViewMode: { Owner: 'owner' } }));
+vi.mock('@/common/constants', () => ({
+  PERMISSIONS: { skills: { update: 'skills.update' } },
+  SkillsTabs: ['all'],
+  ViewMode: { Owner: 'owner' },
+}));
 vi.mock('@/common/utils.jsx', () => ({ buildErrorMessage: vi.fn(), isNotFoundError: () => false }));
 vi.mock('@/components/Formik/DirtyDetector', () => ({ default: () => null }));
 vi.mock('@/components/StyledTabs', () => ({ default: ({ tabs }) => <>{tabs[0].content}</> }));
+vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => true }) }));
 vi.mock('@/hooks/useNavBlocker', () => ({ default: () => {} }));
 vi.mock('@/pages/Common/Components', () => ({ StyledGridContainer: ({ children }) => <>{children}</> }));
 vi.mock('@/pages/Common/Components/StyledComponents', () => {

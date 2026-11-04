@@ -1,4 +1,4 @@
-import { memo, useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { useLocation } from 'react-router-dom';
 
@@ -6,7 +6,9 @@ import { Box } from '@mui/material';
 
 import { PIPELINE_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { usePipelineAttachmentYamlSync } from '@/[fsd]/features/pipelines/lib/hooks';
-import { useIsSmallWindow } from '@/[fsd]/shared/lib/hooks';
+import { useIsSmallWindow, useViewMode } from '@/[fsd]/shared/lib/hooks';
+import { PERMISSIONS, ViewMode } from '@/common/constants';
+import useCheckPermission from '@/hooks/useCheckPermission';
 import EditorPanel from '@/pages/Pipelines/Components/EditorPanel';
 import GeneralFormPanel from '@/pages/Pipelines/Components/GeneralFormPanel';
 
@@ -23,6 +25,15 @@ const noop = () => {};
 const PipelineEditorWorkspace = memo(props => {
   const { applicationId, setYamlDirty = noop, unsavedLLMSettings, setUnsavedLLMSettings } = props;
   const isEditMode = Boolean(applicationId);
+
+  const viewMode = useViewMode();
+  const { checkPermission } = useCheckPermission();
+  const hasEditPermission = useMemo(
+    () => checkPermission(PERMISSIONS.applications.update),
+    [checkPermission],
+  );
+  // Same rule as the Save button: viewers and the public view get a read-only editor
+  const isReadOnly = isEditMode && (viewMode === ViewMode.Public || !hasEditPermission);
 
   const location = useLocation();
   const editorRowRef = useRef();
@@ -105,6 +116,7 @@ const PipelineEditorWorkspace = memo(props => {
           onTestPipeline={isEditMode ? handleOpenTestPanel : noop}
           testDisabledReason={isEditMode ? '' : UNSAVED_TEST_REASON}
           isTestPanelOpen={isTestPanelOpen}
+          disabled={isReadOnly}
           onCanvasNodeInteraction={handleCanvasNodeInteraction}
           sx={styles.editorPanel}
         />

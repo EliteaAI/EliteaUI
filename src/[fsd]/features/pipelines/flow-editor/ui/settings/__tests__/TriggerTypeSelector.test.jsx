@@ -59,6 +59,8 @@ vi.mock('@/[fsd]/shared/ui/select', () => ({
 vi.mock('@/api/applications', () => ({
   useGetPipelineTriggerQuery: () => ({ data: mocks.triggerData, isLoading: false }),
   useUpdatePipelineTriggerMutation: () => [mocks.updateTrigger, { isLoading: false }],
+  TAG_TYPE_GOVERNANCE_READINESS: 'GOVERNANCE_READINESS',
+  withReadiness: tags => tags,
 }));
 vi.mock('@/assets/clock.svg?react', () => ({ default: () => null }));
 vi.mock('@/[fsd]/shared/config/store', () => ({ store: {} }));
