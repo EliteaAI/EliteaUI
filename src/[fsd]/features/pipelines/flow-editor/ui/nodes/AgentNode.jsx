@@ -90,7 +90,7 @@ const AgentNode = memo(props => {
     typeTestIdPrefix: `${AGENT_NODE_TESTID_PREFIX}-input-mapping-type`,
   };
 
-  const { addTool, prepareApplicationAttachment, getAttachedApplication } = usePipelineAttachments();
+  const { addToolWithNode, prepareApplicationAttachment, getAttachedApplication } = usePipelineAttachments();
   const attachedTool = useMemo(
     () => (yamlNode?.tool ? getAttachedApplication(yamlNode.tool) : undefined),
     [getAttachedApplication, yamlNode?.tool],
@@ -123,10 +123,9 @@ const AgentNode = memo(props => {
       }
       const tool = await prepareApplicationAttachment(item.source);
       if (!tool) return;
-      // Same tick, so reconcile never sees the attachment without the node that uses it
-      setAgentName(addTool(tool).name);
+      addToolWithNode(tool, attached => setAgentName(attached.name));
     },
-    [addTool, prepareApplicationAttachment, setAgentName],
+    [addToolWithNode, prepareApplicationAttachment, setAgentName],
   );
 
   const onClearAgent = useCallback(() => setAgentName(null), [setAgentName]);

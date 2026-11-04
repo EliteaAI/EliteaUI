@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { useEffect, useSyncExternalStore } from 'react';
+
 import { Formik, useFormikContext } from 'formik';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -71,5 +73,56 @@ describe('usePipelineAttachments', () => {
     expect(mocks.fetchToolkitDetails).toHaveBeenCalledWith({ projectId: 406, toolkitId: 1 });
     expect(attached.settings.selected_tools).toEqual(['search']);
     expect(result.current.form.values.version_details.tools).toHaveLength(1);
+  });
+
+  it('adds the attachment with its node in one render, so reconcile never writes back stale tools', async () => {
+    // A Redux-like store for the node reference: its updates render synchronously, ahead of Formik's
+    let boundName = 'old-agent';
+    const listeners = new Set();
+    const store = {
+      subscribe: listener => {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+      getSnapshot: () => boundName,
+      bind: name => {
+        boundName = name;
+        listeners.forEach(listener => listener());
+      },
+    };
+    const oldAgent = { type: 'application', name: 'old-agent', settings: { application_id: 1 } };
+    const newAgent = { type: 'application', name: 'new-agent', settings: { application_id: 2 } };
+
+    const { result } = renderHook(
+      () => {
+        const attachments = usePipelineAttachments();
+        const form = useFormikContext();
+        const bound = useSyncExternalStore(store.subscribe, store.getSnapshot);
+        const tools = form.values.version_details.tools;
+        // Same shape as reconcile: drop what the node no longer references, write the rest back
+        useEffect(() => {
+          const nextTools = tools.filter(tool => tool.name === bound);
+          if (nextTools.length !== tools.length) form.setFieldValue('version_details.tools', nextTools);
+        }, [bound, form, tools]);
+        return { attachments, form };
+      },
+      {
+        wrapper: ({ children }) => (
+          <Formik
+            initialValues={{ version_details: { tools: [oldAgent] } }}
+            onSubmit={vi.fn()}
+          >
+            {children}
+          </Formik>
+        ),
+      },
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+      result.current.attachments.addToolWithNode(newAgent, attached => store.bind(attached.name));
+    });
+
+    expect(result.current.form.values.version_details.tools).toEqual([newAgent]);
   });
 });
