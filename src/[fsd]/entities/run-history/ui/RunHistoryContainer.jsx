@@ -223,7 +223,9 @@ const RunHistoryContainer = memo(props => {
                 variant="bodySmall"
                 data-testid="run-history-error"
               >
-                {error?.data?.error ?? 'Failed to load the run history.'}{' '}
+                {error?.status === 400 && error?.data?.error
+                  ? error.data.error
+                  : 'Failed to load the run history.'}{' '}
                 <Link
                   component="button"
                   type="button"

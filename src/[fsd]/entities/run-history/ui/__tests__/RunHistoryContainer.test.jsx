@@ -456,6 +456,15 @@ describe('RunHistoryContainer list error', () => {
     expect(fetchRunList).toHaveBeenCalledTimes(1);
   });
 
+  it('hides the server text of a server error and shows the plain text', () => {
+    queryResult.isError = true;
+    queryResult.error = { status: 500, data: { error: 'Traceback: db down' } };
+    renderContainer('');
+
+    expect(screen.getByTestId('run-history-error')).toHaveTextContent('Failed to load the run history.');
+    expect(screen.getByTestId('run-history-error')).not.toHaveTextContent('Traceback');
+  });
+
   it('shows a plain text when the answer has no message', () => {
     queryResult.isError = true;
     queryResult.error = { status: 500 };
