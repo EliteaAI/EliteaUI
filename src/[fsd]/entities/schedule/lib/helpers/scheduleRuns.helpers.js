@@ -14,7 +14,7 @@ import TimerOffOutlinedIcon from '@mui/icons-material/TimerOffOutlined';
 export const RUN_STATUS_META = {
   success: { label: 'Success', color: 'success.main', Icon: CheckCircleOutlineIcon },
   failed: { label: 'Failed', color: 'error.main', Icon: HighlightOffIcon },
-  running: { label: 'Running...', color: 'info.main', Icon: null, isSpinner: true },
+  running: { label: 'Running', color: 'info.main', Icon: null, isSpinner: true },
   waiting_for_approval: { label: 'Awaiting approval', color: 'warning.main', Icon: PauseCircleOutlineIcon },
   waiting_for_input: { label: 'Waiting for input', color: 'warning.main', Icon: HourglassEmptyIcon },
   expired: { label: 'Expired', color: 'warning.main', Icon: TimerOffOutlinedIcon },

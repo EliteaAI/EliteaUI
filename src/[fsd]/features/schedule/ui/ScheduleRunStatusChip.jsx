@@ -10,7 +10,8 @@ const ScheduleRunStatusChip = memo(props => {
 
   const { Icon, color, label: statusLabel, isSpinner } = toRunStatusMeta(status);
   const styles = scheduleRunStatusChipStyles(color);
-  const label = statusLabel || '-';
+  // The spinner already says the run is going; the ellipsis shows it in the word too
+  const label = statusLabel ? `${statusLabel}${isSpinner ? '...' : ''}` : '-';
 
   const icon = isSpinner ? (
     <CircularProgress

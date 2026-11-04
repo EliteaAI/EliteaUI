@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material';
 
+import { toRunStatusLabel } from '@/[fsd]/entities/schedule';
 import lightPalette from '@/lightPalette';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
@@ -27,6 +28,12 @@ describe('ScheduleRunStatusChip', () => {
     expect(chip).toHaveClass('MuiChip-outlined');
     expect(chip).toHaveTextContent('Failed');
     expect(chip.querySelector('.MuiChip-icon')).not.toBeNull();
+  });
+
+  it('adds the ellipsis to the label of a running chip only', () => {
+    renderChip({ status: 'running' });
+    expect(screen.getByTestId('schedule-run-status')).toHaveTextContent('Running...');
+    expect(toRunStatusLabel('running')).toBe('Running');
   });
 
   it('shows the icon and the word with no border for the text variant', () => {

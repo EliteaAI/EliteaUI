@@ -39,7 +39,7 @@ describe('status text', () => {
         'skipped',
       ].map(status => toRunStatusLabel(status)),
     ).toEqual([
-      'Running...',
+      'Running',
       'Success',
       'Awaiting approval',
       'Expired',
