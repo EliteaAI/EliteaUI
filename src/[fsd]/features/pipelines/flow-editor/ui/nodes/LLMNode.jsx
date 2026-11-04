@@ -75,7 +75,7 @@ const LLMNode = memo(props => {
 
   const { inputMappings, onChangeMapping, defaultValues } = useLLMInputMapping({ id });
 
-  const { addTool, prepareToolkitAttachment } = usePipelineAttachments();
+  const { addToolWithNode, prepareToolkitAttachment } = usePipelineAttachments();
   const selectedToolkitNames = useMemo(() => Object.keys(yamlNode?.tool_names || {}), [yamlNode?.tool_names]);
 
   // Attaching may wait for the toolkit details, so YAML writes must use the YAML as it is by then
@@ -101,19 +101,21 @@ const LLMNode = memo(props => {
     async (source, toolkitName, mcp) => {
       const prepared = await prepareToolkitAttachment(source, { mcp, toolkitName });
       if (!prepared) return;
-      // Same tick as the `tool_names` write, so reconcile never sees the attachment without its node
-      const attached = addTool(prepared);
-      const availableTools = getSelectedTools(attached.type);
-      const toolkitTools = AttachmentToolHelpers.getToolkitAvailableTools(attached).map(tool =>
-        typeof tool === 'string' ? tool : tool.name,
-      );
-      const tools =
-        availableTools.length > 0 ? toolkitTools.filter(tool => availableTools.includes(tool)) : toolkitTools;
-      setToolNames(toolNames =>
-        toolNames[toolkitName] ? toolNames : { ...toolNames, [toolkitName]: tools },
-      );
+      addToolWithNode(prepared, attached => {
+        const availableTools = getSelectedTools(attached.type);
+        const toolkitTools = AttachmentToolHelpers.getToolkitAvailableTools(attached).map(tool =>
+          typeof tool === 'string' ? tool : tool.name,
+        );
+        const tools =
+          availableTools.length > 0
+            ? toolkitTools.filter(tool => availableTools.includes(tool))
+            : toolkitTools;
+        setToolNames(toolNames =>
+          toolNames[toolkitName] ? toolNames : { ...toolNames, [toolkitName]: tools },
+        );
+      });
     },
-    [addTool, getSelectedTools, prepareToolkitAttachment, setToolNames],
+    [addToolWithNode, getSelectedTools, prepareToolkitAttachment, setToolNames],
   );
 
   const onRemoveToolkit = useCallback(

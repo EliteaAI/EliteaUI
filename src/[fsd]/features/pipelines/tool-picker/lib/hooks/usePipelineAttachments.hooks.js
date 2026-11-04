@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useFormikContext } from 'formik';
+import { flushSync } from 'react-dom';
 
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks/useGetToolkitNameFromSchema.hooks';
 import { APPLICATION_TOOL_TYPE } from '@/[fsd]/features/pipelines/tool-picker/lib/constants/toolPicker.constants';
@@ -64,9 +65,26 @@ export const usePipelineAttachments = () => {
   );
 
   /**
+   * Adds the attachment and writes the node that uses it in one render. After an `await` the Redux YAML
+   * write renders before the Formik one, so reconcile would see the node without its attachment and
+   * write back the stale tools. `writeNode` gets the attached tool.
+   */
+  const addToolWithNode = useCallback(
+    (tool, writeNode) => {
+      let attached;
+      flushSync(() => {
+        attached = addTool(tool);
+        writeNode(attached);
+      });
+      return attached;
+    },
+    [addTool],
+  );
+
+  /**
    * Builds the attachment for a project toolkit or MCP (fetching its details when the list row has no
-   * settings) without adding it. Callers that also write the node must call `addTool` in the same tick
-   * as that YAML write, or reconcile may drop the attachment before a node references it.
+   * settings) without adding it. Callers that also write the node add it with `addToolWithNode`, or
+   * reconcile may drop the attachment before a node references it.
    * @param toolkit a project toolkit list row or details; `toolkitName` is the name the node binds to
    */
   const prepareToolkitAttachment = useCallback(
@@ -161,6 +179,7 @@ export const usePipelineAttachments = () => {
   return {
     tools,
     addTool,
+    addToolWithNode,
     attachToolkit,
     prepareToolkitAttachment,
     prepareApplicationAttachment,
