@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { Button, Markdown } from '@/[fsd]/shared/ui';
@@ -31,6 +31,7 @@ const CanvasContent = memo(props => {
 
   const { checkPermission } = useCheckPermission();
   const styles = canvasContentStyles();
+  const theme = useTheme();
 
   return (
     <>
@@ -71,7 +72,10 @@ const CanvasContent = memo(props => {
                 disabled={isStreaming || !checkPermission(PERMISSIONS.chat.canvas.update)}
                 onClick={onClickEdit}
               >
-                <EditIcon sx={styles.icon} />
+                <EditIcon
+                  sx={styles.icon}
+                  fill={theme.palette.icon.default}
+                />
               </Button.BaseBtn>
             </Box>
           </Tooltip>
