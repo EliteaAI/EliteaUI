@@ -14,6 +14,8 @@ const fitView = vi.fn();
 const panBy = vi.fn();
 const stopRun = vi.fn();
 let isSmallWindow = false;
+let viewMode = 'owner';
+let hasEditPermission = true;
 
 vi.mock('@/[fsd]/features/interactive-tours/lib/constants', () => ({
   PIPELINE_TOUR_TARGET_IDS: { workspace: 'workspace' },
@@ -25,6 +27,11 @@ vi.mock('@/[fsd]/features/pipelines/lib/hooks', () => ({
 
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useIsSmallWindow: () => ({ isSmallWindow }),
+  useViewMode: () => viewMode,
+}));
+
+vi.mock('@/hooks/useCheckPermission', () => ({
+  default: () => ({ checkPermission: () => hasEditPermission }),
 }));
 
 vi.mock('@/pages/Pipelines/Components/GeneralFormPanel', () => ({
@@ -50,6 +57,7 @@ vi.mock('@/pages/Pipelines/Components/EditorPanel', () => {
         data-testid="editor-panel"
         data-test-panel-open={String(props.isTestPanelOpen)}
         data-test-disabled-reason={props.testDisabledReason}
+        data-disabled={String(Boolean(props.disabled))}
       >
         <button
           data-testid="test-pipeline"
@@ -107,6 +115,8 @@ describe('PipelineEditorWorkspace', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     isSmallWindow = false;
+    viewMode = 'owner';
+    hasEditPermission = true;
   });
   afterEach(() => {
     cleanup();
@@ -160,6 +170,35 @@ describe('PipelineEditorWorkspace', () => {
     act(() => vi.runAllTimers());
     expect(screen.getByTestId('test-region')).toHaveAttribute('data-open', 'false');
     expect(fitView).not.toHaveBeenCalled();
+  });
+
+  describe('read-only editor', () => {
+    it('is editable for a user who can update the pipeline', () => {
+      renderWorkspace({ applicationId: 3 });
+
+      expect(screen.getByTestId('editor-panel')).toHaveAttribute('data-disabled', 'false');
+    });
+
+    it('is read-only for a viewer without the update permission', () => {
+      hasEditPermission = false;
+      renderWorkspace({ applicationId: 3 });
+
+      expect(screen.getByTestId('editor-panel')).toHaveAttribute('data-disabled', 'true');
+    });
+
+    it('is read-only in the public view', () => {
+      viewMode = 'public';
+      renderWorkspace({ applicationId: 3 });
+
+      expect(screen.getByTestId('editor-panel')).toHaveAttribute('data-disabled', 'true');
+    });
+
+    it('stays editable on the create layout', () => {
+      hasEditPermission = false;
+      renderWorkspace();
+
+      expect(screen.getByTestId('editor-panel')).toHaveAttribute('data-disabled', 'false');
+    });
   });
 
   it('stops runs through the Test panel chat', () => {
