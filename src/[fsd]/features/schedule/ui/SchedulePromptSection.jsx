@@ -25,6 +25,7 @@ const PROMPT_INFO = 'The text the run receives as its first message. Use {{name}
 const SchedulePromptSection = memo(props => {
   const { type, runMode, prompt, variables, promptError, variablesError, setFieldValue, setValues } = props;
 
+  const styles = schedulePromptSectionStyles();
   const showPrompt = isPromptShown({ type, run_mode: runMode });
 
   // setValues with a function keeps a fast second change; the run mode clears what the other mode filled
@@ -108,7 +109,7 @@ const SchedulePromptSection = memo(props => {
 SchedulePromptSection.displayName = 'SchedulePromptSection';
 
 /** @type {MuiSx} */
-const styles = {
+const schedulePromptSectionStyles = () => ({
   // the outlined variant grows the box to 25rem; the mockup keeps it at the 8.25rem minimum and scrolls the text
   prompt: {
     '& .MuiOutlinedInput-input.MuiInputBase-inputMultiline': {
@@ -118,6 +119,6 @@ const styles = {
   },
   runMode: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
   runModeLabel: { display: 'flex', alignItems: 'center', gap: '0.25rem' },
-};
+});
 
 export default SchedulePromptSection;

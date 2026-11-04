@@ -10,6 +10,8 @@ const ownerName = owner => owner?.name || owner?.email || '-';
 const ScheduleGeneralSection = memo(props => {
   const { showOwner, owner, name, description, nameError, descriptionError, setFieldValue } = props;
 
+  const styles = scheduleGeneralSectionStyles();
+
   return (
     <>
       <StyledInputEnhancer
@@ -50,9 +52,9 @@ const ScheduleGeneralSection = memo(props => {
 
 ScheduleGeneralSection.displayName = 'ScheduleGeneralSection';
 
-export default ScheduleGeneralSection;
-
 /** @type {MuiSx} */
-const styles = {
+const scheduleGeneralSectionStyles = () => ({
   ownerName: ({ palette }) => ({ color: palette.text.secondary, fontWeight: 600 }),
-};
+});
+
+export default ScheduleGeneralSection;
