@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseRefusalPayload, parseValidationRefusal } from '../refusal.helpers';
+import { parseGovernanceRefusal, parseRefusalPayload, parseValidationRefusal } from '../refusal.helpers';
 
 const DENIED = {
   code: 'DENIED_GRANT',
@@ -84,5 +84,30 @@ describe('parseValidationRefusal (#7281)', () => {
     ['nothing', undefined],
   ])('keeps the misconfiguration marker for %s', (_name, input) => {
     expect(parseValidationRefusal(input)).toBeUndefined();
+  });
+});
+
+describe('EL-7228 coded refusals', () => {
+  it('reads a credential refusal and a refused resume sent as `CODE: text`', () => {
+    expect(
+      parseRefusalPayload(
+        'CREDENTIALS_VIA_FORM: An agent never handles credential values: it must ask you for the credential through the credential form. Nothing was written.',
+      ),
+    ).toEqual({
+      code: 'CREDENTIALS_VIA_FORM',
+      message:
+        'An agent never handles credential values: it must ask you for the credential through the credential form. Nothing was written.',
+    });
+    expect(
+      parseGovernanceRefusal('HITL_VALUE_INVALID: The answer to the credential request is not valid.'),
+    ).toEqual({
+      code: 'HITL_VALUE_INVALID',
+      message: 'The answer to the credential request is not valid.',
+    });
+  });
+
+  it('leaves any other `WORD: text` alone', () => {
+    expect(parseRefusalPayload('ERROR: something broke')).toBeUndefined();
+    expect(parseRefusalPayload('INTERNAL_SCOPE_DENIED: x')).toBeUndefined();
   });
 });

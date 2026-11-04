@@ -76,6 +76,14 @@ export const normalizeHitlInterrupt = (raw = {}, overlay = {}) => {
     resume_strategy: runtimeResumeStrategy || nonEmpty(raw.resume_strategy) || 'single',
     ...hierarchy,
   };
+  // (#7228) a credential form keeps what it asks for (type, title, purpose) and, once created, the server's record of
+  // it: a reload renders the same card (live and reloaded interrupts both pass here)
+  if (interrupt.guardrail_type === 'credential_form') {
+    interrupt.credential_type = raw.credential_type || overlay.credential_type || '';
+    interrupt.title = raw.title || overlay.title || '';
+    interrupt.purpose = raw.purpose || overlay.purpose || '';
+    interrupt.credential_form_result = raw.credential_form_result || overlay.credential_form_result || null;
+  }
   return interrupt;
 };
 
@@ -279,3 +287,13 @@ export const hasRootHitlTurnEnded = (state, turnEndRevision) =>
     state?.inFlightIdentities?.length &&
     Number(turnEndRevision || 0) >= Number(state.requiredTurnEndRevision || 1),
   );
+
+// The `hitl_value` a scalar resume sends for an action, or undefined when the action carries none: `edit` the rewritten
+// prompt, `block_with_comment` the note, `answer` the clarifying answers, (#7228) `created` the credential form's new
+// reference id and nothing else of the form
+export const hitlResumeValue = (action, value) => {
+  if (action === 'edit' || action === 'block_with_comment') return value ?? '';
+  if (action === 'answer') return value ?? {};
+  if (action === 'created') return { reference_id: value?.reference_id };
+  return undefined;
+};

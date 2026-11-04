@@ -22,6 +22,7 @@ import { Tab } from '@/[fsd]/shared/ui';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
+import BindingOperationsFields from './BindingOperationsFields';
 import GovernanceApproveDialog from './GovernanceApproveDialog';
 import GovernanceRowsTable from './GovernanceRowsTable';
 import GrantAlsoToFields from './GrantAlsoToFields';
@@ -43,6 +44,8 @@ const EMPTY = {
   [KINDS.mandate]: 'No mandates in this project yet.',
 };
 const STALE_TEXT = 'It changed in the meantime; the list was read again.';
+const staleText = code =>
+  code === 'BINDING_DIGEST_MISMATCH' ? ProjectGovernanceConstants.AGENT_CHANGED_TEXT : STALE_TEXT;
 
 // The project operator view and inbox (C-1009, #7269): the project's own admins approve and operate the agent
 // identities, credentials, grants and mandates of their project here, as a platform operator does in the Admin UI.
@@ -56,6 +59,7 @@ const ProjectGovernanceContent = memo(() => {
   const { toastError, toastInfo, toastSuccess } = useToast();
   const [tab, setTab] = useState('inbox');
   const [approving, setApproving] = useState(null);
+  const [keptOperations, setKeptOperations] = useState([]);
   const [alsoMembers, setAlsoMembers] = useState([]);
   const [alsoRole, setAlsoRole] = useState('');
 
@@ -165,14 +169,17 @@ const ProjectGovernanceContent = memo(() => {
         toastSuccess(`${GovernanceHelpers.rowTitle(kind, row)}: done.`);
       } catch (err) {
         const refusal = GovernanceHelpers.toGovernanceError(err);
-        if (ProjectGovernanceConstants.STALE_CODES.includes(refusal.code)) toastInfo(STALE_TEXT);
+        if (ProjectGovernanceConstants.STALE_CODES.includes(refusal.code)) toastInfo(staleText(refusal.code));
         else toastError(refusal.code ? `${refusal.message} (${refusal.code})` : refusal.message);
       }
     },
     [send, toastError, toastInfo, toastSuccess],
   );
 
-  const handleApprove = useCallback((kind, row, item) => setApproving({ kind, row, item }), []);
+  const handleApprove = useCallback((kind, row, item) => {
+    setApproving({ kind, row, item });
+    setKeptOperations(Array.isArray(row.platform_operations) ? row.platform_operations : []);
+  }, []);
   const handleApproveClose = useCallback(() => {
     setApproving(null);
     setAlsoMembers([]);
@@ -186,7 +193,9 @@ const ProjectGovernanceContent = memo(() => {
               ...(alsoMembers.length && { also_grant_to: alsoMembers }),
               ...(alsoRole && { also_grant_role: alsoRole }),
             }
-          : {};
+          : GovernanceHelpers.takesOperations(approving)
+            ? { platform_operations: keptOperations }
+            : {};
       return send(
         approving.kind,
         approving.row,
@@ -196,15 +205,15 @@ const ProjectGovernanceContent = memo(() => {
         }),
       );
     },
-    [alsoMembers, alsoRole, approving, send],
+    [alsoMembers, alsoRole, approving, keptOperations, send],
   );
   const handleApproveDone = useCallback(
-    outcome => {
+    (outcome, code) => {
       const title = approving ? GovernanceHelpers.rowTitle(approving.kind, approving.row) : '';
       setApproving(null);
       setAlsoMembers([]);
       setAlsoRole('');
-      if (outcome === 'stale') toastInfo(STALE_TEXT);
+      if (outcome === 'stale') toastInfo(staleText(code));
       else toastSuccess(`${title}: approved.`);
     },
     [approving, toastInfo, toastSuccess],
@@ -274,6 +283,13 @@ const ProjectGovernanceContent = memo(() => {
         onClose={handleApproveClose}
         onDone={handleApproveDone}
       >
+        {GovernanceHelpers.takesOperations(approving) && (
+          <BindingOperationsFields
+            proposed={approving.row.platform_operations}
+            kept={keptOperations}
+            onChange={setKeptOperations}
+          />
+        )}
         {GovernanceHelpers.takesSiblings(approving) && (
           <GrantAlsoToFields
             members={alsoMembers}

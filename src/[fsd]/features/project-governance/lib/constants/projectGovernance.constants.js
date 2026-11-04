@@ -37,7 +37,10 @@ export const ESCALATED_HINT =
 export const REFERENCE_PATTERN = /^[A-Za-z0-9._:/@-]{1,128}$/;
 export const REFERENCE_HELP = 'Letters, digits and . _ : / @ - (at most 128 characters).';
 // A change that raced another admin, or a view that is out of date: the list is read again
-export const STALE_CODES = ['CONCURRENT_CHANGE', 'INVALID_STATE'];
+// (#7228) BINDING_DIGEST_MISMATCH: the agent changed since the approval was opened; the list is read again
+export const STALE_CODES = ['CONCURRENT_CHANGE', 'INVALID_STATE', 'BINDING_DIGEST_MISMATCH'];
+export const AGENT_CHANGED_TEXT =
+  'The agent changed since you opened it; the list was read again: review it again.';
 
 // The states the inbox asks each list for (the server filters, so no waiting row is lost behind newer ones)
 export const INBOX_STATES = {
@@ -55,7 +58,8 @@ export const WAITING_STATES = ['pending', 'validated', 'pending_approval', 'prov
 export const ITEM_TEXT = {
   binding: {
     missing: 'Its identity is not set up yet',
-    changed: 'It changed since its identity was approved',
+    // (#7228) also a waiting identity for an older definition: it is requested again for the agent as it is
+    changed: 'It changed since its identity was requested or approved',
     draft: 'Its identity is a draft',
     provisioning: 'Its identity is being set up',
     pending_approval: 'Its identity waits for approval',
@@ -69,6 +73,8 @@ export const ITEM_TEXT = {
     suspended: 'Suspended',
     changed: 'Changed since it was approved',
     not_registrable: 'A value typed into the toolkit: store it as a credential first',
+    // (#7228) the toolkit selects a credential by name and none of that name is yours or this project's
+    not_found: 'The selected credential was not found for you: choose it again in the toolkit',
     other_project: 'A credential of another project',
     personal_to_another: 'Another member’s personal credential',
     needs_owner_sign_in: 'Acts with a Microsoft sign-in the schedule does not name',
@@ -94,3 +100,21 @@ export const ITEM_TEXT = {
 
 // How deep a credential type's schema is walked for its secret fields (as the server walks it)
 export const MAX_SCHEMA_DEPTH = 4;
+
+// --- the chat's credential form (#7228) --------------------------------------------------------------------------
+
+// Credential types whose material is the person's own Microsoft sign-in (the server's DELEGATED_TYPES): never typed,
+// never shared
+export const SIGN_IN_CREDENTIAL_TYPES = ['sharepoint'];
+
+// (#7228) the fields the credential card shows at first for a known type: its simplest way to sign in. Every other
+// optional field is folded behind "More fields". A type not listed shows its required fields and its first secret one.
+export const PRIMARY_CREDENTIAL_FIELDS = {
+  github: ['access_token'],
+  jira: ['username', 'api_key'],
+  confluence: ['username', 'api_key'],
+};
+// The check's code when the person's Elitea sign-in carries no Microsoft identity
+export const SIGN_IN_NOT_MICROSOFT = 'DENIED_ASSERTION_SOURCE_UNSUPPORTED';
+export const SIGN_IN_NOT_MICROSOFT_TEXT =
+  'Your Elitea sign-in is not a Microsoft sign-in, so this credential cannot act for you yet: sign in to Elitea with Microsoft, then ask the agent again.';

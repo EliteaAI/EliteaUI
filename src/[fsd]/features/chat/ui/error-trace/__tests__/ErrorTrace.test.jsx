@@ -82,4 +82,16 @@ describe('ErrorTrace', () => {
     expect(screen.getByText('Model said no')).toBeTruthy();
     expect(screen.queryByTestId('error-code-chip')).toBeNull();
   });
+
+  it.each([
+    [
+      'CREDENTIALS_VIA_FORM',
+      'An agent never handles credential values: it must ask you for the credential through the credential form. Nothing was written.',
+    ],
+    ['HITL_VALUE_INVALID', 'The answer to the credential request is not valid; nothing was resumed.'],
+  ])('EL-7228 shows the %s refusal as its readable copy and code', (code, text) => {
+    renderTrace({ trace: `${code}: ${text}` });
+    expect(screen.getByText(text)).toBeTruthy();
+    expect(screen.getByTestId('error-code-chip').textContent).toContain(code);
+  });
 });

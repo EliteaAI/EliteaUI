@@ -3,6 +3,7 @@ import {
   ITEM_TEXT,
   KINDS,
   MAX_SCHEMA_DEPTH,
+  PRIMARY_CREDENTIAL_FIELDS,
   REFERENCE_PATTERN,
   STATE_LABELS,
   WAITING_STATES,
@@ -43,12 +44,28 @@ export const rowTitle = (kind, row) => {
 };
 
 // What a row of a list shows in its columns (besides its title and state)
+// (#7228) what an agent identity lets the agent do on the platform through the internal Elitea tools
+export const operationsLabel = operations =>
+  Array.isArray(operations) && operations.length ? `Operations: ${operations.join(', ')}` : 'Read only';
+
+// (#7228) an agent identity's approval keeps the proposed operations, or part of them (never more)
+export const takesOperations = approving =>
+  approving?.kind === KINDS.binding &&
+  approving?.item?.action === 'activate' &&
+  Array.isArray(approving?.row?.platform_operations) &&
+  approving.row.platform_operations.length > 0;
+
 export const rowDetails = (kind, row) => {
   switch (kind) {
     case KINDS.binding:
       return [
         row.identity_mode,
-        row.digest_status === 'changed' ? 'Agent changed since approval' : null,
+        operationsLabel(row.platform_operations),
+        row.digest_status === 'changed'
+          ? row.state === 'pending_approval'
+            ? 'Agent changed since it was requested: bring it up to date before approving'
+            : 'Agent changed since approval'
+          : null,
         `by ${personName(row.created_by)}`,
       ];
     case KINDS.reference:
@@ -85,13 +102,21 @@ const G = PERMISSIONS.governance;
 export const rowActions = (kind, row, userId) => {
   const state = row.state;
   if (kind === KINDS.binding) {
-    const own = isMe(row.created_by, userId) || isMe(row.state_changed_by, userId);
+    // (#7228) four eyes on the current request: whoever made it (last moved it, else its creator) does not approve it
+    const own = isMe(row.state_changed_by ?? row.created_by, userId);
+    // (#7228) a waiting identity for an older definition would be refused: it is brought up to date first
+    const stale = state === 'pending_approval' && row.digest_status === 'changed';
     return [
       state === 'draft' && action('submit', 'Submit for approval', G.bindingsManage),
+      stale && action('rebind', 'Bring up to date with the agent as it is', G.bindingsManage),
       state === 'pending_approval' &&
         action('activate', 'Approve', G.bindingsApprove, {
           approval: true,
-          disabledReason: own ? 'You created or last changed it: another admin approves it.' : null,
+          disabledReason: stale
+            ? 'The agent changed since it was requested: bring it up to date first.'
+            : own
+              ? 'You made this request: another admin approves it.'
+              : null,
         }),
       state === 'active' && action('suspend', 'Suspend', G.bindingsManage),
       state === 'suspended' && action('resume', 'Resume', G.bindingsManage),
@@ -158,10 +183,12 @@ export const rowActions = (kind, row, userId) => {
   return [];
 };
 
-// The body of an action; a binding action carries the state the admin saw
+// The body of an action; a binding action carries the state the admin saw, and (#7228) its approval the definition
+// the admin reviewed: one brought up to date since is refused, so the admin reviews it again
 export const actionBody = (kind, row, name, approval) => ({
   action: name,
   ...(kind === KINDS.binding && { expected_state: row.state }),
+  ...(kind === KINDS.binding && name === 'activate' && { definition_digest: row.definition_digest_full }),
   ...(approval || {}),
 });
 
@@ -195,8 +222,14 @@ export const inboxItems = lists =>
 
 // --- the Save card (#7269 phase 2): what an entity still needs to run governed, in words -------------------------
 
-export const readinessText = item =>
-  ITEM_TEXT[item.kind]?.[item.state] ?? (item.kind === 'blocking' ? 'Stops a scheduled run' : item.state);
+export const readinessText = item => {
+  const text =
+    ITEM_TEXT[item.kind]?.[item.state] ?? (item.kind === 'blocking' ? 'Stops a scheduled run' : item.state);
+  // (#7228) an identity names what its agent may do: "Its identity (read, build, credentials, run) waits for approval"
+  return item.kind === 'binding' && Array.isArray(item.operations) && item.operations.length
+    ? text.replace(/^Its identity/, `Its identity (${item.operations.join(', ')})`)
+    : text;
+};
 
 // A personal reference of the person's own whose value is still to be written: the card writes it inline
 export const isValueItem = item =>
@@ -225,6 +258,76 @@ export const secretFieldsOf = (types, provider, depth = 0, properties = undefine
   });
 };
 
+// (#7228) the fields the chat's credential form shows for a credential type: its top-level text fields (a secret
+// one masked), required as the type's schema says, with the schema's default (or prefill), the first line of its
+// description and its choices (an enum, offered as a select); null when the type is unknown to the schema store. A
+// stored sign-in (`refresh_token`) and nested or selected configurations are never typed into the form.
+const NOT_TYPED = ['refresh_token'];
+const plainLine = text =>
+  String(text || '')
+    .split('\n')
+    .map(line => line.replace(/[*`_#>]/g, '').trim())
+    .find(Boolean) || '';
+const optionsOf = schema => {
+  const found = Array.isArray(schema.enum)
+    ? schema.enum
+    : (schema.anyOf || []).find(option => Array.isArray(option?.enum))?.enum;
+  return Array.isArray(found) ? found.filter(item => typeof item === 'string') : null;
+};
+export const credentialFormFieldsOf = (types, type) => {
+  const entry = (Array.isArray(types) ? types : []).find(candidate => candidate?.type === type);
+  const data = entry?.config_schema?.properties?.data;
+  if (!isObject(data?.properties)) return null;
+  const required = Array.isArray(data.required) ? data.required : [];
+  const fields = Object.entries(data.properties).flatMap(([name, schema]) => {
+    if (!isObject(schema) || NOT_TYPED.includes(name) || schema.$ref) return [];
+    const secret = isPasswordSchema(schema);
+    const options = secret ? null : optionsOf(schema);
+    const text =
+      secret ||
+      Boolean(options) ||
+      schema.type === 'string' ||
+      (Array.isArray(schema.anyOf) && schema.anyOf.some(option => option?.type === 'string' && !option.$ref));
+    if (!text) return [];
+    const preset = [schema.default, schema.prefill_value].find(value => typeof value === 'string' && value);
+    return [
+      {
+        name,
+        label: schema.title ?? name,
+        secret,
+        required: required.includes(name),
+        defaultValue: secret ? '' : (preset ?? ''),
+        description: plainLine(schema.description),
+        options,
+      },
+    ];
+  });
+  // (#7228) shown at first: the required fields and the type's primary sign-in field(s); the rest is folded
+  const listed = (PRIMARY_CREDENTIAL_FIELDS[type] ?? []).filter(name =>
+    fields.some(field => field.name === name),
+  );
+  const primary = listed.length
+    ? listed
+    : fields
+        .filter(field => field.secret)
+        .slice(0, 1)
+        .map(field => field.name);
+  return fields.map(field => ({ ...field, primary: field.required || primary.includes(field.name) }));
+};
+
+// (#7228) what the card says after Create, from the credential's state and its check: who acts next, in words
+export const credentialFormResultText = result => {
+  const name = `Credential '${result?.title ?? ''}' (${result?.credential_type ?? ''}) is registered`;
+  switch (result?.state) {
+    case 'active':
+      return `${name} and approved: the agent can use it.`;
+    case 'validated':
+      return `${name} and checked: it waits for a project admin's approval before the agent can use it.`;
+    default:
+      return `${name}: it waits for a check and a project admin's approval before the agent can use it.`;
+  }
+};
+
 export const isWaitingItem = item => WAITING_STATES.includes(item.state) && Boolean(item.ref);
 
 // What the row's chip says: who has to act now
@@ -247,9 +350,49 @@ export const governanceRequestOf = output => {
     }
   }
   const found = value && typeof value === 'object' ? value.governance_requests : null;
-  return found && found.entity_kind && Number.isInteger(found.entity_id)
-    ? { entityKind: found.entity_kind, entityId: found.entity_id }
-    : null;
+  const entityOf = part =>
+    part && part.entity_kind && Number.isInteger(part.entity_id)
+      ? {
+          entityKind: part.entity_kind,
+          entityId: part.entity_id,
+          // (#7228) an automatic request that could not be filed reads as a sentence, never as its JSON
+          refused: typeof part.refused === 'string' ? part.refused : null,
+        }
+      : null;
+  const main = entityOf(found);
+  if (!main) return null;
+  // (#7228) a changed toolkit also files for every agent version using it: one card per changed entity, once each
+  const seen = new Set();
+  const entities = [main, ...(Array.isArray(found.versions) ? found.versions.map(entityOf) : [])].filter(
+    entity => {
+      const key = entity && `${entity.entityKind}:${entity.entityId}`;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    },
+  );
+  // (#7228) the toolkit's other agents beyond the cap: said, so the person opens them
+  const versionsMore =
+    Number.isInteger(found.versions_more) && found.versions_more > 0 ? found.versions_more : 0;
+  return { ...main, entities, versionsMore };
 };
+
+export const versionsMoreText = count =>
+  `${count} more agent${count === 1 ? '' : 's'} use${count === 1 ? 's' : ''} this toolkit: open ${
+    count === 1 ? 'it' : 'them'
+  } to request what ${count === 1 ? 'it needs' : 'they need'}.`;
+
+// (#7228) an automatic request of a governed run that could not be filed, in words (no code, no JSON): the card below
+// it then offers Request for what is still missing
+const AUTO_REQUEST_REASONS = {
+  STALE_READINESS: 'what it needs changed meanwhile',
+  DEPENDENCY_UNAVAILABLE: 'the service could not be reached',
+  AUDIT_UNAVAILABLE: 'the service could not be reached',
+  FORBIDDEN: 'you may not request it here',
+};
+export const autoRequestRefusedText = code =>
+  `The approval requests for it could not be filed automatically (${
+    AUTO_REQUEST_REASONS[code] ?? 'they were refused'
+  }); request what is missing on the card.`;
 
 export const requestableKeys = items => (items || []).filter(item => item.requestable).map(item => item.key);

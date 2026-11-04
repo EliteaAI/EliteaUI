@@ -55,7 +55,7 @@ const GovernanceApproveDialog = memo(props => {
       const refusal = GovernanceHelpers.toGovernanceError(err, 'The approval failed.');
       if (ProjectGovernanceConstants.STALE_CODES.includes(refusal.code)) {
         reset();
-        onDone('stale');
+        onDone('stale', refusal.code);
       } else {
         setError(refusal);
       }

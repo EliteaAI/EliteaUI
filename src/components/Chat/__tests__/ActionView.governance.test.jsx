@@ -80,4 +80,74 @@ describe('ActionView governed creation card (EL-7269)', () => {
     expect(trace.fetch).toHaveBeenCalled();
     expect(await screen.findByTestId('chat-governance-card')).toHaveTextContent('version:41');
   });
+
+  // --- EL-7228 build from chat: one card per created or changed entity, a refused automatic request in words ---
+
+  it('EL-7228 mounts the card of a toolkit a run changed (PUT), one per action', () => {
+    const changed = JSON.stringify({
+      id: 3,
+      governance_requests: {
+        entity_kind: 'toolkit',
+        entity_id: 3,
+        filed: [{ key: 'grant:3:u', kind: 'grant', id: 'g' }],
+        next: 'Requested for approval: your use of the credential.',
+      },
+    });
+    wrap({ ...RELOADED, name: 'put_elitea_core_tool', traceStepId: undefined, toolOutputs: changed });
+    expect(screen.getAllByTestId('chat-governance-card')).toHaveLength(1);
+    expect(screen.getByTestId('chat-governance-card')).toHaveTextContent('toolkit:3');
+    expect(screen.queryByTestId('chat-governance-auto-request-refused')).toBeNull();
+  });
+
+  it('EL-7228 reads a refused automatic request as a sentence beside the card (no code, no JSON)', () => {
+    const refused = JSON.stringify({
+      governance_requests: { entity_kind: 'version', entity_id: 41, filed: [], refused: 'STALE_READINESS' },
+    });
+    wrap({ ...RELOADED, traceStepId: undefined, toolOutputs: refused });
+    const line = screen.getByTestId('chat-governance-auto-request-refused');
+    expect(line).toHaveTextContent('could not be filed automatically (what it needs changed meanwhile)');
+    expect(line.textContent).not.toContain('STALE_READINESS');
+    expect(screen.getByTestId('chat-governance-card')).toHaveTextContent('version:41');
+  });
+
+  it('EL-7228 shows one card per changed entity: the toolkit and each version using it, once each', () => {
+    const linked = JSON.stringify({
+      governance_requests: {
+        entity_kind: 'toolkit',
+        entity_id: 3,
+        filed: [],
+        versions: [
+          { entity_kind: 'version', entity_id: 41, filed: [{ key: 'binding:41', kind: 'binding', id: 'b' }] },
+          { entity_kind: 'version', entity_id: 42, filed: [], refused: 'DEPENDENCY_UNAVAILABLE' },
+          { entity_kind: 'version', entity_id: 41, filed: [] },
+        ],
+      },
+    });
+    wrap({ ...RELOADED, name: 'patch_elitea_core_tool', traceStepId: undefined, toolOutputs: linked });
+    expect(screen.getAllByTestId('chat-governance-card').map(card => card.textContent)).toEqual([
+      'toolkit:3',
+      'version:41',
+      'version:42',
+    ]);
+    const refused = screen.getAllByTestId('chat-governance-auto-request-refused');
+    expect(refused).toHaveLength(1);
+    expect(refused[0]).toHaveTextContent('the service could not be reached');
+  });
+
+  it('EL-7228 says how many agents beyond the cap use a changed toolkit, never dropping them silently', () => {
+    const capped = JSON.stringify({
+      governance_requests: {
+        entity_kind: 'toolkit',
+        entity_id: 3,
+        filed: [],
+        versions: [{ entity_kind: 'version', entity_id: 41, filed: [] }],
+        versions_more: 4,
+      },
+    });
+    wrap({ ...RELOADED, name: 'patch_elitea_core_tool', traceStepId: undefined, toolOutputs: capped });
+    expect(screen.getAllByTestId('chat-governance-card')).toHaveLength(2);
+    expect(screen.getByTestId('chat-governance-versions-more')).toHaveTextContent(
+      '4 more agents use this toolkit: open them to request what they need.',
+    );
+  });
 });

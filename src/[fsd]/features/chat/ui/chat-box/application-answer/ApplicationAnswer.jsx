@@ -243,6 +243,7 @@ const ApplicationAnswer = memo(
                   exception={exception}
                   inputGuardrail={inputGuardrail}
                   messageId={messageId}
+                  conversationUuid={conversation_uuid}
                   onCopy={onCopy}
                   budgetErrorCode={budgetErrorCode}
                   realAnswer={realAnswer}

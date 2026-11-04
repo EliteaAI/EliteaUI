@@ -9,6 +9,7 @@ import RejectIcon from '@/assets/reject.svg?react';
 
 import BlockWithCommentControl from './BlockWithCommentControl';
 import ClarifyingQuestionControl from './ClarifyingQuestionControl';
+import CredentialFormControl from './CredentialFormControl';
 import EditControl from './EditControl';
 import SensitiveToolParams from './SensitiveToolParams';
 
@@ -16,11 +17,13 @@ const BLOCK_WITH_COMMENT_ACTION = 'block_with_comment';
 const DEFAULT_HITL_MESSAGE = 'Here are some results. Choose the action to proceed.';
 
 const ChatHitlActions = memo(props => {
-  const { hitlInterrupt, onHitlResume, disabled, toolCallId, interruptId } = props;
+  const { hitlInterrupt, onHitlResume, disabled, toolCallId, interruptId, messageId, conversationUuid } =
+    props;
   const { available_actions = [], guardrail_type, message, questions } = hitlInterrupt || {};
   const isSensitiveTool =
     guardrail_type === 'sensitive_tool' || guardrail_type === 'parallel_sensitive_tools';
   const isClarifyingQuestion = guardrail_type === 'clarifying_question';
+  const isCredentialForm = guardrail_type === 'credential_form';
   const styles = getStyles();
 
   const handleClarifyingSubmit = useCallback(
@@ -55,6 +58,21 @@ const ChatHitlActions = memo(props => {
   );
 
   if (!hitlInterrupt) return null;
+
+  // (#7228) a governed agent asks for a credential: the person types it into this card, never into the chat
+  if (isCredentialForm) {
+    return (
+      <CredentialFormControl
+        hitlInterrupt={hitlInterrupt}
+        interruptId={interruptId}
+        messageId={messageId}
+        conversationUuid={conversationUuid}
+        onHitlResume={onHitlResume}
+        disabled={disabled}
+        testId="credential-form"
+      />
+    );
+  }
 
   if (isClarifyingQuestion) {
     return (
