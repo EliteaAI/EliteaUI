@@ -16,12 +16,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Box, Typography, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip.jsx';
+import { AIEditPipelineButton } from '@/[fsd]/features/pipelines/ai-edit-pipeline';
 import {
   DumpYamlHelpers,
   ParsePipelineHelpers,
   PipelineReadinessHelpers,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
-import { AIEditPipelineButton } from '@/[fsd]/features/pipelines/ui/ai-edit-pipeline-modal';
 import { YamlCodeEditor } from '@/[fsd]/features/pipelines/yaml-editor/ui';
 import { ChunkHelpers, FunctionHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useIsFrom, useIsPipelineLayoutDirty, useIsSmallWindow } from '@/[fsd]/shared/lib/hooks';

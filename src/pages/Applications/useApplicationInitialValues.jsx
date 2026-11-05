@@ -270,6 +270,15 @@ const useApplicationInitialValues = forPipeline => {
   // (e.g. two empty versions) still triggers re-initialization.
   const lastInitYamlRef = useRef(undefined);
 
+  // The page clears the pipeline slot on unmount; a StrictMode remount keeps refs, so without this
+  // reset the guard would skip re-initialising the cleared slot and leave the flow and YAML empty
+  useEffect(
+    () => () => {
+      lastInitYamlRef.current = undefined;
+    },
+    [],
+  );
+
   useEffect(() => {
     if (forPipeline && Object.keys(applicationData).length && initialPipeline) {
       // Skip if the server returned the exact (versionId, yamlCode) pair we already initialized from.

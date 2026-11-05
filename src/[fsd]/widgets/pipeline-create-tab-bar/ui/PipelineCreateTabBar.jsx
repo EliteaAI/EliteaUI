@@ -19,17 +19,22 @@ const PipelineCreateTabBar = memo(() => {
   const navigate = useNavigate();
   const { toastError } = useToast();
   const [wantToCancel, setWantToCancel] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const isYamlCodeDirty = useIsPipelineYamlCodeDirty();
   const { stateValidationErrors } = useSelector(selectActivePipeline);
 
   const blockOptions = useMemo(
-    () => ({ blockCondition: (!!formik.dirty || isYamlCodeDirty) && !wantToCancel }),
-    [formik.dirty, isYamlCodeDirty, wantToCancel],
+    () => ({ blockCondition: (!!formik.dirty || isYamlCodeDirty) && !wantToCancel && !isSaved }),
+    [formik.dirty, isYamlCodeDirty, wantToCancel, isSaved],
   );
   const { setBlockNav } = useNavBlocker(blockOptions);
 
-  // The redirect after save is deferred; the effect-driven unblock may not land before it
-  const resetBlockNav = useCallback(() => setBlockNav(false), [setBlockNav]);
+  // The redirect after save is deferred; until it lands, the post-save pipeline reset can re-sync the
+  // YAML (attachments state, flow editor re-dump) and flip it dirty again, so a saved draft stays unblocked
+  const resetBlockNav = useCallback(() => {
+    setIsSaved(true);
+    setBlockNav(false);
+  }, [setBlockNav]);
   const { isLoading, create, error, isError } = useCreateApplication(formik, resetBlockNav);
 
   const hasStateErrors = useMemo(

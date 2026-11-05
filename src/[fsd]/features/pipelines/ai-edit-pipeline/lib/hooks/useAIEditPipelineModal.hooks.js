@@ -1,12 +1,9 @@
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 import YAML from 'js-yaml';
 import { useDispatch } from 'react-redux';
 
-import { Alert, Box } from '@mui/material';
-
-import { EditEntityModal } from '@/[fsd]/entities/edit-entity-with-ai';
 import { useGeneratePipelineDraftMutation } from '@/[fsd]/features/pipelines/api/generatePipelineApi';
 import {
   FlowEditorHelpers,
@@ -14,12 +11,15 @@ import {
   ParsePipelineHelpers,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { toggleSet } from '@/[fsd]/features/pipelines/lib/helpers';
+import {
+  buildApplicationAttachment,
+  buildToolkitAttachment,
+} from '@/[fsd]/features/pipelines/tool-picker/lib/helpers/attachmentTool.helpers';
 import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd]/features/skill/api';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
-import { Input, Modal } from '@/[fsd]/shared/ui';
-import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import {
   useLazyApplicationDetailsQuery,
+  useLazyToolkitsDetailsQuery,
   useToolkitAssociateMutation,
   useUpdateApplicationRelationMutation,
 } from '@/api';
@@ -30,13 +30,9 @@ import useSaveNewVersion from '@/hooks/application/useSaveNewVersion';
 import { actions } from '@/slices/pipeline';
 import { actions as editorActions } from '@/slices/pipelineEditor';
 
-import PipelineRunSettingsDiffStep from './PipelineRunSettingsDiffStep';
-import PipelineToolsDiffStep from './PipelineToolsDiffStep';
-import PipelineYamlDiffStep from './PipelineYamlDiffStep';
+import { computeInitialSelections } from '../helpers';
 
-const AIEditPipelineModal = memo(props => {
-  const { open, onClose, isCreateMode = false } = props;
-
+export const useAIEditPipelineModal = ({ isCreateMode, onClose }) => {
   const formik = useFormikContext();
   const dispatch = useDispatch();
   const projectId = useSelectedProjectId();
@@ -51,13 +47,13 @@ const AIEditPipelineModal = memo(props => {
   const [updateSkillRelation] = useUpdateSkillRelationMutation();
   const [fetchApplicationDetails] = useLazyApplicationDetailsQuery();
   const [fetchSkillDetails] = useLazySkillDetailsQuery();
+  const [fetchToolkitDetails] = useLazyToolkitsDetailsQuery();
 
   const [showVersionModal, setShowVersionModal] = useState(false);
   const [versionName, setVersionName] = useState('');
   const [isSavingAsVersion, setIsSavingAsVersion] = useState(false);
   const pendingDraftRef = useRef(null);
 
-  // Tools diff state — populated when a draft is generated
   const [addToolkitIds, setAddToolkitIds] = useState(new Set());
   const [addMcpIds, setAddMcpIds] = useState(new Set());
   const [addAgentIds, setAddAgentIds] = useState(new Set());
@@ -71,21 +67,6 @@ const AIEditPipelineModal = memo(props => {
   const handleToggleAddPipeline = useCallback(id => toggleSet(setAddPipelineIds)(id), []);
   const handleToggleAddSkill = useCallback(id => toggleSet(setAddSkillIds)(id), []);
   const handleToggleRemoveTool = useCallback(id => toggleSet(setRemoveToolRecordIds)(id), []);
-
-  const steps = useMemo(
-    () =>
-      isCreateMode
-        ? [
-            { key: 'yaml', label: 'Pipeline YAML' },
-            { key: 'run-settings', label: 'Run settings' },
-          ]
-        : [
-            { key: 'yaml', label: 'Pipeline YAML' },
-            { key: 'run-settings', label: 'Run settings' },
-            { key: 'tools-skills', label: 'Tools & Skills' },
-          ],
-    [isCreateMode],
-  );
 
   const currentTools = useMemo(
     () => formik.values?.version_details?.tools || [],
@@ -175,48 +156,13 @@ const AIEditPipelineModal = memo(props => {
 
   const handleDraftGenerated = useCallback(
     draftData => {
-      const tools = formik.values?.version_details?.tools || [];
-      const currentToolkitIds = new Set(
-        tools.filter(t => t.type !== 'application' && t.type?.toLowerCase() !== 'mcp').map(t => t.id),
-      );
-      const currentMcpIds = new Set(tools.filter(t => t.type?.toLowerCase() === 'mcp').map(t => t.id));
-      const currentAgentAppIds = new Set(
-        tools
-          .filter(t => t.type === 'application' && t.agent_type === 'agent')
-          .map(t => t.settings?.application_id)
-          .filter(Boolean),
-      );
-      const currentPipelineAppIds = new Set(
-        tools
-          .filter(t => t.type === 'application' && t.agent_type === 'pipeline')
-          .map(t => t.settings?.application_id)
-          .filter(Boolean),
-      );
-
-      // Pre-select new suggested items (not already associated); deselect removes by default
-      setAddToolkitIds(
-        new Set(
-          (draftData?.suggested_toolkits || []).filter(t => !currentToolkitIds.has(t.id)).map(t => t.id),
-        ),
-      );
-      setAddMcpIds(
-        new Set((draftData?.suggested_mcp || []).filter(m => !currentMcpIds.has(m.id)).map(m => m.id)),
-      );
-      setAddAgentIds(
-        new Set(
-          (draftData?.suggested_agents || []).filter(a => !currentAgentAppIds.has(a.id)).map(a => a.id),
-        ),
-      );
-      setAddPipelineIds(
-        new Set(
-          (draftData?.suggested_pipelines || []).filter(p => !currentPipelineAppIds.has(p.id)).map(p => p.id),
-        ),
-      );
-      // Skills are tracked separately — select any suggested skill not already attached.
-      // (current skills come from formik as a separate skills list, but we don't have that here;
-      // pre-select all suggested skills and let the user deselect.)
-      setAddSkillIds(new Set((draftData?.suggested_skills || []).map(s => s.id)));
-      setRemoveToolRecordIds(new Set());
+      const selections = computeInitialSelections(draftData, formik.values?.version_details?.tools);
+      setAddToolkitIds(selections.addToolkitIds);
+      setAddMcpIds(selections.addMcpIds);
+      setAddAgentIds(selections.addAgentIds);
+      setAddPipelineIds(selections.addPipelineIds);
+      setAddSkillIds(selections.addSkillIds);
+      setRemoveToolRecordIds(selections.removeToolRecordIds);
       return draftData;
     },
     [formik.values?.version_details?.tools],
@@ -227,7 +173,6 @@ const AIEditPipelineModal = memo(props => {
       const newYaml = draftData.pipeline_yaml ?? '';
       await formik.setFieldValue('version_details.instructions', newYaml);
 
-      // Apply proposed name/description when present so the Run Settings diff is not cosmetic-only.
       if (draftData.name) {
         await formik.setFieldValue('name', draftData.name);
       }
@@ -273,6 +218,53 @@ const AIEditPipelineModal = memo(props => {
         }),
       );
 
+      // In create mode: build full tool entries from selected suggestions and write them into
+      // formik so the existing Save button sends them in the create payload.
+      // Suggestion objects carry only id/name — fetch full details for every tool type so the
+      // BE receives the correct settings (e.g. sharepoint_configuration, url, available_tools).
+      if (isCreateMode) {
+        const toolkitsToAdd = (draftData.suggested_toolkits || []).filter(t => addToolkitIds.has(t.id));
+        const mcpsToAdd = (draftData.suggested_mcp || []).filter(m => addMcpIds.has(m.id));
+        const agentsToAdd = (draftData.suggested_agents || []).filter(a => addAgentIds.has(a.id));
+        const pipelinesToAdd = (draftData.suggested_pipelines || []).filter(p => addPipelineIds.has(p.id));
+
+        const pendingTools = [];
+
+        // Fetch full toolkit details so settings are populated correctly.
+        const toolkitResults = await Promise.allSettled(
+          [...toolkitsToAdd, ...mcpsToAdd].map(async t => {
+            const tkProjectId = t.project_id ?? projectId;
+            const { data: tkDetails } = await fetchToolkitDetails({
+              projectId: tkProjectId,
+              toolkitId: t.id,
+            });
+            const isMcp = mcpsToAdd.includes(t);
+            return buildToolkitAttachment(tkDetails ?? t, { mcp: isMcp });
+          }),
+        );
+        toolkitResults.forEach(r => {
+          if (r.status === 'fulfilled') pendingTools.push(r.value);
+        });
+
+        // Applications require a version_id — fetch each before building the attachment.
+        const appResults = await Promise.allSettled(
+          [...agentsToAdd, ...pipelinesToAdd].map(async a => {
+            const appProjectId = a.project_id ?? projectId;
+            const { data: appDetails } = await fetchApplicationDetails({
+              projectId: appProjectId,
+              applicationId: a.id,
+            });
+            return buildApplicationAttachment(a, appDetails?.version_details);
+          }),
+        );
+        appResults.forEach(r => {
+          if (r.status === 'fulfilled') pendingTools.push(r.value);
+        });
+
+        await formik.setFieldValue('version_details.tools', pendingTools);
+        return;
+      }
+
       // Associate / disassociate tools when editing an existing pipeline (IDs available)
       const entityId = formik.values?.id;
       const versionId = formik.values?.version_details?.id;
@@ -283,7 +275,6 @@ const AIEditPipelineModal = memo(props => {
         const pipelinesToAdd = (draftData.suggested_pipelines || []).filter(p => addPipelineIds.has(p.id));
         const skillsToAdd = (draftData.suggested_skills || []).filter(s => addSkillIds.has(s.id));
 
-        // Disassociate tools the user chose to remove
         const tools = formik.values?.version_details?.tools || [];
         const toolkitsToRemove = tools.filter(
           t => t.type !== 'application' && t.type?.toLowerCase() !== 'mcp' && removeToolRecordIds.has(t.id),
@@ -296,7 +287,6 @@ const AIEditPipelineModal = memo(props => {
         await associateToolkits(versionId, entityId, [...toolkitsToAdd, ...mcpsToAdd]);
         await associateApplications(versionId, entityId, [...agentsToAdd, ...pipelinesToAdd]);
 
-        // Associate selected skills
         if (skillsToAdd.length) {
           await Promise.allSettled(
             skillsToAdd.map(async skill => {
@@ -317,7 +307,6 @@ const AIEditPipelineModal = memo(props => {
           );
         }
 
-        // Disassociate: toolkit/mcp records use has_relation: false
         if (toolkitsToRemove.length || mcpsToRemove.length) {
           await Promise.allSettled(
             [...toolkitsToRemove, ...mcpsToRemove].map(t =>
@@ -332,7 +321,7 @@ const AIEditPipelineModal = memo(props => {
             ),
           );
         }
-        // Disassociate: application records need their version id
+
         if (appsToRemove.length) {
           await Promise.allSettled(
             appsToRemove.map(async a => {
@@ -377,6 +366,10 @@ const AIEditPipelineModal = memo(props => {
                   // (setFieldValue queues a React state update, not a synchronous mutation).
                   draft.version_details.instructions = newYaml;
                 }
+                // The refetch triggers a Formik reinitialization, which would otherwise restore
+                // the saved name/description over the AI-applied ones
+                if (draft && draftData.name) draft.name = draftData.name;
+                if (draft && draftData.description != null) draft.description = draftData.description;
               },
             ),
           );
@@ -384,6 +377,7 @@ const AIEditPipelineModal = memo(props => {
       }
     },
     [
+      isCreateMode,
       formik,
       dispatch,
       associateToolkits,
@@ -392,6 +386,7 @@ const AIEditPipelineModal = memo(props => {
       updateApplicationRelation,
       updateSkillRelation,
       fetchApplicationDetails,
+      fetchToolkitDetails,
       fetchSkillDetails,
       projectId,
       addToolkitIds,
@@ -431,201 +426,31 @@ const AIEditPipelineModal = memo(props => {
     }
   }, [handleSave, formik.values, versionName, onClose]);
 
-  const styles = useMemo(() => aiEditPipelineModalStyles(), []);
-
-  const renderStep = useCallback(
-    (stepKey, draftData) => {
-      const warnings = draftData?.validation_result?.warnings ?? [];
-      const warningBanner =
-        warnings.length > 0 ? (
-          <Alert
-            severity="warning"
-            sx={styles.warningBanner}
-          >
-            {warnings.map((w, i) => (
-              <Box
-                key={i}
-                component="span"
-                sx={styles.warningItem}
-              >
-                {w.node_id ? `[${w.node_id}] ` : ''}
-                {w.message}
-              </Box>
-            ))}
-          </Alert>
-        ) : null;
-
-      if (stepKey === 'yaml') {
-        return (
-          <Box sx={styles.stepRoot}>
-            {warningBanner}
-            <PipelineYamlDiffStep
-              originalYaml={formik.values?.version_details?.instructions ?? ''}
-              proposedYaml={draftData?.pipeline_yaml ?? ''}
-            />
-          </Box>
-        );
-      }
-
-      if (stepKey === 'run-settings') {
-        return (
-          <Box sx={styles.stepRoot}>
-            {warningBanner}
-            <PipelineRunSettingsDiffStep
-              currentName={formik.values?.name ?? ''}
-              currentDescription={formik.values?.description ?? ''}
-              proposedName={draftData?.name ?? ''}
-              proposedDescription={draftData?.description ?? ''}
-            />
-          </Box>
-        );
-      }
-
-      if (stepKey === 'tools-skills') {
-        return (
-          <Box sx={styles.stepRoot}>
-            {warningBanner}
-            <PipelineToolsDiffStep
-              currentTools={currentTools}
-              draftData={draftData}
-              addToolkitIds={addToolkitIds}
-              onToggleAddToolkit={handleToggleAddToolkit}
-              addMcpIds={addMcpIds}
-              onToggleAddMcp={handleToggleAddMcp}
-              addAgentIds={addAgentIds}
-              onToggleAddAgent={handleToggleAddAgent}
-              addPipelineIds={addPipelineIds}
-              onToggleAddPipeline={handleToggleAddPipeline}
-              addSkillIds={addSkillIds}
-              onToggleAddSkill={handleToggleAddSkill}
-              removeToolRecordIds={removeToolRecordIds}
-              onToggleRemoveTool={handleToggleRemoveTool}
-            />
-          </Box>
-        );
-      }
-
-      return null;
-    },
-    [
-      styles,
-      formik.values,
-      currentTools,
-      addToolkitIds,
-      handleToggleAddToolkit,
-      addMcpIds,
-      handleToggleAddMcp,
-      addAgentIds,
-      handleToggleAddAgent,
-      addPipelineIds,
-      handleToggleAddPipeline,
-      addSkillIds,
-      handleToggleAddSkill,
-      removeToolRecordIds,
-      handleToggleRemoveTool,
-    ],
-  );
-
-  return (
-    <>
-      <EditEntityModal
-        open={open}
-        onClose={onClose}
-        title="Edit Pipeline with AI"
-        entityLabel="pipeline"
-        placeholder="Describe the changes you want to make to this pipeline."
-        onGenerate={handleGenerate}
-        generateError={generateError}
-        resetGenerate={resetGenerate}
-        onDraftGenerated={handleDraftGenerated}
-        steps={steps}
-        renderStep={renderStep}
-        onSave={handleSave}
-        onSaveAsVersion={handleSaveAsVersion}
-        isSavingAsVersion={isSavingAsVersion}
-        saveLabel="Apply to Editor"
-        savingLabel="Applying..."
-        modalTestId="ai-edit-pipeline-modal"
-        closeButtonTestId="ai-edit-pipeline-close-button"
-        promptInputTestId="ai-edit-pipeline-prompt-input"
-        errorAlertTestId="ai-edit-pipeline-error-alert"
-        loadingIndicatorTestId="ai-edit-pipeline-loading-indicator"
-        generateButtonTestId="ai-edit-pipeline-submit-button"
-        cancelButtonTestId="ai-edit-pipeline-cancel-button"
-        loadingText={isCreateMode ? 'Building pipeline...' : 'Generating pipeline changes...'}
-      />
-
-      {showVersionModal && (
-        <Modal.BaseModal
-          open={showVersionModal}
-          title="Save as New Version"
-          onClose={() => setShowVersionModal(false)}
-          content={
-            <Box sx={styles.versionModalContent}>
-              <Input.InputBase
-                label="Version name"
-                fullWidth
-                size="small"
-                value={versionName}
-                onChange={e => setVersionName(e.target.value)}
-                autoFocus
-                inputProps={{ 'data-testid': 'ai-edit-pipeline-version-name-input' }}
-              />
-            </Box>
-          }
-          actions={
-            <>
-              <Box sx={styles.versionModalSpacer} />
-              <BaseBtn
-                variant={BUTTON_VARIANTS.secondary}
-                size="small"
-                onClick={() => setShowVersionModal(false)}
-                disabled={isSavingAsVersion}
-              >
-                Cancel
-              </BaseBtn>
-              <BaseBtn
-                variant={BUTTON_VARIANTS.elitea}
-                size="small"
-                onClick={handleConfirmSaveAsVersion}
-                disabled={isSavingAsVersion || !versionName.trim()}
-                data-testid="ai-edit-pipeline-save-version-button"
-              >
-                {isSavingAsVersion ? 'Saving...' : 'Save Version'}
-              </BaseBtn>
-            </>
-          }
-        />
-      )}
-    </>
-  );
-});
-
-AIEditPipelineModal.displayName = 'AIEditPipelineModal';
-
-/** @type {MuiSx} */
-const aiEditPipelineModalStyles = () => ({
-  stepRoot: {
-    display: 'flex',
-    flexDirection: 'column',
-    flex: 1,
-    minHeight: 0,
-  },
-  warningBanner: {
-    mx: '1.5rem',
-    mt: '0.5rem',
-    flexShrink: 0,
-  },
-  warningItem: {
-    display: 'block',
-    fontSize: '0.8125rem',
-  },
-  versionModalContent: {
-    padding: '1rem 1.5rem',
-  },
-  versionModalSpacer: {
-    flex: 1,
-  },
-});
-
-export default AIEditPipelineModal;
+  return {
+    generateError,
+    resetGenerate,
+    currentTools,
+    addToolkitIds,
+    addMcpIds,
+    addAgentIds,
+    addPipelineIds,
+    addSkillIds,
+    removeToolRecordIds,
+    handleToggleAddToolkit,
+    handleToggleAddMcp,
+    handleToggleAddAgent,
+    handleToggleAddPipeline,
+    handleToggleAddSkill,
+    handleToggleRemoveTool,
+    handleGenerate,
+    handleDraftGenerated,
+    handleSave,
+    handleSaveAsVersion,
+    showVersionModal,
+    setShowVersionModal,
+    versionName,
+    setVersionName,
+    isSavingAsVersion,
+    handleConfirmSaveAsVersion,
+  };
+};

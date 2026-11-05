@@ -5,53 +5,13 @@ import { Box, Typography } from '@mui/material';
 import { EditEntityComparisonLayout, ToolItemCard } from '@/[fsd]/entities/edit-entity-with-ai';
 import BaseCheckbox from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
 
-// Build a normalised tools list from current formik tools (same shape matchDependencies expects)
-const normaliseCurrentTools = tools =>
-  (tools || []).map(t => {
-    if (t.type === 'application') {
-      return {
-        ...t,
-        id: t.settings?.application_id ?? t.id,
-        entityType: t.agent_type === 'pipeline' ? 'pipeline' : 'agent',
-      };
-    }
-    return {
-      ...t,
-      entityType: t.entity_type ?? (t.type?.toLowerCase() === 'mcp' ? 'mcp' : 'toolkit'),
-    };
-  });
-
-// Build a normalised tools list from draft suggestions
-const normaliseSuggestedTools = draftData => [
-  ...(draftData?.suggested_toolkits || []).map(t => ({ ...t, entityType: 'toolkit' })),
-  ...(draftData?.suggested_mcp || []).map(t => ({ ...t, entityType: 'mcp' })),
-  ...(draftData?.suggested_agents || []).map(a => ({ ...a, entityType: 'agent' })),
-  ...(draftData?.suggested_pipelines || []).map(p => ({ ...p, entityType: 'pipeline' })),
-  ...(draftData?.suggested_skills || []).map(s => ({ ...s, entityType: 'skill' })),
-];
-
-const toolKey = t => `${t.entityType}:${t.id}`;
-
-const matchTools = (leftTools, rightTools) => {
-  const allKeys = [...new Set([...leftTools.map(toolKey), ...rightTools.map(toolKey)])];
-  return allKeys.map(k => ({
-    key: k,
-    left: leftTools.find(t => toolKey(t) === k) ?? null,
-    right: rightTools.find(t => toolKey(t) === k) ?? null,
-  }));
-};
-
-// Returns the set-state id for a suggested (right) item
-const getAddId = item => {
-  if (item.entityType === 'agent' || item.entityType === 'pipeline') {
-    // suggested_agents/pipelines have the platform id directly as item.id
-    return item.id;
-  }
-  return item.id;
-};
-
-// Returns the record id used for removal (keyed on the current tool's record id)
-const getRemoveId = item => item.id;
+import {
+  getAddId,
+  getRemoveId,
+  matchTools,
+  normaliseCurrentTools,
+  normaliseSuggestedTools,
+} from '../lib/helpers';
 
 const PipelineToolsDiffStep = memo(props => {
   const {
