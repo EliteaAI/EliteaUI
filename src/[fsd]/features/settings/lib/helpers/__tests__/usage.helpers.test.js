@@ -347,3 +347,33 @@ describe('toolSpendLabel (#6983)', () => {
     expect(UsageHelpers.toolSpendLabel(item, true)).not.toContain('turned off');
   });
 });
+
+describe('cacheHitRatePercent', () => {
+  // The API sends the rate on a 0-100 scale; the UI only rounds it (EL-7412)
+  it('rounds the API rate to a whole percent', () => {
+    expect(UsageHelpers.cacheHitRatePercent({ cache_hit_rate: 73.42 })).toBe(73);
+    expect(UsageHelpers.cacheHitRatePercent({ cache_hit_rate: 54.5 })).toBe(55);
+  });
+
+  it('keeps 0 and 100', () => {
+    expect(UsageHelpers.cacheHitRatePercent({ cache_hit_rate: 0 })).toBe(0);
+    expect(UsageHelpers.cacheHitRatePercent({ cache_hit_rate: 100 })).toBe(100);
+  });
+
+  it('ignores the raw token counts', () => {
+    expect(
+      UsageHelpers.cacheHitRatePercent({
+        cache_hit_rate: 73.42,
+        input_tokens: 449,
+        cache_read_tokens: 15606,
+      }),
+    ).toBe(73);
+  });
+
+  it('is null when the API has no rate', () => {
+    expect(UsageHelpers.cacheHitRatePercent({ cache_hit_rate: null })).toBeNull();
+    expect(UsageHelpers.cacheHitRatePercent({})).toBeNull();
+    expect(UsageHelpers.cacheHitRatePercent(undefined)).toBeNull();
+    expect(UsageHelpers.cacheHitRatePercent({ cache_hit_rate: '73' })).toBeNull();
+  });
+});
