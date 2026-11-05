@@ -16,13 +16,14 @@ const LAYOUTS = {
 };
 
 // The window size keeps the unselected tab colour, so the selected tab highlights only the mode name
-const buildTabLabel = (name, tokens, windowSizeSx) =>
+const buildTabLabel = (mode, name, tokens, windowSizeSx) =>
   tokens > 0 ? (
     <>
       {name}{' '}
       <Box
         component="span"
         sx={windowSizeSx}
+        data-testid={`context-window-mode-${mode}-size`}
       >
         · {formatWindowSize(tokens)}
       </Box>
@@ -52,12 +53,17 @@ const ContextWindowModeSelector = memo(props => {
     () => [
       {
         value: CONTEXT_WINDOW_MODES.BALANCED,
-        label: buildTabLabel('Balanced', balancedWindowTokens, styles.tabWindowSize),
+        label: buildTabLabel(
+          CONTEXT_WINDOW_MODES.BALANCED,
+          'Balanced',
+          balancedWindowTokens,
+          styles.tabWindowSize,
+        ),
         buttonProps: { disabled, 'data-testid': 'context-window-mode-balanced' },
       },
       {
         value: CONTEXT_WINDOW_MODES.FULL,
-        label: buildTabLabel('Full', fullWindowTokens, styles.tabWindowSize),
+        label: buildTabLabel(CONTEXT_WINDOW_MODES.FULL, 'Full', fullWindowTokens, styles.tabWindowSize),
         buttonProps: { disabled, 'data-testid': 'context-window-mode-full' },
       },
     ],

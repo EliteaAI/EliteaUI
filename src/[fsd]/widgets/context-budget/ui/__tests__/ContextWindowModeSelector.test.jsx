@@ -73,12 +73,16 @@ describe('ContextWindowModeSelector', () => {
 
     it('keeps the window size in the unselected tab colour so only the mode name is highlighted', () => {
       renderMarked();
-      expect(screen.getByText('· 272K')).toHaveStyle({ color: unselectedTabColor });
+      expect(screen.getByTestId('context-window-mode-balanced-size')).toHaveStyle({
+        color: unselectedTabColor,
+      });
     });
 
     it('leaves the whole label of a disabled tab in one colour', () => {
       renderMarked({ disabled: true });
-      expect(screen.getByText('· 272K')).not.toHaveStyle({ color: unselectedTabColor });
+      expect(screen.getByTestId('context-window-mode-balanced-size')).not.toHaveStyle({
+        color: unselectedTabColor,
+      });
     });
   });
 
