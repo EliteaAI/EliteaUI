@@ -146,6 +146,8 @@ const ChatParticipantPicker = memo(props => {
       // toolkit_type is used to resolve the correct toolkit icon
       toolkit_type: p.type ?? null,
       avatar: p.avatar ?? null,
+      // Custom agent/pipeline/skill icon; without it every option falls back to the type icon
+      icon_meta: p.icon_meta ?? null,
     }));
 
     // `useParticipants` merges several sources (project + public) and re-sorts the whole list by
