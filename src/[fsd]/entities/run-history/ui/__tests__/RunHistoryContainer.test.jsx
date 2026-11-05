@@ -425,6 +425,37 @@ describe('RunHistoryContainer stacked layout', () => {
     expect(screen.getByTestId('run-history-layout')).toHaveStyle({ flexDirection: 'row' });
     expect(screen.queryByTestId('run-history-detail-panel')).not.toBeInTheDocument();
   });
+
+  it('keeps its own height in the stacked layout', () => {
+    renderContainer('', { layout: 'stacked' });
+
+    expect(screen.getByTestId('run-history-layout')).toHaveStyle({ height: 'auto' });
+  });
+});
+
+describe('RunHistoryContainer height', () => {
+  // A height from the viewport ignored the filters above the list, which cut off its bottom rows and
+  // the load-more trigger, so older runs never loaded (EL-7422)
+  it('fills the space the page leaves instead of guessing from the viewport', () => {
+    renderContainer('');
+
+    const layout = screen.getByTestId('run-history-layout');
+
+    expect(layout).toHaveStyle({ flexGrow: '1', minHeight: '0' });
+    expect(layout.style.height).toBe('');
+    expect(getComputedStyle(layout).height).not.toMatch(/100vh/);
+  });
+
+  it('lets its root grow inside the page, so the layout gets that height', () => {
+    renderContainer('');
+
+    expect(screen.getByTestId('run-history-layout').parentElement).toHaveStyle({
+      display: 'flex',
+      flexDirection: 'column',
+      flexGrow: '1',
+      minHeight: '0',
+    });
+  });
 });
 
 describe('RunHistoryContainer list column width', () => {
