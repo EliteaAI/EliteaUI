@@ -4,12 +4,16 @@ import { useNavigate } from 'react-router-dom';
 
 import { parseMdFrontmatter } from '@/[fsd]/entities/import-wizard';
 import { useSkillImportMutation } from '@/[fsd]/features/skill/api';
+import { isSkillZip, readSkillZip } from '@/[fsd]/features/skill/lib/helpers';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import RouteDefinitions from '@/routes';
 
-const ACCEPT = '.md,text/markdown';
+const ACCEPT = '.md,.zip,text/markdown,application/zip';
+
+const readSkillFile = async file =>
+  isSkillZip(file.name) ? readSkillZip(file) : { content: await file.text(), filePaths: [] };
 
 export const useSkillImport = () => {
   const navigate = useNavigate();
@@ -31,13 +35,13 @@ export const useSkillImport = () => {
     async file => {
       if (!file) return;
 
-      if (!file.name.toLowerCase().endsWith('.md')) {
-        toastError('Only .md files can be imported.');
+      if (!file.name.toLowerCase().endsWith('.md') && !isSkillZip(file.name)) {
+        toastError('Only .md or .zip files can be imported.');
         return;
       }
 
       try {
-        const content = await file.text();
+        const { content, filePaths } = await readSkillFile(file);
         const { frontmatter, body } = parseMdFrontmatter(content);
         if (!frontmatter?.name || !frontmatter?.description) {
           toastError(
@@ -52,6 +56,7 @@ export const useSkillImport = () => {
             description: frontmatter.description,
             instructions: body || '',
             tags: Array.isArray(frontmatter.tags) ? frontmatter.tags : [],
+            filePaths,
             // Imported skills are always created with version 'base', regardless
             // of what version was in the exported file. No need to extract the
             // version from frontmatter.

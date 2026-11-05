@@ -268,7 +268,7 @@ const skillsApi = eliteaApi
           ];
         },
       }),
-      // Export the selected version as a .md file (YAML frontmatter + markdown body).
+      // Export the selected version: a .md file (YAML frontmatter + markdown body), or a .zip when it has files.
       skillExportMd: build.query({
         query: ({ projectId, skillId, versionId }) => {
           let url = `${apiSlicePath}/skill_export/${mode}/${projectId}/${skillId}`;
@@ -302,8 +302,8 @@ const skillsApi = eliteaApi
         },
         providesTags: [],
       }),
-      // Import a skill from a .md file (multipart 'file') OR json { content, filename }.
-      // ONLY .md is accepted; wrong extension -> 400 { error }. Duplicate name -> reused + { notice }.
+      // Import a skill from a .md or .zip file (multipart 'file') OR json { content, filename }.
+      // Wrong extension, an unsafe ZIP or one over the file caps -> 400 { error }.
       skillImport: build.mutation({
         query: ({ projectId, file, content, filename }) => {
           if (file) {
