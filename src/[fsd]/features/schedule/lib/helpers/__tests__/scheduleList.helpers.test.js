@@ -1,21 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
-import { ownerOnlyRunHint } from '../scheduleList.helpers';
+import { runDeniedHint } from '../scheduleList.helpers';
 
-// #7254: Run now and Test run are the owner's; an admin is told who can run the schedule
+// A viewer who manages a schedule but has no run right is told why Run now is off
 
 const ADMIN_ACTIONS = ['edit', 'pause', 'delete', 'change_owner'];
 
-describe('ownerOnlyRunHint', () => {
+describe('runDeniedHint', () => {
   it('names the owner for an admin viewing a schedule with a version', () => {
-    expect(
-      ownerOnlyRunHint({ version_id: 4, owner: { name: 'Ann Lee' }, allowed_actions: ADMIN_ACTIONS }),
-    ).toBe('Only the schedule owner, Ann Lee, can run it.');
+    expect(runDeniedHint({ version_id: 4, owner: { name: 'Ann Lee' }, allowed_actions: ADMIN_ACTIONS })).toBe(
+      'You do not have the right to run this schedule. The owner is Ann Lee.',
+    );
   });
 
   it('says it without a name when the owner has none', () => {
-    expect(ownerOnlyRunHint({ version_id: 4, owner: { id: 1 }, allowed_actions: ADMIN_ACTIONS })).toBe(
-      'Only the schedule owner can run it.',
+    expect(runDeniedHint({ version_id: 4, owner: { id: 1 }, allowed_actions: ADMIN_ACTIONS })).toBe(
+      'You do not have the right to run this schedule.',
     );
   });
 
@@ -26,6 +26,6 @@ describe('ownerOnlyRunHint', () => {
     ['a row without actions', { version_id: 4 }],
     ['no row', undefined],
   ])('is null for %s', (_label, schedule) => {
-    expect(ownerOnlyRunHint(schedule)).toBeNull();
+    expect(runDeniedHint(schedule)).toBeNull();
   });
 });

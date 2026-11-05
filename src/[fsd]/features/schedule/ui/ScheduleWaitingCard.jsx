@@ -1,5 +1,7 @@
 import { forwardRef, memo, useId, useMemo } from 'react';
 
+import { useSelector } from 'react-redux';
+
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import { Box, Chip, Typography } from '@mui/material';
 
@@ -23,8 +25,11 @@ import {
 import ScheduleRunApproval from './ScheduleRunApproval';
 
 const noop = () => {};
-const STEP2_NOTE = 'Reject ends the run as Failed: rejected by the owner.';
+const STEP2_NOTE = 'Reject ends the run as Failed.';
 const BLOCKED_REASON = 'Provide the credential first';
+// A project admin who is not the owner can reject, but the sign-in and the credential belong to the owner
+const OWNER_SIGN_IN_REASON = 'The schedule owner must sign in to the toolkit first';
+const OWNER_CREDENTIAL_REASON = 'The schedule owner must provide the credential first';
 const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' };
 const ENTITY_LABELS = { agent: 'agent', pipeline: 'pipeline' };
 const STEP_STATUS = {
@@ -53,6 +58,7 @@ const ScheduleWaitingCard = memo(
   forwardRef((props, ref) => {
     const { schedule, run, entityType, applicationId, onShowTest } = props;
     const projectId = useSelectedProjectId();
+    const userId = useSelector(state => state.user.id);
     const styles = scheduleWaitingCardStyles();
     const now = useNow();
     const statusId = useId();
@@ -75,6 +81,8 @@ const ScheduleWaitingCard = memo(
     const isCredential = waiting.need === WAITING_NEED.CREDENTIAL;
     const isSignIn = waiting.need === WAITING_NEED.SIGN_IN;
     const { authAction } = conversation;
+    // A Test run has no schedule: the user who started it is the owner
+    const isOtherOwner = Boolean(schedule) && schedule.owner?.id !== userId;
 
     const {
       state: credentialState,
@@ -138,6 +146,10 @@ const ScheduleWaitingCard = memo(
       </Box>
     );
     const buttonProps = useActionButtonProps();
+    const credentialPending = isCredential && credentialState !== CREDENTIAL_CHECK_STATE.READY;
+    let blockedReason;
+    if (credentialPending) blockedReason = isOtherOwner ? OWNER_CREDENTIAL_REASON : BLOCKED_REASON;
+    else if (isSignIn && isOtherOwner) blockedReason = OWNER_SIGN_IN_REASON;
     const approval = (
       <ScheduleRunApproval
         compact
@@ -150,9 +162,7 @@ const ScheduleWaitingCard = memo(
         pausedMessageId={conversation.pausedMessageId}
         authAction={authAction}
         pausedAt={pausedEvent?.at}
-        blockedReason={
-          isCredential && credentialState !== CREDENTIAL_CHECK_STATE.READY ? BLOCKED_REASON : undefined
-        }
+        blockedReason={blockedReason}
       />
     );
 

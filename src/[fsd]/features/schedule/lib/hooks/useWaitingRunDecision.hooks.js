@@ -13,7 +13,7 @@ import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
-// Approve or reject of a waiting schedule run by its owner or a project admin. Returns undefined for any other
+// Approve or reject of a waiting schedule run by its owner or a project admin (`schedules.admin`). Returns undefined for any other
 // user, so the run detail shows the buttons disabled. The server still checks the caller.
 // A run without a chat (`conversationUuid` empty) is decided through the schedule route with `runId`.
 // `authRequest` (from the sign-in pause) switches the call to the mcp_auth resume. It sends every stored token,
@@ -82,6 +82,9 @@ export const useWaitingRunDecision = ({ schedule, run, onDecided }) => {
   );
 
   const isOwner = schedule?.owner?.id === userId;
-  const mayDecide = isTestRun ? run?.requested_by === userId : isOwner || isProjectAdmin;
+  // The schedule route needs a schedule, so an admin decides only a run that has one
+  const mayDecide = isTestRun
+    ? run?.requested_by === userId
+    : Boolean(schedule) && (isOwner || isProjectAdmin);
   return mayDecide ? onHitlResume : undefined;
 };

@@ -13,7 +13,7 @@ import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
-import { isRunActive, ownerOnlyRunHint } from '../lib/helpers';
+import { isRunActive, runDeniedHint } from '../lib/helpers';
 import ScheduleRunCard from './ScheduleRunCard';
 import ScheduleRunsFilters, { ALL_RUNS } from './ScheduleRunsFilters';
 
@@ -45,7 +45,7 @@ const ScheduleRunsCard = memo(
     const isWebhook = isWebhookRow(schedule);
     const canRunNow = Boolean(schedule?.id) && Boolean(schedule?.allowed_actions?.includes('run'));
     const canTest = checkPermission(PERMISSIONS.schedules.run);
-    const runHint = schedule?.id ? ownerOnlyRunHint(schedule) : null;
+    const runHint = schedule?.id ? runDeniedHint(schedule) : null;
     const { expectRun, cancelExpectRun, draftSettled = true } = view;
     const busy = hasActiveRun || runNowPending || testRunPending;
     const startRun = start => async () => {

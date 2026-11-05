@@ -85,6 +85,33 @@ describe('useWaitingRunDecision', () => {
     expect(mocks.refetch).toHaveBeenCalledTimes(1);
   });
 
+  it('gives a project admin no handler for a Test run another user started', () => {
+    mocks.isProjectAdmin = true;
+    const { result } = renderHook(() =>
+      useWaitingRunDecision({ run: { isDraftRun: true, requested_by: 9 }, onDecided: mocks.refetch }),
+    );
+    expect(result.current).toBeUndefined();
+  });
+
+  it('gives the user who started a Test run a handler that decides it without a schedule', async () => {
+    mocks.decideTestRun.mockReturnValue(ok());
+    const { result } = renderHook(() =>
+      useWaitingRunDecision({
+        run: { id: 41, isDraftRun: true, requested_by: 5 },
+        onDecided: mocks.refetch,
+      }),
+    );
+    await act(() => result.current({ action: 'approve', runId: 41 }));
+    expect(mocks.decideTestRun).toHaveBeenCalledWith({ projectId: 3, runId: 41, action: 'approve' });
+    expect(mocks.refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('gives a project admin no handler for a run without a schedule that is not a Test run', () => {
+    mocks.isProjectAdmin = true;
+    const { result } = renderHook(() => useWaitingRunDecision({ run: { id: 41 }, onDecided: mocks.refetch }));
+    expect(result.current).toBeUndefined();
+  });
+
   it('sends the decision and refetches the run rows', async () => {
     mocks.decide.mockReturnValue(ok());
     const result = setup();

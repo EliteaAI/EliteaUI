@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   isOwner: true,
   decide: vi.fn(),
   signedIn: false,
+  userId: 1,
 }));
 
 vi.mock('../../lib/hooks/useScheduleRuns.hooks', () => ({
@@ -43,7 +44,11 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: () => 5,
   useToast: () => ({ toastSuccess: vi.fn() }),
 }));
-vi.mock('react-redux', async importOriginal => ({ ...(await importOriginal()), useDispatch: () => vi.fn() }));
+vi.mock('react-redux', async importOriginal => ({
+  ...(await importOriginal()),
+  useDispatch: () => vi.fn(),
+  useSelector: select => select({ user: { id: mocks.userId } }),
+}));
 
 const schedule = {
   id: 9,
@@ -84,6 +89,7 @@ describe('ScheduleWaitingCard', () => {
     mocks.check = { state: 'missing', recheck: vi.fn() };
     mocks.isOwner = true;
     mocks.signedIn = false;
+    mocks.userId = 1;
   });
   afterEach(() => {
     cleanup();
@@ -135,7 +141,7 @@ describe('ScheduleWaitingCard', () => {
     expect(approve).toBeDisabled();
     expect(screen.getByText('Provide the credential first')).toBeInTheDocument();
     expect(button('Reject')).toBeEnabled();
-    expect(screen.getByText('Reject ends the run as Failed: rejected by the owner.')).toBeInTheDocument();
+    expect(screen.getByText('Reject ends the run as Failed.')).toBeInTheDocument();
   });
 
   it('runs the check again from Check again', () => {
@@ -190,6 +196,35 @@ describe('ScheduleWaitingCard', () => {
     expect(screen.queryByRole('link', { name: 'Open credentials' })).not.toBeInTheDocument();
     expect(mocks.checkArgs.enabled).toBe(false);
     expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Missing');
+  });
+
+  it('keeps Approve off for a project admin who is not the owner while the credential is missing', () => {
+    mocks.userId = 77;
+    renderCard();
+
+    expect(button('Approve')).toBeDisabled();
+    expect(screen.getByText('The schedule owner must provide the credential first')).toBeInTheDocument();
+    expect(screen.queryByText('Provide the credential first')).not.toBeInTheDocument();
+    expect(button('Reject')).toBeEnabled();
+  });
+
+  it('lets a project admin who is not the owner approve once the owner has provided the credential', () => {
+    mocks.userId = 77;
+    mocks.check = { state: 'ready', recheck: vi.fn() };
+    renderCard();
+
+    expect(button('Approve')).toBeEnabled();
+  });
+
+  it('keeps Approve off for a project admin who is not the owner on a sign-in pause', () => {
+    mocks.userId = 77;
+    mocks.signedIn = true;
+    mocks.detail = { ...run, events: [paused({ need: 'sign_in', toolkit: 'Jira' })] };
+    renderCard();
+
+    expect(button('Approve')).toBeDisabled();
+    expect(screen.getByText('The schedule owner must sign in to the toolkit first')).toBeInTheDocument();
+    expect(button('Reject')).toBeEnabled();
   });
 
   it('shows the owner-only note and no decision for another user', () => {

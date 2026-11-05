@@ -127,11 +127,9 @@ describe('ScheduleRunApproval', () => {
     expect(button('Reject')).toBeDisabled();
   });
 
-  it('enables both buttons and shows no note when the user may decide, as the owner or a project admin', () => {
-    renderApproval({ schedule: { id: 9, owner: { id: 77 } } });
+  it('shows no note when the hook gives a handler', () => {
+    renderApproval();
 
-    expect(button('Approve')).toBeEnabled();
-    expect(button('Reject')).toBeEnabled();
     expect(
       screen.queryByText('Only the owner or project admins can approve or reject this run'),
     ).not.toBeInTheDocument();
