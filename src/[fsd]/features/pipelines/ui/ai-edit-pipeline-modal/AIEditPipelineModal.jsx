@@ -6,11 +6,7 @@ import { useDispatch } from 'react-redux';
 
 import { Alert, Box } from '@mui/material';
 
-import {
-  EditEntityComparisonLayout,
-  EditEntityModal,
-  TextDiffHighlight,
-} from '@/[fsd]/entities/edit-entity-with-ai';
+import { EditEntityModal } from '@/[fsd]/entities/edit-entity-with-ai';
 import { useGeneratePipelineDraftMutation } from '@/[fsd]/features/pipelines/api/generatePipelineApi';
 import {
   FlowEditorHelpers,
@@ -34,6 +30,7 @@ import useSaveNewVersion from '@/hooks/application/useSaveNewVersion';
 import { actions } from '@/slices/pipeline';
 import { actions as editorActions } from '@/slices/pipelineEditor';
 
+import PipelineRunSettingsDiffStep from './PipelineRunSettingsDiffStep';
 import PipelineToolsDiffStep from './PipelineToolsDiffStep';
 import PipelineYamlDiffStep from './PipelineYamlDiffStep';
 
@@ -433,6 +430,8 @@ const AIEditPipelineModal = memo(props => {
     }
   }, [handleSave, formik.values, versionName, onClose]);
 
+  const styles = useMemo(() => aiEditPipelineModalStyles(), []);
+
   const renderStep = useCallback(
     (stepKey, draftData) => {
       const warnings = draftData?.validation_result?.warnings ?? [];
@@ -440,13 +439,13 @@ const AIEditPipelineModal = memo(props => {
         warnings.length > 0 ? (
           <Alert
             severity="warning"
-            sx={{ mx: '1.5rem', mt: '0.5rem', flexShrink: 0 }}
+            sx={styles.warningBanner}
           >
             {warnings.map((w, i) => (
               <Box
                 key={i}
                 component="span"
-                sx={{ display: 'block', fontSize: '0.8125rem' }}
+                sx={styles.warningItem}
               >
                 {w.node_id ? `[${w.node_id}] ` : ''}
                 {w.message}
@@ -457,7 +456,7 @@ const AIEditPipelineModal = memo(props => {
 
       if (stepKey === 'yaml') {
         return (
-          <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <Box sx={styles.stepRoot}>
             {warningBanner}
             <PipelineYamlDiffStep
               originalYaml={formik.values?.version_details?.instructions ?? ''}
@@ -468,70 +467,14 @@ const AIEditPipelineModal = memo(props => {
       }
 
       if (stepKey === 'run-settings') {
-        const currentName = formik.values?.name ?? '';
-        const currentDescription = formik.values?.description ?? '';
-        const proposedName = draftData?.name ?? '';
-        const proposedDescription = draftData?.description ?? '';
         return (
-          <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <Box sx={styles.stepRoot}>
             {warningBanner}
-            <EditEntityComparisonLayout
-              currentContent={
-                <Box sx={runSettingsColumnStyles}>
-                  <Box sx={runSettingsFieldStyles}>
-                    <Box sx={runSettingsLabelStyles}>Name</Box>
-                    <Box sx={runSettingsReadCardStyles}>
-                      <TextDiffHighlight
-                        original={currentName}
-                        modified={proposedName}
-                        mode="original"
-                      />
-                    </Box>
-                  </Box>
-                  <Box sx={runSettingsFieldStyles}>
-                    <Box sx={runSettingsLabelStyles}>Description</Box>
-                    <Box sx={runSettingsReadCardStyles}>
-                      {currentDescription ? (
-                        <TextDiffHighlight
-                          original={currentDescription}
-                          modified={proposedDescription}
-                          mode="original"
-                        />
-                      ) : (
-                        <Box sx={runSettingsEmptyTextStyles}>No description</Box>
-                      )}
-                    </Box>
-                  </Box>
-                </Box>
-              }
-              suggestedContent={
-                <Box sx={runSettingsColumnStyles}>
-                  <Box sx={runSettingsFieldStyles}>
-                    <Box sx={runSettingsLabelStyles}>Name</Box>
-                    <Box sx={runSettingsReadCardStyles}>
-                      <TextDiffHighlight
-                        original={currentName}
-                        modified={proposedName}
-                        mode="modified"
-                      />
-                    </Box>
-                  </Box>
-                  <Box sx={runSettingsFieldStyles}>
-                    <Box sx={runSettingsLabelStyles}>Description</Box>
-                    <Box sx={runSettingsReadCardStyles}>
-                      {proposedDescription ? (
-                        <TextDiffHighlight
-                          original={currentDescription}
-                          modified={proposedDescription}
-                          mode="modified"
-                        />
-                      ) : (
-                        <Box sx={runSettingsEmptyTextStyles}>No description</Box>
-                      )}
-                    </Box>
-                  </Box>
-                </Box>
-              }
+            <PipelineRunSettingsDiffStep
+              currentName={formik.values?.name ?? ''}
+              currentDescription={formik.values?.description ?? ''}
+              proposedName={draftData?.name ?? ''}
+              proposedDescription={draftData?.description ?? ''}
             />
           </Box>
         );
@@ -539,7 +482,7 @@ const AIEditPipelineModal = memo(props => {
 
       if (stepKey === 'tools-skills') {
         return (
-          <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <Box sx={styles.stepRoot}>
             {warningBanner}
             <PipelineToolsDiffStep
               currentTools={currentTools}
@@ -564,6 +507,7 @@ const AIEditPipelineModal = memo(props => {
       return null;
     },
     [
+      styles,
       formik.values,
       currentTools,
       addToolkitIds,
@@ -616,7 +560,7 @@ const AIEditPipelineModal = memo(props => {
           title="Save as New Version"
           onClose={() => setShowVersionModal(false)}
           content={
-            <Box sx={{ padding: '1rem 1.5rem' }}>
+            <Box sx={styles.versionModalContent}>
               <Input.InputBase
                 label="Version name"
                 fullWidth
@@ -630,7 +574,7 @@ const AIEditPipelineModal = memo(props => {
           }
           actions={
             <>
-              <Box sx={{ flex: 1 }} />
+              <Box sx={styles.versionModalSpacer} />
               <BaseBtn
                 variant={BUTTON_VARIANTS.secondary}
                 size="small"
@@ -659,42 +603,28 @@ const AIEditPipelineModal = memo(props => {
 AIEditPipelineModal.displayName = 'AIEditPipelineModal';
 
 /** @type {MuiSx} */
-const runSettingsColumnStyles = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '1rem',
-  padding: '1.5rem 2rem',
-};
-
-/** @type {MuiSx} */
-const runSettingsFieldStyles = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.5rem',
-};
-
-/** @type {MuiSx} */
-const runSettingsLabelStyles = {
-  fontSize: '0.875rem',
-  fontWeight: 500,
-  lineHeight: '1.5rem',
-  color: 'text.primary',
-};
-
-/** @type {MuiSx} */
-const runSettingsReadCardStyles = ({ palette }) => ({
-  padding: '0.5rem 1rem',
-  borderRadius: '0.5rem',
-  backgroundColor: palette.background.surface.interactive.default,
-  border: `0.0625rem solid ${palette.border.lines}`,
-  minHeight: '2.5rem',
+const aiEditPipelineModalStyles = () => ({
+  stepRoot: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    minHeight: 0,
+  },
+  warningBanner: {
+    mx: '1.5rem',
+    mt: '0.5rem',
+    flexShrink: 0,
+  },
+  warningItem: {
+    display: 'block',
+    fontSize: '0.8125rem',
+  },
+  versionModalContent: {
+    padding: '1rem 1.5rem',
+  },
+  versionModalSpacer: {
+    flex: 1,
+  },
 });
-
-/** @type {MuiSx} */
-const runSettingsEmptyTextStyles = {
-  fontSize: '0.75rem',
-  color: 'text.primary',
-  fontStyle: 'italic',
-};
 
 export default AIEditPipelineModal;
