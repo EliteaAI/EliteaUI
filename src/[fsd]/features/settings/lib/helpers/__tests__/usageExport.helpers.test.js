@@ -443,6 +443,27 @@ describe('KPI summary sheet', () => {
     expect(sheet.rows[4].value).toBe(16);
   });
 
+  // The export shows the same rate as the page: the API's, not one worked out from the raw counts (EL-7412)
+  it('exports the API cache hit rate for a member without amounts or a budget percentage', () => {
+    const data = {
+      ...kpiUsage(),
+      percent_used: null,
+      input_tokens: 449,
+      cache_read_tokens: 15606,
+      cache_hit_rate: 73.42,
+    };
+    const sheet = buildKpiSheet({ data, canSeeAmounts: false, isCurrentPeriod: true });
+
+    expect(sheet.rows[3]).toMatchObject({ metric: 'Cache hit rate', value: 73, unit: '%' });
+  });
+
+  it('falls back to the Tokens row when the API has no cache hit rate', () => {
+    const data = { ...kpiUsage(), percent_used: null, cache_hit_rate: null };
+    const sheet = buildKpiSheet({ data, canSeeAmounts: false, isCurrentPeriod: true });
+
+    expect(sheet.rows[3].metric).toBe('Tokens');
+  });
+
   it('includes the sheet in buildUsageSheets output', () => {
     const names = buildUsageSheets({
       data: limitedUsage(),

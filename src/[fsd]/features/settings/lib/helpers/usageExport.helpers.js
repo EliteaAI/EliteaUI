@@ -3,6 +3,7 @@ import { ExcelFormats, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils/exp
 import { isNullOrUndefined } from '@/common/utils';
 
 import {
+  cacheHitRatePercent,
   comparableTotal,
   computeDelta,
   fillDailyGaps,
@@ -247,8 +248,6 @@ export const buildKpiSheet = ({ data, canSeeAmounts, isCurrentPeriod, comparison
     daily = [],
     api_requests: calls = 0,
     percent_used: percentUsed,
-    input_tokens: inputTokens = 0,
-    cache_read_tokens: cacheReadTokens = 0,
   } = data;
 
   const daysInMonth = kpiDaysInMonth(periodStart);
@@ -271,8 +270,7 @@ export const buildKpiSheet = ({ data, canSeeAmounts, isCurrentPeriod, comparison
       })()
     : '';
 
-  const cacheTotal = inputTokens + cacheReadTokens;
-  const cacheHitRate = cacheTotal > 0 ? Math.round((cacheReadTokens / cacheTotal) * 100) : 0;
+  const cacheHitRate = cacheHitRatePercent(data);
 
   const forecastPct =
     effectiveLimit && forecast != null
@@ -320,7 +318,7 @@ export const buildKpiSheet = ({ data, canSeeAmounts, isCurrentPeriod, comparison
       vsTrend: '',
     },
     (() => {
-      const showCacheHitRate = cacheTotal > 0 && !canSeeAmounts && percentUsed == null;
+      const showCacheHitRate = cacheHitRate !== null && !canSeeAmounts && percentUsed == null;
       return {
         metric: showCacheHitRate ? 'Cache hit rate' : 'Tokens',
         value: showCacheHitRate ? cacheHitRate : orBlank(totalTokens),

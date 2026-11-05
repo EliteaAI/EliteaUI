@@ -99,12 +99,7 @@ export const useUsageKpiMetrics = ({
     return `${PeriodConstants.MONTH_SHORT[d.getUTCMonth()]} ${d.getUTCDate()}`;
   }, [peakDay]);
 
-  const cacheHitRate = useMemo(() => {
-    const { input_tokens: inp = 0, cache_read_tokens: cr = 0 } = data;
-    const total = inp + cr;
-
-    return total > 0 ? Math.round((cr / total) * 100) : 0;
-  }, [data]);
+  const cacheHitRate = useMemo(() => UsageHelpers.cacheHitRatePercent(data) ?? 0, [data]);
 
   const avgPerDay = elapsedDays > 0 ? spend / elapsedDays : 0;
   const noCompareSubtitle = !hasValidComparison;

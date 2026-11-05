@@ -173,15 +173,27 @@ describe('useUsageKpiMetrics — tokens card', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-10-11T12:00:00Z'));
 
-    const noLimit = { ...baseData, effective_limit: null, percent_used: null };
+    const noLimit = { ...baseData, effective_limit: null, percent_used: null, cache_hit_rate: 73.42 };
     const { result } = renderHook(() =>
       useUsageKpiMetrics({ ...baseProps, data: noLimit, canSeeAmounts: false }),
     );
     const tokens = result.current.kpis.find(k => k.id === 'tokens');
 
     expect(tokens.label).toBe('CACHE HIT RATE');
-    // 2000 cache_read / (6000 input + 2000 cache_read) = 25%
-    expect(tokens.value).toBe('25%');
+    // The API's cache_hit_rate, rounded, not a rate worked out again from the raw token counts (EL-7412)
+    expect(tokens.value).toBe('73%');
+  });
+
+  it('shows 0% on the CACHE HIT RATE card when the API sends no rate', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-11T12:00:00Z'));
+
+    const noLimit = { ...baseData, effective_limit: null, percent_used: null, cache_hit_rate: null };
+    const { result } = renderHook(() =>
+      useUsageKpiMetrics({ ...baseProps, data: noLimit, canSeeAmounts: false }),
+    );
+
+    expect(result.current.kpis.find(k => k.id === 'tokens').value).toBe('0%');
   });
 });
 
