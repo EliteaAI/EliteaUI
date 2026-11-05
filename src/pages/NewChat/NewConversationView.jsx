@@ -110,7 +110,7 @@ const NewConversationView = forwardRef(
     const selectedProjectId = useSelectedProjectId();
     const { data: chatTemplates = [] } = useGetChatTemplatesQuery(
       { projectId: selectedProjectId },
-      { skip: !selectedProjectId },
+      { skip: !selectedProjectId, refetchOnMountOrArgChange: true },
     );
     const defaultTemplate = chatTemplates.find(t => t.is_default);
     const { toastSuccess, toastInfo } = useToast();
