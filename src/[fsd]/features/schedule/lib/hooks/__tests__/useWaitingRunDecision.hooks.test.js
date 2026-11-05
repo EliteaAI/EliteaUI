@@ -5,13 +5,14 @@ import { act, renderHook } from '@testing-library/react';
 
 import { useWaitingRunDecision } from '../useWaitingRunDecision.hooks';
 
-// owner-only decision on a waiting run.
+// decision on a waiting run by the owner or a project admin.
 
 const mocks = vi.hoisted(() => ({
   decide: vi.fn(),
   decideWithoutChat: vi.fn(),
   decideTestRun: vi.fn(),
   user: { id: 5 },
+  isProjectAdmin: false,
   toastError: vi.fn(),
   toastInfo: vi.fn(),
   toastSuccess: vi.fn(),
@@ -23,6 +24,12 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('react-redux', () => ({ useSelector: select => select({ user: mocks.user }) }));
+vi.mock('@/hooks/useCheckPermission', () => ({
+  default: () => ({
+    checkPermission: permission =>
+      permission === 'models.applications.schedules.admin' ? mocks.isProjectAdmin : false,
+  }),
+}));
 vi.mock('@/[fsd]/features/mcp', () => ({
   McpAuthHelpers: {
     getAllTokens: () => mocks.tokens,
@@ -55,10 +62,27 @@ const setup = (schedule = DEFAULT_SCHEDULE) =>
   renderHook(() => useWaitingRunDecision({ schedule, onDecided: mocks.refetch })).result;
 
 describe('useWaitingRunDecision', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.isProjectAdmin = false;
+  });
 
-  it('gives a non-owner no handler', () => {
+  it('gives a plain user who is not the owner no handler', () => {
     expect(setup({ owner: { id: 9 }, created_by: 5 }).current).toBeUndefined();
+  });
+
+  it('gives the owner a handler', () => {
+    expect(setup().current).toBeTypeOf('function');
+  });
+
+  it('gives a project admin who is not the owner a handler that decides the run', async () => {
+    mocks.isProjectAdmin = true;
+    mocks.decide.mockReturnValue(ok());
+    const result = setup({ id: 8, owner: { id: 9 } });
+    expect(result.current).toBeTypeOf('function');
+    await act(() => result.current({ ...request, action: 'reject' }));
+    expect(mocks.decide).toHaveBeenCalledWith(expect.objectContaining({ action: 'reject' }));
+    expect(mocks.refetch).toHaveBeenCalledTimes(1);
   });
 
   it('sends the decision and refetches the run rows', async () => {

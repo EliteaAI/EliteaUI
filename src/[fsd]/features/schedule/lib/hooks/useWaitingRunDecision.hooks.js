@@ -9,10 +9,12 @@ import {
 } from '@/[fsd]/entities/schedule';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
+import useCheckPermission from '@/hooks/useCheckPermission';
 
-// Owner-only approve or reject of a waiting schedule run. Returns undefined for any other
-// user, so the run detail shows the buttons disabled. The server still checks the owner.
+// Approve or reject of a waiting schedule run by its owner or a project admin. Returns undefined for any other
+// user, so the run detail shows the buttons disabled. The server still checks the caller.
 // A run without a chat (`conversationUuid` empty) is decided through the schedule route with `runId`.
 // `authRequest` (from the sign-in pause) switches the call to the mcp_auth resume. It sends every stored token,
 // as the chat resume does, because the resumed run may call other signed-in servers.
@@ -23,6 +25,8 @@ const CREDENTIAL_MISSING = 'credential_missing';
 export const useWaitingRunDecision = ({ schedule, run, onDecided }) => {
   const projectId = useSelectedProjectId();
   const userId = useSelector(state => state.user.id);
+  const { checkPermission } = useCheckPermission();
+  const isProjectAdmin = checkPermission(PERMISSIONS.schedules.admin);
   const { toastError, toastInfo } = useToast();
   const [decideWaitingRun] = RunHistoryApi.useDecideWaitingRunMutation();
   const [decideRunWithoutChat] = useDecideRunWithoutChatMutation();
@@ -77,6 +81,7 @@ export const useWaitingRunDecision = ({ schedule, run, onDecided }) => {
     ],
   );
 
-  const mayDecide = isTestRun ? run?.requested_by === userId : schedule?.owner?.id === userId;
+  const isOwner = schedule?.owner?.id === userId;
+  const mayDecide = isTestRun ? run?.requested_by === userId : isOwner || isProjectAdmin;
   return mayDecide ? onHitlResume : undefined;
 };

@@ -115,7 +115,9 @@ describe('ScheduleRunApproval', () => {
 
     expect(button('Approve')).toBeDisabled();
     expect(button('Reject')).toBeDisabled();
-    expect(screen.getByText('Only the owner can approve or reject this run')).toBeInTheDocument();
+    expect(
+      screen.getByText('Only the owner or project admins can approve or reject this run'),
+    ).toBeInTheDocument();
   });
 
   it('disables both buttons until the conversation of the run has loaded', () => {
@@ -123,6 +125,16 @@ describe('ScheduleRunApproval', () => {
 
     expect(button('Approve')).toBeDisabled();
     expect(button('Reject')).toBeDisabled();
+  });
+
+  it('enables both buttons and shows no note when the user may decide, as the owner or a project admin', () => {
+    renderApproval({ schedule: { id: 9, owner: { id: 77 } } });
+
+    expect(button('Approve')).toBeEnabled();
+    expect(button('Reject')).toBeEnabled();
+    expect(
+      screen.queryByText('Only the owner or project admins can approve or reject this run'),
+    ).not.toBeInTheDocument();
   });
 
   it('enables both buttons for a run that has no chat', () => {
@@ -227,7 +239,9 @@ describe('ScheduleRunApproval', () => {
 
       expect(screen.getByTestId('schedule-run-sign-in')).toBeDisabled();
       expect(screen.queryByText(/Sign in to GitHub, then approve/)).not.toBeInTheDocument();
-      expect(screen.getByText('Only the owner can approve or reject this run')).toBeInTheDocument();
+      expect(
+        screen.getByText('Only the owner or project admins can approve or reject this run'),
+      ).toBeInTheDocument();
     });
   });
 });

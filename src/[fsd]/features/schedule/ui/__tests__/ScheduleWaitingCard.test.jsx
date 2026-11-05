@@ -198,7 +198,9 @@ describe('ScheduleWaitingCard', () => {
 
     expect(button('Approve')).toBeDisabled();
     expect(button('Reject')).toBeDisabled();
-    expect(screen.getByText('Only the owner can approve or reject this run')).toBeInTheDocument();
+    expect(
+      screen.getByText('Only the owner or project admins can approve or reject this run'),
+    ).toBeInTheDocument();
   });
 
   it('shows one short notice and the two buttons for a plain pause', () => {
