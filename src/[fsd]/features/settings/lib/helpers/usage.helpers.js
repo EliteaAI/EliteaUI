@@ -131,6 +131,18 @@ export const toolSpendLabel = (item, canSeeAmounts) => {
   const limited = item.percent_used !== null && item.percent_used !== undefined;
   return `${item.label}: ${limited ? `${item.percent_used}% of limit` : 'no limit'}`;
 };
+
+/**
+ * Cache hit rate as a whole percent, or null when there is nothing to show.
+ * The API computes it once, as cache_read / (input incl. cache), so the KPI tile, the export and
+ * the Token mix card show the same number (EL-7412).
+ */
+export const cacheHitRatePercent = usage => {
+  const rate = usage?.cache_hit_rate;
+
+  return typeof rate === 'number' && Number.isFinite(rate) ? Math.round(rate) : null;
+};
+
 /**
  * Compute the delta between two spend values.
  * Returns { value, pct, label, direction: 'up'|'down'|'flat'|'new'|'none' }
