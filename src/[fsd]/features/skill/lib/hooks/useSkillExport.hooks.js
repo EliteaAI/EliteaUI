@@ -24,12 +24,13 @@ export const useSkillExport = overrideProjectId => {
         // Filename from Content-Disposition (parsed in the slice); fall back to the skill name.
         const downloadName = filename || `${skillName || 'skill'}.md`;
         downloadBlobFile(blob, downloadName);
+        const exportFormat = downloadName.toLowerCase().endsWith('.zip') ? 'zip' : 'md';
 
         trackEvent(GA_EVENT_NAMES.ENTITY_EXPORTED, {
           [GA_EVENT_PARAMS.ENTITY_ID]: skillId || 'unknown',
           [GA_EVENT_PARAMS.ENTITY_NAME]: skillName || 'unknown',
           [GA_EVENT_PARAMS.ENTITY_TYPE]: 'skills',
-          [GA_EVENT_PARAMS.EXPORT_FORMAT]: 'md',
+          [GA_EVENT_PARAMS.EXPORT_FORMAT]: exportFormat,
           [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString(),
         });
       } catch (error) {
