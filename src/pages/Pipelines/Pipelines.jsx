@@ -6,7 +6,6 @@ import { useLocation, useMatch, useNavigate, useParams, useSearchParams } from '
 import { Box, Typography } from '@mui/material';
 
 import { ToolbarImportButton } from '@/[fsd]/entities/import-wizard/ui';
-import { GeneratePipelineButton } from '@/[fsd]/features/pipelines/ui/generate-pipeline-modal';
 import { useSelectedProjectId, useTags } from '@/[fsd]/shared/lib/hooks';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import {
@@ -67,19 +66,6 @@ const Pipelines = memo(() => {
 
   const isCreating = useMatch({ path: RouteDefinitions.CreatePipeline });
   const { trendRange } = useTrendRange();
-
-  const handlePipelineCreated = useCallback(
-    result => {
-      if (!result?.id) return;
-      navigate(
-        RouteDefinitions.PipelineDetail.replace(':tab', PrivateApplicationTabs[0]).replace(
-          ':agentId',
-          result.id,
-        ),
-      );
-    },
-    [navigate],
-  );
 
   const styles = pipelinesStyles();
 
@@ -283,9 +269,6 @@ const Pipelines = memo(() => {
             </Box>
           )}
           <ToolbarImportButton testId="pipelines-import-button" />
-          {projectId != PUBLIC_PROJECT_ID && (
-            <GeneratePipelineButton onPipelineCreated={handlePipelineCreated} />
-          )}
           <ViewToggle
             tableViewTestId="pipeline-table-view"
             cardViewTestId="pipeline-card-view"
