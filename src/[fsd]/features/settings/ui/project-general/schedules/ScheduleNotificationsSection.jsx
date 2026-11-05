@@ -37,7 +37,7 @@ const ScheduleNotificationsSection = memo(() => {
             variant="bodyMedium"
             color="text.secondary"
           >
-            Get notified
+            Send schedule notifications
           </Typography>
         }
         control={
@@ -57,7 +57,7 @@ const ScheduleNotificationsSection = memo(() => {
       >
         {isError
           ? 'Could not load the setting'
-          : 'Failures, approvals and other schedule events always notify the owner.'}
+          : 'If checked, ELITEA will notify the schedule owner about run results, approvals, and changes to the schedule.'}
       </Typography>
     </Box>
   );

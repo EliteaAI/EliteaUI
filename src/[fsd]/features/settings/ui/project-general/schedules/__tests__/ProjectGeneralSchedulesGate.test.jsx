@@ -58,7 +58,7 @@ describe('Schedules section gate', () => {
     expect(screen.getByTestId('schedules-section')).toBeInTheDocument();
   });
 
-  it('shows Get notified and Allow Run without asking in the Schedules section', () => {
+  it('shows Send schedule notifications and Run without approval in the Schedules section', () => {
     perm.allowed = [PERMISSIONS.schedules.list];
     renderContent();
     expect(screen.getByTestId('schedule-notifications')).toBeInTheDocument();

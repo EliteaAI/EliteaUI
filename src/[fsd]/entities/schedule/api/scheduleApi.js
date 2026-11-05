@@ -263,7 +263,7 @@ export const scheduleApi = eliteaApi
           !error && (result?.created?.length || result?.updated?.length) ? [listTag] : [],
       }),
 
-      // Project setting "Allow Run without asking"; read by any member
+      // Project setting "Run without approval"; read by any member
       getScheduleSettings: build.query({
         query: ({ projectId }) => ({ url: `${schedulesPath(projectId)}/settings` }),
         providesTags: (_, _error, { projectId }) => [{ type: SCHEDULE_SETTINGS_TAG, id: projectId }],
