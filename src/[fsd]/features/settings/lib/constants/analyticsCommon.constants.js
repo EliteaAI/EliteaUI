@@ -495,63 +495,63 @@ export const GUIDE_SECTIONS = [
   {
     tabId: ANALYTICS_TAB_IDS.chats,
     title: 'Chats Tab',
-    items: [
+    metrics: [
       {
-        title: 'About',
+        name: 'About',
         description:
           'The Chats tab shows token usage and estimated cost of conversations on the Chats page for the selected project and date range. It counts every model and tool call made in a chat, whether the reply came directly from a model, from an Agent or Pipeline added to the chat, or from a skill participant. Agent and Pipeline Run History runs, index runs and Support Bot conversations are not included.',
       },
       {
-        title: 'ACTIVE CHATS',
+        name: 'ACTIVE CHATS',
         description:
           'Number of chats with at least one AI response during the selected date range. Calculation: distinct chats among the model and tool calls recorded with a chat id.',
       },
       {
-        title: 'TOTAL CHAT COST',
+        name: 'TOTAL CHAT COST',
         description:
           "Estimated USD cost of all model calls made in chats, including input-token, output-token, cache read and cache write costs. Costs are calculated from the platform's local model-price table when the call is made and may differ from provider invoices.",
       },
       {
-        title: 'TOTAL CHAT TOKENS',
+        name: 'TOTAL CHAT TOKENS',
         description:
           'Combined input, output, cache read and cache write tokens used in chats. Calculation: billable input + output + cache read + cache write tokens.',
       },
       {
-        title: 'AI RESPONSES',
+        name: 'AI RESPONSES',
         description:
           'Number of replies generated in chats. Each reply is one response; regenerating or continuing a reply counts as an additional response.',
       },
       {
-        title: 'CHAT USERS',
+        name: 'CHAT USERS',
         description:
           'Distinct project members who received at least one AI response in a chat. Not shown for Private Projects.',
       },
       {
-        title: 'SHARE OF PROJECT COST',
+        name: 'SHARE OF PROJECT COST',
         description:
           "Total chat cost as a percentage of the project's total estimated cost in the same date range.",
       },
       {
-        title: 'ERRORS',
+        name: 'ERRORS',
         description: 'Responses in which at least one model or tool call failed.',
       },
       {
-        title: 'Top Chats',
+        name: 'Top Chats',
         description:
           'The chats with the highest cost (or tokens / responses, depending on the selected metric) in the selected date range. Only the top 10 are loaded when the tab opens; use Show all chats to browse the rest.',
       },
       {
-        title: 'Cost by Participant',
+        name: 'Cost by Participant',
         description:
           'Splits chat usage into Direct model, Agents, Pipelines and Skills. Usage of an Agent or Pipeline inside a chat is also included in that Agent or Pipeline on the Agents & Pipelines tab, so the two tabs overlap and must not be added together.',
       },
       {
-        title: 'Chat Activity',
+        name: 'Chat Activity',
         description:
           'Lists chats with Responses, Users and Owner (Team Projects), Total/Input/Output/Cache costs, token counts, Avg Cost per Response, Models, Avg Latency, Errors and Last Activity. In Team Projects private chats of other members are counted but shown as "Private chat". Deleted chats keep their usage and are marked as deleted.',
       },
       {
-        title: 'Chat Detail View',
+        name: 'Chat Detail View',
         description:
           "Selecting a chat opens its KPIs, usage by day, participants, models, users (Team Projects), tools and every response with its user, participant, model, tokens, cost and status. Select a response start time to open its Run Analytics page. All-time cost shows the running total kept since the chat started tracking usage — the same value as Approx. cost in the chat's Context management panel — whereas all other figures cover only the selected date range.",
       },
