@@ -78,4 +78,33 @@ describe('ChatParticipantIcon', () => {
     expect(screen.getByTestId('type-icon-skill')).toBeInTheDocument();
     expect(screen.getByTestId('circle-icon-skill')).toBeInTheDocument();
   });
+
+  it.each(['application', 'pipeline', 'skill'])(
+    'draws the custom icon of a %s in chips and options instead of the type icon',
+    entityName => {
+      const participant = { entity_name: entityName, icon_meta: { url: 'https://host/custom-icon.png' } };
+      render(withTheme(<ChatParticipantIcon participant={participant} />));
+      render(
+        withTheme(
+          <ChatParticipantIcon
+            participant={participant}
+            withBackground
+          />,
+        ),
+      );
+
+      // EntityIcon is mocked above: a passed custom icon renders as `circle-icon-custom`
+      expect(screen.getByRole('img')).toHaveAttribute('src', 'https://host/custom-icon.png');
+      expect(screen.getByTestId('circle-icon-custom')).toBeInTheDocument();
+      expect(screen.queryByTestId(`type-icon-${entityName}`)).not.toBeInTheDocument();
+      expect(screen.queryByTestId(`circle-icon-${entityName}`)).not.toBeInTheDocument();
+    },
+  );
+
+  it('falls back to the type icon when icon_meta has no url', () => {
+    render(withTheme(<ChatParticipantIcon participant={{ entity_name: 'skill', icon_meta: {} }} />));
+
+    expect(screen.getByTestId('type-icon-skill')).toBeInTheDocument();
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  });
 });
