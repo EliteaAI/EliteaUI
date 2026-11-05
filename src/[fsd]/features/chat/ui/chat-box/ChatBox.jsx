@@ -55,6 +55,7 @@ import {
   useSelectedChatModel,
   useSlashMention,
 } from '@/[fsd]/features/chat/lib/hooks';
+import { sendFailuresActions } from '@/[fsd]/features/chat/model';
 import {
   areDetailsOfParticipant,
   getSkillUnavailableReason,
@@ -859,13 +860,18 @@ const ChatBox = memo(
       setIsStreaming?.(isStreaming);
     }, [isStreaming, setIsStreaming]);
 
-    const { setStreamingInfo, stopStreaming, clearConversationStreamingInfo, isStreamingNow } =
-      useChatStreaming({
-        conversationId: activeConversation?.uuid,
-        chatHistory: chat_history,
-        onStopStreaming,
-        isChatStreaming: !isAgentsPage,
-      });
+    const {
+      setStreamingInfo,
+      setConversationStreamingInfo,
+      stopStreaming,
+      clearConversationStreamingInfo,
+      isStreamingNow,
+    } = useChatStreaming({
+      conversationId: activeConversation?.uuid,
+      chatHistory: chat_history,
+      onStopStreaming,
+      isChatStreaming: !isAgentsPage,
+    });
 
     const stopStreamingRef = useRef(stopStreaming);
 
@@ -1176,6 +1182,17 @@ const ChatBox = memo(
         });
         const initialConversationUuid = activeConversation?.uuid;
         let eventPayload = makeEventPayload(initialConversationUuid);
+        // Tracked app-wide so a failure after the user left is shown in this chat on return
+        if (initialConversationUuid && !isSendingToUser && participant?.entity_name !== 'user') {
+          dispatch(
+            sendFailuresActions.trackSend({
+              questionId: question_id,
+              conversationUuid: initialConversationUuid,
+              question,
+              userMessage: newMessages.find(message => message.role === ROLES.User),
+            }),
+          );
+        }
 
         // Prepare message data for onSend callback
         const messageData = {
@@ -1215,11 +1232,18 @@ const ChatBox = memo(
           eventPayload.participant_id = participantIdRef.current;
         }
 
-        const { success, messages, updatedAttachments } = await uploadAttachments({
+        const {
+          success,
+          messages,
+          updatedAttachments,
+          error: uploadError,
+        } = await uploadAttachments({
           attachments,
           conversationId: activeConversation?.id || sendResult.createdConversation?.id || '',
           messages: newMessages,
         });
+        const isAwayFromConversation = () =>
+          !!initialConversationUuid && activeConversationRef.current?.uuid !== initialConversationUuid;
         if (success) {
           newMessages = messages;
           // Rebuild event payload with sanitized attachment names if they were updated
@@ -1257,7 +1281,34 @@ const ChatBox = memo(
             }
           }
         } else {
+          if (isAwayFromConversation()) {
+            dispatch(
+              sendFailuresActions.recordFailure({
+                questionId: question_id,
+                conversationUuid: initialConversationUuid,
+                error: uploadError,
+              }),
+            );
+          } else {
+            dispatch(sendFailuresActions.settleSend({ questionId: question_id }));
+          }
           return;
+        }
+
+        // Left while awaiting onSend / upload: still send to the original chat, but leave the open one alone
+        if (isAwayFromConversation()) {
+          if (sendResult?.success !== false) {
+            const conversationUuid = eventPayload?.conversation_uuid || initialConversationUuid;
+            emit({ ...eventPayload, conversation_uuid: conversationUuid });
+            if (!isSendingToUser && participant?.entity_name !== 'user') {
+              // Bound to the original chat so its Stop button shows on return
+              setConversationStreamingInfo(conversationUuid, question_id);
+            }
+            emitted = true;
+          } else {
+            dispatch(sendFailuresActions.settleSend({ questionId: question_id }));
+          }
+          return emitted;
         }
 
         // Continue with common logic if sending was successful
@@ -1328,6 +1379,7 @@ const ChatBox = memo(
         chat_history,
         clearMentions,
         conversationEdit,
+        dispatch,
         emit,
         getPayload,
         isAgentsPage,
@@ -1340,6 +1392,7 @@ const ChatBox = memo(
         projectId,
         setAskingQuestionId,
         setChatHistory,
+        setConversationStreamingInfo,
         setSelectedUsers,
         setStreamingInfo,
         unsavedLLMSettings,

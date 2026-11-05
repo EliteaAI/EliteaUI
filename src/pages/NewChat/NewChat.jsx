@@ -25,9 +25,11 @@ import {
 } from '@/[fsd]/features/chat/conversation-list/lib/hooks';
 import { Conversations } from '@/[fsd]/features/chat/conversation-list/ui';
 import {
+  useApplyChatSendFailures,
   useChatEditors,
   useChatSocketReconnect,
   useConversationNavigation,
+  useCreatedAwayConversationName,
   useEditConversation,
   useInternalToolsConfig,
   useIsCreatingConversation,
@@ -89,7 +91,6 @@ import usePlaybackConversation from '@/hooks/chat/usePlaybackConversation';
 import useRemoteParticipantUpdate from '@/hooks/chat/useRemoteParticipantUpdate';
 import useReorderFolders from '@/hooks/chat/useReorderFolders.js';
 import useSelectConversation from '@/hooks/chat/useSelectConversation';
-import useStreamingNavBlocker from '@/hooks/chat/useStreamingNavBlocker';
 import useSynChatMessage from '@/hooks/chat/useSyncChatMessage';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
 import useNavBlocker from '@/hooks/useNavBlocker';
@@ -161,7 +162,6 @@ const NewChat = props => {
   const [activeParticipant, setActiveParticipant] = useState();
   const [collapsedParticipants, setCollapsedParticipants] = useState(true);
 
-  const [isStreaming, setIsStreaming] = useState(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [newConversationQuestion, setNewConversationQuestion] = useState('');
 
@@ -321,6 +321,10 @@ const NewChat = props => {
   );
 
   useChatConversationNameUpdateSocket({ onRemoteUpdateConversationName });
+  const { watchConversationName } = useCreatedAwayConversationName({
+    projectId,
+    onNameResolved: onRemoteUpdateConversationName,
+  });
 
   const { onPinConversation } = usePinConversation({
     activeConversation,
@@ -366,9 +370,12 @@ const NewChat = props => {
     }
   }, []);
 
+  // Bumped when the user starts opening another chat: the active one only changes once it has loaded
+  const selectionCountRef = useRef(0);
+
   const { onCreateConversation, onCancelCreateConversation } = useCreateConversation({
     activeConversation,
-    conversations,
+    selectionCountRef,
     setActiveConversation,
     setConversations,
     setFolders,
@@ -415,7 +422,7 @@ const NewChat = props => {
   }, []);
 
   const {
-    onSelectConversation,
+    onSelectConversation: selectConversationNow,
     isLoadingConversation,
     isSelectingConversation,
     markConversationDeleted,
@@ -437,6 +444,14 @@ const NewChat = props => {
     enableMessagesPagination: true,
   });
 
+  const onSelectConversation = useCallback(
+    conversation => {
+      selectionCountRef.current += 1;
+      return selectConversationNow(conversation);
+    },
+    [selectConversationNow],
+  );
+
   const { onImportedConversation } = useOpenImportedConversation({
     setConversations,
     onSelectConversation,
@@ -456,6 +471,13 @@ const NewChat = props => {
   });
 
   useChatSocketReconnect({ activeConversation, projectId, setActiveConversation });
+
+  useApplyChatSendFailures({
+    conversationUuid: activeConversation?.isNew ? undefined : activeConversation?.uuid,
+    isLoaded: !isSelectingConversation && !isLoadingConversation,
+    chatHistory: activeConversation?.chat_history,
+    setChatHistory,
+  });
 
   const handleRestrictAccessSuccess = useCallback(
     async (conversationId, participantChanges = {}) => {
@@ -784,9 +806,6 @@ const NewChat = props => {
     onSelectParticipant,
     onSelectConversation,
     onSelectThisParticipant,
-    isStreaming,
-    setIsStreaming,
-    boxRef,
   });
 
   const onStopRun = useCallback(isNode => {
@@ -835,7 +854,6 @@ const NewChat = props => {
       onClearActiveParticipant,
       onSelectThisParticipant,
       setChatHistory,
-      setIsStreaming,
       onDeleteMessage,
       onDeleteAllMessages,
       onCreateFolder,
@@ -860,7 +878,6 @@ const NewChat = props => {
       onClearActiveParticipant,
       onSelectThisParticipant,
       setChatHistory,
-      setIsStreaming,
       onDeleteMessage,
       onDeleteAllMessages,
       onCreateFolder,
@@ -1093,7 +1110,7 @@ const NewChat = props => {
   }, []);
 
   const onClickCreateNewFolder = useCallback(() => {
-    if (!isStreaming && !activeFolder?.isNew) {
+    if (!activeFolder?.isNew) {
       const newFolder = {
         id: uuidv4(),
         name: DefaultFolderName,
@@ -1103,7 +1120,7 @@ const NewChat = props => {
       setActiveFolder({ ...newFolder });
       setFolders(prev => [newFolder, ...prev]);
     }
-  }, [isStreaming, activeFolder?.isNew]);
+  }, [activeFolder?.isNew]);
 
   const startNewConversation = useCallback(
     (folderId = null) => {
@@ -1163,15 +1180,14 @@ const NewChat = props => {
 
   const onCreateConversationInFolder = useCallback(
     folder => {
-      if (isStreaming || folder?.isNew || folder?.owner_id != userId) return;
+      if (folder?.isNew || folder?.owner_id != userId) return;
       startNewConversation(folder.id);
     },
-    [isStreaming, startNewConversation, userId],
+    [startNewConversation, userId],
   );
 
   useEffect(() => {
     if (isCreatingConversation && !activeConversation?.isNew) {
-      if (isStreaming) boxRef.current?.stopAll?.();
       startNewConversation();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1186,7 +1202,6 @@ const NewChat = props => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preProjectId, projectId]);
 
-  useStreamingNavBlocker(isStreaming);
   useEditingCanvasNavBlocker(!!selectedCodeBlockInfo);
 
   useEffect(() => {
@@ -1212,10 +1227,9 @@ const NewChat = props => {
     doLeaveCurrentRoomRef.current = doLeaveCurrentRoom;
   }, [doLeaveCurrentRoom]);
 
+  // Only leave the room: the run keeps going on the server
   useEffect(() => {
-    const boxRefValue = boxRef.current;
     return () => {
-      boxRefValue?.stopAll?.();
       doLeaveCurrentRoomRef.current?.();
     };
   }, []);
@@ -1387,6 +1401,7 @@ const NewChat = props => {
                 addToolkitAsAgentAttachament={addNewParticipants}
                 setNewConversationSelectedManager={setNewConversationSelectedManager}
                 onCreateConversation={onCreateConversation}
+                watchConversationName={watchConversationName}
                 activeConversation={activeConversation}
                 setActiveConversation={setActiveConversation}
                 activeParticipant={activeParticipant}
