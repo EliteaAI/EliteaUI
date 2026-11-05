@@ -80,8 +80,9 @@ const EntitySchedulesSection = memo(props => {
   const version =
     versionName && versionName !== BASE_VERSION_NAME ? `version ${versionName}` : 'the base version';
   const testId = `${entityType}-schedules-section`;
+  const showSkeleton = !isError && isFetching && rows.length === 0;
 
-  const styles = entitySchedulesSectionStyles();
+  const styles = entitySchedulesSectionStyles(entityType === 'agent');
 
   const items = [
     {
@@ -122,17 +123,6 @@ const EntitySchedulesSection = memo(props => {
               </Button.BaseBtn>
             </Box>
           )}
-          {!isError &&
-            isFetching &&
-            rows.length === 0 &&
-            [0, 1].map(key => (
-              <Skeleton
-                key={key}
-                variant="rounded"
-                sx={styles.skeleton}
-                data-testid={`${testId}-skeleton`}
-              />
-            ))}
           {!isError && !isFetching && total === 0 && (
             <Typography
               variant="bodyMedium"
@@ -141,16 +131,29 @@ const EntitySchedulesSection = memo(props => {
               No schedules run {version} yet.
             </Typography>
           )}
-          {rows.map(row => (
-            <EntityScheduleCard
-              key={row.id}
-              row={row}
-              entityType={entityType}
-              currentUserId={currentUserId}
-              onOpenForm={openForm}
-              onOpenRunHistory={openRunHistory}
-            />
-          ))}
+          {(showSkeleton || rows.length > 0) && (
+            <Box sx={styles.cards}>
+              {showSkeleton &&
+                [0, 1].map(key => (
+                  <Skeleton
+                    key={key}
+                    variant="rounded"
+                    sx={styles.skeleton}
+                    data-testid={`${testId}-skeleton`}
+                  />
+                ))}
+              {rows.map(row => (
+                <EntityScheduleCard
+                  key={row.id}
+                  row={row}
+                  entityType={entityType}
+                  currentUserId={currentUserId}
+                  onOpenForm={openForm}
+                  onOpenRunHistory={openRunHistory}
+                />
+              ))}
+            </Box>
+          )}
           {canCreate && !isError && (
             <Button.BaseBtn
               variant={BUTTON_VARIANTS.iconLabel}
@@ -195,7 +198,7 @@ const EntitySchedulesSection = memo(props => {
 EntitySchedulesSection.displayName = 'EntitySchedulesSection';
 
 /** @type {MuiSx} */
-const entitySchedulesSectionStyles = () => ({
+const entitySchedulesSectionStyles = isAgent => ({
   accordion: ({ palette }) => ({
     background: `${palette.background.default.tertiary} !important`,
   }),
@@ -206,6 +209,18 @@ const entitySchedulesSectionStyles = () => ({
     gap: '0.75rem',
     containerType: 'inline-size',
   },
+  // The wide agent editor column lays the cards out in a grid; the narrow pipeline column stacks them
+  cards: isAgent
+    ? {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 18rem), 1fr))',
+        gap: '0.75rem',
+      }
+    : {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.75rem',
+      },
   header: {
     display: 'flex',
     flexWrap: 'wrap',
