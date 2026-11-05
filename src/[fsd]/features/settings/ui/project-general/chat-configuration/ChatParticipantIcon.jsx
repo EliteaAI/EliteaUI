@@ -6,12 +6,13 @@ import { isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
 import { EntityIcon, EntityTypeIcon } from '@/[fsd]/shared/ui/icon';
 import { ChatParticipantType } from '@/common/constants';
 import { getToolIconByType } from '@/common/toolkitUtils';
+import EliteAImage from '@/components/EliteAImage';
 import UserAvatar from '@/components/UserAvatar';
 
 // Type icon for a template participant: compact for value chips, circled for dropdown options
 const ChatParticipantIcon = memo(props => {
   const { participant, withBackground = false } = props;
-  const { entity_name, toolkit_type, avatar, name } = participant;
+  const { entity_name, toolkit_type, avatar, name, icon_meta } = participant;
 
   const theme = useTheme();
   const styles = chatParticipantIconStyles();
@@ -30,14 +31,25 @@ const ChatParticipantIcon = memo(props => {
     entity_name === ChatParticipantType.Toolkits
       ? getToolIconByType(toolkit_type ?? '', theme, { isMCP: isMcpToolkitType(toolkit_type) })
       : null;
+  const customIcon = !toolkitIcon && icon_meta?.url ? icon_meta : null;
 
   if (withBackground) {
     return (
       <EntityIcon
-        icon={toolkitIcon ? { component: toolkitIcon } : undefined}
+        icon={toolkitIcon ? { component: toolkitIcon } : (customIcon ?? undefined)}
         entityType={entity_name}
         specifiedFontSize="0.75rem"
         sx={styles.circle}
+        imageStyle={styles.circleImage}
+      />
+    );
+  }
+
+  if (customIcon) {
+    return (
+      <EliteAImage
+        image={customIcon}
+        style={styles.compactImage}
       />
     );
   }
@@ -73,6 +85,17 @@ const chatParticipantIconStyles = () => ({
       height: '0.75rem',
       fontSize: '0.75rem',
     },
+  },
+  // Custom icon image is fixed at 2.25rem inside EntityIcon; fit it to the circle
+  circleImage: {
+    width: '100%',
+    height: '100%',
+  },
+  compactImage: {
+    width: '0.875rem',
+    height: '0.875rem',
+    borderRadius: '50%',
+    flexShrink: 0,
   },
 });
 
