@@ -60,7 +60,9 @@ vi.mock('@/api/applications', () => ({
   useGetPipelineTriggerQuery: () => ({ data: mocks.triggerData, isLoading: false }),
   useUpdatePipelineTriggerMutation: () => [mocks.updateTrigger, { isLoading: false }],
   TAG_TYPE_GOVERNANCE_READINESS: 'GOVERNANCE_READINESS',
-  withReadiness: tags => tags,
+  withReadiness: tags => (result, error, arg) => [
+    ...(typeof tags === 'function' ? tags(result, error, arg) : tags),
+  ],
 }));
 vi.mock('@/assets/clock.svg?react', () => ({ default: () => null }));
 vi.mock('@/[fsd]/shared/config/store', () => ({ store: {} }));

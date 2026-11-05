@@ -49,10 +49,9 @@ vi.mock('@/api/applications', () => {
     return EMPTY_RESULT;
   };
   return {
-    TAG_TYPE_GOVERNANCE_READINESS: 'GOVERNANCE_READINESS',
-    withReadiness: tags => tags,
     useApplicationListQuery: record,
     usePublicApplicationsListQuery: record,
+    TAG_TYPE_GOVERNANCE_READINESS: 'GOVERNANCE_READINESS',
   };
 });
 
