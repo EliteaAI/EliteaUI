@@ -59,6 +59,8 @@ const EntitySchedulesSection = memo(props => {
     kind = 'cron',
   } = props;
   const config = KINDS[kind];
+  // The Webhooks instance gets its own section ids; the shared skeleton keeps the schedules one
+  const sectionTestId = `${entityType}-${config.noun}s-section`;
   const triggerKind = kind === 'webhook' ? kind : undefined;
   const { checkPermission } = useCheckPermission();
   const currentUserId = useSelector(state => state.user.id);
@@ -112,7 +114,7 @@ const EntitySchedulesSection = memo(props => {
   const onAdd = useCallback(() => openForm(), [openForm]);
   const version =
     versionName && versionName !== BASE_VERSION_NAME ? `version ${versionName}` : 'the base version';
-  const testId = `${entityType}-${config.noun}s-section`;
+  const testId = `${entityType}-schedules-section`;
   const showSkeleton = !isError && isFetching && rows.length === 0;
 
   const styles = entitySchedulesSectionStyles(entityType === 'agent');
@@ -120,7 +122,7 @@ const EntitySchedulesSection = memo(props => {
   const items = [
     {
       title: config.title,
-      testId,
+      testId: sectionTestId,
       summaryAction: (
         <Link
           component={RouterLink}
@@ -129,7 +131,7 @@ const EntitySchedulesSection = memo(props => {
           state={{ entityName }}
           variant="bodySmall"
           sx={styles.link}
-          data-testid={`${testId}-open-all`}
+          data-testid={`${sectionTestId}-open-all`}
         >
           {config.link}
         </Link>
@@ -193,7 +195,7 @@ const EntitySchedulesSection = memo(props => {
               startIcon={<PlusIcon />}
               onClick={onAdd}
               sx={styles.add}
-              data-testid={`${testId}-add`}
+              data-testid={`${sectionTestId}-add`}
             >
               {config.add}
             </Button.BaseBtn>
