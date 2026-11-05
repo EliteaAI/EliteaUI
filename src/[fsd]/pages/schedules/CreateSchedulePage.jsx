@@ -25,7 +25,7 @@ const CreateSchedulePage = props => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { state } = useLocation();
-  const [createSchedule] = useCreateScheduleMutation();
+  const [createSchedule, { reset: resetCreate }] = useCreateScheduleMutation();
   const [startDraftTestRun] = useStartDraftTestRunMutation();
   const entityRoute = useEntityScheduleRoute(entityType);
 
@@ -35,8 +35,13 @@ const CreateSchedulePage = props => {
   );
 
   const onSubmit = useCallback(
-    body => createSchedule({ projectId, ...body }).unwrap(),
-    [createSchedule, projectId],
+    async body => {
+      const answer = await createSchedule({ projectId, ...body }).unwrap();
+      // A webhook answer carries its secret once: keep it out of the mutation cache
+      resetCreate();
+      return answer;
+    },
+    [createSchedule, projectId, resetCreate],
   );
 
   const onSaved = useCallback(

@@ -10,6 +10,7 @@ import {
   GridTableRow,
   useResponsiveColumns,
 } from '@/[fsd]/entities/grid-table';
+import { useNow } from '@/[fsd]/features/schedule';
 import { useGetComponentWidth } from '@/[fsd]/shared/lib/hooks';
 
 import {
@@ -43,6 +44,8 @@ const SchedulesTable = memo(props => {
     kind = 'cron',
   } = props;
   const noun = kind === 'webhook' ? 'webhook' : 'schedule';
+  // The rotation marker of a webhook row ends on time; schedule rows need no clock
+  const now = useNow(kind === 'webhook');
   const { componentRef, componentWidth } = useGetComponentWidth();
   const tableWidth = componentWidth - GUTTERS_PX;
   const tier = getTier(tableWidth);
@@ -69,9 +72,10 @@ const SchedulesTable = memo(props => {
         value={value}
         row={row}
         tier={tier}
+        now={now}
       />
     ),
-    [tier],
+    [tier, now],
   );
 
   const paginationProps = useMemo(

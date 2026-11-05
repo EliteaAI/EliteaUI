@@ -26,7 +26,7 @@ const RotateSecretDialog = memo(props => {
   const { open, webhook, onClose } = props;
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
-  const [changeSecret, { isLoading }] = useChangeWebhookSecretMutation();
+  const [changeSecret, { isLoading, reset }] = useChangeWebhookSecretMutation();
   const signing = isSigningRow(webhook);
   const [mode, setMode] = useState('rotate');
   const [token, setToken] = useState('');
@@ -50,6 +50,8 @@ const RotateSecretDialog = memo(props => {
         mode,
         signingSecretValue: signing ? token.trim() : undefined,
       }).unwrap();
+      // The answer carries the secret once: drop it from the mutation cache, the dialog state is its only copy
+      reset();
       setResult(answer);
     } catch (error) {
       if (error?.status === 409) setErrorMessage(rotationInProgressText(error.data?.previous_secret_until));
@@ -59,7 +61,7 @@ const RotateSecretDialog = memo(props => {
         onClose();
       }
     }
-  }, [changeSecret, mode, onClose, projectId, signing, toastError, token, webhook.id]);
+  }, [changeSecret, mode, onClose, projectId, reset, signing, toastError, token, webhook.id]);
 
   if (result)
     return (

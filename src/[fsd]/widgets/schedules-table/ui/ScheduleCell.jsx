@@ -79,7 +79,7 @@ const lastRunTooltip = (row, label, reason) => {
   return reason ? `${text}. ${reason}` : text;
 };
 
-const ScheduleCell = memo(({ column, value, row, tier }) => {
+const ScheduleCell = memo(({ column, value, row, tier, now }) => {
   const styles = cellStyles;
   const isCompact = tier === 'compact';
   switch (column.field) {
@@ -138,7 +138,7 @@ const ScheduleCell = memo(({ column, value, row, tier }) => {
             value={toFullWebhookUrl(value)}
             testId={`webhook-url-${row.id}`}
           />
-          {isRotating(row) && (
+          {isRotating(row, now) && (
             <MuiTooltip
               title={rotationText(row)}
               placement="top"

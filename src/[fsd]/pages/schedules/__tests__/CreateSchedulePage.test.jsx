@@ -29,7 +29,7 @@ vi.mock('react-router-dom', () => ({
 }));
 vi.mock('@/[fsd]/entities/schedule', async importOriginal => ({
   ...(await importOriginal()),
-  useCreateScheduleMutation: () => [mocks.createSchedule],
+  useCreateScheduleMutation: () => [mocks.createSchedule, { reset: vi.fn() }],
   useStartDraftTestRunMutation: () => [mocks.startDraftTestRun],
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 5, useViewMode: () => 'owner' }));

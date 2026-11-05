@@ -14,6 +14,7 @@ import WebhookSecretDialog from '../WebhookSecretDialog';
 
 const mocks = vi.hoisted(() => ({
   changeSecret: vi.fn(),
+  reset: vi.fn(),
   copy: vi.fn(),
   toastInfo: vi.fn(),
   toastError: vi.fn(),
@@ -26,7 +27,7 @@ vi.mock('@/[fsd]/shared/lib/hooks', async importOriginal => ({
 }));
 vi.mock('@/[fsd]/entities/schedule', async importOriginal => ({
   ...(await importOriginal()),
-  useChangeWebhookSecretMutation: () => [mocks.changeSecret, { isLoading: false }],
+  useChangeWebhookSecretMutation: () => [mocks.changeSecret, { isLoading: false, reset: mocks.reset }],
 }));
 vi.mock('@/common/utils', async importOriginal => ({ ...(await importOriginal()), handleCopy: mocks.copy }));
 
@@ -110,6 +111,8 @@ describe('RotateSecretDialog', () => {
       signingSecretValue: undefined,
     });
     expect(screen.getByText('Secret rotated')).toBeInTheDocument();
+    // The secret leaves the RTK mutation cache at once; the dialog state is its only copy
+    expect(mocks.reset).toHaveBeenCalled();
   });
 
   it('a second rotate inside the window names its end and points to Regenerate', async () => {
