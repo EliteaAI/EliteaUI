@@ -24,6 +24,8 @@ export { useDeleteMessageAlert } from './useDeleteMessageAlert.hooks';
 export { useIsMidturnInjectionAvailable, useIsMidturnInjectionEnabled } from './useMidturnInjection.hooks';
 export { useNextInputSuggestion } from './useNextInputSuggestion.hooks';
 export { useRejectedSendRecovery } from './useRejectedSendRecovery.hooks';
+export { useApplyChatSendFailures, useChatSendOutcomeTracker } from './useChatSendFailures.hooks';
+export { useCreatedAwayConversationName } from './useCreatedAwayConversationName.hooks';
 
 export * from './chat-button/useApplicationSubmenu.hooks';
 

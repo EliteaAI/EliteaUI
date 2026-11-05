@@ -55,12 +55,15 @@ export const useRejectedSendRecovery = props => {
       const { text, conversationUuid } = sentQuestions.get(frame.message_id);
       sentQuestions.delete(frame.message_id);
 
+      const isSentFromActiveConversation = conversationUuid === activeConversationRef.current?.uuid;
+      // After leaving a chat its run's frames no longer reach this socket, so "no response" is expected there
+      if (frame.code === SEND_NO_RESPONSE_CODE && conversationUuid && !isSentFromActiveConversation) return;
+
       // This instance did send it, so the user is told. The text goes back only when the conversation it
       // was sent to is still the one on screen: one instance and one input serve every conversation, so
       // after a switch it would land in an unrelated chat, one Enter away from being sent there.
       toastError(frame.content);
 
-      const isSentFromActiveConversation = conversationUuid === activeConversationRef.current?.uuid;
       const input = chatInput.current;
       if (isSentFromActiveConversation && input && !input.getInputContent()) {
         input.setValue(text);
