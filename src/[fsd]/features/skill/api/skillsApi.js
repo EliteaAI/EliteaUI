@@ -302,8 +302,6 @@ const skillsApi = eliteaApi
         },
         providesTags: [],
       }),
-      // Import a skill from a .md file (multipart 'file') OR json { content, filename }.
-      // ONLY .md is accepted; wrong extension -> 400 { error }. Duplicate name -> reused + { notice }.
       skillImport: build.mutation({
         query: ({ projectId, file, content, filename }) => {
           if (file) {

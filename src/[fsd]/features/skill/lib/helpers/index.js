@@ -1,5 +1,6 @@
 export { filterAttachedSkills } from './attachedSkills.helpers';
 export { normalizeTagsForSave } from './tags.helpers';
+export { isSkillZip, readSkillZip } from './skillPackage.helpers';
 export {
   instructionsTooLongMessage,
   isInstructionsOverLimit,

@@ -120,6 +120,17 @@ const SkillImportModal = memo(props => {
                   type="markdown"
                   testId="skill-import-preview-instructions"
                 />
+                {skill.filePaths?.length > 0 && (
+                  <IWModalEntityTextField
+                    title={`Files (${skill.filePaths.length})`}
+                    description={skill.filePaths.join('\n')}
+                    lineClamp={8}
+                    setFullscreenData={setFullscreenData}
+                    height="9rem"
+                    type="markdown"
+                    testId="skill-import-preview-files"
+                  />
+                )}
               </>
             )}
           </IWModalEntityCardWrapper>
