@@ -103,6 +103,14 @@ export const BREADCRUMB_REGISTRY = {
     parent: RouteDefinitions.ApplicationsDetail,
     label: 'Edit Schedule',
   },
+  [RouteDefinitions.ApplicationsCreateWebhook]: {
+    parent: RouteDefinitions.ApplicationsDetail,
+    label: 'New Webhook',
+  },
+  [RouteDefinitions.ApplicationsWebhookDetail]: {
+    parent: RouteDefinitions.ApplicationsDetail,
+    label: 'Edit Webhook',
+  },
 
   [RouteDefinitions.SkillsWithTab]: { label: PathSessionMap[RouteDefinitions.Skills] },
   [RouteDefinitions.CreateSkill]: { parent: RouteDefinitions.SkillsWithTab, label: 'New Skill' },
@@ -183,6 +191,14 @@ export const BREADCRUMB_REGISTRY = {
     parent: RouteDefinitions.PipelineDetail,
     label: 'Edit Schedule',
   },
+  [RouteDefinitions.PipelineCreateWebhook]: {
+    parent: RouteDefinitions.PipelineDetail,
+    label: 'New Webhook',
+  },
+  [RouteDefinitions.PipelineWebhookDetail]: {
+    parent: RouteDefinitions.PipelineDetail,
+    label: 'Edit Webhook',
+  },
 
   [RouteDefinitions.Schedules]: { label: PathSessionMap[RouteDefinitions.Schedules] },
   [RouteDefinitions.CreateSchedule]: { parent: RouteDefinitions.Schedules, label: 'New schedule' },
@@ -190,5 +206,12 @@ export const BREADCRUMB_REGISTRY = {
     parent: RouteDefinitions.Schedules,
     entityName: true,
     fallbackLabel: 'Edit schedule',
+  },
+  [RouteDefinitions.Webhooks]: { label: PathSessionMap[RouteDefinitions.Webhooks] },
+  [RouteDefinitions.CreateWebhook]: { parent: RouteDefinitions.Webhooks, label: 'New webhook' },
+  [RouteDefinitions.WebhookDetail]: {
+    parent: RouteDefinitions.Webhooks,
+    entityName: true,
+    fallbackLabel: 'Edit webhook',
   },
 };

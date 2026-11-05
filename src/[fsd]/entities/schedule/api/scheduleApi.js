@@ -70,8 +70,12 @@ export const scheduleApi = eliteaApi
           enabled,
           search,
           ownerIds,
+          triggerKind,
+          webhookType,
         }) => {
           const filterParams = {
+            trigger_kind: triggerKind,
+            webhook_type: webhookType,
             entity_type: entityType,
             entity_id: entityId,
             version_id: versionId,
@@ -205,6 +209,16 @@ export const scheduleApi = eliteaApi
         invalidatesTags: (_, error, { scheduleId }) => (error ? [] : scheduleTags(scheduleId)),
       }),
 
+      // rotate keeps the old secret valid 24 h more, regenerate replaces it now; the answer has the new secret once
+      changeWebhookSecret: build.mutation({
+        query: ({ projectId, scheduleId, mode, signingSecretValue }) => ({
+          url: `${schedulePath(projectId, scheduleId)}/secret`,
+          method: 'POST',
+          body: { mode, ...(signingSecretValue && { signing_secret_value: signingSecretValue }) },
+        }),
+        invalidatesTags: (_, error, { scheduleId }) => (error ? [] : scheduleTags(scheduleId)),
+      }),
+
       pauseSchedule: setEnabledMutation(build, 'pause', false),
       resumeSchedule: setEnabledMutation(build, 'resume', true),
 
@@ -311,6 +325,7 @@ export const {
   usePauseScheduleMutation,
   useResumeScheduleMutation,
   useChangeScheduleOwnerMutation,
+  useChangeWebhookSecretMutation,
   useDeleteScheduleMutation,
   useLazyExportSchedulesQuery,
   useImportSchedulesMutation,

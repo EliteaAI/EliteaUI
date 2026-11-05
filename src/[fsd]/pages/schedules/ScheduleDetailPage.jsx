@@ -5,6 +5,8 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
 
 import {
+  getListRoute,
+  isWebhookRow,
   useGetScheduleQuery,
   useRunScheduleMutation,
   useUpdateScheduleMutation,
@@ -12,6 +14,7 @@ import {
 import {
   ScheduleForm,
   ScheduleRunsCard,
+  WebhookSettingsSection,
   buildEditValues,
   useEntityScheduleRoute,
   useScheduleRunsView,
@@ -19,16 +22,18 @@ import {
 import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { ScheduleSettingsSection, StopOnDateField } from '@/[fsd]/shared/ui/schedule';
-import RouteDefinitions from '@/routes';
 
 import ScheduleDetailMenu from './ScheduleDetailMenu';
 import ScheduleNotice from './ScheduleNotice';
+import WebhookDetailMenu from './WebhookDetailMenu';
 
 const { convertCronTimezone, getBrowserTimezone } = ScheduleHelpers;
 
-// entityType: the page is nested in that editor and locks its entity
+// entityType: the page is nested in that editor and locks its entity; kind: the row kind of this route
 const ScheduleDetailPage = memo(props => {
-  const { entityType } = props;
+  const { entityType, kind = 'cron' } = props;
+  const isWebhook = kind === 'webhook';
+  const noun = isWebhook ? 'Webhook' : 'Schedule';
   const projectId = useSelectedProjectId();
   const { scheduleId, agentId } = useParams();
   const navigate = useNavigate();
@@ -48,8 +53,8 @@ const ScheduleDetailPage = memo(props => {
   useEffect(() => {
     if (projectId == null) return;
     openedProjectId.current ??= projectId;
-    if (projectId !== openedProjectId.current) navigate(RouteDefinitions.Schedules, { replace: true });
-  }, [navigate, projectId]);
+    if (projectId !== openedProjectId.current) navigate(getListRoute(kind), { replace: true });
+  }, [navigate, projectId, kind]);
 
   const { values, returnTo } = useMemo(
     () => (schedule ? buildEditValues(schedule, state, entityRoute) : {}),
@@ -83,7 +88,7 @@ const ScheduleDetailPage = memo(props => {
   if (isError)
     return (
       <ScheduleNotice
-        message={error?.status === 404 ? 'Schedule not found.' : 'Failed to load the schedule.'}
+        message={error?.status === 404 ? `${noun} not found.` : `Failed to load the ${noun.toLowerCase()}.`}
       />
     );
   if (!schedule)
@@ -92,12 +97,39 @@ const ScheduleDetailPage = memo(props => {
         <CircularProgress />
       </Box>
     );
-  // A nested URL may name a schedule of another agent or pipeline
+  // A nested URL may name a schedule of another agent or pipeline, or a row of the other kind
   if (
-    entityType &&
-    (schedule.entity_type !== entityType || String(schedule.application_id) !== String(agentId))
+    isWebhookRow(schedule) !== isWebhook ||
+    (entityType &&
+      (schedule.entity_type !== entityType || String(schedule.application_id) !== String(agentId)))
   )
-    return <ScheduleNotice message="Schedule not found." />;
+    return <ScheduleNotice message={`${noun} not found.`} />;
+
+  if (isWebhook)
+    return (
+      <ScheduleForm
+        initialValues={values}
+        schedule={schedule}
+        lockedEntity={entityRoute.lockedEntity}
+        entityName={entityType ? undefined : schedule.name}
+        settingsTitle="WEBHOOK SETTINGS"
+        sidePanel={sidePanel}
+        // Rotate, pause and the other admin actions; the form itself is the edit
+        headerActions={<WebhookDetailMenu webhook={schedule} />}
+        onSubmit={onSubmit}
+        onSaved={onSaved}
+        onCancel={onCancel}
+      >
+        {({ values: formValues, setFieldValue, fieldError }) => (
+          <WebhookSettingsSection
+            values={formValues}
+            webhook={schedule}
+            setFieldValue={setFieldValue}
+            fieldError={fieldError}
+          />
+        )}
+      </ScheduleForm>
+    );
 
   const browserTimezone = getBrowserTimezone();
 

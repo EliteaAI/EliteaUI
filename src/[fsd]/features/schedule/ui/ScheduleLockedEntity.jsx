@@ -15,7 +15,8 @@ const TYPE_LABEL = { agent: 'Agent', pipeline: 'Pipeline' };
  * `editing` words the hint for a saved schedule.
  */
 const ScheduleLockedEntity = memo(props => {
-  const { type, name, editing = false } = props;
+  const { type, name, editing = false, isWebhook = false } = props;
+  const noun = isWebhook ? 'webhook' : 'schedule';
 
   const label = TYPE_LABEL[type] ?? 'Agent';
   const lowerLabel = label.toLowerCase();
@@ -42,15 +43,15 @@ const ScheduleLockedEntity = memo(props => {
         sx={styles.hint}
       >
         {editing
-          ? `To change the ${lowerLabel}, create a new schedule in `
-          : `To schedule a different ${lowerLabel}, create the schedule in `}
+          ? `To change the ${lowerLabel}, create a new ${noun} in `
+          : `To ${isWebhook ? 'start' : 'schedule'} a different ${lowerLabel}, create the ${noun} in `}
         <Box
           component={Link}
-          to={RouteDefinitions.Schedules}
+          to={isWebhook ? RouteDefinitions.Webhooks : RouteDefinitions.Schedules}
           data-testid="schedule-locked-entity-link"
           sx={styles.link}
         >
-          Settings / Schedules
+          {isWebhook ? 'Settings / Webhooks' : 'Settings / Schedules'}
         </Box>
         .
       </Typography>

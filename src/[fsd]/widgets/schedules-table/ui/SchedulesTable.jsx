@@ -16,9 +16,9 @@ import {
   COMPACT_MIN_PX,
   GUTTERS_PX,
   ROW_HEIGHT,
-  SCHEDULES_COLUMNS,
   TABLE_MIN_WIDTH,
   TIER_WIDTHS,
+  getColumns,
   getTier,
 } from '../lib/helpers/scheduleColumns.helpers';
 import ScheduleActionsCell from './ScheduleActionsCell';
@@ -40,7 +40,9 @@ const SchedulesTable = memo(props => {
     isLoading = false,
     emptyMessage = 'No schedules',
     toolbar,
+    kind = 'cron',
   } = props;
+  const noun = kind === 'webhook' ? 'webhook' : 'schedule';
   const { componentRef, componentWidth } = useGetComponentWidth();
   const tableWidth = componentWidth - GUTTERS_PX;
   const tier = getTier(tableWidth);
@@ -51,8 +53,8 @@ const SchedulesTable = memo(props => {
   const containerProps = useMemo(() => ({ ref: componentRef }), [componentRef]);
 
   const columns = useMemo(
-    () => SCHEDULES_COLUMNS.map(col => ({ ...col, width: TIER_WIDTHS[tier][col.field] ?? col.width })),
-    [tier],
+    () => getColumns(kind).map(col => ({ ...col, width: TIER_WIDTHS[tier][col.field] ?? col.width })),
+    [tier, kind],
   );
   const { visibleColumns, gridTemplateColumns, dataColumns } = useResponsiveColumns({
     columns,
@@ -104,7 +106,7 @@ const SchedulesTable = memo(props => {
               sx={styles.visuallyHidden}
               aria-live="polite"
             >
-              {isLoading ? '' : `${total} ${total === 1 ? 'schedule' : 'schedules'}`}
+              {isLoading ? '' : `${total} ${noun}${total === 1 ? '' : 's'}`}
             </Box>
           </>
         )

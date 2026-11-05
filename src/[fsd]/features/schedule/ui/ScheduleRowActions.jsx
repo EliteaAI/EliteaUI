@@ -1,6 +1,7 @@
 import { Fragment, memo, useCallback, useMemo, useState } from 'react';
 
 import ClockIcon from '@/assets/clock_icon.svg?react';
+import KeyIcon from '@/assets/key-icon.svg?react';
 import PauseIcon from '@/assets/pause-icon.svg?react';
 import ResumeIcon from '@/assets/play.svg?react';
 import DotMenu from '@/components/DotMenu';
@@ -12,6 +13,7 @@ import PlayIcon from '@/components/Icons/PlayIcon';
 
 import { ownerOnlyRunHint } from '../lib/helpers';
 import ChangeOwnerDialog from './ChangeOwnerDialog';
+import RotateSecretDialog from './RotateSecretDialog';
 
 // Owner CR : every item shows a small icon; the item sets the colour through currentColor
 const ICON_SX = { fontSize: '1rem' };
@@ -41,6 +43,9 @@ const ScheduleRowActions = memo(props => {
   const [isOwnerDialogOpen, setIsOwnerDialogOpen] = useState(false);
   const openOwnerDialog = useCallback(() => setIsOwnerDialogOpen(true), []);
   const closeOwnerDialog = useCallback(() => setIsOwnerDialogOpen(false), []);
+  const [isRotateDialogOpen, setIsRotateDialogOpen] = useState(false);
+  const openRotateDialog = useCallback(() => setIsRotateDialogOpen(true), []);
+  const closeRotateDialog = useCallback(() => setIsRotateDialogOpen(false), []);
 
   const styles = scheduleRowActionsStyles();
 
@@ -96,6 +101,12 @@ const ScheduleRowActions = memo(props => {
             icon: <ClockIcon style={SVG_ICON_STYLE} />,
             onClick: onOpenRunHistory,
           },
+        allowed?.includes('rotate_secret') && {
+          key: 'rotate_secret',
+          label: 'Rotate secret',
+          icon: <KeyIcon style={SVG_ICON_STYLE} />,
+          onClick: openRotateDialog,
+        },
         !hideChangeOwner &&
           allowed?.includes('change_owner') && {
             key: 'change_owner',
@@ -141,6 +152,7 @@ const ScheduleRowActions = memo(props => {
       onExport,
       onDelete,
       openOwnerDialog,
+      openRotateDialog,
       hideChangeOwner,
       hideEdit,
       hideToggle,
@@ -163,8 +175,15 @@ const ScheduleRowActions = memo(props => {
       {isOwnerDialogOpen && (
         <ChangeOwnerDialog
           open
-          schedule={{ id: row.id, name: row.name, owner: row.owner }}
+          schedule={{ id: row.id, name: row.name, owner: row.owner, trigger_kind: row.trigger_kind }}
           onClose={closeOwnerDialog}
+        />
+      )}
+      {isRotateDialogOpen && (
+        <RotateSecretDialog
+          open
+          webhook={row}
+          onClose={closeRotateDialog}
         />
       )}
     </Fragment>

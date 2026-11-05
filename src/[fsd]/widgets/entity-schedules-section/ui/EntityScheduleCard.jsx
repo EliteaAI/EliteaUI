@@ -9,11 +9,17 @@ import {
   ScheduleEnabledSwitch,
   ScheduleRowActions,
   ScheduleRunStatusChip,
+  isRotating,
+  rotationText,
+  toFullWebhookUrl,
+  toWebhookTypeLabel,
+  useNow,
   useScheduleRowActions,
 } from '@/[fsd]/features/schedule';
 import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
+import { CopyValueField } from '@/[fsd]/shared/ui/webhook';
 
 import EntityScheduleCardLine from './EntityScheduleCardLine';
 
@@ -25,7 +31,7 @@ const stopPropagation = event => event.stopPropagation();
 
 // A running schedule has no finished run time to show, only the status
 const lastRunText = row => {
-  if (!row.last_run) return 'Never run';
+  if (!row.last_run) return row.trigger_kind === 'webhook' ? 'No deliveries yet' : 'Never run';
   return row.last_run_status === 'running' ? '' : formatCardDate(row.last_run);
 };
 
@@ -54,7 +60,10 @@ const EntityScheduleCard = memo(props => {
   // The list API sends only the user's own rows to a non-admin
   const isYou = row.owner?.id != null && row.owner.id === currentUserId;
   const showChip = Boolean(row.last_run && row.last_run_status);
-  const testId = `${entityType}-schedule-card`;
+  const isWebhook = row.trigger_kind === 'webhook';
+  // Ticks each minute, so the rotation note goes when the window ends
+  const now = useNow();
+  const testId = `${entityType}-${isWebhook ? 'webhook' : 'schedule'}-card`;
 
   const styles = entityScheduleCardStyles(isOpenable);
 
@@ -67,26 +76,47 @@ const EntityScheduleCard = memo(props => {
         data-testid={`${testId}-${row.id}`}
         onClick={isOpenable ? onEdit : undefined}
       >
-        <Box sx={styles.heading}>
+        {isWebhook ? (
           <EntityScheduleCardLine
-            text={rule}
-            testId={`${testId}-rule-${row.id}`}
+            text={`${row.name} · ${toWebhookTypeLabel(row)}`}
+            testId={`${testId}-title-${row.id}`}
             onActivate={isOpenable ? onEdit : undefined}
             isTitle
           />
-          <Typography
-            variant="bodySmall2"
-            component="span"
-            color="text.secondary"
-            sx={styles.timezone}
-            data-testid={`${testId}-timezone-${row.id}`}
-          >
-            {`· ${timezone}`}
-          </Typography>
-        </Box>
-        <EntityScheduleCardLine text={row.name} />
+        ) : (
+          <>
+            <Box sx={styles.heading}>
+              <EntityScheduleCardLine
+                text={rule}
+                testId={`${testId}-rule-${row.id}`}
+                onActivate={isOpenable ? onEdit : undefined}
+                isTitle
+              />
+              <Typography
+                variant="bodySmall2"
+                component="span"
+                color="text.secondary"
+                sx={styles.timezone}
+                data-testid={`${testId}-timezone-${row.id}`}
+              >
+                {`· ${timezone}`}
+              </Typography>
+            </Box>
+            <EntityScheduleCardLine text={row.name} />
+          </>
+        )}
+        {isWebhook && (
+          <Box onClick={stopPropagation}>
+            <CopyValueField
+              compact
+              label="URL"
+              value={toFullWebhookUrl(row.webhook_url)}
+              testId={`${testId}-url-${row.id}`}
+            />
+          </Box>
+        )}
         <EntityScheduleCardLine
-          label="Last run"
+          label={isWebhook ? 'Last delivery' : 'Last run'}
           text={lastRunText(row)}
           chip={
             // A status without a run time is stale data: "Never run" carries no chip
@@ -98,11 +128,23 @@ const EntityScheduleCard = memo(props => {
             )
           }
         />
-        <EntityScheduleCardLine
-          label="Next run"
-          text={nextRun}
-          testId={`${testId}-next-${row.id}`}
-        />
+        {isWebhook ? (
+          isRotating(row, now) && (
+            <Typography
+              variant="bodySmall2"
+              color="text.secondary"
+              data-testid={`${testId}-rotating-${row.id}`}
+            >
+              {rotationText(row)}
+            </Typography>
+          )
+        ) : (
+          <EntityScheduleCardLine
+            label="Next run"
+            text={nextRun}
+            testId={`${testId}-next-${row.id}`}
+          />
+        )}
         {/* Buttons inside the consent and the readiness card must not open the schedule */}
         <Box onClick={stopPropagation}>
           <ScheduleMandateConsent

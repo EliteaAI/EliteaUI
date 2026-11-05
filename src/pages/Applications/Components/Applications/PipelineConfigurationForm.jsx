@@ -58,6 +58,16 @@ const PipelineConfigurationForm = memo(props => {
         versionName={values?.version_details?.name}
         isChatView={isChatView}
       />
+      <EntitySchedulesSection
+        kind="webhook"
+        style={styles.information}
+        entityType="pipeline"
+        entityId={applicationId}
+        entityName={initialValues?.name}
+        versionId={values?.version_details?.id}
+        versionName={values?.version_details?.name}
+        isChatView={isChatView}
+      />
       <ApplicationAdvanceSettings
         style={styles.advanceSettings}
         disabled={isDisabled}

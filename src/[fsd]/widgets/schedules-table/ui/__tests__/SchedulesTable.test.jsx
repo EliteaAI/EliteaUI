@@ -65,6 +65,10 @@ const rowActions = vi.hoisted(() => ({
 vi.mock('@/[fsd]/features/schedule/lib/hooks/useScheduleRowActions.hooks', () => ({
   useScheduleRowActions: () => rowActions,
 }));
+// The URL Copy of a webhook row toasts; the test renders no toast provider
+vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
+  useToast: () => ({ toastInfo: vi.fn(), toastError: vi.fn() }),
+}));
 vi.mock('@/[fsd]/shared/ui/icon/EntityTypeIcon', () => ({
   default: ({ type }) => <span data-testid={`icon-${type}`} />,
 }));
@@ -538,5 +542,65 @@ describe('FilterSelect', () => {
       />,
     );
     expect(screen.getByTestId('schedules-filter-status')).toBeInTheDocument();
+  });
+
+  // #7405: the Webhooks page passes kind="webhook"
+  describe('webhook rows', () => {
+    const webhookRow = (overrides = {}) =>
+      makeRow({
+        id: 11,
+        name: 'On push',
+        trigger_kind: 'webhook',
+        webhook_type: 'github',
+        webhook_url: '/api/v2/elitea_core/hooks/prompt_lib/3/abc',
+        cron: null,
+        timezone: null,
+        next_run: null,
+        allowed_actions: ['edit', 'pause', 'rotate_secret', 'delete'],
+        ...overrides,
+      });
+    const renderWebhooks = rows =>
+      renderWithTheme(
+        <MemoryRouter>
+          <SchedulesTable
+            kind="webhook"
+            rows={rows}
+            total={rows.length}
+            page={0}
+            pageSize={20}
+            onPageChange={vi.fn()}
+            onChangePageSize={vi.fn()}
+            sortConfig={{ field: 'last_run', direction: 'desc' }}
+            onSort={vi.fn()}
+          />
+        </MemoryRouter>,
+      );
+
+    it('shows Type, URL and Last delivery instead of Schedule and Next run', () => {
+      renderWebhooks([webhookRow()]);
+      ['Type', 'URL', 'Last delivery'].forEach(label => expect(screen.getByText(label)).toBeInTheDocument());
+      expect(screen.queryByText('Schedule')).toBeNull();
+      expect(screen.queryByText('Next run')).toBeNull();
+      expect(screen.getByText('GitHub')).toBeInTheDocument();
+      expect(screen.getByTestId('webhook-url-11')).toHaveTextContent('/hooks/prompt_lib/3/abc');
+    });
+
+    it('the name opens the webhook page, not the schedule page', () => {
+      renderWebhooks([webhookRow()]);
+      expect(screen.getByRole('link', { name: 'On push' })).toHaveAttribute('href', '/settings/webhooks/11');
+    });
+
+    it('marks a row whose previous secret is still accepted', () => {
+      renderWebhooks([
+        webhookRow({ previous_secret_until: new Date(Date.now() + 3_600_000).toISOString() }),
+        webhookRow({
+          id: 12,
+          name: 'Old',
+          previous_secret_until: new Date(Date.now() - 3_600_000).toISOString(),
+        }),
+      ]);
+      expect(screen.getByTestId('webhook-rotating-11')).toHaveTextContent('Rotating secret');
+      expect(screen.queryByTestId('webhook-rotating-12')).toBeNull();
+    });
   });
 });

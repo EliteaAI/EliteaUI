@@ -79,6 +79,12 @@ export const usePageDetails = () => {
   const isAgentScheduleDetailPage = useMatch({ path: RouteDefinitions.ApplicationsScheduleDetail });
   const isPipelineScheduleCreatePage = useMatch({ path: RouteDefinitions.PipelineCreateSchedule });
   const isPipelineScheduleDetailPage = useMatch({ path: RouteDefinitions.PipelineScheduleDetail });
+  const isWebhookCreatePage = useMatch({ path: RouteDefinitions.CreateWebhook });
+  const isWebhookDetailPage = useMatch({ path: RouteDefinitions.WebhookDetail });
+  const isAgentWebhookCreatePage = useMatch({ path: RouteDefinitions.ApplicationsCreateWebhook });
+  const isAgentWebhookDetailPage = useMatch({ path: RouteDefinitions.ApplicationsWebhookDetail });
+  const isPipelineWebhookCreatePage = useMatch({ path: RouteDefinitions.PipelineCreateWebhook });
+  const isPipelineWebhookDetailPage = useMatch({ path: RouteDefinitions.PipelineWebhookDetail });
 
   const isChatPage = useMatch({ path: RouteDefinitions.Chat });
   const isChatConversationPage = useMatch({ path: RouteDefinitions.ChatConversation });
@@ -242,7 +248,13 @@ export const usePageDetails = () => {
     isAgentScheduleCreatePage ||
     isAgentScheduleDetailPage ||
     isPipelineScheduleCreatePage ||
-    isPipelineScheduleDetailPage
+    isPipelineScheduleDetailPage ||
+    isWebhookCreatePage ||
+    isWebhookDetailPage ||
+    isAgentWebhookCreatePage ||
+    isAgentWebhookDetailPage ||
+    isPipelineWebhookCreatePage ||
+    isPipelineWebhookDetailPage
   ) {
     pageType = 'ScheduleDetails';
   } else if (isChatPage || isChatConversationPage) {

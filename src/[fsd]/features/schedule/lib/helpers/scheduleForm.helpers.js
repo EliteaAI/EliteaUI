@@ -1,9 +1,10 @@
 import * as Yup from 'yup';
 
-import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
+import { TRIGGER_KIND, getListRoute } from '@/[fsd]/entities/schedule';
+import { WebhookConstants } from '@/[fsd]/shared/lib/constants';
+import { ScheduleHelpers, WebhookHelpers } from '@/[fsd]/shared/lib/helpers';
 import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
 import { contextResolver } from '@/common/utils';
-import RouteDefinitions from '@/routes';
 
 import {
   APPROVAL_RULE,
@@ -12,6 +13,8 @@ import {
   WAIT_FOR_OWNER_CODES,
   WARNING_LABELS,
 } from '../constants';
+
+const { GITLAB_AUTH_METHODS, WEBHOOK_TYPES } = WebhookConstants;
 
 const ENTITY_TYPES = ['agent', 'pipeline'];
 const ENTRY_POINT = 'entry_point';
@@ -29,9 +32,33 @@ export const scheduleFormSchema = Yup.object({
   description: Yup.string().max(MAX_DESCRIPTION_LENGTH),
   application_id: Yup.string().required('Choose an agent or a pipeline'),
   version_id: Yup.string().required('Choose a version'),
-}).test('prompt-required', 'Prompt is required', function (values) {
-  return !isPromptShown(values) || !!values.prompt?.trim() || this.createError({ path: 'prompt' });
-});
+})
+  .test('prompt-required', 'Prompt is required', function (values) {
+    return !isPromptShown(values) || !!values.prompt?.trim() || this.createError({ path: 'prompt' });
+  })
+  // Only a new GitLab signing-token webhook carries the pasted token
+  .test('signing-token', '', function (values) {
+    if (values.gitlab_auth_method !== GITLAB_AUTH_METHODS.signing_token || values.id) return true;
+    const message = WebhookHelpers.getGitlabSigningTokenError(values.signing_secret_value);
+    return !message || this.createError({ path: 'signing_secret_value', message });
+  });
+
+export const isWebhookForm = values => values.trigger_kind === TRIGGER_KIND.webhook;
+
+// The trigger part of a new form: cron timing for a schedule, the sender for a webhook
+const triggerValues = kind =>
+  kind === TRIGGER_KIND.webhook
+    ? {
+        trigger_kind: TRIGGER_KIND.webhook,
+        webhook_type: WEBHOOK_TYPES.github,
+        gitlab_auth_method: null,
+        signing_secret_value: '',
+      }
+    : {
+        cron: DEFAULT_SCHEDULE_CRON,
+        timezone: ScheduleHelpers.getBrowserTimezone(),
+        expires_at: null,
+      };
 
 export const resetWhatToRun = (values, type) => ({
   ...values,
@@ -50,7 +77,12 @@ export const syncPromptVariables = (prompt, variables = []) => {
 };
 
 // entityRoute: the entity and the editor path of a form nested in an agent or pipeline editor
-export const buildInitialValues = (searchParams, locationState, entityRoute = {}) => {
+export const buildInitialValues = (
+  searchParams,
+  locationState,
+  entityRoute = {},
+  kind = TRIGGER_KIND.cron,
+) => {
   const entityType = searchParams.get('entityType');
   const entityId = searchParams.get('entityId');
   const urlEntity =
@@ -64,14 +96,12 @@ export const buildInitialValues = (searchParams, locationState, entityRoute = {}
     values: {
       ...resetWhatToRun({ name: '', description: '' }, type),
       application_id: urlEntity?.id ?? '',
-      cron: DEFAULT_SCHEDULE_CRON,
-      timezone: ScheduleHelpers.getBrowserTimezone(),
-      expires_at: null,
+      ...triggerValues(kind),
       approval_rule: DEFAULT_APPROVAL_RULE,
       enabled: true,
     },
     urlEntity,
-    returnTo: IN_APP_PATH.test(returnTo) ? returnTo : (entityRoute.returnTo ?? RouteDefinitions.Schedules),
+    returnTo: IN_APP_PATH.test(returnTo) ? returnTo : (entityRoute.returnTo ?? getListRoute(kind)),
   };
 };
 
@@ -81,7 +111,20 @@ const toExpiryDate = (expiresAt, timeZone) =>
 
 // The saved cron stays in the schedule's own zone: only a cron edit moves it to the browser zone
 export const buildEditValues = (schedule, locationState, entityRoute) => {
-  const { values, returnTo } = buildInitialValues(new URLSearchParams(), locationState, entityRoute);
+  const kind = schedule.trigger_kind ?? TRIGGER_KIND.cron;
+  const { values, returnTo } = buildInitialValues(new URLSearchParams(), locationState, entityRoute, kind);
+  const trigger =
+    kind === TRIGGER_KIND.webhook
+      ? {
+          id: schedule.id,
+          webhook_type: schedule.webhook_type,
+          gitlab_auth_method: schedule.gitlab_auth_method ?? null,
+        }
+      : {
+          cron: schedule.cron,
+          timezone: schedule.timezone || values.timezone,
+          expires_at: toExpiryDate(schedule.expires_at, schedule.timezone),
+        };
 
   return {
     values: {
@@ -94,9 +137,7 @@ export const buildEditValues = (schedule, locationState, entityRoute) => {
       run_mode: schedule.run_mode,
       prompt: schedule.prompt ?? '',
       variables: syncPromptVariables(schedule.prompt, schedule.variables),
-      cron: schedule.cron,
-      timezone: schedule.timezone || values.timezone,
-      expires_at: toExpiryDate(schedule.expires_at, schedule.timezone),
+      ...trigger,
       // The saved rule, so a confirmed schedule keeps its consent and is not saved back as Pause and ask
       approval_rule: schedule.approval_rule ?? DEFAULT_APPROVAL_RULE,
     },
@@ -124,6 +165,10 @@ export const toCreateBody = ({
   expires_at,
   approval_rule = DEFAULT_APPROVAL_RULE,
   enabled,
+  trigger_kind,
+  webhook_type,
+  gitlab_auth_method,
+  signing_secret_value,
 }) => {
   const mode = type === 'agent' ? null : run_mode;
   const sendsPrompt = isPromptShown({ type, run_mode: mode });
@@ -137,9 +182,16 @@ export const toCreateBody = ({
     run_mode: mode,
     prompt: sendsPrompt ? prompt : null,
     variables: sendsPrompt ? variables : [],
-    cron,
-    timezone,
-    expires_at,
+    // The server refuses cron fields on a webhook and webhook fields on a schedule
+    ...(trigger_kind === TRIGGER_KIND.webhook
+      ? {
+          trigger_kind,
+          webhook_type,
+          gitlab_auth_method: webhook_type === WEBHOOK_TYPES.gitlab ? gitlab_auth_method : null,
+          ...(gitlab_auth_method === GITLAB_AUTH_METHODS.signing_token &&
+            webhook_type === WEBHOOK_TYPES.gitlab && { signing_secret_value: signing_secret_value?.trim() }),
+        }
+      : { cron, timezone, expires_at }),
     approval_rule,
     // set on a new schedule only; a saved one pauses and resumes through its own calls
     ...(enabled !== undefined && { enabled }),
@@ -147,9 +199,13 @@ export const toCreateBody = ({
 };
 
 // The PUT body has no `enabled`: a saved schedule pauses and resumes through its own calls
+// A webhook keeps its sender: the PUT body has no trigger fields
 export const toUpdateBody = values => {
   const body = toCreateBody(values);
   delete body.enabled;
+  ['trigger_kind', 'webhook_type', 'gitlab_auth_method', 'signing_secret_value'].forEach(
+    key => delete body[key],
+  );
   return body;
 };
 

@@ -66,6 +66,7 @@ const ScheduleForm = memo(props => {
     sidePanel,
     sidePanelFirst = false,
     headerActions,
+    settingsTitle = 'SCHEDULE SETTINGS',
     children,
   } = props;
 
@@ -172,7 +173,8 @@ const ScheduleForm = memo(props => {
     {
       title: 'GENERAL',
       testId: 'schedule-section-general',
-      summaryAction: !schedule?.id && (
+      // Build with AI writes a cron; a webhook has none
+      summaryAction: !schedule?.id && values.trigger_kind !== 'webhook' && (
         <GenerateEntityButton
           permission={PERMISSIONS.schedules.create}
           buttonTestId="generate-schedule-open-button"
@@ -218,6 +220,7 @@ const ScheduleForm = memo(props => {
               type={values.type}
               name={details?.name}
               editing={!!schedule}
+              isWebhook={values.trigger_kind === 'webhook'}
             />
           ) : (
             <ScheduleEntitySection
@@ -244,7 +247,7 @@ const ScheduleForm = memo(props => {
       ),
     },
     {
-      title: 'SCHEDULE SETTINGS',
+      title: settingsTitle,
       testId: 'schedule-section-settings',
       content: (
         <Box

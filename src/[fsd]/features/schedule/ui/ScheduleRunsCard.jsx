@@ -42,6 +42,7 @@ const ScheduleRunsCard = memo(
     const { checkPermission } = useCheckPermission();
     const { runs, total, versionNames, expandedRunId, onExpand } = view;
     const hasActiveRun = runs.some(run => isRunActive(run.status));
+    const isWebhook = schedule?.trigger_kind === 'webhook';
     const canRunNow = Boolean(schedule?.id) && Boolean(schedule?.allowed_actions?.includes('run'));
     const canTest = checkPermission(PERMISSIONS.schedules.run);
     const runHint = schedule?.id ? ownerOnlyRunHint(schedule) : null;
@@ -94,7 +95,8 @@ const ScheduleRunsCard = memo(
             )}
           </Typography>
           <Box sx={styles.actions}>
-            {schedule?.id && (
+            {/* A webhook runs on a delivery; its sample-body run comes with #7399 */}
+            {schedule?.id && !isWebhook && (
               <BaseBtn
                 data-testid="schedule-run-now"
                 title={RUN_NOW_NOTE}
@@ -107,7 +109,7 @@ const ScheduleRunsCard = memo(
                 Run Now
               </BaseBtn>
             )}
-            {!schedule?.id && (
+            {!schedule?.id && !isWebhook && (
               <BaseBtn
                 data-testid="schedule-test-run"
                 title={TEST_RUN_NOTE}

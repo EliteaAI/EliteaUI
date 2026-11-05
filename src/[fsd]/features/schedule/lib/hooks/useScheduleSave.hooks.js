@@ -14,6 +14,7 @@ const FIELDS_WITH_INPUT = [
   'approval_rule',
   'cron',
   'expires_at',
+  'signing_secret_value',
 ];
 const PROMPT_FIELDS = ['prompt', 'variables'];
 // Test Run answers 400 with this code when the project does not allow "Run without asking"
@@ -87,7 +88,7 @@ export const useScheduleSave = ({
         : FIELDS_WITH_INPUT;
       if (Object.keys(fieldErrors).some(field => shownFields.includes(field))) setErrors(fieldErrors);
       else if (error?.status === 400 || error?.status === 409) setBanner(error.data?.error ?? '');
-      else toastError('Failed to save the schedule');
+      else toastError(`Failed to save the ${values.trigger_kind === 'webhook' ? 'webhook' : 'schedule'}`);
       return;
     }
     setReview(null);
@@ -95,7 +96,8 @@ export const useScheduleSave = ({
     const approvalRule = answer?.approval_rule ?? values.approval_rule;
     const hasWarnings = answer?.warnings?.length > 0;
     // The saved values are the new baseline, so the leave-page blocker stays shut
-    resetTo({ values: { ...values, approval_rule: approvalRule } });
+    // The pasted GitLab token is stored now, so the form keeps no copy of it
+    resetTo({ values: { ...values, approval_rule: approvalRule, signing_secret_value: '' } });
     const changed = approvalRule !== values.approval_rule;
     setRuleChanged(changed);
     setSavedRule(approvalRule);

@@ -6,10 +6,15 @@ import {
   ScheduleEnabledSwitch,
   ScheduleRunStatusChip,
   formatRunStarted,
+  isRotating,
+  rotationText,
+  toFullWebhookUrl,
   toRunStatusLabel,
+  toWebhookTypeLabel,
 } from '@/[fsd]/features/schedule';
 import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 import { Text, Tooltip } from '@/[fsd]/shared/ui';
+import { CopyValueField } from '@/[fsd]/shared/ui/webhook';
 import { TIME_FORMAT } from '@/common/constants';
 import { timeFormatter } from '@/common/utils';
 import AuthorContainer from '@/components/AuthorContainer';
@@ -115,6 +120,41 @@ const ScheduleCell = memo(({ column, value, row, tier }) => {
         </MuiTooltip>
       );
     }
+    case 'webhook_type':
+      return (
+        <Typography
+          variant="bodyMedium"
+          sx={styles.twoLines}
+        >
+          {toWebhookTypeLabel(row)}
+        </Typography>
+      );
+    case 'webhook_url':
+      return (
+        <Box sx={styles.url}>
+          <CopyValueField
+            compact
+            label="URL"
+            value={toFullWebhookUrl(value)}
+            testId={`webhook-url-${row.id}`}
+          />
+          {isRotating(row) && (
+            <MuiTooltip
+              title={rotationText(row)}
+              placement="top"
+            >
+              <Typography
+                variant="bodySmall"
+                color="text.secondary"
+                tabIndex={0}
+                data-testid={`webhook-rotating-${row.id}`}
+              >
+                Rotating secret
+              </Typography>
+            </MuiTooltip>
+          )}
+        </Box>
+      );
     case 'next_run': {
       if (!row.enabled) return 'Paused';
       if (!value) return '-';
@@ -249,6 +289,7 @@ const cellStyles = {
   statusLine: { display: 'flex', alignItems: 'center', gap: '0.25rem', minWidth: 0, maxWidth: '100%' },
   statusLabel: { flexShrink: 0, whiteSpace: 'nowrap' },
   owner: { display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0, maxWidth: '100%' },
+  url: { display: 'flex', flexDirection: 'column', minWidth: 0, maxWidth: '100%' },
 };
 
 export default ScheduleCell;

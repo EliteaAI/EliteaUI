@@ -52,7 +52,7 @@ const ChangeOwnerDialog = memo(props => {
     isSubmitting.current = true;
     try {
       await changeOwner({ projectId, scheduleId: schedule.id, ownerId: picked.value }).unwrap();
-      toastSuccess('The schedule owner is changed.');
+      toastSuccess(`The ${schedule.trigger_kind === 'webhook' ? 'webhook' : 'schedule'} owner is changed.`);
       onClose();
     } catch (error) {
       if (STAY_OPEN_STATUSES.includes(error?.status)) {
@@ -64,7 +64,7 @@ const ChangeOwnerDialog = memo(props => {
     } finally {
       isSubmitting.current = false;
     }
-  }, [changeOwner, onClose, picked, projectId, schedule.id, toastError, toastSuccess]);
+  }, [changeOwner, onClose, picked, projectId, schedule.id, schedule.trigger_kind, toastError, toastSuccess]);
 
   const content = (
     <Box sx={styles.content}>
@@ -72,7 +72,7 @@ const ChangeOwnerDialog = memo(props => {
         variant="bodySmall"
         color="text.secondary"
       >
-        Schedule: {schedule.name}
+        {schedule.trigger_kind === 'webhook' ? 'Webhook' : 'Schedule'}: {schedule.name}
       </Typography>
       <Typography
         variant="bodySmall"
@@ -80,6 +80,14 @@ const ChangeOwnerDialog = memo(props => {
       >
         Current owner: {schedule.owner?.name || schedule.owner?.email || '—'}
       </Typography>
+      {schedule.trigger_kind === 'webhook' && (
+        <Typography
+          variant="bodySmall"
+          color="text.secondary"
+        >
+          The webhook stays paused until the new owner switches it on.
+        </Typography>
+      )}
       <LazySelect
         label="New owner"
         value={picked?.value}

@@ -256,6 +256,26 @@ const ProtectedRoutes = memo(() => {
         element: <ScheduleDetailPage entityType="agent" />,
         requiredPermissions: [PERMISSIONS.schedules.details],
       },
+      {
+        path: RouteDefinitions.ApplicationsCreateWebhook,
+        element: (
+          <CreateSchedulePage
+            entityType="agent"
+            kind="webhook"
+          />
+        ),
+        requiredPermissions: [PERMISSIONS.schedules.create],
+      },
+      {
+        path: RouteDefinitions.ApplicationsWebhookDetail,
+        element: (
+          <ScheduleDetailPage
+            entityType="agent"
+            kind="webhook"
+          />
+        ),
+        requiredPermissions: [PERMISSIONS.schedules.details],
+      },
 
       /* skills — hidden for public projects */
       { path: RouteDefinitions.Skills, element: <SkillsGuard>{getIndexElement(SkillsTabs[0])}</SkillsGuard> },
@@ -356,6 +376,26 @@ const ProtectedRoutes = memo(() => {
       {
         path: RouteDefinitions.PipelineScheduleDetail,
         element: <ScheduleDetailPage entityType="pipeline" />,
+        requiredPermissions: [PERMISSIONS.schedules.details],
+      },
+      {
+        path: RouteDefinitions.PipelineCreateWebhook,
+        element: (
+          <CreateSchedulePage
+            entityType="pipeline"
+            kind="webhook"
+          />
+        ),
+        requiredPermissions: [PERMISSIONS.schedules.create],
+      },
+      {
+        path: RouteDefinitions.PipelineWebhookDetail,
+        element: (
+          <ScheduleDetailPage
+            entityType="pipeline"
+            kind="webhook"
+          />
+        ),
         requiredPermissions: [PERMISSIONS.schedules.details],
       },
 
@@ -529,7 +569,7 @@ const ProtectedRoutes = memo(() => {
               path={RouteDefinitions.Schedules}
               element={
                 <ProtectedRoute requiredPermissions={[PERMISSIONS.schedules.list]}>
-                  <SchedulesPage />
+                  <SchedulesPage key="cron" />
                 </ProtectedRoute>
               }
             />
@@ -546,6 +586,33 @@ const ProtectedRoutes = memo(() => {
               element={
                 <ProtectedRoute requiredPermissions={[PERMISSIONS.schedules.details]}>
                   <ScheduleDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path={RouteDefinitions.Webhooks}
+              element={
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.schedules.list]}>
+                  <SchedulesPage
+                    key="webhook"
+                    kind="webhook"
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path={RouteDefinitions.CreateWebhook}
+              element={
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.schedules.create]}>
+                  <CreateSchedulePage kind="webhook" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path={RouteDefinitions.WebhookDetail}
+              element={
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.schedules.details]}>
+                  <ScheduleDetailPage kind="webhook" />
                 </ProtectedRoute>
               }
             />

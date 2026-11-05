@@ -144,6 +144,14 @@ const AgentEditorWorkspace = memo(props => {
               versionId={values?.version_details?.id}
               versionName={values?.version_details?.name}
             />
+            <EntitySchedulesSection
+              kind="webhook"
+              entityType="agent"
+              entityId={applicationId}
+              entityName={initialValues?.name}
+              versionId={values?.version_details?.id}
+              versionName={values?.version_details?.name}
+            />
           </EditorLayout.ConfigColumn>
         }
       />

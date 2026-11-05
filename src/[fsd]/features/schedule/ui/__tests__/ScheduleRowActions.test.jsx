@@ -23,6 +23,10 @@ vi.mock('../ChangeOwnerDialog', () => ({
     ) : null,
 }));
 
+vi.mock('../RotateSecretDialog', () => ({
+  default: ({ webhook }) => <div data-testid="rotate-secret-dialog">{webhook.name}</div>,
+}));
+
 vi.mock('@/[fsd]/shared/lib/hooks/useDeleteConfirmationDisabled.hooks', () => ({
   useDeleteConfirmationDisabled: () => false,
 }));
@@ -301,5 +305,27 @@ describe('ScheduleRowActions', () => {
     });
     openMenu();
     expect(screen.queryByText('Run now')).not.toBeInTheDocument();
+  });
+
+  // #7405: webhook rows get Rotate secret from allowed_actions and never Run now
+  it('a webhook row offers Rotate secret and opens its dialog', () => {
+    renderMenu({ trigger_kind: 'webhook', allowed_actions: ['pause', 'rotate_secret', 'delete'] });
+    openMenu();
+    expect(screen.queryByText('Run now')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText('Rotate secret'));
+    expect(screen.getByTestId('rotate-secret-dialog')).toHaveTextContent('Nightly digest');
+  });
+
+  it("an admin on another owner's webhook gets no owner-only run hint", () => {
+    renderMenu({ trigger_kind: 'webhook', version_id: 3, allowed_actions: ['change_owner', 'pause'] });
+    openMenu();
+    expect(screen.queryByText('Run now')).not.toBeInTheDocument();
+    expect(screen.getByText('Change owner')).toBeInTheDocument();
+  });
+
+  it('a row without rotate_secret has no Rotate secret item', () => {
+    renderMenu({ trigger_kind: 'webhook', allowed_actions: ['pause'] });
+    openMenu();
+    expect(screen.queryByText('Rotate secret')).not.toBeInTheDocument();
   });
 });
