@@ -7,6 +7,38 @@ import { mdToApplicationJson, parseMdFrontmatter } from '@/[fsd]/entities/import
 import { actions as importWizardActions } from '@/[fsd]/entities/import-wizard/model/importWizard.slice';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 
+const SKILL_FILES_FOLDER = 'skills/';
+
+const listSkillVersions = parsed => (parsed?.skills || []).flatMap(skill => skill.versions);
+
+const embedSkillFileContents = (zip, version) =>
+  Promise.all(
+    version.files.map(async ({ path, sha256 }) => {
+      const memberName = `${version.files_folder}/${path}`;
+      const member = zip.file(memberName);
+
+      if (!member) throw new Error(`${memberName} is missing from the archive`);
+
+      return { path, sha256, content_base64: await member.async('base64') };
+    }),
+  );
+
+const loadSkillFiles = async (zip, parsedResults) => {
+  const versions = parsedResults.flatMap(listSkillVersions).filter(version => version.files_folder);
+
+  for (const version of versions) {
+    version.files = await embedSkillFileContents(zip, version);
+    delete version.files_folder;
+  }
+};
+
+const dropSkillFiles = parsed => {
+  for (const version of listSkillVersions(parsed)) {
+    delete version.files;
+    delete version.files_folder;
+  }
+};
+
 export const useImport = () => {
   const dispatch = useDispatch();
   const { toastError } = useToast();
@@ -34,6 +66,8 @@ export const useImport = () => {
         const requestBody = parseMdFile(contents, file.name);
 
         if (!requestBody) return null;
+
+        dropSkillFiles(requestBody);
 
         dispatch(
           importWizardActions.openImportWizard({
@@ -64,11 +98,14 @@ export const useImport = () => {
 
           const entryName = relativePath.toLowerCase();
 
+          if (entryName.startsWith(SKILL_FILES_FOLDER)) return;
           if (entryName.endsWith('.md'))
             parsePromises.push(zipEntry.async('string').then(content => parseMdFile(content, relativePath)));
         });
 
         const parsedResults = await Promise.all(parsePromises);
+
+        await loadSkillFiles(zip, parsedResults);
 
         // Merge all parsed results, grouping by application name
         const appsByName = new Map();
