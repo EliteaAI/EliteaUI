@@ -113,11 +113,11 @@ describe('ScheduleApprovalSection', () => {
     renderSection();
 
     expect(APPROVAL_RULE_ITEMS.map(item => item.infoLabel)).toEqual([
-      'More info about Ask me first',
-      'More info about Run automatically',
+      'More info about Pause and ask me',
+      'More info about Run without asking',
     ]);
-    expect(screen.getByLabelText('More info about Ask me first')).toBeInTheDocument();
-    expect(screen.getByLabelText('More info about Run automatically')).toBeInTheDocument();
+    expect(screen.getByLabelText('More info about Pause and ask me')).toBeInTheDocument();
+    expect(screen.getByLabelText('More info about Run without asking')).toBeInTheDocument();
   });
 
   it('opens the info text on hover', async () => {
