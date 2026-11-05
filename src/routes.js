@@ -2,6 +2,7 @@ import { DEV, VITE_BASE_URI } from '@/common/constants';
 
 // The one value the Schedules pages hang from: a move of the list moves the create and edit pages too
 const SCHEDULES = '/settings/schedules';
+const WEBHOOKS = '/settings/webhooks';
 
 const RouteDefinitions = {
   // ExampleShowcase: '/examples/showcase',
@@ -23,6 +24,8 @@ const RouteDefinitions = {
   ApplicationsEvaluateHistoryAnalytics: '/agents/:tab/:agentId/evaluate/history/analytics',
   ApplicationsCreateSchedule: '/agents/:tab/:agentId/schedules/create',
   ApplicationsScheduleDetail: '/agents/:tab/:agentId/schedules/:scheduleId',
+  ApplicationsCreateWebhook: '/agents/:tab/:agentId/webhooks/create',
+  ApplicationsWebhookDetail: '/agents/:tab/:agentId/webhooks/:scheduleId',
 
   Skills: '/skills',
   SkillsWithTab: '/skills/:tab',
@@ -48,9 +51,14 @@ const RouteDefinitions = {
   PipelineEvaluateHistoryAnalytics: '/pipelines/:tab/:agentId/evaluate/history/analytics',
   PipelineCreateSchedule: '/pipelines/:tab/:agentId/schedules/create',
   PipelineScheduleDetail: '/pipelines/:tab/:agentId/schedules/:scheduleId',
+  PipelineCreateWebhook: '/pipelines/:tab/:agentId/webhooks/create',
+  PipelineWebhookDetail: '/pipelines/:tab/:agentId/webhooks/:scheduleId',
   Schedules: SCHEDULES,
   CreateSchedule: `${SCHEDULES}/create`,
   ScheduleDetail: `${SCHEDULES}/:scheduleId`,
+  Webhooks: WEBHOOKS,
+  CreateWebhook: `${WEBHOOKS}/create`,
+  WebhookDetail: `${WEBHOOKS}/:scheduleId`,
 
   Credentials: '/credentials',
   CredentialsWithTab: '/credentials/:tab',
@@ -141,6 +149,12 @@ export const BLOCK_NAV_PATTERNS = [
   RouteDefinitions.ApplicationsScheduleDetail,
   RouteDefinitions.PipelineCreateSchedule,
   RouteDefinitions.PipelineScheduleDetail,
+  RouteDefinitions.CreateWebhook,
+  RouteDefinitions.WebhookDetail,
+  RouteDefinitions.ApplicationsCreateWebhook,
+  RouteDefinitions.ApplicationsWebhookDetail,
+  RouteDefinitions.PipelineCreateWebhook,
+  RouteDefinitions.PipelineWebhookDetail,
   RouteDefinitions.CreateToolkitType,
   RouteDefinitions.ToolkitDetail,
   RouteDefinitions.ToolkitIndex,
@@ -179,6 +193,7 @@ export const PathSessionMap = {
   [RouteDefinitions.Skills]: 'Skills',
   [RouteDefinitions.Pipelines]: 'Pipelines',
   [RouteDefinitions.Schedules]: 'Schedules',
+  [RouteDefinitions.Webhooks]: 'Webhooks',
   [RouteDefinitions.Toolkits]: 'Toolkits & Indexes',
   [RouteDefinitions.Apps]: 'Apps',
   [RouteDefinitions.Credentials]: 'Credentials',

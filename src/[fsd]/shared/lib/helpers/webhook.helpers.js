@@ -1,4 +1,4 @@
-import { GITLAB_SIGNING_KEY_MIN_BYTES, GITLAB_SIGNING_TOKEN_PREFIX } from '../constants/webhook.constants';
+import { GITLAB_SIGNING_KEY_MIN_BYTES, GITLAB_SIGNING_TOKEN_PREFIX } from '../constants/webhook.constants.js';
 
 /**
  * Check a pasted GitLab signing token. The backend is authoritative; this only catches the

@@ -4,8 +4,8 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 
 import { Box, Link } from '@mui/material';
 
+import { getListRoute } from '@/[fsd]/entities/schedule';
 import { Tooltip } from '@/[fsd]/shared/ui';
-import RouteDefinitions from '@/routes';
 
 // The name and description lines of the Agents and Pipelines list view (widgets/data-table DataTableNameCell)
 const ScheduleNameCell = memo(props => {
@@ -25,7 +25,7 @@ const ScheduleNameCell = memo(props => {
       >
         <Link
           component={RouterLink}
-          to={`${RouteDefinitions.Schedules}/${row.id}`}
+          to={`${getListRoute(row.trigger_kind)}/${row.id}`}
           state={{ returnTo: pathname + search }}
           color="inherit"
           underline="hover"

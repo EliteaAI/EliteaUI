@@ -72,7 +72,10 @@ vi.mock('@/[fsd]/widgets/entity-test-panel', () => ({
     EntityTestPanelControls: () => null,
   },
 }));
-vi.mock('@/[fsd]/widgets/entity-schedules-section', () => ({ EntitySchedulesSection: section('schedules') }));
+vi.mock('@/[fsd]/widgets/entity-schedules-section', () => ({
+  EntitySchedulesSection: props =>
+    (props.kind === 'webhook' ? section('webhooks') : section('schedules'))(props),
+}));
 vi.mock('@/common/constants', () => ({
   PERMISSIONS: { applications: { update: 'applications.update' } },
   ViewMode: { Owner: 'owner' },
@@ -146,7 +149,7 @@ describe('AgentEditorWorkspace', () => {
   it('lays out the right panel sections in order', () => {
     renderWorkspace();
 
-    expect(childTestIds('agent-config-panels-right')).toEqual(['tools', 'skills', 'schedules']);
+    expect(childTestIds('agent-config-panels-right')).toEqual(['tools', 'skills', 'schedules', 'webhooks']);
   });
 
   it('collapses only Advanced, Editor Notes and Information by default', () => {

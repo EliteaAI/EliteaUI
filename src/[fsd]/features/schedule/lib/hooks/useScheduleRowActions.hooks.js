@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 
 import {
+  isWebhookRow,
   useDeleteScheduleMutation,
   useLazyExportSchedulesQuery,
   usePauseScheduleMutation,
@@ -30,29 +31,32 @@ export const useScheduleRowActions = row => {
       try {
         await call.unwrap();
         toastSuccess(successText);
+        return true;
       } catch (error) {
         toastError(buildErrorMessage(error));
+        return false;
       }
     },
     [toastError, toastSuccess],
   );
 
   const scheduleId = row.id;
+  const noun = isWebhookRow(row) ? 'Webhook' : 'Schedule';
   const onRun = useCallback(
     () => perform(runSchedule({ projectId, scheduleId }), 'Run started'),
     [perform, runSchedule, projectId, scheduleId],
   );
   const onPause = useCallback(
-    () => perform(pauseSchedule({ projectId, scheduleId }), 'Schedule paused'),
-    [perform, pauseSchedule, projectId, scheduleId],
+    () => perform(pauseSchedule({ projectId, scheduleId }), `${noun} paused`),
+    [perform, pauseSchedule, projectId, scheduleId, noun],
   );
   const onResume = useCallback(
-    () => perform(resumeSchedule({ projectId, scheduleId }), 'Schedule resumed'),
-    [perform, resumeSchedule, projectId, scheduleId],
+    () => perform(resumeSchedule({ projectId, scheduleId }), `${noun} resumed`),
+    [perform, resumeSchedule, projectId, scheduleId, noun],
   );
   const onDelete = useCallback(
-    () => perform(deleteSchedule({ projectId, scheduleId }), `Schedule "${row.name}" deleted`),
-    [perform, deleteSchedule, projectId, scheduleId, row.name],
+    () => perform(deleteSchedule({ projectId, scheduleId }), `${noun} "${row.name}" deleted`),
+    [perform, deleteSchedule, projectId, scheduleId, row.name, noun],
   );
 
   // One schedule in the list export format; no onExport means no Export item
@@ -67,7 +71,8 @@ export const useScheduleRowActions = row => {
     onPause,
     onResume,
     onDelete,
-    onExport: checkPermission(PERMISSIONS.schedules.export) ? onExport : undefined,
+    // The export file holds schedules only; webhooks are never exported
+    onExport: checkPermission(PERMISSIONS.schedules.export) && !isWebhookRow(row) ? onExport : undefined,
     isBusy:
       runState.isLoading ||
       pauseState.isLoading ||

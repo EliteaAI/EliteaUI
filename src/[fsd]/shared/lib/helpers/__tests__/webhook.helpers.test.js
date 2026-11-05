@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { GITLAB_SIGNING_KEY_MIN_BYTES } from '../../constants/webhook.constants';
-import { getGitlabSigningTokenError } from '../webhook.helpers';
+import { GITLAB_SIGNING_KEY_MIN_BYTES } from '../../constants/webhook.constants.js';
+import { getGitlabSigningTokenError } from '../webhook.helpers.js';
 
 // GitLab shows the signing token exactly once, so the whole value is hand-copied. These checks
 // catch the two things that go wrong when copying by hand: grabbing the wrong field, and

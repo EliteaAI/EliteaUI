@@ -442,4 +442,42 @@ describe('EntitySchedulesSection', () => {
       );
     });
   });
+
+  // #7405: the same section, once more after Schedules, for webhook rows
+  describe('Webhooks section', () => {
+    it('lists webhook rows of the editor version only', () => {
+      renderSection({ kind: 'webhook', versionId: 31 });
+      expect(mocks.entitySchedules).toHaveBeenLastCalledWith(
+        expect.objectContaining({ entityId: 12, versionId: 31, triggerKind: 'webhook' }),
+      );
+    });
+
+    it('the Schedules section asks for no trigger kind, so it never lists webhooks', () => {
+      renderSection();
+      expect(mocks.entitySchedules.mock.calls.at(-1)[0].triggerKind).toBeUndefined();
+    });
+
+    it('has its own anchor, "+ Webhook" and the "Open all in Webhooks" link', () => {
+      renderSection({ kind: 'webhook' });
+      expect(document.getElementById('entity-webhooks-section')).not.toBeNull();
+      expect(screen.getByText('Webhooks')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-webhooks-section-add')).toHaveTextContent(/^Webhook$/);
+      expect(screen.getByTestId('agent-webhooks-section-open-all')).toHaveAttribute(
+        'href',
+        '/settings/webhooks?entityType=agent&entityId=12',
+      );
+    });
+
+    it('"+ Webhook" opens the nested webhook form', () => {
+      renderSection({ kind: 'webhook' });
+      fireEvent.click(screen.getByTestId('agent-webhooks-section-add'));
+      expect(mocks.navigate.mock.calls.at(-1)[0].pathname).toBe('/agents/my/12/webhooks/create');
+    });
+
+    it('says no webhooks run the version yet', () => {
+      mocks.entitySchedules.mockReturnValue(listOf([]));
+      renderSection({ kind: 'webhook' });
+      expect(screen.getByText('No webhooks run the base version yet.')).toBeInTheDocument();
+    });
+  });
 });

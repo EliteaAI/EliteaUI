@@ -12,6 +12,7 @@ import CoinIcon from '@/assets/coin-icon.svg?react';
 import CompassIcon from '@/assets/compass.svg?react';
 import ConfigurationIcon from '@/assets/configuration-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
+import WebhookIcon from '@/assets/link-icon.svg?react';
 import ModelIcon from '@/assets/model-icon.svg?react';
 import EnvironmentIcon from '@/assets/new-environment-icon.svg?react';
 import PersonalizationIcon from '@/assets/personalization-icon.svg?react';
@@ -32,6 +33,7 @@ const ICON_COMPONENTS = {
   'project-general': BriefcaseIcon,
   'project-context': CompassIcon,
   schedules: ClockIcon,
+  webhooks: WebhookIcon,
   secrets: Lock,
   users: UsersIcon,
   analytics: AnalyticsIcon,
@@ -70,6 +72,9 @@ const SettingsDrawer = memo(props => {
         return true;
       }
       if (tabId === 'schedules' && location.pathname.startsWith(RouteDefinitions.Schedules)) {
+        return true;
+      }
+      if (tabId === 'webhooks' && location.pathname.startsWith(RouteDefinitions.Webhooks)) {
         return true;
       }
       return lastSegment === tabId;

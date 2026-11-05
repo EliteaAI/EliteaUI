@@ -32,6 +32,7 @@ export * as ModalHelpers from './modal.helpers.js';
 export { getFilenameFromContentDisposition } from './download.helpers';
 export * as ParseYamlToMermaidHelpers from './parseYamlToMermaid.helpers.js';
 export * as ScheduleHelpers from './schedule.helpers';
+export * as WebhookHelpers from './webhook.helpers.js';
 export * as CronBuilderHelpers from './cronBuilder.helpers';
 export * as BreadcrumbHelpers from './breadcrumb.helpers';
 export * as RtkCacheHelpers from './rtkCache.helpers';

@@ -9,10 +9,10 @@ const PAGE_SIZE = 20;
 const MAX_ROWS = 100;
 
 // The schedules of one agent or pipeline version; the list API keeps only the rows the user may see
-export const useEntitySchedules = ({ entityType, entityId, versionId, skip = false }) => {
+export const useEntitySchedules = ({ entityType, entityId, versionId, triggerKind, skip = false }) => {
   const projectId = useSelectedProjectId();
   const [pages, setPages] = useState(1);
-  const listKey = `${entityId}:${versionId}`;
+  const listKey = `${entityId}:${versionId}:${triggerKind}`;
   const [pagesKey, setPagesKey] = useState(listKey);
   // Another agent, pipeline or version starts at the first 20 rows, before any request
   if (pagesKey !== listKey) {
@@ -22,7 +22,7 @@ export const useEntitySchedules = ({ entityType, entityId, versionId, skip = fal
   const pageSize = Math.min(pages * PAGE_SIZE, MAX_ROWS);
   // data keeps the shown rows while "Show more" loads the bigger page
   const { data, isError, error, isFetching, refetch } = useGetScheduleListQuery(
-    { projectId, entityType, entityId, versionId, pageSize },
+    { projectId, entityType, entityId, versionId, triggerKind, pageSize },
     { skip: skip || !projectId || !entityId },
   );
   const rows = data?.rows ?? [];

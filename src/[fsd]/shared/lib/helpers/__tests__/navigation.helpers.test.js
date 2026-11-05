@@ -9,7 +9,7 @@ import {
 } from '../navigation.helpers';
 
 vi.mock('@/routes', () => ({
-  default: { Schedules: '/settings/schedules' },
+  default: { Schedules: '/settings/schedules', Webhooks: '/settings/webhooks' },
   getBasename: () => '/app',
 }));
 
@@ -73,5 +73,6 @@ describe('stripProjectSegment', () => {
 describe('getListRouteByPageType', () => {
   it('maps the ScheduleDetails page type to the schedules list', () => {
     expect(getListRouteByPageType('ScheduleDetails')).toBe('/settings/schedules');
+    expect(getListRouteByPageType('WebhookDetails')).toBe('/settings/webhooks');
   });
 });

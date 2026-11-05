@@ -4,7 +4,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Chip } from '@mui/material';
 
-import { useGetScheduleListQuery } from '@/[fsd]/entities/schedule';
+import { TRIGGER_KIND, useGetScheduleListQuery } from '@/[fsd]/entities/schedule';
 import { getPollingInterval } from '@/[fsd]/features/schedule';
 import { ScheduleImportExportActions } from '@/[fsd]/features/schedule-import-export';
 import { DrawerPage, DrawerPageBody, DrawerPageHeader } from '@/[fsd]/features/settings';
@@ -17,9 +17,31 @@ import RouteDefinitions from '@/routes';
 
 const ENTITY_TYPE_LABELS = { agent: 'Agent', pipeline: 'Pipeline' };
 
-const NO_FILTERS = { entityType: '', status: '', enabled: '', search: '', ownerIds: [] };
+const NO_FILTERS = { entityType: '', status: '', enabled: '', search: '', ownerIds: [], webhookType: '' };
 
-const SchedulesPage = memo(() => {
+// One page for both row kinds; a webhook is a schedule row with trigger_kind 'webhook'
+const KINDS = {
+  [TRIGGER_KIND.cron]: {
+    title: 'Schedules',
+    noun: 'schedule',
+    testId: 'schedules',
+    createRoute: RouteDefinitions.CreateSchedule,
+    // The API default: the next run first
+    sort: { field: 'next_run', direction: SortOrderOptions.ASC },
+  },
+  [TRIGGER_KIND.webhook]: {
+    title: 'Webhooks',
+    noun: 'webhook',
+    testId: 'webhooks',
+    createRoute: RouteDefinitions.CreateWebhook,
+    sort: { field: 'last_run', direction: SortOrderOptions.DESC },
+  },
+};
+
+const SchedulesPage = memo(props => {
+  const { kind = TRIGGER_KIND.cron } = props;
+  const config = KINDS[kind];
+  const isWebhook = kind === TRIGGER_KIND.webhook;
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
   const { checkPermission } = useCheckPermission();
@@ -30,8 +52,7 @@ const SchedulesPage = memo(() => {
   const [page, setPage] = useState(0);
   const [pageProjectId, setPageProjectId] = useState(projectId);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
-  // The API default: the next run first
-  const [sortConfig, setSortConfig] = useState({ field: 'next_run', direction: SortOrderOptions.ASC });
+  const [sortConfig, setSortConfig] = useState(config.sort);
   // "Open all in Schedules" of an editor: the one filter the page keeps in its URL
   const [searchParams, setSearchParams] = useSearchParams();
   const urlEntityType = searchParams.get('entityType');
@@ -58,6 +79,9 @@ const SchedulesPage = memo(() => {
     ...filters,
     ...urlEntity,
     ownerIds: isAdmin ? filters.ownerIds : undefined,
+    // Unset on the Schedules page: the server lists cron rows by default
+    triggerKind: isWebhook ? TRIGGER_KIND.webhook : undefined,
+    webhookType: isWebhook ? filters.webhookType : undefined,
   };
   const { currentData, isFetching, isError, error } = useGetScheduleListQuery(queryArgs, {
     skip: !projectId,
@@ -91,6 +115,7 @@ const SchedulesPage = memo(() => {
     filters.status ||
     filters.enabled !== '' ||
     filters.search ||
+    filters.webhookType ||
     filters.ownerIds.length,
   );
 
@@ -131,18 +156,19 @@ const SchedulesPage = memo(() => {
     setPage(0);
   }, []);
 
-  const onAdd = useCallback(() => navigate(RouteDefinitions.CreateSchedule), [navigate]);
+  const onAdd = useCallback(() => navigate(config.createRoute), [navigate, config.createRoute]);
 
   // The Settings page header of Secrets: title, the import and export actions, the round + button
   return (
     <DrawerPage>
       <DrawerPageHeader
-        title="Schedules"
-        titleTestId="schedules-page-header"
-        extraContent={<ScheduleImportExportActions projectId={projectId} />}
+        title={config.title}
+        titleTestId={`${config.testId}-page-header`}
+        // The export file holds schedules only, so the Webhooks page has + alone
+        extraContent={isWebhook ? undefined : <ScheduleImportExportActions projectId={projectId} />}
         showAddButton={canCreate}
         slotProps={{
-          addButton: { onAdd, tooltip: 'Create new schedule', testId: 'schedules-add-button' },
+          addButton: { onAdd, tooltip: `Create new ${config.noun}`, testId: `${config.testId}-add-button` },
         }}
       />
       <DrawerPageBody>
@@ -156,7 +182,10 @@ const SchedulesPage = memo(() => {
           onChangePageSize={onChangePageSize}
           sortConfig={sortConfig}
           onSort={onSort}
-          emptyMessage={hasFilters || urlEntity ? 'No schedules match the filters' : 'No schedules'}
+          kind={kind}
+          emptyMessage={
+            hasFilters || urlEntity ? `No ${config.noun}s match the filters` : `No ${config.noun}s`
+          }
           toolbar={
             <>
               <SchedulesFilters
@@ -168,10 +197,11 @@ const SchedulesPage = memo(() => {
                 isAdmin={isAdmin}
                 // The chip sets the type, so a Type select could contradict the list
                 hideEntityType={Boolean(urlEntity)}
+                showWebhookType={isWebhook}
               />
               {urlEntity && (
                 <Chip
-                  data-testid="schedules-entity-chip"
+                  data-testid={`${config.testId}-entity-chip`}
                   label={`${ENTITY_TYPE_LABELS[urlEntityType] ?? urlEntityType}: ${locationState?.entityName ?? currentData?.rows?.[0]?.entity_name ?? urlEntityId}`}
                   onDelete={onClearUrlEntity}
                 />

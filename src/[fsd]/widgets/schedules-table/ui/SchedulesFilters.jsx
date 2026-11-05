@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Typography, debounce } from '@mui/material';
 
+import { WebhookConstants } from '@/[fsd]/shared/lib/constants';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 
@@ -21,11 +22,20 @@ const STATUS_OPTIONS = [
   { label: 'Blocked', value: 'blocked' },
   { label: 'Awaiting approval', value: 'waiting_for_approval' },
 ];
+const WEBHOOK_TYPE_OPTIONS = [ALL, ...WebhookConstants.WEBHOOK_TYPE_OPTIONS];
 // The select keeps string values; the list API takes a boolean
 const ENABLED_OPTIONS = [ALL, { label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }];
 
 const SchedulesFilters = memo(props => {
-  const { value, onChange, onClear, hasFilters, isAdmin, hideEntityType = false } = props;
+  const {
+    value,
+    onChange,
+    onClear,
+    hasFilters,
+    isAdmin,
+    hideEntityType = false,
+    showWebhookType = false,
+  } = props;
   const styles = schedulesFiltersStyles();
   const [searchText, setSearchText] = useState(value.search);
   // The value only carries ids; the Owner filter needs the user objects for its chips
@@ -54,6 +64,10 @@ const SchedulesFilters = memo(props => {
 
   const handleEntityType = useCallback(entityType => onChange({ ...value, entityType }), [onChange, value]);
   const handleStatus = useCallback(status => onChange({ ...value, status }), [onChange, value]);
+  const handleWebhookType = useCallback(
+    webhookType => onChange({ ...value, webhookType }),
+    [onChange, value],
+  );
   const handleEnabled = useCallback(
     enabled => onChange({ ...value, enabled: enabled === '' ? '' : enabled === 'true' }),
     [onChange, value],
@@ -79,7 +93,7 @@ const SchedulesFilters = memo(props => {
     <Box
       sx={styles.bar}
       role="group"
-      aria-label="Schedule filters"
+      aria-label={showWebhookType ? 'Webhook filters' : 'Schedule filters'}
     >
       <Typography
         variant="bodyMedium"
@@ -96,7 +110,7 @@ const SchedulesFilters = memo(props => {
           placeholder="Search"
           autoFocus={false}
           inputRef={searchInputRef}
-          inputProps={{ 'aria-label': 'Search schedules' }}
+          inputProps={{ 'aria-label': showWebhookType ? 'Search webhooks' : 'Search schedules' }}
         />
       </Box>
       {!hideEntityType && (
@@ -107,6 +121,16 @@ const SchedulesFilters = memo(props => {
           options={TYPE_OPTIONS}
           value={value.entityType}
           onValueChange={handleEntityType}
+        />
+      )}
+      {showWebhookType && (
+        <FilterSelect
+          id="webhook-type"
+          label="Webhook type"
+          width="9.5rem"
+          options={WEBHOOK_TYPE_OPTIONS}
+          value={value.webhookType ?? ''}
+          onValueChange={handleWebhookType}
         />
       )}
       <FilterSelect

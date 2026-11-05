@@ -3,7 +3,7 @@ import { compareRunTimestamp } from '@/[fsd]/entities/run-history';
 import { describeRunDuration, formatRunCost } from './scheduleRuns.helpers';
 
 // The stored trigger `cron` reads "Scheduled" everywhere the user sees it
-export const TRIGGER_LABELS = { cron: 'Scheduled', manual: 'Manual', test: 'Test' };
+export const TRIGGER_LABELS = { cron: 'Scheduled', manual: 'Manual', test: 'Test', webhook: 'Webhook' };
 
 export const toTriggerLabel = trigger => TRIGGER_LABELS[trigger] ?? trigger;
 

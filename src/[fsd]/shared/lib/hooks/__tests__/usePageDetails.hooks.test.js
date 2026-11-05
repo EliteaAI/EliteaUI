@@ -26,4 +26,16 @@ describe('usePageDetails schedule routes', () => {
   ])('reports ScheduleDetails for %s', path => {
     expect(pageTypeAt(path)).toBe('ScheduleDetails');
   });
+
+  // #7405: a project switch or Back from a webhook page returns to Webhooks, not Schedules
+  it.each([
+    '/settings/webhooks/create',
+    '/settings/webhooks/5',
+    '/agents/all/3/webhooks/create',
+    '/agents/all/3/webhooks/7',
+    '/pipelines/all/3/webhooks/create',
+    '/pipelines/all/3/webhooks/7',
+  ])('reports WebhookDetails for %s', path => {
+    expect(pageTypeAt(path)).toBe('WebhookDetails');
+  });
 });

@@ -33,6 +33,7 @@ const VALID_TAB_IDS = [
   'project-general',
   'project-context',
   'schedules',
+  'webhooks',
   'tokens',
   'integrations',
   'secrets',
@@ -75,6 +76,11 @@ const SETTINGS_TABS_CONFIG = [
       {
         id: 'schedules',
         label: 'Schedules',
+        permission: PERMISSIONS.schedules.list,
+      },
+      {
+        id: 'webhooks',
+        label: 'Webhooks',
         permission: PERMISSIONS.schedules.list,
       },
       {

@@ -11,14 +11,15 @@ import {
   GITLAB_AUTH_METHODS,
   GITLAB_AUTH_METHOD_DESCRIPTIONS,
   GITLAB_AUTH_METHOD_OPTIONS,
+  GITLAB_SIGNING_DESCRIPTION,
   WEBHOOK_TYPES,
-} from '@/[fsd]/features/pipelines/flow-editor/lib/constants/webhook.constants';
-import { getGitlabSigningTokenError } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/webhook.helpers';
+  WEBHOOK_TYPE_DESCRIPTIONS,
+} from '@/[fsd]/shared/lib/constants/webhook.constants';
+import { getGitlabSigningTokenError } from '@/[fsd]/shared/lib/helpers/webhook.helpers';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Checkbox, Modal } from '@/[fsd]/shared/ui';
+import GitlabSigningTokenField from '@/[fsd]/shared/ui/webhook/GitlabSigningTokenField';
 import FormInput from '@/components/FormInput';
-
-import GitlabSigningTokenField from './GitlabSigningTokenField';
 
 const WEBHOOK_TYPE_OPTIONS = [
   { label: 'GitHub', value: WEBHOOK_TYPES.github },
@@ -41,15 +42,6 @@ const generateSecretToken = () => {
     .replace(/\//g, '_')
     .replace(/=/g, '');
 };
-
-const WEBHOOK_TYPE_DESCRIPTIONS = {
-  github: 'Uses x-hub-signature-256 header with HMAC-SHA256 signature',
-  gitlab: 'Uses x-gitlab-token header with secret token',
-  custom: 'Uses X-Webhook-Token header with secret token',
-};
-
-const GITLAB_SIGNING_DESCRIPTION =
-  'GitLab signs every delivery. Elitea verifies the webhook-signature header and rejects deliveries more than 5 minutes old.';
 
 const buildExampleRequest = ({
   webhookType,

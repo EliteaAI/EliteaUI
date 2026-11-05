@@ -29,7 +29,7 @@ vi.mock('react-router-dom', () => ({
 }));
 vi.mock('@/[fsd]/entities/schedule', async importOriginal => ({
   ...(await importOriginal()),
-  useCreateScheduleMutation: () => [mocks.createSchedule],
+  useCreateScheduleMutation: () => [mocks.createSchedule, { reset: vi.fn() }],
   useStartDraftTestRunMutation: () => [mocks.startDraftTestRun],
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 5, useViewMode: () => 'owner' }));
@@ -47,6 +47,15 @@ vi.mock('@/[fsd]/features/schedule', async importOriginal => {
   const { toCreateBody } = await import('@/[fsd]/features/schedule/lib/helpers');
   return {
     ...(await importOriginal()),
+    WebhookSettingsSection: props => <div data-testid="webhook-settings">{props.values.webhook_type}</div>,
+    WebhookSecretDialog: props => (
+      <button
+        data-testid="secret-dialog"
+        onClick={props.onClose}
+      >
+        {`${props.webhook.webhook_url} ${props.secret ?? ''}`}
+      </button>
+    ),
     ScheduleDraftRuns: props => {
       mocks.draftRunsProps = props;
       return null;
@@ -61,7 +70,7 @@ vi.mock('@/[fsd]/features/schedule', async importOriginal => {
             setFieldValue: vi.fn(),
             fieldError: name => mocks.fieldErrors[name] ?? '',
           })}
-          {props.sidePanel({ values: initialValues, onTestRun: 'test-run', testRunPending: false })}
+          {props.sidePanel?.({ values: initialValues, onTestRun: 'test-run', testRunPending: false })}
           <button onClick={() => props.onCancel(initialValues)}>Cancel</button>
           <button onClick={() => props.onDraftTestRun({ name: 'Draft' })}>Test run</button>
           <button onClick={async () => onSaved(await onSubmit(toCreateBody(initialValues)))}>Save</button>
@@ -189,5 +198,34 @@ describe('CreateSchedulePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
     expect(mocks.navigate).toHaveBeenCalledWith('/agents/3');
+  });
+
+  // #7405: a new webhook shows its URL and secret once, and only then leaves the page
+  describe('webhook', () => {
+    const CREATED = { id: 9, webhook_url: '/api/v2/elitea_core/hooks/prompt_lib/5/abc', secret: 's3cret' };
+
+    it('creates a webhook body without cron fields and with no Test Run panel', async () => {
+      mocks.createSchedule.mockReturnValue({ unwrap: () => Promise.resolve(CREATED) });
+      render(<CreateSchedulePage kind="webhook" />);
+      expect(screen.getByTestId('webhook-settings')).toHaveTextContent('github');
+      expect(mocks.formProps.sidePanel).toBeUndefined();
+      expect(mocks.formProps.settingsTitle).toBe('WEBHOOK SETTINGS');
+      fireEvent.click(screen.getByText('Save'));
+      await waitFor(() => expect(mocks.createSchedule).toHaveBeenCalled());
+      const body = mocks.createSchedule.mock.calls[0][0];
+      expect(body).toMatchObject({ projectId: 5, trigger_kind: 'webhook', webhook_type: 'github' });
+      expect(body).not.toHaveProperty('cron');
+    });
+
+    it('shows the secret dialog after Save and returns only when it closes', async () => {
+      mocks.createSchedule.mockReturnValue({ unwrap: () => Promise.resolve(CREATED) });
+      render(<CreateSchedulePage kind="webhook" />);
+      fireEvent.click(screen.getByText('Save'));
+      const dialog = await screen.findByTestId('secret-dialog');
+      expect(dialog).toHaveTextContent('/hooks/prompt_lib/5/abc s3cret');
+      expect(mocks.navigate).not.toHaveBeenCalled();
+      fireEvent.click(dialog);
+      expect(mocks.navigate).toHaveBeenCalledWith('/agents/3');
+    });
   });
 });

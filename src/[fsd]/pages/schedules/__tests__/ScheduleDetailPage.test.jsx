@@ -52,6 +52,7 @@ vi.mock('@/[fsd]/entities/schedule', async importOriginal => ({
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: () => mocks.projectId,
   useViewMode: () => 'owner',
+  useToast: () => ({ toastError: vi.fn(), toastSuccess: vi.fn(), toastInfo: vi.fn() }),
 }));
 vi.mock('@/[fsd]/shared/lib/helpers', async importOriginal => {
   const actual = await importOriginal();

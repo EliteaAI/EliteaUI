@@ -26,6 +26,10 @@ vi.mock('@/[fsd]/shared/lib/helpers/schedule.helpers', async importOriginal => (
   getBrowserTimezone: () => 'Europe/Kyiv',
   getCronSummaryInBrowserTimezone: (cron, timezone) => `Rule of ${cron} from ${timezone}`,
 }));
+// The URL Copy of a webhook card toasts; the test renders no toast provider
+vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
+  useToast: () => ({ toastInfo: vi.fn(), toastError: vi.fn() }),
+}));
 vi.mock('@/[fsd]/shared/lib/hooks/useDeleteConfirmationDisabled.hooks', () => ({
   useDeleteConfirmationDisabled: () => false,
 }));
@@ -352,6 +356,42 @@ describe('EntityScheduleCard', () => {
       openMenu();
 
       expect(menuItems()).toEqual(['Run now', 'Delete']);
+    });
+  });
+
+  // #7405: a webhook card has its sender and URL instead of the cron rule and the next run
+  describe('webhook card', () => {
+    const WEBHOOK = {
+      trigger_kind: 'webhook',
+      webhook_type: 'gitlab',
+      gitlab_auth_method: 'secret_token',
+      webhook_url: '/api/v2/elitea_core/hooks/prompt_lib/5/abc',
+      cron: null,
+      timezone: null,
+      next_run: null,
+      allowed_actions: ['edit', 'pause', 'rotate_secret', 'delete'],
+    };
+    const webhookCard = () => screen.getByTestId('agent-webhook-card-7');
+
+    it('shows the name, the type, the URL and the last delivery, and no rule or next run', () => {
+      renderCard(WEBHOOK);
+      expect(screen.getByTestId('agent-webhook-card-title-7')).toHaveTextContent('Daily digest · GitLab');
+      expect(screen.getByTestId('agent-webhook-card-url-7-copy')).toBeInTheDocument();
+      expect(webhookCard()).toHaveTextContent('/hooks/prompt_lib/5/abc');
+      expect(webhookCard()).toHaveTextContent(/Last delivery:\s*19.10.2026/);
+      expect(webhookCard()).not.toHaveTextContent('Next run');
+    });
+
+    it('says when no delivery came yet', () => {
+      renderCard({ ...WEBHOOK, last_run: null, last_run_status: null });
+      expect(webhookCard()).toHaveTextContent('No deliveries yet');
+    });
+
+    it('names the end of the rotation window while the old secret is still accepted', () => {
+      renderCard({ ...WEBHOOK, previous_secret_until: new Date(Date.now() + 3_600_000).toISOString() });
+      expect(screen.getByTestId('agent-webhook-card-rotating-7')).toHaveTextContent(
+        'previous secret stays valid until',
+      );
     });
   });
 });

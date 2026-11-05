@@ -4,19 +4,19 @@ import { useNavigate } from 'react-router-dom';
 
 import { Box, Tooltip } from '@mui/material';
 
-import { buildScheduleRunsLink } from '@/[fsd]/entities/schedule';
+import { TRIGGER_KIND, buildScheduleRunsLink, getListRoute } from '@/[fsd]/entities/schedule';
 import { ScheduleRowActions, useScheduleRowActions } from '@/[fsd]/features/schedule';
-import RouteDefinitions from '@/routes';
 
 const ScheduleActionsCell = memo(props => {
   const { row } = props;
   const actions = useScheduleRowActions(row);
   const navigate = useNavigate();
-  const onEdit = useCallback(() => navigate(`${RouteDefinitions.Schedules}/${row.id}`), [navigate, row.id]);
+  const kind = row.trigger_kind ?? TRIGGER_KIND.cron;
+  const onEdit = useCallback(() => navigate(`${getListRoute(kind)}/${row.id}`), [navigate, row.id, kind]);
   // The same edit page with its Runs section open, as the card menu of the editors does
   const onOpenRunHistory = useCallback(
-    () => navigate(buildScheduleRunsLink({ scheduleId: row.id })),
-    [navigate, row.id],
+    () => navigate(buildScheduleRunsLink({ scheduleId: row.id, kind })),
+    [navigate, row.id, kind],
   );
 
   return (

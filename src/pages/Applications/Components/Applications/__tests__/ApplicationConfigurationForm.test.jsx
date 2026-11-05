@@ -22,7 +22,10 @@ vi.mock('@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationEdito
 }));
 vi.mock('@/[fsd]/features/skill/ui', () => ({ ApplicationSkills: stub('skills') }));
 vi.mock('@/[fsd]/widgets/entity-schedules-section', () => ({
-  EntitySchedulesSection: ({ isChatView }) => <div data-testid="schedules">{String(isChatView)}</div>,
+  // The editors render it twice: Schedules, then Webhooks (#7405)
+  EntitySchedulesSection: ({ isChatView, kind }) => (
+    <div data-testid={kind === 'webhook' ? 'webhooks' : 'schedules'}>{String(isChatView)}</div>
+  ),
 }));
 vi.mock('@/components/ApplicationVariables.jsx', () => ({ default: stub('variables') }));
 vi.mock('@/components/ConversationStarters', () => ({ default: stub('starters') }));
@@ -34,7 +37,8 @@ vi.mock('@/pages/Applications/Components/Applications/ApplicationInformation', (
   default: stub('information'),
 }));
 
-const order = () => screen.getAllByTestId(/^(starters|schedules|advanced)$/).map(node => node.dataset.testid);
+const order = () =>
+  screen.getAllByTestId(/^(starters|schedules|webhooks|advanced)$/).map(node => node.dataset.testid);
 
 describe('ApplicationConfigurationForm section order', () => {
   afterEach(cleanup);
@@ -46,7 +50,7 @@ describe('ApplicationConfigurationForm section order', () => {
         applicationId={1}
       />,
     );
-    expect(order()).toEqual(['starters', 'schedules', 'advanced']);
+    expect(order()).toEqual(['starters', 'schedules', 'webhooks', 'advanced']);
   });
 
   it('passes isChatView so the chat shows no Schedules section', () => {
@@ -58,5 +62,6 @@ describe('ApplicationConfigurationForm section order', () => {
       />,
     );
     expect(screen.getByTestId('schedules')).toHaveTextContent('true');
+    expect(screen.getByTestId('webhooks')).toHaveTextContent('true');
   });
 });

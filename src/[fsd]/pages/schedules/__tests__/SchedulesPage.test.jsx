@@ -23,7 +23,10 @@ vi.mock('react-router-dom', () => ({
   useSearchParams: () => [mocks.searchParams, mocks.setSearchParams],
 }));
 
-vi.mock('@/[fsd]/entities/schedule', () => ({ useGetScheduleListQuery: mocks.useGetScheduleListQuery }));
+vi.mock('@/[fsd]/entities/schedule', () => ({
+  TRIGGER_KIND: { cron: 'cron', webhook: 'webhook' },
+  useGetScheduleListQuery: mocks.useGetScheduleListQuery,
+}));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: mocks.useSelectedProjectId,
   useToast: () => ({ toastError: mocks.toastError }),
@@ -54,13 +57,15 @@ vi.mock('@/[fsd]/features/settings', () => ({
   ),
 }));
 vi.mock('@/[fsd]/widgets/schedules-table', () => ({
-  SchedulesFilters: ({ value, onChange, onClear, hasFilters, isAdmin, hideEntityType }) => (
+  SchedulesFilters: ({ value, onChange, onClear, hasFilters, isAdmin, hideEntityType, showWebhookType }) => (
     <div
       data-testid="filters"
       data-admin={String(isAdmin)}
       data-has-filters={String(hasFilters)}
       data-hide-entity-type={String(Boolean(hideEntityType))}
+      data-webhook-type={String(Boolean(showWebhookType))}
     >
+      <button onClick={() => onChange({ ...value, webhookType: 'gitlab' })}>webhook type</button>
       <button onClick={() => onChange({ ...value, search: 'nightly' })}>search</button>
       <button onClick={() => onChange({ ...value, status: 'failed' })}>status</button>
       <button onClick={() => onChange({ ...value, ownerIds: [3, 4] })}>owners</button>
@@ -69,6 +74,7 @@ vi.mock('@/[fsd]/widgets/schedules-table', () => ({
     </div>
   ),
   SchedulesTable: ({
+    kind,
     toolbar,
     emptyMessage,
     rows,
@@ -84,6 +90,7 @@ vi.mock('@/[fsd]/widgets/schedules-table', () => ({
     <div>
       {toolbar}
       <span data-testid="empty-message">{emptyMessage}</span>
+      <span data-testid="kind">{kind}</span>
       <span data-testid="sort">{`${sortConfig.field} ${sortConfig.direction}`}</span>
       <button onClick={() => onSort('name')}>sort name</button>
       <span data-testid="loading">{String(isLoading)}</span>
@@ -402,5 +409,57 @@ describe('SchedulesPage', () => {
 
     const [update] = mocks.setSearchParams.mock.calls.at(-1);
     expect(update(new URLSearchParams('entityType=agent&entityId=12&tab=x')).toString()).toBe('tab=x');
+  });
+
+  it('the Schedules page sends no trigger kind, so the server lists cron rows only (#7405)', () => {
+    render(<SchedulesPage />);
+    expect(lastArgs().triggerKind).toBeUndefined();
+    expect(lastArgs().webhookType).toBeUndefined();
+    expect(screen.getByTestId('filters')).toHaveAttribute('data-webhook-type', 'false');
+  });
+});
+
+describe('Webhooks page (#7405)', () => {
+  beforeEach(() => {
+    mocks.useSelectedProjectId.mockReturnValue(5);
+    mocks.checkPermission.mockReturnValue(true);
+    mocks.useGetScheduleListQuery.mockReturnValue({
+      currentData: { total: 1, rows: [{ id: 9, name: 'On push', trigger_kind: 'webhook' }] },
+      isError: false,
+    });
+  });
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+    mocks.searchParams = new URLSearchParams();
+  });
+
+  it('lists webhook rows, newest delivery first', () => {
+    render(<SchedulesPage kind="webhook" />);
+    expect(lastArgs()).toMatchObject({ triggerKind: 'webhook', sortBy: 'last_run', sortOrder: 'desc' });
+    expect(screen.getByTestId('webhooks-page-header')).toHaveTextContent('Webhooks');
+    expect(screen.getByTestId('kind')).toHaveTextContent('webhook');
+  });
+
+  it('has the + button only: no import or export', () => {
+    render(<SchedulesPage kind="webhook" />);
+    expect(screen.queryByTestId('import-export-actions')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('webhooks-add-button'));
+    expect(mocks.navigate).toHaveBeenCalledWith('/settings/webhooks/create');
+  });
+
+  it('the webhook type filter reaches the list request and counts as a filter', () => {
+    render(<SchedulesPage kind="webhook" />);
+    expect(screen.getByTestId('filters')).toHaveAttribute('data-webhook-type', 'true');
+    fireEvent.click(screen.getByText('webhook type'));
+    expect(lastArgs()).toMatchObject({ webhookType: 'gitlab', page: 0 });
+    expect(screen.getByTestId('empty-message')).toHaveTextContent('No webhooks match the filters');
+  });
+
+  it('sends the owner filter for an admin only', () => {
+    mocks.checkPermission.mockReturnValue(false);
+    render(<SchedulesPage kind="webhook" />);
+    fireEvent.click(screen.getByText('owners'));
+    expect(lastArgs().ownerIds).toBeUndefined();
   });
 });

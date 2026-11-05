@@ -16,7 +16,6 @@ export * as DecisionOutputHelpers from './decisionOutput.helpers';
 export * as StateHelpers from './state.helpers';
 export { DumpYamlHelpers } from '@/[fsd]/shared/lib/helpers';
 export * as ParsePipelineHelpers from './parsePipeline.helpers';
-export * as WebhookHelpers from './webhook.helpers';
 export * as NodeTypeSelectorHelpers from './nodeTypeSelector.helpers';
 export * as PipelineReadinessHelpers from './pipelineReadiness.helpers';
 export * as NodeSummaryHelpers from './nodeSummary.helpers';

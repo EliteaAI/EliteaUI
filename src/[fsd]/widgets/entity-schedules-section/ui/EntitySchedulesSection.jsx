@@ -6,6 +6,7 @@ import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-r
 import { Box, Link, Skeleton, Typography } from '@mui/material';
 
 import {
+  TRIGGER_KIND,
   buildScheduleFormLink,
   buildScheduleRunsLink,
   buildSchedulesListLink,
@@ -22,7 +23,25 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 
 import EntityScheduleCard from './EntityScheduleCard';
 
-const { SCHEDULES_SECTION_ID } = ScheduleSectionConstants;
+const { SCHEDULES_SECTION_ID, WEBHOOKS_SECTION_ID } = ScheduleSectionConstants;
+
+// kind 'webhook' turns the section into the editor Webhooks section
+const KINDS = {
+  [TRIGGER_KIND.cron]: {
+    title: 'Schedules',
+    noun: 'schedule',
+    add: 'Schedule',
+    link: 'Manage Schedules',
+    id: SCHEDULES_SECTION_ID,
+  },
+  [TRIGGER_KIND.webhook]: {
+    title: 'Webhooks',
+    noun: 'webhook',
+    add: 'Webhook',
+    link: 'Open all in Webhooks',
+    id: WEBHOOKS_SECTION_ID,
+  },
+};
 
 const WIDE = '@container (min-width: 30rem)';
 // The name every agent and pipeline gives its first version
@@ -30,7 +49,20 @@ const BASE_VERSION_NAME = 'base';
 
 // The last section of the agent and pipeline editors; entityType is 'agent' or 'pipeline'; versionId is the editor version, versionName its label (none or 'base': the base version)
 const EntitySchedulesSection = memo(props => {
-  const { entityType, entityId, entityName, versionId, versionName, isChatView = false, style } = props;
+  const {
+    entityType,
+    entityId,
+    entityName,
+    versionId,
+    versionName,
+    isChatView = false,
+    style,
+    kind = TRIGGER_KIND.cron,
+  } = props;
+  const config = KINDS[kind];
+  // The Webhooks instance gets its own section ids; the shared skeleton keeps the schedules one
+  const sectionTestId = `${entityType}-${config.noun}s-section`;
+  const triggerKind = kind === TRIGGER_KIND.webhook ? kind : undefined;
   const { checkPermission } = useCheckPermission();
   const currentUserId = useSelector(state => state.user.id);
   const canCreate = checkPermission(PERMISSIONS.schedules.create);
@@ -39,6 +71,7 @@ const EntitySchedulesSection = memo(props => {
     entityType,
     entityId,
     versionId,
+    triggerKind,
     skip: isHidden,
   });
   const navigate = useNavigate();
@@ -66,15 +99,18 @@ const EntitySchedulesSection = memo(props => {
   const openForm = useCallback(
     scheduleId =>
       openNested(
-        { pathname: buildScheduleFormLink({ entityType, entityId, tab, scheduleId }) },
+        { pathname: buildScheduleFormLink({ entityType, entityId, tab, scheduleId, kind }) },
         versionOf(scheduleId),
       ),
-    [openNested, versionOf, entityType, entityId, tab],
+    [openNested, versionOf, entityType, entityId, tab, kind],
   );
   const openRunHistory = useCallback(
     scheduleId =>
-      openNested(buildScheduleRunsLink({ entityType, entityId, tab, scheduleId }), versionOf(scheduleId)),
-    [openNested, versionOf, entityType, entityId, tab],
+      openNested(
+        buildScheduleRunsLink({ entityType, entityId, tab, scheduleId, kind }),
+        versionOf(scheduleId),
+      ),
+    [openNested, versionOf, entityType, entityId, tab, kind],
   );
   const onAdd = useCallback(() => openForm(), [openForm]);
   const version =
@@ -86,25 +122,25 @@ const EntitySchedulesSection = memo(props => {
 
   const items = [
     {
-      title: 'Schedules',
-      testId,
+      title: config.title,
+      testId: sectionTestId,
       summaryAction: (
         <Link
           component={RouterLink}
-          to={buildSchedulesListLink({ entityType, entityId })}
+          to={buildSchedulesListLink({ entityType, entityId, kind })}
           // The Schedules page names the entity chip with it when the list has no rows
           state={{ entityName }}
           variant="bodySmall"
           sx={styles.link}
-          data-testid={`${testId}-open-all`}
+          data-testid={`${sectionTestId}-open-all`}
         >
-          Manage Schedules
+          {config.link}
         </Link>
       ),
       content: (
         <Box
           role="region"
-          aria-label="Schedules"
+          aria-label={config.title}
           sx={styles.content}
         >
           {isError && (
@@ -128,7 +164,7 @@ const EntitySchedulesSection = memo(props => {
               variant="bodyMedium"
               color="text.secondary"
             >
-              No schedules run {version} yet.
+              No {config.noun}s run {version} yet.
             </Typography>
           )}
           {(showSkeleton || rows.length > 0) && (
@@ -160,9 +196,9 @@ const EntitySchedulesSection = memo(props => {
               startIcon={<PlusIcon />}
               onClick={onAdd}
               sx={styles.add}
-              data-testid={`${testId}-add`}
+              data-testid={`${sectionTestId}-add`}
             >
-              Schedule
+              {config.add}
             </Button.BaseBtn>
           )}
           {hasMore && (
@@ -185,7 +221,7 @@ const EntitySchedulesSection = memo(props => {
 
   return (
     // Target of the scroll link in the pipeline Trigger selector hint
-    <Box id={SCHEDULES_SECTION_ID}>
+    <Box id={config.id}>
       <BasicAccordion
         accordionSX={styles.accordion}
         style={style}
