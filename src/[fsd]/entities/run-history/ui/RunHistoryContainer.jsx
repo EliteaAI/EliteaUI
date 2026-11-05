@@ -189,7 +189,7 @@ const RunHistoryContainer = memo(props => {
     );
 
   return (
-    <Box sx={onClose ? styles.outerWrapper : undefined}>
+    <Box sx={onClose ? styles.outerWrapper : styles.root}>
       {onClose && (
         <Box sx={styles.header}>
           <BaseBtn
@@ -277,6 +277,13 @@ RunHistoryContainer.displayName = 'RunHistoryContainer';
 
 /** @type {MuiSx} */
 const runHistoryContainerStyles = (isSmallWindow, isStacked, wideList = false) => ({
+  // Fills the caller's flex box, so the layout below can take exactly the height left for it
+  root: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    minHeight: 0,
+  },
   outerWrapper: {
     display: 'flex',
     flexDirection: 'column',
@@ -298,7 +305,9 @@ const runHistoryContainerStyles = (isSmallWindow, isStacked, wideList = false) =
     height: '1.25rem',
   },
   wrapper: {
-    height: isStacked ? 'auto' : 'calc(100vh - 6rem)',
+    // The space above varies (header, filters), so a viewport-based height cut off the list bottom
+    // and its load-more trigger (EL-7422)
+    ...(isStacked ? { height: 'auto' } : { flex: 1, minHeight: 0 }),
     paddingTop: '0rem',
     display: 'flex',
     boxSizing: 'border-box',
