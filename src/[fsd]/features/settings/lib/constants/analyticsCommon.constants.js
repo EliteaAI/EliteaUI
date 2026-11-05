@@ -495,7 +495,7 @@ export const GUIDE_SECTIONS = [
   {
     tabId: ANALYTICS_TAB_IDS.chats,
     title: 'Chats Tab',
-    items: [
+    metrics: [
       {
         title: 'About',
         description:
