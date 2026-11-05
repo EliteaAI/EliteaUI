@@ -38,7 +38,7 @@ const RunWithoutAskingSetting = memo(() => {
             variant="bodyMedium"
             color="text.secondary"
           >
-            Allow Run without asking
+            Run without approval
           </Typography>
         }
         control={
@@ -51,27 +51,15 @@ const RunWithoutAskingSetting = memo(() => {
           />
         }
       />
-      <Box
+      <Typography
         id="schedule-run-without-asking-help"
-        sx={styles.help}
+        variant="bodySmall"
+        color={isError ? 'error' : 'text.metrics'}
       >
-        <Typography
-          variant="bodySmall"
-          color={isError ? 'error' : 'text.metrics'}
-        >
-          {isError
-            ? 'Could not load the setting'
-            : 'Scheduled runs with this rule approve sensitive actions by themselves.'}
-        </Typography>
-        {!isAdmin && (
-          <Typography
-            variant="bodySmall"
-            color="text.metrics"
-          >
-            Only a project admin can change this setting.
-          </Typography>
-        )}
-      </Box>
+        {isError
+          ? 'Could not load the setting'
+          : 'If checked, ELITEA will run sensitive actions without asking the schedule owner to approve them. Only a project administrator can change this setting.'}
+      </Typography>
     </Box>
   );
 });
@@ -85,9 +73,5 @@ const runWithoutAskingSettingStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '0.25rem',
-  },
-  help: {
-    display: 'flex',
-    flexDirection: 'column',
   },
 });
