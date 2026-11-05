@@ -257,6 +257,10 @@ describe('list filter arguments', () => {
     expect(params.get('enabled')).toBe('true');
   });
 
+  it('sends the running status as status=running', async () => {
+    expect((await listParams({ status: 'running' })).get('status')).toBe('running');
+  });
+
   it('sends entityId as entity_id', async () => {
     expect((await listParams({ entityType: 'agent', entityId: '12' })).get('entity_id')).toBe('12');
   });
