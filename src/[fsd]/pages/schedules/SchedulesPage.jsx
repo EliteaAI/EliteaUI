@@ -4,7 +4,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Chip } from '@mui/material';
 
-import { useGetScheduleListQuery } from '@/[fsd]/entities/schedule';
+import { TRIGGER_KIND, useGetScheduleListQuery } from '@/[fsd]/entities/schedule';
 import { getPollingInterval } from '@/[fsd]/features/schedule';
 import { ScheduleImportExportActions } from '@/[fsd]/features/schedule-import-export';
 import { DrawerPage, DrawerPageBody, DrawerPageHeader } from '@/[fsd]/features/settings';
@@ -21,7 +21,7 @@ const NO_FILTERS = { entityType: '', status: '', enabled: '', search: '', ownerI
 
 // One page for both row kinds; a webhook is a schedule row with trigger_kind 'webhook'
 const KINDS = {
-  cron: {
+  [TRIGGER_KIND.cron]: {
     title: 'Schedules',
     noun: 'schedule',
     testId: 'schedules',
@@ -29,7 +29,7 @@ const KINDS = {
     // The API default: the next run first
     sort: { field: 'next_run', direction: SortOrderOptions.ASC },
   },
-  webhook: {
+  [TRIGGER_KIND.webhook]: {
     title: 'Webhooks',
     noun: 'webhook',
     testId: 'webhooks',
@@ -39,9 +39,9 @@ const KINDS = {
 };
 
 const SchedulesPage = memo(props => {
-  const { kind = 'cron' } = props;
+  const { kind = TRIGGER_KIND.cron } = props;
   const config = KINDS[kind];
-  const isWebhook = kind === 'webhook';
+  const isWebhook = kind === TRIGGER_KIND.webhook;
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
   const { checkPermission } = useCheckPermission();
@@ -80,7 +80,7 @@ const SchedulesPage = memo(props => {
     ...urlEntity,
     ownerIds: isAdmin ? filters.ownerIds : undefined,
     // Unset on the Schedules page: the server lists cron rows by default
-    triggerKind: isWebhook ? 'webhook' : undefined,
+    triggerKind: isWebhook ? TRIGGER_KIND.webhook : undefined,
     webhookType: isWebhook ? filters.webhookType : undefined,
   };
   const { currentData, isFetching, isError, error } = useGetScheduleListQuery(queryArgs, {

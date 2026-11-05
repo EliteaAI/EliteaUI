@@ -23,7 +23,10 @@ vi.mock('react-router-dom', () => ({
   useSearchParams: () => [mocks.searchParams, mocks.setSearchParams],
 }));
 
-vi.mock('@/[fsd]/entities/schedule', () => ({ useGetScheduleListQuery: mocks.useGetScheduleListQuery }));
+vi.mock('@/[fsd]/entities/schedule', () => ({
+  TRIGGER_KIND: { cron: 'cron', webhook: 'webhook' },
+  useGetScheduleListQuery: mocks.useGetScheduleListQuery,
+}));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: mocks.useSelectedProjectId,
   useToast: () => ({ toastError: mocks.toastError }),

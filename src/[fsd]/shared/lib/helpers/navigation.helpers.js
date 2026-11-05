@@ -21,6 +21,7 @@ export const getListRouteByPageType = (pageType, fallbackRoute = null) => {
     PipelineDetails: RouteDefinitions.Pipelines,
     SkillDetails: RouteDefinitions.Skills,
     ScheduleDetails: RouteDefinitions.Schedules,
+    WebhookDetails: RouteDefinitions.Webhooks,
     Chat: RouteDefinitions.Chat,
   };
 

@@ -2,7 +2,7 @@ import { memo, useCallback } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
-import { getListRoute } from '@/[fsd]/entities/schedule';
+import { TRIGGER_KIND, getListRoute } from '@/[fsd]/entities/schedule';
 import { ScheduleRowActions, useScheduleRowActions } from '@/[fsd]/features/schedule';
 
 // The Edit webhook page header menu: rotate, change owner and delete; the form itself is the edit
@@ -14,7 +14,7 @@ const WebhookDetailMenu = memo(props => {
 
   const onDeleteAndLeave = useCallback(async () => {
     // A failed delete keeps the page: the webhook is still there
-    if (await onDelete()) navigate(getListRoute('webhook'), { replace: true });
+    if (await onDelete()) navigate(getListRoute(TRIGGER_KIND.webhook), { replace: true });
   }, [onDelete, navigate]);
 
   return (

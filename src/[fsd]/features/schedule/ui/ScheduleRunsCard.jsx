@@ -7,7 +7,7 @@ import PlayArrowOutlinedIcon from '@mui/icons-material/PlayArrowOutlined';
 import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
 import { Box, Link, Typography } from '@mui/material';
 
-import { buildScheduleHistoryLink } from '@/[fsd]/entities/schedule';
+import { buildScheduleHistoryLink, isWebhookRow } from '@/[fsd]/entities/schedule';
 import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { PERMISSIONS } from '@/common/constants';
@@ -42,7 +42,7 @@ const ScheduleRunsCard = memo(
     const { checkPermission } = useCheckPermission();
     const { runs, total, versionNames, expandedRunId, onExpand } = view;
     const hasActiveRun = runs.some(run => isRunActive(run.status));
-    const isWebhook = schedule?.trigger_kind === 'webhook';
+    const isWebhook = isWebhookRow(schedule);
     const canRunNow = Boolean(schedule?.id) && Boolean(schedule?.allowed_actions?.includes('run'));
     const canTest = checkPermission(PERMISSIONS.schedules.run);
     const runHint = schedule?.id ? ownerOnlyRunHint(schedule) : null;

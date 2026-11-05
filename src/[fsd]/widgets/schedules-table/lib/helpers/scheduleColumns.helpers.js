@@ -1,3 +1,5 @@
+import { TRIGGER_KIND } from '@/[fsd]/entities/schedule';
+
 // All 8 columns show at every width. The tier comes from the measured table
 // width: 796 px at a 1280 px window, 956 px at 1440, 1116 px at 1600.
 // The regular tier starts at 948 px, a 1280 px window with the main sidebar collapsed (+152 px).
@@ -32,7 +34,7 @@ export const WEBHOOKS_COLUMNS = [
   { field: 'actions', label: 'Actions' },
 ];
 
-export const getColumns = kind => (kind === 'webhook' ? WEBHOOKS_COLUMNS : SCHEDULES_COLUMNS);
+export const getColumns = kind => (kind === TRIGGER_KIND.webhook ? WEBHOOKS_COLUMNS : SCHEDULES_COLUMNS);
 
 export const TIER_WIDTHS = {
   compact: {

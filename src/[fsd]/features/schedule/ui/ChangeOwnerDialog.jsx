@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { useChangeScheduleOwnerMutation } from '@/[fsd]/entities/schedule';
+import { isWebhookRow, toKindNoun, useChangeScheduleOwnerMutation } from '@/[fsd]/entities/schedule';
 import { useSelectedProjectId, useToast, useUserList } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import BannerMessage from '@/[fsd]/shared/ui/banner-message/BannerMessage';
@@ -52,7 +52,7 @@ const ChangeOwnerDialog = memo(props => {
     isSubmitting.current = true;
     try {
       await changeOwner({ projectId, scheduleId: schedule.id, ownerId: picked.value }).unwrap();
-      toastSuccess(`The ${schedule.trigger_kind === 'webhook' ? 'webhook' : 'schedule'} owner is changed.`);
+      toastSuccess(`The ${toKindNoun(schedule.trigger_kind)} owner is changed.`);
       onClose();
     } catch (error) {
       if (STAY_OPEN_STATUSES.includes(error?.status)) {
@@ -72,7 +72,7 @@ const ChangeOwnerDialog = memo(props => {
         variant="bodySmall"
         color="text.secondary"
       >
-        {schedule.trigger_kind === 'webhook' ? 'Webhook' : 'Schedule'}: {schedule.name}
+        {isWebhookRow(schedule) ? 'Webhook' : 'Schedule'}: {schedule.name}
       </Typography>
       <Typography
         variant="bodySmall"
@@ -80,7 +80,7 @@ const ChangeOwnerDialog = memo(props => {
       >
         Current owner: {schedule.owner?.name || schedule.owner?.email || '—'}
       </Typography>
-      {schedule.trigger_kind === 'webhook' && (
+      {isWebhookRow(schedule) && (
         <Typography
           variant="bodySmall"
           color="text.secondary"

@@ -5,6 +5,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
 
 import {
+  TRIGGER_KIND,
   getListRoute,
   isWebhookRow,
   useGetScheduleQuery,
@@ -31,8 +32,8 @@ const { convertCronTimezone, getBrowserTimezone } = ScheduleHelpers;
 
 // entityType: the page is nested in that editor and locks its entity; kind: the row kind of this route
 const ScheduleDetailPage = memo(props => {
-  const { entityType, kind = 'cron' } = props;
-  const isWebhook = kind === 'webhook';
+  const { entityType, kind = TRIGGER_KIND.cron } = props;
+  const isWebhook = kind === TRIGGER_KIND.webhook;
   const noun = isWebhook ? 'Webhook' : 'Schedule';
   const projectId = useSelectedProjectId();
   const { scheduleId, agentId } = useParams();
@@ -89,6 +90,7 @@ const ScheduleDetailPage = memo(props => {
     return (
       <ScheduleNotice
         message={error?.status === 404 ? `${noun} not found.` : `Failed to load the ${noun.toLowerCase()}.`}
+        kind={kind}
       />
     );
   if (!schedule)
@@ -103,7 +105,12 @@ const ScheduleDetailPage = memo(props => {
     (entityType &&
       (schedule.entity_type !== entityType || String(schedule.application_id) !== String(agentId)))
   )
-    return <ScheduleNotice message={`${noun} not found.`} />;
+    return (
+      <ScheduleNotice
+        message={`${noun} not found.`}
+        kind={kind}
+      />
+    );
 
   if (isWebhook)
     return (

@@ -10,6 +10,7 @@ import {
   GridTableRow,
   useResponsiveColumns,
 } from '@/[fsd]/entities/grid-table';
+import { TRIGGER_KIND, toKindNoun } from '@/[fsd]/entities/schedule';
 import { useNow } from '@/[fsd]/features/schedule';
 import { useGetComponentWidth } from '@/[fsd]/shared/lib/hooks';
 
@@ -41,11 +42,11 @@ const SchedulesTable = memo(props => {
     isLoading = false,
     emptyMessage = 'No schedules',
     toolbar,
-    kind = 'cron',
+    kind = TRIGGER_KIND.cron,
   } = props;
-  const noun = kind === 'webhook' ? 'webhook' : 'schedule';
+  const noun = toKindNoun(kind);
   // The rotation marker of a webhook row ends on time; schedule rows need no clock
-  const now = useNow(kind === 'webhook');
+  const now = useNow(kind === TRIGGER_KIND.webhook);
   const { componentRef, componentWidth } = useGetComponentWidth();
   const tableWidth = componentWidth - GUTTERS_PX;
   const tier = getTier(tableWidth);

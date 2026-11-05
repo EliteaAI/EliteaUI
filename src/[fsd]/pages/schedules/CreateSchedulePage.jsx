@@ -2,7 +2,11 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
-import { useCreateScheduleMutation, useStartDraftTestRunMutation } from '@/[fsd]/entities/schedule';
+import {
+  TRIGGER_KIND,
+  useCreateScheduleMutation,
+  useStartDraftTestRunMutation,
+} from '@/[fsd]/entities/schedule';
 import {
   DEFAULT_SCHEDULE_CRON,
   ScheduleDraftRuns,
@@ -17,8 +21,8 @@ import { ScheduleSettingsSection, StopOnDateField } from '@/[fsd]/shared/ui/sche
 
 // entityType: the form is nested in that editor and locks its entity; kind 'webhook' creates a webhook
 const CreateSchedulePage = props => {
-  const { entityType, kind = 'cron' } = props;
-  const isWebhook = kind === 'webhook';
+  const { entityType, kind = TRIGGER_KIND.cron } = props;
+  const isWebhook = kind === TRIGGER_KIND.webhook;
   // The create answer of a webhook: its URL and the secret, shown once before leaving
   const [created, setCreated] = useState(null);
   const projectId = useSelectedProjectId();

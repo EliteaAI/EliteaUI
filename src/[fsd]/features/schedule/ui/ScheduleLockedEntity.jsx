@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { Box, Typography } from '@mui/material';
 
+import { TRIGGER_KIND, toKindNoun } from '@/[fsd]/entities/schedule';
 import StyledInputEnhancer from '@/[fsd]/shared/ui/input/StyledInputEnhancer';
 import RouteDefinitions from '@/routes';
 
@@ -16,7 +17,7 @@ const TYPE_LABEL = { agent: 'Agent', pipeline: 'Pipeline' };
  */
 const ScheduleLockedEntity = memo(props => {
   const { type, name, editing = false, isWebhook = false } = props;
-  const noun = isWebhook ? 'webhook' : 'schedule';
+  const noun = toKindNoun(isWebhook ? TRIGGER_KIND.webhook : TRIGGER_KIND.cron);
 
   const label = TYPE_LABEL[type] ?? 'Agent';
   const lowerLabel = label.toLowerCase();

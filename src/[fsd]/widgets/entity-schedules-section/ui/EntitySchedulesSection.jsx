@@ -6,6 +6,7 @@ import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-r
 import { Box, Link, Skeleton, Typography } from '@mui/material';
 
 import {
+  TRIGGER_KIND,
   buildScheduleFormLink,
   buildScheduleRunsLink,
   buildSchedulesListLink,
@@ -26,14 +27,14 @@ const { SCHEDULES_SECTION_ID, WEBHOOKS_SECTION_ID } = ScheduleSectionConstants;
 
 // kind 'webhook' turns the section into the editor Webhooks section
 const KINDS = {
-  cron: {
+  [TRIGGER_KIND.cron]: {
     title: 'Schedules',
     noun: 'schedule',
     add: 'Schedule',
     link: 'Manage Schedules',
     id: SCHEDULES_SECTION_ID,
   },
-  webhook: {
+  [TRIGGER_KIND.webhook]: {
     title: 'Webhooks',
     noun: 'webhook',
     add: 'Webhook',
@@ -56,12 +57,12 @@ const EntitySchedulesSection = memo(props => {
     versionName,
     isChatView = false,
     style,
-    kind = 'cron',
+    kind = TRIGGER_KIND.cron,
   } = props;
   const config = KINDS[kind];
   // The Webhooks instance gets its own section ids; the shared skeleton keeps the schedules one
   const sectionTestId = `${entityType}-${config.noun}s-section`;
-  const triggerKind = kind === 'webhook' ? kind : undefined;
+  const triggerKind = kind === TRIGGER_KIND.webhook ? kind : undefined;
   const { checkPermission } = useCheckPermission();
   const currentUserId = useSelector(state => state.user.id);
   const canCreate = checkPermission(PERMISSIONS.schedules.create);

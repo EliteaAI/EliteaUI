@@ -1,3 +1,5 @@
+import { isWebhookRow } from '@/[fsd]/entities/schedule';
+
 const POLLING_INTERVAL_MS = 10000;
 
 // Refetch the list while any row shows a Running last run
@@ -9,7 +11,7 @@ export const getPollingInterval = rows =>
 export const ownerOnlyRunHint = schedule => {
   const allowed = schedule?.allowed_actions ?? [];
   // A webhook never runs from the UI, so nobody gets the owner-only hint
-  if (schedule?.trigger_kind === 'webhook') return null;
+  if (isWebhookRow(schedule)) return null;
   if (allowed.includes('run') || !allowed.includes('change_owner') || schedule.version_id == null)
     return null;
   const name = schedule.owner?.name;

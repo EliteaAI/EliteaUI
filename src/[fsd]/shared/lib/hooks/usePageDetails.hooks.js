@@ -248,7 +248,10 @@ export const usePageDetails = () => {
     isAgentScheduleCreatePage ||
     isAgentScheduleDetailPage ||
     isPipelineScheduleCreatePage ||
-    isPipelineScheduleDetailPage ||
+    isPipelineScheduleDetailPage
+  ) {
+    pageType = 'ScheduleDetails';
+  } else if (
     isWebhookCreatePage ||
     isWebhookDetailPage ||
     isAgentWebhookCreatePage ||
@@ -256,7 +259,7 @@ export const usePageDetails = () => {
     isPipelineWebhookCreatePage ||
     isPipelineWebhookDetailPage
   ) {
-    pageType = 'ScheduleDetails';
+    pageType = 'WebhookDetails';
   } else if (isChatPage || isChatConversationPage) {
     pageType = 'Chat';
     matchParams = isChatConversationPage?.params || {};

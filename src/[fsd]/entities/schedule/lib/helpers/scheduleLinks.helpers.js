@@ -7,6 +7,9 @@ export const TRIGGER_KIND = { cron: 'cron', webhook: 'webhook' };
 
 export const isWebhookRow = row => row?.trigger_kind === TRIGGER_KIND.webhook;
 
+// "webhook" or "schedule", for the texts both kinds share
+export const toKindNoun = kind => (kind === TRIGGER_KIND.webhook ? 'webhook' : 'schedule');
+
 // The list page of each kind; its create and edit pages hang from it
 const LIST_ROUTES = {
   [TRIGGER_KIND.cron]: RouteDefinitions.Schedules,

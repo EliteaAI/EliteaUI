@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 
+import { toKindNoun } from '@/[fsd]/entities/schedule';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 
 import { APPROVAL_RULE, RISK_NAME_MISMATCH, RISK_SAVE_ERROR } from '../constants';
@@ -88,7 +89,7 @@ export const useScheduleSave = ({
         : FIELDS_WITH_INPUT;
       if (Object.keys(fieldErrors).some(field => shownFields.includes(field))) setErrors(fieldErrors);
       else if (error?.status === 400 || error?.status === 409) setBanner(error.data?.error ?? '');
-      else toastError(`Failed to save the ${values.trigger_kind === 'webhook' ? 'webhook' : 'schedule'}`);
+      else toastError(`Failed to save the ${toKindNoun(values.trigger_kind)}`);
       return;
     }
     setReview(null);

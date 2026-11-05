@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 
 import {
+  isWebhookRow,
   useDeleteScheduleMutation,
   useLazyExportSchedulesQuery,
   usePauseScheduleMutation,
@@ -40,7 +41,7 @@ export const useScheduleRowActions = row => {
   );
 
   const scheduleId = row.id;
-  const noun = row.trigger_kind === 'webhook' ? 'Webhook' : 'Schedule';
+  const noun = isWebhookRow(row) ? 'Webhook' : 'Schedule';
   const onRun = useCallback(
     () => perform(runSchedule({ projectId, scheduleId }), 'Run started'),
     [perform, runSchedule, projectId, scheduleId],
@@ -71,7 +72,7 @@ export const useScheduleRowActions = row => {
     onResume,
     onDelete,
     // The export file holds schedules only; webhooks are never exported
-    onExport: checkPermission(PERMISSIONS.schedules.export) && noun === 'Schedule' ? onExport : undefined,
+    onExport: checkPermission(PERMISSIONS.schedules.export) && !isWebhookRow(row) ? onExport : undefined,
     isBusy:
       runState.isLoading ||
       pauseState.isLoading ||

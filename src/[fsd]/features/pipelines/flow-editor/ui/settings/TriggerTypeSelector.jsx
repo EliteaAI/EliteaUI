@@ -10,11 +10,10 @@ import Tooltip from '@/ComponentsLib/Tooltip';
 import {
   FlowEditorConstants,
   NodeFieldInfoConstants,
-  WebhookConstants,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { LegacyScheduleNotice } from '@/[fsd]/features/schedule';
 import { useDelegatedOauthToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
-import { ModalConstants, ScheduleSectionConstants } from '@/[fsd]/shared/lib/constants';
+import { ModalConstants, ScheduleSectionConstants, WebhookConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProject, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';

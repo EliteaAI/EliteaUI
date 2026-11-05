@@ -1,12 +1,13 @@
 import { memo } from 'react';
+
 import { Link as RouterLink } from 'react-router-dom';
 
 import { Container, Link } from '@mui/material';
 
-import RouteDefinitions from '@/routes';
+import { TRIGGER_KIND, getListRoute } from '@/[fsd]/entities/schedule';
 
-// The Page404 layout, with the way back to the Schedules list instead of Home
-const ScheduleNotice = memo(({ message }) => {
+// The Page404 layout, with the way back to the Schedules or Webhooks list instead of Home
+const ScheduleNotice = memo(({ message, kind = TRIGGER_KIND.cron }) => {
   const styles = scheduleNoticeStyles();
 
   return (
@@ -14,10 +15,10 @@ const ScheduleNotice = memo(({ message }) => {
       {message} Open{' '}
       <Link
         component={RouterLink}
-        to={RouteDefinitions.Schedules}
+        to={getListRoute(kind)}
         color="primary"
       >
-        Schedules
+        {kind === TRIGGER_KIND.webhook ? 'Webhooks' : 'Schedules'}
       </Link>
     </Container>
   );

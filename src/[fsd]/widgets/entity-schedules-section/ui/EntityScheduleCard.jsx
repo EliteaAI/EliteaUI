@@ -3,6 +3,7 @@ import { Fragment, memo, useCallback, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { formatRunTimestamp } from '@/[fsd]/entities/run-history';
+import { isWebhookRow, toKindNoun } from '@/[fsd]/entities/schedule';
 import { ScheduleMandateConsent } from '@/[fsd]/features/owner-consent';
 import { GovernanceReadinessCard } from '@/[fsd]/features/project-governance';
 import {
@@ -31,7 +32,7 @@ const stopPropagation = event => event.stopPropagation();
 
 // A running schedule has no finished run time to show, only the status
 const lastRunText = row => {
-  if (!row.last_run) return row.trigger_kind === 'webhook' ? 'No deliveries yet' : 'Never run';
+  if (!row.last_run) return isWebhookRow(row) ? 'No deliveries yet' : 'Never run';
   return row.last_run_status === 'running' ? '' : formatCardDate(row.last_run);
 };
 
@@ -60,10 +61,10 @@ const EntityScheduleCard = memo(props => {
   // The list API sends only the user's own rows to a non-admin
   const isYou = row.owner?.id != null && row.owner.id === currentUserId;
   const showChip = Boolean(row.last_run && row.last_run_status);
-  const isWebhook = row.trigger_kind === 'webhook';
-  // Ticks each minute, so the rotation note goes when the window ends
-  const now = useNow();
-  const testId = `${entityType}-${isWebhook ? 'webhook' : 'schedule'}-card`;
+  const isWebhook = isWebhookRow(row);
+  // Ticks each minute on webhook cards only, so the rotation note goes when the window ends
+  const now = useNow(isWebhook);
+  const testId = `${entityType}-${toKindNoun(row.trigger_kind)}-card`;
 
   const styles = entityScheduleCardStyles(isOpenable);
 

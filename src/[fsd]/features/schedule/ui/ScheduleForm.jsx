@@ -5,6 +5,7 @@ import { useFormik } from 'formik';
 import { Box, Grid } from '@mui/material';
 
 import { GenerateEntityButton } from '@/[fsd]/entities/generate-entity-with-ai';
+import { isWebhookRow } from '@/[fsd]/entities/schedule';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
@@ -174,7 +175,7 @@ const ScheduleForm = memo(props => {
       title: 'GENERAL',
       testId: 'schedule-section-general',
       // Build with AI writes a cron; a webhook has none
-      summaryAction: !schedule?.id && values.trigger_kind !== 'webhook' && (
+      summaryAction: !schedule?.id && !isWebhookRow(values) && (
         <GenerateEntityButton
           permission={PERMISSIONS.schedules.create}
           buttonTestId="generate-schedule-open-button"
@@ -220,7 +221,7 @@ const ScheduleForm = memo(props => {
               type={values.type}
               name={details?.name}
               editing={!!schedule}
-              isWebhook={values.trigger_kind === 'webhook'}
+              isWebhook={isWebhookRow(values)}
             />
           ) : (
             <ScheduleEntitySection
