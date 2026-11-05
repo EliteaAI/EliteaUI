@@ -30,6 +30,7 @@ const ContextStrategySystemMessages = memo(props => {
         <Label.InfoLabelWithTooltip
           label="Default persona"
           tooltip="Select the default assistant persona for model chat (without agent selected)"
+          variant="labelSmall"
           sx={styles.label}
         />
         <SingleSelect
@@ -59,7 +60,8 @@ const ContextStrategySystemMessages = memo(props => {
       </Box>
 
       <Input.StyledInputEnhancer
-        label="User instructions"
+        label="Default instructions"
+        labelVariant="labelSmall"
         tooltipDescription="Custom instructions for the assistant"
         autoComplete="off"
         variantInput="outlined"
@@ -74,7 +76,7 @@ const ContextStrategySystemMessages = memo(props => {
         placeholder="Enter custom instructions for the assistant..."
         hasActionsToolBar
         showExpandAction={false}
-        fieldName="User Instructions"
+        fieldName="Default Instructions"
         containerProps={styles.inputContainer}
         inputProps={{
           'data-testid': 'persona-user-instructions-textarea',

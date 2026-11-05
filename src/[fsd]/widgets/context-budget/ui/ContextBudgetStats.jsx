@@ -70,7 +70,14 @@ const ContextStats = memo(props => {
                 item.value
               )}
             </Typography>
-            {item.suffix && <Typography variant="bodyMedium">{item.suffix}</Typography>}
+            {item.suffix && (
+              <Typography
+                variant="bodyMedium"
+                sx={styles.statSuffix}
+              >
+                {item.suffix}
+              </Typography>
+            )}
           </Box>
         </Box>
       ))}
@@ -86,8 +93,7 @@ const contextStatsStyles = () => ({
     display: 'flex',
     alignItems: 'flex-start',
     gap: '0.75rem',
-    padding: '0.75rem 0rem 0rem',
-    marginBottom: '0.5rem',
+    padding: '1rem 0rem 0rem',
   },
   statCard: ({ palette }) => ({
     display: 'flex',
@@ -112,6 +118,10 @@ const contextStatsStyles = () => ({
     alignItems: 'center',
     gap: '0.5rem',
     width: '100%',
+    '& > svg': {
+      width: '1rem',
+      height: '1rem',
+    },
   },
   statValue: ({ palette }) => ({
     color: palette.text.secondary,
@@ -119,6 +129,9 @@ const contextStatsStyles = () => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+  }),
+  statSuffix: ({ palette }) => ({
+    color: palette.text.secondary,
   }),
 });
 

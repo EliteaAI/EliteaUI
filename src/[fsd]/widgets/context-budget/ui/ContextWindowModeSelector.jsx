@@ -15,7 +15,21 @@ const LAYOUTS = {
   stacked: 'stacked',
 };
 
-const buildTabLabel = (name, tokens) => (tokens > 0 ? `${name} · ${formatWindowSize(tokens)}` : name);
+// The window size keeps the unselected tab colour, so the selected tab highlights only the mode name
+const buildTabLabel = (name, tokens, windowSizeSx) =>
+  tokens > 0 ? (
+    <>
+      {name}{' '}
+      <Box
+        component="span"
+        sx={windowSizeSx}
+      >
+        · {formatWindowSize(tokens)}
+      </Box>
+    </>
+  ) : (
+    name
+  );
 
 /**
  * Balanced / Full context window tab group. Each tab shows the tokens it gives the selected model.
@@ -32,22 +46,22 @@ const ContextWindowModeSelector = memo(props => {
     fullWindowTokens,
   } = props;
   const isStacked = layout === LAYOUTS.stacked;
-  const styles = contextWindowModeSelectorStyles(isStacked);
+  const styles = useMemo(() => contextWindowModeSelectorStyles(isStacked, disabled), [isStacked, disabled]);
 
   const tabs = useMemo(
     () => [
       {
         value: CONTEXT_WINDOW_MODES.BALANCED,
-        label: buildTabLabel('Balanced', balancedWindowTokens),
+        label: buildTabLabel('Balanced', balancedWindowTokens, styles.tabWindowSize),
         buttonProps: { disabled, 'data-testid': 'context-window-mode-balanced' },
       },
       {
         value: CONTEXT_WINDOW_MODES.FULL,
-        label: buildTabLabel('Full', fullWindowTokens),
+        label: buildTabLabel('Full', fullWindowTokens, styles.tabWindowSize),
         buttonProps: { disabled, 'data-testid': 'context-window-mode-full' },
       },
     ],
-    [balancedWindowTokens, fullWindowTokens, disabled],
+    [balancedWindowTokens, fullWindowTokens, disabled, styles.tabWindowSize],
   );
 
   const handleChange = useCallback(
@@ -112,7 +126,7 @@ const ContextWindowModeSelector = memo(props => {
 ContextWindowModeSelector.displayName = 'ContextWindowModeSelector';
 
 /** @type {MuiSx} */
-const contextWindowModeSelectorStyles = isStacked => ({
+const contextWindowModeSelectorStyles = (isStacked, disabled) => ({
   container: {
     display: 'flex',
     flexDirection: 'column',
@@ -156,6 +170,8 @@ const contextWindowModeSelectorStyles = isStacked => ({
     }),
   },
   tabButton: { whiteSpace: 'nowrap' },
+  // A disabled tab keeps one colour for the whole label
+  tabWindowSize: ({ palette }) => (disabled ? {} : { color: palette.components.tabGroupButton.text.default }),
 });
 
 export default ContextWindowModeSelector;
