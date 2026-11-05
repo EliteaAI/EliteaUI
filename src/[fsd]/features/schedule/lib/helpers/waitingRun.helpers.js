@@ -1,28 +1,36 @@
 export const WAITING_NEED = { CREDENTIAL: 'credential', SIGN_IN: 'sign_in' };
 
-const CREDENTIAL_PREFIX = 'credential';
-const CREDENTIAL_SUFFIX = 'not found.';
-const SIGN_IN_PREFIX = 'a sign-in is needed for';
-const TOOLKIT_TEXT = /toolkit\s+["']?([^"'.]+?)["']?(?:\s|\.|$)/i;
+// Flat patterns without a repeated group, so the run time stays linear on long server text. The global flag
+// lets a search start at an index; `matchFrom` resets it on every call.
+const CREDENTIAL_PREFIX = /credential\s/gi;
+const CREDENTIAL_SUFFIX = /\snot found\./gi;
+const SIGN_IN_PREFIX = /a sign-in is needed for\s/gi;
+// The toolkit name is the first word after "toolkit": it ends at a space, a quote or a full stop
+const TOOLKIT_TEXT = /toolkit\s+["']?([^\s"'.]+)/i;
 
-const isSpace = char => char !== undefined && char.trim() === '';
+const matchFrom = (pattern, text, from) => {
+  pattern.lastIndex = from;
+  return pattern.exec(text);
+};
 
-// The text between `prefix` and the first `suffix` after it (the end of the text when `suffix` is empty), both
-// separated by whitespace and trimmed. Plain string search keeps the run time linear on long server text.
+// The first non-empty text between a `prefix` hit and the next `suffix` hit (the end of the text when there is
+// no `suffix`). A hit of `prefix` that is not followed by a `suffix` ends the search: no later hit can have one.
 const textBetween = (text, prefix, suffix) => {
-  const lower = text.toLowerCase();
-  const start = lower.indexOf(prefix);
-  if (start < 0 || !isSpace(text[start + prefix.length])) return undefined;
-  const from = start + prefix.length;
-  if (!suffix) return text.slice(from).trim() || undefined;
-  const end = lower.indexOf(suffix, from);
-  if (end < 0 || !isSpace(text[end - 1])) return undefined;
-  return text.slice(from, end).trim() || undefined;
+  let hit = matchFrom(prefix, text, 0);
+  while (hit) {
+    const from = hit.index + hit[0].length;
+    const tail = suffix ? matchFrom(suffix, text, from) : null;
+    if (suffix && !tail) return undefined;
+    const value = text.slice(from, tail ? tail.index : undefined).trim();
+    if (value) return value;
+    hit = matchFrom(prefix, text, from);
+  }
+  return undefined;
 };
 
 // The signed-in server name ends at the first full stop
 const signInTarget = text => {
-  const target = textBetween(text, SIGN_IN_PREFIX, '');
+  const target = textBetween(text, SIGN_IN_PREFIX);
   return target?.split('.')[0].trim() || undefined;
 };
 

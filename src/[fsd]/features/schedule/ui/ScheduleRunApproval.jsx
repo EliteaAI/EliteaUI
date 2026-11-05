@@ -169,7 +169,9 @@ const ScheduleRunApproval = memo(props => {
           color="text.secondary"
           sx={styles.note}
         >
-          Only the owner or project admins can approve or reject this run
+          {run?.isDraftRun
+            ? 'Only the user who started this Test run can approve or reject it'
+            : 'Only the owner or project admins can approve or reject this run'}
         </Typography>
       )}
     </Box>

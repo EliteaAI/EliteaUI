@@ -120,6 +120,16 @@ describe('ScheduleRunApproval', () => {
     ).toBeInTheDocument();
   });
 
+  it('says only the starter decides a Test run, without a promise for project admins', () => {
+    mocks.isOwner = false;
+    renderApproval({ schedule: undefined, run: { id: 5, isDraftRun: true, requested_by: 8 } });
+
+    expect(
+      screen.getByText('Only the user who started this Test run can approve or reject it'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/project admins/)).not.toBeInTheDocument();
+  });
+
   it('disables both buttons until the conversation of the run has loaded', () => {
     renderApproval({ conversationUuid: undefined });
 

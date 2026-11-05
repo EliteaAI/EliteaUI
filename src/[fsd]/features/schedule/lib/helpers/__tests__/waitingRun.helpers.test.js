@@ -23,6 +23,39 @@ describe('getWaitingRunNeed', () => {
     });
   });
 
+  it('finds a later "credential X not found." after an earlier word that starts the same', () => {
+    const text = 'Credentials are missing. Credential foo not found.';
+    expect(getWaitingRunNeed({ kind: 'paused', text })).toEqual({
+      need: 'credential',
+      toolkit: undefined,
+      credential: 'foo',
+    });
+  });
+
+  it('reads the credential in any letter case and over a line break', () => {
+    expect(getWaitingRunNeed({ kind: 'paused', text: 'CREDENTIAL\n gh-main \nNOT FOUND.' })).toMatchObject({
+      need: 'credential',
+      credential: 'gh-main',
+    });
+  });
+
+  it('returns no need when no credential name stands between the words', () => {
+    expect(getWaitingRunNeed({ kind: 'paused', text: 'Credential not found.' })).toEqual({});
+    expect(getWaitingRunNeed({ kind: 'paused', text: 'Credential foo not found' })).toEqual({});
+  });
+
+  it('reads the first word after "toolkit" as the toolkit name', () => {
+    const text = 'Paused: credential gh-main not found. Fix toolkit "GitHub" in this project.';
+    expect(getWaitingRunNeed({ kind: 'paused', text })).toMatchObject({ toolkit: 'GitHub' });
+  });
+
+  it('parses long text without a hit in linear time', () => {
+    const text = 'credential '.repeat(20000);
+    const started = Date.now();
+    expect(getWaitingRunNeed({ kind: 'paused', text })).toEqual({});
+    expect(Date.now() - started).toBeLessThan(1000);
+  });
+
   it('parses the toolkit of a sign-in pause from the text', () => {
     expect(getWaitingRunNeed({ kind: 'paused', text: 'Paused: a sign-in is needed for Jira.' })).toEqual({
       need: 'sign_in',

@@ -227,6 +227,66 @@ describe('ScheduleWaitingCard', () => {
     expect(button('Reject')).toBeEnabled();
   });
 
+  it('lets an admin approve their own Run now once the credential is found', () => {
+    mocks.userId = 77;
+    mocks.check = { state: 'ready', recheck: vi.fn() };
+    mocks.detail = { ...mocks.detail, trigger: 'manual', requested_by: 77 };
+    renderCard();
+
+    expect(button('Approve')).toBeEnabled();
+  });
+
+  it('asks an admin for their own credential when the Run now is theirs', () => {
+    mocks.userId = 77;
+    mocks.detail = { ...mocks.detail, trigger: 'manual', requested_by: 77 };
+    renderCard();
+
+    expect(button('Approve')).toBeDisabled();
+    expect(screen.getByText('Provide the credential first')).toBeInTheDocument();
+    expect(screen.getByText(/Provide the credential, then approve\./)).toBeInTheDocument();
+  });
+
+  it('names the starter, not the owner, when another user started the Run now', () => {
+    mocks.userId = 1;
+    mocks.detail = { ...mocks.detail, trigger: 'manual', requested_by: 77 };
+    renderCard();
+
+    expect(button('Approve')).toBeDisabled();
+    expect(
+      screen.getByText('The user who started this run must provide the credential first'),
+    ).toBeInTheDocument();
+  });
+
+  it('keeps the schedule owner as the actor of a scheduled run', () => {
+    mocks.userId = 1;
+    mocks.detail = { ...mocks.detail, trigger: 'cron', requested_by: 77 };
+    renderCard();
+
+    expect(screen.getByText('Provide the credential first')).toBeInTheDocument();
+  });
+
+  it('gives the owner on a sign-in pause the authorize button and the sign-in text', () => {
+    mocks.signedIn = true;
+    mocks.conversation = { authAction: { toolMeta: { server_url: 'https://auth.example' } } };
+    mocks.detail = { ...mocks.detail, events: [paused({ need: 'sign_in', toolkit: 'Jira' })] };
+    renderCard();
+
+    expect(screen.getByText(/Authorize now, then approve\./)).toBeInTheDocument();
+    expect(button('Approve')).toBeEnabled();
+  });
+
+  it('offers a project admin who is not the actor no authorize text and no ready step on a sign-in pause', () => {
+    mocks.userId = 77;
+    mocks.signedIn = true;
+    mocks.conversation = { authAction: { toolMeta: { server_url: 'https://auth.example' } } };
+    mocks.detail = { ...mocks.detail, events: [paused({ need: 'sign_in', toolkit: 'Jira' })] };
+    renderCard();
+
+    expect(screen.queryByText(/Authorize now/)).not.toBeInTheDocument();
+    expect(screen.getByText(/The schedule owner must authorize it, then approve\./)).toBeInTheDocument();
+    expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Missing');
+  });
+
   it('shows the owner-only note and no decision for another user', () => {
     mocks.isOwner = false;
     renderCard();
