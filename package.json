@@ -1,7 +1,7 @@
 {
   "name": "elitea_ui",
   "private": true,
-  "version": "0.4.2509-hotfix.38",
+  "version": "0.4.2509-hotfix.39",
   "type": "module",
   "homepage": "./elitea_ui/",
   "scripts": {
