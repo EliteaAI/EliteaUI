@@ -14,10 +14,6 @@ import {
   ParsePipelineHelpers,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { toggleSet } from '@/[fsd]/features/pipelines/lib/helpers';
-import {
-  buildApplicationAttachment,
-  buildToolkitAttachment,
-} from '@/[fsd]/features/pipelines/tool-picker/lib/helpers/attachmentTool.helpers';
 import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd]/features/skill/api';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Input, Modal } from '@/[fsd]/shared/ui';
@@ -76,11 +72,20 @@ const AIEditPipelineModal = memo(props => {
   const handleToggleAddSkill = useCallback(id => toggleSet(setAddSkillIds)(id), []);
   const handleToggleRemoveTool = useCallback(id => toggleSet(setRemoveToolRecordIds)(id), []);
 
-  const steps = [
-    { key: 'yaml', label: 'Pipeline YAML' },
-    { key: 'run-settings', label: 'Run settings' },
-    { key: 'tools-skills', label: 'Tools & Skills' },
-  ];
+  const steps = useMemo(
+    () =>
+      isCreateMode
+        ? [
+            { key: 'yaml', label: 'Pipeline YAML' },
+            { key: 'run-settings', label: 'Run settings' },
+          ]
+        : [
+            { key: 'yaml', label: 'Pipeline YAML' },
+            { key: 'run-settings', label: 'Run settings' },
+            { key: 'tools-skills', label: 'Tools & Skills' },
+          ],
+    [isCreateMode],
+  );
 
   const currentTools = useMemo(
     () => formik.values?.version_details?.tools || [],
@@ -268,28 +273,6 @@ const AIEditPipelineModal = memo(props => {
         }),
       );
 
-      // In create mode the pipeline doesn't exist in the backend yet.
-      // Write selected suggested tools directly into Formik so the Save button picks them up.
-      if (isCreateMode) {
-        const toolkitEntries = (draftData.suggested_toolkits || [])
-          .filter(t => addToolkitIds.has(t.id))
-          .map(t => buildToolkitAttachment(t));
-        const mcpEntries = (draftData.suggested_mcp || [])
-          .filter(m => addMcpIds.has(m.id))
-          .map(m => buildToolkitAttachment(m, { mcp: true }));
-        const agentEntries = (draftData.suggested_agents || [])
-          .filter(a => addAgentIds.has(a.id))
-          .map(a => buildApplicationAttachment(a));
-        const pipelineEntries = (draftData.suggested_pipelines || [])
-          .filter(p => addPipelineIds.has(p.id))
-          .map(p => buildApplicationAttachment(p));
-        const pendingTools = [...toolkitEntries, ...mcpEntries, ...agentEntries, ...pipelineEntries];
-        if (pendingTools.length) {
-          await formik.setFieldValue('version_details.tools', pendingTools);
-        }
-        return;
-      }
-
       // Associate / disassociate tools when editing an existing pipeline (IDs available)
       const entityId = formik.values?.id;
       const versionId = formik.values?.version_details?.id;
@@ -403,7 +386,6 @@ const AIEditPipelineModal = memo(props => {
     [
       formik,
       dispatch,
-      isCreateMode,
       associateToolkits,
       associateApplications,
       associateToolkit,
