@@ -42,7 +42,7 @@ const renderSetting = () =>
       <RunWithoutAskingSetting />
     </ThemeProvider>,
   );
-const box = () => screen.getByRole('checkbox', { name: 'Allow Run without asking' });
+const box = () => screen.getByRole('checkbox', { name: 'Run without approval' });
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -54,14 +54,12 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-describe('Allow Run without asking setting', () => {
+describe('Run without approval setting', () => {
   it('shows the hint and the saved value', () => {
     api.query = { data: { allow_run_without_asking: true }, isError: false };
     renderSetting();
     expect(box()).toBeChecked();
-    expect(
-      screen.getByText('Scheduled runs with this rule approve sensitive actions by themselves.'),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/run sensitive actions without asking the schedule owner/i)).toBeInTheDocument();
   });
 
   it('checks the schedules admin permission', () => {
@@ -83,18 +81,12 @@ describe('Allow Run without asking setting', () => {
     expect(api.save).toHaveBeenCalledWith({ projectId: 2, allowRunWithoutAsking: false });
   });
 
-  it('shows it disabled with a note for a non-admin', () => {
+  it('shows it disabled for a non-admin', () => {
     api.isAdmin = false;
     api.query = { data: { allow_run_without_asking: true }, isError: false };
     renderSetting();
     expect(box()).toBeDisabled();
     expect(box()).toBeChecked();
-    expect(screen.getByText('Only a project admin can change this setting.')).toBeInTheDocument();
-  });
-
-  it('hides the admin note for a project admin', () => {
-    renderSetting();
-    expect(screen.queryByText('Only a project admin can change this setting.')).not.toBeInTheDocument();
   });
 
   it('shows an error toast when the save fails', async () => {

@@ -32,7 +32,7 @@ const renderSection = () =>
       <ScheduleNotificationsSection />
     </ThemeProvider>,
   );
-const box = () => screen.getByRole('checkbox', { name: 'Get notified' });
+const box = () => screen.getByRole('checkbox', { name: 'Send schedule notifications' });
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -42,10 +42,10 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-describe('Get notified section', () => {
-  it('shows the always-notify text', () => {
+describe('Send schedule notifications section', () => {
+  it('shows the description', () => {
     renderSection();
-    expect(screen.getByText(/failures, approvals/i)).toBeInTheDocument();
+    expect(screen.getByText(/notify the schedule owner about run results/i)).toBeInTheDocument();
   });
 
   it('shows the saved value unchecked', () => {
