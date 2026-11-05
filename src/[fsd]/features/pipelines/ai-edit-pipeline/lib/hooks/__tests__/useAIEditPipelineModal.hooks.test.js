@@ -10,11 +10,11 @@ import {
 import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd]/features/skill/api';
 import {
   useLazyApplicationDetailsQuery,
+  useLazyGetApplicationVersionDetailQuery,
   useLazyToolkitsDetailsQuery,
   useToolkitAssociateMutation,
   useUpdateApplicationRelationMutation,
 } from '@/api';
-import { eliteaApi } from '@/api/eliteaApi';
 import { act, renderHook } from '@testing-library/react';
 
 import { useAIEditPipelineModal } from '../useAIEditPipelineModal.hooks';
@@ -68,15 +68,12 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
 
 vi.mock('@/api', () => ({
   useLazyApplicationDetailsQuery: vi.fn(() => [vi.fn()]),
+  useLazyGetApplicationVersionDetailQuery: vi.fn(() => [vi.fn()]),
   useLazyToolkitsDetailsQuery: vi.fn(() => [vi.fn()]),
   useToolkitAssociateMutation: vi.fn(() => [vi.fn(() => ({ unwrap: vi.fn().mockResolvedValue({}) }))]),
   useUpdateApplicationRelationMutation: vi.fn(() => [
     vi.fn(() => ({ unwrap: vi.fn().mockResolvedValue({}) })),
   ]),
-}));
-
-vi.mock('@/api/eliteaApi', () => ({
-  eliteaApi: { util: { updateQueryData: vi.fn(() => () => {}) } },
 }));
 
 vi.mock('@/common/utils', () => ({ buildErrorMessage: vi.fn(() => 'error') }));
@@ -90,7 +87,10 @@ vi.mock('@/hooks/application/useSaveNewVersion', () => ({
 }));
 
 vi.mock('@/slices/pipeline', () => ({
-  actions: { initThePipeline: vi.fn(p => ({ type: 'pipeline/init', payload: p })) },
+  actions: {
+    initThePipeline: vi.fn(p => ({ type: 'pipeline/init', payload: p })),
+    applyPipelineDraft: vi.fn(p => ({ type: 'pipeline/applyDraft', payload: p })),
+  },
 }));
 
 vi.mock('@/slices/pipelineEditor', () => ({
@@ -137,8 +137,10 @@ beforeEach(() => {
   vi.mocked(useUpdateSkillRelationMutation).mockReturnValue([vi.fn(() => ({ unwrap: unwrapOk }))]);
   vi.mocked(useLazyApplicationDetailsQuery).mockReturnValue([vi.fn()]);
   vi.mocked(useLazyToolkitsDetailsQuery).mockReturnValue([vi.fn()]);
+  vi.mocked(useLazyGetApplicationVersionDetailQuery).mockReturnValue([
+    vi.fn().mockResolvedValue({ data: null }),
+  ]);
   vi.mocked(useLazySkillDetailsQuery).mockReturnValue([vi.fn()]);
-  vi.mocked(eliteaApi.util.updateQueryData).mockReturnValue(() => {});
 
   useFormikContext.mockReturnValue({
     values: makeFormikValues(),
@@ -548,7 +550,7 @@ describe('useAIEditPipelineModal', () => {
       expect(buildApplicationAttachment).toHaveBeenCalledTimes(2);
     });
 
-    it('skips skills in create mode even when selected', async () => {
+    it('keeps selected skills pending until the pipeline exists', async () => {
       const { result } = renderHook(() =>
         useAIEditPipelineModal({ isCreateMode: true, onClose: mockOnClose }),
       );
@@ -562,12 +564,63 @@ describe('useAIEditPipelineModal', () => {
           suggested_mcp: [],
           suggested_agents: [],
           suggested_pipelines: [],
-          suggested_skills: [{ id: 50 }],
+          suggested_skills: [
+            { id: 50, name: 'S' },
+            { id: 51, name: 'not ticked' },
+          ],
         });
       });
 
       const toolsCall = mockSetFieldValue.mock.calls.find(c => c[0] === 'version_details.tools');
       expect(toolsCall[1]).toHaveLength(0);
+      expect(mockSetFieldValue).toHaveBeenCalledWith('pending_skills', [{ id: 50, name: 'S' }]);
+      expect(getUpdateSkillRelationFn()).not.toHaveBeenCalled();
+    });
+
+    it('merges new suggestions into tools already in the create form', async () => {
+      const existing = [
+        { id: 7, type: 'github', name: 'GH already attached' },
+        { id: 8, type: 'jira', name: 'Jira to remove' },
+      ];
+      vi.mocked(useFormikContext).mockReturnValue({
+        values: makeFormikValues({
+          id: undefined,
+          version_details: { ...baseVersionDetails, tools: existing },
+        }),
+        setFieldValue: mockSetFieldValue,
+      });
+      vi.mocked(useLazyToolkitsDetailsQuery).mockReturnValue([
+        vi.fn(({ toolkitId }) =>
+          Promise.resolve({ data: { id: toolkitId, type: 'sharepoint', name: `tk${toolkitId}` } }),
+        ),
+      ]);
+
+      const { result } = renderHook(() =>
+        useAIEditPipelineModal({ isCreateMode: true, onClose: mockOnClose }),
+      );
+
+      act(() => {
+        result.current.handleToggleAddToolkit(7);
+        result.current.handleToggleAddToolkit(12);
+        result.current.handleToggleRemoveTool(8);
+      });
+
+      await act(async () => {
+        await result.current.handleSave({
+          pipeline_yaml: '',
+          suggested_toolkits: [
+            { id: 7, name: 'GH' },
+            { id: 12, name: 'SP' },
+          ],
+          suggested_mcp: [],
+          suggested_agents: [],
+          suggested_pipelines: [],
+        });
+      });
+
+      const toolsCall = mockSetFieldValue.mock.calls.find(c => c[0] === 'version_details.tools');
+      expect(toolsCall[1].map(t => t.id)).toEqual([7, 12]);
+      expect(toolsCall[1][0].name).toBe('GH already attached');
     });
   });
 
@@ -617,7 +670,7 @@ describe('useAIEditPipelineModal', () => {
       ]);
     });
 
-    it('dispatches resetPipelineEditor and initThePipeline', async () => {
+    it('loads the draft as an unsaved edit, keeping the saved version as the discard baseline', async () => {
       const { result } = renderHook(() =>
         useAIEditPipelineModal({ isCreateMode: false, onClose: mockOnClose }),
       );
@@ -627,7 +680,13 @@ describe('useAIEditPipelineModal', () => {
       });
 
       expect(mockDispatch).toHaveBeenCalledWith(expect.objectContaining({ type: 'pipelineEditor/reset' }));
-      expect(mockDispatch).toHaveBeenCalledWith(expect.objectContaining({ type: 'pipeline/init' }));
+      expect(mockDispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'pipeline/applyDraft',
+          payload: expect.objectContaining({ yamlCode: 'updated: true' }),
+        }),
+      );
+      expect(mockDispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'pipeline/init' }));
     });
 
     it('associates selected toolkit with the existing version', async () => {
@@ -794,27 +853,30 @@ describe('useAIEditPipelineModal', () => {
       );
     });
 
-    it('patches RTK cache with fresh tools and AI-applied YAML after save', async () => {
+    it('re-reads tools from the version endpoint and keeps the AI edits as unsaved form changes', async () => {
+      const freshTools = [{ id: 99, type: 'github', name: 'GH' }];
+      const fetchVersion = vi.fn().mockResolvedValue({ data: { tools: freshTools } });
+      vi.mocked(useLazyGetApplicationVersionDetailQuery).mockReturnValue([fetchVersion]);
+
       const { result } = renderHook(() =>
         useAIEditPipelineModal({ isCreateMode: false, onClose: mockOnClose }),
       );
 
       await act(async () => {
-        await result.current.handleSave(draftWithSuggestions);
+        await result.current.handleSave({
+          ...draftWithSuggestions,
+          name: 'renamed',
+          description: 'new desc',
+        });
       });
 
-      const updateQueryDataFn = vi.mocked(eliteaApi.util.updateQueryData);
-      expect(updateQueryDataFn).toHaveBeenCalledWith(
-        'applicationDetails',
-        { projectId: 1, applicationId: 1 },
-        expect.any(Function),
-      );
-
-      // Verify the updater injects the AI-applied YAML, not the stale server YAML
-      const updaterFn = updateQueryDataFn.mock.calls[0][2];
-      const draftState = { version_details: { tools: [], instructions: 'old_yaml: true' } };
-      updaterFn(draftState);
-      expect(draftState.version_details.instructions).toBe('updated: true');
+      expect(fetchVersion).toHaveBeenCalledWith({ projectId: 1, applicationId: 1, versionId: 10 });
+      expect(mockSetFieldValue).toHaveBeenCalledWith('version_details.tools', freshTools);
+      expect(mockSetFieldValue).toHaveBeenCalledWith('name', 'renamed');
+      expect(mockSetFieldValue).toHaveBeenCalledWith('description', 'new desc');
+      expect(mockSetFieldValue).toHaveBeenCalledWith('version_details.instructions', 'updated: true');
+      // the edit page's form is never reinitialized from the application details query
+      expect(getFetchApplicationDetailsFn().mock.calls.some(([arg]) => arg?.applicationId === 1)).toBe(false);
     });
 
     it('does not call associateToolkit or updateApplicationRelation when nothing is selected or removed', async () => {

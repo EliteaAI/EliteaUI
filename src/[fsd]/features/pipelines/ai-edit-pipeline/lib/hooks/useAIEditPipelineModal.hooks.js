@@ -11,6 +11,7 @@ import {
   ParsePipelineHelpers,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { toggleSet } from '@/[fsd]/features/pipelines/lib/helpers';
+import { getAttachmentKey } from '@/[fsd]/features/pipelines/tool-picker/lib/helpers/attachmentDiff.helpers';
 import {
   buildApplicationAttachment,
   buildToolkitAttachment,
@@ -19,18 +20,18 @@ import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   useLazyApplicationDetailsQuery,
+  useLazyGetApplicationVersionDetailQuery,
   useLazyToolkitsDetailsQuery,
   useToolkitAssociateMutation,
   useUpdateApplicationRelationMutation,
 } from '@/api';
-import { eliteaApi } from '@/api/eliteaApi';
 import { buildErrorMessage } from '@/common/utils';
 import { mapAssociationError } from '@/hooks/application/useAgentPipelineAssociation';
 import useSaveNewVersion from '@/hooks/application/useSaveNewVersion';
 import { actions } from '@/slices/pipeline';
 import { actions as editorActions } from '@/slices/pipelineEditor';
 
-import { computeInitialSelections } from '../helpers';
+import { computeInitialSelections, getRemoveId, normaliseCurrentTool } from '../helpers';
 
 export const useAIEditPipelineModal = ({ isCreateMode, onClose }) => {
   const formik = useFormikContext();
@@ -48,6 +49,7 @@ export const useAIEditPipelineModal = ({ isCreateMode, onClose }) => {
   const [fetchApplicationDetails] = useLazyApplicationDetailsQuery();
   const [fetchSkillDetails] = useLazySkillDetailsQuery();
   const [fetchToolkitDetails] = useLazyToolkitsDetailsQuery();
+  const [fetchVersionDetail] = useLazyGetApplicationVersionDetailQuery();
 
   const [showVersionModal, setShowVersionModal] = useState(false);
   const [versionName, setVersionName] = useState('');
@@ -207,8 +209,11 @@ export const useAIEditPipelineModal = ({ isCreateMode, onClose }) => {
       );
 
       dispatch(editorActions.resetPipelineEditor());
+      // On an existing pipeline the draft is an unsaved edit, so Discard must still return to the saved
+      // version; the create page has no saved version, so the draft becomes its starting point
+      const loadPipeline = isCreateMode ? actions.initThePipeline : actions.applyPipelineDraft;
       dispatch(
-        actions.initThePipeline({
+        loadPipeline({
           nodes: convertedNodes,
           edges,
           yamlJsonObject: parsedYamlJson,
@@ -261,7 +266,18 @@ export const useAIEditPipelineModal = ({ isCreateMode, onClose }) => {
           if (r.status === 'fulfilled') pendingTools.push(r.value);
         });
 
-        await formik.setFieldValue('version_details.tools', pendingTools);
+        // Merge into what the create form already has: keep tools the user did not tick for removal and
+        // skip suggestions that are already attached, so applying a draft never wipes earlier work
+        const formTools = formik.values?.version_details?.tools || [];
+        const kept = formTools.filter(t => !removeToolRecordIds.has(getRemoveId(normaliseCurrentTool(t))));
+        const keptKeys = new Set(kept.map(t => getAttachmentKey(t)));
+        const added = pendingTools.filter(t => !keptKeys.has(getAttachmentKey(t)));
+        await formik.setFieldValue('version_details.tools', [...kept, ...added]);
+
+        // A skill needs a version to attach to, which only exists after the first Save; the create page
+        // attaches these once the pipeline is created
+        const skillsToAdd = (draftData.suggested_skills || []).filter(s => addSkillIds.has(s.id));
+        await formik.setFieldValue('pending_skills', skillsToAdd);
         return;
       }
 
@@ -339,40 +355,16 @@ export const useAIEditPipelineModal = ({ isCreateMode, onClose }) => {
           );
         }
 
-        // Fetch fresh tools without triggering Formik reinitialization.
-        // fetchApplicationDetails updates the global RTK cache; with enableReinitialize on the
-        // parent Formik the cache update would recompute initialValues from the stale server YAML
-        // and overwrite the AI-applied YAML that was just dispatched to Redux.
-        // Instead, fetch once then patch only version_details.tools in the existing cache entry
-        // while preserving the AI-applied YAML, so the cache key stays consistent with what
-        // lastInitYamlRef already guards.
-        const { data: freshData } = await fetchApplicationDetails({
+        // Read the attached tools back from the version endpoint: it is not the `applicationDetails` query the
+        // edit page's Formik reinitializes from, so the AI-applied name, description and YAML stay unsaved
+        // edits that Discard and the leave-page warning still see
+        const { data: freshVersion } = await fetchVersionDetail({
           projectId,
           applicationId: entityId,
+          versionId,
         });
-        if (freshData?.version_details?.tools) {
-          const freshTools = freshData.version_details.tools;
-          await formik.setFieldValue('version_details.tools', freshTools);
-          dispatch(
-            eliteaApi.util.updateQueryData(
-              'applicationDetails',
-              { projectId, applicationId: entityId },
-              draft => {
-                if (draft?.version_details) {
-                  draft.version_details.tools = freshTools;
-                  // Keep the AI-applied YAML so the cache key matches lastInitYamlRef and
-                  // the useApplicationInitialValues guard skips re-initialization.
-                  // Use newYaml directly — formik.values is a stale closure reference here
-                  // (setFieldValue queues a React state update, not a synchronous mutation).
-                  draft.version_details.instructions = newYaml;
-                }
-                // The refetch triggers a Formik reinitialization, which would otherwise restore
-                // the saved name/description over the AI-applied ones
-                if (draft && draftData.name) draft.name = draftData.name;
-                if (draft && draftData.description != null) draft.description = draftData.description;
-              },
-            ),
-          );
+        if (freshVersion?.tools) {
+          await formik.setFieldValue('version_details.tools', freshVersion.tools);
         }
       }
     },
@@ -388,6 +380,7 @@ export const useAIEditPipelineModal = ({ isCreateMode, onClose }) => {
       fetchApplicationDetails,
       fetchToolkitDetails,
       fetchSkillDetails,
+      fetchVersionDetail,
       projectId,
       addToolkitIds,
       addMcpIds,

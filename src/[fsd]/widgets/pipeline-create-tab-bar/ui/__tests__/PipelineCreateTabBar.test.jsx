@@ -11,6 +11,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 const create = vi.fn();
 const setBlockNav = vi.fn();
 const createApplicationSpy = vi.fn();
+const attachPendingSkills = vi.fn();
 let pipelineState = { stateValidationErrors: {} };
 
 vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn() }));
@@ -26,6 +27,9 @@ vi.mock('@/hooks/application/useCreateApplication', () => ({
   },
 }));
 vi.mock('@/hooks/useNavBlocker', () => ({ default: () => ({ setBlockNav }) }));
+vi.mock('@/[fsd]/features/pipelines/ai-edit-pipeline', () => ({
+  useAttachPendingSkills: () => attachPendingSkills,
+}));
 vi.mock('@/pages/Pipelines/useIsPipelineYamlCodeDirty', () => ({ default: () => false }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useToast: () => ({ toastError: vi.fn() }) }));
 vi.mock('@/[fsd]/shared/ui', async () => {
@@ -101,5 +105,18 @@ describe('PipelineCreateTabBar', () => {
     const resetBlockNav = createApplicationSpy.mock.calls.at(-1)[1];
     resetBlockNav();
     expect(setBlockNav).toHaveBeenLastCalledWith(false);
+  });
+
+  it('attaches the pending draft skills to the created version', async () => {
+    const skills = [{ id: 50, name: 'S' }];
+    renderTabBar({ name: 'Pipeline 1', description: '', pending_skills: skills });
+
+    const save = screen.getByTestId('agent-save-button');
+    await waitFor(() => expect(save).toBeEnabled());
+    fireEvent.click(save);
+
+    const { onSuccess } = createApplicationSpy.mock.calls.at(-1)[2];
+    onSuccess({ version_details: { id: 77 } });
+    expect(attachPendingSkills).toHaveBeenCalledWith(skills, 77);
   });
 });

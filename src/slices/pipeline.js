@@ -76,6 +76,26 @@ const pipelineSlice = createSlice({
       };
     },
 
+    // Loads a new YAML as an unsaved edit: the canvas re-renders it, but initState (what Discard returns
+    // to and what dirty checks compare against) stays on the saved version
+    applyPipelineDraft: (state, action) => {
+      const { nodes, edges, yamlJsonObject, yamlCode, layout_version } = action.payload;
+      const key = resolveKey(state);
+      const pipeline = state.byKey[key] || initialPipelineState;
+      state.byKey[key] = {
+        ...pipeline,
+        nodes: [...nodes],
+        edges: [...edges],
+        yamlJsonObject: structuredClone(yamlJsonObject || {}),
+        yamlCode,
+        resetFlag: true,
+        resetVersion: (pipeline.resetVersion ?? 0) + 1,
+        layout_version,
+        orientation: action.payload.orientation || pipeline.orientation || ORIENTATION.vertical,
+        stateValidationErrors: {},
+      };
+    },
+
     resetPipeline: state => {
       const key = resolveKey(state);
       if (!state.byKey[key]) return;

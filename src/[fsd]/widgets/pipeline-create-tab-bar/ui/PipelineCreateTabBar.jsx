@@ -1,9 +1,10 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
+import { useAttachPendingSkills } from '@/[fsd]/features/pipelines/ai-edit-pipeline';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -35,7 +36,24 @@ const PipelineCreateTabBar = memo(() => {
     setIsSaved(true);
     setBlockNav(false);
   }, [setBlockNav]);
-  const { isLoading, create, error, isError } = useCreateApplication(formik, resetBlockNav);
+  // The create payload has no skills field, so skills an AI draft suggested are attached once the version
+  // exists; read before Save because the form is reset to the server response on success
+  const attachPendingSkills = useAttachPendingSkills();
+  const pendingSkillsRef = useRef([]);
+  const onCreated = useCallback(
+    data => attachPendingSkills(pendingSkillsRef.current, data?.version_details?.id),
+    [attachPendingSkills],
+  );
+  const {
+    isLoading,
+    create: createPipeline,
+    error,
+    isError,
+  } = useCreateApplication(formik, resetBlockNav, { onSuccess: onCreated });
+  const create = useCallback(() => {
+    pendingSkillsRef.current = formik.values?.pending_skills || [];
+    return createPipeline();
+  }, [createPipeline, formik.values?.pending_skills]);
 
   const hasStateErrors = useMemo(
     () => Boolean(stateValidationErrors && Object.keys(stateValidationErrors).length),
