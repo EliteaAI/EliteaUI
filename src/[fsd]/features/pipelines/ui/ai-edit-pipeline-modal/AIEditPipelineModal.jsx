@@ -373,8 +373,9 @@ const AIEditPipelineModal = memo(props => {
                   draft.version_details.tools = freshTools;
                   // Keep the AI-applied YAML so the cache key matches lastInitYamlRef and
                   // the useApplicationInitialValues guard skips re-initialization.
-                  draft.version_details.instructions =
-                    formik.values?.version_details?.instructions ?? draft.version_details.instructions;
+                  // Use newYaml directly — formik.values is a stale closure reference here
+                  // (setFieldValue queues a React state update, not a synchronous mutation).
+                  draft.version_details.instructions = newYaml;
                 }
               },
             ),

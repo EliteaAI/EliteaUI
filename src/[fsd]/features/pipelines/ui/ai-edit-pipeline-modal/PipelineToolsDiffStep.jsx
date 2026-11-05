@@ -71,6 +71,8 @@ const PipelineToolsDiffStep = memo(props => {
     onToggleRemoveTool,
   } = props;
 
+  const styles = pipelineToolsDiffStepStyles();
+
   const leftTools = useMemo(() => normaliseCurrentTools(currentTools), [currentTools]);
   const rightTools = useMemo(() => normaliseSuggestedTools(draftData), [draftData]);
 
@@ -177,7 +179,7 @@ const PipelineToolsDiffStep = memo(props => {
 PipelineToolsDiffStep.displayName = 'PipelineToolsDiffStep';
 
 /** @type {MuiSx} */
-const styles = {
+const pipelineToolsDiffStepStyles = () => ({
   column: {
     display: 'flex',
     flexDirection: 'column',
@@ -227,6 +229,6 @@ const styles = {
     fontStyle: 'italic',
     marginBottom: '0.5rem',
   },
-};
+});
 
 export default PipelineToolsDiffStep;
