@@ -1,8 +1,58 @@
+// Header and body rows are separate flex containers, so their columns only line up when every
+// cell resolves to the same width in both. With a plain `flex: N` the minimum width is `auto`:
+// header cells (visible overflow) refuse to shrink below their longest word plus the reserved
+// sort icon, while body cells (overflow hidden) shrink freely. On narrow viewports that pushes
+// the header columns to the right of the values below them. Giving header and body cells the
+// same explicit minimum width removes the content dependency, and giving the rows the same
+// minimum width makes the table scroll horizontally instead of squeezing the columns.
+const COLUMN_UNIT_REM = 5;
+// Wide (name) columns grow with their flex factor but do not need a proportionally wide minimum
+const MAX_MIN_UNITS = 2;
+const CELL_GAP_REM = 0.5;
+const ROW_PADDING_X_REM = 0.75;
+
+const toFlex = columnOrFlex => (typeof columnOrFlex === 'number' ? columnOrFlex : (columnOrFlex?.flex ?? 1));
+
+const columnMinWidthRem = (flex, unitRem = COLUMN_UNIT_REM) => Math.min(flex, MAX_MIN_UNITS) * unitRem;
+
+// Sizing for one header or body cell. Accepts a column definition (`{ flex }`) or a flex number.
+// Pass the same `unitRem` here and to `analyticsRowMinWidthSx` for compact tables.
+export const analyticsColumnSx = (columnOrFlex, options = {}) => {
+  const { unitRem } = options;
+  const flex = toFlex(columnOrFlex);
+  return { flex: `${flex} 1 0`, minWidth: `${columnMinWidthRem(flex, unitRem)}rem` };
+};
+
+// Minimum width shared by the header row and every body row of one table.
+// Pass `paddingXRem` / `gapRem` when the rows do not use the default analytics row spacing, and
+// `fixedColumnsRem` (one width per column) for fixed-width columns that are not flex-sized.
+export const analyticsRowMinWidthSx = (columnsOrFlexes, options = {}) => {
+  const { gapRem = CELL_GAP_REM, paddingXRem = ROW_PADDING_X_REM, fixedColumnsRem = [], unitRem } = options;
+  const flexes = columnsOrFlexes.map(toFlex);
+  const cellsRem =
+    flexes.reduce((sum, flex) => sum + columnMinWidthRem(flex, unitRem), 0) +
+    fixedColumnsRem.reduce((sum, width) => sum + width, 0);
+  const gapsRem = Math.max(flexes.length + fixedColumnsRem.length - 1, 0) * gapRem;
+  return { minWidth: `${cellsRem + gapsRem + paddingXRem * 2}rem` };
+};
+
+// Header labels wrap inside their fixed-minimum cell instead of widening it
+export const analyticsHeaderCellSx = { overflowWrap: 'anywhere' };
+
 // Card + flex-table layout shared by the Overview tables (ModelUsageTable, AutomatedActivityTable)
 export const analyticsTableSortLabelSx = {
   color: 'inherit',
   '&.Mui-active': { color: 'inherit' },
   '& .MuiTableSortLabel-icon': { fontSize: '0.875rem' },
+};
+
+// For right-aligned (numeric) columns. TableSortLabel always reserves room for its arrow after the
+// label, even while the arrow is hidden, so a right-aligned header ends short of the values under
+// it. Rendering the arrow before the label keeps the label text flush with the right edge.
+export const analyticsTableSortLabelEndSx = {
+  ...analyticsTableSortLabelSx,
+  flexDirection: 'row-reverse',
+  '& .MuiTableSortLabel-icon': { fontSize: '0.875rem', marginLeft: 0, marginRight: '0.25rem' },
 };
 /** @type {MuiSx} */
 export const analyticsTableStyles = {

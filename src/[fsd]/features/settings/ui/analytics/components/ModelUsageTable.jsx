@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { Box, TableSortLabel, Typography } from '@mui/material';
 
@@ -8,7 +8,14 @@ import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { useClientSort, useSortedRows } from '@/[fsd]/shared/lib/hooks';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
-import { analyticsTableSortLabelSx, analyticsTableStyles } from './analyticsTable.styles';
+import {
+  analyticsColumnSx,
+  analyticsHeaderCellSx,
+  analyticsRowMinWidthSx,
+  analyticsTableSortLabelEndSx,
+  analyticsTableSortLabelSx,
+  analyticsTableStyles,
+} from './analyticsTable.styles';
 
 const MODEL_COLUMNS = [
   { key: 'model_name', label: 'Model', flex: 3 },
@@ -17,10 +24,22 @@ const MODEL_COLUMNS = [
   { key: 'share', label: 'Share', flex: 2, align: 'right' },
 ];
 
+const INDEX_COLUMN_REM = 2;
+const [MODEL_COLUMN, CALLS_COLUMN, USERS_COLUMN, SHARE_COLUMN] = MODEL_COLUMNS;
+
 const ModelUsageTable = memo(props => {
   const { models = [], totalCalls, isPersonalProject = false } = props;
 
   const styles = modelUsageTableStyles();
+
+  const visibleColumns = useMemo(
+    () => MODEL_COLUMNS.filter(col => !col.personalHide || !isPersonalProject),
+    [isPersonalProject],
+  );
+  const rowMinWidth = useMemo(
+    () => analyticsRowMinWidthSx(visibleColumns, { fixedColumnsRem: [INDEX_COLUMN_REM] }),
+    [visibleColumns],
+  );
 
   const { sort: modelSort, handleSort: handleModelSort } = useClientSort('calls');
   const getModelValue = useCallback(
@@ -62,15 +81,16 @@ const ModelUsageTable = memo(props => {
         />
       </Box>
       <Box sx={styles.tableWrapper}>
-        <Box sx={styles.tableHeader}>
+        <Box sx={[styles.tableHeader, rowMinWidth]}>
           <Typography sx={[styles.tableCell, { flex: '0 0 2rem', textAlign: 'right' }]}>#</Typography>
-          {MODEL_COLUMNS.filter(col => !col.personalHide || !isPersonalProject).map(col => (
+          {visibleColumns.map(col => (
             <Box
               key={col.key}
               sx={[
                 styles.tableCell,
+                analyticsHeaderCellSx,
+                analyticsColumnSx(col),
                 {
-                  flex: col.flex,
                   display: 'flex',
                   justifyContent: col.align === 'right' ? 'flex-end' : 'flex-start',
                 },
@@ -80,7 +100,7 @@ const ModelUsageTable = memo(props => {
                 active={modelSort.sortBy === col.key}
                 direction={modelSort.sortBy === col.key ? modelSort.sortOrder : 'desc'}
                 onClick={() => handleModelSort(col.key)}
-                sx={analyticsTableSortLabelSx}
+                sx={col.align === 'right' ? analyticsTableSortLabelEndSx : analyticsTableSortLabelSx}
               >
                 {col.label}
               </TableSortLabel>
@@ -94,7 +114,7 @@ const ModelUsageTable = memo(props => {
           return (
             <Box
               key={index}
-              sx={styles.tableRow}
+              sx={[styles.tableRow, rowMinWidth]}
             >
               <Typography
                 sx={[
@@ -108,7 +128,8 @@ const ModelUsageTable = memo(props => {
               <Box
                 sx={[
                   styles.tableCellValue,
-                  { flex: 3, display: 'flex', alignItems: 'center', gap: '0.5rem' },
+                  analyticsColumnSx(MODEL_COLUMN),
+                  { display: 'flex', alignItems: 'center', gap: '0.5rem' },
                 ]}
               >
                 <Box sx={styles.colorDot(color)} />
@@ -119,15 +140,15 @@ const ModelUsageTable = memo(props => {
                   {model.display_name || model.model_name || 'Unknown Model'}
                 </Typography>
               </Box>
-              <Typography sx={[styles.tableCellValue, { flex: 1, textAlign: 'right' }]}>
+              <Typography sx={[styles.tableCellValue, analyticsColumnSx(CALLS_COLUMN), styles.right]}>
                 {AnalyticCommonHelpers.fmtNum(model.calls)}
               </Typography>
               {!isPersonalProject && (
-                <Typography sx={[styles.tableCellValue, { flex: 1, textAlign: 'right' }]}>
+                <Typography sx={[styles.tableCellValue, analyticsColumnSx(USERS_COLUMN), styles.right]}>
                   {model.users}
                 </Typography>
               )}
-              <Box sx={styles.modelCell}>
+              <Box sx={[styles.modelCell, analyticsColumnSx(SHARE_COLUMN)]}>
                 <Box sx={styles.shareBarBg}>
                   <Box
                     sx={[
@@ -160,15 +181,20 @@ ModelUsageTable.displayName = 'ModelUsageTable';
 /** @type {MuiSx} */
 const modelUsageTableStyles = () => ({
   ...analyticsTableStyles,
+  right: { textAlign: 'right' },
+  // No padding on the cell itself: a body-only padding widens this column relative to its header
+  // cell and shifts every column to its left. The spacing lives on the bar instead.
   modelCell: {
-    flex: 2,
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    paddingLeft: '0.5rem',
   },
+  // The fill grows from the right so it ends next to the right-aligned share value and header
   shareBarBg: {
     flex: 1,
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginLeft: '0.5rem',
     height: 8,
     borderRadius: 4,
     backgroundColor: 'transparent',

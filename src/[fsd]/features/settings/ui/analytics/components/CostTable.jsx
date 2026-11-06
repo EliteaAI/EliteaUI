@@ -1,11 +1,16 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 import { Box, TableSortLabel, Typography } from '@mui/material';
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
-import { analyticsTableSortLabelSx } from './analyticsTable.styles';
+import {
+  analyticsColumnSx,
+  analyticsHeaderCellSx,
+  analyticsRowMinWidthSx,
+  analyticsTableSortLabelSx,
+} from './analyticsTable.styles';
 
 const COST_COLUMNS = [
   { header: 'TOTAL COST', key: 'cost', belowKey: 'total_cost' },
@@ -14,6 +19,10 @@ const COST_COLUMNS = [
   { header: 'CACHE READ COST', key: 'cache_read_cost', belowKey: 'cache_read_cost' },
   { header: 'CACHE WRITE COST', key: 'cache_creation_cost', belowKey: 'cache_creation_cost' },
 ];
+
+const NAME_FLEX = 3;
+const COST_FLEX = 1.5;
+const SHARE_FLEX = 1;
 
 const CostTable = memo(props => {
   const {
@@ -30,6 +39,11 @@ const CostTable = memo(props => {
   } = props;
 
   const styles = costTableStyles();
+  const rowMinWidth = useMemo(
+    () =>
+      analyticsRowMinWidthSx([NAME_FLEX, ...extraColumns, ...COST_COLUMNS.map(() => COST_FLEX), SHARE_FLEX]),
+    [extraColumns],
+  );
 
   const renderHeaderCell = (key, label, sx) => {
     if (onSort) {
@@ -72,20 +86,28 @@ const CostTable = memo(props => {
       </Box>
       {rows.length > 0 ? (
         <Box sx={styles.tableWrapper}>
-          <Box sx={styles.tableHeader}>
-            {renderHeaderCell('name', nameHeader, [styles.tableCell, styles.nameCell])}
+          <Box sx={[styles.tableHeader, rowMinWidth]}>
+            {renderHeaderCell('name', nameHeader, [styles.tableCell, analyticsHeaderCellSx, styles.nameCell])}
             {extraColumns.map(col =>
-              renderHeaderCell(col.key, col.header, [styles.tableCell, { flex: col.flex ?? 1 }]),
+              renderHeaderCell(col.key, col.header, [
+                styles.tableCell,
+                analyticsHeaderCellSx,
+                analyticsColumnSx(col),
+              ]),
             )}
             {COST_COLUMNS.map(col =>
-              renderHeaderCell(col.key, col.header, [styles.tableCell, styles.costCell]),
+              renderHeaderCell(col.key, col.header, [
+                styles.tableCell,
+                analyticsHeaderCellSx,
+                styles.costCell,
+              ]),
             )}
-            {renderHeaderCell('share', 'SHARE', [styles.tableCell, styles.shareCell])}
+            {renderHeaderCell('share', 'SHARE', [styles.tableCell, analyticsHeaderCellSx, styles.shareCell])}
           </Box>
           {rows.map((row, index) => (
             <Box
               key={`${row.name}-${index}`}
-              sx={styles.tableRow}
+              sx={[styles.tableRow, rowMinWidth]}
             >
               <Typography
                 sx={[styles.tableCellValue, styles.nameCell]}
@@ -96,7 +118,7 @@ const CostTable = memo(props => {
               {extraColumns.map(col => (
                 <Box
                   key={col.key}
-                  sx={[styles.tableCellValue, styles.extraCell, { flex: col.flex ?? 1 }]}
+                  sx={[styles.tableCellValue, styles.extraCell, analyticsColumnSx(col)]}
                 >
                   {col.render(row)}
                 </Box>
@@ -177,10 +199,10 @@ const costTableStyles = () => ({
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   }),
-  extraCell: { display: 'flex', alignItems: 'center', minWidth: 0 },
-  nameCell: { flex: 3 },
-  costCell: { flex: 1.5 },
-  shareCell: { flex: 1 },
+  extraCell: { display: 'flex', alignItems: 'center' },
+  nameCell: analyticsColumnSx(NAME_FLEX),
+  costCell: analyticsColumnSx(COST_FLEX),
+  shareCell: analyticsColumnSx(SHARE_FLEX),
 });
 
 export default CostTable;
