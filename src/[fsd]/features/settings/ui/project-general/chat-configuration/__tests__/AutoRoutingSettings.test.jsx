@@ -363,6 +363,13 @@ describe('project Auto permission and configuration', () => {
       for (const name of ['economical', 'tiered', 'premium_at_deep', 'premium_from_standard'])
         expect(mode(name)).toBeInTheDocument();
     });
+    it('says that Economical includes floor-cleared models without a paired comparison', () => {
+      api.current = { id: 12, elitea_title: 'auto_routing', data: { escalation_mode: 'economical' } };
+      renderSettings();
+      expect(screen.getByTestId('auto-routing-mode-description')).toHaveTextContent(
+        'Cheapest admitted model at every demand; models that cleared the quality floor but have no paired comparison are included.',
+      );
+    });
     it('is hidden when Auto is disabled', () => {
       api.autoEnabled = false;
       renderSettings();

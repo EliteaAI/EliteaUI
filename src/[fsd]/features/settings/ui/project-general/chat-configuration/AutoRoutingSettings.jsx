@@ -37,7 +37,7 @@ const ROUTING_MODES = [
   {
     value: 'economical',
     label: 'Economical',
-    line: 'Cheapest admitted model at every demand.',
+    line: 'Cheapest admitted model at every demand; models that cleared the quality floor but have no paired comparison are included.',
   },
   {
     value: 'tiered',
