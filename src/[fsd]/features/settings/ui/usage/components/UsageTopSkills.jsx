@@ -77,7 +77,7 @@ const UsageTopSkills = memo(props => {
     [sortKey],
   );
 
-  const title = sortKey === 'runs' ? 'Top Run Skills' : 'Top Spend Skills';
+  const title = sortKey === 'runs' ? 'Top Run Skills' : 'Top Spent Skills';
 
   if (!topSkills.length && !topSkillsByRuns.length) return null;
 
