@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { findWaitingRun, getWaitingRunNeed, hasMissingCredential } from '../waitingRun.helpers';
+import {
+  findWaitingRun,
+  getRunActorId,
+  getWaitingRunNeed,
+  hasMissingCredential,
+} from '../waitingRun.helpers';
 
 describe('getWaitingRunNeed', () => {
   it('reads the structured fields of the paused event', () => {
@@ -21,6 +26,39 @@ describe('getWaitingRunNeed', () => {
       toolkit: undefined,
       credential: 'gh-main',
     });
+  });
+
+  it('finds a later "credential X not found." after an earlier word that starts the same', () => {
+    const text = 'Credentials are missing. Credential foo not found.';
+    expect(getWaitingRunNeed({ kind: 'paused', text })).toEqual({
+      need: 'credential',
+      toolkit: undefined,
+      credential: 'foo',
+    });
+  });
+
+  it('reads the credential in any letter case and over a line break', () => {
+    expect(getWaitingRunNeed({ kind: 'paused', text: 'CREDENTIAL\n gh-main \nNOT FOUND.' })).toMatchObject({
+      need: 'credential',
+      credential: 'gh-main',
+    });
+  });
+
+  it('returns no need when no credential name stands between the words', () => {
+    expect(getWaitingRunNeed({ kind: 'paused', text: 'Credential not found.' })).toEqual({});
+    expect(getWaitingRunNeed({ kind: 'paused', text: 'Credential foo not found' })).toEqual({});
+  });
+
+  it('reads the first word after "toolkit" as the toolkit name', () => {
+    const text = 'Paused: credential gh-main not found. Fix toolkit "GitHub" in this project.';
+    expect(getWaitingRunNeed({ kind: 'paused', text })).toMatchObject({ toolkit: 'GitHub' });
+  });
+
+  it('parses long text without a hit in linear time', () => {
+    const text = 'credential '.repeat(20000);
+    const started = Date.now();
+    expect(getWaitingRunNeed({ kind: 'paused', text })).toEqual({});
+    expect(Date.now() - started).toBeLessThan(1000);
   });
 
   it('parses the toolkit of a sign-in pause from the text', () => {
@@ -73,5 +111,26 @@ describe('findWaitingRun', () => {
     const waiting = { id: 2, status: 'waiting_for_approval' };
     expect(findWaitingRun([{ id: 1, status: 'success' }, waiting])).toBe(waiting);
     expect(findWaitingRun(undefined)).toBeUndefined();
+  });
+});
+
+describe('getRunActorId', () => {
+  const schedule = { owner: { id: 5 } };
+
+  it.each(['manual', 'test'])('returns the starter of a %s run', trigger => {
+    expect(getRunActorId({ trigger, requested_by: 9 }, schedule)).toBe(9);
+  });
+
+  it('returns the schedule owner for a cron run', () => {
+    expect(getRunActorId({ trigger: 'cron', requested_by: 9 }, schedule)).toBe(5);
+  });
+
+  it('returns the schedule owner for a manual run without a starter', () => {
+    expect(getRunActorId({ trigger: 'manual', requested_by: null }, schedule)).toBe(5);
+  });
+
+  it('returns undefined when the run has no starter to use and there is no schedule', () => {
+    expect(getRunActorId({ trigger: 'cron' }, undefined)).toBeUndefined();
+    expect(getRunActorId(undefined, undefined)).toBeUndefined();
   });
 });

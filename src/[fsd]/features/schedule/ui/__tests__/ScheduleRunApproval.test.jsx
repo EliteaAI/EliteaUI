@@ -115,7 +115,19 @@ describe('ScheduleRunApproval', () => {
 
     expect(button('Approve')).toBeDisabled();
     expect(button('Reject')).toBeDisabled();
-    expect(screen.getByText('Only the owner can approve or reject this run')).toBeInTheDocument();
+    expect(
+      screen.getByText('Only the owner or project admins can approve or reject this run'),
+    ).toBeInTheDocument();
+  });
+
+  it('says only the starter decides a Test run, without a promise for project admins', () => {
+    mocks.isOwner = false;
+    renderApproval({ schedule: undefined, run: { id: 5, isDraftRun: true, requested_by: 8 } });
+
+    expect(
+      screen.getByText('Only the user who started this Test run can approve or reject it'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/project admins/)).not.toBeInTheDocument();
   });
 
   it('disables both buttons until the conversation of the run has loaded', () => {
@@ -123,6 +135,14 @@ describe('ScheduleRunApproval', () => {
 
     expect(button('Approve')).toBeDisabled();
     expect(button('Reject')).toBeDisabled();
+  });
+
+  it('shows no note when the hook gives a handler', () => {
+    renderApproval();
+
+    expect(
+      screen.queryByText('Only the owner or project admins can approve or reject this run'),
+    ).not.toBeInTheDocument();
   });
 
   it('enables both buttons for a run that has no chat', () => {
@@ -227,7 +247,9 @@ describe('ScheduleRunApproval', () => {
 
       expect(screen.getByTestId('schedule-run-sign-in')).toBeDisabled();
       expect(screen.queryByText(/Sign in to GitHub, then approve/)).not.toBeInTheDocument();
-      expect(screen.getByText('Only the owner can approve or reject this run')).toBeInTheDocument();
+      expect(
+        screen.getByText('Only the owner or project admins can approve or reject this run'),
+      ).toBeInTheDocument();
     });
   });
 });

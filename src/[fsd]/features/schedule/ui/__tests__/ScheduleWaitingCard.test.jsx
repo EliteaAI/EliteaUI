@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   isOwner: true,
   decide: vi.fn(),
   signedIn: false,
+  userId: 1,
 }));
 
 vi.mock('../../lib/hooks/useScheduleRuns.hooks', () => ({
@@ -43,7 +44,11 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: () => 5,
   useToast: () => ({ toastSuccess: vi.fn() }),
 }));
-vi.mock('react-redux', async importOriginal => ({ ...(await importOriginal()), useDispatch: () => vi.fn() }));
+vi.mock('react-redux', async importOriginal => ({
+  ...(await importOriginal()),
+  useDispatch: () => vi.fn(),
+  useSelector: select => select({ user: { id: mocks.userId } }),
+}));
 
 const schedule = {
   id: 9,
@@ -84,6 +89,7 @@ describe('ScheduleWaitingCard', () => {
     mocks.check = { state: 'missing', recheck: vi.fn() };
     mocks.isOwner = true;
     mocks.signedIn = false;
+    mocks.userId = 1;
   });
   afterEach(() => {
     cleanup();
@@ -105,6 +111,12 @@ describe('ScheduleWaitingCard', () => {
     expect(screen.getByTestId('schedule-waiting-expiry')).toHaveTextContent('Expires in 23 h 58 min');
     expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Missing');
     expect(mocks.checkArgs).toMatchObject({ toolkit: 'GitHub', enabled: true });
+  });
+
+  it('asks the credential check to scan for the shown run', () => {
+    renderCard();
+
+    expect(mocks.checkArgs).toMatchObject({ runId: 41 });
   });
 
   it('takes the toolkit name from the credential check when the run does not name it', () => {
@@ -135,7 +147,7 @@ describe('ScheduleWaitingCard', () => {
     expect(approve).toBeDisabled();
     expect(screen.getByText('Provide the credential first')).toBeInTheDocument();
     expect(button('Reject')).toBeEnabled();
-    expect(screen.getByText('Reject ends the run as Failed: rejected by the owner.')).toBeInTheDocument();
+    expect(screen.getByText('Reject ends the run as Failed.')).toBeInTheDocument();
   });
 
   it('runs the check again from Check again', () => {
@@ -192,13 +204,104 @@ describe('ScheduleWaitingCard', () => {
     expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Missing');
   });
 
+  it('keeps Approve off for a project admin who is not the owner while the credential is missing', () => {
+    mocks.userId = 77;
+    renderCard();
+
+    expect(button('Approve')).toBeDisabled();
+    expect(screen.getByText('The schedule owner must provide the credential first')).toBeInTheDocument();
+    expect(screen.queryByText('Provide the credential first')).not.toBeInTheDocument();
+    expect(button('Reject')).toBeEnabled();
+  });
+
+  it('lets a project admin who is not the owner approve once the owner has provided the credential', () => {
+    mocks.userId = 77;
+    mocks.check = { state: 'ready', recheck: vi.fn() };
+    renderCard();
+
+    expect(button('Approve')).toBeEnabled();
+  });
+
+  it('keeps Approve off for a project admin who is not the owner on a sign-in pause', () => {
+    mocks.userId = 77;
+    mocks.signedIn = true;
+    mocks.detail = { ...run, events: [paused({ need: 'sign_in', toolkit: 'Jira' })] };
+    renderCard();
+
+    expect(button('Approve')).toBeDisabled();
+    expect(screen.getByText('The schedule owner must sign in to the toolkit first')).toBeInTheDocument();
+    expect(button('Reject')).toBeEnabled();
+  });
+
+  it('lets an admin approve their own Run now once the credential is found', () => {
+    mocks.userId = 77;
+    mocks.check = { state: 'ready', recheck: vi.fn() };
+    mocks.detail = { ...mocks.detail, trigger: 'manual', requested_by: 77 };
+    renderCard();
+
+    expect(button('Approve')).toBeEnabled();
+  });
+
+  it('asks an admin for their own credential when the Run now is theirs', () => {
+    mocks.userId = 77;
+    mocks.detail = { ...mocks.detail, trigger: 'manual', requested_by: 77 };
+    renderCard();
+
+    expect(button('Approve')).toBeDisabled();
+    expect(screen.getByText('Provide the credential first')).toBeInTheDocument();
+    expect(screen.getByText(/Provide the credential, then approve\./)).toBeInTheDocument();
+  });
+
+  it('names the starter, not the owner, when another user started the Run now', () => {
+    mocks.userId = 1;
+    mocks.detail = { ...mocks.detail, trigger: 'manual', requested_by: 77 };
+    renderCard();
+
+    expect(button('Approve')).toBeDisabled();
+    expect(
+      screen.getByText('The user who started this run must provide the credential first'),
+    ).toBeInTheDocument();
+  });
+
+  it('keeps the schedule owner as the actor of a scheduled run', () => {
+    mocks.userId = 1;
+    mocks.detail = { ...mocks.detail, trigger: 'cron', requested_by: 77 };
+    renderCard();
+
+    expect(screen.getByText('Provide the credential first')).toBeInTheDocument();
+  });
+
+  it('gives the owner on a sign-in pause the authorize button and the sign-in text', () => {
+    mocks.signedIn = true;
+    mocks.conversation = { authAction: { toolMeta: { server_url: 'https://auth.example' } } };
+    mocks.detail = { ...mocks.detail, events: [paused({ need: 'sign_in', toolkit: 'Jira' })] };
+    renderCard();
+
+    expect(screen.getByText(/Authorize now, then approve\./)).toBeInTheDocument();
+    expect(button('Approve')).toBeEnabled();
+  });
+
+  it('offers a project admin who is not the actor no authorize text and no ready step on a sign-in pause', () => {
+    mocks.userId = 77;
+    mocks.signedIn = true;
+    mocks.conversation = { authAction: { toolMeta: { server_url: 'https://auth.example' } } };
+    mocks.detail = { ...mocks.detail, events: [paused({ need: 'sign_in', toolkit: 'Jira' })] };
+    renderCard();
+
+    expect(screen.queryByText(/Authorize now/)).not.toBeInTheDocument();
+    expect(screen.getByText(/The schedule owner must authorize it, then approve\./)).toBeInTheDocument();
+    expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Missing');
+  });
+
   it('shows the owner-only note and no decision for another user', () => {
     mocks.isOwner = false;
     renderCard();
 
     expect(button('Approve')).toBeDisabled();
     expect(button('Reject')).toBeDisabled();
-    expect(screen.getByText('Only the owner can approve or reject this run')).toBeInTheDocument();
+    expect(
+      screen.getByText('Only the owner or project admins can approve or reject this run'),
+    ).toBeInTheDocument();
   });
 
   it('shows one short notice and the two buttons for a plain pause', () => {
