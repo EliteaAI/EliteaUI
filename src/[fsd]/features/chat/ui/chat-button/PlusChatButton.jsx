@@ -566,9 +566,8 @@ const plusChatButtonStyles = theme => ({
     borderRadius: '.75rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
     background: theme.palette.background.default.secondary,
-    boxShadow: theme.palette.boxShadow.default,
+    // No boxShadow override: elevation 8 gives the same shadow as the main menu; no gap, it sits flush against it
     padding: 0,
-    ml: '.25rem',
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
