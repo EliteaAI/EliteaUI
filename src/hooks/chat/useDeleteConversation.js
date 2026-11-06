@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react';
 
 import { useDispatch } from 'react-redux';
 
+import { useConversationNavigation } from '@/[fsd]/features/chat/lib/hooks';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useDeleteConversationMutation, useUnselectConversationMutation } from '@/api';
 import { dummyConversation } from '@/common/constants';
@@ -33,6 +34,7 @@ const useDeleteConversation = ({
   const [deleteConversation, { isError, error }] = useDeleteConversationMutation();
   const { clearLocalActiveParticipant } = useLocalActiveParticipant();
   const [unselectConversation] = useUnselectConversationMutation();
+  const { clearUrlConversation } = useConversationNavigation();
 
   // Helper function to find the next conversation to select
   const findNextConversation = useCallback((deletedConversation, allConversations, allFolders) => {
@@ -88,6 +90,7 @@ const useDeleteConversation = ({
             onSelectConversation(nextConversation);
           } else {
             setActiveConversation(dummyConversation);
+            clearUrlConversation();
             unselectConversation({ projectId });
           }
 
@@ -134,6 +137,7 @@ const useDeleteConversation = ({
     [
       activeConversation,
       clearLocalActiveParticipant,
+      clearUrlConversation,
       deleteConversation,
       dispatch,
       emitLeaveRoom,
