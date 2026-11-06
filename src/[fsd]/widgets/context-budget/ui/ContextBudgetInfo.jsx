@@ -3,6 +3,7 @@ import { memo } from 'react';
 import { useSelector } from 'react-redux';
 
 import { useModal, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { isAutoSelection } from '@/[fsd]/shared/lib/utils';
 import { useGetContextStatusQuery } from '@/api';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
@@ -53,6 +54,7 @@ const ContextBudgetInfo = memo(props => {
   });
   // Preview the selected model's window before the next response resolves it on the backend
   const selectedModelWindow = useSelector(state => state.chat?.currentChatModel?.context_window);
+  const selectedModelIsAuto = useSelector(state => isAutoSelection(state.chat?.currentChatModel));
 
   const utilization = contextStatus?.utilization || 0;
   const utilizationData = useContextUtilization(utilization, contextStatus?.current_tokens || 0, {
@@ -107,7 +109,7 @@ const ContextBudgetInfo = memo(props => {
     windowMode,
     modelWindow: resolvedModelWindow,
     modelWindowPreview: previewWindow,
-    windowSource: previewWindow ? 'model' : contextStatus.window_source,
+    windowSource: previewWindow ? (selectedModelIsAuto ? 'auto' : 'model') : contextStatus.window_source,
     effectiveWindow: resolvedEffectiveWindow,
     safetyMargin: contextStatus.safety_margin,
     reservedOutput: contextStatus.reserved_output,
