@@ -93,10 +93,7 @@ const PlusChatButton = memo(props => {
   const canInviteUsers = !isPrivateProject && !!onInviteUsers;
 
   const [isOpen, setIsOpen] = useState(false);
-  // The submenu opens on a click and stays until another row is clicked, the menu closes (click outside, Esc) or
-  // an item is picked: hover never switches it, so the pointer can travel to any result (EL-7458).
   const [openItem, setOpenItem] = useState(null);
-  // Every submenu is as tall as the main menu and keeps that height while the search narrows the list.
   const [mainHeight, setMainHeight] = useState(0);
 
   const handleToggle = useCallback(() => {
@@ -146,14 +143,16 @@ const PlusChatButton = memo(props => {
     [submenuMap],
   );
 
-  const handleKeyDown = useCallback(
-    event => {
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const handleKeyDown = event => {
       if (event.key === 'Escape') handleClose();
-    },
-    [handleClose],
-  );
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, handleClose]);
 
-  // A callback ref: the main paper mounts inside the Popper only when the menu opens.
+  // Callback ref: the main paper mounts only when the Popper opens
   const resizeObserverRef = useRef(null);
   const setMainPaper = useCallback(node => {
     mainPaperRef.current = node;
@@ -303,13 +302,7 @@ const PlusChatButton = memo(props => {
               switch: {
                 size: 'small',
                 onClick: e => e.stopPropagation(),
-                // MUI v7's <Switch> only forwards a testid placed on
-                // slotProps.input to the underlying <input> — the legacy
-                // `inputProps` prop is silently dropped once Switch.js's own
-                // explicit `slotProps.input` (merged via mergeSlotProps)
-                // shadows it, so `inputProps` alone never reaches the DOM
-                // (live-confirmed: `[data-testid^="modules-toggle-"]`
-                // resolved 0 elements with `inputProps`, ELITEA-2162).
+                // MUI v7 Switch drops `inputProps`, the testid must go via slotProps.input
                 slotProps: { input: { 'data-testid': `modules-toggle-${tool.name}` } },
               },
             }}
@@ -325,7 +318,7 @@ const PlusChatButton = memo(props => {
       if (!data || !config) return null;
       return (
         <PlusChatSubmenu
-          // A new submenu per row, so its search box takes the focus again when another row is clicked
+          // Remount per row so the search box regains focus
           key={openItem}
           items={data.items}
           searchValue={data.searchValue}
@@ -388,7 +381,6 @@ const PlusChatButton = memo(props => {
             ref={setMainPaper}
             elevation={8}
             sx={styles.paper}
-            onKeyDown={handleKeyDown}
           >
             <MenuList sx={styles.menuList}>
               <AttachmentButton
@@ -460,7 +452,6 @@ const PlusChatButton = memo(props => {
               openItem === SUBMENU_KEYS.INTERNAL_TOOLS && styles.internalToolsPaper,
               { height: mainHeight ? `${mainHeight}px` : 'auto' },
             ]}
-            onKeyDown={handleKeyDown}
             data-testid={`${openItem}-submenu`}
           >
             {renderSubmenuContent()}
@@ -559,14 +550,12 @@ const plusChatButtonStyles = theme => ({
   subPopper: {
     zIndex: 9999,
   },
-  // One width for every submenu (the Modules switches set it) and the main menu's height, set inline.
   subPaper: {
     width: '18.75rem',
     boxSizing: 'border-box',
     borderRadius: '.75rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
     background: theme.palette.background.default.secondary,
-    // No boxShadow override: elevation 8 gives the same shadow as the main menu; no gap, it sits flush against it
     padding: 0,
     overflow: 'hidden',
     display: 'flex',

@@ -68,4 +68,13 @@ describe('PlusChatButton skills submenu', () => {
 
     expect(screen.queryByTestId('skills-create-new-button')).toBeNull();
   });
+
+  it('closes the menu on Escape while focus is outside it', () => {
+    openSkillsSubmenu(vi.fn());
+
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+
+    expect(screen.queryByTestId('skills-menuitem')).toBeNull();
+    expect(screen.queryByTestId('skills-submenu')).toBeNull();
+  });
 });

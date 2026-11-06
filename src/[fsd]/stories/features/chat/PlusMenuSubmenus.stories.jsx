@@ -6,22 +6,12 @@ import '@/[fsd]/app/routes';
 import { withStoryApi } from '@/[fsd]/stories/lib/storyApi';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 
-// The routes module must load before the layout, as in App.jsx: layout → MainPanel → routes → router.jsx renders
-// <AppLayout /> at load time. A static import of the layout would be sorted above the routes by Prettier, so the
-// layout is loaded on first render, when the routes are in place.
+// Lazy so the routes module loads before the layout
 const AppLayout = lazy(() => import('@/[fsd]/app/layout/AppLayout'));
 
-/**
- * The new chat screen with the chat input's "+" menu (EL-7458): a submenu (Modules, Agents, Pipelines, Skills,
- * Toolkits, MCPs) opens on a click, keeps the main menu's height and one width, and stays put while the search
- * narrows its list, so a single result can be reached with the mouse. 1366 × 768, the app layout on /chat as
- * router.jsx mounts it; the backend is replaced by sample answers, nothing leaves the browser.
- */
 const PROJECT_ID = 42;
-// A team project, as in the frame: in the personal project the "+" menu hides "Invite Users".
 const USER = { id: 1, name: 'George Smith', email: 'george_smith@example.com', personal_project_id: 7 };
 
-// Every permission the app knows, so no route or button is hidden.
 const flatten = value => (typeof value === 'string' ? [value] : Object.values(value).flatMap(flatten));
 const ALL_PERMISSIONS = flatten(PERMISSIONS);
 
@@ -64,7 +54,6 @@ const PUBLIC_AGENTS = [
   agent(22, 'Meeting Summarizer', PUBLIC_PROJECT_ID),
 ];
 
-// The search box sends ?query=; the sample lists answer it like the backend does, by name.
 const byQuery = (url, rows) => {
   const q = (new URL(url, 'http://x').searchParams.get('query') || '').toLowerCase();
   return q ? rows.filter(r => r.name.toLowerCase().includes(q)) : rows;
@@ -151,7 +140,6 @@ const routes = [
 export default {
   title: 'features/chat/Plus Menu — Submenus on Click',
   parameters: { layout: 'fullscreen' },
-  // In the app the layout is a child of <body>; here it sits in the story's flex frame and must be told to fill it.
   render: () => (
     <Box sx={{ width: '100%' }}>
       <Suspense>
@@ -168,15 +156,11 @@ export default {
       },
       width: 1366,
       height: 768,
-      // "+ → Chat" in the sidebar opens this address; the chat page then starts a new conversation.
       path: '/chat?create=1',
     }),
   ],
 };
 
-// EL-7458: the + menu's submenus open on a click and stay open while the pointer travels to a result. Open one with
-// the real mouse: click [data-testid=plus-menu-button], then click [data-testid=agents-menuitem] (or modules:
-// internal-tools-menuitem, pipelines-, skills-, toolkits-).
 export const Dark = { globals: { theme: 'dark' } };
 
 export const Light = { globals: { theme: 'light' } };

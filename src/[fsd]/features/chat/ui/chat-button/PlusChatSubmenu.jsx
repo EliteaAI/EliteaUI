@@ -113,7 +113,6 @@ const PlusChatSubmenu = memo(props => {
         </MenuItem>
       )}
 
-      {/* The divider belongs to the create action, so it stays when the list is empty */}
       {showCreateNew && (
         <Box sx={styles.dividerContainer}>
           <Box sx={styles.dividerLine} />
@@ -215,7 +214,6 @@ PlusChatSubmenu.displayName = 'PlusChatSubmenu';
 
 /** @type {MuiSx} */
 const submenuStyles = theme => ({
-  // Fills the submenu paper, which is as tall as the main menu (PlusChatButton): the list scrolls inside.
   root: {
     display: 'flex',
     flexDirection: 'column',
@@ -244,7 +242,6 @@ const submenuStyles = theme => ({
     width: '100%',
     '& .MuiInputBase-input': {
       padding: 0,
-      // Typed text is white; in the ELITEA palette white is text.secondary
       color: theme.palette.text.secondary,
       '&::placeholder': {
         color: theme.palette.text.disabled,
