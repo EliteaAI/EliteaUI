@@ -102,7 +102,7 @@ const UsageTopAgents = memo(props => {
     [sortKey],
   );
 
-  const title = sortKey === 'runs' ? 'Top Run Agents/Pipelines' : 'Top Spend Agents/Pipelines';
+  const title = sortKey === 'runs' ? 'Top Run Agents/Pipelines' : 'Top Spent Agents/Pipelines';
 
   if (!topAgents.length && !topAgentsByRuns.length) return null;
 
