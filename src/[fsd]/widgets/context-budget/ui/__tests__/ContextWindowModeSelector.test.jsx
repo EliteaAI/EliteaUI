@@ -42,6 +42,13 @@ describe('ContextWindowModeSelector', () => {
     );
   });
 
+  it('explains an identical Auto window as the smallest among the models Auto can pick', () => {
+    renderSelector({ balancedWindowTokens: 128000, fullWindowTokens: 128000, windowSource: 'auto' });
+    expect(screen.getByTestId('context-window-mode-identical-hint')).toHaveTextContent(
+      'Auto uses the smallest window among the models it can pick: 128K, so Balanced and Full are the same.',
+    );
+  });
+
   it('falls back to plain labels when the model window is unknown', () => {
     renderSelector();
     expect(screen.getByTestId('context-window-mode-balanced')).toHaveTextContent(/^Balanced$/);

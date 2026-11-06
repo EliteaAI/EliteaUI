@@ -61,6 +61,7 @@ const ContextBudgetExpanded = memo(props => {
           disabledReason={!canEdit ? CONTEXT_WINDOW_COPY.NO_PERMISSION : undefined}
           balancedWindowTokens={stats.balancedWindowTokens}
           fullWindowTokens={stats.fullWindowTokens}
+          windowSource={stats.windowSource}
         />
       </Box>
 
