@@ -59,11 +59,10 @@ describe('getWaitingRunNeed for the tools approval before the first call', () =>
     { toolkit: 'github', tool: 'delete_file' },
   ];
 
-  it('returns the tools and the tools that may still ask', () => {
+  it('returns the need and the tools that may still ask', () => {
     const mayAsk = [{ toolkit: 'jira', tool: 'create_issue' }];
     expect(getWaitingRunNeed({ kind: 'paused', need: 'tools', tools, may_ask: mayAsk })).toEqual({
       need: 'tools',
-      tools,
       mayAsk,
     });
   });
@@ -71,7 +70,6 @@ describe('getWaitingRunNeed for the tools approval before the first call', () =>
   it('returns empty lists when the event carries none', () => {
     expect(getWaitingRunNeed({ kind: 'paused', need: 'tools' })).toEqual({
       need: 'tools',
-      tools: [],
       mayAsk: [],
     });
   });

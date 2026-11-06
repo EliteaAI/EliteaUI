@@ -17,7 +17,7 @@ export const formatTool = ({ toolkit, tool }) => (toolkit ? `${toolkit} · ${too
 
 /**
  * What a paused run waits for, read from its paused event: `{ need, toolkit, credential }`, or
- * `{ need, tools, mayAsk }` for a run that waits for the sensitive tools to be approved before it starts.
+ * `{ need, mayAsk }` for a run that waits for the sensitive tools to be approved before it starts.
  * The server sends the structured fields `need`, `toolkit` and `credential`. A run paused before it did
  * has only the text, so the text is parsed as a fallback. `need` is undefined for any other pause.
  */
@@ -25,7 +25,7 @@ export const getWaitingRunNeed = pausedEvent => {
   if (!pausedEvent) return {};
   const { need, toolkit, credential, text = '' } = pausedEvent;
   if (need === WAITING_NEED.TOOLS)
-    return { need, tools: getPausedTools(pausedEvent), mayAsk: toToolList(pausedEvent.may_ask) };
+    return { need, mayAsk: toToolList(pausedEvent.may_ask) };
   if (need === WAITING_NEED.CREDENTIAL || need === WAITING_NEED.SIGN_IN)
     return { need, toolkit: unquote(toolkit), credential: unquote(credential) };
 

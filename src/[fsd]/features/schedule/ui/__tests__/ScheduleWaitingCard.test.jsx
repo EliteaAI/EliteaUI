@@ -260,6 +260,17 @@ describe('ScheduleWaitingCard', () => {
     expect(screen.queryByTestId('schedule-waiting-may-ask')).not.toBeInTheDocument();
   });
 
+  it('lists a repeated tool pair once per entry without a duplicate key warning', () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const pair = { toolkit: 'github', tool: 'delete_file' };
+    mocks.detail = { ...run, events: [paused({ need: 'tools', tools: [pair, pair] })] };
+    renderCard();
+
+    expect(within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem')).toHaveLength(2);
+    expect(errorSpy.mock.calls.flat().join(' ')).not.toContain('same key');
+    errorSpy.mockRestore();
+  });
+
   it('lists every tool of a call-time pause that names several', () => {
     mocks.detail = {
       ...run,

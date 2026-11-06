@@ -83,7 +83,7 @@ const ScheduleWaitingCard = memo(
     const isCredential = waiting.need === WAITING_NEED.CREDENTIAL;
     const isSignIn = waiting.need === WAITING_NEED.SIGN_IN;
     // A call-time pause for one tool already names it in its text; a list helps from two tools on
-    const pausedTools = waiting.tools ?? getPausedTools(pausedEvent);
+    const pausedTools = getPausedTools(pausedEvent);
     const listedTools = waiting.need === WAITING_NEED.TOOLS || pausedTools.length > 1 ? pausedTools : [];
     const mayAskTools = waiting.mayAsk ?? [];
     const { authAction } = conversation;
@@ -196,9 +196,9 @@ const ScheduleWaitingCard = memo(
               aria-label="Sensitive tools to approve"
               sx={styles.toolList}
             >
-              {listedTools.map(item => (
+              {listedTools.map((item, index) => (
                 <ListItem
-                  key={formatTool(item)}
+                  key={`${formatTool(item)}-${index}`}
                   sx={styles.toolItem}
                 >
                   <Typography variant="bodySmall">{formatTool(item)}</Typography>
