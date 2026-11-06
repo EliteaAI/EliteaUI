@@ -50,7 +50,7 @@ export const useSelectedChatModel = ({
       }
 
       if (isAutoSelection(settingsToUse)) {
-        setSelectedModel(autoModel(settingsToUse.selection.profile_ref));
+        setSelectedModel(autoModel(settingsToUse.selection.profile_ref, modelsData.auto_routing?.limits));
         return;
       }
       if (settingsToUse) {
@@ -97,6 +97,7 @@ export const useSelectedChatModel = ({
       activeConversation,
       userId,
       modelsData.items,
+      modelsData.auto_routing?.limits,
       defaultModel,
       onChangeParticipantSettings,
       activeParticipant?.entity_settings,
