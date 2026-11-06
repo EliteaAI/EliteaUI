@@ -6,6 +6,7 @@ import { useProjectConfigRecord } from '@/[fsd]/features/settings/lib/hooks';
 import { projectConfigCardStyles } from '@/[fsd]/features/settings/ui/project-general/chat-configuration/projectConfigCard.styles';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Input, Select } from '@/[fsd]/shared/ui';
+import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import { useListModelsQuery } from '@/api/configurations';
 import { PERMISSIONS } from '@/common/constants';
@@ -29,6 +30,32 @@ const defaultClassifierLabel = readiness => {
   const source = DEFAULT_CLASSIFIER_SOURCE_LABEL[resolved.source] ?? DEFAULT_CLASSIFIER_SOURCE_LABEL.platform;
   return `Use default (${resolved.display_name || resolved.name} — ${source})`;
 };
+const ROUTING_MODE_TOOLTIP =
+  'Where Auto starts for each task. The classifier rates every request as simple, standard or deep; the mode decides which admitted model answers at each level. Applies to the whole project.';
+// Where Auto starts per demand; the Gateway owns the semantics (#6722). Unset is tiered.
+const ROUTING_MODES = [
+  {
+    value: 'economical',
+    label: 'Economical',
+    line: 'Cheapest admitted model at every demand.',
+  },
+  {
+    value: 'tiered',
+    label: 'Tiered (default)',
+    line: 'Cheapest at simple, measured mid tier at standard, frontier at deep.',
+  },
+  {
+    value: 'premium_at_deep',
+    label: 'Premium at deep',
+    line: 'Frontier model for deep tasks only.',
+  },
+  {
+    value: 'premium_from_standard',
+    label: 'Premium from standard',
+    line: 'Frontier model from standard tasks up.',
+  },
+];
+const DEFAULT_ROUTING_MODE = 'tiered';
 const PLATFORM_DEFAULT = '__platform_default__';
 const NON_CHAT_KINDS = ['embedding', 'image', 'audio', 'video'];
 const classifierKey = ref => `${ref.name}<<>>${ref.project_id}`;
@@ -59,6 +86,7 @@ const AutoRoutingSettings = memo(() => {
   });
   const value = current?.data?.enabled == null ? 'default' : String(current.data.enabled);
   const classifier = current?.data?.classifier ?? null;
+  const routingMode = current?.data?.escalation_mode ?? DEFAULT_ROUTING_MODE;
   const readiness = models?.auto_routing?.readiness;
 
   const { classifierOptions, showAllHint } = useMemo(() => {
@@ -103,6 +131,23 @@ const AutoRoutingSettings = memo(() => {
     [persist, current?.data?.enabled],
   );
   const disabled = !checkPermission(PERMISSIONS.configuration.update) || saving;
+  const saveRoutingMode = useCallback(
+    (_event, mode) => {
+      if (disabled || mode === routingMode) return;
+      persist({ enabled: current?.data?.enabled ?? null, classifier, escalation_mode: mode });
+    },
+    [disabled, routingMode, persist, current?.data?.enabled, classifier],
+  );
+  const routingModeTabs = useMemo(
+    () =>
+      ROUTING_MODES.map(({ value: mode, label, line }) => ({
+        value: mode,
+        label,
+        tooltip: line,
+        buttonProps: { disabled, 'data-testid': `auto-routing-mode-${mode}` },
+      })),
+    [disabled],
+  );
 
   return (
     <Box
@@ -181,6 +226,38 @@ const AutoRoutingSettings = memo(() => {
           </Typography>
         )}
       </Box>
+      {models?.auto_routing?.enabled && (
+        <Box
+          sx={styles.modeRow}
+          data-testid="auto-routing-mode"
+        >
+          <Box sx={styles.titleGroup}>
+            <Typography
+              variant="headingSmall"
+              color="text.secondary"
+            >
+              Auto routing mode
+            </Typography>
+            <InfoTooltip
+              infoTooltip={ROUTING_MODE_TOOLTIP}
+              testId="auto-routing-mode-info-tooltip"
+            />
+          </Box>
+          <TabGroupButton
+            arrayBtn={routingModeTabs}
+            value={routingMode}
+            onChange={saveRoutingMode}
+            aria-label="Auto routing mode"
+          />
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+            data-testid="auto-routing-mode-description"
+          >
+            {ROUTING_MODES.find(mode => mode.value === routingMode)?.line}
+          </Typography>
+        </Box>
+      )}
     </Box>
   );
 });
@@ -194,6 +271,13 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.25rem',
+  },
+  modeRow: {
+    flex: '1 1 100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: '0.5rem',
   },
 };
 
