@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
@@ -59,15 +59,6 @@ const SEARCHABLE_KEYS = [
   SUBMENU_KEYS.MCPS,
 ];
 
-const PAPER_STYLE_MAP = {
-  [SUBMENU_KEYS.INTERNAL_TOOLS]: 'internalToolsPaper',
-  [SUBMENU_KEYS.TOOLKITS]: 'toggleSubmenuPaper',
-  [SUBMENU_KEYS.MCPS]: 'toggleSubmenuPaper',
-  [SUBMENU_KEYS.AGENTS]: 'entitySubmenuPaper',
-  [SUBMENU_KEYS.PIPELINES]: 'entitySubmenuPaper',
-  [SUBMENU_KEYS.SKILLS]: 'entitySubmenuPaper',
-};
-
 const PlusChatButton = memo(props => {
   const {
     attachmentButtonRef,
@@ -93,7 +84,6 @@ const PlusChatButton = memo(props => {
   const isMcpVisible = useIsMcpVisible();
   const availableTools = useAvailableInternalTools({ activeToolNames: internal_tools });
   const buttonRef = useRef(null);
-  const hoverTimeoutRef = useRef(null);
   const subMenuRef = useRef(null);
   const mainPaperRef = useRef(null);
 
@@ -103,19 +93,20 @@ const PlusChatButton = memo(props => {
   const canInviteUsers = !isPrivateProject && !!onInviteUsers;
 
   const [isOpen, setIsOpen] = useState(false);
-  const [hoveredItem, setHoveredItem] = useState(null);
-  const [hoveredAnchorEl, setHoveredAnchorEl] = useState(null);
+  // The submenu opens on a click and stays until another row is clicked, the menu closes (click outside, Esc) or
+  // an item is picked: hover never switches it, so the pointer can travel to any result (EL-7458).
+  const [openItem, setOpenItem] = useState(null);
+  // Every submenu is as tall as the main menu and keeps that height while the search narrows the list.
+  const [mainHeight, setMainHeight] = useState(0);
 
   const handleToggle = useCallback(() => {
     setIsOpen(prev => !prev);
-    setHoveredItem(null);
-    setHoveredAnchorEl(null);
+    setOpenItem(null);
   }, []);
 
   const handleClose = useCallback(() => {
     setIsOpen(false);
-    setHoveredItem(null);
-    setHoveredAnchorEl(null);
+    setOpenItem(null);
   }, []);
 
   const { agents, pipelines, skills, toolkits, mcps } = useApplicationSubmenu({
@@ -145,36 +136,36 @@ const PlusChatButton = memo(props => {
     [handleClose],
   );
 
-  const handleItemHover = useCallback(
-    (key, event) => {
-      clearTimeout(hoverTimeoutRef.current);
-      setHoveredItem(prev => {
-        if (prev && prev !== key && submenuMap[prev]?.resetSearch) {
-          submenuMap[prev].resetSearch();
-        }
-        return key;
+  const handleItemClick = useCallback(
+    key => {
+      setOpenItem(prev => {
+        if (prev && submenuMap[prev]?.resetSearch) submenuMap[prev].resetSearch();
+        return prev === key ? null : key;
       });
-      setHoveredAnchorEl(event.currentTarget);
     },
     [submenuMap],
   );
 
-  const handleItemLeave = useCallback(() => {
-    hoverTimeoutRef.current = setTimeout(() => {
-      setHoveredItem(null);
-      setHoveredAnchorEl(null);
-    }, 150);
-  }, []);
+  const handleKeyDown = useCallback(
+    event => {
+      if (event.key === 'Escape') handleClose();
+    },
+    [handleClose],
+  );
 
-  const handleSubMenuEnter = useCallback(() => {
-    clearTimeout(hoverTimeoutRef.current);
+  // A callback ref: the main paper mounts inside the Popper only when the menu opens.
+  const resizeObserverRef = useRef(null);
+  const setMainPaper = useCallback(node => {
+    mainPaperRef.current = node;
+    resizeObserverRef.current?.disconnect();
+    resizeObserverRef.current = null;
+    if (!node) return;
+    setMainHeight(node.offsetHeight);
+    if (typeof ResizeObserver === 'undefined') return;
+    resizeObserverRef.current = new ResizeObserver(() => setMainHeight(node.offsetHeight));
+    resizeObserverRef.current.observe(node);
   }, []);
-
-  const handleSubMenuLeave = useCallback(() => {
-    if (subMenuRef.current?.contains(document.activeElement)) return;
-    setHoveredItem(null);
-    setHoveredAnchorEl(null);
-  }, []);
+  useEffect(() => () => resizeObserverRef.current?.disconnect(), []);
 
   const handleCloseAndCall = useCallback(
     (callback, ...args) => {
@@ -279,10 +270,9 @@ const PlusChatButton = memo(props => {
   );
 
   const styles = plusChatButtonStyles(theme);
-  const paperStyleKey = PAPER_STYLE_MAP[hoveredItem] || 'subPaper';
 
   const renderSubmenuContent = useCallback(() => {
-    if (hoveredItem === SUBMENU_KEYS.INTERNAL_TOOLS && availableTools.length > 0) {
+    if (openItem === SUBMENU_KEYS.INTERNAL_TOOLS && availableTools.length > 0) {
       return availableTools.map(tool => {
         const isChecked = internal_tools.includes(tool.name);
         const handleRowClick = () => {
@@ -328,25 +318,27 @@ const PlusChatButton = memo(props => {
       });
     }
 
-    if (SEARCHABLE_KEYS.includes(hoveredItem)) {
-      if (hoveredItem === SUBMENU_KEYS.MCPS && !isMcpVisible) return null;
-      const data = submenuMap[hoveredItem];
-      const config = submenuConfigs[hoveredItem];
+    if (SEARCHABLE_KEYS.includes(openItem)) {
+      if (openItem === SUBMENU_KEYS.MCPS && !isMcpVisible) return null;
+      const data = submenuMap[openItem];
+      const config = submenuConfigs[openItem];
       if (!data || !config) return null;
       return (
         <PlusChatSubmenu
+          // A new submenu per row, so its search box takes the focus again when another row is clicked
+          key={openItem}
           items={data.items}
           searchValue={data.searchValue}
           onSearchChange={data.onSearchChange}
           onScroll={data.onScroll}
           isLoading={data.isLoading}
-          sectionKey={hoveredItem}
+          sectionKey={openItem}
           {...config}
         />
       );
     }
   }, [
-    hoveredItem,
+    openItem,
     isMcpVisible,
     availableTools,
     internal_tools,
@@ -393,9 +385,10 @@ const PlusChatButton = memo(props => {
       >
         <ClickAwayListener onClickAway={handleClickAway}>
           <Paper
-            ref={mainPaperRef}
+            ref={setMainPaper}
             elevation={8}
             sx={styles.paper}
+            onKeyDown={handleKeyDown}
           >
             <MenuList sx={styles.menuList}>
               <AttachmentButton
@@ -418,8 +411,10 @@ const PlusChatButton = memo(props => {
                     key={key}
                     sx={styles.menuItem}
                     data-testid={testId}
-                    onMouseEnter={e => handleItemHover(key, e)}
-                    onMouseLeave={handleItemLeave}
+                    selected={openItem === key}
+                    aria-haspopup="menu"
+                    aria-expanded={openItem === key}
+                    onClick={() => handleItemClick(key)}
                   >
                     <Box
                       component={Icon}
@@ -450,19 +445,23 @@ const PlusChatButton = memo(props => {
         </ClickAwayListener>
       </Popper>
 
-      {hoveredAnchorEl && hoveredItem && (
+      {isOpen && openItem && (
         <Popper
           open
           anchorEl={mainPaperRef.current}
-          placement="right-end"
+          placement="right-start"
           style={styles.subPopper}
         >
           <Paper
             ref={subMenuRef}
             elevation={8}
-            sx={styles[paperStyleKey]}
-            onMouseEnter={handleSubMenuEnter}
-            onMouseLeave={handleSubMenuLeave}
+            sx={[
+              styles.subPaper,
+              openItem === SUBMENU_KEYS.INTERNAL_TOOLS && styles.internalToolsPaper,
+              { height: mainHeight ? `${mainHeight}px` : 'auto' },
+            ]}
+            onKeyDown={handleKeyDown}
+            data-testid={`${openItem}-submenu`}
           >
             {renderSubmenuContent()}
           </Paper>
@@ -535,7 +534,7 @@ const plusChatButtonStyles = theme => ({
     height: '2.75rem',
     color: theme.palette.text.secondary,
     background: theme.palette.background.default.secondary,
-    '&:hover': {
+    '&:hover, &.Mui-selected, &.Mui-selected:hover': {
       background: theme.palette.background.surface.interactive.active,
     },
   },
@@ -560,46 +559,29 @@ const plusChatButtonStyles = theme => ({
   subPopper: {
     zIndex: 9999,
   },
+  // One width for every submenu (the Modules switches set it) and the main menu's height, set inline.
   subPaper: {
-    minWidth: '12rem',
+    width: '18.75rem',
+    boxSizing: 'border-box',
     borderRadius: '.75rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
     background: theme.palette.background.default.secondary,
-    padding: '1rem',
-    ml: '.25rem',
-  },
-  entitySubmenuPaper: {
-    width: '14.25rem',
-    borderRadius: '.5rem',
-    border: `.0625rem solid ${theme.palette.border.lines}`,
-    background: theme.palette.background.default.secondary,
     boxShadow: theme.palette.boxShadow.default,
     padding: 0,
     ml: '.25rem',
     overflow: 'hidden',
-  },
-  toggleSubmenuPaper: {
-    width: '17rem',
-    borderRadius: '.5rem',
-    border: `.0625rem solid ${theme.palette.border.lines}`,
-    background: theme.palette.background.default.secondary,
-    boxShadow: theme.palette.boxShadow.default,
-    padding: 0,
-    ml: '.25rem',
-    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
   },
   internalToolsPaper: {
-    minWidth: '18.75rem',
-    borderRadius: '.75rem',
-    border: `.0625rem solid ${theme.palette.border.lines}`,
-    background: theme.palette.background.default.secondary,
     padding: '.5rem 0',
-    ml: '.25rem',
+    overflowY: 'auto',
   },
   toolFormControlLabel: {
     margin: 0,
-    width: '18.75rem',
+    width: '100%',
     height: '2.75rem',
+    flexShrink: 0,
     boxSizing: 'border-box',
     display: 'flex',
     padding: '.5rem 1rem',
