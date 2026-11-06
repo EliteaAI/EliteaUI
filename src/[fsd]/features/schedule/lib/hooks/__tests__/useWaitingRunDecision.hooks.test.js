@@ -83,6 +83,31 @@ describe('useWaitingRunDecision', () => {
     expect(mocks.refetch).toHaveBeenCalledTimes(1);
   });
 
+  it('passes the interrupt ids of the shown pause to the decision', async () => {
+    mocks.decide.mockReturnValue(ok());
+    const result = setup();
+    await act(() => result.current({ ...request, interruptIds: ['int-1'] }));
+    expect(mocks.decide).toHaveBeenCalledWith(expect.objectContaining({ interruptIds: ['int-1'] }));
+  });
+
+  it('sends no interrupt ids when the pause had none', async () => {
+    mocks.decide.mockReturnValue(ok());
+    const result = setup();
+    await act(() => result.current(request));
+    expect(mocks.decide.mock.calls[0][0]).not.toHaveProperty('interruptIds');
+  });
+
+  it('says the approval request changed and loads the run again on a 409 after ids were sent', async () => {
+    mocks.decide.mockReturnValue(fail({ status: 409, data: { error: 'server text' } }));
+    const result = setup();
+    await act(() => result.current({ ...request, interruptIds: ['int-1'] }));
+    expect(mocks.toastInfo).toHaveBeenCalledWith(
+      'The approval request changed. Refresh and check the tools.',
+    );
+    expect(mocks.refetch).toHaveBeenCalledTimes(1);
+    expect(mocks.toastError).not.toHaveBeenCalled();
+  });
+
   it('shows an error toast and keeps the panel open on a 400', async () => {
     mocks.decide.mockReturnValue(fail({ status: 400, data: { message: 'bad request' } }));
     const result = setup();

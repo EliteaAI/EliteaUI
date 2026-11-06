@@ -86,6 +86,33 @@ describe('run history decideWaitingRun', () => {
   });
 });
 
+describe('run history decideWaitingRun interrupt ids', () => {
+  let fetchSpy;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    fetchSpy = vi.spyOn(globalThis, 'fetch');
+  });
+
+  it('sends the ids of the pause the owner saw next to the action', async () => {
+    const { body } = await decide('approve', fetchSpy, { interruptIds: ['int-1', 'int-2'] });
+
+    expect(body).toEqual({
+      message_id: 42,
+      hitl_resume: true,
+      hitl_action: 'approve',
+      interrupt_ids: ['int-1', 'int-2'],
+      await_task_timeout: -1,
+    });
+  });
+
+  it.each([undefined, []])('sends no interrupt_ids field for %j', async interruptIds => {
+    const { body } = await decide('reject', fetchSpy, { interruptIds });
+
+    expect(body).not.toHaveProperty('interrupt_ids');
+  });
+});
+
 describe('run history decideWaitingRun for a sign-in pause', () => {
   let fetchSpy;
   const mcpAuth = {

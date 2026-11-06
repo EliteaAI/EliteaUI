@@ -217,6 +217,22 @@ describe('ScheduleWaitingCard', () => {
     expect(button('Reject')).toBeEnabled();
   });
 
+  it('sends the interrupt ids of the paused event with the decision', () => {
+    mocks.conversation = { conversationUuid: 'conv-1', pausedMessageId: 'msg-1' };
+    mocks.detail = {
+      ...run,
+      conversation_id: 5,
+      events: [paused({ text: 'Paused for approval', interrupt_ids: ['int-1', 'int-2'] })],
+    };
+    renderCard({ run: { ...run, conversation_id: 5 } });
+
+    fireEvent.click(button('Approve'));
+
+    expect(mocks.decide).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'approve', interruptIds: ['int-1', 'int-2'] }),
+    );
+  });
+
   it('renders a Test run without a schedule from the entity and the run version', () => {
     mocks.detail = {
       ...mocks.detail,

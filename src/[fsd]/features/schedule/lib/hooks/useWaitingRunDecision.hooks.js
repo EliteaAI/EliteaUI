@@ -17,7 +17,10 @@ import { buildErrorMessage } from '@/common/utils';
 // `authRequest` (from the sign-in pause) switches the call to the mcp_auth resume. It sends every stored token,
 // as the chat resume does, because the resumed run may call other signed-in servers.
 // A 409 with `credential_missing` is not a stale run: the run still waits, so the server text is shown.
+// `interruptIds` are the ids of the paused event the owner saw. A 409 after they were sent means the pause changed, so the
+// notice says so and the run loads again to show the new pause.
 const CREDENTIAL_MISSING = 'credential_missing';
+const APPROVAL_CHANGED = 'The approval request changed. Refresh and check the tools.';
 
 // A Test run has no schedule: the user who started it (`requested_by`) decides it, through the test run route.
 export const useWaitingRunDecision = ({ schedule, run, onDecided }) => {
@@ -30,7 +33,7 @@ export const useWaitingRunDecision = ({ schedule, run, onDecided }) => {
   const isTestRun = Boolean(run?.isDraftRun);
 
   const onHitlResume = useCallback(
-    async ({ action, conversationUuid, messageId, authRequest, runId }) => {
+    async ({ action, conversationUuid, messageId, authRequest, runId, interruptIds }) => {
       try {
         if (!conversationUuid) {
           // A run that waits for credentials has no chat; a route without a chat decides it
@@ -51,13 +54,14 @@ export const useWaitingRunDecision = ({ schedule, run, onDecided }) => {
           messageId,
           action,
           ...(mcpAuth && { mcpAuth }),
+          ...(interruptIds?.length && { interruptIds }),
         }).unwrap();
         onDecided?.();
       } catch (error) {
         if (error?.status === 409 && error?.data?.code === CREDENTIAL_MISSING) {
           toastError(error.data.error || buildErrorMessage(error));
         } else if (error?.status === 409) {
-          toastInfo('The run no longer waits for approval.');
+          toastInfo(interruptIds?.length ? APPROVAL_CHANGED : 'The run no longer waits for approval.');
           onDecided?.();
         } else {
           toastError(buildErrorMessage(error));

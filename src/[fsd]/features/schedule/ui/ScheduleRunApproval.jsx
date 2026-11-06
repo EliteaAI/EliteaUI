@@ -30,6 +30,7 @@ const PAGE_BUTTON_PROPS = {
  * then Approve resumes the run with the fresh tokens. Reject skips the sign-in.
  * `blockedReason` keeps Approve off and names why. `compact` is the form for the Action needed card: no
  * left offset, no sign-in button and no expiry text, because the card shows them itself.
+ * `interruptIds` are the ids of the paused event the card shows; they go with the decision so a newer pause is not approved by mistake.
  * `plain` is the page button look (primary Approve, secondary Reject, no icons) of the short waiting notice.
  */
 const ScheduleRunApproval = memo(props => {
@@ -41,6 +42,7 @@ const ScheduleRunApproval = memo(props => {
     conversationUuid,
     pausedMessageId,
     pausedAt,
+    interruptIds,
     authAction,
     blockedReason,
     compact = false,
@@ -75,6 +77,7 @@ const ScheduleRunApproval = memo(props => {
           conversationUuid,
           runId,
           messageId: pausedMessageId,
+          interruptIds,
           ...(authAction && {
             authRequest: {
               authorizationRequestId: authAction.authorizationRequestId,
@@ -88,7 +91,7 @@ const ScheduleRunApproval = memo(props => {
         setDeciding(false);
       }
     },
-    [onHitlResume, conversationUuid, runId, pausedMessageId, authAction, serverUrl],
+    [onHitlResume, conversationUuid, runId, pausedMessageId, interruptIds, authAction, serverUrl],
   );
 
   // A run with a chat waits until its chat has loaded; a run without one (it waits for credentials) is ready

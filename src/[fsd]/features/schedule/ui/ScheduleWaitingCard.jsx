@@ -150,6 +150,7 @@ const ScheduleWaitingCard = memo(
         pausedMessageId={conversation.pausedMessageId}
         authAction={authAction}
         pausedAt={pausedEvent?.at}
+        interruptIds={pausedEvent?.interrupt_ids}
         blockedReason={
           isCredential && credentialState !== CREDENTIAL_CHECK_STATE.READY ? BLOCKED_REASON : undefined
         }

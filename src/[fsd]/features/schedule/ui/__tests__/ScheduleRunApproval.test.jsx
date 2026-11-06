@@ -94,6 +94,18 @@ describe('ScheduleRunApproval', () => {
     expect(mocks.hookArgs.schedule).toBe(schedule);
   });
 
+  it('sends the interrupt ids of the shown pause with the decision', async () => {
+    renderApproval({ interruptIds: ['int-1', 'int-2'] });
+
+    fireEvent.click(button('Approve'));
+
+    await waitFor(() =>
+      expect(mocks.decide).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'approve', interruptIds: ['int-1', 'int-2'] }),
+      ),
+    );
+  });
+
   it('loads the runs again after a decision, so the log gets the decision line', () => {
     renderApproval();
 
