@@ -71,6 +71,13 @@ describe('saved chat model ownership during SPA navigation', () => {
     rerender(initial(concrete));
     expect(result.current.selectedModel).toBe(haiku);
   });
+  it('hydrates a saved Auto chat with the project Auto window', () => {
+    const limits = { context_window: 128000, max_output_tokens: 8000, models: 2 };
+    const { result } = renderHook(useSelection, {
+      initialProps: { ...initial(auto), modelsData: { items: [haiku, luna], auto_routing: { limits } } },
+    });
+    expect(result.current.selectedModel.context_window).toBe(128000);
+  });
   it('keeps explicit Agent editor LLM prop updates reactive', () => {
     const { result, rerender } = renderHook(useSelection, {
       initialProps: { ...initial(concrete), isAgentsPage: true, llmSettings: auto.saved },

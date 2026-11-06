@@ -116,6 +116,7 @@ const ContextStrategyModalContent = memo(props => {
                   onChange={handleWindowModeChange}
                   balancedWindowTokens={stats?.balancedWindowTokens}
                   fullWindowTokens={stats?.fullWindowTokens}
+                  windowSource={stats?.windowSource}
                 />
                 {stats?.manualMaxTokensEnabled && (
                   <ManualMaxContextTokensField

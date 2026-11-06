@@ -91,9 +91,9 @@ const LLMModelSelectorWrapper = memo(props => {
   const selectedModel = useMemo(
     () =>
       isAutoSelection(version_details.llm_settings)
-        ? autoModel(version_details.llm_settings.selection.profile_ref)
+        ? autoModel(version_details.llm_settings.selection.profile_ref, modelsData.auto_routing?.limits)
         : modelList.find(m => m.id === modelName || m.name === modelName) || null,
-    [modelList, modelName, version_details.llm_settings],
+    [modelList, modelName, version_details.llm_settings, modelsData.auto_routing?.limits],
   );
 
   const handleSelectModel = useCallback(

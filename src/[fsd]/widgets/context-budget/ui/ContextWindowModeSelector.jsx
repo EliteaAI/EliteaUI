@@ -30,6 +30,7 @@ const ContextWindowModeSelector = memo(props => {
     disabledReason,
     balancedWindowTokens,
     fullWindowTokens,
+    windowSource,
   } = props;
   const isStacked = layout === LAYOUTS.stacked;
   const styles = contextWindowModeSelectorStyles(isStacked);
@@ -93,6 +94,7 @@ const ContextWindowModeSelector = memo(props => {
       <ContextWindowHint
         balancedWindowTokens={balancedWindowTokens}
         fullWindowTokens={fullWindowTokens}
+        windowSource={windowSource}
       />
     </Box>
   );
