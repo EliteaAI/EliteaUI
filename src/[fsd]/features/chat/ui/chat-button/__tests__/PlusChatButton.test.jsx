@@ -44,7 +44,7 @@ const openSkillsSubmenu = onCreateSkill => {
     </ThemeProvider>,
   );
   fireEvent.click(screen.getByTestId('plus-menu-button'));
-  fireEvent.mouseEnter(screen.getByTestId('skills-menuitem'));
+  fireEvent.click(screen.getByTestId('skills-menuitem'));
 };
 
 describe('PlusChatButton skills submenu', () => {
