@@ -9,6 +9,7 @@ import {
   analyticsHeaderCellSx,
   analyticsRowMinWidthSx,
   analyticsTableSortLabelSx,
+  analyticsTableWrapperSx,
 } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { useAnalyticsUsersQuery } from '@/api';
 import StyledSearchInput from '@/components/SearchInput';
@@ -285,7 +286,7 @@ const styles = {
     display: 'block',
   }),
   loadingState: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem' },
-  tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
+  tableWrapper: analyticsTableWrapperSx,
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',

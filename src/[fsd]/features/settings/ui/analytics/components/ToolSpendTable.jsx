@@ -4,7 +4,12 @@ import { Box, Typography } from '@mui/material';
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 
-import { analyticsColumnSx, analyticsHeaderCellSx, analyticsRowMinWidthSx } from './analyticsTable.styles';
+import {
+  analyticsColumnSx,
+  analyticsHeaderCellSx,
+  analyticsRowMinWidthSx,
+  analyticsTableWrapperSx,
+} from './analyticsTable.styles';
 
 const COLUMNS = [
   {
@@ -113,7 +118,7 @@ const toolSpendTableStyles = () => ({
     marginBottom: '0.5rem',
   }),
   empty: ({ palette }) => ({ padding: '1rem', color: palette.text.secondary }),
-  tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
+  tableWrapper: analyticsTableWrapperSx,
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
