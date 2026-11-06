@@ -5,6 +5,7 @@ import { Box, TextField, Typography } from '@mui/material';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 
 const DeleteEntityModal = memo(props => {
   const {
@@ -66,13 +67,16 @@ const DeleteEntityModal = memo(props => {
         sx={{ whiteSpaceCollapse: 'preserve' }}
       >
         {textContent}
-        <Typography
+        <TypographyWithConditionalTooltip
           component="span"
           variant="headingSmall"
-          sx={({ palette }) => ({ color: palette.components.deleteAlert.text.entityName })}
+          title={name}
+          placement="top"
+          data-testid="delete-confirm-entity-name"
+          sx={styles.entityName}
         >
           {name}
-        </Typography>
+        </TypographyWithConditionalTooltip>
         {inlineExtraContent || '?'}
         {shouldRequestInputName && ' Enter the name to complete the action.'}
       </Typography>
@@ -140,6 +144,12 @@ const deleteEntityModalStyles = () => ({
     flexDirection: 'column',
     gap: '.75rem',
   },
+  entityName: ({ palette }) => ({
+    display: 'inline-block',
+    maxWidth: '100%',
+    verticalAlign: 'bottom',
+    color: palette.components.deleteAlert.text.entityName,
+  }),
 });
 
 export default DeleteEntityModal;
