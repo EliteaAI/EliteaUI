@@ -111,6 +111,10 @@ describe('ScheduleRunApproval', () => {
 
     expect(button('Approve')).toBeDisabled();
     expect(button('Reject')).toBeEnabled();
+    expect(button('Approve')).toHaveAttribute(
+      'aria-describedby',
+      screen.getByText(/Approve all is not possible here/).id,
+    );
   });
 
   it('enables Approve once the required interrupt ids are known', () => {

@@ -41,3 +41,13 @@ export const findMissingCredential = (result, toolkit) =>
 export const hasMissingCredential = (result, toolkit) => !!findMissingCredential(result, toolkit);
 
 export const findWaitingRun = runs => (runs ?? []).find(run => run.status === 'waiting_for_approval');
+
+/**
+ * How many tools wait for a decision in a paused event. The server applies one Approve to every pending tool only
+ * when the request names their interrupt ids, so more than one tool needs the ids. An event without `tools`
+ * (an older server, or a pause of one tool) counts as one.
+ */
+export const hasSeveralPendingTools = pausedEvent => {
+  const tools = Array.isArray(pausedEvent?.tools) ? pausedEvent.tools : [];
+  return tools.length > 1 || tools.some(tool => Number(tool?.count) > 1) || Number(pausedEvent?.hidden) > 0;
+};

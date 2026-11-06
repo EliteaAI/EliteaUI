@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { findWaitingRun, getWaitingRunNeed, hasMissingCredential } from '../waitingRun.helpers';
+import {
+  findWaitingRun,
+  getWaitingRunNeed,
+  hasMissingCredential,
+  hasSeveralPendingTools,
+} from '../waitingRun.helpers';
 
 describe('getWaitingRunNeed', () => {
   it('reads the structured fields of the paused event', () => {
@@ -73,5 +78,21 @@ describe('findWaitingRun', () => {
     const waiting = { id: 2, status: 'waiting_for_approval' };
     expect(findWaitingRun([{ id: 1, status: 'success' }, waiting])).toBe(waiting);
     expect(findWaitingRun(undefined)).toBeUndefined();
+  });
+});
+
+describe('hasSeveralPendingTools', () => {
+  const tool = (name, count = 1) => ({ toolkit: 'Artifact', tool: name, count });
+
+  it('is false for no event, no tools or one tool', () => {
+    expect(hasSeveralPendingTools(undefined)).toBe(false);
+    expect(hasSeveralPendingTools({ kind: 'paused' })).toBe(false);
+    expect(hasSeveralPendingTools({ tools: [tool('create_file')], hidden: 0 })).toBe(false);
+  });
+
+  it('is true for two tools, a tool called twice or hidden tools', () => {
+    expect(hasSeveralPendingTools({ tools: [tool('create_file'), tool('delete_file')] })).toBe(true);
+    expect(hasSeveralPendingTools({ tools: [tool('create_file', 2)] })).toBe(true);
+    expect(hasSeveralPendingTools({ tools: [tool('create_file')], hidden: 2 })).toBe(true);
   });
 });

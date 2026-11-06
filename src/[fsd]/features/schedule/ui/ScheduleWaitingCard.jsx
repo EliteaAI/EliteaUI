@@ -12,7 +12,12 @@ import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SearchParams, ViewMode } from '@/common/constants';
 import RouteDefinitions from '@/routes';
 
-import { WAITING_NEED, formatApprovalExpiry, getWaitingRunNeed } from '../lib/helpers';
+import {
+  WAITING_NEED,
+  formatApprovalExpiry,
+  getWaitingRunNeed,
+  hasSeveralPendingTools,
+} from '../lib/helpers';
 import { useActionButtonProps } from '../lib/hooks/useActionButtonProps.hooks';
 import { useNow } from '../lib/hooks/useNow.hooks';
 import { useRunDetail, useScheduleRunConversation } from '../lib/hooks/useScheduleRuns.hooks';
@@ -21,6 +26,7 @@ import {
   useWaitingRunCredentialCheck,
 } from '../lib/hooks/useWaitingRunCredentialCheck.hooks';
 import ScheduleRunApproval from './ScheduleRunApproval';
+import ScheduleWaitingTools from './ScheduleWaitingTools';
 
 const noop = () => {};
 const STEP2_NOTE = 'Reject ends the run as Failed: rejected by the owner.';
@@ -151,7 +157,12 @@ const ScheduleWaitingCard = memo(
         authAction={authAction}
         pausedAt={pausedEvent?.at}
         interruptIds={pausedEvent?.interrupt_ids}
-        requireInterruptIds={!isCredential && !isSignIn && shownRun.conversation_id != null}
+        requireInterruptIds={
+          !isCredential &&
+          !isSignIn &&
+          shownRun.conversation_id != null &&
+          hasSeveralPendingTools(pausedEvent)
+        }
         blockedReason={
           isCredential && credentialState !== CREDENTIAL_CHECK_STATE.READY ? BLOCKED_REASON : undefined
         }
@@ -180,6 +191,7 @@ const ScheduleWaitingCard = memo(
               {`This run will not start until you approve it. ${description} ${STEP2_NOTE}`}
             </Typography>
           </Box>
+          <ScheduleWaitingTools pausedEvent={pausedEvent} />
           {expiry && (
             <Typography
               data-testid="schedule-waiting-expiry"

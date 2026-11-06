@@ -5,7 +5,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import getDesignTokens from '@/MainTheme';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
 import ScheduleWaitingCard from '../ScheduleWaitingCard';
 
@@ -233,22 +233,111 @@ describe('ScheduleWaitingCard', () => {
     );
   });
 
-  it('keeps Approve off until the paused event of a chat run has interrupt ids', () => {
+  const chatRun = { ...run, conversation_id: 5 };
+  const pauseChat = event => {
+    mocks.conversation = { conversationUuid: 'conv-1', pausedMessageId: 'msg-1' };
+    mocks.detail = { ...chatRun, events: [event] };
+    renderCard({ run: chatRun });
+  };
+
+  it('keeps Approve on and sends no ids for a one-tool pause without interrupt ids', () => {
+    pauseChat(
+      paused({
+        text: 'Paused for approval',
+        tools: [{ toolkit: 'Artifact', tool: 'create_file', count: 1 }],
+      }),
+    );
+
+    expect(button('Approve')).toBeEnabled();
+    fireEvent.click(button('Approve'));
+
+    expect(mocks.decide).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'approve', interruptIds: undefined }),
+    );
+  });
+
+  it('keeps Approve on when the run detail has not loaded', () => {
     mocks.conversation = { conversationUuid: 'conv-1', pausedMessageId: 'msg-1' };
     mocks.detail = undefined;
-    renderCard({ run: { ...run, conversation_id: 5 } });
+    renderCard({ run: chatRun });
 
-    expect(button('Approve')).toBeDisabled();
+    expect(button('Approve')).toBeEnabled();
     expect(button('Reject')).toBeEnabled();
   });
 
-  it('keeps Approve off when the paused event of a chat run carries no interrupt ids', () => {
-    mocks.conversation = { conversationUuid: 'conv-1', pausedMessageId: 'msg-1' };
-    mocks.detail = { ...run, conversation_id: 5, events: [paused({ text: 'Paused for approval' })] };
-    renderCard({ run: { ...run, conversation_id: 5 } });
+  it.each([
+    [
+      'two tools',
+      [
+        { toolkit: 'Artifact', tool: 'create_file', count: 1 },
+        { toolkit: 'ADO', tool: 'list_indexes', count: 1 },
+      ],
+      0,
+    ],
+    ['one tool called twice', [{ toolkit: 'Artifact', tool: 'create_file', count: 2 }], 0],
+    ['hidden tools', [{ toolkit: 'Artifact', tool: 'create_file', count: 1 }], 3],
+  ])(
+    'keeps Approve off with a note for a pause of %s without interrupt ids, Reject works',
+    (_, tools, hidden) => {
+      pauseChat(paused({ text: 'Paused for approval', tools, hidden }));
 
-    expect(button('Approve')).toBeDisabled();
-    expect(button('Reject')).toBeEnabled();
+      const note = screen.getByText(
+        'Approve all is not possible here. Answer each tool in the run chat, or Reject.',
+      );
+      expect(button('Approve')).toBeDisabled();
+      expect(button('Approve')).toHaveAttribute('aria-describedby', note.id);
+      expect(button('Reject')).toBeEnabled();
+
+      fireEvent.click(button('Reject'));
+      expect(mocks.decide).toHaveBeenCalledWith(expect.objectContaining({ action: 'reject' }));
+    },
+  );
+
+  it('enables Approve for a pause of several tools that carries the interrupt ids', () => {
+    pauseChat(
+      paused({
+        tools: [
+          { toolkit: 'Artifact', tool: 'create_file', count: 1 },
+          { toolkit: 'ADO', tool: 'list_indexes', count: 1 },
+        ],
+        interrupt_ids: ['int-1', 'int-2'],
+      }),
+    );
+
+    expect(button('Approve')).toBeEnabled();
+    expect(screen.queryByText(/Approve all is not possible here/)).not.toBeInTheDocument();
+  });
+
+  it('lists the pending tools, the hidden count and the tools that may ask later', () => {
+    pauseChat(
+      paused({
+        tools: [
+          { toolkit: 'Artifact', tool: 'create_file', count: 2 },
+          { toolkit: 'ADO', tool: 'list_indexes', count: 1 },
+        ],
+        hidden: 4,
+        later_tools: [{ toolkit: 'GitHub', tool: '<b>create_pull_request</b>' }],
+        interrupt_ids: ['int-1'],
+      }),
+    );
+
+    const pending = within(screen.getByTestId('schedule-waiting-tools'));
+    expect(pending.getAllByRole('listitem').map(item => item.textContent)).toEqual([
+      'Artifact · create_file x 2',
+      'ADO · list_indexes',
+      '+4 more',
+    ]);
+    expect(screen.getByText('May ask for approval later in this run')).toBeInTheDocument();
+    const later = within(screen.getByTestId('schedule-waiting-later-tools'));
+    expect(later.getByRole('listitem')).toHaveTextContent('GitHub · <b>create_pull_request</b>');
+    expect(screen.getByTestId('schedule-waiting-later-tools').querySelector('b')).toBeNull();
+  });
+
+  it('shows no tool lists for a pause without them', () => {
+    pauseChat(paused({ text: 'Paused for approval' }));
+
+    expect(screen.queryByTestId('schedule-waiting-tools')).not.toBeInTheDocument();
+    expect(screen.queryByText('May ask for approval later in this run')).not.toBeInTheDocument();
   });
 
   it('renders a Test run without a schedule from the entity and the run version', () => {

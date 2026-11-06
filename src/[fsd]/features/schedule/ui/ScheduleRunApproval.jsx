@@ -31,8 +31,8 @@ const PAGE_BUTTON_PROPS = {
  * `blockedReason` keeps Approve off and names why. `compact` is the form for the Action needed card: no
  * left offset, no sign-in button and no expiry text, because the card shows them itself.
  * `interruptIds` are the ids of the paused event the card shows; they go with the decision so a newer pause is not approved by mistake.
- * `requireInterruptIds` keeps Approve off until `interruptIds` is known (a chat sensitive-tool pause): the server applies one
- * Approve to every pending tool only for a request that carries the ids. Reject needs none.
+ * `requireInterruptIds` keeps Approve off until `interruptIds` is known (a pause of several tools): the server applies one
+ * Approve to every pending tool only for a request that carries the ids, so the note sends the owner to the run chat. Reject needs none.
  * `plain` is the page button look (primary Approve, secondary Reject, no icons) of the short waiting notice.
  */
 const ScheduleRunApproval = memo(props => {
@@ -55,6 +55,7 @@ const ScheduleRunApproval = memo(props => {
   const dispatch = useDispatch();
   const signInNoteId = useId();
   const blockedNoteId = useId();
+  const idsNoteId = useId();
   const [deciding, setDeciding] = useState(false);
   const authContext = useMemo(
     () => (authAction ? getToolkitAuthorizationContext(authAction) : null),
@@ -101,8 +102,8 @@ const ScheduleRunApproval = memo(props => {
   const disabled = !onHitlResume || (hasChat && !conversationUuid) || deciding;
   const needsSignIn = Boolean(authAction) && !signedIn;
   const waitsForIds = requireInterruptIds && !interruptIds?.length;
-  const approveNoteId = blockedReason ? blockedNoteId : signInNoteId;
-  const approveDescribed = !disabled && (blockedReason || needsSignIn);
+  const approveNoteId = blockedReason ? blockedNoteId : waitsForIds ? idsNoteId : signInNoteId;
+  const approveDescribed = !disabled && (blockedReason || needsSignIn || waitsForIds);
   const themeButtonProps = useActionButtonProps();
   const buttonProps = plain ? PAGE_BUTTON_PROPS : themeButtonProps;
   const styles = scheduleRunApprovalStyles();
@@ -154,6 +155,16 @@ const ScheduleRunApproval = memo(props => {
           sx={styles.note}
         >
           {blockedReason}
+        </Typography>
+      )}
+      {waitsForIds && !blockedReason && onHitlResume && (
+        <Typography
+          id={idsNoteId}
+          variant="bodySmall"
+          color="text.secondary"
+          sx={styles.note}
+        >
+          Approve all is not possible here. Answer each tool in the run chat, or Reject.
         </Typography>
       )}
       {needsSignIn && !blockedReason && onHitlResume && (
