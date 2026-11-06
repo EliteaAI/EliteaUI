@@ -52,6 +52,31 @@ describe('schedule risk check API', () => {
     expect(result.data).toEqual(CHECK_ANSWER);
   });
 
+  it('sends schedule_id and run_id in the check body', async () => {
+    fetchSpy.mockResolvedValue(jsonResponse(CHECK_ANSWER));
+
+    await makeStore().dispatch(
+      scheduleApi.endpoints.checkScheduleRisk.initiate({
+        projectId: 5,
+        entity_type: 'agent',
+        application_id: 7,
+        version_id: 71,
+        schedule_id: 9,
+        run_id: 41,
+      }),
+    );
+
+    const request = await requestAt(fetchSpy, 0);
+    expect(request.url.pathname).toBe(`${BASE}/check`);
+    expect(request.body).toEqual({
+      entity_type: 'agent',
+      application_id: 7,
+      version_id: 71,
+      schedule_id: 9,
+      run_id: 41,
+    });
+  });
+
   it('a check refetches no schedule list, because it saves nothing', async () => {
     fetchSpy.mockImplementation(async arg =>
       arg.url.endsWith('/check') ? jsonResponse(CHECK_ANSWER) : jsonResponse({ total: 0, rows: [] }),

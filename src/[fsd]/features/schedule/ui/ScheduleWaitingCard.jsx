@@ -99,6 +99,7 @@ const ScheduleWaitingCard = memo(
     } = useWaitingRunCredentialCheck({
       schedule: target,
       toolkit: waiting.toolkit,
+      runId: shownRun.id,
       enabled: isCredential,
     });
     const serverUrl = authAction?.toolOutputs?.server_url || authAction?.toolMeta?.server_url || '';

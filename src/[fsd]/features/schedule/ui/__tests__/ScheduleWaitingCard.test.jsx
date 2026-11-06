@@ -113,6 +113,12 @@ describe('ScheduleWaitingCard', () => {
     expect(mocks.checkArgs).toMatchObject({ toolkit: 'GitHub', enabled: true });
   });
 
+  it('asks the credential check to scan for the shown run', () => {
+    renderCard();
+
+    expect(mocks.checkArgs).toMatchObject({ runId: 41 });
+  });
+
   it('takes the toolkit name from the credential check when the run does not name it', () => {
     mocks.detail = { ...mocks.detail, events: [paused({ need: 'credential', credential: 'gh-main' })] };
     mocks.check = { state: 'missing', recheck: vi.fn(), toolkitName: 'Repo toolkit' };
