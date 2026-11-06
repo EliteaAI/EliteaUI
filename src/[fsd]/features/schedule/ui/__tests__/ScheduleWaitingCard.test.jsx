@@ -5,7 +5,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import getDesignTokens from '@/MainTheme';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
 import ScheduleWaitingCard from '../ScheduleWaitingCard';
 
@@ -215,6 +215,94 @@ describe('ScheduleWaitingCard', () => {
     expect(screen.queryByText('Action needed: this run is waiting for you')).not.toBeInTheDocument();
     expect(button('Approve')).toBeEnabled();
     expect(button('Reject')).toBeEnabled();
+  });
+
+  it('lists the sensitive tools to approve before the first call and the tools that may still ask', () => {
+    mocks.detail = {
+      ...run,
+      events: [
+        paused({
+          need: 'tools',
+          text: 'Paused for approval before the first tool call: github · create_pull_request, github · delete_file',
+          tools: [
+            { toolkit: 'github', tool: 'create_pull_request' },
+            { toolkit: 'github', tool: 'delete_file' },
+          ],
+          may_ask: [{ toolkit: 'jira', tool: 'create_issue' }],
+        }),
+      ],
+    };
+    renderCard();
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'This run will not start until you approve it. Before the first tool call, this run needs your approval for these sensitive tools.',
+    );
+    const items = within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem');
+    expect(items.map(item => item.textContent)).toEqual([
+      'github · create_pull_request',
+      'github · delete_file',
+    ]);
+    expect(screen.getByTestId('schedule-waiting-may-ask')).toHaveTextContent(
+      'These tools from the global list may still ask during the run: jira · create_issue.',
+    );
+    expect(button('Approve')).toBeEnabled();
+    expect(button('Reject')).toBeEnabled();
+  });
+
+  it('shows no may-ask line when no tool may still ask', () => {
+    mocks.detail = {
+      ...run,
+      events: [paused({ need: 'tools', tools: [{ toolkit: 'github', tool: 'delete_file' }] })],
+    };
+    renderCard();
+
+    expect(screen.getByTestId('schedule-waiting-tools')).toBeInTheDocument();
+    expect(screen.queryByTestId('schedule-waiting-may-ask')).not.toBeInTheDocument();
+  });
+
+  it('lists every tool of a call-time pause that names several', () => {
+    mocks.detail = {
+      ...run,
+      events: [
+        paused({
+          text: 'Paused for approval: github · create_issue, github · delete_issue',
+          tools: [
+            { toolkit: 'github', tool: 'create_issue' },
+            { toolkit: 'github', tool: 'delete_issue' },
+          ],
+        }),
+      ],
+    };
+    renderCard();
+
+    expect(within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem')).toHaveLength(2);
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Paused for approval: github · create_issue, github · delete_issue',
+    );
+  });
+
+  it('shows no list for a call-time pause of one tool', () => {
+    mocks.detail = {
+      ...run,
+      events: [
+        paused({
+          text: 'Paused for approval: github · create_issue',
+          tools: [{ toolkit: 'github', tool: 'create_issue' }],
+        }),
+      ],
+    };
+    renderCard();
+
+    expect(screen.queryByTestId('schedule-waiting-tools')).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Paused for approval: github · create_issue');
+  });
+
+  it('renders an older pause without tools as before', () => {
+    mocks.detail = { ...run, events: [paused({ text: 'Paused for approval: create_pull_request' })] };
+    renderCard();
+
+    expect(screen.queryByTestId('schedule-waiting-tools')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('schedule-waiting-may-ask')).not.toBeInTheDocument();
   });
 
   it('renders a Test run without a schedule from the entity and the run version', () => {

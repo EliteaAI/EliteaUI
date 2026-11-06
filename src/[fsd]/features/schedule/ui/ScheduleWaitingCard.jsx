@@ -1,7 +1,7 @@
 import { forwardRef, memo, useId, useMemo } from 'react';
 
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
-import { Box, Chip, Typography } from '@mui/material';
+import { Box, Chip, List, ListItem, Typography } from '@mui/material';
 
 import { buildEntityEditorLink } from '@/[fsd]/entities/schedule';
 import { ChatContinue, ToolkitActionPanel } from '@/[fsd]/features/chat';
@@ -12,7 +12,13 @@ import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SearchParams, ViewMode } from '@/common/constants';
 import RouteDefinitions from '@/routes';
 
-import { WAITING_NEED, formatApprovalExpiry, getWaitingRunNeed } from '../lib/helpers';
+import {
+  WAITING_NEED,
+  formatApprovalExpiry,
+  formatTool,
+  getPausedTools,
+  getWaitingRunNeed,
+} from '../lib/helpers';
 import { useActionButtonProps } from '../lib/hooks/useActionButtonProps.hooks';
 import { useNow } from '../lib/hooks/useNow.hooks';
 import { useRunDetail, useScheduleRunConversation } from '../lib/hooks/useScheduleRuns.hooks';
@@ -40,6 +46,8 @@ const describeNeed = ({ need, toolkit, credential }, pausedText) => {
     return credential
       ? `Toolkit "${name}" has no usable credential "${credential}".`
       : `Toolkit "${name}" has no usable credential.`;
+  if (need === WAITING_NEED.TOOLS)
+    return 'Before the first tool call, this run needs your approval for these sensitive tools.';
   return pausedText || 'This run is paused and waits for your decision.';
 };
 
@@ -74,6 +82,10 @@ const ScheduleWaitingCard = memo(
     const waiting = useMemo(() => getWaitingRunNeed(pausedEvent), [pausedEvent]);
     const isCredential = waiting.need === WAITING_NEED.CREDENTIAL;
     const isSignIn = waiting.need === WAITING_NEED.SIGN_IN;
+    // A call-time pause for one tool already names it in its text; a list helps from two tools on
+    const pausedTools = waiting.tools ?? getPausedTools(pausedEvent);
+    const listedTools = waiting.need === WAITING_NEED.TOOLS || pausedTools.length > 1 ? pausedTools : [];
+    const mayAskTools = waiting.mayAsk ?? [];
     const { authAction } = conversation;
 
     const {
@@ -178,6 +190,31 @@ const ScheduleWaitingCard = memo(
               {`This run will not start until you approve it. ${description} ${STEP2_NOTE}`}
             </Typography>
           </Box>
+          {listedTools.length > 0 && (
+            <List
+              data-testid="schedule-waiting-tools"
+              aria-label="Sensitive tools to approve"
+              sx={styles.toolList}
+            >
+              {listedTools.map(item => (
+                <ListItem
+                  key={formatTool(item)}
+                  sx={styles.toolItem}
+                >
+                  <Typography variant="bodySmall">{formatTool(item)}</Typography>
+                </ListItem>
+              ))}
+            </List>
+          )}
+          {mayAskTools.length > 0 && (
+            <Typography
+              data-testid="schedule-waiting-may-ask"
+              variant="bodySmall"
+              color="text.secondary"
+            >
+              {`These tools from the global list may still ask during the run: ${mayAskTools.map(formatTool).join(', ')}.`}
+            </Typography>
+          )}
           {expiry && (
             <Typography
               data-testid="schedule-waiting-expiry"
@@ -329,6 +366,13 @@ const scheduleWaitingCardStyles = () => ({
   }),
   noticeIcon: ({ palette }) => ({ fontSize: '1.25rem', flexShrink: 0, color: palette.warning.scheduleCard }),
   noticeText: ({ palette }) => ({ color: palette.text.secondary }),
+  toolList: ({ palette }) => ({
+    margin: 0,
+    padding: '0 0 0 1.5rem',
+    listStyleType: 'disc',
+    color: palette.text.primary,
+  }),
+  toolItem: { display: 'list-item', padding: 0 },
   header: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' },
   title: ({ palette }) => ({
     flex: '1 1 auto',
