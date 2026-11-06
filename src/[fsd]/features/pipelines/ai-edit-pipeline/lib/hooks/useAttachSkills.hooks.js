@@ -4,10 +4,10 @@ import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 
 /**
- * Attaches the skills an AI draft suggested on the create page, once the new pipeline has a version.
- * A skill relation needs a version id, which only exists after the first Save.
+ * Attaches skills an AI draft suggested to a pipeline version. Skills are not part of the version payload
+ * (the backend copies them between versions itself), so each one is a separate relation request.
  */
-export const useAttachPendingSkills = () => {
+export const useAttachSkills = () => {
   const projectId = useSelectedProjectId();
   const { toastWarning } = useToast();
   const [fetchSkillDetails] = useLazySkillDetailsQuery();
@@ -34,9 +34,7 @@ export const useAttachPendingSkills = () => {
         }),
       );
       const failed = results.filter(r => r.status === 'rejected').length;
-      if (failed) {
-        toastWarning(`The pipeline was saved, but ${failed} suggested skill(s) could not be attached.`);
-      }
+      if (failed) toastWarning(`${failed} suggested skill(s) could not be attached.`);
     },
     [fetchSkillDetails, projectId, toastWarning, updateSkillRelation],
   );

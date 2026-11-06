@@ -28,7 +28,7 @@ vi.mock('@/hooks/application/useCreateApplication', () => ({
 }));
 vi.mock('@/hooks/useNavBlocker', () => ({ default: () => ({ setBlockNav }) }));
 vi.mock('@/[fsd]/features/pipelines/ai-edit-pipeline', () => ({
-  useAttachPendingSkills: () => attachPendingSkills,
+  useAttachSkills: () => attachPendingSkills,
 }));
 vi.mock('@/pages/Pipelines/useIsPipelineYamlCodeDirty', () => ({ default: () => false }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useToast: () => ({ toastError: vi.fn() }) }));

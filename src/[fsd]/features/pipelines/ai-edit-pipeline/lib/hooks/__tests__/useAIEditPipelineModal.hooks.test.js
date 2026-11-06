@@ -1,26 +1,21 @@
 // @vitest-environment jsdom
 import { useFormikContext } from 'formik';
-import { useDispatch } from 'react-redux';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useDispatch, useStore } from 'react-redux';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   buildApplicationAttachment,
   buildToolkitAttachment,
 } from '@/[fsd]/features/pipelines/tool-picker/lib/helpers/attachmentTool.helpers';
-import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd]/features/skill/api';
-import {
-  useLazyApplicationDetailsQuery,
-  useLazyGetApplicationVersionDetailQuery,
-  useLazyToolkitsDetailsQuery,
-  useToolkitAssociateMutation,
-  useUpdateApplicationRelationMutation,
-} from '@/api';
+import { useLazyApplicationDetailsQuery, useLazyToolkitsDetailsQuery } from '@/api';
+import { calculateNodesAndEdges } from '@/pages/Pipelines/useSavePipeline';
 import { act, renderHook } from '@testing-library/react';
 
 import { useAIEditPipelineModal } from '../useAIEditPipelineModal.hooks';
+import { useAttachSkills } from '../useAttachSkills.hooks';
 
 vi.mock('formik', () => ({ useFormikContext: vi.fn() }));
-vi.mock('react-redux', () => ({ useDispatch: vi.fn() }));
+vi.mock('react-redux', () => ({ useDispatch: vi.fn(), useStore: vi.fn() }));
 vi.mock('js-yaml', () => ({ default: { load: vi.fn(() => ({})) } }));
 
 vi.mock('@/[fsd]/features/pipelines/api/generatePipelineApi', () => ({
@@ -29,8 +24,10 @@ vi.mock('@/[fsd]/features/pipelines/api/generatePipelineApi', () => ({
 
 vi.mock('@/[fsd]/features/pipelines/flow-editor/lib/helpers', () => ({
   FlowEditorHelpers: { convertNode: vi.fn(n => n) },
-  LayoutHelpers: { doLayout: vi.fn(() => ({ nodes: [], edges: [] })) },
-  ParsePipelineHelpers: { parseYaml: vi.fn(() => ({ nodes: [], edges: [] })) },
+}));
+
+vi.mock('@/pages/Pipelines/useSavePipeline', () => ({
+  calculateNodesAndEdges: vi.fn(() => ({ nodes: [], edges: [] })),
 }));
 
 vi.mock('@/[fsd]/features/pipelines/lib/helpers', () => ({
@@ -56,10 +53,7 @@ vi.mock('@/[fsd]/features/pipelines/tool-picker/lib/helpers/attachmentTool.helpe
   })),
 }));
 
-vi.mock('@/[fsd]/features/skill/api', () => ({
-  useLazySkillDetailsQuery: vi.fn(() => [vi.fn()]),
-  useUpdateSkillRelationMutation: vi.fn(() => [vi.fn(() => ({ unwrap: vi.fn().mockResolvedValue({}) }))]),
-}));
+vi.mock('../useAttachSkills.hooks', () => ({ useAttachSkills: vi.fn() }));
 
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: vi.fn(() => 1),
@@ -68,18 +62,7 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
 
 vi.mock('@/api', () => ({
   useLazyApplicationDetailsQuery: vi.fn(() => [vi.fn()]),
-  useLazyGetApplicationVersionDetailQuery: vi.fn(() => [vi.fn()]),
   useLazyToolkitsDetailsQuery: vi.fn(() => [vi.fn()]),
-  useToolkitAssociateMutation: vi.fn(() => [vi.fn(() => ({ unwrap: vi.fn().mockResolvedValue({}) }))]),
-  useUpdateApplicationRelationMutation: vi.fn(() => [
-    vi.fn(() => ({ unwrap: vi.fn().mockResolvedValue({}) })),
-  ]),
-}));
-
-vi.mock('@/common/utils', () => ({ buildErrorMessage: vi.fn(() => 'error') }));
-
-vi.mock('@/hooks/application/useAgentPipelineAssociation', () => ({
-  mapAssociationError: vi.fn(msg => msg),
 }));
 
 vi.mock('@/hooks/application/useSaveNewVersion', () => ({
@@ -90,6 +73,7 @@ vi.mock('@/slices/pipeline', () => ({
   actions: {
     initThePipeline: vi.fn(p => ({ type: 'pipeline/init', payload: p })),
     applyPipelineDraft: vi.fn(p => ({ type: 'pipeline/applyDraft', payload: p })),
+    markPipelineSaved: vi.fn(p => ({ type: 'pipeline/markSaved', payload: p })),
   },
 }));
 
@@ -98,6 +82,9 @@ vi.mock('@/slices/pipelineEditor', () => ({
 }));
 
 const mockSetFieldValue = vi.fn().mockResolvedValue(undefined);
+const mockResetForm = vi.fn();
+const mockAttachSkills = vi.fn().mockResolvedValue(undefined);
+let canvasState = { resetFlag: false, yamlCode: 'canvas_yaml: true' };
 const mockDispatch = vi.fn();
 const mockOnClose = vi.fn();
 
@@ -118,30 +105,21 @@ const makeFormikValues = (overrides = {}) => ({
   ...overrides,
 });
 
-// Helpers to get the inner mock fns from the hook-level mocks
-const getAssociateToolkitFn = () => vi.mocked(useToolkitAssociateMutation).mock.results[0]?.value[0];
-const getUpdateApplicationRelationFn = () =>
-  vi.mocked(useUpdateApplicationRelationMutation).mock.results[0]?.value[0];
-const getUpdateSkillRelationFn = () => vi.mocked(useUpdateSkillRelationMutation).mock.results[0]?.value[0];
-const getFetchApplicationDetailsFn = () =>
-  vi.mocked(useLazyApplicationDetailsQuery).mock.results[0]?.value[0];
-const getFetchSkillDetailsFn = () => vi.mocked(useLazySkillDetailsQuery).mock.results[0]?.value[0];
-const getFetchToolkitDetailsFn = () => vi.mocked(useLazyToolkitsDetailsQuery).mock.results[0]?.value[0];
+const emptySuggestions = {
+  suggested_toolkits: [],
+  suggested_mcp: [],
+  suggested_agents: [],
+  suggested_pipelines: [],
+  suggested_skills: [],
+};
+
+const toolsWritten = () => mockSetFieldValue.mock.calls.find(c => c[0] === 'version_details.tools')?.[1];
 
 beforeEach(() => {
   vi.clearAllMocks();
-
-  const unwrapOk = vi.fn().mockResolvedValue({});
-  vi.mocked(useToolkitAssociateMutation).mockReturnValue([vi.fn(() => ({ unwrap: unwrapOk }))]);
-  vi.mocked(useUpdateApplicationRelationMutation).mockReturnValue([vi.fn(() => ({ unwrap: unwrapOk }))]);
-  vi.mocked(useUpdateSkillRelationMutation).mockReturnValue([vi.fn(() => ({ unwrap: unwrapOk }))]);
   vi.mocked(useLazyApplicationDetailsQuery).mockReturnValue([vi.fn()]);
   vi.mocked(useLazyToolkitsDetailsQuery).mockReturnValue([vi.fn()]);
-  vi.mocked(useLazyGetApplicationVersionDetailQuery).mockReturnValue([
-    vi.fn().mockResolvedValue({ data: null }),
-  ]);
-  vi.mocked(useLazySkillDetailsQuery).mockReturnValue([vi.fn()]);
-
+  vi.mocked(useAttachSkills).mockReturnValue(mockAttachSkills);
   useFormikContext.mockReturnValue({
     values: makeFormikValues(),
     setFieldValue: mockSetFieldValue,
@@ -314,157 +292,134 @@ describe('useAIEditPipelineModal', () => {
     });
   });
 
-  describe('handleSave — create mode', () => {
-    it('sets version_details.instructions from pipeline_yaml', async () => {
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: true, onClose: mockOnClose }),
-      );
+  describe('handleSave', () => {
+    const render = isCreateMode =>
+      renderHook(() => useAIEditPipelineModal({ isCreateMode, onClose: mockOnClose }));
 
+    it('writes the draft YAML, name and description into the form', async () => {
+      const { result } = render(false);
       await act(async () => {
         await result.current.handleSave({
-          pipeline_yaml: 'new_yaml: true',
-          suggested_toolkits: [],
-          suggested_mcp: [],
-          suggested_agents: [],
-          suggested_pipelines: [],
+          ...emptySuggestions,
+          pipeline_yaml: 'new: true',
+          name: 'n',
+          description: 'd',
         });
       });
-
-      expect(mockSetFieldValue).toHaveBeenCalledWith('version_details.instructions', 'new_yaml: true');
+      expect(mockSetFieldValue).toHaveBeenCalledWith('version_details.instructions', 'new: true');
+      expect(mockSetFieldValue).toHaveBeenCalledWith('name', 'n');
+      expect(mockSetFieldValue).toHaveBeenCalledWith('description', 'd');
     });
 
-    it('fetches full toolkit details and builds attachment', async () => {
-      const fullToolkit = {
-        id: 10,
-        name: 'Jira',
-        type: 'jira',
-        settings: { sharepoint_configuration: { site: 'x' } },
-      };
+    it('lays the draft out with the saved canvas positions', async () => {
+      const { result } = render(false);
+      await act(async () => {
+        await result.current.handleSave({ ...emptySuggestions, pipeline_yaml: 'new: true' });
+      });
+      expect(calculateNodesAndEdges).toHaveBeenCalledWith('new: true', 'horizontal', []);
+    });
+
+    it('loads an existing pipeline draft as an unsaved edit, a new one as the starting point', async () => {
+      const edit = render(false);
+      await act(async () => {
+        await edit.result.current.handleSave({ ...emptySuggestions, pipeline_yaml: 'a: 1' });
+      });
+      expect(mockDispatch).toHaveBeenCalledWith(expect.objectContaining({ type: 'pipeline/applyDraft' }));
+
+      mockDispatch.mockClear();
+      const create = render(true);
+      await act(async () => {
+        await create.result.current.handleSave({ ...emptySuggestions, pipeline_yaml: 'a: 1' });
+      });
+      expect(mockDispatch).toHaveBeenCalledWith(expect.objectContaining({ type: 'pipeline/init' }));
+    });
+
+    it('builds ticked toolkits, MCPs, agents and pipelines from their full details', async () => {
       vi.mocked(useLazyToolkitsDetailsQuery).mockReturnValue([
-        vi.fn().mockResolvedValue({ data: fullToolkit }),
+        vi.fn(({ toolkitId }) => Promise.resolve({ data: { id: toolkitId, name: `tk${toolkitId}` } })),
       ]);
-
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: true, onClose: mockOnClose }),
-      );
-
-      act(() => result.current.handleToggleAddToolkit(10));
-
-      await act(async () => {
-        await result.current.handleSave({
-          pipeline_yaml: '',
-          suggested_toolkits: [{ id: 10, name: 'Jira', project_id: 1 }],
-          suggested_mcp: [],
-          suggested_agents: [],
-          suggested_pipelines: [],
-        });
-      });
-
-      const fetchFn = getFetchToolkitDetailsFn();
-      expect(fetchFn).toHaveBeenCalledWith({ projectId: 1, toolkitId: 10 });
-      // Full details object passed, not the sparse suggestion
-      expect(buildToolkitAttachment).toHaveBeenCalledWith(fullToolkit, { mcp: false });
-
-      const toolsCall = mockSetFieldValue.mock.calls.find(c => c[0] === 'version_details.tools');
-      expect(toolsCall[1]).toHaveLength(1);
-    });
-
-    it('fetches full mcp details and builds attachment with mcp:true', async () => {
-      const fullMcp = { id: 20, name: 'MyMcp', type: 'mcp', settings: { url: 'https://mcp.example.com' } };
-      vi.mocked(useLazyToolkitsDetailsQuery).mockReturnValue([vi.fn().mockResolvedValue({ data: fullMcp })]);
-
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: true, onClose: mockOnClose }),
-      );
-
-      act(() => result.current.handleToggleAddMcp(20));
-
-      await act(async () => {
-        await result.current.handleSave({
-          pipeline_yaml: '',
-          suggested_toolkits: [],
-          suggested_mcp: [{ id: 20, name: 'MyMcp', project_id: 1 }],
-          suggested_agents: [],
-          suggested_pipelines: [],
-        });
-      });
-
-      expect(buildToolkitAttachment).toHaveBeenCalledWith(fullMcp, { mcp: true });
-    });
-
-    it('fetches app details and builds agent attachment', async () => {
       vi.mocked(useLazyApplicationDetailsQuery).mockReturnValue([
-        vi.fn().mockResolvedValue({ data: { version_details: { id: 99 } } }),
+        vi.fn(() => Promise.resolve({ data: { version_details: { id: 900 } } })),
       ]);
-
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: true, onClose: mockOnClose }),
-      );
-
-      act(() => result.current.handleToggleAddAgent(30));
-
-      await act(async () => {
-        await result.current.handleSave({
-          pipeline_yaml: '',
-          suggested_toolkits: [],
-          suggested_mcp: [],
-          suggested_agents: [{ id: 30, name: 'My Agent', project_id: 1 }],
-          suggested_pipelines: [],
-        });
+      const { result } = render(false);
+      act(() => {
+        result.current.handleToggleAddToolkit(10);
+        result.current.handleToggleAddMcp(20);
+        result.current.handleToggleAddAgent(30);
       });
-
-      const fetchFn = getFetchApplicationDetailsFn();
-      expect(fetchFn).toHaveBeenCalledWith({ projectId: 1, applicationId: 30 });
-      expect(buildApplicationAttachment).toHaveBeenCalledWith(
-        { id: 30, name: 'My Agent', project_id: 1 },
-        { id: 99 },
-      );
-    });
-
-    it('does not include unselected suggestions in tools', async () => {
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: true, onClose: mockOnClose }),
-      );
-
       await act(async () => {
         await result.current.handleSave({
+          ...emptySuggestions,
           pipeline_yaml: '',
           suggested_toolkits: [{ id: 10 }, { id: 11 }],
-          suggested_mcp: [],
-          suggested_agents: [],
-          suggested_pipelines: [],
+          suggested_mcp: [{ id: 20 }],
+          suggested_agents: [{ id: 30, project_id: 5 }],
         });
       });
-
-      const toolsCall = mockSetFieldValue.mock.calls.find(c => c[0] === 'version_details.tools');
-      expect(toolsCall).toBeDefined();
-      expect(toolsCall[1]).toHaveLength(0);
+      expect(buildToolkitAttachment).toHaveBeenCalledWith({ id: 10, name: 'tk10' }, { mcp: false });
+      expect(buildToolkitAttachment).toHaveBeenCalledWith({ id: 20, name: 'tk20' }, { mcp: true });
+      expect(buildApplicationAttachment).toHaveBeenCalledWith({ id: 30, project_id: 5 }, { id: 900 });
+      expect(toolsWritten()).toHaveLength(3);
     });
 
-    it('uses project_id fallback when suggestion has no project_id', async () => {
-      vi.mocked(useLazyApplicationDetailsQuery).mockReturnValue([
-        vi.fn().mockResolvedValue({ data: { version_details: { id: 42 } } }),
+    it('only changes the form: keeps current tools, drops ones ticked for removal, skips duplicates', async () => {
+      useFormikContext.mockReturnValue({
+        values: makeFormikValues({
+          version_details: {
+            ...baseVersionDetails,
+            tools: [
+              { id: 7, type: 'github', name: 'kept' },
+              { id: 8, type: 'jira', name: 'removed' },
+            ],
+          },
+        }),
+        setFieldValue: mockSetFieldValue,
+      });
+      vi.mocked(useLazyToolkitsDetailsQuery).mockReturnValue([
+        vi.fn(({ toolkitId }) => Promise.resolve({ data: { id: toolkitId, name: `tk${toolkitId}` } })),
       ]);
-
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: true, onClose: mockOnClose }),
-      );
-
-      act(() => result.current.handleToggleAddPipeline(40));
-
+      const { result } = render(false);
+      act(() => {
+        result.current.handleToggleAddToolkit(7);
+        result.current.handleToggleAddToolkit(12);
+        result.current.handleToggleRemoveTool(8);
+      });
       await act(async () => {
         await result.current.handleSave({
+          ...emptySuggestions,
           pipeline_yaml: '',
-          suggested_toolkits: [],
-          suggested_mcp: [],
-          suggested_agents: [],
-          suggested_pipelines: [{ id: 40, name: 'My Pipeline' }], // no project_id
+          suggested_toolkits: [{ id: 7 }, { id: 12 }],
         });
       });
+      expect(toolsWritten().map(t => t.id)).toEqual([7, 12]);
+      expect(toolsWritten()[0].name).toBe('kept');
+    });
 
-      // Falls back to projectId=1 from useSelectedProjectId mock
-      const fetchFn = getFetchApplicationDetailsFn();
-      expect(fetchFn).toHaveBeenCalledWith({ projectId: 1, applicationId: 40 });
+    it('attaches ticked skills to the current version in edit mode', async () => {
+      const { result } = render(false);
+      act(() => result.current.handleToggleAddSkill(50));
+      await act(async () => {
+        await result.current.handleSave({
+          ...emptySuggestions,
+          pipeline_yaml: '',
+          suggested_skills: [{ id: 50 }, { id: 51 }],
+        });
+      });
+      expect(mockAttachSkills).toHaveBeenCalledWith([{ id: 50 }], 10);
+    });
+
+    it('keeps ticked skills pending in create mode, until the pipeline exists', async () => {
+      const { result } = render(true);
+      act(() => result.current.handleToggleAddSkill(50));
+      await act(async () => {
+        await result.current.handleSave({
+          ...emptySuggestions,
+          pipeline_yaml: '',
+          suggested_skills: [{ id: 50 }],
+        });
+      });
+      expect(mockSetFieldValue).toHaveBeenCalledWith('pending_skills', [{ id: 50 }]);
+      expect(mockAttachSkills).not.toHaveBeenCalled();
     });
   });
 
@@ -506,407 +461,10 @@ describe('useAIEditPipelineModal', () => {
     });
   });
 
-  describe('handleSave — create mode with all tool types together', () => {
-    it('builds all selected tool types and writes them into formik at once', async () => {
-      vi.mocked(useLazyToolkitsDetailsQuery).mockReturnValue([
-        vi.fn().mockResolvedValue({ data: { id: 10, name: 'Jira', type: 'jira', settings: {} } }),
-      ]);
-      vi.mocked(useLazyApplicationDetailsQuery).mockReturnValue([
-        vi.fn().mockResolvedValue({ data: { version_details: { id: 99 } } }),
-      ]);
-
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: true, onClose: mockOnClose }),
-      );
-
-      act(() => {
-        result.current.handleToggleAddToolkit(10);
-        result.current.handleToggleAddMcp(20);
-        result.current.handleToggleAddAgent(30);
-        result.current.handleToggleAddPipeline(40);
-        // skills are skipped in create mode — no handleToggleAddSkill needed
-      });
-
-      await act(async () => {
-        await result.current.handleSave({
-          pipeline_yaml: 'combined: true',
-          suggested_toolkits: [{ id: 10, name: 'Jira' }],
-          suggested_mcp: [{ id: 20, name: 'MyMcp' }],
-          suggested_agents: [{ id: 30, name: 'My Agent', project_id: 1 }],
-          suggested_pipelines: [{ id: 40, name: 'My Pipeline', project_id: 1 }],
-          suggested_skills: [{ id: 50, name: 'My Skill' }],
-        });
-      });
-
-      const toolsCall = mockSetFieldValue.mock.calls.find(c => c[0] === 'version_details.tools');
-      expect(toolsCall).toBeDefined();
-      // toolkit + mcp + 1 agent + 1 pipeline = 4 entries; skill omitted (no version_id yet)
-      expect(toolsCall[1]).toHaveLength(4);
-
-      const tkFetchFn = getFetchToolkitDetailsFn();
-      expect(tkFetchFn).toHaveBeenCalledTimes(2); // toolkit + mcp
-      const appFetchFn = getFetchApplicationDetailsFn();
-      expect(appFetchFn).toHaveBeenCalledTimes(2); // agent + pipeline
-      expect(buildApplicationAttachment).toHaveBeenCalledTimes(2);
-    });
-
-    it('keeps selected skills pending until the pipeline exists', async () => {
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: true, onClose: mockOnClose }),
-      );
-
-      act(() => result.current.handleToggleAddSkill(50));
-
-      await act(async () => {
-        await result.current.handleSave({
-          pipeline_yaml: '',
-          suggested_toolkits: [],
-          suggested_mcp: [],
-          suggested_agents: [],
-          suggested_pipelines: [],
-          suggested_skills: [
-            { id: 50, name: 'S' },
-            { id: 51, name: 'not ticked' },
-          ],
-        });
-      });
-
-      const toolsCall = mockSetFieldValue.mock.calls.find(c => c[0] === 'version_details.tools');
-      expect(toolsCall[1]).toHaveLength(0);
-      expect(mockSetFieldValue).toHaveBeenCalledWith('pending_skills', [{ id: 50, name: 'S' }]);
-      expect(getUpdateSkillRelationFn()).not.toHaveBeenCalled();
-    });
-
-    it('merges new suggestions into tools already in the create form', async () => {
-      const existing = [
-        { id: 7, type: 'github', name: 'GH already attached' },
-        { id: 8, type: 'jira', name: 'Jira to remove' },
-      ];
-      vi.mocked(useFormikContext).mockReturnValue({
-        values: makeFormikValues({
-          id: undefined,
-          version_details: { ...baseVersionDetails, tools: existing },
-        }),
-        setFieldValue: mockSetFieldValue,
-      });
-      vi.mocked(useLazyToolkitsDetailsQuery).mockReturnValue([
-        vi.fn(({ toolkitId }) =>
-          Promise.resolve({ data: { id: toolkitId, type: 'sharepoint', name: `tk${toolkitId}` } }),
-        ),
-      ]);
-
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: true, onClose: mockOnClose }),
-      );
-
-      act(() => {
-        result.current.handleToggleAddToolkit(7);
-        result.current.handleToggleAddToolkit(12);
-        result.current.handleToggleRemoveTool(8);
-      });
-
-      await act(async () => {
-        await result.current.handleSave({
-          pipeline_yaml: '',
-          suggested_toolkits: [
-            { id: 7, name: 'GH' },
-            { id: 12, name: 'SP' },
-          ],
-          suggested_mcp: [],
-          suggested_agents: [],
-          suggested_pipelines: [],
-        });
-      });
-
-      const toolsCall = mockSetFieldValue.mock.calls.find(c => c[0] === 'version_details.tools');
-      expect(toolsCall[1].map(t => t.id)).toEqual([7, 12]);
-      expect(toolsCall[1][0].name).toBe('GH already attached');
-    });
-  });
-
-  describe('handleSave — edit mode', () => {
-    const editFormikValues = makeFormikValues({
-      id: 1,
-      version_details: {
-        ...baseVersionDetails,
-        id: 10,
-        tools: [
-          { type: 'jira', id: 101, name: 'Jira' },
-          { type: 'mcp', id: 102, name: 'MCP Tool' },
-          {
-            type: 'application',
-            agent_type: 'classic',
-            settings: { application_id: 200, application_version_id: 201 },
-            id: 103,
-          },
-        ],
-      },
-    });
-
-    const draftWithSuggestions = {
-      pipeline_yaml: 'updated: true',
-      suggested_toolkits: [{ id: 300, name: 'GitHub' }],
-      suggested_mcp: [{ id: 301, name: 'New MCP' }],
-      suggested_agents: [{ id: 400, name: 'New Agent' }],
-      suggested_pipelines: [],
-      suggested_skills: [],
-    };
-
-    beforeEach(() => {
-      useFormikContext.mockReturnValue({ values: editFormikValues, setFieldValue: mockSetFieldValue });
-      // Default: fresh tools returned after association call
-      vi.mocked(useLazyApplicationDetailsQuery).mockReturnValue([
-        vi.fn().mockResolvedValue({
-          data: {
-            version_details: {
-              id: 10,
-              tools: [
-                { type: 'jira', id: 101 },
-                { type: 'github', id: 300 },
-              ],
-            },
-          },
-        }),
-      ]);
-    });
-
-    it('loads the draft as an unsaved edit, keeping the saved version as the discard baseline', async () => {
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: false, onClose: mockOnClose }),
-      );
-
-      await act(async () => {
-        await result.current.handleSave(draftWithSuggestions);
-      });
-
-      expect(mockDispatch).toHaveBeenCalledWith(expect.objectContaining({ type: 'pipelineEditor/reset' }));
-      expect(mockDispatch).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'pipeline/applyDraft',
-          payload: expect.objectContaining({ yamlCode: 'updated: true' }),
-        }),
-      );
-      expect(mockDispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'pipeline/init' }));
-    });
-
-    it('associates selected toolkit with the existing version', async () => {
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: false, onClose: mockOnClose }),
-      );
-
-      act(() => result.current.handleToggleAddToolkit(300));
-
-      await act(async () => {
-        await result.current.handleSave(draftWithSuggestions);
-      });
-
-      const associateFn = getAssociateToolkitFn();
-      expect(associateFn).toHaveBeenCalledWith(
-        expect.objectContaining({ toolkitId: 300, entity_version_id: 10, has_relation: true }),
-      );
-    });
-
-    it('associates selected mcp with the existing version', async () => {
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: false, onClose: mockOnClose }),
-      );
-
-      act(() => result.current.handleToggleAddMcp(301));
-
-      await act(async () => {
-        await result.current.handleSave(draftWithSuggestions);
-      });
-
-      const associateFn = getAssociateToolkitFn();
-      expect(associateFn).toHaveBeenCalledWith(
-        expect.objectContaining({ toolkitId: 301, entity_version_id: 10, has_relation: true }),
-      );
-    });
-
-    it('fetches agent details and calls updateApplicationRelation', async () => {
-      vi.mocked(useLazyApplicationDetailsQuery).mockReturnValue([
-        vi
-          .fn()
-          .mockResolvedValueOnce({ data: { version_details: { id: 401 } } }) // associate agent
-          .mockResolvedValueOnce({ data: { version_details: { id: 10, tools: [] } } }), // fresh tools
-      ]);
-
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: false, onClose: mockOnClose }),
-      );
-
-      act(() => result.current.handleToggleAddAgent(400));
-
-      await act(async () => {
-        await result.current.handleSave(draftWithSuggestions);
-      });
-
-      const updateAppRelFn = getUpdateApplicationRelationFn();
-      expect(updateAppRelFn).toHaveBeenCalledWith(
-        expect.objectContaining({
-          selectedApplicationId: 400,
-          selectedVersionId: 401,
-          application_id: 1,
-          version_id: 10,
-          has_relation: true,
-        }),
-      );
-    });
-
-    it('disassociates a toolkit marked for removal', async () => {
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: false, onClose: mockOnClose }),
-      );
-
-      // id 101 is the jira toolkit in editFormikValues.tools
-      act(() => result.current.handleToggleRemoveTool(101));
-
-      await act(async () => {
-        await result.current.handleSave({ ...draftWithSuggestions, suggested_toolkits: [] });
-      });
-
-      const associateFn = getAssociateToolkitFn();
-      expect(associateFn).toHaveBeenCalledWith(
-        expect.objectContaining({ toolkitId: 101, entity_version_id: 10, has_relation: false }),
-      );
-    });
-
-    it('disassociates an mcp tool marked for removal', async () => {
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: false, onClose: mockOnClose }),
-      );
-
-      // id 102 is the mcp tool in editFormikValues.tools
-      act(() => result.current.handleToggleRemoveTool(102));
-
-      await act(async () => {
-        await result.current.handleSave({ ...draftWithSuggestions, suggested_toolkits: [] });
-      });
-
-      const associateFn = getAssociateToolkitFn();
-      expect(associateFn).toHaveBeenCalledWith(
-        expect.objectContaining({ toolkitId: 102, entity_version_id: 10, has_relation: false }),
-      );
-    });
-
-    it('disassociates an application tool marked for removal', async () => {
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: false, onClose: mockOnClose }),
-      );
-
-      // id 103 is the application tool in editFormikValues.tools
-      act(() => result.current.handleToggleRemoveTool(103));
-
-      await act(async () => {
-        await result.current.handleSave({ ...draftWithSuggestions, suggested_toolkits: [] });
-      });
-
-      const updateAppRelFn = getUpdateApplicationRelationFn();
-      expect(updateAppRelFn).toHaveBeenCalledWith(
-        expect.objectContaining({
-          selectedApplicationId: 200,
-          selectedVersionId: 201,
-          application_id: 1,
-          version_id: 10,
-          has_relation: false,
-        }),
-      );
-    });
-
-    it('associates selected skill in edit mode', async () => {
-      vi.mocked(useLazyApplicationDetailsQuery).mockReturnValue([
-        vi.fn().mockResolvedValue({ data: { version_details: { id: 10, tools: [] } } }),
-      ]);
-      vi.mocked(useLazySkillDetailsQuery).mockReturnValue([
-        vi.fn().mockResolvedValue({ data: { version_details: { id: 501 } } }),
-      ]);
-
-      const draftWithSkill = {
-        ...draftWithSuggestions,
-        suggested_toolkits: [],
-        suggested_mcp: [],
-        suggested_agents: [],
-        suggested_skills: [{ id: 50, name: 'My Skill', project_id: 1 }],
-      };
-
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: false, onClose: mockOnClose }),
-      );
-
-      act(() => result.current.handleToggleAddSkill(50));
-
-      await act(async () => {
-        await result.current.handleSave(draftWithSkill);
-      });
-
-      const fetchSkillFn = getFetchSkillDetailsFn();
-      expect(fetchSkillFn).toHaveBeenCalledWith({ projectId: 1, skillId: 50 });
-
-      const updateSkillFn = getUpdateSkillRelationFn();
-      expect(updateSkillFn).toHaveBeenCalledWith(
-        expect.objectContaining({
-          skillId: 50,
-          entity_version_id: 10,
-          skill_version_id: 501,
-          has_relation: true,
-        }),
-      );
-    });
-
-    it('re-reads tools from the version endpoint and keeps the AI edits as unsaved form changes', async () => {
-      const freshTools = [{ id: 99, type: 'github', name: 'GH' }];
-      const fetchVersion = vi.fn().mockResolvedValue({ data: { tools: freshTools } });
-      vi.mocked(useLazyGetApplicationVersionDetailQuery).mockReturnValue([fetchVersion]);
-
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: false, onClose: mockOnClose }),
-      );
-
-      await act(async () => {
-        await result.current.handleSave({
-          ...draftWithSuggestions,
-          name: 'renamed',
-          description: 'new desc',
-        });
-      });
-
-      expect(fetchVersion).toHaveBeenCalledWith({ projectId: 1, applicationId: 1, versionId: 10 });
-      expect(mockSetFieldValue).toHaveBeenCalledWith('version_details.tools', freshTools);
-      expect(mockSetFieldValue).toHaveBeenCalledWith('name', 'renamed');
-      expect(mockSetFieldValue).toHaveBeenCalledWith('description', 'new desc');
-      expect(mockSetFieldValue).toHaveBeenCalledWith('version_details.instructions', 'updated: true');
-      // the edit page's form is never reinitialized from the application details query
-      expect(getFetchApplicationDetailsFn().mock.calls.some(([arg]) => arg?.applicationId === 1)).toBe(false);
-    });
-
-    it('does not call associateToolkit or updateApplicationRelation when nothing is selected or removed', async () => {
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: false, onClose: mockOnClose }),
-      );
-
-      await act(async () => {
-        await result.current.handleSave({
-          pipeline_yaml: 'no_tools: true',
-          suggested_toolkits: [],
-          suggested_mcp: [],
-          suggested_agents: [],
-          suggested_pipelines: [],
-          suggested_skills: [],
-        });
-      });
-
-      const associateFn = getAssociateToolkitFn();
-      const updateAppRelFn = getUpdateApplicationRelationFn();
-      const addCalls = associateFn.mock.calls.filter(c => c[0]?.has_relation === true);
-      const removeCalls = associateFn.mock.calls.filter(c => c[0]?.has_relation === false);
-      expect(addCalls).toHaveLength(0);
-      expect(removeCalls).toHaveLength(0);
-      expect(updateAppRelFn).not.toHaveBeenCalled();
-    });
-  });
-
   describe('handleConfirmSaveAsVersion', () => {
-    const emptyDraft = {
+    const draft = {
+      name: 'ai suggested name',
+      description: 'ai suggested description',
       pipeline_yaml: 'save_version: true',
       suggested_toolkits: [],
       suggested_mcp: [],
@@ -915,32 +473,76 @@ describe('useAIEditPipelineModal', () => {
       suggested_skills: [],
     };
 
-    beforeEach(() => {
-      vi.mocked(useLazyApplicationDetailsQuery).mockReturnValue([
-        vi.fn().mockResolvedValue({ data: { version_details: { id: 10, tools: [] } } }),
-      ]);
-    });
-
-    it('calls handleSave then onCreateNewVersion then closes modal and calls onClose', async () => {
-      const mockOnCreateNewVersion = vi.fn().mockResolvedValue(undefined);
+    const mockCreate = async (resolved = { data: { id: 77 } }) => {
+      const create = vi.fn().mockResolvedValue(resolved);
       const useSaveNewVersion = await import('@/hooks/application/useSaveNewVersion');
-      vi.mocked(useSaveNewVersion.default).mockReturnValue({ onCreateNewVersion: mockOnCreateNewVersion });
+      vi.mocked(useSaveNewVersion.default).mockReturnValue({ onCreateNewVersion: create });
+      return create;
+    };
 
+    const confirm = async (versionName = 'v2') => {
       const { result } = renderHook(() =>
         useAIEditPipelineModal({ isCreateMode: false, onClose: mockOnClose }),
       );
-
-      act(() => result.current.handleSaveAsVersion(emptyDraft));
-      act(() => result.current.setVersionName('v2'));
-
+      act(() => result.current.handleSaveAsVersion(draft));
+      act(() => result.current.setVersionName(versionName));
       await act(async () => {
         await result.current.handleConfirmSaveAsVersion();
       });
+      return result;
+    };
 
-      expect(mockSetFieldValue).toHaveBeenCalledWith('version_details.instructions', 'save_version: true');
-      expect(mockOnCreateNewVersion).toHaveBeenCalledWith('v2');
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true, advanceTimeDelta: 50 });
+      canvasState = { resetFlag: false, yamlCode: 'canvas_yaml: true' };
+      vi.mocked(useStore).mockReturnValue({
+        getState: () => ({
+          pipeline: { byKey: { __default__: canvasState } },
+          pipelineEditor: { nodes: [{ id: 'n' }] },
+        }),
+      });
+      vi.mocked(useFormikContext).mockReturnValue({
+        values: makeFormikValues({ versions: [{ id: 10, name: 'base' }] }),
+        setFieldValue: mockSetFieldValue,
+        resetForm: mockResetForm,
+      });
+    });
+
+    afterEach(() => vi.useRealTimers());
+
+    it('creates the version from the YAML the canvas settled on', async () => {
+      const create = await mockCreate();
+      await confirm('v2');
+      expect(create).toHaveBeenCalledWith('v2', { yamlCode: 'canvas_yaml: true' });
+    });
+
+    it('does not apply the suggested name or description', async () => {
+      await mockCreate();
+      await confirm();
+      expect(mockSetFieldValue).not.toHaveBeenCalledWith('name', expect.anything());
+      expect(mockSetFieldValue).not.toHaveBeenCalledWith('description', expect.anything());
+    });
+
+    it('leaves the form clean and marks the canvas saved, then closes', async () => {
+      await mockCreate();
+      const result = await confirm();
+      expect(mockResetForm).toHaveBeenCalledWith({
+        values: expect.objectContaining({
+          name: 'Test Pipeline',
+          version_details: expect.objectContaining({ instructions: 'canvas_yaml: true' }),
+        }),
+      });
+      expect(mockDispatch).toHaveBeenCalledWith(expect.objectContaining({ type: 'pipeline/markSaved' }));
       expect(result.current.showVersionModal).toBe(false);
+      expect(result.current.isSavingAsVersion).toBe(false);
       expect(mockOnClose).toHaveBeenCalled();
+    });
+
+    it('keeps the form as it is when the version was not created', async () => {
+      await mockCreate({ error: 'boom' });
+      await confirm();
+      expect(mockResetForm).not.toHaveBeenCalled();
+      expect(mockOnClose).not.toHaveBeenCalled();
     });
 
     it('does nothing when no pending draft', async () => {
@@ -954,24 +556,6 @@ describe('useAIEditPipelineModal', () => {
 
       expect(mockSetFieldValue).not.toHaveBeenCalled();
       expect(mockOnClose).not.toHaveBeenCalled();
-    });
-
-    it('isSavingAsVersion is false after completion', async () => {
-      const mockOnCreateNewVersion = vi.fn().mockResolvedValue(undefined);
-      const useSaveNewVersion = await import('@/hooks/application/useSaveNewVersion');
-      vi.mocked(useSaveNewVersion.default).mockReturnValue({ onCreateNewVersion: mockOnCreateNewVersion });
-
-      const { result } = renderHook(() =>
-        useAIEditPipelineModal({ isCreateMode: false, onClose: mockOnClose }),
-      );
-
-      act(() => result.current.handleSaveAsVersion(emptyDraft));
-
-      await act(async () => {
-        await result.current.handleConfirmSaveAsVersion();
-      });
-
-      expect(result.current.isSavingAsVersion).toBe(false);
     });
   });
 });

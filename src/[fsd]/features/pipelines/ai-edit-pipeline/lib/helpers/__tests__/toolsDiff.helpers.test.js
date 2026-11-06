@@ -5,7 +5,6 @@ import {
   computeSummaryTools,
   getAddId,
   getRemoveId,
-  matchTools,
   normaliseCurrentTool,
   normaliseCurrentTools,
   normaliseSuggestedTools,
@@ -90,43 +89,6 @@ describe('toolKey', () => {
   it('produces a unique key from entityType and id', () => {
     expect(toolKey({ entityType: 'toolkit', id: 3 })).toBe('toolkit:3');
     expect(toolKey({ entityType: 'agent', id: 7 })).toBe('agent:7');
-  });
-});
-
-describe('matchTools', () => {
-  const left = [
-    { entityType: 'toolkit', id: 1, name: 'A' },
-    { entityType: 'toolkit', id: 2, name: 'B' },
-  ];
-  const right = [
-    { entityType: 'toolkit', id: 2, name: 'B2' },
-    { entityType: 'toolkit', id: 3, name: 'C' },
-  ];
-
-  it('produces one row per unique key across both sides', () => {
-    const rows = matchTools(left, right);
-    expect(rows).toHaveLength(3);
-  });
-
-  it('sets left=null for items only on the right', () => {
-    const rows = matchTools(left, right);
-    const row = rows.find(r => r.key === 'toolkit:3');
-    expect(row.left).toBeNull();
-    expect(row.right).not.toBeNull();
-  });
-
-  it('sets right=null for items only on the left', () => {
-    const rows = matchTools(left, right);
-    const row = rows.find(r => r.key === 'toolkit:1');
-    expect(row.right).toBeNull();
-    expect(row.left).not.toBeNull();
-  });
-
-  it('sets both when the item exists on both sides', () => {
-    const rows = matchTools(left, right);
-    const row = rows.find(r => r.key === 'toolkit:2');
-    expect(row.left).not.toBeNull();
-    expect(row.right).not.toBeNull();
   });
 });
 

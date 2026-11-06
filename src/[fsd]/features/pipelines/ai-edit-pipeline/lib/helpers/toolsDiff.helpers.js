@@ -26,16 +26,6 @@ export const normaliseSuggestedTools = draftData => [
 
 export const toolKey = t => `${t.entityType}:${t.id}`;
 
-/** Align current and suggested tools into matched rows for side-by-side display. */
-export const matchTools = (leftTools, rightTools) => {
-  const allKeys = [...new Set([...leftTools.map(toolKey), ...rightTools.map(toolKey)])];
-  return allKeys.map(k => ({
-    key: k,
-    left: leftTools.find(t => toolKey(t) === k) ?? null,
-    right: rightTools.find(t => toolKey(t) === k) ?? null,
-  }));
-};
-
 export const getAddId = item => item.id;
 
 export const getRemoveId = item => item.id;

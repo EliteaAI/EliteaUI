@@ -2,16 +2,11 @@ import { memo, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { matchDependencies } from '@/[fsd]/entities/compare-versions';
 import { EditEntityComparisonLayout, ToolItemCard } from '@/[fsd]/entities/edit-entity-with-ai';
 import BaseCheckbox from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
 
-import {
-  getAddId,
-  getRemoveId,
-  matchTools,
-  normaliseCurrentTools,
-  normaliseSuggestedTools,
-} from '../lib/helpers';
+import { getAddId, getRemoveId, normaliseCurrentTools, normaliseSuggestedTools } from '../lib/helpers';
 
 const PipelineToolsDiffStep = memo(props => {
   const {
@@ -36,7 +31,7 @@ const PipelineToolsDiffStep = memo(props => {
   const leftTools = useMemo(() => normaliseCurrentTools(currentTools), [currentTools]);
   const rightTools = useMemo(() => normaliseSuggestedTools(draftData), [draftData]);
 
-  const matchedRows = useMemo(() => matchTools(leftTools, rightTools), [leftTools, rightTools]);
+  const matchedRows = useMemo(() => matchDependencies(leftTools, rightTools), [leftTools, rightTools]);
 
   const noDiff = useMemo(
     () => matchedRows.length > 0 && matchedRows.every(row => row.left && row.right),

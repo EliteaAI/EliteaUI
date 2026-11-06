@@ -2,54 +2,44 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 import YAML from 'js-yaml';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useStore } from 'react-redux';
 
 import { useGeneratePipelineDraftMutation } from '@/[fsd]/features/pipelines/api/generatePipelineApi';
-import {
-  FlowEditorHelpers,
-  LayoutHelpers,
-  ParsePipelineHelpers,
-} from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { DEFAULT_PIPELINE_KEY } from '@/[fsd]/features/pipelines/lib/constants';
 import { toggleSet } from '@/[fsd]/features/pipelines/lib/helpers';
 import { getAttachmentKey } from '@/[fsd]/features/pipelines/tool-picker/lib/helpers/attachmentDiff.helpers';
 import {
   buildApplicationAttachment,
   buildToolkitAttachment,
 } from '@/[fsd]/features/pipelines/tool-picker/lib/helpers/attachmentTool.helpers';
-import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd]/features/skill/api';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
-import {
-  useLazyApplicationDetailsQuery,
-  useLazyGetApplicationVersionDetailQuery,
-  useLazyToolkitsDetailsQuery,
-  useToolkitAssociateMutation,
-  useUpdateApplicationRelationMutation,
-} from '@/api';
-import { buildErrorMessage } from '@/common/utils';
-import { mapAssociationError } from '@/hooks/application/useAgentPipelineAssociation';
+import { useLazyApplicationDetailsQuery, useLazyToolkitsDetailsQuery } from '@/api';
 import useSaveNewVersion from '@/hooks/application/useSaveNewVersion';
+import { calculateNodesAndEdges } from '@/pages/Pipelines/useSavePipeline';
 import { actions } from '@/slices/pipeline';
 import { actions as editorActions } from '@/slices/pipelineEditor';
 
 import { computeInitialSelections, getRemoveId, normaliseCurrentTool } from '../helpers';
+import { useAttachSkills } from './useAttachSkills.hooks';
+
+const CANVAS_SETTLE_INTERVAL_MS = 100;
+const CANVAS_SETTLE_MAX_CHECKS = 30;
 
 export const useAIEditPipelineModal = ({ isCreateMode, onClose }) => {
   const formik = useFormikContext();
   const dispatch = useDispatch();
+  const store = useStore();
   const projectId = useSelectedProjectId();
-  const { toastError, toastSuccess, toastWarning } = useToast();
+  const { toastError, toastSuccess } = useToast();
 
   const onCreateNewVersionRef = useRef(null);
 
   const [generateDraft, { error: generateError, reset: resetGenerate }] = useGeneratePipelineDraftMutation();
 
-  const [associateToolkit] = useToolkitAssociateMutation();
-  const [updateApplicationRelation] = useUpdateApplicationRelationMutation();
-  const [updateSkillRelation] = useUpdateSkillRelationMutation();
   const [fetchApplicationDetails] = useLazyApplicationDetailsQuery();
-  const [fetchSkillDetails] = useLazySkillDetailsQuery();
   const [fetchToolkitDetails] = useLazyToolkitsDetailsQuery();
-  const [fetchVersionDetail] = useLazyGetApplicationVersionDetailQuery();
+  const attachSkills = useAttachSkills();
 
   const [showVersionModal, setShowVersionModal] = useState(false);
   const [versionName, setVersionName] = useState('');
@@ -89,61 +79,6 @@ export const useAIEditPipelineModal = ({ isCreateMode, onClose }) => {
 
   onCreateNewVersionRef.current = onCreateNewVersion;
 
-  const associateToolkits = useCallback(
-    async (versionId, entityId, toolkits) => {
-      if (!versionId || !toolkits.length) return;
-      await Promise.allSettled(
-        toolkits.map(t =>
-          associateToolkit({
-            projectId,
-            toolkitId: t.id,
-            entity_version_id: versionId,
-            entity_id: entityId,
-            entity_type: 'agent',
-            has_relation: true,
-          }).unwrap(),
-        ),
-      );
-    },
-    [associateToolkit, projectId],
-  );
-
-  const associateApplications = useCallback(
-    async (versionId, entityId, apps) => {
-      if (!versionId || !apps.length) return;
-      const results = await Promise.allSettled(
-        apps.map(async a => {
-          const appProjectId = a.project_id ?? projectId;
-          const { data: appDetails } = await fetchApplicationDetails({
-            projectId: appProjectId,
-            applicationId: a.id,
-          });
-          if (!appDetails?.version_details?.id) return;
-          try {
-            return await updateApplicationRelation({
-              projectId: appProjectId,
-              selectedApplicationId: a.id,
-              selectedVersionId: appDetails.version_details.id,
-              application_id: entityId,
-              version_id: versionId,
-              has_relation: true,
-            }).unwrap();
-          } catch (error) {
-            throw { name: a.name, entityLabel: a.agent_type === 'pipeline' ? 'pipeline' : 'agent', error };
-          }
-        }),
-      );
-      results
-        .filter(r => r.status === 'rejected')
-        .forEach(r => {
-          const { name, entityLabel, error } = r.reason || {};
-          const rawMsg = error?.data?.error || buildErrorMessage(error);
-          toastWarning(mapAssociationError(rawMsg, name || 'agent', { action: 'add', entityLabel }));
-        });
-    },
-    [fetchApplicationDetails, updateApplicationRelation, projectId, toastWarning],
-  );
-
   const handleGenerate = useCallback(
     description =>
       generateDraft({
@@ -170,223 +105,107 @@ export const useAIEditPipelineModal = ({ isCreateMode, onClose }) => {
     [formik.values?.version_details?.tools],
   );
 
+  // Builds the form attachment for every ticked suggestion. Suggestions carry only ids and names, so the full
+  // toolkit (settings, available tools) and application version are read first, as the node pickers do.
+  const buildSelectedAttachments = useCallback(
+    async draftData => {
+      const pick = (list, ids) => (list || []).filter(item => ids.has(item.id));
+      const mcps = pick(draftData.suggested_mcp, addMcpIds);
+      const toolkits = [...pick(draftData.suggested_toolkits, addToolkitIds), ...mcps];
+      const apps = [
+        ...pick(draftData.suggested_agents, addAgentIds),
+        ...pick(draftData.suggested_pipelines, addPipelineIds),
+      ];
+      const results = await Promise.allSettled([
+        ...toolkits.map(async t => {
+          const { data } = await fetchToolkitDetails({
+            projectId: t.project_id ?? projectId,
+            toolkitId: t.id,
+          });
+          return buildToolkitAttachment(data ?? t, { mcp: mcps.includes(t) });
+        }),
+        ...apps.map(async a => {
+          const { data } = await fetchApplicationDetails({
+            projectId: a.project_id ?? projectId,
+            applicationId: a.id,
+          });
+          return buildApplicationAttachment(a, data?.version_details);
+        }),
+      ]);
+      return results.filter(r => r.status === 'fulfilled').map(r => r.value);
+    },
+    [
+      addAgentIds,
+      addMcpIds,
+      addPipelineIds,
+      addToolkitIds,
+      fetchApplicationDetails,
+      fetchToolkitDetails,
+      projectId,
+    ],
+  );
+
   const handleSave = useCallback(
     async draftData => {
       const newYaml = draftData.pipeline_yaml ?? '';
       await formik.setFieldValue('version_details.instructions', newYaml);
+      if (draftData.name) await formik.setFieldValue('name', draftData.name);
+      if (draftData.description != null) await formik.setFieldValue('description', draftData.description);
 
-      if (draftData.name) {
-        await formik.setFieldValue('name', draftData.name);
-      }
-      if (draftData.description != null) {
-        await formik.setFieldValue('description', draftData.description);
-      }
-
-      // Re-initialize the Redux pipeline slice so the flow canvas re-renders with the new YAML.
-      // setFieldValue alone only updates Formik; the canvas reads from Redux (selectActivePipeline).
-      let parsedYamlJson = {};
+      // The canvas reads the pipeline from Redux, so the draft is loaded there too. Nodes keep their
+      // position on the canvas; only the ones the draft adds are arranged.
+      const {
+        orientation,
+        layout_version: layoutVersion,
+        nodes: flowNodes = [],
+      } = formik.values?.version_details?.pipeline_settings || {};
+      const { nodes, edges } = calculateNodesAndEdges(newYaml, orientation, flowNodes);
+      let yamlJsonObject = {};
       try {
-        parsedYamlJson = YAML.load(newYaml) || {};
+        yamlJsonObject = YAML.load(newYaml) || {};
       } catch {
-        // keep empty object — canvas will show an empty pipeline
+        // an unparsable draft leaves an empty canvas, as the YAML editor does
       }
-
-      const currentSettings = formik.values?.version_details?.pipeline_settings || {};
-      const orientation = currentSettings.orientation;
-
-      const { nodes: parsedNodes, edges: parsedEdges } = ParsePipelineHelpers.parseYaml(
-        parsedYamlJson,
-        orientation,
-      );
-      const { nodes, edges } = LayoutHelpers.doLayout({
-        nodes: parsedNodes,
-        edges: parsedEdges,
-        orientation,
-        flowNodes: currentSettings.nodes || [],
-      });
-      const convertedNodes = nodes.map(node =>
-        FlowEditorHelpers.convertNode(node, currentSettings.layout_version),
-      );
-
       dispatch(editorActions.resetPipelineEditor());
       // On an existing pipeline the draft is an unsaved edit, so Discard must still return to the saved
       // version; the create page has no saved version, so the draft becomes its starting point
       const loadPipeline = isCreateMode ? actions.initThePipeline : actions.applyPipelineDraft;
       dispatch(
         loadPipeline({
-          nodes: convertedNodes,
+          nodes: nodes.map(node => FlowEditorHelpers.convertNode(node, layoutVersion)),
           edges,
-          yamlJsonObject: parsedYamlJson,
+          yamlJsonObject,
           yamlCode: newYaml,
-          layout_version: currentSettings.layout_version,
+          layout_version: layoutVersion,
           orientation,
         }),
       );
 
-      // In create mode: build full tool entries from selected suggestions and write them into
-      // formik so the existing Save button sends them in the create payload.
-      // Suggestion objects carry only id/name — fetch full details for every tool type so the
-      // BE receives the correct settings (e.g. sharepoint_configuration, url, available_tools).
+      // Selections only change the form: Save applies the relations (useApplyPipelineAttachments), exactly as
+      // for tools picked in nodes, and Discard reverts them with the rest of the draft
+      const formTools = formik.values?.version_details?.tools || [];
+      const kept = formTools.filter(t => !removeToolRecordIds.has(getRemoveId(normaliseCurrentTool(t))));
+      const keptKeys = new Set(kept.map(getAttachmentKey));
+      const added = (await buildSelectedAttachments(draftData)).filter(
+        t => !keptKeys.has(getAttachmentKey(t)),
+      );
+      await formik.setFieldValue('version_details.tools', [...kept, ...added]);
+
+      const skills = (draftData.suggested_skills || []).filter(s => addSkillIds.has(s.id));
       if (isCreateMode) {
-        const toolkitsToAdd = (draftData.suggested_toolkits || []).filter(t => addToolkitIds.has(t.id));
-        const mcpsToAdd = (draftData.suggested_mcp || []).filter(m => addMcpIds.has(m.id));
-        const agentsToAdd = (draftData.suggested_agents || []).filter(a => addAgentIds.has(a.id));
-        const pipelinesToAdd = (draftData.suggested_pipelines || []).filter(p => addPipelineIds.has(p.id));
-
-        const pendingTools = [];
-
-        // Fetch full toolkit details so settings are populated correctly.
-        const toolkitResults = await Promise.allSettled(
-          [...toolkitsToAdd, ...mcpsToAdd].map(async t => {
-            const tkProjectId = t.project_id ?? projectId;
-            const { data: tkDetails } = await fetchToolkitDetails({
-              projectId: tkProjectId,
-              toolkitId: t.id,
-            });
-            const isMcp = mcpsToAdd.includes(t);
-            return buildToolkitAttachment(tkDetails ?? t, { mcp: isMcp });
-          }),
-        );
-        toolkitResults.forEach(r => {
-          if (r.status === 'fulfilled') pendingTools.push(r.value);
-        });
-
-        // Applications require a version_id — fetch each before building the attachment.
-        const appResults = await Promise.allSettled(
-          [...agentsToAdd, ...pipelinesToAdd].map(async a => {
-            const appProjectId = a.project_id ?? projectId;
-            const { data: appDetails } = await fetchApplicationDetails({
-              projectId: appProjectId,
-              applicationId: a.id,
-            });
-            return buildApplicationAttachment(a, appDetails?.version_details);
-          }),
-        );
-        appResults.forEach(r => {
-          if (r.status === 'fulfilled') pendingTools.push(r.value);
-        });
-
-        // Merge into what the create form already has: keep tools the user did not tick for removal and
-        // skip suggestions that are already attached, so applying a draft never wipes earlier work
-        const formTools = formik.values?.version_details?.tools || [];
-        const kept = formTools.filter(t => !removeToolRecordIds.has(getRemoveId(normaliseCurrentTool(t))));
-        const keptKeys = new Set(kept.map(t => getAttachmentKey(t)));
-        const added = pendingTools.filter(t => !keptKeys.has(getAttachmentKey(t)));
-        await formik.setFieldValue('version_details.tools', [...kept, ...added]);
-
-        // A skill needs a version to attach to, which only exists after the first Save; the create page
-        // attaches these once the pipeline is created
-        const skillsToAdd = (draftData.suggested_skills || []).filter(s => addSkillIds.has(s.id));
-        await formik.setFieldValue('pending_skills', skillsToAdd);
-        return;
-      }
-
-      // Associate / disassociate tools when editing an existing pipeline (IDs available)
-      const entityId = formik.values?.id;
-      const versionId = formik.values?.version_details?.id;
-      if (entityId && versionId) {
-        const toolkitsToAdd = (draftData.suggested_toolkits || []).filter(t => addToolkitIds.has(t.id));
-        const mcpsToAdd = (draftData.suggested_mcp || []).filter(m => addMcpIds.has(m.id));
-        const agentsToAdd = (draftData.suggested_agents || []).filter(a => addAgentIds.has(a.id));
-        const pipelinesToAdd = (draftData.suggested_pipelines || []).filter(p => addPipelineIds.has(p.id));
-        const skillsToAdd = (draftData.suggested_skills || []).filter(s => addSkillIds.has(s.id));
-
-        const tools = formik.values?.version_details?.tools || [];
-        const toolkitsToRemove = tools.filter(
-          t => t.type !== 'application' && t.type?.toLowerCase() !== 'mcp' && removeToolRecordIds.has(t.id),
-        );
-        const mcpsToRemove = tools.filter(
-          t => t.type?.toLowerCase() === 'mcp' && removeToolRecordIds.has(t.id),
-        );
-        const appsToRemove = tools.filter(t => t.type === 'application' && removeToolRecordIds.has(t.id));
-
-        await associateToolkits(versionId, entityId, [...toolkitsToAdd, ...mcpsToAdd]);
-        await associateApplications(versionId, entityId, [...agentsToAdd, ...pipelinesToAdd]);
-
-        if (skillsToAdd.length) {
-          await Promise.allSettled(
-            skillsToAdd.map(async skill => {
-              const skillProjectId = skill.project_id ?? projectId;
-              const { data: skillDetails } = await fetchSkillDetails({
-                projectId: skillProjectId,
-                skillId: skill.id,
-              });
-              if (!skillDetails?.version_details?.id) return;
-              return updateSkillRelation({
-                projectId,
-                skillId: skill.id,
-                entity_version_id: versionId,
-                skill_version_id: skillDetails.version_details.id,
-                has_relation: true,
-              }).unwrap();
-            }),
-          );
-        }
-
-        if (toolkitsToRemove.length || mcpsToRemove.length) {
-          await Promise.allSettled(
-            [...toolkitsToRemove, ...mcpsToRemove].map(t =>
-              associateToolkit({
-                projectId,
-                toolkitId: t.id,
-                entity_version_id: versionId,
-                entity_id: entityId,
-                entity_type: 'agent',
-                has_relation: false,
-              }).unwrap(),
-            ),
-          );
-        }
-
-        if (appsToRemove.length) {
-          await Promise.allSettled(
-            appsToRemove.map(async a => {
-              const appVersionId = a.settings?.application_version_id;
-              if (!appVersionId) return;
-              return updateApplicationRelation({
-                projectId,
-                selectedApplicationId: a.settings?.application_id,
-                selectedVersionId: appVersionId,
-                application_id: entityId,
-                version_id: versionId,
-                has_relation: false,
-              }).unwrap();
-            }),
-          );
-        }
-
-        // Read the attached tools back from the version endpoint: it is not the `applicationDetails` query the
-        // edit page's Formik reinitializes from, so the AI-applied name, description and YAML stay unsaved
-        // edits that Discard and the leave-page warning still see
-        const { data: freshVersion } = await fetchVersionDetail({
-          projectId,
-          applicationId: entityId,
-          versionId,
-        });
-        if (freshVersion?.tools) {
-          await formik.setFieldValue('version_details.tools', freshVersion.tools);
-        }
+        // A skill relation needs a version, which only exists after the first Save of a new pipeline
+        await formik.setFieldValue('pending_skills', skills);
+      } else {
+        await attachSkills(skills, formik.values?.version_details?.id);
       }
     },
     [
-      isCreateMode,
-      formik,
-      dispatch,
-      associateToolkits,
-      associateApplications,
-      associateToolkit,
-      updateApplicationRelation,
-      updateSkillRelation,
-      fetchApplicationDetails,
-      fetchToolkitDetails,
-      fetchSkillDetails,
-      fetchVersionDetail,
-      projectId,
-      addToolkitIds,
-      addMcpIds,
-      addAgentIds,
-      addPipelineIds,
       addSkillIds,
+      attachSkills,
+      buildSelectedAttachments,
+      dispatch,
+      formik,
+      isCreateMode,
       removeToolRecordIds,
     ],
   );
@@ -397,19 +216,44 @@ export const useAIEditPipelineModal = ({ isCreateMode, onClose }) => {
     setShowVersionModal(true);
   }, []);
 
+  // The canvas fills in node defaults and rewrites the draft in the editor's YAML format after it renders it.
+  // A version created before that stores YAML the editor rewrites again on open, so it opens as changed.
+  const waitForCanvasYaml = useCallback(async () => {
+    const readYaml = () => store.getState().pipeline.byKey[DEFAULT_PIPELINE_KEY] || {};
+    let previous = null;
+    for (let i = 0; i < CANVAS_SETTLE_MAX_CHECKS; i++) {
+      await new Promise(resolve => setTimeout(resolve, CANVAS_SETTLE_INTERVAL_MS));
+      const { resetFlag, yamlCode } = readYaml();
+      if (!resetFlag && yamlCode === previous) break;
+      previous = yamlCode;
+    }
+    return readYaml().yamlCode;
+  }, [store]);
+
   const handleConfirmSaveAsVersion = useCallback(async () => {
     const draftData = pendingDraftRef.current;
     if (!draftData) return;
 
     setIsSavingAsVersion(true);
     try {
-      // Apply the draft to Formik and Redux first (same as "Apply to Editor") so that
-      // useSavePipeline's yamlCode selector and pipeline_settings reflect the AI-applied YAML
-      // when onCreateNewVersion reads them.
-      await handleSave(draftData);
-      // onCreateNewVersion reads yamlCode from Redux (via useSavePipeline) and versionDetails
-      // from its own hook props, so passing only the version name is sufficient.
-      await onCreateNewVersionRef.current?.(versionName || formik.values?.version_details?.name);
+      // Name and description belong to the pipeline, and a new version does not save them, so they are not applied
+      await handleSave({ ...draftData, name: undefined, description: undefined });
+      const yamlCode = await waitForCanvasYaml();
+      // Passed in because this callback was created before the canvas re-rendered the draft
+      const result = await onCreateNewVersionRef.current?.(
+        versionName || formik.values?.version_details?.name,
+        { yamlCode },
+      );
+      if (!result?.data?.id) return;
+      // The form and canvas (YAML and layout) now hold the saved version; marking them clean lets the redirect
+      // to it through instead of being blocked as leaving with unsaved changes
+      formik.resetForm({
+        values: {
+          ...formik.values,
+          version_details: { ...formik.values.version_details, instructions: yamlCode },
+        },
+      });
+      dispatch(actions.markPipelineSaved({ nodes: store.getState().pipelineEditor.nodes }));
       setShowVersionModal(false);
       onClose();
     } catch {
@@ -417,7 +261,7 @@ export const useAIEditPipelineModal = ({ isCreateMode, onClose }) => {
     } finally {
       setIsSavingAsVersion(false);
     }
-  }, [handleSave, formik.values, versionName, onClose]);
+  }, [dispatch, formik, handleSave, onClose, store, versionName, waitForCanvasYaml]);
 
   return {
     generateError,

@@ -1,2 +1,2 @@
 export { useAIEditPipelineModal } from './useAIEditPipelineModal.hooks';
-export { useAttachPendingSkills } from './useAttachPendingSkills.hooks';
+export { useAttachSkills } from './useAttachSkills.hooks';

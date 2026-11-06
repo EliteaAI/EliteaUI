@@ -5,7 +5,7 @@ import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { act, renderHook } from '@testing-library/react';
 
-import { useAttachPendingSkills } from '../useAttachPendingSkills.hooks';
+import { useAttachSkills } from '../useAttachSkills.hooks';
 
 vi.mock('@/[fsd]/features/skill/api', () => ({
   useLazySkillDetailsQuery: vi.fn(),
@@ -31,13 +31,13 @@ beforeEach(() => {
 });
 
 const run = async (skills, versionId) => {
-  const { result } = renderHook(() => useAttachPendingSkills());
+  const { result } = renderHook(() => useAttachSkills());
   await act(async () => {
     await result.current(skills, versionId);
   });
 };
 
-describe('useAttachPendingSkills', () => {
+describe('useAttachSkills', () => {
   it('attaches each skill to the new version, using the catalog project when given', async () => {
     await run([{ id: 3 }, { id: 4, project_id: 1 }], 55);
 

@@ -154,6 +154,21 @@ const pipelineSlice = createSlice({
       }
     },
 
+    // What the canvas shows was just saved: it becomes what Discard returns to and what dirty checks compare against
+    markPipelineSaved: (state, action) => {
+      const key = resolveKey(state);
+      const pipeline = state.byKey[key];
+      if (!pipeline) return;
+      pipeline.initState = {
+        nodes: [...(action.payload?.nodes || pipeline.nodes)],
+        edges: [...pipeline.edges],
+        yamlJsonObject: structuredClone(current(pipeline.yamlJsonObject || {})),
+        yamlCode: pipeline.yamlCode,
+        layout_version: pipeline.layout_version,
+        orientation: pipeline.orientation,
+      };
+    },
+
     updateInitState: (state, action) => {
       const key = resolveKey(state);
       if (!state.byKey[key]) return;
