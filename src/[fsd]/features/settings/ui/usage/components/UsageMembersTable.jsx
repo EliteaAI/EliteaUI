@@ -246,6 +246,9 @@ const UsageMembersTable = memo(props => {
             </Typography>
             <Typography sx={[styles.value, styles.right, styles.muted, usageColumnSx(1.2)]}>—</Typography>
             <Typography sx={[styles.value, styles.right, styles.muted, usageColumnSx(1)]}>—</Typography>
+            {showVsPrior && (
+              <Typography sx={[styles.value, styles.right, styles.muted, usageColumnSx(0.9)]}>—</Typography>
+            )}
           </Box>
         )}
       </Box>
