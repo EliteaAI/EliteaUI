@@ -113,7 +113,8 @@ const PlusChatSubmenu = memo(props => {
         </MenuItem>
       )}
 
-      {showCreateNew && items.length > 0 && (
+      {/* The divider belongs to the create action, so it stays when the list is empty */}
+      {showCreateNew && (
         <Box sx={styles.dividerContainer}>
           <Box sx={styles.dividerLine} />
         </Box>
