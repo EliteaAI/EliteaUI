@@ -111,6 +111,7 @@ const SummarizationSettings = memo(props => {
 
       <Input.StyledInputEnhancer
         label="Summarization instructions"
+        labelVariant="labelSmall"
         tooltipDescription="Custom instructions for how summaries should be generated"
         autoComplete="off"
         variantInput="outlined"

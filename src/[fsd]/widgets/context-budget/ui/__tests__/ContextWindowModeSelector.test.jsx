@@ -42,6 +42,50 @@ describe('ContextWindowModeSelector', () => {
     );
   });
 
+  describe('window size colour', () => {
+    // A colour no other element inherits, so the check sees the window size style itself
+    const unselectedTabColor = '#123456';
+    const markedTheme = createTheme({
+      palette: {
+        ...darkPalette,
+        components: {
+          ...darkPalette.components,
+          tabGroupButton: {
+            ...darkPalette.components.tabGroupButton,
+            text: { ...darkPalette.components.tabGroupButton.text, default: unselectedTabColor },
+          },
+        },
+      },
+    });
+
+    const renderMarked = (props = {}) =>
+      render(
+        <ThemeProvider theme={markedTheme}>
+          <ContextWindowModeSelector
+            value="balanced"
+            onChange={vi.fn()}
+            balancedWindowTokens={272000}
+            fullWindowTokens={400000}
+            {...props}
+          />
+        </ThemeProvider>,
+      );
+
+    it('keeps the window size in the unselected tab colour so only the mode name is highlighted', () => {
+      renderMarked();
+      expect(screen.getByTestId('context-window-mode-balanced-size')).toHaveStyle({
+        color: unselectedTabColor,
+      });
+    });
+
+    it('leaves the whole label of a disabled tab in one colour', () => {
+      renderMarked({ disabled: true });
+      expect(screen.getByTestId('context-window-mode-balanced-size')).not.toHaveStyle({
+        color: unselectedTabColor,
+      });
+    });
+  });
+
   it('falls back to plain labels when the model window is unknown', () => {
     renderSelector();
     expect(screen.getByTestId('context-window-mode-balanced')).toHaveTextContent(/^Balanced$/);
