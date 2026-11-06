@@ -339,8 +339,10 @@ const chatActivityTableStyles = () => ({
     padding: '0.375rem 0.75rem',
   },
   tableWrapper: { width: '100%', overflowX: 'auto' },
+  // Fixed-width cells: rows grow to their content so borders and hover span the scrolled width
   tableHeader: ({ palette }) => ({
     display: 'flex',
+    minWidth: 'fit-content',
     padding: '0.5rem 0.75rem',
     borderBottom: `0.0625rem solid ${palette.border.default}`,
     gap: '0.5rem',
@@ -353,6 +355,7 @@ const chatActivityTableStyles = () => ({
   }),
   clickableRow: ({ palette }) => ({
     display: 'flex',
+    minWidth: 'fit-content',
     padding: '0.5rem 0.75rem',
     borderBottom: `0.0625rem solid ${palette.border.default}`,
     gap: '0.5rem',

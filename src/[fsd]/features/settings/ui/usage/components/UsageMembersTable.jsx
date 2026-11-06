@@ -8,6 +8,7 @@ import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 
 import UsageSortHeader from './UsageSortHeader';
+import { usageColumnSx, usageRowMinWidthSx, usageTableWrapperSx } from './usageTable.styles';
 
 const SEVERITY_COLOR = {
   exceeded: 'error',
@@ -50,6 +51,11 @@ const UsageMembersTable = memo(props => {
         _delta: showVsPrior ? UsageHelpers.computeDelta(row.spend ?? 0, row.prev_spend ?? null) : null,
       })),
     [rows, showVsPrior],
+  );
+
+  const rowMinWidth = useMemo(
+    () => usageRowMinWidthSx(showVsPrior ? [3, 1.2, 1.2, 1, 0.9] : [3, 1.2, 1.2, 1]),
+    [showVsPrior],
   );
 
   const handleSort = useCallback(
@@ -113,127 +119,136 @@ const UsageMembersTable = memo(props => {
         </Typography>
       )}
 
-      {(showsSkeleton || !!rows.length) && (
-        <>
-          <Box sx={styles.tableHeader}>
-            <Box
-              sx={[styles.sortableCell, styles.nameCell, { flex: 3 }]}
-              onClick={() => handleSort('name')}
-              role="button"
-              tabIndex={0}
-              onKeyDown={e => e.key === 'Enter' && handleSort('name')}
-            >
-              <Typography sx={[styles.cell, sortKey === 'name' ? { color: palette.primary.main } : {}]}>
-                Member
-                {sortKey === 'name' && <Box component="span">{sortDir === 'desc' ? ' ▼' : ' ▲'}</Box>}
-              </Typography>
-            </Box>
-            <UsageSortHeader
-              label="Spent"
-              keyName="spend"
-              flex={1.2}
-              sortKey={sortKey}
-              sortDir={sortDir}
-              onSort={handleSort}
-            />
-            <Box sx={[styles.headerCell, { flex: 1.2 }]}>
-              <Typography sx={styles.cell}>Limit</Typography>
-            </Box>
-            <Box sx={[styles.headerCell, { flex: 1 }]}>
-              <Typography sx={styles.cell}>Used</Typography>
-            </Box>
-            {showVsPrior && (
-              <Box sx={[styles.headerCell, { flex: 0.9 }]}>
-                <Typography sx={styles.cell}>vs prior</Typography>
-              </Box>
-            )}
-          </Box>
-
-          {showsSkeleton &&
-            Array.from({ length: SKELETON_ROWS }, (_, index) => (
+      <Box sx={styles.tableWrapper}>
+        {(showsSkeleton || !!rows.length) && (
+          <>
+            <Box sx={[styles.tableHeader, rowMinWidth]}>
               <Box
-                key={`skeleton-${index}`}
-                sx={styles.row}
+                sx={[styles.sortableCell, styles.nameCell, usageColumnSx(3)]}
+                onClick={() => handleSort('name')}
+                role="button"
+                tabIndex={0}
+                onKeyDown={e => e.key === 'Enter' && handleSort('name')}
               >
-                <Skeleton
-                  variant="text"
-                  width="100%"
-                />
+                <Typography sx={[styles.cell, sortKey === 'name' ? { color: palette.primary.main } : {}]}>
+                  Member
+                  {sortKey === 'name' && <Box component="span">{sortDir === 'desc' ? ' ▼' : ' ▲'}</Box>}
+                </Typography>
               </Box>
-            ))}
+              <UsageSortHeader
+                label="Spent"
+                keyName="spend"
+                flex={1.2}
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onSort={handleSort}
+              />
+              <Box sx={[styles.headerCell, usageColumnSx(1.2)]}>
+                <Typography sx={styles.cell}>Limit</Typography>
+              </Box>
+              <Box sx={[styles.headerCell, usageColumnSx(1)]}>
+                <Typography sx={styles.cell}>Used</Typography>
+              </Box>
+              {showVsPrior && (
+                <Box sx={[styles.headerCell, usageColumnSx(0.9)]}>
+                  <Typography sx={styles.cell}>vs prior</Typography>
+                </Box>
+              )}
+            </Box>
 
-          {enrichedRows.map(row => {
-            const severity = UsageHelpers.usageSeverity(row.percent_used, warningPct);
-            const color = SEVERITY_COLOR[severity];
-            const delta = row._delta;
+            {showsSkeleton &&
+              Array.from({ length: SKELETON_ROWS }, (_, index) => (
+                <Box
+                  key={`skeleton-${index}`}
+                  sx={[styles.row, rowMinWidth]}
+                >
+                  <Skeleton
+                    variant="text"
+                    width="100%"
+                  />
+                </Box>
+              ))}
 
-            const deltaColor = delta
-              ? delta.direction === 'up'
-                ? palette.warning.main
-                : delta.direction === 'down'
-                  ? palette.success.main
-                  : palette.text.disabled
-              : null;
+            {enrichedRows.map(row => {
+              const severity = UsageHelpers.usageSeverity(row.percent_used, warningPct);
+              const color = SEVERITY_COLOR[severity];
+              const delta = row._delta;
 
-            return (
-              <Box
-                key={row.user_id}
-                sx={styles.row}
-              >
-                <Box sx={{ flex: 3, minWidth: 0 }}>
-                  <Typography sx={styles.value}>{row.name || row.email || `User ${row.user_id}`}</Typography>
-                  {row.email && row.name && row.name !== row.email && (
-                    <Typography sx={styles.emailText}>{row.email}</Typography>
+              const deltaColor = delta
+                ? delta.direction === 'up'
+                  ? palette.warning.main
+                  : delta.direction === 'down'
+                    ? palette.success.main
+                    : palette.text.disabled
+                : null;
+
+              return (
+                <Box
+                  key={row.user_id}
+                  sx={[styles.row, rowMinWidth]}
+                >
+                  <Box sx={usageColumnSx(3)}>
+                    <Typography sx={styles.value}>
+                      {row.name || row.email || `User ${row.user_id}`}
+                    </Typography>
+                    {row.email && row.name && row.name !== row.email && (
+                      <Typography sx={styles.emailText}>{row.email}</Typography>
+                    )}
+                  </Box>
+                  <Typography sx={[styles.value, styles.right, usageColumnSx(1.2)]}>
+                    {UsageHelpers.formatMoney(row.spend, row.currency)}
+                  </Typography>
+                  <Typography sx={[styles.value, styles.right, styles.muted, usageColumnSx(1.2)]}>
+                    {isCurrentPeriod ? UsageHelpers.formatLimit(row.effective_limit, row.currency) : '—'}
+                  </Typography>
+                  <Typography
+                    sx={[
+                      styles.value,
+                      styles.right,
+                      usageColumnSx(1),
+                      color ? ({ palette: p }) => ({ color: p[color].main, fontWeight: 600 }) : {},
+                    ]}
+                  >
+                    {!isCurrentPeriod
+                      ? '—'
+                      : row.percent_used === null || row.percent_used === undefined
+                        ? '—'
+                        : `${row.percent_used}%`}
+                  </Typography>
+                  {showVsPrior && (
+                    <Typography
+                      sx={[
+                        styles.value,
+                        styles.right,
+                        usageColumnSx(0.9),
+                        { color: deltaColor, fontWeight: 600 },
+                      ]}
+                    >
+                      {delta?.direction === 'up' ? '▲ ' : delta?.direction === 'down' ? '▼ ' : ''}
+                      {delta?.label ?? '—'}
+                    </Typography>
                   )}
                 </Box>
-                <Typography sx={[styles.value, styles.right, { flex: 1.2 }]}>
-                  {UsageHelpers.formatMoney(row.spend, row.currency)}
-                </Typography>
-                <Typography sx={[styles.value, styles.right, styles.muted, { flex: 1.2 }]}>
-                  {isCurrentPeriod ? UsageHelpers.formatLimit(row.effective_limit, row.currency) : '—'}
-                </Typography>
-                <Typography
-                  sx={[
-                    styles.value,
-                    styles.right,
-                    { flex: 1 },
-                    color ? ({ palette: p }) => ({ color: p[color].main, fontWeight: 600 }) : {},
-                  ]}
-                >
-                  {!isCurrentPeriod
-                    ? '—'
-                    : row.percent_used === null || row.percent_used === undefined
-                      ? '—'
-                      : `${row.percent_used}%`}
-                </Typography>
-                {showVsPrior && (
-                  <Typography
-                    sx={[styles.value, styles.right, { flex: 0.9, color: deltaColor, fontWeight: 600 }]}
-                  >
-                    {delta?.direction === 'up' ? '▲ ' : delta?.direction === 'down' ? '▼ ' : ''}
-                    {delta?.label ?? '—'}
-                  </Typography>
-                )}
-              </Box>
-            );
-          })}
-        </>
-      )}
+              );
+            })}
+          </>
+        )}
 
-      {/* Pinned outside paging so the member rows always add up to the project total */}
-      {!!systemRow && (
-        <Box sx={[styles.row, styles.systemRow]}>
-          <Box sx={{ flex: 3, minWidth: 0 }}>
-            <Typography sx={[styles.value, styles.muted]}>{systemRow.name}</Typography>
-            <Typography sx={styles.emailText}>Not attributable to a member</Typography>
+        {/* Pinned outside paging so the member rows always add up to the project total */}
+        {!!systemRow && (
+          <Box sx={[styles.row, styles.systemRow, rowMinWidth]}>
+            <Box sx={usageColumnSx(3)}>
+              <Typography sx={[styles.value, styles.muted]}>{systemRow.name}</Typography>
+              <Typography sx={styles.emailText}>Not attributable to a member</Typography>
+            </Box>
+            <Typography sx={[styles.value, styles.right, styles.muted, usageColumnSx(1.2)]}>
+              {UsageHelpers.formatMoney(systemRow.spend, systemRow.currency)}
+            </Typography>
+            <Typography sx={[styles.value, styles.right, styles.muted, usageColumnSx(1.2)]}>—</Typography>
+            <Typography sx={[styles.value, styles.right, styles.muted, usageColumnSx(1)]}>—</Typography>
           </Box>
-          <Typography sx={[styles.value, styles.right, styles.muted, { flex: 1.2 }]}>
-            {UsageHelpers.formatMoney(systemRow.spend, systemRow.currency)}
-          </Typography>
-          <Typography sx={[styles.value, styles.right, styles.muted, { flex: 1.2 }]}>—</Typography>
-          <Typography sx={[styles.value, styles.right, styles.muted, { flex: 1 }]}>—</Typography>
-        </Box>
-      )}
+        )}
+      </Box>
 
       {/* Dynamic footer: row count or end-of-period note */}
       {!!rows.length && (
@@ -303,6 +318,7 @@ const usageMembersTableStyles = () => ({
   errorText: ({ palette }) => ({
     color: palette.error.main,
   }),
+  tableWrapper: usageTableWrapperSx,
   tableHeader: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',

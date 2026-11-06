@@ -5,7 +5,13 @@ import { Box, TableSortLabel, Typography } from '@mui/material';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
-import { analyticsTableSortLabelSx } from './analyticsTable.styles';
+import {
+  analyticsColumnSx,
+  analyticsHeaderCellSx,
+  analyticsRowMinWidthSx,
+  analyticsTableSortLabelEndSx,
+  analyticsTableSortLabelSx,
+} from './analyticsTable.styles';
 
 const TOKEN_COLUMNS = [
   { key: 'total', label: 'TOTAL TOKENS' },
@@ -16,11 +22,15 @@ const TOKEN_COLUMNS = [
   { key: 'share', label: 'SHARE' },
 ];
 
+const NAME_FLEX = 3;
+const VALUE_FLEX = 1.25;
+const TOKEN_ROW_MIN_WIDTH = analyticsRowMinWidthSx([NAME_FLEX, ...TOKEN_COLUMNS.map(() => VALUE_FLEX)]);
+
 const TokenTable = memo(props => {
   const { title, subtitleTooltip, nameHeader, rows, emptyState, testId, sortBy, sortOrder, onSort } = props;
 
   const renderHeaderCell = (key, label) => {
-    const sx = [styles.tableCell, styles.rightAlignedCell];
+    const sx = [styles.tableCell, analyticsHeaderCellSx, styles.rightAlignedCell];
     if (onSort) {
       return (
         <Box
@@ -31,7 +41,7 @@ const TokenTable = memo(props => {
             active={sortBy === key}
             direction={sortBy === key ? sortOrder : 'desc'}
             onClick={() => onSort(key)}
-            sx={analyticsTableSortLabelSx}
+            sx={analyticsTableSortLabelEndSx}
           >
             {label}
           </TableSortLabel>
@@ -49,7 +59,7 @@ const TokenTable = memo(props => {
   };
 
   const renderNameHeader = () => {
-    const sx = [styles.tableCell, styles.nameCell];
+    const sx = [styles.tableCell, analyticsHeaderCellSx, styles.nameCell];
     if (onSort) {
       return (
         <Box sx={sx}>
@@ -88,14 +98,14 @@ const TokenTable = memo(props => {
       </Box>
       {rows.length > 0 ? (
         <Box sx={styles.tableWrapper}>
-          <Box sx={styles.tableHeader}>
+          <Box sx={[styles.tableHeader, TOKEN_ROW_MIN_WIDTH]}>
             {renderNameHeader()}
             {TOKEN_COLUMNS.map(col => renderHeaderCell(col.key, col.label))}
           </Box>
           {rows.map((row, index) => (
             <Box
               key={`${row.name}-${index}`}
-              sx={styles.tableRow}
+              sx={[styles.tableRow, TOKEN_ROW_MIN_WIDTH]}
             >
               <Typography
                 sx={[styles.tableCellValue, styles.nameCell]}
@@ -184,8 +194,8 @@ const styles = {
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   }),
-  nameCell: { flex: 3, textAlign: 'left' },
-  rightAlignedCell: { flex: 1.25, textAlign: 'right' },
+  nameCell: { ...analyticsColumnSx(NAME_FLEX), textAlign: 'left' },
+  rightAlignedCell: { ...analyticsColumnSx(VALUE_FLEX), textAlign: 'right' },
 };
 
 export default TokenTable;

@@ -19,7 +19,12 @@ import { Box, CircularProgress, TablePagination, TableSortLabel, Typography, use
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers, AnalyticsUrlStateHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { AnalyticsAgentDetailed, ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
-import { analyticsTableSortLabelSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
+import {
+  analyticsColumnSx,
+  analyticsHeaderCellSx,
+  analyticsRowMinWidthSx,
+  analyticsTableSortLabelSx,
+} from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
@@ -101,6 +106,8 @@ const AnalyticsAgents = memo(props => {
     () => AGENT_COLUMNS.filter(column => !column.teamOnly || !isPersonalProject),
     [isPersonalProject],
   );
+
+  const rowMinWidth = useMemo(() => analyticsRowMinWidthSx(columns), [columns]);
 
   const { data, isFetching } = useAnalyticsAgentsQuery(
     {
@@ -355,13 +362,13 @@ const AnalyticsAgents = memo(props => {
         </Box>
         <Box sx={styles.tableWrapper}>
           <Box
-            sx={styles.tableHeader}
+            sx={[styles.tableHeader, rowMinWidth]}
             data-testid="analytics-agents-table-header"
           >
             {columns.map(column => (
               <Box
                 key={column.key}
-                sx={[styles.tableCell, { flex: column.flex ?? 1 }]}
+                sx={[styles.tableCell, analyticsHeaderCellSx, analyticsColumnSx(column)]}
               >
                 <TableSortLabel
                   active={sort.sortBy === column.key}
@@ -387,7 +394,7 @@ const AnalyticsAgents = memo(props => {
             rows.map((a, i) => (
               <Box
                 key={i}
-                sx={styles.clickableRow}
+                sx={[styles.clickableRow, rowMinWidth]}
                 onClick={() => handleAgentClick(a.entity_id)}
                 data-testid="analytics-agents-row"
               >
@@ -396,7 +403,7 @@ const AnalyticsAgents = memo(props => {
                     key={column.key}
                     sx={[
                       styles.tableCellValue,
-                      { flex: column.flex ?? 1 },
+                      analyticsColumnSx(column),
                       column.key === 'errors' && a.errors > 0 && styles.errorValue,
                     ]}
                     data-testid={`analytics-agents-row-${column.key}`}

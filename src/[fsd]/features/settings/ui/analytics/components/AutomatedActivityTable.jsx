@@ -8,7 +8,14 @@ import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { useClientSort, useSortedRows } from '@/[fsd]/shared/lib/hooks';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
-import { analyticsTableSortLabelSx, analyticsTableStyles } from './analyticsTable.styles';
+import {
+  analyticsColumnSx,
+  analyticsHeaderCellSx,
+  analyticsRowMinWidthSx,
+  analyticsTableSortLabelEndSx,
+  analyticsTableSortLabelSx,
+  analyticsTableStyles,
+} from './analyticsTable.styles';
 
 const COLUMNS = [
   { key: 'runs', label: 'Runs', format: AnalyticCommonHelpers.fmtNum },
@@ -16,6 +23,11 @@ const COLUMNS = [
   { key: 'tool_runs', label: 'Tool Runs', format: AnalyticCommonHelpers.fmtNum },
   { key: 'llm_cost', label: 'Cost', format: AnalyticCommonHelpers.fmtCost },
 ];
+
+const SOURCE_FLEX = 3;
+const ENTITY_FLEX = 1.5;
+const VALUE_FLEX = 1;
+const ROW_MIN_WIDTH = analyticsRowMinWidthSx([SOURCE_FLEX, ENTITY_FLEX, ...COLUMNS.map(() => VALUE_FLEX)]);
 
 const { TRIGGER_SOURCE_LABELS } = AnalyticsCommonConstants;
 
@@ -78,8 +90,8 @@ const AutomatedActivityTable = memo(props => {
         />
       </Box>
       <Box sx={styles.tableWrapper}>
-        <Box sx={styles.tableHeader}>
-          <Box sx={[styles.tableCell, styles.sourceCol]}>
+        <Box sx={[styles.tableHeader, ROW_MIN_WIDTH]}>
+          <Box sx={[styles.tableCell, analyticsHeaderCellSx, styles.sourceCol]}>
             <TableSortLabel
               active={activitySort.sortBy === 'trigger_source'}
               direction={activitySort.sortBy === 'trigger_source' ? activitySort.sortOrder : 'desc'}
@@ -89,7 +101,7 @@ const AutomatedActivityTable = memo(props => {
               Trigger Source
             </TableSortLabel>
           </Box>
-          <Box sx={[styles.tableCell, styles.entityCol]}>
+          <Box sx={[styles.tableCell, analyticsHeaderCellSx, styles.entityCol]}>
             <TableSortLabel
               active={activitySort.sortBy === 'entity_kind'}
               direction={activitySort.sortBy === 'entity_kind' ? activitySort.sortOrder : 'desc'}
@@ -102,13 +114,13 @@ const AutomatedActivityTable = memo(props => {
           {COLUMNS.map(({ key, label }) => (
             <Box
               key={key}
-              sx={[styles.tableCell, styles.valueCol, { display: 'flex', justifyContent: 'flex-end' }]}
+              sx={[styles.tableCell, analyticsHeaderCellSx, styles.valueCol, styles.valueHeaderCol]}
             >
               <TableSortLabel
                 active={activitySort.sortBy === key}
                 direction={activitySort.sortBy === key ? activitySort.sortOrder : 'desc'}
                 onClick={() => handleActivitySort(key)}
-                sx={analyticsTableSortLabelSx}
+                sx={analyticsTableSortLabelEndSx}
               >
                 {label}
               </TableSortLabel>
@@ -118,7 +130,7 @@ const AutomatedActivityTable = memo(props => {
         {sortedItems.map((item, index) => (
           <Box
             key={`${item.trigger_source}-${item.entity_kind ?? 'none'}`}
-            sx={styles.tableRow}
+            sx={[styles.tableRow, ROW_MIN_WIDTH]}
             data-testid={`analytics-automated-row-${item.trigger_source}`}
           >
             <Box sx={[styles.tableCellValue, styles.sourceCol, styles.sourceCell]}>
@@ -144,7 +156,7 @@ const AutomatedActivityTable = memo(props => {
           </Box>
         ))}
         {items.length > 1 && (
-          <Box sx={[styles.tableRow, styles.totalRow]}>
+          <Box sx={[styles.tableRow, styles.totalRow, ROW_MIN_WIDTH]}>
             <Typography sx={[styles.tableCellValue, styles.sourceCol, styles.totalText]}>Total</Typography>
             <Box sx={styles.entityCol} />
             {COLUMNS.map(({ key, format }) => (
@@ -171,10 +183,11 @@ const automatedActivityTableStyles = () => ({
   dashedCard: { borderStyle: 'dashed' },
   totalRow: { borderBottom: 'none' },
   totalText: { fontWeight: 600 },
-  sourceCol: { flex: 3 },
-  entityCol: { flex: 1.5 },
+  sourceCol: analyticsColumnSx(SOURCE_FLEX),
+  entityCol: analyticsColumnSx(ENTITY_FLEX),
   sourceCell: { display: 'flex', alignItems: 'center', gap: '0.5rem' },
-  valueCol: { flex: 1, textAlign: 'right' },
+  valueCol: { ...analyticsColumnSx(VALUE_FLEX), textAlign: 'right' },
+  valueHeaderCol: { display: 'flex', justifyContent: 'flex-end' },
 });
 
 export default AutomatedActivityTable;
