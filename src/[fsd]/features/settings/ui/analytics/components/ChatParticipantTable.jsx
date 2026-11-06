@@ -10,6 +10,7 @@ import {
   analyticsRowMinWidthSx,
   analyticsTableStyles,
 } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
+import { customScrollbarSx } from '@/[fsd]/shared/lib/helpers';
 
 const { CHAT_PARTICIPANT_TYPE_LABELS } = AnalyticsCommonConstants;
 
@@ -93,7 +94,7 @@ const chatParticipantTableStyles = () => ({
     minWidth: 0,
   }),
   title: ({ palette }) => ({ color: palette.text.secondary, marginBottom: '0.25rem', display: 'block' }),
-  tableWrapper: { width: '100%', overflowX: 'auto' },
+  tableWrapper: theme => ({ width: '100%', overflowX: 'auto', ...customScrollbarSx(theme) }),
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',

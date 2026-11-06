@@ -1,3 +1,5 @@
+import { customScrollbarSx } from '@/[fsd]/shared/lib/helpers';
+
 // Header and body rows are separate flex containers, so their columns only line up when every
 // cell resolves to the same width in both. With a plain `flex: N` the minimum width is `auto`:
 // header cells (visible overflow) refuse to shrink below their longest word plus the reserved
@@ -35,6 +37,17 @@ export const analyticsRowMinWidthSx = (columnsOrFlexes, options = {}) => {
   const gapsRem = Math.max(flexes.length + fixedColumnsRem.length - 1, 0) * gapRem;
   return { minWidth: `${cellsRem + gapsRem + paddingXRem * 2}rem` };
 };
+
+// Scroll container for a table. The app hides every scrollbar globally, which leaves an overflowing
+// table with no visible way to reach its hidden columns on a plain mouse wheel (Windows), so the
+// table wrapper opts back in to the thin themed scrollbar.
+export const analyticsTableWrapperSx = theme => ({
+  display: 'flex',
+  flexDirection: 'column',
+  width: '100%',
+  overflow: 'auto',
+  ...customScrollbarSx(theme),
+});
 
 // Header labels wrap inside their fixed-minimum cell instead of widening it
 export const analyticsHeaderCellSx = { overflowWrap: 'anywhere' };
@@ -83,7 +96,7 @@ export const analyticsTableStyles = {
     gap: '0.25rem',
     marginBottom: '0.5rem',
   },
-  tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
+  tableWrapper: analyticsTableWrapperSx,
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',

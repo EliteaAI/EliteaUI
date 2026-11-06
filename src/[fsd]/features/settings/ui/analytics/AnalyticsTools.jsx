@@ -11,6 +11,7 @@ import {
   analyticsHeaderCellSx,
   analyticsRowMinWidthSx,
   analyticsTableSortLabelSx,
+  analyticsTableWrapperSx,
 } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { useAnalyticsToolsQuery } from '@/api';
@@ -302,7 +303,7 @@ const styles = {
   }),
   chartWrapper: { width: '100%', overflow: 'hidden', flex: 1, minHeight: 200 },
   loadingState: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem' },
-  tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
+  tableWrapper: analyticsTableWrapperSx,
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',

@@ -12,6 +12,7 @@ import {
   analyticsHeaderCellSx,
   analyticsRowMinWidthSx,
   analyticsTableSortLabelSx,
+  analyticsTableWrapperSx,
 } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { useClientSort, useSortedRows } from '@/[fsd]/shared/lib/hooks';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
@@ -367,7 +368,7 @@ const analyticsToolDetailedStyles = () => ({
     transform: 'translate(-50%, -50%)',
   },
   emptyText: ({ palette }) => ({ color: palette.text.metrics || palette.text.disabled }),
-  tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
+  tableWrapper: analyticsTableWrapperSx,
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',

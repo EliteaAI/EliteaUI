@@ -20,6 +20,7 @@ import {
   analyticsTableSortLabelSx,
   analyticsTableStyles,
 } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
+import { customScrollbarSx } from '@/[fsd]/shared/lib/helpers';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import EllipsisLabelWithTooltip from '@/[fsd]/shared/ui/label/EllipsisLabelWithTooltip';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
@@ -338,7 +339,7 @@ const chatActivityTableStyles = () => ({
     borderBottom: '0rem',
     padding: '0.375rem 0.75rem',
   },
-  tableWrapper: { width: '100%', overflowX: 'auto' },
+  tableWrapper: theme => ({ width: '100%', overflowX: 'auto', ...customScrollbarSx(theme) }),
   // Fixed-width cells: rows grow to their content so borders and hover span the scrolled width
   tableHeader: ({ palette }) => ({
     display: 'flex',
