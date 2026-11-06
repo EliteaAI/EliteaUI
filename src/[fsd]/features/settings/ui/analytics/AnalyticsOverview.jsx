@@ -21,6 +21,7 @@ import {
   KPICard,
   ModelUsageTable,
 } from '@/[fsd]/features/settings/ui/analytics';
+import { analyticsTableWrapperSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { CHART_COLORS, EVENT_TYPE_COLORS, MEDAL_COLORS } from '@/[fsd]/shared/config/theme';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
@@ -358,7 +359,7 @@ const analyticsOverviewStyles = () => ({
   },
   chartWrapper: { width: '100%', overflow: 'hidden', flex: 1, minHeight: 200 },
   legendLabel: ({ palette }) => ({ color: palette.text.secondary }),
-  tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
+  tableWrapper: analyticsTableWrapperSx,
   leaderboardRow: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',

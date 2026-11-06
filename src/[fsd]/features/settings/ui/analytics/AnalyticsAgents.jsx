@@ -24,6 +24,7 @@ import {
   analyticsHeaderCellSx,
   analyticsRowMinWidthSx,
   analyticsTableSortLabelSx,
+  analyticsTableWrapperSx,
 } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -471,7 +472,7 @@ const styles = {
   loadingState: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem' },
   emptyState: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem' },
   emptyText: ({ palette }) => ({ color: palette.text.metrics || palette.text.disabled }),
-  tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
+  tableWrapper: analyticsTableWrapperSx,
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
