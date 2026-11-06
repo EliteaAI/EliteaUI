@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, Chip, Typography, useTheme } from '@mui/material';
 
@@ -9,8 +9,19 @@ import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
 import UsageSortHeader from './UsageSortHeader';
+import { usageColumnSx, usageRowMinWidthSx, usageTableWrapperSx } from './usageTable.styles';
 
 const { USAGE_DEFAULT_VISIBLE_MODELS, USAGE_DIRECTION_GLYPH } = UsageConstants;
+
+// One flex factor per column, shared by the header and every row so both resolve to the same widths
+const COLUMN_FLEX = {
+  model: 2.5,
+  cost: 1,
+  tokens: 1,
+  share: 2,
+  delta: 1,
+  trend: 0.75,
+};
 
 const UsageModelTable = memo(props => {
   const { models = [], canSeeAmounts, currency, comparisonModels = [], comparisonLabel } = props;
@@ -30,6 +41,20 @@ const UsageModelTable = memo(props => {
     sortKey,
     sortDir,
   });
+
+  const hasComparison = comparisonModels.length > 0;
+  const rowMinWidth = useMemo(
+    () =>
+      usageRowMinWidthSx([
+        COLUMN_FLEX.model,
+        ...(canSeeAmounts ? [COLUMN_FLEX.cost] : []),
+        COLUMN_FLEX.tokens,
+        COLUMN_FLEX.share,
+        ...(hasComparison ? [COLUMN_FLEX.delta] : []),
+        COLUMN_FLEX.trend,
+      ]),
+    [canSeeAmounts, hasComparison],
+  );
 
   const handleSort = useCallback(
     key => {
@@ -85,9 +110,9 @@ const UsageModelTable = memo(props => {
       </Box>
 
       <Box sx={styles.tableWrapper}>
-        <Box sx={styles.tableHeader}>
+        <Box sx={[styles.tableHeader, rowMinWidth]}>
           <Box
-            sx={[styles.cell, styles.sortableCell, { flex: 3 }]}
+            sx={[styles.cell, styles.sortableCell, usageColumnSx(COLUMN_FLEX.model)]}
             onClick={() => handleSort('name')}
             role="button"
             tabIndex={0}
@@ -102,7 +127,7 @@ const UsageModelTable = memo(props => {
             <UsageSortHeader
               label="Cost"
               keyName="spend"
-              flex={1.2}
+              flex={COLUMN_FLEX.cost}
               sortKey={sortKey}
               sortDir={sortDir}
               onSort={handleSort}
@@ -111,25 +136,25 @@ const UsageModelTable = memo(props => {
           <UsageSortHeader
             label="Tokens"
             keyName="tokens"
-            flex={1}
+            flex={COLUMN_FLEX.tokens}
             sortKey={sortKey}
             sortDir={sortDir}
             onSort={handleSort}
           />
-          <Box sx={[styles.cell, { flex: 1.5 }]}>
+          <Box sx={[styles.cell, styles.shareColumn, usageColumnSx(COLUMN_FLEX.share)]}>
             <Typography sx={styles.cellText}>% of total</Typography>
           </Box>
           {comparisonModels.length > 0 && (
             <UsageSortHeader
               label="vs prior"
               keyName="delta"
-              flex={0.9}
+              flex={COLUMN_FLEX.delta}
               sortKey={sortKey}
               sortDir={sortDir}
               onSort={handleSort}
             />
           )}
-          <Box sx={[styles.cell, { flex: 0.75 }]}>
+          <Box sx={[styles.cell, styles.right, usageColumnSx(COLUMN_FLEX.trend)]}>
             <Typography sx={styles.cellText}>Trend</Typography>
           </Box>
         </Box>
@@ -149,9 +174,9 @@ const UsageModelTable = memo(props => {
           return (
             <Box
               key={model.model || model.displayName}
-              sx={[styles.row, model.isOther ? styles.otherRow : {}]}
+              sx={[styles.row, rowMinWidth, model.isOther ? styles.otherRow : {}]}
             >
-              <Box sx={[{ flex: 3, minWidth: 0 }, styles.modelCell]}>
+              <Box sx={[usageColumnSx(COLUMN_FLEX.model), styles.modelCell]}>
                 {/* Colored circle dot — omitted for Other row */}
                 {!model.isOther && <Box sx={styles.modelDot(model.color)} />}
                 <Typography sx={[styles.modelName, model.isOther ? styles.otherName : {}]}>
@@ -168,16 +193,16 @@ const UsageModelTable = memo(props => {
               </Box>
 
               {canSeeAmounts && (
-                <Typography sx={[styles.value, styles.right, { flex: 1.2 }]}>
+                <Typography sx={[styles.value, styles.right, usageColumnSx(COLUMN_FLEX.cost)]}>
                   {UsageHelpers.formatMoney(model.spend, currency)}
                 </Typography>
               )}
 
-              <Typography sx={[styles.value, styles.right, { flex: 1 }]}>
+              <Typography sx={[styles.value, styles.right, usageColumnSx(COLUMN_FLEX.tokens)]}>
                 {UsageHelpers.formatTokens(model.total_tokens)}
               </Typography>
 
-              <Box sx={[styles.shareWrapper, { flex: 1.5 }]}>
+              <Box sx={[styles.shareWrapper, styles.shareColumn, usageColumnSx(COLUMN_FLEX.share)]}>
                 <Box sx={styles.shareTrack}>
                   <Box sx={styles.shareFill(model.share, model.color)} />
                 </Box>
@@ -188,7 +213,12 @@ const UsageModelTable = memo(props => {
 
               {comparisonModels.length > 0 && (
                 <Typography
-                  sx={[styles.value, styles.right, { flex: 0.9, color: deltaColor, fontWeight: 600 }]}
+                  sx={[
+                    styles.value,
+                    styles.right,
+                    usageColumnSx(COLUMN_FLEX.delta),
+                    { color: deltaColor, fontWeight: 600 },
+                  ]}
                 >
                   {USAGE_DIRECTION_GLYPH[model.delta?.direction]
                     ? `${USAGE_DIRECTION_GLYPH[model.delta.direction]} `
@@ -197,7 +227,7 @@ const UsageModelTable = memo(props => {
                 </Typography>
               )}
 
-              <Box sx={{ flex: 0.75, display: 'flex', justifyContent: 'flex-end' }}>
+              <Box sx={[usageColumnSx(COLUMN_FLEX.trend), styles.trendCell]}>
                 {sparkPath ? (
                   <svg
                     viewBox="0 0 100 28"
@@ -272,10 +302,7 @@ const usageModelTableStyles = () => ({
     color: palette.text.metrics || palette.text.disabled,
     marginTop: '0.5rem',
   }),
-  tableWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
+  tableWrapper: usageTableWrapperSx,
   tableHeader: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'row',
@@ -346,6 +373,9 @@ const usageModelTableStyles = () => ({
     textAlign: 'right',
     justifyContent: 'flex-end',
   },
+  // Left-aligned bar column: inset it so its header does not run into the right-aligned Tokens header
+  shareColumn: { paddingLeft: '1rem' },
+  trendCell: { display: 'flex', justifyContent: 'flex-end' },
   shareWrapper: {
     display: 'flex',
     flexDirection: 'row',
