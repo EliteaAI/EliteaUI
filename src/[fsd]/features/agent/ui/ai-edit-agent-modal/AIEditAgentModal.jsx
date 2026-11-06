@@ -275,15 +275,16 @@ const AIEditAgentModal = memo(props => {
       if (appsToAdd.length > 0) {
         const results = await Promise.allSettled(
           appsToAdd.map(async a => {
+            const appProjectId = a.project_id ?? projectId;
             const { data: appDetails } = await fetchApplicationDetails({
-              projectId,
+              projectId: appProjectId,
               applicationId: a.id,
             });
 
             if (!appDetails?.version_details?.id) return;
             try {
               return await updateApplicationRelation({
-                projectId,
+                projectId: appProjectId,
                 selectedApplicationId: a.id,
                 selectedVersionId: appDetails.version_details.id,
                 application_id: entityId,
@@ -309,14 +310,15 @@ const AIEditAgentModal = memo(props => {
       if (appsToRemove.length > 0) {
         await Promise.allSettled(
           appsToRemove.map(async a => {
+            const appProjectId = a.project_id ?? projectId;
             const { data: appDetails } = await fetchApplicationDetails({
-              projectId,
+              projectId: appProjectId,
               applicationId: a.id,
             });
 
             if (!appDetails?.version_details?.id) return;
             return updateApplicationRelation({
-              projectId,
+              projectId: appProjectId,
               selectedApplicationId: a.id,
               selectedVersionId: appDetails.version_details.id,
               application_id: entityId,

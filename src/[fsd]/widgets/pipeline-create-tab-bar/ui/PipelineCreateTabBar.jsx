@@ -1,9 +1,10 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
+import { useAttachSkills } from '@/[fsd]/features/pipelines/ai-edit-pipeline';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -19,18 +20,40 @@ const PipelineCreateTabBar = memo(() => {
   const navigate = useNavigate();
   const { toastError } = useToast();
   const [wantToCancel, setWantToCancel] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const isYamlCodeDirty = useIsPipelineYamlCodeDirty();
   const { stateValidationErrors } = useSelector(selectActivePipeline);
 
   const blockOptions = useMemo(
-    () => ({ blockCondition: (!!formik.dirty || isYamlCodeDirty) && !wantToCancel }),
-    [formik.dirty, isYamlCodeDirty, wantToCancel],
+    () => ({ blockCondition: (!!formik.dirty || isYamlCodeDirty) && !wantToCancel && !isSaved }),
+    [formik.dirty, isYamlCodeDirty, wantToCancel, isSaved],
   );
   const { setBlockNav } = useNavBlocker(blockOptions);
 
-  // The redirect after save is deferred; the effect-driven unblock may not land before it
-  const resetBlockNav = useCallback(() => setBlockNav(false), [setBlockNav]);
-  const { isLoading, create, error, isError } = useCreateApplication(formik, resetBlockNav);
+  // The redirect after save is deferred; until it lands, the post-save pipeline reset can re-sync the
+  // YAML (attachments state, flow editor re-dump) and flip it dirty again, so a saved draft stays unblocked
+  const resetBlockNav = useCallback(() => {
+    setIsSaved(true);
+    setBlockNav(false);
+  }, [setBlockNav]);
+  // The create payload has no skills field, so skills an AI draft suggested are attached once the version
+  // exists; read before Save because the form is reset to the server response on success
+  const attachPendingSkills = useAttachSkills();
+  const pendingSkillsRef = useRef([]);
+  const onCreated = useCallback(
+    data => attachPendingSkills(pendingSkillsRef.current, data?.version_details?.id),
+    [attachPendingSkills],
+  );
+  const {
+    isLoading,
+    create: createPipeline,
+    error,
+    isError,
+  } = useCreateApplication(formik, resetBlockNav, { onSuccess: onCreated });
+  const create = useCallback(() => {
+    pendingSkillsRef.current = formik.values?.pending_skills || [];
+    return createPipeline();
+  }, [createPipeline, formik.values?.pending_skills]);
 
   const hasStateErrors = useMemo(
     () => Boolean(stateValidationErrors && Object.keys(stateValidationErrors).length),

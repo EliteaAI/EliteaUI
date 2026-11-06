@@ -16,6 +16,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Box, Typography, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip.jsx';
+import { AIEditPipelineButton } from '@/[fsd]/features/pipelines/ai-edit-pipeline';
 import {
   DumpYamlHelpers,
   ParsePipelineHelpers,
@@ -63,6 +64,7 @@ const EditorPanel = forwardRef((props, ref) => {
     testDisabledReason,
     isTestPanelOpen = false,
     onCanvasNodeInteraction,
+    isCreateMode = false,
   } = props;
   const dispatch = useDispatch();
   const { isSmallWindow } = useIsSmallWindow();
@@ -205,6 +207,14 @@ const EditorPanel = forwardRef((props, ref) => {
         testDisabledReason={testDisabledReason || flowTestDisabledReason}
         disabled={disabled}
         isCompact={isFromChat}
+        extraActions={
+          !isFromChat ? (
+            <AIEditPipelineButton
+              label={isCreateMode ? 'Build with AI' : 'Edit with AI'}
+              isCreateMode={isCreateMode}
+            />
+          ) : undefined
+        }
       />
       <Box sx={styles.editorContainer}>
         {

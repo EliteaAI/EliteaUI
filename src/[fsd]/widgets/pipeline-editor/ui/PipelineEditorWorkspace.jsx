@@ -118,6 +118,7 @@ const PipelineEditorWorkspace = memo(props => {
           isTestPanelOpen={isTestPanelOpen}
           disabled={isReadOnly}
           onCanvasNodeInteraction={handleCanvasNodeInteraction}
+          isCreateMode={!isEditMode}
           sx={styles.editorPanel}
         />
         {isEditMode && (

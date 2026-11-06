@@ -121,9 +121,13 @@ const useSaveNewVersion = ({
   );
 
   const onCreateNewVersion = useCallback(
-    async newVersionName => {
+    // `overrides.yamlCode` is for a caller that changed the canvas in the same tick, before this callback re-rendered
+    async (newVersionName, overrides = {}) => {
       const saveTarget = captureSaveTarget();
-      const { nodes, edges } = isFromPipeline ? calculateNodesAndEdges(yamlCode, orientation, flowNodes) : {};
+      const versionYaml = overrides.yamlCode ?? yamlCode;
+      const { nodes, edges } = isFromPipeline
+        ? calculateNodesAndEdges(versionYaml, orientation, flowNodes)
+        : {};
 
       // Reset trigger to default 'chat_message' for new versions
       const triggerConfig = isFromPipeline ? { type: 'chat_message' } : null;
@@ -137,7 +141,7 @@ const useSaveNewVersion = ({
         projectId: selectedProjectId,
         webhook_secret: webhook_secret || null,
         applicationId,
-        instructions: !isFromPipeline ? versionDetails.instructions : yamlCode,
+        instructions: !isFromPipeline ? versionDetails.instructions : versionYaml,
         pipeline_settings: isFromPipeline
           ? {
               nodes,

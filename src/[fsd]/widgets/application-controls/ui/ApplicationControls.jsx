@@ -196,8 +196,7 @@ const ApplicationControls = memo(props => {
           ]),
       { ...exportApplicationMenuItem, disabled: !checkPermission(PERMISSIONS.applications.export) },
       shareVersionMenuItem,
-      ...(!isFromPipeline &&
-      (formik?.values?.versions?.length ?? 0) >= 2 &&
+      ...((formik?.values?.versions?.length ?? 0) >= 2 &&
       (isPrivate || checkPermission(PERMISSIONS.applications.update))
         ? [
             {

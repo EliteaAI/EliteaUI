@@ -6,11 +6,16 @@ import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Modal } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
-import { AGENT_COMPARE_STEPS, SKILL_COMPARE_STEPS } from '../lib/constants/compareVersions.constants';
+import {
+  AGENT_COMPARE_STEPS,
+  PIPELINE_COMPARE_STEPS,
+  SKILL_COMPARE_STEPS,
+} from '../lib/constants/compareVersions.constants';
 import CompareVersionSelector from './CompareVersionSelector';
 import CompareVersionsStepIndicator from './CompareVersionsStepIndicator';
 import {
   CompareInstructionsStep,
+  ComparePipelineYamlStep,
   CompareRunSettingsStep,
   CompareToolsSkillsStep,
   CompareUserInteractionStep,
@@ -49,8 +54,12 @@ const CompareVersionsModal = memo(props => {
   const [loadError, setLoadError] = useState(null);
   const [discardTarget, setDiscardTarget] = useState(null);
 
-  const isAgent = entityType === 'agent';
-  const steps = isAgent ? AGENT_COMPARE_STEPS : SKILL_COMPARE_STEPS;
+  const steps =
+    entityType === 'agent'
+      ? AGENT_COMPARE_STEPS
+      : entityType === 'pipeline'
+        ? PIPELINE_COMPARE_STEPS
+        : SKILL_COMPARE_STEPS;
   const isLastStep = activeStepIndex === steps.length - 1;
 
   const leftVersion = useMemo(
@@ -215,6 +224,8 @@ const CompareVersionsModal = memo(props => {
         return <CompareToolsSkillsStep {...stepProps} />;
       case 'run-settings':
         return <CompareRunSettingsStep {...stepProps} />;
+      case 'yaml':
+        return <ComparePipelineYamlStep {...stepProps} />;
       default:
         return null;
     }

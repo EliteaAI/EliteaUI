@@ -142,14 +142,15 @@ const GenerateAgentModal = memo(props => {
       if (!versionId || !apps.length) return;
       const results = await Promise.allSettled(
         apps.map(async a => {
+          const appProjectId = a.project_id ?? projectId;
           const { data: appDetails } = await fetchApplicationDetails({
-            projectId,
+            projectId: appProjectId,
             applicationId: a.id,
           });
           if (!appDetails?.version_details?.id) return;
           try {
             return await updateApplicationRelation({
-              projectId,
+              projectId: appProjectId,
               selectedApplicationId: a.id,
               selectedVersionId: appDetails.version_details.id,
               application_id: entityId,
@@ -181,13 +182,14 @@ const GenerateAgentModal = memo(props => {
       if (!versionId || !skills.length) return;
       await Promise.allSettled(
         skills.map(async skill => {
+          const skillProjectId = skill.project_id ?? projectId;
           const { data: skillDetails } = await fetchSkillDetails({
-            projectId,
+            projectId: skillProjectId,
             skillId: skill.id,
           });
           if (!skillDetails?.version_details?.id) return;
           return updateSkillRelation({
-            projectId,
+            projectId: skillProjectId,
             skillId: skill.id,
             entity_version_id: versionId,
             skill_version_id: skillDetails.version_details.id,
