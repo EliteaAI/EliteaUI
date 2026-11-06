@@ -4,9 +4,17 @@ import { Box, Typography } from '@mui/material';
 
 import { AnalyticCommonHelpers, AnalyticsExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
 
-import { analyticsTableStyles } from './analyticsTable.styles';
+import {
+  analyticsColumnSx,
+  analyticsHeaderCellSx,
+  analyticsRowMinWidthSx,
+  analyticsTableStyles,
+} from './analyticsTable.styles';
 
 const NO_NAME_LABEL = '—';
+const WIDE_FLEX = 2;
+const NARROW_FLEX = 1;
+const COLUMN_FLEX = { wideCol: WIDE_FLEX, narrowCol: NARROW_FLEX };
 
 const COLUMNS = [
   { key: 'ts', label: 'Time', colStyle: 'wideCol', format: AnalyticsExportHelpers.fmtRunDateTime },
@@ -20,6 +28,8 @@ const COLUMNS = [
   },
   { key: 'durationMs', label: 'Latency', colStyle: 'narrowCol', format: AnalyticCommonHelpers.fmtDuration },
 ];
+
+const ROW_MIN_WIDTH = analyticsRowMinWidthSx(COLUMNS.map(({ colStyle }) => COLUMN_FLEX[colStyle]));
 
 const RunFailedCallsTable = memo(props => {
   const { calls = [], sx = {} } = props;
@@ -40,11 +50,11 @@ const RunFailedCallsTable = memo(props => {
         Failed Calls
       </Typography>
       <Box sx={styles.tableWrapper}>
-        <Box sx={styles.tableHeader}>
+        <Box sx={[styles.tableHeader, ROW_MIN_WIDTH]}>
           {COLUMNS.map(({ key, label, colStyle }) => (
             <Typography
               key={key}
-              sx={[styles.tableCell, styles[colStyle]]}
+              sx={[styles.tableCell, analyticsHeaderCellSx, styles[colStyle]]}
             >
               {label}
             </Typography>
@@ -53,7 +63,7 @@ const RunFailedCallsTable = memo(props => {
         {calls.map(call => (
           <Box
             key={call.key}
-            sx={styles.tableRow}
+            sx={[styles.tableRow, ROW_MIN_WIDTH]}
             data-testid="run-analytics-failed-call"
           >
             {COLUMNS.map(({ key, colStyle, cellStyle, format }) => (
@@ -76,8 +86,8 @@ RunFailedCallsTable.displayName = 'RunFailedCallsTable';
 /** @type {MuiSx} */
 const runFailedCallsTableStyles = () => ({
   ...analyticsTableStyles,
-  wideCol: { flex: 2 },
-  narrowCol: { flex: 1 },
+  wideCol: analyticsColumnSx(WIDE_FLEX),
+  narrowCol: analyticsColumnSx(NARROW_FLEX),
   failedName: ({ palette }) => ({ color: palette.status.rejected }),
 });
 

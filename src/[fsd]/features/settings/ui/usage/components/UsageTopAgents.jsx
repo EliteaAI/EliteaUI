@@ -7,12 +7,15 @@ import { Box, Link, Typography, useTheme } from '@mui/material';
 import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
 
 import UsageSortHeader from './UsageSortHeader';
+import { usageColumnSx, usageRowMinWidthSx, usageTableWrapperSx } from './usageTable.styles';
 
 const MAX_ROWS = 5;
 
 const BADGE_COLORS = {
   pipeline: { bg: '#2a1a3a', text: '#b98cff' },
 };
+
+const ROW_MIN_WIDTH = usageRowMinWidthSx([3, 1, 1.2, 1.2, 0.9]);
 
 const UsageTopAgents = memo(props => {
   const {
@@ -102,7 +105,7 @@ const UsageTopAgents = memo(props => {
     [sortKey],
   );
 
-  const title = sortKey === 'runs' ? 'Top Run Agents/Pipelines' : 'Top Spend Agents/Pipelines';
+  const title = sortKey === 'runs' ? 'Top Run Agents/Pipelines' : 'Top Spent Agents/Pipelines';
 
   if (!topAgents.length && !topAgentsByRuns.length) return null;
 
@@ -132,9 +135,9 @@ const UsageTopAgents = memo(props => {
       </Box>
 
       <Box sx={styles.tableWrapper}>
-        <Box sx={styles.tableHeader}>
+        <Box sx={[styles.tableHeader, ROW_MIN_WIDTH]}>
           <Box
-            sx={[styles.cell, styles.sortableCell, { flex: 3 }]}
+            sx={[styles.cell, styles.sortableCell, usageColumnSx(3)]}
             onClick={() => handleSort('name')}
             role="button"
             tabIndex={0}
@@ -200,27 +203,28 @@ const UsageTopAgents = memo(props => {
           return (
             <Box
               key={agent._key}
-              sx={styles.row}
+              sx={[styles.row, ROW_MIN_WIDTH]}
             >
-              <Box sx={[{ flex: 3, minWidth: 0 }, styles.nameCell]}>
+              <Box sx={[usageColumnSx(3), styles.nameCell]}>
                 <Box sx={styles.badge(badge)}>{badgeText}</Box>
                 <Typography sx={styles.name}>{agent.name || agent.id}</Typography>
               </Box>
-              <Typography sx={[styles.value, styles.right, { flex: 1 }]}>{agent.runs ?? '—'}</Typography>
-              <Typography sx={[styles.value, styles.right, { flex: 1.2 }]}>
+              <Typography sx={[styles.value, styles.right, usageColumnSx(1)]}>{agent.runs ?? '—'}</Typography>
+              <Typography sx={[styles.value, styles.right, usageColumnSx(1.2)]}>
                 {canSeeAmounts ? UsageHelpers.formatMoney(agent.spend, currency) : `${share.toFixed(1)}%`}
               </Typography>
               <Typography
                 sx={[
                   styles.value,
                   styles.right,
-                  { flex: 1.2, color: palette.text.metrics || palette.text.disabled },
+                  usageColumnSx(1.2),
+                  { color: palette.text.metrics || palette.text.disabled },
                 ]}
               >
                 {canSeeAmounts && agent.runs ? UsageHelpers.formatMoney(agent._perRun, currency) : '—'}
               </Typography>
               <Typography
-                sx={[styles.value, styles.right, { flex: 0.9, color: deltaColor, fontWeight: 600 }]}
+                sx={[styles.value, styles.right, usageColumnSx(0.9), { color: deltaColor, fontWeight: 600 }]}
               >
                 {delta.direction === 'up' ? '▲ ' : delta.direction === 'down' ? '▼ ' : ''}
                 {delta.label}
@@ -265,10 +269,7 @@ const usageTopAgentsStyles = () => ({
     flexShrink: 0,
     '&:hover': { textDecoration: 'underline' },
   }),
-  tableWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
+  tableWrapper: usageTableWrapperSx,
   tableHeader: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'row',

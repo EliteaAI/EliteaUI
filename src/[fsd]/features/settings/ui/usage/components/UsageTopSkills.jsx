@@ -7,8 +7,11 @@ import { Box, Link, Typography, useTheme } from '@mui/material';
 import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
 
 import UsageSortHeader from './UsageSortHeader';
+import { usageColumnSx, usageRowMinWidthSx, usageTableWrapperSx } from './usageTable.styles';
 
 const MAX_ROWS = 5;
+
+const ROW_MIN_WIDTH = usageRowMinWidthSx([3, 1, 1.2, 1.2]);
 
 const UsageTopSkills = memo(props => {
   const { topSkills = [], topSkillsByRuns = [], canSeeAmounts, currency, analyticsUrl, sx = {} } = props;
@@ -77,7 +80,7 @@ const UsageTopSkills = memo(props => {
     [sortKey],
   );
 
-  const title = sortKey === 'runs' ? 'Top Run Skills' : 'Top Spend Skills';
+  const title = sortKey === 'runs' ? 'Top Run Skills' : 'Top Spent Skills';
 
   if (!topSkills.length && !topSkillsByRuns.length) return null;
 
@@ -107,9 +110,9 @@ const UsageTopSkills = memo(props => {
       </Box>
 
       <Box sx={styles.tableWrapper}>
-        <Box sx={styles.tableHeader}>
+        <Box sx={[styles.tableHeader, ROW_MIN_WIDTH]}>
           <Box
-            sx={[styles.sortableCell, { flex: 3, justifyContent: 'flex-start', textAlign: 'left' }]}
+            sx={[styles.sortableCell, usageColumnSx(3), { justifyContent: 'flex-start', textAlign: 'left' }]}
             onClick={() => handleSort('name')}
             role="button"
             tabIndex={0}
@@ -152,22 +155,25 @@ const UsageTopSkills = memo(props => {
           return (
             <Box
               key={skill._key}
-              sx={styles.row}
+              sx={[styles.row, ROW_MIN_WIDTH]}
             >
-              <Box sx={{ flex: 3, minWidth: 0 }}>
+              <Box sx={usageColumnSx(3)}>
                 <Typography sx={styles.name}>{skill.name || skill.id}</Typography>
               </Box>
-              <Typography sx={[styles.value, styles.right, { flex: 1 }]}>{skill._runs ?? '—'}</Typography>
+              <Typography sx={[styles.value, styles.right, usageColumnSx(1)]}>
+                {skill._runs ?? '—'}
+              </Typography>
               <Typography
                 sx={[
                   styles.value,
                   styles.right,
-                  { flex: 1.2, color: palette.text.metrics || palette.text.disabled },
+                  usageColumnSx(1.2),
+                  { color: palette.text.metrics || palette.text.disabled },
                 ]}
               >
                 {canSeeAmounts && skill._runs ? UsageHelpers.formatMoney(skill._perRun, currency) : '—'}
               </Typography>
-              <Typography sx={[styles.value, styles.right, { flex: 1.2 }]}>
+              <Typography sx={[styles.value, styles.right, usageColumnSx(1.2)]}>
                 {canSeeAmounts ? UsageHelpers.formatMoney(skill.spend, currency) : `${share.toFixed(1)}%`}
               </Typography>
             </Box>
@@ -210,10 +216,7 @@ const usageTopSkillsStyles = () => ({
     flexShrink: 0,
     '&:hover': { textDecoration: 'underline' },
   }),
-  tableWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
+  tableWrapper: usageTableWrapperSx,
   tableHeader: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'row',
