@@ -10,6 +10,7 @@ import {
   analyticsHeaderCellSx,
   analyticsRowMinWidthSx,
   analyticsTableSortLabelSx,
+  analyticsTableWrapperSx,
 } from './analyticsTable.styles';
 
 const COST_COLUMNS = [
@@ -170,7 +171,7 @@ const costTableStyles = () => ({
     gap: '0.25rem',
     marginBottom: '0.5rem',
   },
-  tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
+  tableWrapper: analyticsTableWrapperSx,
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
