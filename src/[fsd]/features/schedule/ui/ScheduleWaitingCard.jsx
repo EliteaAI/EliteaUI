@@ -16,6 +16,7 @@ import {
   WAITING_NEED,
   formatApprovalExpiry,
   getWaitingRunNeed,
+  hasPendingToolsList,
   hasSeveralPendingTools,
 } from '../lib/helpers';
 import { useActionButtonProps } from '../lib/hooks/useActionButtonProps.hooks';
@@ -30,6 +31,7 @@ import ScheduleWaitingTools from './ScheduleWaitingTools';
 
 const noop = () => {};
 const STEP2_NOTE = 'Reject ends the run as Failed: rejected by the owner.';
+const LISTED_TOOLS_NOTE = 'Paused for approval. The tools below wait for your decision.';
 const BLOCKED_REASON = 'Provide the credential first';
 const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' };
 const ENTITY_LABELS = { agent: 'agent', pipeline: 'pipeline' };
@@ -119,10 +121,9 @@ const ScheduleWaitingCard = memo(
       now,
     );
 
-    const description = describeNeed(
-      { ...waiting, toolkit: waiting.toolkit || toolkitName },
-      pausedEvent?.text,
-    );
+    // The event text ends with a short "(+N more)" tail of the same tools, so a banner with the list shows a fixed line
+    const pausedText = hasPendingToolsList(pausedEvent) ? LISTED_TOOLS_NOTE : pausedEvent?.text;
+    const description = describeNeed({ ...waiting, toolkit: waiting.toolkit || toolkitName }, pausedText);
     const toolkitLabel = waiting.toolkit || toolkitName || 'the toolkit';
     const authorizationText = `Authorization is required for toolkit "${toolkitLabel}". Provide the credential, then approve.`;
     const signInText = `Authorization is required for toolkit "${toolkitLabel}". Authorize now, then approve.`;
@@ -342,7 +343,7 @@ const scheduleWaitingCardStyles = () => ({
     backgroundColor: palette.background.default.tertiary,
   }),
   noticeIcon: ({ palette }) => ({ fontSize: '1.25rem', flexShrink: 0, color: palette.warning.scheduleCard }),
-  noticeText: ({ palette }) => ({ color: palette.text.secondary }),
+  noticeText: ({ palette }) => ({ color: palette.text.secondary, minWidth: 0, overflowWrap: 'anywhere' }),
   header: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' },
   title: ({ palette }) => ({
     flex: '1 1 auto',

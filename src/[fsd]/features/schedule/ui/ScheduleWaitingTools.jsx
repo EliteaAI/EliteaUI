@@ -83,7 +83,7 @@ ScheduleWaitingTools.displayName = 'ScheduleWaitingTools';
 
 /** @type {MuiSx} */
 const scheduleWaitingToolsStyles = () => ({
-  list: { margin: 0, paddingLeft: '1.25rem', wordBreak: 'break-word' },
+  list: { margin: 0, paddingLeft: '1.25rem', overflowWrap: 'anywhere' },
 });
 
 export default ScheduleWaitingTools;

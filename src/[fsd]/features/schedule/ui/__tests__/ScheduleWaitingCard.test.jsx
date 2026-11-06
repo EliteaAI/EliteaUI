@@ -333,6 +333,46 @@ describe('ScheduleWaitingCard', () => {
     expect(screen.getByTestId('schedule-waiting-later-tools').querySelector('b')).toBeNull();
   });
 
+  it('replaces the event text with a fixed line when the tools are listed', () => {
+    pauseChat(
+      paused({
+        text: 'Paused for approval: Artifact · create_file, ADO · list_indexes (+1 more)',
+        tools: [
+          { toolkit: 'Artifact', tool: 'create_file', count: 1 },
+          { toolkit: 'ADO', tool: 'list_indexes', count: 1 },
+        ],
+        interrupt_ids: ['int-1', 'int-2'],
+      }),
+    );
+
+    const notice = screen.getByRole('status');
+    expect(notice).toHaveTextContent(
+      'This run will not start until you approve it. Paused for approval. The tools below wait for your decision. Reject ends the run as Failed: rejected by the owner.',
+    );
+    expect(notice).not.toHaveTextContent('more)');
+    expect(screen.getByTestId('schedule-waiting-tools')).toBeInTheDocument();
+  });
+
+  it('keeps the event text when the pause has no tool list', () => {
+    pauseChat(paused({ text: 'Paused for approval: create_pull_request (+1 more)' }));
+
+    expect(screen.getByRole('status')).toHaveTextContent('Paused for approval: create_pull_request (+1 more)');
+  });
+
+  it('wraps long toolkit names in the notice and in both lists', () => {
+    const toolkit = 'QA7432GitHubwritetoolkitwithaverylongdisplaynameforthebannerlayoutchecknumberC';
+    pauseChat(
+      paused({
+        tools: [{ toolkit, tool: 'create_pull_request', count: 1 }],
+        later_tools: [{ toolkit, tool: 'delete_file', count: 1 }],
+      }),
+    );
+
+    expect(screen.getByTestId('schedule-waiting-tools')).toHaveStyle({ overflowWrap: 'anywhere' });
+    expect(screen.getByTestId('schedule-waiting-later-tools')).toHaveStyle({ overflowWrap: 'anywhere' });
+    expect(screen.getByRole('status').querySelector('p, span')).toHaveStyle({ overflowWrap: 'anywhere' });
+  });
+
   it('shows no tool lists for a pause without them', () => {
     pauseChat(paused({ text: 'Paused for approval' }));
 

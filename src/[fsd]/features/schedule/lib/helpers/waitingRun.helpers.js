@@ -51,3 +51,7 @@ export const hasSeveralPendingTools = pausedEvent => {
   const tools = Array.isArray(pausedEvent?.tools) ? pausedEvent.tools : [];
   return tools.length > 1 || tools.some(tool => Number(tool?.count) > 1) || Number(pausedEvent?.hidden) > 0;
 };
+
+/** True when the paused event names the pending tools, so the banner lists them and needs no tool names in the text. */
+export const hasPendingToolsList = pausedEvent =>
+  (Array.isArray(pausedEvent?.tools) && pausedEvent.tools.length > 0) || Number(pausedEvent?.hidden) > 0;

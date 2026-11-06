@@ -4,6 +4,7 @@ import {
   findWaitingRun,
   getWaitingRunNeed,
   hasMissingCredential,
+  hasPendingToolsList,
   hasSeveralPendingTools,
 } from '../waitingRun.helpers';
 
@@ -94,5 +95,18 @@ describe('hasSeveralPendingTools', () => {
     expect(hasSeveralPendingTools({ tools: [tool('create_file'), tool('delete_file')] })).toBe(true);
     expect(hasSeveralPendingTools({ tools: [tool('create_file', 2)] })).toBe(true);
     expect(hasSeveralPendingTools({ tools: [tool('create_file')], hidden: 2 })).toBe(true);
+  });
+});
+
+describe('hasPendingToolsList', () => {
+  it('is false for no event, no tools or an empty list', () => {
+    expect(hasPendingToolsList(undefined)).toBe(false);
+    expect(hasPendingToolsList({ kind: 'paused', text: 'Paused' })).toBe(false);
+    expect(hasPendingToolsList({ tools: [], hidden: 0 })).toBe(false);
+  });
+
+  it('is true for a tool or for hidden tools', () => {
+    expect(hasPendingToolsList({ tools: [{ toolkit: 'Artifact', tool: 'create_file' }] })).toBe(true);
+    expect(hasPendingToolsList({ tools: [], hidden: 3 })).toBe(true);
   });
 });
