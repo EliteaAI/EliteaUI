@@ -79,22 +79,22 @@ const Users = memo(() => {
   );
 
   const rolesOptions = useMemo(() => roles.map(({ name }) => ({ label: name, value: name })), [roles]);
-  // SCIM projects: members follow the IdP group, so they can't be invited or removed here; roles can change
-  const { rows: users = [], total, scim_managed: isScimManaged = false } = data || {};
+  const { rows: users = [], total } = data || {};
 
-  // If navigated with ?inviteUsers=1, open the invite dialog once the list says whether invites are allowed
-  // (a skipped or failed list request can't say, and the backend still refuses invites to SCIM projects)
-  const canView = checkPermission(PERMISSIONS.users.view);
-  const isListSettled = Boolean(data) || isError || !projectId || !canView;
+  // If navigated with ?inviteUsers=1, open the invite dialog
   useEffect(() => {
-    if (shouldInvite && isListSettled) {
-      if (!isScimManaged) setOpenInviteDialog(true);
+    if (shouldInvite) {
+      setOpenInviteDialog(true);
       // Remove the flag from URL to avoid re-triggering
       const newParams = new URLSearchParams(location.search);
       newParams.delete('inviteUsers');
       setSearchParams(newParams, { replace: true });
     }
-  }, [isListSettled, isScimManaged, location.search, setSearchParams, shouldInvite]);
+  }, [location.search, setSearchParams, shouldInvite]);
+
+  // Members synced from an Entra ID group (EL-5202) can only be removed in the IdP
+  const deletableSelectedUsers = useMemo(() => selectedUsers.filter(u => !u.scim_synced), [selectedUsers]);
+  const skippedSyncedCount = selectedUsers.length - deletableSelectedUsers.length;
 
   const visibleRows = useMemo(
     () => users.slice(visiblePage * pageSize, visiblePage * pageSize + pageSize),
@@ -200,7 +200,7 @@ const Users = memo(() => {
         <DrawerPageHeader
           title="Users"
           titleTestId="users-page-title"
-          showAddButton={checkPermission(PERMISSIONS.users.create) && !isScimManaged}
+          showAddButton={checkPermission(PERMISSIONS.users.create)}
           showSearchInput={checkPermission(PERMISSIONS.users.view)}
           slotProps={{
             searchInput: {
@@ -233,10 +233,15 @@ const Users = memo(() => {
                   saveButtonTestId="users-edit-roles-save-button"
                 />
               )}
-              {checkPermission(PERMISSIONS.users.delete) && !isScimManaged && (
+              {checkPermission(PERMISSIONS.users.delete) && (
                 <DeleteUserButton
-                  users={selectedUsers}
-                  disabled={!selectedUsers.length}
+                  users={deletableSelectedUsers}
+                  disabled={!deletableSelectedUsers.length}
+                  tooltip={
+                    skippedSyncedCount
+                      ? `${skippedSyncedCount} selected user(s) synced from Entra ID are not deleted: remove them from the group in Entra ID`
+                      : undefined
+                  }
                   setSelectedUsers={setSelectedUsers}
                   useSecondaryButton
                   sx={styles.actionButton}
@@ -267,7 +272,6 @@ const Users = memo(() => {
                 toastSuccess={toastSuccess}
                 rolesOptions={rolesOptions}
                 setSelectedUsers={setSelectedUsers}
-                canDeleteUsers={!isScimManaged}
               />
             </Box>
           </>

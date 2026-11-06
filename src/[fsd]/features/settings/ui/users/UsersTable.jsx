@@ -2,8 +2,10 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
+import SyncOutlinedIcon from '@mui/icons-material/SyncOutlined';
 import { Box, Skeleton } from '@mui/material';
 
+import Tooltip from '@/ComponentsLib/Tooltip';
 import { useResponsiveColumns, useTableSort } from '@/[fsd]/entities/grid-table/lib';
 import {
   GridTableBody,
@@ -47,7 +49,6 @@ const UsersTable = memo(props => {
     onSelectRow,
     rolesOptions,
     setSelectedUsers,
-    canDeleteUsers = true,
   } = props;
 
   const styles = usersTableStyles();
@@ -154,7 +155,7 @@ const UsersTable = memo(props => {
               testId="user-row-edit-button"
             />
           )}
-          {checkPermission(PERMISSIONS.users.delete) && canDeleteUsers && (
+          {checkPermission(PERMISSIONS.users.delete) && !row.scim_synced && (
             <DeleteUserButton
               users={[row]}
               setSelectedUsers={setSelectedUsers}
@@ -164,7 +165,7 @@ const UsersTable = memo(props => {
         </Box>
       );
     },
-    [canDeleteUsers, checkPermission, rolesOptions, setSelectedUsers, styles.actionsContainer],
+    [checkPermission, rolesOptions, setSelectedUsers, styles.actionsContainer],
   );
 
   return !isFetching ? (
@@ -204,6 +205,19 @@ const UsersTable = memo(props => {
               columns={dataColumns}
               renderCell={renderCell}
               actions={renderActions(row)}
+              namePrefix={
+                row.scim_synced ? (
+                  <Tooltip
+                    title="Synced from Entra ID: remove the user from the group there"
+                    placement="top"
+                  >
+                    <SyncOutlinedIcon
+                      data-testid="user-row-synced-icon"
+                      sx={styles.syncedIcon}
+                    />
+                  </Tooltip>
+                ) : null
+              }
               dataCellSx={styles.dataCell}
               data-testid="user-row"
               checkboxTestId="user-row-checkbox"
@@ -241,6 +255,11 @@ const usersTableStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
   },
+  syncedIcon: ({ palette }) => ({
+    fontSize: '1rem',
+    marginRight: '0.5rem',
+    color: palette.icon.secondary,
+  }),
   actionsContainer: {
     display: 'flex',
     flexDirection: 'row',
