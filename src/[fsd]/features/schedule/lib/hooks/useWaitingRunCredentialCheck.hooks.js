@@ -14,10 +14,11 @@ export const FOCUS_RECHECK_MIN_INTERVAL_MS = 30000;
 /**
  * Runs the risk check of the schedule again to see if the credential a waiting run needs exists now.
  * It runs on mount, on `recheck()` and when the window gets focus again, because the owner adds the
- * credential in another tab. `runId` tells the server which run the check is for, so it scans as the user the run
- * acts as; it is sent only with a saved schedule (a Test run has none) and a new run id starts a new check. A focus event starts no check while one is running or when the last one
+ * credential in another tab. A focus event starts no check while one is running or when the last one
  * started less than FOCUS_RECHECK_MIN_INTERVAL_MS ago. `enabled` false skips every check and reports `ready`.
  * A failed check keeps the state `missing`, so the Approve button stays locked.
+ * `runId` tells the server which run the check is for, so it scans as the user the run acts as.
+ * It is sent only with a saved schedule (a Test run has none). A new run id starts a new check.
  */
 export const useWaitingRunCredentialCheck = ({ schedule, toolkit, runId, enabled = true }) => {
   const projectId = useSelectedProjectId();
