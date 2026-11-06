@@ -14,7 +14,13 @@ import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SearchParams, ViewMode } from '@/common/constants';
 import RouteDefinitions from '@/routes';
 
-import { WAITING_NEED, formatApprovalExpiry, getWaitingRunNeed } from '../lib/helpers';
+import {
+  WAITING_NEED,
+  formatApprovalExpiry,
+  getRunActorId,
+  getWaitingRunNeed,
+  isStartedByUser,
+} from '../lib/helpers';
 import { useActionButtonProps } from '../lib/hooks/useActionButtonProps.hooks';
 import { useNow } from '../lib/hooks/useNow.hooks';
 import { useRunDetail, useScheduleRunConversation } from '../lib/hooks/useScheduleRuns.hooks';
@@ -29,7 +35,6 @@ const STEP2_NOTE = 'Reject ends the run as Failed.';
 const BLOCKED_REASON = 'Provide the credential first';
 // A project admin can reject any run, but the sign-in and the credential belong to the user the run acts as
 const ACTOR_LABEL = { owner: 'schedule owner', starter: 'user who started this run' };
-const MANUAL_TRIGGERS = ['manual', 'test'];
 const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' };
 const ENTITY_LABELS = { agent: 'agent', pipeline: 'pipeline' };
 const STEP_STATUS = {
@@ -81,10 +86,9 @@ const ScheduleWaitingCard = memo(
     const isCredential = waiting.need === WAITING_NEED.CREDENTIAL;
     const isSignIn = waiting.need === WAITING_NEED.SIGN_IN;
     const { authAction } = conversation;
-    // The server runs a manual or Test run as the user who started it, any other run as the schedule owner;
-    // the credential check and the sign-in tokens come from that user
-    const actsAsStarter = MANUAL_TRIGGERS.includes(shownRun.trigger) && shownRun.requested_by != null;
-    const actorId = actsAsStarter ? shownRun.requested_by : schedule?.owner?.id;
+    // The credential check and the sign-in tokens come from the user the run acts as
+    const actsAsStarter = isStartedByUser(shownRun);
+    const actorId = getRunActorId(shownRun, schedule);
     const isOtherActor = actorId != null && actorId !== userId;
     const actorLabel = ACTOR_LABEL[actsAsStarter ? 'starter' : 'owner'];
 

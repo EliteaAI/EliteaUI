@@ -58,8 +58,8 @@ const request = { action: 'approve', conversationUuid: 'c-1', messageId: 'm-1' }
 
 const DEFAULT_SCHEDULE = { id: 8, owner: { id: 5 }, created_by: 9 };
 
-const setup = (schedule = DEFAULT_SCHEDULE) =>
-  renderHook(() => useWaitingRunDecision({ schedule, onDecided: mocks.refetch })).result;
+const setup = (schedule = DEFAULT_SCHEDULE, run) =>
+  renderHook(() => useWaitingRunDecision({ schedule, run, onDecided: mocks.refetch })).result;
 
 describe('useWaitingRunDecision', () => {
   beforeEach(() => {
@@ -73,6 +73,26 @@ describe('useWaitingRunDecision', () => {
 
   it('gives the owner a handler', () => {
     expect(setup().current).toBeTypeOf('function');
+  });
+
+  it('gives the user who started a manual run a handler without the admin permission', () => {
+    const run = { trigger: 'manual', requested_by: 5 };
+    expect(setup({ id: 8, owner: { id: 9 } }, run).current).toBeTypeOf('function');
+  });
+
+  it('gives the owner a handler for a manual run an admin started', () => {
+    const run = { trigger: 'manual', requested_by: 9 };
+    expect(setup({ id: 8, owner: { id: 5 } }, run).current).toBeTypeOf('function');
+  });
+
+  it('gives a plain user no handler for a manual run another user started', () => {
+    const run = { trigger: 'manual', requested_by: 9 };
+    expect(setup({ id: 8, owner: { id: 7 } }, run).current).toBeUndefined();
+  });
+
+  it('gives a plain user no handler for a cron run even when requested_by is the user', () => {
+    const run = { trigger: 'cron', requested_by: 5 };
+    expect(setup({ id: 8, owner: { id: 7 } }, run).current).toBeUndefined();
   });
 
   it('gives a project admin who is not the owner a handler that decides the run', async () => {

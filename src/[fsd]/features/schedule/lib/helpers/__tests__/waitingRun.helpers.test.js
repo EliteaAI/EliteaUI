@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { findWaitingRun, getWaitingRunNeed, hasMissingCredential } from '../waitingRun.helpers';
+import {
+  findWaitingRun,
+  getRunActorId,
+  getWaitingRunNeed,
+  hasMissingCredential,
+} from '../waitingRun.helpers';
 
 describe('getWaitingRunNeed', () => {
   it('reads the structured fields of the paused event', () => {
@@ -106,5 +111,26 @@ describe('findWaitingRun', () => {
     const waiting = { id: 2, status: 'waiting_for_approval' };
     expect(findWaitingRun([{ id: 1, status: 'success' }, waiting])).toBe(waiting);
     expect(findWaitingRun(undefined)).toBeUndefined();
+  });
+});
+
+describe('getRunActorId', () => {
+  const schedule = { owner: { id: 5 } };
+
+  it.each(['manual', 'test'])('returns the starter of a %s run', trigger => {
+    expect(getRunActorId({ trigger, requested_by: 9 }, schedule)).toBe(9);
+  });
+
+  it('returns the schedule owner for a cron run', () => {
+    expect(getRunActorId({ trigger: 'cron', requested_by: 9 }, schedule)).toBe(5);
+  });
+
+  it('returns the schedule owner for a manual run without a starter', () => {
+    expect(getRunActorId({ trigger: 'manual', requested_by: null }, schedule)).toBe(5);
+  });
+
+  it('returns undefined when the run has no starter to use and there is no schedule', () => {
+    expect(getRunActorId({ trigger: 'cron' }, undefined)).toBeUndefined();
+    expect(getRunActorId(undefined, undefined)).toBeUndefined();
   });
 });

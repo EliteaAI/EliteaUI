@@ -71,3 +71,11 @@ export const findMissingCredential = (result, toolkit) =>
 export const hasMissingCredential = (result, toolkit) => !!findMissingCredential(result, toolkit);
 
 export const findWaitingRun = runs => (runs ?? []).find(run => run.status === 'waiting_for_approval');
+
+// The server runs a manual or Test run as the user who started it, any other run as the schedule owner
+export const MANUAL_TRIGGERS = ['manual', 'test'];
+
+export const isStartedByUser = run => MANUAL_TRIGGERS.includes(run?.trigger) && run?.requested_by != null;
+
+export const getRunActorId = (run, schedule) =>
+  isStartedByUser(run) ? run.requested_by : schedule?.owner?.id;
