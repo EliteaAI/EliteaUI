@@ -31,6 +31,8 @@ const PAGE_BUTTON_PROPS = {
  * `blockedReason` keeps Approve off and names why. `compact` is the form for the Action needed card: no
  * left offset, no sign-in button and no expiry text, because the card shows them itself.
  * `interruptIds` are the ids of the paused event the card shows; they go with the decision so a newer pause is not approved by mistake.
+ * `requireInterruptIds` keeps Approve off until `interruptIds` is known (a chat sensitive-tool pause): the server applies one
+ * Approve to every pending tool only for a request that carries the ids. Reject needs none.
  * `plain` is the page button look (primary Approve, secondary Reject, no icons) of the short waiting notice.
  */
 const ScheduleRunApproval = memo(props => {
@@ -43,6 +45,7 @@ const ScheduleRunApproval = memo(props => {
     pausedMessageId,
     pausedAt,
     interruptIds,
+    requireInterruptIds = false,
     authAction,
     blockedReason,
     compact = false,
@@ -97,6 +100,7 @@ const ScheduleRunApproval = memo(props => {
   // A run with a chat waits until its chat has loaded; a run without one (it waits for credentials) is ready
   const disabled = !onHitlResume || (hasChat && !conversationUuid) || deciding;
   const needsSignIn = Boolean(authAction) && !signedIn;
+  const waitsForIds = requireInterruptIds && !interruptIds?.length;
   const approveNoteId = blockedReason ? blockedNoteId : signInNoteId;
   const approveDescribed = !disabled && (blockedReason || needsSignIn);
   const themeButtonProps = useActionButtonProps();
@@ -119,7 +123,7 @@ const ScheduleRunApproval = memo(props => {
         {...(needsSignIn ? buttonProps.secondary : buttonProps.primary)}
         sx={styles.button}
         startIcon={plain ? undefined : <CheckedIcon />}
-        disabled={disabled || needsSignIn || !!blockedReason}
+        disabled={disabled || needsSignIn || !!blockedReason || waitsForIds}
         aria-describedby={approveDescribed ? approveNoteId : undefined}
         onClick={() => decide('approve')}
       >

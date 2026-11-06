@@ -106,6 +106,29 @@ describe('ScheduleRunApproval', () => {
     );
   });
 
+  it('keeps Approve off and Reject on while the interrupt ids are required and not known', () => {
+    renderApproval({ requireInterruptIds: true });
+
+    expect(button('Approve')).toBeDisabled();
+    expect(button('Reject')).toBeEnabled();
+  });
+
+  it('enables Approve once the required interrupt ids are known', () => {
+    renderApproval({ requireInterruptIds: true, interruptIds: ['int-1'] });
+
+    expect(button('Approve')).toBeEnabled();
+  });
+
+  it('rejects without interrupt ids when they are required', async () => {
+    renderApproval({ requireInterruptIds: true });
+
+    fireEvent.click(button('Reject'));
+
+    await waitFor(() =>
+      expect(mocks.decide).toHaveBeenCalledWith(expect.objectContaining({ action: 'reject' })),
+    );
+  });
+
   it('loads the runs again after a decision, so the log gets the decision line', () => {
     renderApproval();
 

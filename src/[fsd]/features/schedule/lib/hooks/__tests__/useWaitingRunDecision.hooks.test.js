@@ -108,6 +108,28 @@ describe('useWaitingRunDecision', () => {
     expect(mocks.toastError).not.toHaveBeenCalled();
   });
 
+  it('keeps the generic 409 notice and sends no ids on the sign-in resume', async () => {
+    mocks.decide.mockReturnValue(fail({ status: 409, data: { error: 'server text' } }));
+    const result = setup();
+    await act(() =>
+      result.current({
+        ...request,
+        interruptIds: ['int-1'],
+        authRequest: { authorizationRequestId: 'auth-1', toolCallId: 't-1', childThreadId: 'ct-1' },
+      }),
+    );
+    expect(mocks.decide.mock.calls[0][0]).not.toHaveProperty('interruptIds');
+    expect(mocks.toastInfo).toHaveBeenCalledWith('The run no longer waits for approval.');
+    expect(mocks.refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the generic 409 notice on the no-chat route even when ids are passed', async () => {
+    mocks.decideWithoutChat.mockReturnValue(fail({ status: 409 }));
+    const result = setup();
+    await act(() => result.current({ action: 'approve', runId: 41, interruptIds: ['int-1'] }));
+    expect(mocks.toastInfo).toHaveBeenCalledWith('The run no longer waits for approval.');
+  });
+
   it('shows an error toast and keeps the panel open on a 400', async () => {
     mocks.decide.mockReturnValue(fail({ status: 400, data: { message: 'bad request' } }));
     const result = setup();

@@ -151,6 +151,7 @@ const ScheduleWaitingCard = memo(
         authAction={authAction}
         pausedAt={pausedEvent?.at}
         interruptIds={pausedEvent?.interrupt_ids}
+        requireInterruptIds={!isCredential && !isSignIn && shownRun.conversation_id != null}
         blockedReason={
           isCredential && credentialState !== CREDENTIAL_CHECK_STATE.READY ? BLOCKED_REASON : undefined
         }

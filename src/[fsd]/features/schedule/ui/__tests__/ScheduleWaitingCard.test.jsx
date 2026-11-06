@@ -233,6 +233,24 @@ describe('ScheduleWaitingCard', () => {
     );
   });
 
+  it('keeps Approve off until the paused event of a chat run has interrupt ids', () => {
+    mocks.conversation = { conversationUuid: 'conv-1', pausedMessageId: 'msg-1' };
+    mocks.detail = undefined;
+    renderCard({ run: { ...run, conversation_id: 5 } });
+
+    expect(button('Approve')).toBeDisabled();
+    expect(button('Reject')).toBeEnabled();
+  });
+
+  it('keeps Approve off when the paused event of a chat run carries no interrupt ids', () => {
+    mocks.conversation = { conversationUuid: 'conv-1', pausedMessageId: 'msg-1' };
+    mocks.detail = { ...run, conversation_id: 5, events: [paused({ text: 'Paused for approval' })] };
+    renderCard({ run: { ...run, conversation_id: 5 } });
+
+    expect(button('Approve')).toBeDisabled();
+    expect(button('Reject')).toBeEnabled();
+  });
+
   it('renders a Test run without a schedule from the entity and the run version', () => {
     mocks.detail = {
       ...mocks.detail,
