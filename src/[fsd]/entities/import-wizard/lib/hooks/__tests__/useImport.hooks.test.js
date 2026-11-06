@@ -77,6 +77,26 @@ describe('agent Markdown ZIP import with skill files', () => {
     expect(data.skills[0].versions[0]).not.toHaveProperty('files_folder');
   });
 
+  it('imports an export that Finder re-zipped inside a top-level folder', async () => {
+    const zip = await JSZip.loadAsync(await agentZip());
+    const nested = new JSZip();
+    await Promise.all(
+      Object.values(zip.files)
+        .filter(entry => !entry.dir)
+        .map(async entry => nested.file(`pdf-agent/${entry.name}`, await entry.async('string'))),
+    );
+    nested.file('__MACOSX/pdf-agent/._pdf-agent.agent.md', 'AppleDouble');
+    nested.file('__MACOSX/pdf-agent/skills/pdf-tools/references/._guide.md', 'AppleDouble');
+
+    const data = await upload(await nested.generateAsync({ type: 'uint8array' }), 'pdf-agent.zip');
+
+    expect(toastError).not.toHaveBeenCalled();
+    expect(data.applications.map(app => app.name)).toEqual(['pdf-agent']);
+    expect(data.skills[0].versions[0].files).toEqual([
+      { path: 'references/guide.md', sha256: GUIDE_SHA, content_base64: toBase64(GUIDE) },
+    ]);
+  });
+
   it('refuses an archive whose listed skill file is missing', async () => {
     const zip = await JSZip.loadAsync(await agentZip());
     zip.remove('skills/pdf-tools/references/guide.md');

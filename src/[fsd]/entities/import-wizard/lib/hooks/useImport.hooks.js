@@ -7,9 +7,32 @@ import { mdToApplicationJson, parseMdFrontmatter } from '@/[fsd]/entities/import
 import { actions as importWizardActions } from '@/[fsd]/entities/import-wizard/model/importWizard.slice';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 
-const SKILL_FILES_FOLDER = 'skills/';
-
 const listSkillVersions = parsed => (parsed?.skills || []).flatMap(skill => skill.versions);
+
+const folderOf = memberName => memberName.slice(0, memberName.lastIndexOf('/') + 1);
+
+const isAppleDoubleMember = memberName =>
+  memberName.startsWith('__MACOSX/') || memberName.slice(memberName.lastIndexOf('/') + 1).startsWith('._');
+
+const isMarkdown = memberName => memberName.toLowerCase().endsWith('.md') && !isAppleDoubleMember(memberName);
+
+const declaredSkillFolders = (memberName, content) => {
+  try {
+    const { frontmatter } = parseMdFrontmatter(content);
+    return (frontmatter.skills || [])
+      .filter(block => block?.files_folder)
+      .map(block => `${folderOf(memberName)}${block.files_folder}/`);
+  } catch {
+    return [];
+  }
+};
+
+const resolveSkillFolders = (parsed, memberName) => {
+  for (const version of listSkillVersions(parsed)) {
+    if (version.files_folder) version.files_folder = `${folderOf(memberName)}${version.files_folder}`;
+  }
+  return parsed;
+};
 
 const embedSkillFileContents = (zip, version) =>
   Promise.all(
@@ -91,19 +114,21 @@ export const useImport = () => {
         const applications = [];
         const toolkits = [];
         const skills = [];
-        const parsePromises = [];
+        const markdownMembers = [];
 
         zip.forEach((relativePath, zipEntry) => {
-          if (zipEntry.dir) return;
-
-          const entryName = relativePath.toLowerCase();
-
-          if (entryName.startsWith(SKILL_FILES_FOLDER)) return;
-          if (entryName.endsWith('.md'))
-            parsePromises.push(zipEntry.async('string').then(content => parseMdFile(content, relativePath)));
+          if (!zipEntry.dir && isMarkdown(relativePath)) markdownMembers.push(relativePath);
         });
 
-        const parsedResults = await Promise.all(parsePromises);
+        const markdownContents = await Promise.all(
+          markdownMembers.map(async memberName => [memberName, await zip.file(memberName).async('string')]),
+        );
+        const skillFolders = markdownContents.flatMap(([memberName, content]) =>
+          declaredSkillFolders(memberName, content),
+        );
+        const parsedResults = markdownContents
+          .filter(([memberName]) => !skillFolders.some(folder => memberName.startsWith(folder)))
+          .map(([memberName, content]) => resolveSkillFolders(parseMdFile(content, memberName), memberName));
 
         await loadSkillFiles(zip, parsedResults);
 
