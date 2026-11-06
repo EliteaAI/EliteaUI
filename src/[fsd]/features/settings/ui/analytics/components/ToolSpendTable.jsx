@@ -4,6 +4,8 @@ import { Box, Typography } from '@mui/material';
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 
+import { analyticsColumnSx, analyticsHeaderCellSx, analyticsRowMinWidthSx } from './analyticsTable.styles';
+
 const COLUMNS = [
   {
     key: 'feature',
@@ -27,6 +29,8 @@ const COLUMNS = [
     render: row => AnalyticCommonHelpers.fmtCost(row.total_cost),
   },
 ];
+
+const ROW_MIN_WIDTH = analyticsRowMinWidthSx(COLUMNS);
 
 // Paid tool spend (web search etc.); never part of the LLM totals shown above it
 const ToolSpendTable = memo(props => {
@@ -53,11 +57,11 @@ const ToolSpendTable = memo(props => {
       </Typography>
       {rows.length > 0 ? (
         <Box sx={styles.tableWrapper}>
-          <Box sx={styles.tableHeader}>
+          <Box sx={[styles.tableHeader, ROW_MIN_WIDTH]}>
             {COLUMNS.map(col => (
               <Typography
                 key={col.key}
-                sx={[styles.headerCell, { flex: col.flex }]}
+                sx={[styles.headerCell, analyticsHeaderCellSx, analyticsColumnSx(col)]}
               >
                 {col.header}
               </Typography>
@@ -66,12 +70,12 @@ const ToolSpendTable = memo(props => {
           {rows.map(row => (
             <Box
               key={`${row.feature}-${row.backend}`}
-              sx={styles.row}
+              sx={[styles.row, ROW_MIN_WIDTH]}
             >
               {COLUMNS.map(col => (
                 <Typography
                   key={col.key}
-                  sx={[styles.cell, { flex: col.flex }]}
+                  sx={[styles.cell, analyticsColumnSx(col)]}
                 >
                   {col.render(row)}
                 </Typography>

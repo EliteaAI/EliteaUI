@@ -4,7 +4,12 @@ import { Box, CircularProgress, TablePagination, TableSortLabel, Typography } fr
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { AnalyticsUserDetailed } from '@/[fsd]/features/settings/ui/analytics';
-import { analyticsTableSortLabelSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
+import {
+  analyticsColumnSx,
+  analyticsHeaderCellSx,
+  analyticsRowMinWidthSx,
+  analyticsTableSortLabelSx,
+} from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { useAnalyticsUsersQuery } from '@/api';
 import StyledSearchInput from '@/components/SearchInput';
 
@@ -83,6 +88,8 @@ const AnalyticsUsers = memo(props => {
     () => USER_COLUMNS.filter(column => !column.skillOnly || canViewSkills),
     [canViewSkills],
   );
+
+  const rowMinWidth = useMemo(() => analyticsRowMinWidthSx(columns), [columns]);
 
   const { data, isFetching } = useAnalyticsUsersQuery(
     {
@@ -172,13 +179,13 @@ const AnalyticsUsers = memo(props => {
         </Box>
         <Box sx={styles.tableWrapper}>
           <Box
-            sx={styles.tableHeader}
+            sx={[styles.tableHeader, rowMinWidth]}
             data-testid="analytics-users-table-header"
           >
             {columns.map(column => (
               <Box
                 key={column.key}
-                sx={[styles.tableCell, { flex: column.flex ?? 1 }]}
+                sx={[styles.tableCell, analyticsHeaderCellSx, analyticsColumnSx(column)]}
               >
                 {column.sortable === false ? (
                   column.label
@@ -208,7 +215,7 @@ const AnalyticsUsers = memo(props => {
             rows.map((u, i) => (
               <Box
                 key={i}
-                sx={styles.clickableRow}
+                sx={[styles.clickableRow, rowMinWidth]}
                 onClick={() => handleUserClick(u.user_id)}
                 data-testid="analytics-users-row"
               >
@@ -217,7 +224,7 @@ const AnalyticsUsers = memo(props => {
                     key={column.key}
                     sx={[
                       styles.tableCellValue,
-                      { flex: column.flex ?? 1 },
+                      analyticsColumnSx(column),
                       column.key === 'errors' && u.errors > 0 && styles.errorValue,
                     ]}
                     data-testid={column.key === 'errors' ? 'analytics-users-row-errors' : undefined}

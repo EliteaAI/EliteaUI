@@ -6,7 +6,12 @@ import { Box, TableSortLabel, Typography, useTheme } from '@mui/material';
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
-import { analyticsTableSortLabelSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
+import {
+  analyticsColumnSx,
+  analyticsHeaderCellSx,
+  analyticsRowMinWidthSx,
+  analyticsTableSortLabelSx,
+} from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { EVENT_TYPE_COLORS } from '@/[fsd]/shared/config/theme';
 import { useClientSort, useSortedRows } from '@/[fsd]/shared/lib/hooks';
 
@@ -17,6 +22,9 @@ const HEALTH_COLUMNS = [
   { key: 'error_rate', label: 'Error Rate', flex: 1 },
   { key: 'avg_duration_ms', label: 'Avg Latency', flex: 1 },
 ];
+
+const [EVENT_TYPE_COLUMN, TOTAL_COLUMN, ERRORS_COLUMN, ERROR_RATE_COLUMN, LATENCY_COLUMN] = HEALTH_COLUMNS;
+const HEALTH_ROW_MIN_WIDTH = analyticsRowMinWidthSx(HEALTH_COLUMNS);
 
 const AnalyticsHealth = memo(props => {
   const { health = [], daily_activity = [], hideTrend = false } = props;
@@ -129,11 +137,11 @@ const AnalyticsHealth = memo(props => {
           Health by Event Type
         </Typography>
         <Box sx={styles.tableWrapper}>
-          <Box sx={styles.tableHeader}>
+          <Box sx={[styles.tableHeader, HEALTH_ROW_MIN_WIDTH]}>
             {HEALTH_COLUMNS.map(col => (
               <Box
                 key={col.key}
-                sx={[styles.tableCell, { flex: col.flex }]}
+                sx={[styles.tableCell, analyticsHeaderCellSx, analyticsColumnSx(col)]}
               >
                 <TableSortLabel
                   active={healthSort.sortBy === col.key}
@@ -149,24 +157,26 @@ const AnalyticsHealth = memo(props => {
           {sortedHealth.map((h, i) => (
             <Box
               key={i}
-              sx={styles.tableRow}
+              sx={[styles.tableRow, HEALTH_ROW_MIN_WIDTH]}
             >
               <Box
                 sx={[
                   styles.tableCellValue,
-                  { flex: 2, display: 'flex', alignItems: 'center', gap: '0.5rem' },
+                  analyticsColumnSx(EVENT_TYPE_COLUMN),
+                  { display: 'flex', alignItems: 'center', gap: '0.5rem' },
                 ]}
               >
                 <Box sx={styles.eventDot(EVENT_TYPE_COLORS[h.event_type] || palette.status.draft)} />
                 <Typography variant="bodySmall">{h.event_type}</Typography>
               </Box>
-              <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
+              <Typography sx={[styles.tableCellValue, analyticsColumnSx(TOTAL_COLUMN)]}>
                 {AnalyticCommonHelpers.fmtNum(h.total)}
               </Typography>
               <Typography
                 sx={[
                   styles.tableCellValue,
-                  { flex: 1, color: h.errors > 0 ? palette.status.rejected : undefined },
+                  analyticsColumnSx(ERRORS_COLUMN),
+                  { color: h.errors > 0 ? palette.status.rejected : undefined },
                 ]}
               >
                 {h.errors}
@@ -174,12 +184,13 @@ const AnalyticsHealth = memo(props => {
               <Typography
                 sx={[
                   styles.tableCellValue,
-                  { flex: 1, color: h.error_rate > 5 ? palette.status.rejected : undefined },
+                  analyticsColumnSx(ERROR_RATE_COLUMN),
+                  { color: h.error_rate > 5 ? palette.status.rejected : undefined },
                 ]}
               >
                 {h.error_rate}%
               </Typography>
-              <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
+              <Typography sx={[styles.tableCellValue, analyticsColumnSx(LATENCY_COLUMN)]}>
                 {AnalyticCommonHelpers.fmtDuration(h.avg_duration_ms)}
               </Typography>
             </Box>

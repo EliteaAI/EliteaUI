@@ -23,7 +23,12 @@ import {
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
-import { analyticsTableSortLabelSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
+import {
+  analyticsColumnSx,
+  analyticsHeaderCellSx,
+  analyticsRowMinWidthSx,
+  analyticsTableSortLabelSx,
+} from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { EVENT_TYPE_COLORS } from '@/[fsd]/shared/config/theme';
 import { useClientSort, useSortedRows } from '@/[fsd]/shared/lib/hooks';
 import { Select } from '@/[fsd]/shared/ui';
@@ -52,11 +57,22 @@ const formatAxisLabel = (bucket, granularity) => {
   return format(start, 'MMM d');
 };
 
+const PERIOD_FLEX = 2;
+const VALUE_FLEX = 1;
+
 const AnalyticsActivity = memo(props => {
   const { projectId, dateFrom, dateTo, isPersonalProject = false } = props;
 
   const [roles, setRoles] = useState([]);
   const [granularity, setGranularity] = useState('day');
+
+  const periodRowMinWidth = useMemo(
+    () =>
+      analyticsRowMinWidthSx(
+        isPersonalProject ? [PERIOD_FLEX, VALUE_FLEX] : [PERIOD_FLEX, VALUE_FLEX, VALUE_FLEX],
+      ),
+    [isPersonalProject],
+  );
 
   const { data, isFetching, isError } = useAnalyticsActivityQuery(
     { projectId, dateFrom, dateTo, granularity, roles },
@@ -256,10 +272,10 @@ const AnalyticsActivity = memo(props => {
           </Typography>
           <Box sx={styles.tableWrapper}>
             <Box
-              sx={styles.tableHeader}
+              sx={[styles.tableHeader, periodRowMinWidth]}
               data-testid="analytics-activity-table-header"
             >
-              <Box sx={[styles.tableCell, { flex: 2 }]}>
+              <Box sx={[styles.tableCell, analyticsHeaderCellSx, styles.periodCol]}>
                 <TableSortLabel
                   active={periodSort.sortBy === 'bucket_start'}
                   direction={periodSort.sortBy === 'bucket_start' ? periodSort.sortOrder : 'desc'}
@@ -270,7 +286,7 @@ const AnalyticsActivity = memo(props => {
                 </TableSortLabel>
               </Box>
               {!isPersonalProject && (
-                <Box sx={[styles.tableCell, { flex: 1 }]}>
+                <Box sx={[styles.tableCell, analyticsHeaderCellSx, styles.valueCol]}>
                   <TableSortLabel
                     active={periodSort.sortBy === 'active_users'}
                     direction={periodSort.sortBy === 'active_users' ? periodSort.sortOrder : 'desc'}
@@ -281,7 +297,7 @@ const AnalyticsActivity = memo(props => {
                   </TableSortLabel>
                 </Box>
               )}
-              <Box sx={[styles.tableCell, { flex: 1 }]}>
+              <Box sx={[styles.tableCell, analyticsHeaderCellSx, styles.valueCol]}>
                 <TableSortLabel
                   active={periodSort.sortBy === 'ai_active_users'}
                   direction={periodSort.sortBy === 'ai_active_users' ? periodSort.sortOrder : 'desc'}
@@ -295,18 +311,18 @@ const AnalyticsActivity = memo(props => {
             {sortedBuckets.map(bucket => (
               <Box
                 key={bucket.bucket_start}
-                sx={styles.tableRow}
+                sx={[styles.tableRow, periodRowMinWidth]}
                 data-testid="analytics-activity-row"
               >
-                <Typography sx={[styles.tableCellValue, { flex: 2 }]}>
+                <Typography sx={[styles.tableCellValue, styles.periodCol]}>
                   {formatPeriod(bucket, dataGranularity)}
                 </Typography>
                 {!isPersonalProject && (
-                  <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
+                  <Typography sx={[styles.tableCellValue, styles.valueCol]}>
                     {AnalyticCommonHelpers.fmtNum(bucket.active_users)}
                   </Typography>
                 )}
-                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
+                <Typography sx={[styles.tableCellValue, styles.valueCol]}>
                   {AnalyticCommonHelpers.fmtNum(bucket.ai_active_users)}
                 </Typography>
               </Box>
@@ -399,6 +415,8 @@ const analyticsActivityStyles = () => ({
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   }),
+  periodCol: analyticsColumnSx(PERIOD_FLEX),
+  valueCol: analyticsColumnSx(VALUE_FLEX),
 });
 
 export default AnalyticsActivity;
