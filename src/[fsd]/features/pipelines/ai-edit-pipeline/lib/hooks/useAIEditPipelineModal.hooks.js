@@ -5,7 +5,7 @@ import YAML from 'js-yaml';
 import { useDispatch, useStore } from 'react-redux';
 
 import { useGeneratePipelineDraftMutation } from '@/[fsd]/features/pipelines/api/generatePipelineApi';
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { DumpYamlHelpers, FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { DEFAULT_PIPELINE_KEY } from '@/[fsd]/features/pipelines/lib/constants';
 import { toggleSet } from '@/[fsd]/features/pipelines/lib/helpers';
 import { getAttachmentKey } from '@/[fsd]/features/pipelines/tool-picker/lib/helpers/attachmentDiff.helpers';
@@ -22,6 +22,17 @@ import { actions as editorActions } from '@/slices/pipelineEditor';
 
 import { computeInitialSelections, getRemoveId, normaliseCurrentTool } from '../helpers';
 import { useAttachSkills } from './useAttachSkills.hooks';
+
+// The backend dumps the draft with PyYAML, which indents lists differently from the editor; dumping it with the
+// editor's own helper makes the diff compare like with like and the canvas start from its own format
+const toEditorYaml = yamlCode => {
+  try {
+    const parsed = YAML.load(yamlCode || '');
+    return parsed && typeof parsed === 'object' ? DumpYamlHelpers.dumpYaml(parsed) : yamlCode;
+  } catch {
+    return yamlCode;
+  }
+};
 
 const CANVAS_SETTLE_INTERVAL_MS = 100;
 const CANVAS_SETTLE_MAX_CHECKS = 30;
@@ -100,7 +111,7 @@ export const useAIEditPipelineModal = ({ isCreateMode, onClose }) => {
       setAddPipelineIds(selections.addPipelineIds);
       setAddSkillIds(selections.addSkillIds);
       setRemoveToolRecordIds(selections.removeToolRecordIds);
-      return draftData;
+      return { ...draftData, pipeline_yaml: toEditorYaml(draftData.pipeline_yaml) };
     },
     [formik.values?.version_details?.tools],
   );

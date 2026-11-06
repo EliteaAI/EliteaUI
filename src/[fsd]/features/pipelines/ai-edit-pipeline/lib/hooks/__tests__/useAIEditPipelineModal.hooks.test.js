@@ -23,6 +23,7 @@ vi.mock('@/[fsd]/features/pipelines/api/generatePipelineApi', () => ({
 }));
 
 vi.mock('@/[fsd]/features/pipelines/flow-editor/lib/helpers', () => ({
+  DumpYamlHelpers: { dumpYaml: vi.fn(obj => `editor:${JSON.stringify(obj)}`) },
   FlowEditorHelpers: { convertNode: vi.fn(n => n) },
 }));
 
@@ -267,16 +268,33 @@ describe('useAIEditPipelineModal', () => {
       expect(result.current.addToolkitIds.has(11)).toBe(true);
     });
 
-    it('returns draftData unchanged', () => {
+    it('rewrites the draft YAML in the editor format and keeps the rest of the draft', async () => {
+      const YAML = (await import('js-yaml')).default;
+      vi.mocked(YAML.load).mockReturnValueOnce({ nodes: [{ id: 'a' }] });
       const { result } = renderHook(() =>
         useAIEditPipelineModal({ isCreateMode: false, onClose: mockOnClose }),
       );
-      const draftData = { pipeline_yaml: 'yaml: true' };
+      const draftData = { name: 'n', pipeline_yaml: 'nodes:\n- id: a\n' };
       let returned;
       act(() => {
         returned = result.current.handleDraftGenerated(draftData);
       });
-      expect(returned).toBe(draftData);
+      expect(returned).toEqual({ name: 'n', pipeline_yaml: 'editor:{"nodes":[{"id":"a"}]}' });
+    });
+
+    it('keeps the draft YAML as it is when it does not parse to an object', async () => {
+      const YAML = (await import('js-yaml')).default;
+      vi.mocked(YAML.load).mockImplementationOnce(() => {
+        throw new Error('bad yaml');
+      });
+      const { result } = renderHook(() =>
+        useAIEditPipelineModal({ isCreateMode: false, onClose: mockOnClose }),
+      );
+      let returned;
+      act(() => {
+        returned = result.current.handleDraftGenerated({ pipeline_yaml: ': not yaml' });
+      });
+      expect(returned.pipeline_yaml).toBe(': not yaml');
     });
 
     it('resets removeToolRecordIds to empty', () => {
