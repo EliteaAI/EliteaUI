@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useDispatch } from 'react-redux';
 
@@ -22,7 +22,7 @@ const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 export default function useCreateConversation({
   activeConversation,
-  conversations,
+  selectionCountRef,
   setActiveConversation,
   setConversations,
   setFolders,
@@ -46,6 +46,23 @@ export default function useCreateConversation({
   const [editConversation] = useConversationEditMutation();
   const [selectConversation, { isError: isSelectConversationError, error: selectConversationError }] =
     useSelectConversationMutation();
+
+  // The user may leave a chat while it is being created; the create chain must not pull them back
+  const activeConversationRef = useRef(activeConversation);
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    activeConversationRef.current = activeConversation;
+  }, [activeConversation]);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+  const isConversationOnScreen = useCallback(
+    (...ids) => isMountedRef.current && ids.some(id => id && activeConversationRef.current?.id === id),
+    [],
+  );
 
   const updateFolderConversations = useCallback(
     (folderId, getNextConversations) => {
@@ -77,6 +94,43 @@ export default function useCreateConversation({
     [setActiveConversation, setConversations, updateFolderConversations],
   );
 
+  // Files a created chat into its folder (or the ungrouped list), replacing the entries isReplaced matches
+  const fileCreatedConversation = useCallback(
+    async (folderId, createdConversation, isReplaced) => {
+      if (folderId && setFolders) {
+        const editResult = await editConversation({
+          projectId,
+          id: createdConversation.id,
+          folder_id: folderId,
+        });
+        if (editResult.error) {
+          toastError(buildErrorMessage(editResult.error));
+          fallbackToUngrouped(folderId, createdConversation);
+        } else {
+          updateFolderConversations(folderId, prev =>
+            sortConversations([
+              { ...createdConversation, folder_id: folderId },
+              ...prev.filter(c => !isReplaced(c)),
+            ]),
+          );
+        }
+      } else {
+        setConversations(prev =>
+          sortConversations([...prev.filter(c => !isReplaced(c)), createdConversation]),
+        );
+      }
+    },
+    [
+      editConversation,
+      fallbackToUngrouped,
+      projectId,
+      setConversations,
+      setFolders,
+      toastError,
+      updateFolderConversations,
+    ],
+  );
+
   const onCreateConversation = useCallback(
     async (newConversation, onCreatedCallback, shouldSetActiveAfterCallback, folderId = null) => {
       if (activeConversation?.id && activeConversation?.uuid && !activeConversation?.isPlayback) {
@@ -88,6 +142,7 @@ export default function useCreateConversation({
           project_id: projectId,
         });
       }
+      const selectionCountAtStart = selectionCountRef?.current;
       const pendingConversation = {
         ...newConversation,
         isNamingPending: true,
@@ -162,26 +217,11 @@ export default function useCreateConversation({
             isNamingPending: result.data.name === DefaultConversationName,
           };
 
-          if (folderId && setFolders) {
-            const editResult = await editConversation({ projectId, id: result.data.id, folder_id: folderId });
-            if (editResult.error) {
-              toastError(buildErrorMessage(editResult.error));
-              fallbackToUngrouped(folderId, conversationWithTimestamp);
-            } else {
-              updateFolderConversations(folderId, prev =>
-                sortConversations([
-                  { ...conversationWithTimestamp, folder_id: folderId },
-                  ...prev.filter(c => !c.isNew),
-                ]),
-              );
-            }
-          } else {
-            const sortedData = sortConversations([
-              ...conversations.filter(item => !item.isNew),
-              conversationWithTimestamp,
-            ]);
-            setConversations(sortedData);
-          }
+          await fileCreatedConversation(
+            folderId,
+            conversationWithTimestamp,
+            c => c.isNew || c.id === result.data.id,
+          );
 
           onCreatedCallback && onCreatedCallback(result.data);
           selectConversation({ projectId, conversationId: result.data.id }).then(({ error }) => {
@@ -191,76 +231,83 @@ export default function useCreateConversation({
               );
           });
         } else {
+          const isOnScreen = () =>
+            selectionCountRef?.current === selectionCountAtStart &&
+            isConversationOnScreen(newConversation.id, result.data.id);
           onCreatedCallback &&
-            onCreatedCallback(result.data, async participants => {
-              if (
-                !emitEnterRoom({
-                  conversation_id: result.data.id,
-                  conversation_uuid: result.data.uuid,
-                  project_id: projectId,
-                })
-              ) {
-                setPendingEnterRoomEvent({
-                  conversation_id: result.data.id,
-                  conversation_uuid: result.data.uuid,
-                  project_id: projectId,
-                });
-              } else {
-                listenCanvasEditorsChangeEvent();
-                listenCanvasContentChangeEvent();
-              }
-
-              changeUrlByConversation(result.data.id, result.data.name);
-              const updatedConversation = {
-                ...result.data,
-                participants: [...participants],
-                // Only keep isNamingPending if server returned the default name (meaning it's still generating a real name)
-                isNamingPending: result.data.name === DefaultConversationName,
-              };
-              setActiveConversation(prev => ({
-                ...updatedConversation,
-                ...(folderId && { folder_id: folderId }),
-                ...(prev?.attachment_participant_id && {
-                  attachment_participant_id: prev.attachment_participant_id,
-                }),
-              }));
-
-              const conversationWithTimestamp = {
-                ...updatedConversation,
-                updated_at: result.data.updated_at || new Date().toISOString(),
-              };
-
-              if (folderId && setFolders) {
-                const editResult = await editConversation({
-                  projectId,
-                  id: result.data.id,
-                  folder_id: folderId,
-                });
-                if (editResult.error) {
-                  toastError(buildErrorMessage(editResult.error));
-                  fallbackToUngrouped(folderId, conversationWithTimestamp);
-                } else {
-                  updateFolderConversations(folderId, prev =>
-                    sortConversations([
-                      { ...conversationWithTimestamp, folder_id: folderId },
-                      ...prev.filter(c => !c.isNew),
-                    ]),
+            onCreatedCallback(
+              result.data,
+              async participants => {
+                const conversationWithParticipants = {
+                  ...result.data,
+                  participants: [...participants],
+                  isNamingPending: result.data.name === DefaultConversationName,
+                  updated_at: result.data.updated_at || new Date().toISOString(),
+                  ...(folderId && { folder_id: folderId }),
+                };
+                if (!isOnScreen()) {
+                  // List it, but don't open it: another + Chat draft may be on screen, so match by id
+                  await fileCreatedConversation(
+                    folderId,
+                    conversationWithParticipants,
+                    c => c.id === newConversation.id || c.id === result.data.id,
                   );
+                  return;
                 }
-              } else {
-                const sortedData = sortConversations([
-                  ...conversations.filter(item => !item.isNew),
+                if (
+                  !emitEnterRoom({
+                    conversation_id: result.data.id,
+                    conversation_uuid: result.data.uuid,
+                    project_id: projectId,
+                  })
+                ) {
+                  setPendingEnterRoomEvent({
+                    conversation_id: result.data.id,
+                    conversation_uuid: result.data.uuid,
+                    project_id: projectId,
+                  });
+                } else {
+                  listenCanvasEditorsChangeEvent();
+                  listenCanvasContentChangeEvent();
+                }
+
+                changeUrlByConversation(result.data.id, result.data.name);
+                const updatedConversation = {
+                  ...result.data,
+                  participants: [...participants],
+                  // Only keep isNamingPending if server returned the default name (meaning it's still generating a real name)
+                  isNamingPending: result.data.name === DefaultConversationName,
+                };
+                setActiveConversation(prev => ({
+                  ...updatedConversation,
+                  ...(folderId && { folder_id: folderId }),
+                  ...(prev?.attachment_participant_id && {
+                    attachment_participant_id: prev.attachment_participant_id,
+                  }),
+                }));
+
+                const conversationWithTimestamp = {
+                  ...updatedConversation,
+                  updated_at: result.data.updated_at || new Date().toISOString(),
+                };
+
+                await fileCreatedConversation(
+                  folderId,
                   conversationWithTimestamp,
-                ]);
-                setConversations(sortedData);
-              }
-              selectConversation({ projectId, conversationId: result.data.id }).then(({ error }) => {
-                if (!error)
-                  dispatch(
-                    chatActions.setLastSelectedConversationId({ projectId, conversationId: result.data.id }),
-                  );
-              });
-            });
+                  c => c.isNew || c.id === result.data.id,
+                );
+                selectConversation({ projectId, conversationId: result.data.id }).then(({ error }) => {
+                  if (!error)
+                    dispatch(
+                      chatActions.setLastSelectedConversationId({
+                        projectId,
+                        conversationId: result.data.id,
+                      }),
+                    );
+                });
+              },
+              isOnScreen,
+            );
         }
       } else {
         setActiveConversation(dummyConversation);
@@ -277,9 +324,7 @@ export default function useCreateConversation({
       activeConversation?.isPlayback,
       activeConversation?.uuid,
       changeUrlByConversation,
-      conversations,
       createConversation,
-      editConversation,
       emitEnterRoom,
       emitLeaveRoom,
       projectId,
@@ -287,10 +332,11 @@ export default function useCreateConversation({
       setConversations,
       setFolders,
       updateFolderConversations,
-      fallbackToUngrouped,
+      fileCreatedConversation,
       dispatch,
       selectConversation,
-      toastError,
+      isConversationOnScreen,
+      selectionCountRef,
       listenCanvasEditorsChangeEvent,
       stopListenCanvasEditorsChangeEvent,
       listenCanvasContentChangeEvent,
