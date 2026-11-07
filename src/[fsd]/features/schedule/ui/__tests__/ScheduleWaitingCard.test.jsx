@@ -249,6 +249,45 @@ describe('ScheduleWaitingCard', () => {
     expect(button('Reject')).toBeEnabled();
   });
 
+  it.each([
+    ['one tool', [['Artifact', 'create_file']]],
+    [
+      'three tools of two toolkits',
+      [
+        ['Artifact', 'create_file'],
+        ['Artifact', 'delete_file'],
+        ['ADO', 'list_indexes'],
+      ],
+    ],
+  ])('names every tool with its toolkit in the list for %s', (_title, pairs) => {
+    mocks.detail = {
+      ...run,
+      events: [
+        paused({
+          need: 'tools',
+          tools: pairs.map(([toolkit, tool]) => ({ toolkit, tool })),
+        }),
+      ],
+    };
+    renderCard();
+
+    const items = within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem');
+    expect(items.map(item => item.textContent)).toEqual(pairs.map(([toolkit, tool]) => `${toolkit} · ${tool}`));
+  });
+
+  it('keeps the tool list visible and the decision off for a user who is not the owner', () => {
+    mocks.isOwner = false;
+    mocks.detail = {
+      ...run,
+      events: [paused({ need: 'tools', tools: [{ toolkit: 'ADO', tool: 'list_indexes' }] })],
+    };
+    renderCard();
+
+    expect(within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem')).toHaveLength(1);
+    expect(button('Approve')).toBeDisabled();
+    expect(button('Reject')).toBeDisabled();
+  });
+
   it('shows no may-ask line when no tool may still ask', () => {
     mocks.detail = {
       ...run,
