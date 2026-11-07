@@ -250,7 +250,7 @@ describe('ScheduleWaitingCard', () => {
   });
 
   it.each([
-    ['one tool', [['Artifact', 'create_file']]],
+    ['one tool', [['Artifact', 'create_file']], ['Artifact · create_file']],
     [
       'three tools of two toolkits',
       [
@@ -258,8 +258,9 @@ describe('ScheduleWaitingCard', () => {
         ['Artifact', 'delete_file'],
         ['ADO', 'list_indexes'],
       ],
+      ['Artifact · create_file', 'Artifact · delete_file', 'ADO · list_indexes'],
     ],
-  ])('names every tool with its toolkit in the list for %s', (_title, pairs) => {
+  ])('names every tool with its toolkit in the list for %s', (_title, pairs, expected) => {
     mocks.detail = {
       ...run,
       events: [
@@ -272,7 +273,7 @@ describe('ScheduleWaitingCard', () => {
     renderCard();
 
     const items = within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem');
-    expect(items.map(item => item.textContent)).toEqual(pairs.map(([toolkit, tool]) => `${toolkit} · ${tool}`));
+    expect(items.map(item => item.textContent)).toEqual(expected);
   });
 
   it('keeps the tool list visible and the decision off for a user who is not the owner', () => {
