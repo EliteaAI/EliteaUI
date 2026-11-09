@@ -8,6 +8,7 @@ import {
   ChatHelpers,
   ExecutionHierarchyHelpers,
   HitlHelpers,
+  RunSnapshotHelpers,
   buildMcpAuthorizationToolAction,
   getMcpAuthorizationRequests,
   hasProcessingSiblingForAuthorization,
@@ -60,6 +61,9 @@ const { mergeHitlInterrupts, normalizeHitlInterrupt, reconcileRootHitlInterrupts
   HitlHelpers;
 
 const { agentPathsEqual, getSubAgentInstanceKey, normalizeExecutionHierarchy } = ExecutionHierarchyHelpers;
+
+const { applyRunSnapshot, isChunkInSnapshot, rememberPendingSnapshot, takePendingSnapshot } =
+  RunSnapshotHelpers;
 
 export { useCtrlEnterKeyEventsHandler };
 
@@ -439,6 +443,29 @@ export const useChatSocket = ({
         question_id: questionIdFromContent,
       } = message.content instanceof Object ? message.content : {};
       const question_id = questionIdFromMessage || questionIdFromContent;
+
+      if (socketMessageType === SocketMessageType.ChatRunSnapshot) {
+        // Text streamed while this client was away (EL-7385). Handled before getMessage, which would
+        // claim a local placeholder for it. If the history is still loading, the snapshot waits and the
+        // message's next chunk applies it.
+        const toolRuns = response_metadata?.tool_runs;
+        if (!toolRuns) return;
+        if (findChatSocketMessageIndex(chatHistoryRef.current, message_id, question_id) === -1) {
+          rememberPendingSnapshot(message_id, toolRuns);
+          return;
+        }
+        updateChatHistoryState(setChatHistoryRef, chatHistoryRef, prevState => {
+          const currentMessageIndex = findChatSocketMessageIndex(prevState, message_id, question_id);
+          if (currentMessageIndex === -1) return prevState;
+          return prevState.map((item, idx) => {
+            if (idx !== currentMessageIndex) return item;
+            const toolActions = applyRunSnapshot(item.toolActions || [], toolRuns, message.created_at);
+            return toolActions === item.toolActions ? item : { ...item, toolActions };
+          });
+        });
+        return;
+      }
+
       const [msgIndex, msg] = getMessage(message_id, question_id);
 
       if (RESUMED_AGENT_ACTIVITY_EVENTS.has(socketMessageType) && msg.resumingAgentPaths?.length) {
@@ -633,8 +660,19 @@ export const useChatSocket = ({
             if (msg.toolActions === undefined) {
               msg.toolActions = [];
             }
-            // Create toolAction if it doesn't exist
-            if (toolRunId && !msg.toolActions.find(i => i.id === toolRunId)) {
+            const pendingForNew = takePendingSnapshot(message_id);
+            if (pendingForNew) {
+              msg.toolActions = applyRunSnapshot(msg.toolActions, pendingForNew, message.created_at);
+            }
+            const seededAction = toolRunId && msg.toolActions.find(i => i.id === toolRunId);
+            if (seededAction) {
+              // Seeded from the snapshot: add this chunk unless the snapshot already has it
+              if (!isChunkInSnapshot(seededAction, response_metadata?.snapshot_seq)) {
+                seededAction.content = (seededAction.content || '') + chunkContent;
+                seededAction.thinking = (seededAction.thinking || '') + chunkThinking;
+              }
+            } else if (toolRunId) {
+              // Create toolAction if it doesn't exist
               msg.toolActions.push({
                 name: response_metadata?.metadata?.langgraph_node?.trim() || TOOL_ACTION_NAMES.Llm,
                 ...hierarchy,
@@ -665,12 +703,21 @@ export const useChatSocket = ({
 
           // For existing messages, use state update with proper new object references
           // so React detects the change and re-renders
+          const pendingSnapshot = takePendingSnapshot(message_id);
           updateChatHistoryState(setChatHistoryRef, chatHistoryRef, prevState => {
             const currentMessageIndex = findChatSocketMessageIndex(prevState, message_id, question_id);
             const nextState = prevState.map((item, idx) => {
               if (idx !== currentMessageIndex) return item;
-              const existingToolActions = item.toolActions || [];
+              const existingToolActions = pendingSnapshot
+                ? applyRunSnapshot(item.toolActions || [], pendingSnapshot, message.created_at)
+                : item.toolActions || [];
               const existingAction = existingToolActions.find(ta => ta.id === toolRunId);
+              // Already in the snapshot this step was seeded from
+              if (isChunkInSnapshot(existingAction, response_metadata?.snapshot_seq)) {
+                return existingToolActions === item.toolActions
+                  ? item
+                  : { ...item, toolActions: existingToolActions };
+              }
 
               let updatedToolActions;
               if (existingAction) {

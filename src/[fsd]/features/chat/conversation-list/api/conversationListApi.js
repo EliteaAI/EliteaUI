@@ -1,3 +1,4 @@
+import { runStatusActions } from '@/[fsd]/features/chat/model';
 import { eliteaApi } from '@/api';
 
 const TAG_TYPE_CONVERSATION_DETAILS = 'TAG_TYPE_CONVERSATION_DETAILS';
@@ -11,6 +12,28 @@ export { TAG_TYPE_CONVERSATION_DETAILS };
 const apiSlicePath = '/elitea_core';
 const headers = {
   'Content-Type': 'application/json',
+};
+
+// Every conversation row of any /folder response shape (grouped sidebar, folder page, date-group page)
+export const collectListedConversations = data => [
+  ...(data?.conversations || []),
+  ...(data?.pinned?.conversations || []),
+  ...(data?.folders || []).flatMap(folder => folder?.conversations || []),
+  ...(data?.date_groups || []).flatMap(group =>
+    Array.isArray(group?.conversations) ? group.conversations : [],
+  ),
+];
+
+// A list load corrects run state the socket missed, e.g. a run that ended during a reconnect (EL-7385)
+const syncRunStatus = async ({ projectId }, { dispatch, queryFulfilled }) => {
+  try {
+    const { data } = await queryFulfilled;
+    dispatch(
+      runStatusActions.syncRunningFromList({ projectId, conversations: collectListedConversations(data) }),
+    );
+  } catch {
+    // The list shows its own error
+  }
 };
 
 export const apiSlice = eliteaApi
@@ -52,6 +75,7 @@ export const apiSlice = eliteaApi
           },
         }),
         providesTags: [TAG_TYPE_FOLDERS],
+        onQueryStarted: syncRunStatus,
         serializeQueryArgs: ({ endpointName, queryArgs }) => {
           const sortedObject = {};
           Object.keys(queryArgs)
@@ -83,6 +107,7 @@ export const apiSlice = eliteaApi
             sort_order,
           },
         }),
+        onQueryStarted: syncRunStatus,
       }),
       dateGroupConversations: build.query({
         query: ({ projectId, dateGroup, limit = 10, offset = 0, sort_by, sort_order }) => ({
@@ -96,6 +121,7 @@ export const apiSlice = eliteaApi
             sort_order,
           },
         }),
+        onQueryStarted: syncRunStatus,
       }),
       folderUpdate: build.mutation({
         query: ({ projectId, id, ...body }) => {

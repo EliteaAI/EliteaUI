@@ -33,6 +33,7 @@ import {
   useEditConversation,
   useInternalToolsConfig,
   useIsCreatingConversation,
+  useMarkConversationRunSeen,
 } from '@/[fsd]/features/chat/lib/hooks';
 import {
   canParticipantBeActiveInChat,
@@ -478,6 +479,9 @@ const NewChat = props => {
     chatHistory: activeConversation?.chat_history,
     setChatHistory,
   });
+
+  // A run that ended or asked something while this chat was away is read once it is open (EL-7385)
+  useMarkConversationRunSeen(projectId, activeConversation?.isNew ? undefined : activeConversation?.uuid);
 
   const handleRestrictAccessSuccess = useCallback(
     async (conversationId, participantChanges = {}) => {
