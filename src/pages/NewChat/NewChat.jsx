@@ -414,7 +414,13 @@ const NewChat = props => {
     setShowAddUserModal(true);
   }, []);
 
-  const { onSelectConversation, isLoadingConversation, isSelectingConversation } = useSelectConversation({
+  const {
+    onSelectConversation,
+    isLoadingConversation,
+    isSelectingConversation,
+    markConversationDeleted,
+    isConversationDeleted,
+  } = useSelectConversation({
     activeConversation,
     emitEnterRoom,
     toastError,
@@ -932,6 +938,11 @@ const NewChat = props => {
     }
     if (isSelectingConversation || activeConversation?.id) return;
 
+    if (isConversationDeleted(conversationIdFromUrl)) {
+      clearUrlConversation({ replace: true });
+      return;
+    }
+
     if (isConversationsLoaded) {
       const folderConversations = folders?.map(folder => folder.conversations) || [];
       const conversationList = [...conversations, ...folderConversations.flat()];
@@ -960,9 +971,11 @@ const NewChat = props => {
     }
   }, [
     activeConversation?.id,
+    clearUrlConversation,
     conversationIdFromUrl,
     conversations,
     folders,
+    isConversationDeleted,
     isConversationsLoaded,
     isSelectingConversation,
     onSelectConversation,
@@ -1052,6 +1065,8 @@ const NewChat = props => {
     conversations,
     folders,
     onSelectConversation,
+    markConversationDeleted,
+    isConversationDeleted,
   });
 
   const { onDeleteFolder } = useDeleteFolder({

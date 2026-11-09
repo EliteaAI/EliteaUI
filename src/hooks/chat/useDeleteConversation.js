@@ -27,6 +27,8 @@ const useDeleteConversation = ({
   conversations,
   folders,
   onSelectConversation,
+  markConversationDeleted,
+  isConversationDeleted,
 }) => {
   const dispatch = useDispatch();
   const projectId = useSelectedProjectId();
@@ -37,33 +39,34 @@ const useDeleteConversation = ({
   const { clearUrlConversation } = useConversationNavigation();
 
   // Helper function to find the next conversation to select
-  const findNextConversation = useCallback((deletedConversation, allConversations, allFolders) => {
-    let conversationsToSearch = [];
+  const findNextConversation = useCallback(
+    (deletedConversation, allConversations, allFolders) => {
+      let conversationsToSearch = [];
 
-    if (deletedConversation.folder_id) {
-      // If conversation is in a folder, search within that folder first
-      const folder = allFolders.find(f => f.id === deletedConversation.folder_id);
-      if (folder && folder.conversations) {
-        conversationsToSearch = folder.conversations.filter(
-          conv => conv.id !== deletedConversation.id || conv.isPlayback !== deletedConversation.isPlayback,
-        );
-      }
-      // If no conversations in folder, fall back to ungrouped conversations
-      if (conversationsToSearch.length === 0) {
-        conversationsToSearch = allConversations.filter(
-          conv => conv.id !== deletedConversation.id || conv.isPlayback !== deletedConversation.isPlayback,
-        );
-      }
-    } else {
-      // If conversation is ungrouped, search in ungrouped conversations
-      conversationsToSearch = allConversations.filter(
-        conv => conv.id !== deletedConversation.id || conv.isPlayback !== deletedConversation.isPlayback,
-      );
-    }
+      const isSelectable = conv =>
+        (conv.id !== deletedConversation.id || conv.isPlayback !== deletedConversation.isPlayback) &&
+        (conv.isPlayback || !isConversationDeleted?.(conv.id));
 
-    // Return the most recent conversation (first in sorted order)
-    return conversationsToSearch.length > 0 ? conversationsToSearch[0] : null;
-  }, []);
+      if (deletedConversation.folder_id) {
+        // If conversation is in a folder, search within that folder first
+        const folder = allFolders.find(f => f.id === deletedConversation.folder_id);
+        if (folder && folder.conversations) {
+          conversationsToSearch = folder.conversations.filter(isSelectable);
+        }
+        // If no conversations in folder, fall back to ungrouped conversations
+        if (conversationsToSearch.length === 0) {
+          conversationsToSearch = allConversations.filter(isSelectable);
+        }
+      } else {
+        // If conversation is ungrouped, search in ungrouped conversations
+        conversationsToSearch = allConversations.filter(isSelectable);
+      }
+
+      // Return the most recent conversation (first in sorted order)
+      return conversationsToSearch.length > 0 ? conversationsToSearch[0] : null;
+    },
+    [isConversationDeleted],
+  );
 
   const onDeleteConversation = useCallback(
     async conversation => {
@@ -75,6 +78,8 @@ const useDeleteConversation = ({
         });
       }
       if (!result.error) {
+        if (!conversation.isPlayback) markConversationDeleted?.(conversation.id);
+
         const chatName = conversation.name || conversation.title || 'chat';
         toastSuccess?.(`The ${chatName} chat has been successfully deleted.`);
         dispatch(chatActions.clearLastSelectedConversationId({ projectId, conversationId: conversation.id }));
@@ -90,7 +95,6 @@ const useDeleteConversation = ({
             onSelectConversation(nextConversation);
           } else {
             setActiveConversation(dummyConversation);
-            clearUrlConversation();
             unselectConversation({ projectId });
           }
 
@@ -104,6 +108,8 @@ const useDeleteConversation = ({
             });
           }
           resetCreateFlag();
+          // Must run after resetCreateFlag: its setSearchParams would override this navigation
+          if (!nextConversation) clearUrlConversation({ replace: true });
           clearLocalActiveParticipant(activeConversation?.id);
         }
         if (conversation.folder_id) {
@@ -155,6 +161,7 @@ const useDeleteConversation = ({
       folders,
       onSelectConversation,
       findNextConversation,
+      markConversationDeleted,
     ],
   );
 
