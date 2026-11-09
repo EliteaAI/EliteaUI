@@ -94,14 +94,23 @@ describe('getPausedTools', () => {
 });
 
 describe('getPausedMoreCount', () => {
-  it('reads the count the server puts at the end of a cut list', () => {
-    expect(getPausedMoreCount({ text: 'Paused for approval: a · t0, a · t1 (+12 more)' })).toBe(12);
-    expect(getPausedMoreCount({ text: 'Paused for approval: a · t0 (+1 more) ' })).toBe(1);
+  const labels = count => Array.from({ length: count }, (_, index) => `a · t${index}`).join(', ');
+  const tools = count => Array.from({ length: count }, (_, index) => ({ toolkit: 'a', tool: `t${index}` }));
+
+  it('counts the tools the list lacks, not the tools the text lacks', () => {
+    // 70 tools: the text names 10 and counts 60; the list holds 50
+    expect(getPausedMoreCount({ text: `Paused: ${labels(10)} (+60 more)`, tools: tools(50) })).toBe(20);
+    expect(getPausedMoreCount({ text: `Paused: ${labels(10)} (+43 more) `, tools: tools(50) })).toBe(3);
   });
 
-  it('returns 0 for a complete list, a count inside the text, a bad value or no event', () => {
-    expect(getPausedMoreCount({ text: 'Paused for approval: a · t0, a · t1' })).toBe(0);
-    expect(getPausedMoreCount({ text: 'Paused (+2 more) for approval: a · t0' })).toBe(0);
+  it('returns 0 when the list holds every tool the text counts', () => {
+    expect(getPausedMoreCount({ text: `Paused: ${labels(10)} (+20 more)`, tools: tools(30) })).toBe(0);
+    expect(getPausedMoreCount({ text: `Paused: ${labels(8)} (+1 more)`, tools: tools(9) })).toBe(0);
+  });
+
+  it('returns 0 for a complete text, a count inside the text, a bad value or no event', () => {
+    expect(getPausedMoreCount({ text: `Paused: ${labels(2)}`, tools: tools(2) })).toBe(0);
+    expect(getPausedMoreCount({ text: 'Paused (+2 more) for approval: a · t0', tools: tools(1) })).toBe(0);
     expect(getPausedMoreCount({ text: 42 })).toBe(0);
     expect(getPausedMoreCount(undefined)).toBe(0);
   });

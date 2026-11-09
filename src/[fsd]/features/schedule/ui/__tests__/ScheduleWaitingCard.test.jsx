@@ -71,6 +71,17 @@ const renderCard = (props = {}) => {
 };
 const button = name => screen.getByRole('button', { name });
 
+// The pause the server writes: the text names the first `named` tools and counts the rest, the list holds 50 at most
+const serverPause = (total, named) => {
+  const all = Array.from({ length: total }, (_, index) => ({ toolkit: 'a', tool: `t${index}` }));
+  const labels = all.slice(0, named).map(item => `${item.toolkit} · ${item.tool}`);
+  const more = total > named ? ` (+${total - named} more)` : '';
+  return {
+    text: `Paused for approval before the first tool call: ${labels.join(', ')}${more}`,
+    tools: all.slice(0, 50),
+  };
+};
+
 describe('ScheduleWaitingCard', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'] });
@@ -336,38 +347,20 @@ describe('ScheduleWaitingCard', () => {
   });
 
   it.each([
-    [
-      'a pre-start pause',
-      { need: 'tools', text: 'Paused for approval before the first tool call: a · t0, a · t1 (+3 more)' },
-    ],
-    ['a call-time pause', { text: 'Paused for approval: a · t0, a · t1 (+3 more)' }],
-  ])('tells how many tools are not listed for %s', (_title, event) => {
-    mocks.detail = {
-      ...run,
-      events: [
-        paused({
-          ...event,
-          tools: [
-            { toolkit: 'a', tool: 't0' },
-            { toolkit: 'a', tool: 't1' },
-          ],
-        }),
-      ],
-    };
+    ['30 tools, the text names 10', 30, 10, 30, null],
+    ['9 tools, the text names 8', 9, 8, 9, null],
+    ['70 tools, the text names 10', 70, 10, 50, '20 more'],
+    ['53 tools, the text names 10', 53, 10, 50, '3 more'],
+  ])('tells only the tools the list does not show for %s', (_title, total, named, listed, note) => {
+    const { text, tools } = serverPause(total, named);
+    mocks.detail = { ...run, events: [paused({ need: 'tools', text, tools })] };
     renderCard();
 
-    expect(within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem')).toHaveLength(2);
-    expect(screen.getByTestId('schedule-waiting-tools-more')).toHaveTextContent('3 more');
-  });
-
-  it('shows no cut note when the list is complete', () => {
-    mocks.detail = {
-      ...run,
-      events: [paused({ need: 'tools', tools: [{ toolkit: 'a', tool: 't0' }] })],
-    };
-    renderCard();
-
-    expect(screen.queryByTestId('schedule-waiting-tools-more')).not.toBeInTheDocument();
+    expect(within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem')).toHaveLength(
+      listed,
+    );
+    if (note) expect(screen.getByTestId('schedule-waiting-tools-more')).toHaveTextContent(note);
+    else expect(screen.queryByTestId('schedule-waiting-tools-more')).not.toBeInTheDocument();
   });
 
   it('shows no list for a call-time pause of one tool', () => {

@@ -5,6 +5,8 @@ const SIGN_IN_TEXT = /a sign-in is needed for\s+(.+?)\s*(?:\.|$)/i;
 const MORE_TEXT = /\(\+(\d+) more\)$/;
 const TOOLKIT_TEXT = /toolkit\s+["']?([^"'.]+?)["']?(?:\s|\.|$)/i;
 
+const TOOL_SEPARATOR = ' · ';
+
 const unquote = value => value?.trim().replace(/^["'`](.*)["'`]$/, '$1') || undefined;
 
 const toToolList = list =>
@@ -14,17 +16,21 @@ const toToolList = list =>
 export const getPausedTools = pausedEvent => toToolList(pausedEvent?.tools);
 
 /**
- * How many tools the server left out of the list, read from the `(+N more)` end of the paused text.
- * The server cuts the list and keeps only this count; 0 when the text has none.
+ * How many tools the list does not show. The server cuts the text and the `tools` array at different
+ * points: the `(+N more)` at the end of the text counts the tools the text does not name, and the text names
+ * the labels written as `Toolkit · tool` before it. So the hidden tools are those labels plus N, minus the
+ * tools the list holds. 0 when the text has no `(+N more)` or the list holds every tool.
  */
 export const getPausedMoreCount = pausedEvent => {
   const text = typeof pausedEvent?.text === 'string' ? pausedEvent.text.trimEnd() : '';
   const match = MORE_TEXT.exec(text);
-  return match ? Number(match[1]) : 0;
+  if (!match) return 0;
+  const namedInText = text.slice(0, match.index).split(TOOL_SEPARATOR).length - 1;
+  return Math.max(0, namedInText + Number(match[1]) - getPausedTools(pausedEvent).length);
 };
 
 /** One tool as the user reads it: `Toolkit · tool`. */
-export const formatTool = ({ toolkit, tool }) => (toolkit ? `${toolkit} · ${tool}` : `${tool}`);
+export const formatTool = ({ toolkit, tool }) => (toolkit ? `${toolkit}${TOOL_SEPARATOR}${tool}` : `${tool}`);
 
 /**
  * What a paused run waits for, read from its paused event: `{ need, toolkit, credential }`, or
