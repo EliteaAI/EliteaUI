@@ -24,6 +24,7 @@ const TEST_RUN_NOTE = 'Runs the form as it is now, without saving. Last run and 
 
 /**
  * The "Runs (count)" card right of the schedule form. `view` is the result of `useScheduleRunsView`.
+ * For a toolkit index `applicationId` is the toolkit id and `indexName` names the index.
  * Run Now needs a saved schedule; Test Run is for a new, unsaved one and gives way to Run Now after Save. `schedule` is empty on the Create page.
  */
 const ScheduleRunsCard = memo(
@@ -32,6 +33,7 @@ const ScheduleRunsCard = memo(
       schedule,
       entityType,
       applicationId,
+      indexName,
       view,
       onRunNow,
       runNowPending = false,
@@ -177,6 +179,8 @@ const ScheduleRunsCard = memo(
                 id: schedule.id,
                 entity_type: entityType,
                 application_id: applicationId,
+                toolkit_id: applicationId,
+                index_name: indexName,
               })}
               variant="bodySmall"
             >
@@ -209,6 +213,7 @@ const ScheduleRunsCard = memo(
                 schedule={schedule}
                 entityType={entityType}
                 applicationId={applicationId}
+                indexName={indexName}
                 onToggle={onExpand}
                 // A webhook has no Run Now: its Run again opens the sample dialog
                 onRunAgain={

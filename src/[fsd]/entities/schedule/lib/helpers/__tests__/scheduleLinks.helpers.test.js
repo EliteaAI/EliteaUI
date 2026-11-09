@@ -102,3 +102,28 @@ describe('buildOwnerViewModeParams', () => {
     expect(buildOwnerViewModeParams({ schedule_id: 4 }).toString()).toBe('schedule_id=4&viewMode=owner');
   });
 });
+
+describe('scheduleLinks.helpers for a toolkit index', () => {
+  const index = { entityType: 'toolkit_index', entityId: 8, indexName: 'docs', tab: 'my' };
+
+  it('opens the create and edit forms nested in the index page', () => {
+    expect(buildScheduleFormLink(index)).toBe('/toolkits/my/8/index/docs/schedules/create');
+    expect(buildScheduleFormLink({ ...index, scheduleId: 4 })).toBe('/toolkits/my/8/index/docs/schedules/4');
+  });
+
+  it('returns to the index page', () => {
+    expect(buildEntityEditorLink(index)).toBe('/toolkits/my/8/index/docs');
+  });
+
+  it('opens the run history on the edit form of the index with the owner view mode', () => {
+    expect(buildScheduleRunsLink({ ...index, scheduleId: 4 })).toEqual({
+      pathname: '/toolkits/my/8/index/docs/schedules/4',
+      search: '?viewMode=owner',
+      hash: '#runs',
+    });
+  });
+
+  it('filters the Schedules list by the index', () => {
+    expect(buildSchedulesListLink(index)).toContain('indexName=docs');
+  });
+});

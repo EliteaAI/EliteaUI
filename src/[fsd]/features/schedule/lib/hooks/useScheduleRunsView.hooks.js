@@ -20,9 +20,10 @@ const scrollBehavior = () => (matches('(prefers-reduced-motion: reduce)') ? 'aut
 /**
  * The state of the Runs card of the schedule pages: the saved schedule's runs and the Test runs of the unsaved
  * form in one list and the one run that is open. A new page has no `scheduleId` yet.
+ * For a toolkit index `applicationId` is the toolkit id and `indexName` names the index.
  * Test runs that were already on the server when the page opened stay out of the card (see `mergeRuns`).
  */
-export const useScheduleRunsView = (scheduleId, applicationId) => {
+export const useScheduleRunsView = (scheduleId, applicationId, indexName) => {
   const projectId = useSelectedProjectId();
   const savedRuns = useScheduleRuns(scheduleId);
   // A saved schedule has no Test Run on its page, so its page never asks for the draft runs
@@ -31,7 +32,7 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
     loaded: draftLoaded,
     failed: draftFailed,
     settled: draftSettled,
-  } = useDraftTestRuns(applicationId, scheduleId != null);
+  } = useDraftTestRuns(applicationId, scheduleId != null, indexName);
   const runsLoaded = useScheduleRunsLoaded(scheduleId);
   const savedTotal = useScheduleRunsTotal(scheduleId);
   // The approval notice links here with the conversation of the waiting run
@@ -42,20 +43,21 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
 
   // The draft runs of an earlier visit are not part of this page: the newest id seen at the first load is the
   // baseline for this entity
-  const [baseline, setBaseline] = useState({ applicationId: null, id: 0 });
+  const targetKey = `${applicationId}:${indexName ?? ''}`;
+  const [baseline, setBaseline] = useState({ targetKey: null, id: 0 });
   useEffect(() => {
     // A failed first list counts as an empty one, so every later run is new
     if (!draftLoaded && !draftFailed) return;
     setBaseline(current =>
-      current.applicationId === applicationId
+      current.targetKey === targetKey
         ? current
-        : { applicationId, id: draftRuns.reduce((max, run) => Math.max(max, run.id), 0) },
+        : { targetKey, id: draftRuns.reduce((max, run) => Math.max(max, run.id), 0) },
     );
-  }, [applicationId, draftLoaded, draftFailed, draftRuns]);
+  }, [targetKey, draftLoaded, draftFailed, draftRuns]);
 
   const { currentData: details } = useApplicationDetailsQuery(
     { projectId, applicationId },
-    { skip: !projectId || applicationId == null },
+    { skip: !projectId || applicationId == null || !!indexName },
   );
   const versionNames = useMemo(
     () => Object.fromEntries((details?.versions ?? []).map(version => [version.id, version.name])),
@@ -63,8 +65,8 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
   );
 
   const runs = useMemo(
-    () => mergeRuns(savedRuns, baseline.applicationId === applicationId ? draftRuns : [], baseline.id),
-    [savedRuns, draftRuns, applicationId, baseline],
+    () => mergeRuns(savedRuns, baseline.targetKey === targetKey ? draftRuns : [], baseline.id),
+    [savedRuns, draftRuns, targetKey, baseline],
   );
   const draftCount = runs.length - savedRuns.length;
   const total = Number.isFinite(savedTotal)

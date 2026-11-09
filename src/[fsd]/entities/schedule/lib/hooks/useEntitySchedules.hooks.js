@@ -9,13 +9,15 @@ const PAGE_SIZE = 20;
 const MAX_ROWS = 100;
 const NO_ROWS = [];
 
-// The schedules of one agent or pipeline version; the list API keeps only the rows the user may see.
+// The schedules of one agent or pipeline version, or of one toolkit index; the list API keeps only the rows
+// the user may see.
 // sortBy / sortOrder are optional; without them the list API orders by next run.
 // "Show more" adds 20 rows each time, with no upper limit.
 export const useEntitySchedules = ({
   entityType,
   entityId,
   versionId,
+  indexName,
   triggerKind,
   sortBy,
   sortOrder,
@@ -23,14 +25,14 @@ export const useEntitySchedules = ({
 }) => {
   const projectId = useSelectedProjectId();
   const [shown, setShown] = useState(PAGE_SIZE);
-  const listKey = `${entityId}:${versionId}:${triggerKind}:${sortBy}:${sortOrder}`;
+  const listKey = `${entityId}:${versionId}:${indexName}:${triggerKind}:${sortBy}:${sortOrder}`;
   const [shownKey, setShownKey] = useState(listKey);
   // Another agent, pipeline or version starts at the first 20 rows, before any request
   if (shownKey !== listKey) {
     setShownKey(listKey);
     setShown(PAGE_SIZE);
   }
-  const listArgs = { projectId, entityType, entityId, versionId, triggerKind, sortBy, sortOrder };
+  const listArgs = { projectId, entityType, entityId, versionId, indexName, triggerKind, sortBy, sortOrder };
   const isSkipped = skip || !projectId || !entityId;
 
   // The first 100 rows: one request that grows by 20; data keeps the shown rows while it loads

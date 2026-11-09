@@ -5,7 +5,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Box, Link, Typography } from '@mui/material';
 
-import { buildScheduleHistoryLink } from '@/[fsd]/entities/schedule';
+import { TOOLKIT_INDEX_TYPE, buildScheduleHistoryLink } from '@/[fsd]/entities/schedule';
 import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 
@@ -22,11 +22,12 @@ const FAILED_RESPONSE = 'The run did not finish. Open the run logs for details.'
 // What a run shows once it is open, by status: the waiting run asks for a decision, a running run shows its
 // log, an ended run shows the response, and every ended run can open its log and the Run History.
 const ScheduleRunDetail = memo(props => {
-  const { run, schedule, entityType, applicationId, onRunAgain } = props;
+  const { run, schedule, entityType, applicationId, indexName, onRunAgain } = props;
 
-  const { run: detail, isError, refetch } = useRunDetail(schedule?.id, applicationId, run);
+  const { run: detail, isError, refetch } = useRunDetail(schedule?.id, applicationId, run, indexName);
   const shown = detail ?? run;
   const conversation = useScheduleRunConversation(shown);
+  const isIndexRun = entityType === TOOLKIT_INDEX_TYPE;
   const events = detail?.events ?? NO_EVENTS;
   const active = isRunActive(shown.status);
   const failed = shown.status === 'failed';
@@ -55,6 +56,8 @@ const ScheduleRunDetail = memo(props => {
       id: run.isDraftRun ? NO_SCHEDULE_ID : (schedule?.id ?? NO_SCHEDULE_ID),
       entity_type: entityType,
       application_id: applicationId,
+      toolkit_id: applicationId,
+      index_name: indexName,
     },
     run.isDraftRun ? { trigger: 'test' } : undefined,
   );
@@ -94,7 +97,8 @@ const ScheduleRunDetail = memo(props => {
           {shown.reason}
         </Typography>
       )}
-      {!active && !failed && (
+      {/* An index run has no chat: its details are in the index Run History */}
+      {!active && !failed && !isIndexRun && (
         <Box sx={styles.section}>
           <Typography
             variant="labelSmall"
