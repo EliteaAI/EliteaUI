@@ -372,7 +372,7 @@ const McpAuthModal = memo(props => {
         color="text.secondary"
         sx={styles.dialogTitle}
       >
-        {title || 'MCP Authorization'}
+        {title || (effectiveOAuthAppId ? 'Toolkit Authorization' : 'MCP Authorization')}
         <IconButton
           variant="elitea"
           color="tertiary"
@@ -460,8 +460,9 @@ const McpAuthModal = memo(props => {
             component={'div'}
             sx={styles.successText}
           >
-            ✓ Authorization successful! Your credentials and session have been saved. Please send your message
-            again to use the authorized MCP server.
+            {effectiveOAuthAppId
+              ? '✓ Authorization successful! You are signed in. Please send your message again to use the toolkit.'
+              : '✓ Authorization successful! Your credentials and session have been saved. Please send your message again to use the authorized MCP server.'}
           </Typography>
         )}
       </DialogContent>
