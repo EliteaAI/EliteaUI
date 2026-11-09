@@ -6,19 +6,24 @@ import { Icon, Tooltip } from '@/[fsd]/shared/ui';
 
 const ENTITY_TYPE_LABELS = { agent: 'Agent', pipeline: 'Pipeline', toolkit_index: 'Toolkit Index' };
 
+// Plain object: every row shares the same sx reference
+const iconWithLabelStyles = {
+  iconLabel: { display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 },
+  icon: { display: 'flex', flexShrink: 0 },
+};
+
 const IconWithLabel = memo(props => {
   const { type, label } = props;
-  const styles = iconWithLabelStyles();
   const typeLabel = ENTITY_TYPE_LABELS[type] ?? type;
 
   return (
-    <Box sx={styles.iconLabel}>
+    <Box sx={iconWithLabelStyles.iconLabel}>
       <Box
         component="span"
         role="img"
         aria-label={typeLabel}
         title={typeLabel}
-        sx={styles.icon}
+        sx={iconWithLabelStyles.icon}
       >
         <Icon.EntityTypeIcon type={type} />
       </Box>
@@ -35,11 +40,5 @@ const IconWithLabel = memo(props => {
 });
 
 IconWithLabel.displayName = 'IconWithLabel';
-
-/** @type {MuiSx} */
-const iconWithLabelStyles = () => ({
-  iconLabel: { display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 },
-  icon: { display: 'flex', flexShrink: 0 },
-});
 
 export default IconWithLabel;
