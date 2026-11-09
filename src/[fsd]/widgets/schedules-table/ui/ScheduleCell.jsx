@@ -169,7 +169,7 @@ const ScheduleCell = memo(({ column, value, row, tier, now }) => {
         </MuiTooltip>
       );
     }
-    case 'last_delivery': {
+    case 'last_delivery_at': {
       if (!row.last_delivery_at) return '-';
       const outcome = toDeliveryOutcomeLabel(row.last_delivery_outcome);
       return (

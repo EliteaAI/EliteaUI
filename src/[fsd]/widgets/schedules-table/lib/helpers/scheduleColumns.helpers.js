@@ -22,14 +22,13 @@ export const SCHEDULES_COLUMNS = [
   { field: 'enabled', label: 'Enabled', sortable: true },
   { field: 'actions', label: 'Actions' },
 ];
-// The same tiers: Type takes the Schedule column, URL the Next run column, Last delivery the Last run one.
-// The API cannot sort by delivery, so Last delivery has no sort
+// The same tiers: Type takes the Schedule column, URL the Next run column, Last delivery the Last run one
 export const WEBHOOKS_COLUMNS = [
   { field: 'name', label: 'Name & Description', width: 'minmax(10.25rem, 1.3fr)', sortable: true },
   { field: 'entity_name', label: 'Entity Name', width: 'minmax(7.5rem, 1fr)', sortable: true },
   { field: 'webhook_type', label: 'Type', width: 'minmax(5.5rem, 0.6fr)' },
   { field: 'webhook_url', label: 'URL', width: 'minmax(7.25rem, 1fr)' },
-  { field: 'last_delivery', label: 'Last delivery' },
+  { field: 'last_delivery_at', label: 'Last delivery', sortable: true },
   { field: 'owner', label: 'Owner' },
   { field: 'enabled', label: 'Enabled', sortable: true },
   { field: 'actions', label: 'Actions' },
@@ -41,7 +40,7 @@ export const TIER_WIDTHS = {
   compact: {
     next_run: '5.75rem',
     last_run: '5.75rem',
-    last_delivery: '5.75rem',
+    last_delivery_at: '5.75rem',
     owner: '3.5rem',
     enabled: '5.5rem',
     actions: '4.25rem',
@@ -51,7 +50,7 @@ export const TIER_WIDTHS = {
   regular: {
     next_run: '7.75rem',
     last_run: '7.75rem',
-    last_delivery: '7.75rem',
+    last_delivery_at: '7.75rem',
     owner: '6.75rem',
     enabled: '5.5rem',
     actions: '4.25rem',
@@ -59,7 +58,7 @@ export const TIER_WIDTHS = {
   comfortable: {
     next_run: '9.25rem',
     last_run: '9.25rem',
-    last_delivery: '9.25rem',
+    last_delivery_at: '9.25rem',
     owner: '9.75rem',
     enabled: '6rem',
     actions: '6.5625rem',
