@@ -11,6 +11,7 @@ import { useScheduleRiskCheck } from '../useScheduleRiskCheck.hooks';
 const mocks = vi.hoisted(() => ({ check: vi.fn() }));
 
 vi.mock('@/[fsd]/entities/schedule', () => ({
+  TOOLKIT_INDEX_TYPE: 'toolkit_index',
   useCheckScheduleRiskMutation: () => [mocks.check],
 }));
 

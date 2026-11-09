@@ -25,6 +25,7 @@ vi.mock('react-router-dom', () => ({
 
 vi.mock('@/[fsd]/entities/schedule', () => ({
   TRIGGER_KIND: { cron: 'cron', webhook: 'webhook' },
+  TOOLKIT_INDEX_TYPE: 'toolkit_index',
   useGetScheduleListQuery: mocks.useGetScheduleListQuery,
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({

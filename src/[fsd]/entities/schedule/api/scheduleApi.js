@@ -139,6 +139,23 @@ export const scheduleApi = eliteaApi
         invalidatesTags: (_, error) => (error ? [] : [listTag]),
       }),
 
+      // The indexes of one toolkit with what the schedule picker needs: `scheduled` and `schedulable`.
+      // A row can name the index `name` or `index_name`.
+      getToolkitIndexOptions: build.query({
+        query: ({ projectId, toolkitId }) => ({
+          url: `/elitea_core/index_meta/prompt_lib/${projectId}/${toolkitId}`,
+          params: { summary: true },
+        }),
+        transformResponse: response =>
+          (Array.isArray(response) ? response : (response?.rows ?? [])).map(row => ({
+            name: row.name ?? row.index_name,
+            state: row.state,
+            updatedOn: row.updated_on,
+            scheduled: !!row.scheduled,
+            schedulable: row.schedulable !== false,
+          })),
+      }),
+
       // Dry run of the save risk scan; it writes nothing, so it invalidates nothing
       checkScheduleRisk: build.mutation({
         query: ({ projectId, ...body }) => ({
@@ -341,6 +358,7 @@ export const {
   useGetScheduleListQuery,
   useCreateScheduleMutation,
   useCheckScheduleRiskMutation,
+  useGetToolkitIndexOptionsQuery,
   useDecideRunWithoutChatMutation,
   useRunScheduleMutation,
   useStartDraftTestRunMutation,
