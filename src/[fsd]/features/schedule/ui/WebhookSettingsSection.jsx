@@ -27,8 +27,7 @@ const {
   WEBHOOK_TYPE_OPTIONS,
 } = WebhookConstants;
 
-// Signed senders are marked: their requests cannot be replayed
-const TYPE_ITEMS = WebhookHelpers.markRecommended(WEBHOOK_TYPE_OPTIONS, WEBHOOK_TYPES.github);
+// Only the GitLab signing token is marked: a mark on a whole type reads as a vendor preference
 const METHOD_ITEMS = WebhookHelpers.markRecommended(
   GITLAB_AUTH_METHOD_OPTIONS,
   GITLAB_AUTH_METHODS.signing_token,
@@ -103,7 +102,7 @@ const WebhookSettingsSection = memo(props => {
       <Typography variant="labelMedium">Type</Typography>
       <Checkbox.RadioButtonGroup
         value={values.webhook_type}
-        items={TYPE_ITEMS}
+        items={WEBHOOK_TYPE_OPTIONS}
         onChange={onTypeChange}
         testId="webhook-type-radio"
       />
