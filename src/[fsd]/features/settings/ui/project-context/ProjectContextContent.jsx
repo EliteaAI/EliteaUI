@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { Box, CircularProgress } from '@mui/material';
 
+import { useCanManageProjectSettings } from '@/[fsd]/features/settings/lib/hooks';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useProjectContextQuery } from '@/api/projectContext';
 import { PERMISSIONS } from '@/common/constants';
@@ -19,7 +20,8 @@ const ProjectContextContent = memo(() => {
   const navigate = useNavigate();
 
   const canViewProjectContext = checkPermission(PERMISSIONS.projectContext.view);
-  const canEditProjectContext = checkPermission(PERMISSIONS.projectContext.edit);
+  const { canManageSettings } = useCanManageProjectSettings();
+  const canEditProjectContext = checkPermission(PERMISSIONS.projectContext.edit) && canManageSettings;
 
   const { data: serverData, isLoading } = useProjectContextQuery(projectId, {
     skip: !projectId || !canViewProjectContext,
