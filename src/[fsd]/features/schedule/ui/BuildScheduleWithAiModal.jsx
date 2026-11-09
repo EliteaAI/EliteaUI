@@ -8,7 +8,13 @@ import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 
 import { useGenerateScheduleDraftMutation } from '../api';
-import { changedFields, draftToFormValues, isScheduleFormEmpty, toDraftRequest } from '../lib/helpers';
+import {
+  changedFields,
+  draftToFormValues,
+  isIndexType,
+  isScheduleFormEmpty,
+  toDraftRequest,
+} from '../lib/helpers';
 
 const PLACEHOLDER = 'Describe the schedule: what to run, when and until when.';
 const STEPS = [{ key: 'changes', label: 'Review changes' }];
@@ -25,6 +31,8 @@ const FIELD_LABELS = {
   type: 'Type',
   entity_type: 'Type',
   application_id: 'Entity',
+  toolkit_id: 'Toolkit',
+  index_name: 'Index',
   version_id: 'Version',
   run_mode: 'Run mode',
   prompt: 'Prompt',
@@ -34,6 +42,14 @@ const FIELD_LABELS = {
   expires_at: 'Expires at',
 };
 const DRAFT_FIELDS = Object.keys(FIELD_LABELS).filter(field => field !== 'type');
+// The fields the lock keeps: the draft cannot change them
+const LOCKED_APPLICATION_FIELDS = ['entity_type', 'application_id'];
+const LOCKED_INDEX_FIELDS = ['entity_type', 'toolkit_id', 'index_name'];
+
+const getLockedFields = lockedEntity => {
+  if (!lockedEntity) return [];
+  return isIndexType(lockedEntity.type) ? LOCKED_INDEX_FIELDS : LOCKED_APPLICATION_FIELDS;
+};
 
 const show = value => (typeof value === 'object' && value ? JSON.stringify(value) : String(value ?? '-'));
 
@@ -59,7 +75,7 @@ const BuildScheduleWithAiModal = memo(props => {
     if (open) setIsEmpty(isScheduleFormEmpty(values));
   }
   const styles = buildScheduleWithAiModalStyles();
-  const lockedFields = lockedEntity ? ['entity_type', 'application_id'] : [];
+  const lockedFields = getLockedFields(lockedEntity);
 
   const handleGenerate = useCallback(
     prompt =>

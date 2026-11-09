@@ -77,6 +77,23 @@ describe('SchedulesFilters', () => {
     expect(onChange).toHaveBeenCalledWith({ ...EMPTY, entityType: 'pipeline' });
   });
 
+  it('picking Toolkit Index emits the toolkit_index type', () => {
+    const onChange = renderBar();
+    pick('type', 'Toolkit Index');
+    expect(onChange).toHaveBeenCalledWith({ ...EMPTY, entityType: 'toolkit_index' });
+  });
+
+  it('the Type filter lists All, Agent, Pipeline and Toolkit Index', () => {
+    renderBar();
+    fireEvent.mouseDown(within(screen.getByTestId('schedules-filter-type')).getByRole('combobox'));
+    expect(screen.getAllByRole('option').map(option => option.textContent)).toEqual([
+      'All',
+      'Agent',
+      'Pipeline',
+      'Toolkit Index',
+    ]);
+  });
+
   it('picking a status emits status', () => {
     const onChange = renderBar();
     pick('status', 'Failed');
