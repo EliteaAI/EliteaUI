@@ -1848,4 +1848,19 @@ describe('ScheduleForm', () => {
       expect(saveButton()).toBeDisabled();
     });
   });
+
+  // #7456 review: only the owner's confirmation clears the badge, and the editor lists only webhooks for it
+  describe('Needs re-confirm badge', () => {
+    const owned = { id: 3, owner: { name: 'Ann Lee' }, allowed_actions: ['edit'], needs_reconfirm: true };
+
+    it('shows on a webhook that needs a new confirmation', () => {
+      renderForm({ schedule: { ...owned, trigger_kind: 'webhook' } }, '/settings/webhooks/3');
+      expect(screen.getByTestId('schedule-needs-reconfirm')).toBeInTheDocument();
+    });
+
+    it('never shows on a schedule, even with needs_reconfirm', () => {
+      renderForm({ schedule: { ...owned, trigger_kind: 'cron' } }, '/settings/schedules/3');
+      expect(screen.queryByTestId('schedule-needs-reconfirm')).toBeNull();
+    });
+  });
 });

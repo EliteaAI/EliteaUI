@@ -330,7 +330,7 @@ const ScheduleForm = memo(props => {
                     readOnly={readOnly}
                     onEnabledChange={handleEnabledChange}
                   />
-                  {schedule?.needs_reconfirm === true && !readOnly && (
+                  {isWebhookRow(schedule) && schedule.needs_reconfirm === true && !readOnly && (
                     <ReconfirmBadge onReview={save.reconfirm} />
                   )}
                   <Box

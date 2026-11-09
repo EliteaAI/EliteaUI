@@ -158,6 +158,7 @@ const ScheduleRunsCard = memo(
             runs={runs}
             trigger={trigger}
             status={status}
+            isWebhook={isWebhook}
             onTriggerChange={setTrigger}
             onStatusChange={setStatus}
           />
@@ -209,7 +210,14 @@ const ScheduleRunsCard = memo(
                 entityType={entityType}
                 applicationId={applicationId}
                 onToggle={onExpand}
-                onRunAgain={canRunNow && !busy ? startRun(onRunNow) : undefined}
+                // A webhook has no Run Now: its Run again opens the sample dialog
+                onRunAgain={
+                  canRunNow && !busy
+                    ? isWebhook
+                      ? () => setSampleOpen(true)
+                      : startRun(onRunNow)
+                    : undefined
+                }
               />
             ))}
           </Box>

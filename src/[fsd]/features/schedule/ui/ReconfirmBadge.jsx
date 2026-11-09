@@ -5,6 +5,7 @@ import { Box, Chip, Link, Typography } from '@mui/material';
 // "Run without asking" no longer holds for the next run (tools changed, or another person confirmed it)
 const ReconfirmBadge = memo(props => {
   const { onReview } = props;
+  const styles = reconfirmBadgeStyles();
 
   return (
     <Box
@@ -38,7 +39,7 @@ const ReconfirmBadge = memo(props => {
 ReconfirmBadge.displayName = 'ReconfirmBadge';
 
 /** @type {MuiSx} */
-const styles = {
+const reconfirmBadgeStyles = () => ({
   root: {
     display: 'flex',
     alignItems: 'center',
@@ -46,6 +47,6 @@ const styles = {
     flexWrap: 'wrap',
     padding: '0.75rem 1.5rem 0',
   },
-};
+});
 
 export default ReconfirmBadge;

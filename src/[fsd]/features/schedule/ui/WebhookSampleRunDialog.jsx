@@ -24,6 +24,7 @@ const byteLength = text => new TextEncoder().encode(text).length;
 // The sample body lives in this dialog's state only: it is not kept anywhere once the dialog closes
 const WebhookSampleRunDialog = memo(props => {
   const { open, webhook, onClose, onStarted } = props;
+  const styles = webhookSampleRunDialogStyles();
   const projectId = useSelectedProjectId();
   const { toastError, toastSuccess } = useToast();
   const [runSchedule, { isLoading }] = useRunScheduleMutation();
@@ -113,8 +114,8 @@ const WebhookSampleRunDialog = memo(props => {
 WebhookSampleRunDialog.displayName = 'WebhookSampleRunDialog';
 
 /** @type {MuiSx} */
-const styles = {
+const webhookSampleRunDialogStyles = () => ({
   content: { display: 'flex', flexDirection: 'column', gap: '0.75rem' },
-};
+});
 
 export default WebhookSampleRunDialog;
