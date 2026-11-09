@@ -182,6 +182,23 @@ describe('McpAuthModal client secret requirement (#6689)', () => {
   );
 });
 
+describe('McpAuthModal for a Default app (admin OAuth app) sign-in (#7474)', () => {
+  afterEach(() => cleanup());
+
+  it('asks for no secret and shows no MCP wording when the prompt carries the app reference', () => {
+    renderModal(findServerMetadata('Entra v2 tenant'), {
+      mcp_client_id: 'admin-client-id',
+      oauth_app_id: 'app-uuid',
+      credential_type: 'outlook',
+    });
+
+    expect(screen.queryByPlaceholderText('Enter OAuth client secret')).not.toBeInTheDocument();
+    expect(screen.queryByText(/MCP server/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Sign-in settings are managed by your administrator/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Authorize' })).toBeEnabled();
+  });
+});
+
 describe('McpAuthModal description names only the credential fields it shows (#6689)', () => {
   const descriptionText = () => screen.getByText(/This MCP server requires OAuth authorization/).textContent;
   const secretInput = () => screen.getByPlaceholderText('Enter OAuth client secret');

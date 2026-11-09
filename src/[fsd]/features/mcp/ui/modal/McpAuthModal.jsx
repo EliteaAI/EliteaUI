@@ -177,9 +177,14 @@ const McpAuthModal = memo(props => {
       });
       return `${PRE_REGISTERED_APPLICATION_NOTICE} ${requestedCredentials}`;
     };
+    // A Default app (admin OAuth app) sign-in is a toolkit sign-in, not an MCP server's (#7474)
+    if (effectiveOAuthAppId) {
+      return 'Sign in with your Microsoft account to use this toolkit. Sign-in settings are managed by your administrator.';
+    }
     const flowSuffix = selectFlowSuffix();
     return `This MCP server requires OAuth authorization to access its tools.${flowSuffix ? ` ${flowSuffix}` : ''}`;
   }, [
+    effectiveOAuthAppId,
     providedSettings?.has_pat,
     hasAuthServerMetadata,
     showsCredentialFields,
