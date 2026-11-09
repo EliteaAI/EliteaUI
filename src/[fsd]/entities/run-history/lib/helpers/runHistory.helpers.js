@@ -161,12 +161,13 @@ const EXECUTION_TYPE_LABELS = new Map([
 ]);
 
 // A missing or unknown type (older runs) renders "-" and the row stays selectable. Older test runs were stored
-// as schedule_manual, so the run record's trigger still tells a test apart
-export const toExecutionTypeRow = row => ({
-  ...row,
-  event_label:
-    row.schedule_run?.trigger === 'test' ? 'Test' : (EXECUTION_TYPE_LABELS.get(row.execution_type) ?? '-'),
-});
+// as schedule_manual, so the run record's trigger still tells a test apart; a webhook test is its sample-body run
+const toEventLabel = row => {
+  if (row.schedule_run?.trigger !== 'test') return EXECUTION_TYPE_LABELS.get(row.execution_type) ?? '-';
+  return row.execution_type === 'webhook' ? 'Webhook (sample)' : 'Test';
+};
+
+export const toExecutionTypeRow = row => ({ ...row, event_label: toEventLabel(row) });
 
 // The Schedule and Status columns of Agent and Pipeline Run History; '-' without a run record
 export const SCHEDULE_RUN_COLUMNS = [

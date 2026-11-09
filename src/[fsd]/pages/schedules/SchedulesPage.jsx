@@ -34,7 +34,8 @@ const KINDS = {
     noun: 'webhook',
     testId: 'webhooks',
     createRoute: RouteDefinitions.CreateWebhook,
-    sort: { field: 'last_run', direction: SortOrderOptions.DESC },
+    // The most recent delivery first; webhooks never delivered come last
+    sort: { field: 'last_delivery_at', direction: SortOrderOptions.DESC },
   },
 };
 

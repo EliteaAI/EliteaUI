@@ -5,6 +5,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Box, Link, Typography } from '@mui/material';
 
 import { useGetScheduleSettingsQuery } from '@/[fsd]/entities/schedule';
+import { WebhookConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import RadioButtonGroup from '@/[fsd]/shared/ui/checkbox/RadioButtonGroup';
 import RouteDefinitions from '@/routes';
@@ -39,8 +40,21 @@ const formatConfirmation = (by, at) => {
     : `Confirmed by ${by}`;
 };
 
+const { RUN_WITHOUT_ASKING_SECRET_WARNING, UNSIGNED_REPLAY_WARNING } = WebhookConstants;
+
+// webhookSigned: undefined on a schedule, else whether the webhook type signs its requests
 const ScheduleApprovalSection = memo(props => {
-  const { rule, ruleChanged, confirmedBy, confirmedAt, canChangeProjectSettings, error, onChange } = props;
+  const {
+    rule,
+    ruleChanged,
+    confirmedBy,
+    confirmedAt,
+    canChangeProjectSettings,
+    webhookSigned,
+    error,
+    onChange,
+  } = props;
+  const showWebhookWarning = webhookSigned !== undefined && rule === APPROVAL_RULE.RUN_WITHOUT_ASKING;
   const projectId = useSelectedProjectId();
   const { data: scheduleSettings } = useGetScheduleSettingsQuery({ projectId }, { skip: !projectId });
   // Three states: undefined while loading or on error, then true or false; only an explicit false shows the hint
@@ -90,6 +104,17 @@ const ScheduleApprovalSection = memo(props => {
               </Link>
             </>
           )}
+        </Typography>
+      )}
+      {showWebhookWarning && (
+        <Typography
+          variant="bodySmall"
+          color="warning.main"
+          role="note"
+          data-testid="webhook-run-without-asking-warning"
+        >
+          {RUN_WITHOUT_ASKING_SECRET_WARNING}
+          {!webhookSigned && ` ${UNSIGNED_REPLAY_WARNING}`}
         </Typography>
       )}
       {confirmedBy && (

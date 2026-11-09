@@ -8,3 +8,4 @@ export { default as ScheduleDraftRuns } from './ScheduleDraftRuns';
 export { default as WebhookSecretDialog } from './WebhookSecretDialog';
 export { default as RotateSecretDialog } from './RotateSecretDialog';
 export { default as WebhookSettingsSection } from './WebhookSettingsSection';
+export { default as WebhookSampleRunDialog } from './WebhookSampleRunDialog';

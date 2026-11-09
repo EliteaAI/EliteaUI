@@ -8,6 +8,7 @@ import {
   formatRunStarted,
   isRotating,
   rotationText,
+  toDeliveryOutcomeLabel,
   toFullWebhookUrl,
   toRunStatusLabel,
   toWebhookTypeLabel,
@@ -165,6 +166,34 @@ const ScheduleCell = memo(({ column, value, row, tier, now }) => {
           placement="top"
         >
           {renderRunDate(value, tier)}
+        </MuiTooltip>
+      );
+    }
+    case 'last_delivery_at': {
+      if (!row.last_delivery_at) return '-';
+      const outcome = toDeliveryOutcomeLabel(row.last_delivery_outcome);
+      return (
+        <MuiTooltip
+          title={[outcome, formatRunStarted(row.last_delivery_at)].filter(Boolean).join(' - ')}
+          placement="top"
+        >
+          <Box
+            component="span"
+            tabIndex={isCompact ? 0 : undefined}
+            sx={styles.lastRun}
+            data-testid="webhook-last-delivery"
+          >
+            {renderRunDate(row.last_delivery_at, tier)}
+            {!isCompact && outcome && (
+              <Typography
+                variant="bodySmall"
+                component="span"
+                sx={styles.statusLabel}
+              >
+                {outcome}
+              </Typography>
+            )}
+          </Box>
         </MuiTooltip>
       );
     }

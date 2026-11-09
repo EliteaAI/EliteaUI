@@ -3,10 +3,18 @@ import { memo, useCallback } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { WebhookConstants } from '@/[fsd]/shared/lib/constants';
+import { WebhookHelpers } from '@/[fsd]/shared/lib/helpers';
 import { Checkbox } from '@/[fsd]/shared/ui';
 import { CopyValueField, GitlabSigningTokenField } from '@/[fsd]/shared/ui/webhook';
 
-import { isRotating, isSigningRow, rotationText, toFullWebhookUrl, toWebhookTypeLabel } from '../lib/helpers';
+import {
+  isRotating,
+  isSigningRow,
+  lastDeliveryText,
+  rotationText,
+  toFullWebhookUrl,
+  toWebhookTypeLabel,
+} from '../lib/helpers';
 import { useNow } from '../lib/hooks/useNow.hooks';
 
 const {
@@ -18,6 +26,12 @@ const {
   WEBHOOK_TYPE_DESCRIPTIONS,
   WEBHOOK_TYPE_OPTIONS,
 } = WebhookConstants;
+
+// Only the GitLab signing token is marked: a mark on a whole type reads as a vendor preference
+const METHOD_ITEMS = WebhookHelpers.markRecommended(
+  GITLAB_AUTH_METHOD_OPTIONS,
+  GITLAB_AUTH_METHODS.signing_token,
+);
 
 // WEBHOOK SETTINGS of the form: the sender on create; on edit it is fixed, with the URL and the rotation notice
 const WebhookSettingsSection = memo(props => {
@@ -53,6 +67,12 @@ const WebhookSettingsSection = memo(props => {
           value={toFullWebhookUrl(webhook.webhook_url)}
           testId="webhook-settings-url"
         />
+        <Typography
+          variant="bodySmall"
+          data-testid="webhook-settings-last-delivery"
+        >
+          Last delivery: {lastDeliveryText(webhook)}
+        </Typography>
         <Typography
           variant="bodySmall"
           color="text.secondary"
@@ -97,7 +117,7 @@ const WebhookSettingsSection = memo(props => {
           <Typography variant="labelMedium">Authentication</Typography>
           <Checkbox.RadioButtonGroup
             value={values.gitlab_auth_method}
-            items={GITLAB_AUTH_METHOD_OPTIONS}
+            items={METHOD_ITEMS}
             onChange={onMethodChange}
             testId="webhook-gitlab-method-radio"
           />

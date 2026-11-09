@@ -1,5 +1,6 @@
 import { Fragment, memo, useCallback, useMemo, useState } from 'react';
 
+import { isWebhookRow } from '@/[fsd]/entities/schedule';
 import ClockIcon from '@/assets/clock_icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
 import PauseIcon from '@/assets/pause-icon.svg?react';
@@ -14,6 +15,7 @@ import PlayIcon from '@/components/Icons/PlayIcon';
 import { ownerOnlyRunHint } from '../lib/helpers';
 import ChangeOwnerDialog from './ChangeOwnerDialog';
 import RotateSecretDialog from './RotateSecretDialog';
+import WebhookSampleRunDialog from './WebhookSampleRunDialog';
 
 // Owner CR : every item shows a small icon; the item sets the colour through currentColor
 const ICON_SX = { fontSize: '1rem' };
@@ -46,6 +48,11 @@ const ScheduleRowActions = memo(props => {
   const [isRotateDialogOpen, setIsRotateDialogOpen] = useState(false);
   const openRotateDialog = useCallback(() => setIsRotateDialogOpen(true), []);
   const closeRotateDialog = useCallback(() => setIsRotateDialogOpen(false), []);
+  // A webhook runs only with a body: its Run item opens the sample dialog
+  const isWebhook = isWebhookRow(row);
+  const [isSampleDialogOpen, setIsSampleDialogOpen] = useState(false);
+  const openSampleDialog = useCallback(() => setIsSampleDialogOpen(true), []);
+  const closeSampleDialog = useCallback(() => setIsSampleDialogOpen(false), []);
 
   const styles = scheduleRowActionsStyles();
 
@@ -54,7 +61,7 @@ const ScheduleRowActions = memo(props => {
       [
         (allowed?.includes('run') || runHint) && {
           key: 'run',
-          label: 'Run now',
+          label: isWebhook ? 'Run with sample' : 'Run now',
           icon: (
             <PlayIcon
               fill="currentColor"
@@ -64,7 +71,7 @@ const ScheduleRowActions = memo(props => {
           // #7254: shown to an admin, disabled, with who can run it; no handler then
           disabled: !!runHint,
           tooltip: runHint,
-          onClick: runHint ? undefined : onRun,
+          onClick: runHint ? undefined : isWebhook ? openSampleDialog : onRun,
         },
         !hideEdit &&
           allowed?.includes('edit') && {
@@ -142,6 +149,8 @@ const ScheduleRowActions = memo(props => {
     [
       allowed,
       runHint,
+      isWebhook,
+      openSampleDialog,
       row.enabled,
       row.name,
       onRun,
@@ -177,6 +186,13 @@ const ScheduleRowActions = memo(props => {
           open
           schedule={{ id: row.id, name: row.name, owner: row.owner, trigger_kind: row.trigger_kind }}
           onClose={closeOwnerDialog}
+        />
+      )}
+      {isSampleDialogOpen && (
+        <WebhookSampleRunDialog
+          open
+          webhook={row}
+          onClose={closeSampleDialog}
         />
       )}
       {isRotateDialogOpen && (

@@ -1,4 +1,20 @@
-import { GITLAB_SIGNING_KEY_MIN_BYTES, GITLAB_SIGNING_TOKEN_PREFIX } from '../constants/webhook.constants.js';
+import {
+  GITLAB_AUTH_METHODS,
+  GITLAB_SIGNING_KEY_MIN_BYTES,
+  GITLAB_SIGNING_TOKEN_PREFIX,
+  RECOMMENDED_SUFFIX,
+  WEBHOOK_TYPES,
+} from '../constants/webhook.constants.js';
+
+// Same rule as the API's `signed`: only these requests carry a signature that stops a replay
+export const isSignedWebhook = (type, gitlabAuthMethod) =>
+  type === WEBHOOK_TYPES.github ||
+  (type === WEBHOOK_TYPES.gitlab && gitlabAuthMethod === GITLAB_AUTH_METHODS.signing_token);
+
+export const markRecommended = (options, recommended) =>
+  options.map(option =>
+    option.value === recommended ? { ...option, label: `${option.label}${RECOMMENDED_SUFFIX}` } : option,
+  );
 
 /**
  * Check a pasted GitLab signing token. The backend is authoritative; this only catches the

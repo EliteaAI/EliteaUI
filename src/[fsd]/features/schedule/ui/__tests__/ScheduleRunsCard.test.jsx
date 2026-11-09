@@ -8,7 +8,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import getDesignTokens from '@/MainTheme';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import ScheduleRunsCard from '../ScheduleRunsCard';
 
@@ -18,6 +18,9 @@ const mocks = vi.hoisted(() => ({ canRun: true, cardProps: [] }));
 
 vi.mock('@/hooks/useCheckPermission', () => ({
   default: () => ({ checkPermission: () => mocks.canRun }),
+}));
+vi.mock('../WebhookSampleRunDialog', () => ({
+  default: () => <div data-testid="webhook-sample-run-dialog" />,
 }));
 vi.mock('../ScheduleRunCard', () => ({
   default: props => {
@@ -212,5 +215,30 @@ describe('ScheduleRunsCard', () => {
 
     renderCard({ schedule: undefined, view: makeView([]), testRunError: 'Test failed' });
     expect(screen.getByText('Test failed')).toBeInTheDocument();
+  });
+
+  // #7456 review: a webhook has no Run Now, so Run again on its failed run opens the sample dialog
+  describe('webhook rows', () => {
+    const webhook = { id: 19, name: 'On issue', trigger_kind: 'webhook', allowed_actions: ['run'] };
+
+    it('Run again opens the sample dialog and never calls Run Now', () => {
+      const { onRunNow } = renderCard({
+        schedule: webhook,
+        view: makeView([run(1, { status: 'failed', trigger: 'webhook' })]),
+      });
+      const { onRunAgain } = mocks.cardProps.at(-1);
+      expect(onRunAgain).toBeTypeOf('function');
+      act(() => onRunAgain());
+      expect(screen.getByTestId('webhook-sample-run-dialog')).toBeInTheDocument();
+      expect(onRunNow).not.toHaveBeenCalled();
+    });
+
+    it('has no Run again for a webhook the caller cannot run', () => {
+      renderCard({
+        schedule: { ...webhook, allowed_actions: [] },
+        view: makeView([run(1, { status: 'failed' })]),
+      });
+      expect(mocks.cardProps.at(-1).onRunAgain).toBeUndefined();
+    });
   });
 });

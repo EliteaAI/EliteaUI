@@ -21,6 +21,28 @@ export const WEBHOOK_TYPE_OPTIONS = [
   { label: 'Custom', value: WEBHOOK_TYPES.custom },
 ];
 
+// Signed senders, as the API's `signed`: GitHub, and GitLab with a signing token (marked on the method)
+export const RECOMMENDED_SUFFIX = ' (recommended)';
+
+export const RUN_WITHOUT_ASKING_SECRET_WARNING =
+  "Anyone holding this webhook's secret can start runs that act without approval. Treat it like a password: rotate it when people leave, and never paste it into chats or screenshots.";
+export const UNSIGNED_REPLAY_WARNING =
+  'Requests of this type are not signed, so a copied request can be sent again.';
+
+// What the delivery door stored for the last authentic request (`last_delivery_outcome`)
+export const DELIVERY_OUTCOME_LABELS = {
+  accepted: 'Accepted',
+  duplicate: 'Duplicate',
+  ping: 'Ping received',
+  disabled: 'Disabled',
+  refused: 'Refused',
+  start_failed: 'Start failed',
+};
+
+export const SAMPLE_RUN_CONFIRM = 'This runs the real agent or pipeline as you, with its tools.';
+// The API caps the sample body at 512 KB of UTF-8, as the delivery door
+export const SAMPLE_PAYLOAD_MAX_BYTES = 512 * 1024;
+
 export const WEBHOOK_TYPE_LABELS = { github: 'GitHub', gitlab: 'GitLab', custom: 'Custom' };
 
 export const WEBHOOK_TYPE_DESCRIPTIONS = {

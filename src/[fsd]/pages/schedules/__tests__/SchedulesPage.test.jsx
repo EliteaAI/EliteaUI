@@ -444,7 +444,11 @@ describe('Webhooks page (#7405)', () => {
 
   it('lists webhook rows, newest delivery first', () => {
     render(<SchedulesPage kind="webhook" />);
-    expect(lastArgs()).toMatchObject({ triggerKind: 'webhook', sortBy: 'last_run', sortOrder: 'desc' });
+    expect(lastArgs()).toMatchObject({
+      triggerKind: 'webhook',
+      sortBy: 'last_delivery_at',
+      sortOrder: 'desc',
+    });
     expect(screen.getByTestId('webhooks-page-header')).toHaveTextContent('Webhooks');
     expect(screen.getByTestId('kind')).toHaveTextContent('webhook');
   });
