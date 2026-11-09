@@ -126,4 +126,16 @@ describe('scheduleLinks.helpers for a toolkit index', () => {
   it('filters the Schedules list by the index', () => {
     expect(buildSchedulesListLink(index)).toContain('indexName=docs');
   });
+
+  it('opens the index Run History, which is not filtered by schedule', () => {
+    expect(
+      buildScheduleHistoryLink({ id: 4, entity_type: 'toolkit_index', toolkit_id: 8, index_name: 'docs' }),
+    ).toBe('/toolkits/all/8/index/docs/history');
+  });
+
+  it('encodes an index name that has a slash or a space in the path', () => {
+    expect(buildScheduleFormLink({ ...index, indexName: 'a/b c' })).toBe(
+      '/toolkits/my/8/index/a%2Fb%20c/schedules/create',
+    );
+  });
 });

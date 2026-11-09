@@ -48,20 +48,21 @@ const ENTITY_ROUTES = {
   },
 };
 
+const DEFAULT_TAB = 'all';
+
 // The route params of the entity: a toolkit index is named by its toolkit id and its index name
 const toEntityParams = ({ entityType, entityId, indexName, tab = DEFAULT_TAB }) =>
   entityType === TOOLKIT_INDEX_TYPE ? { tab, toolkitId: entityId, indexName } : { tab, agentId: entityId };
-
-const DEFAULT_TAB = 'all';
 
 // The entity pages fall back to the public mode without the owner view mode, so every link into them adds it
 export const buildOwnerViewModeParams = (params = {}) =>
   new URLSearchParams({ ...params, [SearchParams.ViewMode]: ViewMode.Owner });
 
 export const buildEntityEditorLink = ({ entityType, entityId, indexName, tab = DEFAULT_TAB }) =>
-  NavigationHelpers.buildRoute(ENTITY_ROUTES[entityType].editor, {
-    ...toEntityParams({ entityType, entityId, indexName, tab }),
-  });
+  NavigationHelpers.buildRoute(
+    ENTITY_ROUTES[entityType].editor,
+    toEntityParams({ entityType, entityId, indexName, tab }),
+  );
 
 export const buildScheduleFormLink = ({
   entityType,
