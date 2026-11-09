@@ -2,22 +2,24 @@ import { useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import {
-  findVisibleIndexSchedule,
-  indexScheduleIndicator,
-} from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
-import {
-  selectIsSchedulerForListedToolkit,
-  selectToolkitScheduler,
-} from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
+import { useGetToolkitIndexOptionsQuery } from '@/[fsd]/entities/schedule';
+import { IndexScheduleIndicatorLabel } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import { selectIndexesListToolkitId } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 
+// The clock icon of an index in the listed toolkit; the index summary tells whether the index has a schedule.
+// The summary has no tag that a schedule save clears, so each mount asks again.
 export const useIndexScheduleIndicator = indexName => {
-  const toolkitScheduler = useSelector(selectToolkitScheduler);
-  const isSchedulerForListedToolkit = useSelector(selectIsSchedulerForListedToolkit);
-  const userId = useSelector(state => state.user.id);
+  const projectId = useSelectedProjectId();
+  const toolkitId = useSelector(selectIndexesListToolkitId);
+  const { data: options } = useGetToolkitIndexOptionsQuery(
+    { projectId, toolkitId },
+    { skip: !projectId || !toolkitId || !indexName, refetchOnMountOrArgChange: true },
+  );
 
   return useMemo(() => {
-    if (!isSchedulerForListedToolkit) return null;
-    return indexScheduleIndicator(findVisibleIndexSchedule(toolkitScheduler, indexName, userId)?.schedule);
-  }, [indexName, isSchedulerForListedToolkit, toolkitScheduler, userId]);
+    const isScheduled = options?.some(option => option.name === indexName && option.scheduled);
+
+    return isScheduled ? { enabled: true, tooltip: IndexScheduleIndicatorLabel.enabled } : null;
+  }, [options, indexName]);
 };

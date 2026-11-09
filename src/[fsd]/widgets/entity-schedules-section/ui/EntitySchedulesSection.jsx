@@ -6,6 +6,7 @@ import { Link as RouterLink, useParams } from 'react-router-dom';
 import { Box, Link, Skeleton, Typography } from '@mui/material';
 
 import {
+  TOOLKIT_INDEX_TYPE,
   TRIGGER_KIND,
   buildScheduleFormLink,
   buildScheduleRunsLink,
@@ -49,6 +50,7 @@ const WIDE = '@container (min-width: 30rem)';
 const BASE_VERSION_NAME = 'base';
 
 // The last section of the agent and pipeline editors; entityType is 'agent' or 'pipeline'; versionId is the editor version, versionName its label (none or 'base': the base version)
+// For entityType 'toolkit_index' the entityId is the toolkit id and indexName names the index; an index has one schedule
 const EntitySchedulesSection = memo(props => {
   const {
     entityType,
@@ -56,6 +58,7 @@ const EntitySchedulesSection = memo(props => {
     entityName,
     versionId,
     versionName,
+    indexName,
     isChatView = false,
     style,
     kind = TRIGGER_KIND.cron,
@@ -64,6 +67,7 @@ const EntitySchedulesSection = memo(props => {
   // The Webhooks instance gets its own section ids; the shared skeleton keeps the schedules one
   const sectionTestId = `${entityType}-${config.noun}s-section`;
   const triggerKind = kind === TRIGGER_KIND.webhook ? kind : undefined;
+  const isIndex = entityType === TOOLKIT_INDEX_TYPE;
   const { checkPermission } = useCheckPermission();
   const currentUserId = useSelector(state => state.user.id);
   const canCreate = checkPermission(PERMISSIONS.schedules.create);
@@ -72,6 +76,7 @@ const EntitySchedulesSection = memo(props => {
     entityType,
     entityId,
     versionId,
+    indexName,
     triggerKind,
     skip: isHidden,
   });
@@ -86,24 +91,27 @@ const EntitySchedulesSection = memo(props => {
   const openForm = useCallback(
     scheduleId =>
       openNested(
-        { pathname: buildScheduleFormLink({ entityType, entityId, tab, scheduleId, kind }) },
+        { pathname: buildScheduleFormLink({ entityType, entityId, indexName, tab, scheduleId, kind }) },
         versionOf(scheduleId),
       ),
-    [openNested, versionOf, entityType, entityId, tab, kind],
+    [openNested, versionOf, entityType, entityId, indexName, tab, kind],
   );
   const openRunHistory = useCallback(
     scheduleId =>
       openNested(
-        buildScheduleRunsLink({ entityType, entityId, tab, scheduleId, kind }),
+        buildScheduleRunsLink({ entityType, entityId, indexName, tab, scheduleId, kind }),
         versionOf(scheduleId),
       ),
-    [openNested, versionOf, entityType, entityId, tab, kind],
+    [openNested, versionOf, entityType, entityId, indexName, tab, kind],
   );
   const onAdd = useCallback(() => openForm(), [openForm]);
   const version =
     versionName && versionName !== BASE_VERSION_NAME ? `version ${versionName}` : 'the base version';
   const testId = `${entityType}-schedules-section`;
+  const emptyText = isIndex ? 'No schedule runs this index yet.' : `No ${config.noun}s run ${version} yet.`;
   const showSkeleton = !isError && isFetching && rows.length === 0;
+  // The server keeps one schedule for each index; until the list loads, the index may already have it
+  const isAddBlocked = isIndex && kind === TRIGGER_KIND.cron && (total > 0 || showSkeleton);
 
   const styles = entitySchedulesSectionStyles(entityType === 'agent');
 
@@ -114,7 +122,7 @@ const EntitySchedulesSection = memo(props => {
       summaryAction: (
         <Link
           component={RouterLink}
-          to={buildSchedulesListLink({ entityType, entityId, kind })}
+          to={buildSchedulesListLink({ entityType, entityId, indexName, kind })}
           // The Schedules page names the entity chip with it when the list has no rows
           state={{ entityName }}
           variant="bodySmall"
@@ -151,7 +159,7 @@ const EntitySchedulesSection = memo(props => {
               variant="bodyMedium"
               color="text.secondary"
             >
-              No {config.noun}s run {version} yet.
+              {emptyText}
             </Typography>
           )}
           {(showSkeleton || rows.length > 0) && (
@@ -182,6 +190,7 @@ const EntitySchedulesSection = memo(props => {
               variant={BUTTON_VARIANTS.iconLabel}
               startIcon={<PlusIcon />}
               onClick={onAdd}
+              disabled={isAddBlocked}
               sx={styles.add}
               data-testid={`${sectionTestId}-add`}
             >

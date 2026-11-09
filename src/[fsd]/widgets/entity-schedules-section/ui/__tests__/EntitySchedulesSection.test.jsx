@@ -480,4 +480,99 @@ describe('EntitySchedulesSection', () => {
       expect(screen.getByText('No webhooks run the base version yet.')).toBeInTheDocument();
     });
   });
+
+  describe('toolkit index', () => {
+    const INDEX_PATH = '/toolkits/all/5/index/docs';
+    const renderIndexSection = (props = {}) =>
+      renderSection({ entityType: 'toolkit_index', entityId: 5, indexName: 'docs', ...props }, INDEX_PATH);
+
+    it('requests the schedules of this index of the toolkit', () => {
+      renderIndexSection();
+
+      expect(mocks.entitySchedules).toHaveBeenLastCalledWith(
+        expect.objectContaining({ entityType: 'toolkit_index', entityId: 5, indexName: 'docs' }),
+      );
+    });
+
+    it('shows the card and keeps "+ Schedule" off while the index has its schedule', () => {
+      mocks.entitySchedules.mockReturnValue(listOf([{ id: 2, name: 'Nightly refresh' }]));
+      renderIndexSection();
+
+      expect(screen.getByTestId('card-2')).toBeInTheDocument();
+      expect(screen.getByTestId('toolkit_index-schedules-section-add')).toBeDisabled();
+    });
+
+    it('keeps "+ Schedule" off while the first load runs', () => {
+      mocks.entitySchedules.mockReturnValue(listOf([], { isFetching: true }));
+      renderIndexSection();
+
+      expect(screen.getByTestId('toolkit_index-schedules-section-add')).toBeDisabled();
+    });
+
+    it('does not open the create form from the disabled "+ Schedule"', () => {
+      mocks.entitySchedules.mockReturnValue(listOf([{ id: 2, name: 'Nightly refresh' }]));
+      renderIndexSection();
+
+      fireEvent.click(screen.getByTestId('toolkit_index-schedules-section-add'));
+
+      expect(mocks.navigate).not.toHaveBeenCalled();
+    });
+
+    it('says no schedule runs the index and offers "+ Schedule" for an index without one', () => {
+      mocks.entitySchedules.mockReturnValue(listOf([]));
+      renderIndexSection();
+
+      expect(screen.getByText('No schedule runs this index yet.')).toBeInTheDocument();
+      expect(screen.getByTestId('toolkit_index-schedules-section-add')).toBeEnabled();
+    });
+
+    it('hides "+ Schedule" when the list fails to load', () => {
+      mocks.entitySchedules.mockReturnValue(listOf([], { isError: true, error: { status: 500 } }));
+      renderIndexSection();
+
+      expect(screen.queryByTestId('toolkit_index-schedules-section-add')).not.toBeInTheDocument();
+    });
+
+    it('"+ Schedule" opens the create form nested in the index page', () => {
+      mocks.entitySchedules.mockReturnValue(listOf([]));
+      renderIndexSection();
+
+      fireEvent.click(screen.getByTestId('toolkit_index-schedules-section-add'));
+
+      expect(mocks.navigate).toHaveBeenCalledWith(
+        { pathname: `${INDEX_PATH}/schedules/create`, search: '' },
+        { state: { returnTo: INDEX_PATH } },
+      );
+    });
+
+    it('a card opens the edit form of the index schedule', () => {
+      mocks.entitySchedules.mockReturnValue(listOf([{ id: 2, name: 'Nightly refresh' }]));
+      renderIndexSection();
+
+      fireEvent.click(screen.getByTestId('card-2'));
+
+      expect(mocks.navigate.mock.calls.at(-1)[0].pathname).toBe(`${INDEX_PATH}/schedules/2`);
+    });
+
+    it('Run history of a card opens the runs of the index schedule', () => {
+      mocks.entitySchedules.mockReturnValue(listOf([{ id: 2, name: 'Nightly refresh' }]));
+      renderIndexSection();
+
+      act(() => mocks.cardProps.at(-1).onOpenRunHistory(2));
+
+      expect(mocks.navigate).toHaveBeenCalledWith(
+        { pathname: `${INDEX_PATH}/schedules/2`, hash: '#runs', search: '?viewMode=owner' },
+        { state: { returnTo: INDEX_PATH } },
+      );
+    });
+
+    it('"Manage Schedules" lists the schedules of this index', () => {
+      renderIndexSection();
+
+      expect(screen.getByTestId('toolkit_index-schedules-section-open-all')).toHaveAttribute(
+        'href',
+        '/settings/schedules?entityType=toolkit_index&entityId=5&indexName=docs',
+      );
+    });
+  });
 });

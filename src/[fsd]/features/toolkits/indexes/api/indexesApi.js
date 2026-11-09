@@ -1,11 +1,10 @@
 import { eliteaApi } from '@/api/eliteaApi.js';
 
 const INDEXES_LIST = 'INDEXES_LIST';
-const INDEX_SCHEDULE = 'INDEX_SCHEDULE';
 
 const indexesApi = eliteaApi
   .enhanceEndpoints({
-    addTagTypes: [INDEXES_LIST, INDEX_SCHEDULE],
+    addTagTypes: [INDEXES_LIST],
   })
   .injectEndpoints({
     endpoints: build => ({
@@ -45,36 +44,6 @@ const indexesApi = eliteaApi
         }),
         invalidatesTags: [INDEXES_LIST],
       }),
-      deleteIndexSchedule: build.mutation({
-        query: ({ projectId, toolkitId, indexName, userId }) => ({
-          url: `elitea_core/index_schedule/prompt_lib/${projectId}/${toolkitId}/${indexName}${userId != null ? `?user_id=${userId}` : ''}`,
-          method: 'DELETE',
-        }),
-        invalidatesTags: (_, __, { toolkitId }) => [INDEX_SCHEDULE, { type: INDEX_SCHEDULE, id: toolkitId }],
-      }),
-      updateIndexSchedule: build.mutation({
-        query: ({ projectId, toolkitId, indexName, timezone, ...body }) => ({
-          url: `elitea_core/index_meta/prompt_lib/${projectId}/${toolkitId}/${indexName}`,
-          method: 'PATCH',
-          body: { ...body, timezone },
-        }),
-        invalidatesTags: (_, __, { toolkitId }) => [INDEX_SCHEDULE, { type: INDEX_SCHEDULE, id: toolkitId }],
-      }),
-      getIndexSchedule: build.query({
-        query: ({ projectId, toolkitId }) => ({
-          url: `elitea_core/tool/prompt_lib/${projectId}/${toolkitId}`,
-        }),
-        serializeQueryArgs: ({ endpointName, queryArgs }) => {
-          const sortedObject = {};
-          Object.keys(queryArgs)
-            .sort()
-            .forEach(prop => {
-              sortedObject[prop] = queryArgs[prop];
-            });
-          return endpointName + JSON.stringify(sortedObject);
-        },
-        providesTags: (_, __, { toolkitId }) => [INDEX_SCHEDULE, { type: INDEX_SCHEDULE, id: toolkitId }],
-      }),
     }),
   });
 
@@ -86,8 +55,4 @@ export const {
   useDeleteIndexItemMutation,
   useStopIndexingItemMutation,
   useSaveIndexConfigurationMutation,
-  useDeleteIndexScheduleMutation,
-  useUpdateIndexScheduleMutation,
-  useGetIndexScheduleQuery,
-  useLazyGetIndexScheduleQuery,
 } = indexesApi;
