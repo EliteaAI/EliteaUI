@@ -40,9 +40,9 @@ export const APPLICATION_CATALOG = [
     IconComponent: QuestionnaireIcon,
     shortDescription: 'Answer questionnaires from your project sources, with references.',
     description:
-      'Questionnaire answers compliance and security questionnaires from SharePoint, Confluence, Jira and uploaded documents, with references to the source and an honest "not found" when the sources are silent.',
+      'Questionnaire fills in questionnaires from SharePoint, Confluence, Jira and uploaded documents, with a reference for every answer and an honest "not found" when the sources are silent.',
     capabilities: ['Question extraction', 'Referenced answers', 'Excel export'],
-    bestFor: 'Compliance, security and due-diligence questionnaires',
+    bestFor: 'Vendor, customer and internal questionnaires answered from one document base',
     documentation: 'https://docs.elitea.ai/integrations/apps/questionnaire',
   },
 ];
