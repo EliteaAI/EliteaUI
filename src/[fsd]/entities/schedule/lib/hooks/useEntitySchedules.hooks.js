@@ -8,8 +8,17 @@ const PAGE_SIZE = 20;
 // lean: one request of up to 100 rows, the list API limit; page with offset when an entity has more
 const MAX_ROWS = 100;
 
-// The schedules of one agent or pipeline version; the list API keeps only the rows the user may see
-export const useEntitySchedules = ({ entityType, entityId, versionId, triggerKind, skip = false }) => {
+// The schedules of one agent or pipeline version; the list API keeps only the rows the user may see.
+// sortBy / sortOrder are optional; without them the list API orders by next run.
+export const useEntitySchedules = ({
+  entityType,
+  entityId,
+  versionId,
+  triggerKind,
+  sortBy,
+  sortOrder,
+  skip = false,
+}) => {
   const projectId = useSelectedProjectId();
   const [pages, setPages] = useState(1);
   const listKey = `${entityId}:${versionId}:${triggerKind}`;
@@ -22,7 +31,7 @@ export const useEntitySchedules = ({ entityType, entityId, versionId, triggerKin
   const pageSize = Math.min(pages * PAGE_SIZE, MAX_ROWS);
   // data keeps the shown rows while "Show more" loads the bigger page
   const { data, isError, error, isFetching, refetch } = useGetScheduleListQuery(
-    { projectId, entityType, entityId, versionId, triggerKind, pageSize },
+    { projectId, entityType, entityId, versionId, triggerKind, sortBy, sortOrder, pageSize },
     { skip: skip || !projectId || !entityId },
   );
   const rows = data?.rows ?? [];

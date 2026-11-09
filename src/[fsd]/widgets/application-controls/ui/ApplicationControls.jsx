@@ -5,7 +5,8 @@ import { useLocation, useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { CompareVersionsModal } from '@/[fsd]/entities/compare-versions';
+import { COMPARE_ENTITY_TYPES, CompareVersionsModal } from '@/[fsd]/entities/compare-versions';
+import { buildScheduleFormLink } from '@/[fsd]/entities/schedule';
 import {
   LATEST_VERSION_NAME,
   VersionDelete,
@@ -18,7 +19,9 @@ import { PinEntityConstants, TourTargetConstants } from '@/[fsd]/shared/lib/cons
 import { useInstructionsInputRefContext } from '@/[fsd]/shared/lib/context';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import {
+  useFormDirtyExcluding,
   useIsFromPipelineDetail,
+  useIsPipelineLayoutDirty,
   useProjectEntityLink,
   useProjectType,
   useRunHistoryNavigation,
@@ -38,6 +41,7 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 import { useDeleteApplicationMenu } from '@/pages/Applications/Components/Applications/DeleteApplicationButton';
 import { useExportApplicationMenu } from '@/pages/Applications/Components/Applications/ExportApplicationButton';
 import { AuthorsButton } from '@/pages/Common';
+import useIsPipelineYamlCodeDirty from '@/pages/Pipelines/useIsPipelineYamlCodeDirty';
 import RouteDefinitions from '@/routes';
 
 const { AGENT_TOUR_TARGET_IDS } = TourTargetConstants;
@@ -59,6 +63,14 @@ const ApplicationControls = memo(props => {
   const [compareVersionsOpen, setCompareVersionsOpen] = useState(false);
 
   const { values: { id } = {} } = formik;
+  const compareEntityType = isFromPipeline ? COMPARE_ENTITY_TYPES.pipeline : COMPARE_ENTITY_TYPES.agent;
+
+  // The same rule as the editor header Save button: Compare uses the saved versions
+  const isFormDirty = useFormDirtyExcluding();
+  const isYamlCodeDirty = useIsPipelineYamlCodeDirty();
+  const isLayoutDirty = useIsPipelineLayoutDirty();
+  // Pipelines only (#7324); the agent compare keeps its behavior
+  const isEditorDirty = isFromPipeline && (isFormDirty || isYamlCodeDirty || isLayoutDirty);
 
   const { runHistoryPath } = useRunHistoryNavigation({
     entityId: id,
@@ -75,15 +87,22 @@ const ApplicationControls = memo(props => {
     onSaveRight,
     resetSavingState,
     flushLeftSaves,
-  } = useCompareAgentVersions({ projectId, applicationId: id });
+  } = useCompareAgentVersions({ projectId, applicationId: id, entityType: compareEntityType });
 
   const handleCompareVersionsClose = useCallback(() => {
+    // A pipeline rebuilds its YAML and flow from the patched cache; the agent instructions field keeps its own value
     const savedFields = flushLeftSaves();
-    if (savedFields?.instructions !== undefined) {
+    if (!isFromPipeline && savedFields?.instructions !== undefined) {
       instructionsInputRef.current?.restoreValue(savedFields.instructions);
     }
     setCompareVersionsOpen(false);
-  }, [flushLeftSaves, instructionsInputRef]);
+  }, [flushLeftSaves, instructionsInputRef, isFromPipeline]);
+
+  const handleOpenSchedule = useCallback(
+    scheduleId =>
+      navigate(buildScheduleFormLink({ entityType: compareEntityType, entityId: id, tab, scheduleId })),
+    [compareEntityType, id, navigate, tab],
+  );
 
   const versionDetails = formik?.values?.version_details;
   const { projectEntityLink } = useProjectEntityLink({
@@ -327,7 +346,12 @@ const ApplicationControls = memo(props => {
         <CompareVersionsModal
           open={compareVersionsOpen}
           onClose={handleCompareVersionsClose}
-          entityType={isFromPipeline ? 'pipeline' : 'agent'}
+          entityType={compareEntityType}
+          entityId={id}
+          isEditorDirty={isEditorDirty}
+          canListSchedules={checkPermission(PERMISSIONS.schedules.list)}
+          isScheduleAdmin={checkPermission(PERMISSIONS.schedules.admin)}
+          onOpenSchedule={handleOpenSchedule}
           leftVersionId={formik?.values?.version_details?.id}
           versions={formik?.values?.versions ?? []}
           onLoadVersions={loadAgentVersions}

@@ -2,7 +2,12 @@ import { useCallback, useRef, useState } from 'react';
 
 import { useDispatch } from 'react-redux';
 
-import { extractAgentCompareData } from '@/[fsd]/entities/compare-versions';
+import {
+  COMPARE_ENTITY_TYPES,
+  extractAgentCompareData,
+  extractPipelineCompareData,
+} from '@/[fsd]/entities/compare-versions';
+import { rebuildPipelineSettingsFromYaml } from '@/[fsd]/features/pipelines/lib/helpers/pipelineCanvasSync.helpers';
 import { useLazyGetApplicationSkillsQuery } from '@/[fsd]/features/skill/api';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import {
@@ -11,9 +16,25 @@ import {
 } from '@/api/applications';
 import { eliteaApi } from '@/api/eliteaApi';
 
-export const useCompareAgentVersions = ({ projectId, applicationId }) => {
+// The fields the compare wizard edits; every other field of the version is sent back as stored
+const EDITABLE_FIELDS = ['instructions', 'welcome_message', 'conversation_starters'];
+
+const pickMeta = detail => ({
+  id: detail.id,
+  name: detail.name,
+  created_at: detail.created_at,
+  author: detail.author,
+});
+
+// Compare and save two versions of an agent or a pipeline (entityType 'agent' or 'pipeline')
+export const useCompareAgentVersions = ({
+  projectId,
+  applicationId,
+  entityType = COMPARE_ENTITY_TYPES.agent,
+}) => {
   const dispatch = useDispatch();
   const { toastSuccess, toastError } = useToast();
+  const isPipeline = entityType === COMPARE_ENTITY_TYPES.pipeline;
 
   const [fetchAgentVersion] = useLazyGetApplicationVersionDetailQuery();
   const [updateAgentVersion] = useUpdateApplicationVersionMutation();
@@ -21,7 +42,6 @@ export const useCompareAgentVersions = ({ projectId, applicationId }) => {
 
   const versionDetailsRef = useRef({ left: null, right: null });
   const savedLeftFieldsRef = useRef({});
-  const leftVersionIdRef = useRef(null);
 
   const [savingLeftKeys, setSavingLeftKeys] = useState({});
   const [savingRightKeys, setSavingRightKeys] = useState({});
@@ -34,15 +54,29 @@ export const useCompareAgentVersions = ({ projectId, applicationId }) => {
   const loadVersions = useCallback(
     async (leftId, rightId) => {
       savedLeftFieldsRef.current = {};
-      leftVersionIdRef.current = leftId;
-      const [leftDetail, rightDetail, leftSkillsResult, rightSkillsResult] = await Promise.all([
+      const versionRequests = [
         fetchAgentVersion({ projectId, applicationId, versionId: leftId }).unwrap(),
         fetchAgentVersion({ projectId, applicationId, versionId: rightId }).unwrap(),
+      ];
+
+      if (isPipeline) {
+        // Pipelines have no skills
+        const [leftDetail, rightDetail] = await Promise.all(versionRequests);
+        versionDetailsRef.current = { left: leftDetail, right: rightDetail };
+        return {
+          leftData: extractPipelineCompareData(leftDetail),
+          rightData: extractPipelineCompareData(rightDetail),
+          leftVersionMeta: pickMeta(leftDetail),
+          rightVersionMeta: pickMeta(rightDetail),
+        };
+      }
+
+      const [leftDetail, rightDetail, leftSkillsResult, rightSkillsResult] = await Promise.all([
+        ...versionRequests,
         fetchApplicationSkills({ projectId, appVersionId: leftId }).unwrap(),
         fetchApplicationSkills({ projectId, appVersionId: rightId }).unwrap(),
       ]);
       versionDetailsRef.current = { left: leftDetail, right: rightDetail };
-      const pickMeta = d => ({ id: d.id, name: d.name, created_at: d.created_at, author: d.author });
       return {
         leftData: extractAgentCompareData({ ...leftDetail, skills: leftSkillsResult?.skills ?? [] }),
         rightData: extractAgentCompareData({ ...rightDetail, skills: rightSkillsResult?.skills ?? [] }),
@@ -50,7 +84,7 @@ export const useCompareAgentVersions = ({ projectId, applicationId }) => {
         rightVersionMeta: pickMeta(rightDetail),
       };
     },
-    [fetchAgentVersion, fetchApplicationSkills, projectId, applicationId],
+    [fetchAgentVersion, fetchApplicationSkills, isPipeline, projectId, applicationId],
   );
 
   const saveVersion = useCallback(
@@ -63,21 +97,32 @@ export const useCompareAgentVersions = ({ projectId, applicationId }) => {
         });
         return next;
       });
+      const side = versionId === versionDetailsRef.current.left?.id ? 'left' : 'right';
       try {
         const mergedData = { ...data, ...edits, ...fieldPayload };
-        const versionDetails =
-          versionId === versionDetailsRef.current.left?.id
-            ? versionDetailsRef.current.left
-            : versionDetailsRef.current.right;
+        const versionDetails = versionDetailsRef.current[side];
+        // Only the saved fields change: the other edited fields keep their stored value until saved
+        const storedFields = Object.fromEntries(
+          EDITABLE_FIELDS.map(field => [field, field in fieldPayload ? fieldPayload[field] : data[field]]),
+        );
         await updateAgentVersion({
           ...(versionDetails ?? {}),
           projectId,
           applicationId,
           versionId,
-          instructions: mergedData.instructions,
-          welcome_message: mergedData.welcome_message,
-          conversation_starters: mergedData.conversation_starters,
+          ...(isPipeline
+            ? storedFields
+            : {
+                instructions: mergedData.instructions,
+                welcome_message: mergedData.welcome_message,
+                conversation_starters: mergedData.conversation_starters,
+              }),
         }).unwrap();
+        // The next save of this version sends what is stored now, not what was loaded
+        versionDetailsRef.current = {
+          ...versionDetailsRef.current,
+          [side]: { ...(versionDetails ?? {}), ...fieldPayload },
+        };
         setEdits(prev => {
           const next = { ...prev };
           keys.forEach(k => delete next[k]);
@@ -85,7 +130,7 @@ export const useCompareAgentVersions = ({ projectId, applicationId }) => {
         });
         setData(prev => ({ ...prev, ...fieldPayload }));
         toastSuccess(`Version "${versionName}" has been updated.`);
-        if (versionId === versionDetailsRef.current.left?.id) {
+        if (side === 'left') {
           savedLeftFieldsRef.current = { ...savedLeftFieldsRef.current, ...fieldPayload };
         }
       } catch {
@@ -98,23 +143,46 @@ export const useCompareAgentVersions = ({ projectId, applicationId }) => {
         });
       }
     },
-    [updateAgentVersion, projectId, applicationId, toastSuccess, toastError],
+    [updateAgentVersion, isPipeline, projectId, applicationId, toastSuccess, toastError],
   );
 
+  // Puts the fields saved to the open (left) version into the editor cache when the dialog closes
   const flushLeftSaves = useCallback(() => {
     const fields = savedLeftFieldsRef.current;
     savedLeftFieldsRef.current = {};
     if (Object.keys(fields).length === 0) return null;
+    // A new pipeline YAML brings its canvas: kept positions, new nodes placed, removed ones dropped
+    const withCanvas = (target, cached) => {
+      Object.entries(fields).forEach(([key, value]) => {
+        target[key] = value;
+      });
+      if (!isPipeline || fields.instructions === undefined) return;
+      const pipelineSettings = rebuildPipelineSettingsFromYaml(
+        fields.instructions,
+        cached?.pipeline_settings,
+      );
+      if (pipelineSettings) target.pipeline_settings = pipelineSettings;
+    };
+    const patchVersionDetails = draft => {
+      draft.version_details = draft.version_details ?? {};
+      withCanvas(draft.version_details, draft.version_details);
+    };
     dispatch(
-      eliteaApi.util.updateQueryData('applicationDetails', { projectId, applicationId }, draft => {
-        draft.version_details = draft.version_details ?? {};
-        Object.entries(fields).forEach(([key, value]) => {
-          draft.version_details[key] = value;
-        });
-      }),
+      eliteaApi.util.updateQueryData('applicationDetails', { projectId, applicationId }, patchVersionDetails),
     );
+    const leftVersionId = versionDetailsRef.current.left?.id;
+    if (isPipeline && leftVersionId) {
+      // The pipeline editors that read a single version build their YAML and flow from this entry
+      dispatch(
+        eliteaApi.util.updateQueryData(
+          'getApplicationVersionDetail',
+          { projectId, applicationId, versionId: leftVersionId },
+          draft => withCanvas(draft, draft),
+        ),
+      );
+    }
     return fields;
-  }, [dispatch, projectId, applicationId]);
+  }, [dispatch, isPipeline, projectId, applicationId]);
 
   const onSaveLeft = useCallback(
     args => saveVersion({ ...args, setSavingKeys: setSavingLeftKeys }),

@@ -13,6 +13,17 @@ const resolveToolId = tool => {
   return tool.id;
 };
 
+// The same rule ToolItemCard uses to disable its open link: the linked entity is gone or not visible
+const isToolAvailable = tool =>
+  tool.type === 'application' ? Boolean(tool.settings?.application_id) : tool.id != null;
+
+const toCompareTool = tool => ({
+  ...tool,
+  id: resolveToolId(tool),
+  entityType: resolveToolEntityType(tool),
+  isAvailable: isToolAvailable(tool),
+});
+
 export const extractAgentCompareData = versionDetail => {
   const vd = versionDetail ?? {};
   return {
@@ -23,6 +34,23 @@ export const extractAgentCompareData = versionDetail => {
       ...(vd.tools ?? []).map(t => ({ ...t, id: resolveToolId(t), entityType: resolveToolEntityType(t) })),
       ...(vd.skills ?? []).map(s => ({ ...s, id: s.skill_id, entityType: 'skill' })),
     ],
+  };
+};
+
+/** Pipeline version fields the compare wizard shows; `instructions` holds the pipeline YAML. */
+export const extractPipelineCompareData = versionDetail => {
+  const vd = versionDetail ?? {};
+  return {
+    instructions: vd.instructions ?? '',
+    welcome_message: vd.welcome_message ?? '',
+    conversation_starters: vd.conversation_starters ?? [],
+    tools: (vd.tools ?? []).map(toCompareTool),
+    run_settings: {
+      step_limit: vd.meta?.step_limit ?? null,
+      ignore_project_context: Boolean(vd.meta?.ignore_project_context),
+    },
+    // A cron trigger kept on the version until the schedule migration; read only
+    legacy_trigger: vd.pipeline_settings?.trigger?.cron ? vd.pipeline_settings.trigger : null,
   };
 };
 
@@ -38,6 +66,8 @@ const describeRunModel = llmSettings => {
 
 const describeSetting = value => (value === null || value === undefined ? 'Default' : String(value));
 
+const describeProjectContext = ignoreProjectContext => (ignoreProjectContext ? 'Excluded' : 'Included');
+
 export const buildRunSettingsRows = runSettings => {
   const llmSettings = runSettings?.llm_settings;
   return [
@@ -52,10 +82,27 @@ export const buildRunSettingsRows = runSettings => {
     {
       key: 'project_context',
       label: 'Project context',
-      value: runSettings?.ignore_project_context ? 'Excluded' : 'Included',
+      value: describeProjectContext(runSettings?.ignore_project_context),
     },
   ];
 };
+
+export const buildPipelineRunSettingsRows = runSettings => [
+  {
+    key: 'step_limit',
+    label: 'Step limit',
+    value: runSettings?.step_limit === '' ? 'Default' : describeSetting(runSettings?.step_limit),
+  },
+  {
+    key: 'project_context',
+    label: 'Project context',
+    value: describeProjectContext(runSettings?.ignore_project_context),
+  },
+];
+
+/** Keys of the rows whose value differs between the two sides (rows are in the same order). */
+export const getChangedRowKeys = (leftRows, rightRows) =>
+  new Set(leftRows.filter((row, index) => row.value !== rightRows[index]?.value).map(row => row.key));
 
 export const matchDependencies = (leftTools, rightTools) => {
   const key = d => `${d.entityType}:${d.id}`;

@@ -3,12 +3,13 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Box, CircularProgress, Typography } from '@mui/material';
 
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
-import { Modal } from '@/[fsd]/shared/ui';
+import { Banner, Modal } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
 import {
-  AGENT_COMPARE_STEPS,
-  PIPELINE_COMPARE_STEPS,
+  COMPARE_ENTITY_TYPES,
+  COMPARE_MESSAGES,
+  COMPARE_STEPS_BY_ENTITY,
   SKILL_COMPARE_STEPS,
 } from '../lib/constants/compareVersions.constants';
 import CompareVersionSelector from './CompareVersionSelector';
@@ -16,10 +17,17 @@ import CompareVersionsStepIndicator from './CompareVersionsStepIndicator';
 import {
   CompareInstructionsStep,
   ComparePipelineYamlStep,
+  CompareRunSettingsSchedulesStep,
   CompareRunSettingsStep,
   CompareToolsSkillsStep,
   CompareUserInteractionStep,
 } from './steps';
+
+const DISCARD_TARGETS = {
+  close: 'close',
+  changeVersions: 'changeVersions',
+  navigate: 'navigate',
+};
 
 const PHASES = {
   SELECTION: 'selection',
@@ -40,6 +48,13 @@ const CompareVersionsModal = memo(props => {
     onSaveLeft,
     onSaveRight,
     resetSavingState,
+    // Pipelines: the editor has unsaved changes, so the open version can't be saved from here
+    isEditorDirty = false,
+    entityId,
+    canListSchedules = false,
+    isScheduleAdmin = false,
+    // Called after the dialog closes, to open a schedule (pipelines)
+    onOpenSchedule,
   } = props;
 
   const [phase, setPhase] = useState(PHASES.SELECTION);
@@ -53,14 +68,12 @@ const CompareVersionsModal = memo(props => {
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [loadError, setLoadError] = useState(null);
   const [discardTarget, setDiscardTarget] = useState(null);
+  const [pendingScheduleId, setPendingScheduleId] = useState(null);
 
-  const steps =
-    entityType === 'agent'
-      ? AGENT_COMPARE_STEPS
-      : entityType === 'pipeline'
-        ? PIPELINE_COMPARE_STEPS
-        : SKILL_COMPARE_STEPS;
+  const steps = COMPARE_STEPS_BY_ENTITY[entityType] ?? SKILL_COMPARE_STEPS;
+  const isPipeline = entityType === COMPARE_ENTITY_TYPES.pipeline;
   const isLastStep = activeStepIndex === steps.length - 1;
+  const leftSaveDisabledReason = isEditorDirty ? COMPARE_MESSAGES.editorDirtySave : undefined;
 
   const leftVersion = useMemo(
     () => leftVersionMeta ?? versions.find(v => v.id === leftVersionId),
@@ -95,6 +108,7 @@ const CompareVersionsModal = memo(props => {
       setActiveStepIndex(0);
       setLoadError(null);
       setDiscardTarget(null);
+      setPendingScheduleId(null);
       resetSavingState?.();
     }
   }, [open, resetSavingState]);
@@ -123,18 +137,40 @@ const CompareVersionsModal = memo(props => {
 
   const handleClose = useCallback(() => {
     if (isDirty) {
-      setDiscardTarget('close');
+      setDiscardTarget(DISCARD_TARGETS.close);
     } else {
       onClose();
     }
   }, [isDirty, onClose]);
 
+  const openSchedule = useCallback(
+    scheduleId => {
+      onClose();
+      onOpenSchedule?.(scheduleId);
+    },
+    [onClose, onOpenSchedule],
+  );
+
+  const handleOpenSchedule = useCallback(
+    scheduleId => {
+      if (isDirty) {
+        setPendingScheduleId(scheduleId);
+        setDiscardTarget(DISCARD_TARGETS.navigate);
+      } else {
+        openSchedule(scheduleId);
+      }
+    },
+    [isDirty, openSchedule],
+  );
+
   const handleDiscardConfirm = useCallback(() => {
     const target = discardTarget;
     setDiscardTarget(null);
-    if (target === 'close') {
+    if (target === DISCARD_TARGETS.close) {
       onClose();
-    } else if (target === 'changeVersions') {
+    } else if (target === DISCARD_TARGETS.navigate) {
+      openSchedule(pendingScheduleId);
+    } else if (target === DISCARD_TARGETS.changeVersions) {
       setLeftEdits({});
       setRightEdits({});
       setActiveStepIndex(0);
@@ -142,7 +178,7 @@ const CompareVersionsModal = memo(props => {
       setLeftVersionMeta(null);
       setRightVersionMeta(null);
     }
-  }, [discardTarget, onClose]);
+  }, [discardTarget, onClose, openSchedule, pendingScheduleId]);
 
   const handleSaveLeftField = useCallback(
     fieldPayload =>
@@ -180,7 +216,7 @@ const CompareVersionsModal = memo(props => {
 
   const handleChangeVersions = useCallback(() => {
     if (isDirty) {
-      setDiscardTarget('changeVersions');
+      setDiscardTarget(DISCARD_TARGETS.changeVersions);
     } else {
       setActiveStepIndex(0);
       setPhase(PHASES.SELECTION);
@@ -192,9 +228,8 @@ const CompareVersionsModal = memo(props => {
   const onLeftEdit = useCallback((field, val) => setLeftEdits(prev => ({ ...prev, [field]: val })), []);
   const onRightEdit = useCallback((field, val) => setRightEdits(prev => ({ ...prev, [field]: val })), []);
 
-  const renderStep = () => {
+  const renderStep = stepKey => {
     if (!leftData || !rightData) return null;
-    const stepKey = steps[activeStepIndex]?.key;
     const stepProps = {
       leftVersion,
       rightVersion,
@@ -208,6 +243,7 @@ const CompareVersionsModal = memo(props => {
       onSaveRight: handleSaveRightField,
       savingLeftKeys: savingLeftKeys ?? {},
       savingRightKeys: savingRightKeys ?? {},
+      leftSaveDisabledReason,
     };
 
     switch (stepKey) {
@@ -224,12 +260,33 @@ const CompareVersionsModal = memo(props => {
         return <CompareToolsSkillsStep {...stepProps} />;
       case 'run-settings':
         return <CompareRunSettingsStep {...stepProps} />;
-      case 'yaml':
+      case 'pipeline-yaml':
         return <ComparePipelineYamlStep {...stepProps} />;
+      case 'tools':
+        return (
+          <CompareToolsSkillsStep
+            {...stepProps}
+            emptyText={COMPARE_MESSAGES.noPipelineTools}
+          />
+        );
+      case 'run-settings-schedules':
+        return (
+          <CompareRunSettingsSchedulesStep
+            {...stepProps}
+            entityId={entityId}
+            canListSchedules={canListSchedules}
+            isScheduleAdmin={isScheduleAdmin}
+            onOpenSchedule={handleOpenSchedule}
+          />
+        );
       default:
         return null;
     }
   };
+
+  const activeStepKey = steps[activeStepIndex]?.key;
+  // The YAML editors stay mounted while other steps show, so expanded blocks and scroll survive a step change
+  const keepsYamlMounted = isPipeline && phase === PHASES.WIZARD;
 
   const renderContent = () => {
     if (phase === PHASES.LOADING) {
@@ -254,7 +311,19 @@ const CompareVersionsModal = memo(props => {
             activeStepIndex={activeStepIndex}
             onStepChange={setActiveStepIndex}
           />
-          <Box sx={compareVersionsModalStyles.stepContent}>{renderStep()}</Box>
+          {keepsYamlMounted && (
+            <Box
+              sx={[
+                compareVersionsModalStyles.stepContent,
+                activeStepKey !== 'pipeline-yaml' && compareVersionsModalStyles.hiddenStep,
+              ]}
+            >
+              {renderStep('pipeline-yaml')}
+            </Box>
+          )}
+          {activeStepKey !== 'pipeline-yaml' && (
+            <Box sx={compareVersionsModalStyles.stepContent}>{renderStep(activeStepKey)}</Box>
+          )}
         </Box>
       );
     }
@@ -267,6 +336,17 @@ const CompareVersionsModal = memo(props => {
           availableVersions={availableVersions}
           onRightVersionChange={setRightVersionId}
         />
+        {isEditorDirty && (
+          <Box
+            sx={compareVersionsModalStyles.errorAlert}
+            data-testid="compare-editor-dirty-banner"
+          >
+            <Banner.BannerMessage
+              variant="info"
+              message={COMPARE_MESSAGES.editorDirty}
+            />
+          </Box>
+        )}
         {loadError && (
           <Alert
             severity="error"
@@ -437,6 +517,9 @@ const compareVersionsModalStyles = {
     flex: 1,
     minHeight: 0,
     overflow: 'hidden',
+  },
+  hiddenStep: {
+    display: 'none',
   },
   wizardFooter: ({ palette }) => ({
     display: 'flex',
