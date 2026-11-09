@@ -2,6 +2,7 @@ export const WAITING_NEED = { CREDENTIAL: 'credential', SIGN_IN: 'sign_in', TOOL
 
 const CREDENTIAL_TEXT = /credential\s+(.+?)\s+not found\./i;
 const SIGN_IN_TEXT = /a sign-in is needed for\s+(.+?)\s*(?:\.|$)/i;
+const MORE_TEXT = /\(\+(\d+) more\)$/;
 const TOOLKIT_TEXT = /toolkit\s+["']?([^"'.]+?)["']?(?:\s|\.|$)/i;
 
 const unquote = value => value?.trim().replace(/^["'`](.*)["'`]$/, '$1') || undefined;
@@ -11,6 +12,16 @@ const toToolList = list =>
 
 /** The sensitive tools a paused event names, as `[{ toolkit, tool }]`. An older event has none. */
 export const getPausedTools = pausedEvent => toToolList(pausedEvent?.tools);
+
+/**
+ * How many tools the server left out of the list, read from the `(+N more)` end of the paused text.
+ * The server cuts the list and keeps only this count; 0 when the text has none.
+ */
+export const getPausedMoreCount = pausedEvent => {
+  const text = typeof pausedEvent?.text === 'string' ? pausedEvent.text.trimEnd() : '';
+  const match = MORE_TEXT.exec(text);
+  return match ? Number(match[1]) : 0;
+};
 
 /** One tool as the user reads it: `Toolkit · tool`. */
 export const formatTool = ({ toolkit, tool }) => (toolkit ? `${toolkit} · ${tool}` : `${tool}`);
@@ -24,8 +35,7 @@ export const formatTool = ({ toolkit, tool }) => (toolkit ? `${toolkit} · ${too
 export const getWaitingRunNeed = pausedEvent => {
   if (!pausedEvent) return {};
   const { need, toolkit, credential, text = '' } = pausedEvent;
-  if (need === WAITING_NEED.TOOLS)
-    return { need, mayAsk: toToolList(pausedEvent.may_ask) };
+  if (need === WAITING_NEED.TOOLS) return { need, mayAsk: toToolList(pausedEvent.may_ask) };
   if (need === WAITING_NEED.CREDENTIAL || need === WAITING_NEED.SIGN_IN)
     return { need, toolkit: unquote(toolkit), credential: unquote(credential) };
 

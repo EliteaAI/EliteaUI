@@ -326,10 +326,48 @@ describe('ScheduleWaitingCard', () => {
     };
     renderCard();
 
-    expect(within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem')).toHaveLength(2);
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'Paused for approval: github · create_issue, github · delete_issue',
+    const items = within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem');
+    expect(items.map(item => item.textContent)).toEqual(['github · create_issue', 'github · delete_issue']);
+    const notice = screen.getByRole('status');
+    expect(notice).toHaveTextContent(
+      'This run will not start until you approve it. This run is paused and needs your approval for these sensitive tools.',
     );
+    expect(notice).not.toHaveTextContent('create_issue');
+  });
+
+  it.each([
+    [
+      'a pre-start pause',
+      { need: 'tools', text: 'Paused for approval before the first tool call: a · t0, a · t1 (+3 more)' },
+    ],
+    ['a call-time pause', { text: 'Paused for approval: a · t0, a · t1 (+3 more)' }],
+  ])('tells how many tools are not listed for %s', (_title, event) => {
+    mocks.detail = {
+      ...run,
+      events: [
+        paused({
+          ...event,
+          tools: [
+            { toolkit: 'a', tool: 't0' },
+            { toolkit: 'a', tool: 't1' },
+          ],
+        }),
+      ],
+    };
+    renderCard();
+
+    expect(within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem')).toHaveLength(2);
+    expect(screen.getByTestId('schedule-waiting-tools-more')).toHaveTextContent('3 more');
+  });
+
+  it('shows no cut note when the list is complete', () => {
+    mocks.detail = {
+      ...run,
+      events: [paused({ need: 'tools', tools: [{ toolkit: 'a', tool: 't0' }] })],
+    };
+    renderCard();
+
+    expect(screen.queryByTestId('schedule-waiting-tools-more')).not.toBeInTheDocument();
   });
 
   it('shows no list for a call-time pause of one tool', () => {

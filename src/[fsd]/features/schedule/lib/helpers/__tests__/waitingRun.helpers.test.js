@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   findWaitingRun,
   formatTool,
+  getPausedMoreCount,
   getPausedTools,
   getWaitingRunNeed,
   hasMissingCredential,
@@ -89,6 +90,20 @@ describe('getPausedTools', () => {
     expect(getPausedTools({ kind: 'paused', tools: 'github' })).toEqual([]);
     expect(getPausedTools({ kind: 'paused', tools: [null, { toolkit: 'x' }] })).toEqual([]);
     expect(getPausedTools(undefined)).toEqual([]);
+  });
+});
+
+describe('getPausedMoreCount', () => {
+  it('reads the count the server puts at the end of a cut list', () => {
+    expect(getPausedMoreCount({ text: 'Paused for approval: a · t0, a · t1 (+12 more)' })).toBe(12);
+    expect(getPausedMoreCount({ text: 'Paused for approval: a · t0 (+1 more) ' })).toBe(1);
+  });
+
+  it('returns 0 for a complete list, a count inside the text, a bad value or no event', () => {
+    expect(getPausedMoreCount({ text: 'Paused for approval: a · t0, a · t1' })).toBe(0);
+    expect(getPausedMoreCount({ text: 'Paused (+2 more) for approval: a · t0' })).toBe(0);
+    expect(getPausedMoreCount({ text: 42 })).toBe(0);
+    expect(getPausedMoreCount(undefined)).toBe(0);
   });
 });
 

@@ -1,7 +1,7 @@
 import { forwardRef, memo, useId, useMemo } from 'react';
 
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
-import { Box, Chip, List, ListItem, Typography } from '@mui/material';
+import { Box, Chip, Typography } from '@mui/material';
 
 import { buildEntityEditorLink } from '@/[fsd]/entities/schedule';
 import { ChatContinue, ToolkitActionPanel } from '@/[fsd]/features/chat';
@@ -16,6 +16,7 @@ import {
   WAITING_NEED,
   formatApprovalExpiry,
   formatTool,
+  getPausedMoreCount,
   getPausedTools,
   getWaitingRunNeed,
 } from '../lib/helpers';
@@ -27,6 +28,7 @@ import {
   useWaitingRunCredentialCheck,
 } from '../lib/hooks/useWaitingRunCredentialCheck.hooks';
 import ScheduleRunApproval from './ScheduleRunApproval';
+import ScheduleWaitingTools from './ScheduleWaitingTools';
 
 const noop = () => {};
 const STEP2_NOTE = 'Reject ends the run as Failed: rejected by the owner.';
@@ -39,7 +41,7 @@ const STEP_STATUS = {
   ready: { label: 'Done', tone: 'success' },
 };
 
-const describeNeed = ({ need, toolkit, credential }, pausedText) => {
+const describeNeed = ({ need, toolkit, credential }, pausedText, hasToolList) => {
   const name = toolkit || 'the toolkit';
   if (need === WAITING_NEED.SIGN_IN) return `Toolkit "${name}" needs you to sign in.`;
   if (need === WAITING_NEED.CREDENTIAL)
@@ -48,6 +50,7 @@ const describeNeed = ({ need, toolkit, credential }, pausedText) => {
       : `Toolkit "${name}" has no usable credential.`;
   if (need === WAITING_NEED.TOOLS)
     return 'Before the first tool call, this run needs your approval for these sensitive tools.';
+  if (hasToolList) return 'This run is paused and needs your approval for these sensitive tools.';
   return pausedText || 'This run is paused and waits for your decision.';
 };
 
@@ -82,9 +85,10 @@ const ScheduleWaitingCard = memo(
     const waiting = useMemo(() => getWaitingRunNeed(pausedEvent), [pausedEvent]);
     const isCredential = waiting.need === WAITING_NEED.CREDENTIAL;
     const isSignIn = waiting.need === WAITING_NEED.SIGN_IN;
-    // A call-time pause for one tool already names it in its text; a list helps from two tools on
+    // A call-time pause for one tool names it in its text; from two tools on, a fixed sentence and the list
     const pausedTools = getPausedTools(pausedEvent);
     const listedTools = waiting.need === WAITING_NEED.TOOLS || pausedTools.length > 1 ? pausedTools : [];
+    const moreToolsCount = listedTools.length > 0 ? getPausedMoreCount(pausedEvent) : 0;
     const mayAskTools = waiting.mayAsk ?? [];
     const { authAction } = conversation;
 
@@ -128,6 +132,7 @@ const ScheduleWaitingCard = memo(
     const description = describeNeed(
       { ...waiting, toolkit: waiting.toolkit || toolkitName },
       pausedEvent?.text,
+      listedTools.length > 1,
     );
     const toolkitLabel = waiting.toolkit || toolkitName || 'the toolkit';
     const authorizationText = `Authorization is required for toolkit "${toolkitLabel}". Provide the credential, then approve.`;
@@ -190,22 +195,10 @@ const ScheduleWaitingCard = memo(
               {`This run will not start until you approve it. ${description} ${STEP2_NOTE}`}
             </Typography>
           </Box>
-          {listedTools.length > 0 && (
-            <List
-              data-testid="schedule-waiting-tools"
-              aria-label="Sensitive tools to approve"
-              sx={styles.toolList}
-            >
-              {listedTools.map((item, index) => (
-                <ListItem
-                  key={`${formatTool(item)}-${index}`}
-                  sx={styles.toolItem}
-                >
-                  <Typography variant="bodySmall">{formatTool(item)}</Typography>
-                </ListItem>
-              ))}
-            </List>
-          )}
+          <ScheduleWaitingTools
+            tools={listedTools}
+            moreCount={moreToolsCount}
+          />
           {mayAskTools.length > 0 && (
             <Typography
               data-testid="schedule-waiting-may-ask"
@@ -366,13 +359,6 @@ const scheduleWaitingCardStyles = () => ({
   }),
   noticeIcon: ({ palette }) => ({ fontSize: '1.25rem', flexShrink: 0, color: palette.warning.scheduleCard }),
   noticeText: ({ palette }) => ({ color: palette.text.secondary }),
-  toolList: ({ palette }) => ({
-    margin: 0,
-    padding: '0 0 0 1.5rem',
-    listStyleType: 'disc',
-    color: palette.text.primary,
-  }),
-  toolItem: { display: 'list-item', padding: 0 },
   header: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' },
   title: ({ palette }) => ({
     flex: '1 1 auto',
