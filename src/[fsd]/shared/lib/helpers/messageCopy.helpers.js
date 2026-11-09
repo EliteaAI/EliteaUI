@@ -19,8 +19,7 @@ const SANITIZE_OPTIONS = {
 };
 
 const toTextContent = html => {
-  if (!html) return '';
-  if (typeof DOMParser === 'undefined') return html.replace(/<[^>]*>/g, '');
+  if (!html || typeof DOMParser === 'undefined') return '';
   return new DOMParser().parseFromString(DOMPurify.sanitize(html), 'text/html').body.textContent || '';
 };
 
