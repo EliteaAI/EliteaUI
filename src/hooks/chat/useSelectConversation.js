@@ -46,13 +46,22 @@ export default function useSelectConversation({
   const prevSelectedConversationIdRef = useRef({ id: undefined, isPlayback: false });
   const inFlightConversationIdRef = useRef(null);
   const prevProjectIdRef = useRef(projectId);
+  const deletedConversationIdsRef = useRef(new Set());
   useEffect(() => {
     if (prevProjectIdRef.current !== projectId) {
       prevProjectIdRef.current = projectId;
       prevSelectedConversationIdRef.current = { id: undefined, isPlayback: false };
       inFlightConversationIdRef.current = null;
+      deletedConversationIdsRef.current = new Set();
     }
   }, [projectId]);
+
+  const markConversationDeleted = useCallback(id => {
+    deletedConversationIdsRef.current.add(id);
+  }, []);
+
+  const isConversationDeleted = useCallback(id => deletedConversationIdsRef.current.has(Number(id)), []);
+
   const { clearLocalActiveParticipant } = useLocalActiveParticipant();
   const [
     getConversationDetail,
@@ -66,6 +75,9 @@ export default function useSelectConversation({
     async conversation => {
       // Guard: Skip fetching details for dummy/invalid conversations (e.g., after deleting the last conversation)
       if (!conversation?.id || typeof conversation.id !== 'number') return;
+
+      // Guard: the folders list and the URL can still point at a conversation that was just deleted
+      if (!conversation.isPlayback && deletedConversationIdsRef.current.has(conversation.id)) return;
 
       // Guard: skip if this exact conversation is already being fetched
       const conversationKey = `${conversation.id}:${!!conversation.isPlayback}`;
@@ -248,5 +260,7 @@ export default function useSelectConversation({
     onSelectConversation,
     isLoadingConversation,
     isSelectingConversation,
+    markConversationDeleted,
+    isConversationDeleted,
   };
 }
