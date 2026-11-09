@@ -5,6 +5,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
 
 import {
+  TOOLKIT_INDEX_TYPE,
   TRIGGER_KIND,
   getListRoute,
   isWebhookRow,
@@ -36,7 +37,7 @@ const ScheduleDetailPage = memo(props => {
   const isWebhook = kind === TRIGGER_KIND.webhook;
   const noun = isWebhook ? 'Webhook' : 'Schedule';
   const projectId = useSelectedProjectId();
-  const { scheduleId, agentId } = useParams();
+  const { scheduleId, agentId, toolkitId, indexName } = useParams();
   const navigate = useNavigate();
   const { state } = useLocation();
   const {
@@ -47,7 +48,12 @@ const ScheduleDetailPage = memo(props => {
   const [updateSchedule] = useUpdateScheduleMutation();
   const [runSchedule] = useRunScheduleMutation();
   const entityRoute = useEntityScheduleRoute(entityType);
-  const runsView = useScheduleRunsView(schedule?.id, schedule?.application_id);
+  // A toolkit index schedule is found by its toolkit id and index name, an agent or pipeline by its application id
+  const isIndex = schedule?.entity_type === TOOLKIT_INDEX_TYPE;
+  const targetId = isIndex ? schedule.toolkit_id : schedule?.application_id;
+  const runsView = useScheduleRunsView(
+    ...(isIndex ? [schedule.id, targetId, schedule.index_name] : [schedule?.id, targetId]),
+  );
 
   // A schedule belongs to one project, so a project switch opens the list
   const openedProjectId = useRef();
@@ -78,7 +84,8 @@ const ScheduleDetailPage = memo(props => {
         ref={runsView.cardRef}
         schedule={schedule}
         entityType={schedule?.entity_type}
-        applicationId={schedule?.application_id}
+        applicationId={targetId}
+        indexName={isIndex ? schedule.index_name : undefined}
         view={runsView}
         {...runProps}
       />
@@ -103,7 +110,10 @@ const ScheduleDetailPage = memo(props => {
   if (
     isWebhookRow(schedule) !== isWebhook ||
     (entityType &&
-      (schedule.entity_type !== entityType || String(schedule.application_id) !== String(agentId)))
+      (schedule.entity_type !== entityType ||
+        (entityType === TOOLKIT_INDEX_TYPE
+          ? String(schedule.toolkit_id) !== String(toolkitId) || schedule.index_name !== indexName
+          : String(schedule.application_id) !== String(agentId))))
   )
     return (
       <ScheduleNotice

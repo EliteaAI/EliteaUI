@@ -470,3 +470,124 @@ describe('splitRiskFindings', () => {
     expect(splitRiskFindings(null, 'pause_and_ask')).toEqual({ blocking: [], waiting: [] });
   });
 });
+
+describe('toolkit index form', () => {
+  const indexValues = {
+    name: 'Nightly index',
+    description: '',
+    type: 'toolkit_index',
+    application_id: '',
+    version_id: '',
+    toolkit_id: 3,
+    index_name: 'docs',
+    run_mode: null,
+    prompt: '',
+    variables: [],
+    cron: '0 2 * * *',
+    timezone: 'Europe/Kyiv',
+    expires_at: null,
+  };
+
+  it('needs a toolkit and an index, not an application or a version', async () => {
+    await expect(scheduleFormSchema.validate(indexValues)).resolves.toBeTruthy();
+    await expect(scheduleFormSchema.validate({ ...indexValues, toolkit_id: '' })).rejects.toThrow(
+      'Choose a toolkit',
+    );
+    await expect(scheduleFormSchema.validate({ ...indexValues, index_name: '' })).rejects.toThrow(
+      'Choose an index',
+    );
+  });
+
+  it('keeps the toolkit fields optional for an agent', async () => {
+    await expect(
+      scheduleFormSchema.validate({ ...agentValues, toolkit_id: '', index_name: '' }),
+    ).resolves.toBeTruthy();
+  });
+
+  it('refuses a cron that runs more than once a day, and accepts a daily one', async () => {
+    await expect(scheduleFormSchema.validate({ ...indexValues, cron: '*/5 * * * *' })).rejects.toThrow(
+      'Frequency cannot be more than once per day',
+    );
+    await expect(scheduleFormSchema.validate({ ...indexValues, cron: '30 6 * * *' })).resolves.toBeTruthy();
+  });
+
+  it('does not apply the daily floor to an agent', async () => {
+    await expect(scheduleFormSchema.validate({ ...agentValues, cron: '*/5 * * * *' })).resolves.toBeTruthy();
+  });
+
+  it('shows no prompt for an index', () => {
+    expect(isPromptShown({ type: 'toolkit_index', run_mode: 'prompt' })).toBe(false);
+  });
+
+  it('clears the toolkit and index when the type changes', () => {
+    expect(resetWhatToRun(indexValues, 'agent')).toMatchObject({ toolkit_id: '', index_name: '' });
+  });
+
+  it('sends only the toolkit and index in the create body', () => {
+    const body = toCreateBody(indexValues);
+
+    expect(body).toMatchObject({ entity_type: 'toolkit_index', toolkit_id: 3, index_name: 'docs' });
+    ['application_id', 'version_id', 'run_mode', 'prompt', 'variables'].forEach(key =>
+      expect(body).not.toHaveProperty(key),
+    );
+  });
+
+  it('keeps the toolkit fields out of an agent body', () => {
+    const body = toCreateBody(agentValues);
+
+    expect(body).not.toHaveProperty('toolkit_id');
+    expect(body).not.toHaveProperty('index_name');
+  });
+
+  it('sends the toolkit and index in the update body, without enabled', () => {
+    const body = toUpdateBody({ ...indexValues, enabled: true });
+
+    expect(body).toMatchObject({ toolkit_id: 3, index_name: 'docs' });
+    expect(body).not.toHaveProperty('enabled');
+  });
+
+  it('locks the toolkit and index from the page route', () => {
+    const { values, urlEntity } = buildInitialValues(new URLSearchParams(), null, {
+      lockedEntity: { type: 'toolkit_index', id: 3, indexName: 'docs' },
+    });
+
+    expect(urlEntity).toEqual({ type: 'toolkit_index', id: 3, indexName: 'docs' });
+    expect(values).toMatchObject({
+      type: 'toolkit_index',
+      toolkit_id: 3,
+      index_name: 'docs',
+      application_id: '',
+    });
+  });
+
+  it('ignores a toolkit index type in the search string', () => {
+    const { urlEntity } = buildInitialValues(
+      new URLSearchParams('entityType=toolkit_index&entityId=3'),
+      null,
+    );
+
+    expect(urlEntity).toBeNull();
+  });
+
+  it('fills the edit values of a saved index schedule', () => {
+    const { values } = buildEditValues(
+      {
+        id: 4,
+        name: 'Nightly index',
+        entity_type: 'toolkit_index',
+        toolkit_id: 3,
+        index_name: 'docs',
+        application_id: null,
+        version_id: null,
+        cron: '0 2 * * *',
+        timezone: 'Europe/Kyiv',
+        approval_rule: null,
+      },
+      null,
+      undefined,
+    );
+
+    expect(values).toMatchObject({ type: 'toolkit_index', toolkit_id: 3, index_name: 'docs' });
+    expect(values.application_id).toBe('');
+  });
+});

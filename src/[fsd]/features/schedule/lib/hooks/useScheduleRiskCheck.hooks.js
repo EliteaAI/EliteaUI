@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCheckScheduleRiskMutation } from '@/[fsd]/entities/schedule';
 
 import { RISK_CHECK_STATUS } from '../constants';
-import { splitRiskFindings } from '../helpers';
+import { isIndexType, splitRiskFindings } from '../helpers';
 
 // The state keeps the phase of the request. The blocked and clear status come from the findings
 // and the rule, so they have no second copy in the state.
@@ -28,6 +28,8 @@ export const useScheduleRiskCheck = ({
   entityType,
   applicationId,
   versionId,
+  toolkitId,
+  indexName,
   scheduleId,
   approvalRule,
 }) => {
@@ -38,19 +40,24 @@ export const useScheduleRiskCheck = ({
 
   const runCheck = useCallback(async () => {
     const call = ++latestCall.current;
-    if (!applicationId || !versionId) {
+    // A toolkit index is checked by its toolkit and index name; it has no version
+    const isIndex = isIndexType(entityType);
+    if (isIndex ? !toolkitId || !indexName : !applicationId || !versionId) {
       setState(IDLE_STATE);
       return null;
     }
     // The findings belong to one entity and version; a failed re-check of the same pair keeps them, with the failed status
-    const key = `${entityType}:${applicationId}:${versionId}`;
+    const key = isIndex
+      ? `${entityType}:${toolkitId}:${indexName}`
+      : `${entityType}:${applicationId}:${versionId}`;
     setState(prev => ({ ...prev, phase: RISK_CHECK_STATUS.CHECKING }));
     try {
       const result = await checkRisk({
         projectId,
         entity_type: entityType,
-        application_id: applicationId,
-        version_id: versionId,
+        ...(isIndex
+          ? { toolkit_id: toolkitId, index_name: indexName }
+          : { application_id: applicationId, version_id: versionId }),
         ...(scheduleId && { schedule_id: scheduleId }),
       }).unwrap();
       if (call === latestCall.current) setState({ phase: ANSWERED, result, key });
@@ -66,7 +73,7 @@ export const useScheduleRiskCheck = ({
       }
       return null;
     }
-  }, [checkRisk, projectId, entityType, applicationId, versionId, scheduleId]);
+  }, [checkRisk, projectId, entityType, applicationId, versionId, toolkitId, indexName, scheduleId]);
 
   useEffect(() => {
     runCheck();

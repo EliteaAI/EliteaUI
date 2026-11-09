@@ -12,6 +12,7 @@ import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import BannerMessage from '@/[fsd]/shared/ui/banner-message/BannerMessage';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
+import { useToolkitsDetailsQuery } from '@/api/toolkits';
 import { PERMISSIONS } from '@/common/constants';
 import StyledTabs from '@/components/StyledTabs';
 import useCheckPermission from '@/hooks/useCheckPermission';
@@ -19,7 +20,7 @@ import useNavBlocker from '@/hooks/useNavBlocker';
 import { StyledGridContainer } from '@/pages/Common/Components/StyledComponents';
 
 import { RISK_CHECK_STATUS } from '../lib/constants';
-import { resetWhatToRun, scheduleFormSchema } from '../lib/helpers';
+import { isIndexType, resetWhatToRun, scheduleFormSchema } from '../lib/helpers';
 import { useScheduleEntityDetails, useScheduleRiskCheck, useScheduleSave } from '../lib/hooks';
 import BuildScheduleWithAiModal from './BuildScheduleWithAiModal';
 import ReconfirmBadge from './ReconfirmBadge';
@@ -92,6 +93,8 @@ const ScheduleForm = memo(props => {
     entityType: values.type,
     applicationId: values.application_id,
     versionId: values.version_id,
+    toolkitId: values.toolkit_id,
+    indexName: values.index_name,
     scheduleId: schedule?.id,
     approvalRule: values.approval_rule,
   });
@@ -109,14 +112,21 @@ const ScheduleForm = memo(props => {
   const fieldError = name => (submitCount ? errors[name] : '');
 
   // An editor route or a saved schedule fixes the entity: it is shown, not changeable
-  const { details, lockActive } = useScheduleEntityDetails({
+  // A toolkit index has no application to load: the entity-details lock check would reject it
+  const isIndex = isIndexType(values.type);
+  const { details, lockActive: applicationLocked } = useScheduleEntityDetails({
     projectId,
     formik,
     initialValues,
-    lockedEntity,
+    lockedEntity: isIndex ? undefined : lockedEntity,
     lockFailed,
     setLockFailed,
   });
+  const { currentData: toolkitDetails } = useToolkitsDetailsQuery(
+    { projectId, toolkitId: values.toolkit_id },
+    { skip: !isIndex || !values.toolkit_id },
+  );
+  const lockActive = applicationLocked || (isIndex && (!!lockedEntity || !!schedule?.id));
 
   // setFieldValue changes one field only, so a fast second change keeps the first; radio clicks reset many fields
   const handleTypeChange = useCallback(type => setValues(prev => resetWhatToRun(prev, type)), [setValues]);
@@ -128,6 +138,13 @@ const ScheduleForm = memo(props => {
     },
     [setFieldValue],
   );
+
+  // The index belongs to one toolkit, so a new toolkit clears it
+  const handleToolkitChange = useCallback(
+    id => setValues(prev => ({ ...prev, toolkit_id: id, index_name: '' })),
+    [setValues],
+  );
+  const handleIndexChange = useCallback(name => setFieldValue('index_name', name), [setFieldValue]);
 
   const handleVersionChange = useCallback(
     versionId => setFieldValue('version_id', versionId),
@@ -154,7 +171,8 @@ const ScheduleForm = memo(props => {
       blocking={riskCheck.blocking}
       waiting={riskCheck.waiting}
       entityType={values.type}
-      entityId={values.application_id}
+      entityId={isIndex ? values.toolkit_id : values.application_id}
+      indexName={isIndex ? values.index_name : undefined}
       versionId={values.version_id}
       projectId={projectId}
       onRetry={riskCheck.runCheck}
@@ -221,7 +239,8 @@ const ScheduleForm = memo(props => {
           {lockActive || (schedule?.id && values.application_id) ? (
             <ScheduleLockedEntity
               type={values.type}
-              name={details?.name}
+              name={isIndex ? (toolkitDetails?.toolkit_name ?? toolkitDetails?.name) : details?.name}
+              indexName={values.index_name}
               editing={!!schedule}
               isWebhook={isWebhookRow(values)}
             />
@@ -229,23 +248,33 @@ const ScheduleForm = memo(props => {
             <ScheduleEntitySection
               type={values.type}
               applicationId={values.application_id}
-              details={details}
+              toolkitId={values.toolkit_id}
+              indexName={values.index_name}
+              details={isIndex ? toolkitDetails : details}
               lockFailed={lockFailed}
               readOnly={readOnly}
-              error={fieldError('application_id')}
+              error={fieldError(isIndex ? 'toolkit_id' : 'application_id')}
+              indexError={fieldError('index_name')}
               onTypeChange={handleTypeChange}
               onEntityChange={handleEntityChange}
+              onToolkitChange={handleToolkitChange}
+              onIndexChange={handleIndexChange}
             />
           )}
           {riskNotices}
-          <ScheduleVersionField
-            versions={details?.versions}
-            value={values.version_id}
-            onChange={handleVersionChange}
-            disabled={!values.application_id || readOnly}
-            error={fieldError('version_id')}
-          />
-          {promptFields}
+          {/* an index runs with its saved settings: no version, no prompt */}
+          {!isIndex && (
+            <>
+              <ScheduleVersionField
+                versions={details?.versions}
+                value={values.version_id}
+                onChange={handleVersionChange}
+                disabled={!values.application_id || readOnly}
+                error={fieldError('version_id')}
+              />
+              {promptFields}
+            </>
+          )}
         </Box>
       ),
     },
@@ -290,7 +319,8 @@ const ScheduleForm = memo(props => {
         </Box>
       ),
     },
-  ];
+    // An index schedule keeps the default rule: the server refuses another one, so the section is hidden
+  ].filter(section => !(isIndex && section.testId === 'schedule-section-approval'));
 
   // The same header bar, column and collapsible sections as New Agent (CreateApplication)
   return (

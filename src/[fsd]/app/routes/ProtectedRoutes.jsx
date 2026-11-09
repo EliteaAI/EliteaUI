@@ -418,6 +418,16 @@ const ProtectedRoutes = memo(() => {
       { path: RouteDefinitions.ToolkitIndex, element: <RunIndex /> },
       { path: RouteDefinitions.ToolkitIndexHistory, element: <IndexHistoryPage /> },
       { path: RouteDefinitions.ToolkitIndexSearch, element: <IndexSearch /> },
+      {
+        path: RouteDefinitions.ToolkitIndexCreateSchedule,
+        element: <CreateSchedulePage entityType="toolkit_index" />,
+        requiredPermissions: [PERMISSIONS.schedules.create],
+      },
+      {
+        path: RouteDefinitions.ToolkitIndexScheduleDetail,
+        element: <ScheduleDetailPage entityType="toolkit_index" />,
+        requiredPermissions: [PERMISSIONS.schedules.details],
+      },
 
       /* mcp */
       { path: RouteDefinitions.MCPs, element: getIndexElement(ToolkitsTabs[0]) },

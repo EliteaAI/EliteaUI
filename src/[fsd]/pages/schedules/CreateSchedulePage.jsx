@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import {
+  TOOLKIT_INDEX_TYPE,
   TRIGGER_KIND,
   useCreateScheduleMutation,
   useStartDraftTestRunMutation,
@@ -18,6 +19,8 @@ import {
 } from '@/[fsd]/features/schedule';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { ScheduleSettingsSection, StopOnDateField } from '@/[fsd]/shared/ui/schedule';
+
+const isIndex = formValues => formValues.type === TOOLKIT_INDEX_TYPE;
 
 // entityType: the form is nested in that editor and locks its entity; kind 'webhook' creates a webhook
 const CreateSchedulePage = props => {
@@ -62,7 +65,8 @@ const CreateSchedulePage = props => {
     ({ values: formValues, onTestRun, testRunPending, testRunError }) => (
       <ScheduleDraftRuns
         entityType={formValues.type}
-        applicationId={formValues.application_id || undefined}
+        applicationId={(isIndex(formValues) ? formValues.toolkit_id : formValues.application_id) || undefined}
+        indexName={isIndex(formValues) ? formValues.index_name || undefined : undefined}
         onTestRun={onTestRun}
         testRunPending={testRunPending}
         testRunError={testRunError}

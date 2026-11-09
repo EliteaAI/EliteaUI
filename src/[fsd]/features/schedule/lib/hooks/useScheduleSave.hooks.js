@@ -13,6 +13,8 @@ const FIELDS_WITH_INPUT = [
   'description',
   'application_id',
   'version_id',
+  'toolkit_id',
+  'index_name',
   'approval_rule',
   'cron',
   'expires_at',
