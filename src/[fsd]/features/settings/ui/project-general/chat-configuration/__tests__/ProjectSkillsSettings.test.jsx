@@ -32,6 +32,9 @@ vi.mock('@/[fsd]/features/settings/api', () => ({
   useProjectSkillsPlatformSettingsQuery: () => ({ data: api.platform }),
 }));
 vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));
+vi.mock('@/[fsd]/features/settings/lib/hooks/useCanManageProjectSettings.hooks', () => ({
+  useCanManageProjectSettings: () => ({ canManageSettings: api.permitted, isLoading: false }),
+}));
 vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => api.permitted }) }));
 vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
   useToast: () => ({ toastError: api.toastError, toastInfo: vi.fn() }),
