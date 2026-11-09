@@ -83,7 +83,7 @@ import {
   MentionConstants,
 } from '@/[fsd]/shared/lib/constants';
 import { SocketContext } from '@/[fsd]/shared/lib/context';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useCopyChatMessage, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   cleanLLMSettings,
   defaultReasoningEffortFor,
@@ -244,7 +244,7 @@ const ChatBox = memo(
     const isDequeuingRef = useRef(false);
 
     const dispatch = useDispatch();
-    const { toastError, toastInfo } = useToast();
+    const { toastError } = useToast();
     const { rememberSend } = useRejectedSendRecovery({ chatInput, toastError, activeConversationRef });
 
     // Sockets
@@ -1348,53 +1348,7 @@ const ChatBox = memo(
       ],
     );
 
-    const onCopyToClipboard = useCallback(
-      async id => {
-        const message = chat_history.find(item => item.id === id);
-
-        if (message) {
-          if (message.exception) {
-            try {
-              await navigator.clipboard.writeText(JSON.stringify(message.exception));
-              toastInfo('The exception has been copied to the clipboard.');
-            } catch {
-              toastError('Failed to copy the exception!');
-            }
-          } else {
-            // Handle different message types including images
-            let contentToCopy;
-
-            if (message.message_items) {
-              contentToCopy = message.message_items
-                .map(item => {
-                  switch (item.item_type) {
-                    case 'canvas_message':
-                      return item.item_details.latest_version?.canvas_content || '';
-                    case 'attachment_message': {
-                      // Handle attachment as link
-                      const attachmentName = item.item_details.name || 'Attachment';
-                      return `[${attachmentName}]`;
-                    }
-                    default:
-                      return item.item_details.content || '';
-                  }
-                })
-                .join(', ');
-            } else {
-              contentToCopy = message.content || '';
-            }
-
-            try {
-              await navigator.clipboard.writeText(contentToCopy);
-              toastInfo('The message has been copied to the clipboard.');
-            } catch {
-              toastError('Failed to copy the message!');
-            }
-          }
-        }
-      },
-      [chat_history, toastError, toastInfo],
-    );
+    const onCopyToClipboard = useCopyChatMessage(chat_history);
 
     const onRegenerateAnswer = useCallback(
       async (uuid, messageParticipant, updatedItems, newAttachmentItems) => {

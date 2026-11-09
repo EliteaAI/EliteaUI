@@ -107,7 +107,8 @@ const ApplicationAnswer = memo(
       resolveAuthorizationAgentType,
       onContinueWithConfirmation,
       onClickEdit,
-      onClickCopy,
+      onClickCopyMarkdown,
+      onClickCopyText,
     } = useApplicationAnswerState({
       answer,
       message_items,
@@ -314,7 +315,8 @@ const ApplicationAnswer = memo(
                   shouldDisableRegenerate={shouldDisableRegenerate}
                   visibleHitlInterrupts={visibleHitlInterrupts}
                   onCopy={onCopy}
-                  onClickCopy={onClickCopy}
+                  onClickCopyMarkdown={onClickCopyMarkdown}
+                  onClickCopyText={onClickCopyText}
                   onCopyToMessages={onCopyToMessages}
                   onRegenerate={onRegenerate}
                   onEdit={onEdit}

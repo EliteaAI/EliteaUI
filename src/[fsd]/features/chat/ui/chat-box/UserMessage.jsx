@@ -7,7 +7,7 @@ import ListItemAvatar from '@mui/material/ListItemAvatar';
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { useParticipantName } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { ChatButton, InputGuardrailNotice } from '@/[fsd]/features/chat/ui';
-import { InputGuardrailConstants } from '@/[fsd]/shared/lib/constants';
+import { InputGuardrailConstants, MessageCopyConstants } from '@/[fsd]/shared/lib/constants';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import Markdown from '@/[fsd]/shared/ui/markdown';
@@ -26,6 +26,8 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 import UserAvatar from '@/components/UserAvatar';
 import useHighlightUserMessage from '@/hooks/chat/useHighlightUserMessage';
+
+const { COPY_FORMATS, COPY_LABELS } = MessageCopyConstants;
 
 const UserMessage = memo(
   React.forwardRef((props, ref) => {
@@ -77,6 +79,9 @@ const UserMessage = memo(
       setEditAttachments([...attachmentItems]);
       setIsEditing(true);
     }, [content, questionItem, attachmentItems]);
+
+    // User input is plain text, so a single plain-text copy is enough
+    const onClickCopy = useCallback(() => onCopy?.(COPY_FORMATS.text), [onCopy]);
 
     const onCancel = useCallback(() => {
       setIsEditing(false);
@@ -233,14 +238,16 @@ const UserMessage = memo(
             >
               {onCopy && (
                 <StyledTooltip
-                  title={'Copy to clipboard'}
+                  title={COPY_LABELS[COPY_FORMATS.text]}
                   placement="top"
                 >
                   <IconButton
+                    data-testid="user-message-copy-button"
+                    aria-label={COPY_LABELS[COPY_FORMATS.text]}
                     sx={styles.iconButton}
                     variant="elitea"
                     color="tertiary"
-                    onClick={onCopy}
+                    onClick={onClickCopy}
                   >
                     <CopyIcon sx={styles.icon} />
                   </IconButton>
