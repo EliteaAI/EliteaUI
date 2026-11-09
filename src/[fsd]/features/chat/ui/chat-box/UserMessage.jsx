@@ -11,6 +11,8 @@ import { InputGuardrailConstants, MessageCopyConstants } from '@/[fsd]/shared/li
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import Markdown from '@/[fsd]/shared/ui/markdown';
+import CopyIcon from '@/assets/copy.svg?react';
+import CopyMdIcon from '@/assets/copymd.svg?react';
 import { ChatParticipantType } from '@/common/constants';
 import CreatedTimeInfo from '@/components/Chat/CreatedTimeInfo';
 import MessageAttachmentList from '@/components/Chat/MessageAttachmentList';
@@ -20,7 +22,6 @@ import {
   StyledTextField,
   UserMessageContainerWithMargin as UserMessageContainer,
 } from '@/components/Chat/StyledComponents';
-import CopyIcon from '@/components/Icons/CopyIcon';
 import CopyMoveIcon from '@/components/Icons/CopyMoveIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
@@ -80,8 +81,9 @@ const UserMessage = memo(
       setIsEditing(true);
     }, [content, questionItem, attachmentItems]);
 
-    // User input is plain text, so a single plain-text copy is enough
-    const onClickCopy = useCallback(() => onCopy?.(COPY_FORMATS.text), [onCopy]);
+    // The same two copy actions as an answer
+    const onClickCopyMarkdown = useCallback(() => onCopy?.(COPY_FORMATS.markdown), [onCopy]);
+    const onClickCopyText = useCallback(() => onCopy?.(COPY_FORMATS.text), [onCopy]);
 
     const onCancel = useCallback(() => {
       setIsEditing(false);
@@ -237,21 +239,44 @@ const UserMessage = memo(
               sx={verticalMode ? styles.buttonsContainerVertical(highLightMe) : undefined}
             >
               {onCopy && (
-                <StyledTooltip
-                  title={COPY_LABELS[COPY_FORMATS.text]}
-                  placement="top"
-                >
-                  <IconButton
-                    data-testid="user-message-copy-button"
-                    aria-label={COPY_LABELS[COPY_FORMATS.text]}
-                    sx={styles.iconButton}
-                    variant="elitea"
-                    color="tertiary"
-                    onClick={onClickCopy}
+                <>
+                  <StyledTooltip
+                    title={COPY_LABELS[COPY_FORMATS.markdown]}
+                    placement="top"
                   >
-                    <CopyIcon sx={styles.icon} />
-                  </IconButton>
-                </StyledTooltip>
+                    <IconButton
+                      data-testid="user-message-copy-markdown-button"
+                      aria-label={COPY_LABELS[COPY_FORMATS.markdown]}
+                      sx={styles.iconButton}
+                      variant="elitea"
+                      color="tertiary"
+                      onClick={onClickCopyMarkdown}
+                    >
+                      <Box
+                        component={CopyMdIcon}
+                        sx={styles.copyIcon}
+                      />
+                    </IconButton>
+                  </StyledTooltip>
+                  <StyledTooltip
+                    title={COPY_LABELS[COPY_FORMATS.text]}
+                    placement="top"
+                  >
+                    <IconButton
+                      data-testid="user-message-copy-text-button"
+                      aria-label={COPY_LABELS[COPY_FORMATS.text]}
+                      sx={styles.iconButton}
+                      variant="elitea"
+                      color="tertiary"
+                      onClick={onClickCopyText}
+                    >
+                      <Box
+                        component={CopyIcon}
+                        sx={styles.copyIcon}
+                      />
+                    </IconButton>
+                  </StyledTooltip>
+                </>
               )}
               {onCopyToMessages && (
                 <StyledTooltip
@@ -462,6 +487,11 @@ const styles = {
   },
   icon: {
     fontSize: '1rem',
+  },
+  // The svg copy icons, sized and coloured as on an answer
+  copyIcon: {
+    width: '1rem',
+    height: '1rem',
   },
   editContainer: {
     width: '100%',

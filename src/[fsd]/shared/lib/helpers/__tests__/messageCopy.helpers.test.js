@@ -57,6 +57,21 @@ describe('markdownToPlainText', () => {
   it('returns empty string for empty input', () => {
     expect(markdownToPlainText('')).toBe('');
   });
+
+  it('keeps the text around an ampersand and a lone less-than sign', () => {
+    expect(markdownToPlainText('**Research** & Development')).toBe('Research & Development');
+    expect(markdownToPlainText('a<b & c')).toBe('a<b & c');
+    expect(markdownToPlainText('Tom &amp; Jerry')).toBe('Tom & Jerry');
+  });
+
+  it('turns an inline <br> into a line break', () => {
+    expect(markdownToPlainText('line one<br>line two')).toBe('line one\nline two');
+    expect(markdownToPlainText('line one<br/>line two')).toBe('line one\nline two');
+  });
+
+  it('keeps a table row on one line when a cell has a <br>', () => {
+    expect(markdownToPlainText('| a | b |\n|---|---|\n| x<br>y | z |')).toBe('a\tb\nx y\tz');
+  });
 });
 
 describe('markdownToHtml', () => {
@@ -137,6 +152,12 @@ describe('getChatMessageCopySource', () => {
       isPreformatted: false,
     });
     expect(buildCopyTextPayload(user)).toEqual({ html: '', text: '**hi**' });
+
+    const jsonQuestion = getChatMessageCopySource({
+      role: 'user',
+      message_items: [{ item_type: 'text_message', item_details: { content: '{"a":1}' } }],
+    });
+    expect(buildCopyTextPayload(jsonQuestion)).toEqual({ html: '', text: '{"a":1}' });
 
     const exception = getChatMessageCopySource({ exception: 'Boom <tag>' });
     expect(exception.isMarkdown).toBe(false);

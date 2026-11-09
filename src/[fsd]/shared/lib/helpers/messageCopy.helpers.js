@@ -18,17 +18,27 @@ const SANITIZE_OPTIONS = {
   FORBID_ATTR: ['style', 'class', 'id'],
 };
 
+const LINE_BREAK_TAG = /^<br\s*\/?>$/i;
+
 const toTextContent = html => {
   if (!html || typeof DOMParser === 'undefined') return '';
   return new DOMParser().parseFromString(DOMPurify.sanitize(html), 'text/html').body.textContent || '';
 };
 
 // Text tokens keep entities exactly as typed (`&amp;`), while the preview shows
-// the decoded character, so decode them; code is left untouched.
+// the decoded character, so decode them; code is left untouched. A textarea decodes
+// entities only: it keeps whitespace and never reads `<b` as the start of a tag.
 const decodeEntities = value => {
-  if (!value || !value.includes('&') || typeof DOMParser === 'undefined') return value || '';
-  return new DOMParser().parseFromString(value, 'text/html').documentElement.textContent || '';
+  if (!value || !value.includes('&') || typeof document === 'undefined') return value || '';
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = value;
+  return textarea.value;
 };
+
+// An inline `<br>` has no text of its own: it ends the line, or, in a table cell,
+// separates the parts with a space so the row stays on one line
+const inlineHtmlToText = (html, lineBreak) =>
+  LINE_BREAK_TAG.test(html.trim()) ? lineBreak : toTextContent(html);
 
 const indentLines = (text, indent, firstLineIndent = indent) =>
   text
@@ -36,32 +46,35 @@ const indentLines = (text, indent, firstLineIndent = indent) =>
     .map((line, index) => (index === 0 ? firstLineIndent : line ? indent : '') + line)
     .join('\n');
 
-const inlineToText = (tokens = []) =>
+// `lineBreak` is what a line break becomes: a newline, or a space inside a table cell
+const inlineToText = (tokens = [], lineBreak = '\n') =>
   tokens
     .map(token => {
       switch (token.type) {
         case 'text':
-          return token.tokens?.length ? inlineToText(token.tokens) : decodeEntities(token.text);
+          return token.tokens?.length ? inlineToText(token.tokens, lineBreak) : decodeEntities(token.text);
         case 'strong':
         case 'em':
         case 'del':
-          return inlineToText(token.tokens);
+          return inlineToText(token.tokens, lineBreak);
         case 'codespan':
           return token.text;
         case 'escape':
           return token.text;
         case 'br':
-          return '\n';
+          return lineBreak;
         case 'link': {
-          const label = inlineToText(token.tokens);
+          const label = inlineToText(token.tokens, lineBreak);
           return token.href && token.href !== label ? `${label} (${token.href})` : label;
         }
         case 'image':
           return token.text || '';
         case 'html':
-          return toTextContent(token.text);
+          return inlineHtmlToText(token.text, lineBreak);
         default:
-          return token.tokens?.length ? inlineToText(token.tokens) : decodeEntities(token.text || '');
+          return token.tokens?.length
+            ? inlineToText(token.tokens, lineBreak)
+            : decodeEntities(token.text || '');
       }
     })
     .join('');
@@ -79,9 +92,12 @@ const listToText = token => {
     .join(token.loose ? '\n\n' : '\n');
 };
 
+// A line break inside a cell becomes a space, so each table row stays on one line
+const cellToText = cell => inlineToText(cell.tokens, ' ');
+
 const tableToText = token => {
-  const header = token.header.map(cell => inlineToText(cell.tokens)).join('\t');
-  const rows = token.rows.map(row => row.map(cell => inlineToText(cell.tokens)).join('\t'));
+  const header = token.header.map(cellToText).join('\t');
+  const rows = token.rows.map(row => row.map(cellToText).join('\t'));
   return [header, ...rows].join('\n');
 };
 
@@ -217,9 +233,11 @@ export const getChatMessageCopySource = message => {
     };
   }
 
+  const markdown = parts.map(part => part.source).join('\n\n');
   return {
-    markdown: parts.map(part => part.source).join('\n\n'),
-    rendered: parts.map(part => part.rendered).join('\n\n'),
+    markdown,
+    // User input is shown as typed, so it is copied as typed: no JSON fences or reindent
+    rendered: isUserMessage ? markdown : parts.map(part => part.rendered).join('\n\n'),
     isMarkdown: !isUserMessage,
     isPreformatted: false,
   };
