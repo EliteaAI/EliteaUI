@@ -10,7 +10,7 @@ export const getPollingInterval = rows =>
 // version always has `run`, so without it and with a version this viewer is not the owner: the hint, else null
 export const ownerOnlyRunHint = schedule => {
   const allowed = schedule?.allowed_actions ?? [];
-  // A webhook never runs from the UI, so nobody gets the owner-only hint
+  // A webhook runs from the UI only as the owner's sample run, so nobody gets the owner-only hint
   if (isWebhookRow(schedule)) return null;
   if (allowed.includes('run') || !allowed.includes('change_owner') || schedule.version_id == null)
     return null;

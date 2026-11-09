@@ -7,6 +7,7 @@ import { Box, Grid } from '@mui/material';
 import { GenerateEntityButton } from '@/[fsd]/entities/generate-entity-with-ai';
 import { isWebhookRow } from '@/[fsd]/entities/schedule';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import { WebhookHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import BannerMessage from '@/[fsd]/shared/ui/banner-message/BannerMessage';
@@ -21,6 +22,7 @@ import { RISK_CHECK_STATUS } from '../lib/constants';
 import { resetWhatToRun, scheduleFormSchema } from '../lib/helpers';
 import { useScheduleEntityDetails, useScheduleRiskCheck, useScheduleSave } from '../lib/hooks';
 import BuildScheduleWithAiModal from './BuildScheduleWithAiModal';
+import ReconfirmBadge from './ReconfirmBadge';
 import RiskReviewDialog from './RiskReviewDialog';
 import SaveWarningsDialog from './SaveWarningsDialog';
 import ScheduleApprovalSection, { APPROVAL_RULE_ITEMS } from './ScheduleApprovalSection';
@@ -277,6 +279,11 @@ const ScheduleForm = memo(props => {
             confirmedBy={schedule?.approval_confirmed_by}
             confirmedAt={schedule?.approval_confirmed_at}
             canChangeProjectSettings={canChangeProjectSettings}
+            webhookSigned={
+              isWebhookRow(values)
+                ? WebhookHelpers.isSignedWebhook(values.webhook_type, values.gitlab_auth_method)
+                : undefined
+            }
             error={fieldError('approval_rule')}
             onChange={handleRuleChange}
           />
@@ -323,6 +330,9 @@ const ScheduleForm = memo(props => {
                     readOnly={readOnly}
                     onEnabledChange={handleEnabledChange}
                   />
+                  {schedule?.needs_reconfirm === true && !readOnly && (
+                    <ReconfirmBadge onReview={save.reconfirm} />
+                  )}
                   <Box
                     component="form"
                     noValidate

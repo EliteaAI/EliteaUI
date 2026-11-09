@@ -144,4 +144,33 @@ describe('ScheduleApprovalSection', () => {
 
     expect(screen.getByText('Confirmed by Ann')).toBeInTheDocument();
   });
+
+  // #7456: webhook rows warn about the secret, and about replays when the type is unsigned
+  describe('webhook warnings', () => {
+    const warning = () => screen.queryByTestId('webhook-run-without-asking-warning');
+
+    it('shows nothing on a schedule, even under Run without asking', () => {
+      renderSection({ rule: 'run_without_asking' });
+      expect(warning()).not.toBeInTheDocument();
+    });
+
+    it('shows nothing on a webhook under Pause and ask me', () => {
+      renderSection({ webhookSigned: false });
+      expect(warning()).not.toBeInTheDocument();
+    });
+
+    it('warns about the secret only for a signed type', () => {
+      renderSection({ rule: 'run_without_asking', webhookSigned: true });
+      expect(warning()).toHaveTextContent(/Treat it like a password/);
+      expect(warning()).not.toHaveTextContent(/not signed/);
+    });
+
+    it('adds the replay sentence for an unsigned type', () => {
+      renderSection({ rule: 'run_without_asking', webhookSigned: false });
+      expect(warning()).toHaveTextContent(/Treat it like a password/);
+      expect(warning()).toHaveTextContent(
+        'Requests of this type are not signed, so a copied request can be sent again.',
+      );
+    });
+  });
 });

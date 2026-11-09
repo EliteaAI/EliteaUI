@@ -142,6 +142,14 @@ export const useScheduleSave = ({
   };
   const handleReviewCancel = useCallback(() => setReview(null), []);
 
+  // The "Needs re-confirm" badge: the review opens even when the stored consent would let a save through
+  const reconfirm = async () => {
+    const risk = await riskCheck.runCheck();
+    if (!risk) return toastError('The risk check did not run. Try again.');
+    if (splitRiskFindings(risk, formik.values.approval_rule).blocking.length) return;
+    if (risk.sensitive?.length) setReview({ values: formik.values, runAfterSave: null, changed: false });
+  };
+
   // A clean form runs at once; a changed one saves first, and a failed or invalid save never reaches the run
   const runNow = useCallback(async () => {
     setRunNowPending(true);
@@ -231,6 +239,7 @@ export const useScheduleSave = ({
     submit,
     handleReviewConfirm,
     handleReviewCancel,
+    reconfirm,
     handleRunNow,
     draftTestPending,
     draftTestError,

@@ -191,6 +191,15 @@ describe('toExecutionTypeRow', () => {
     expect(toExecutionTypeRow({ execution_type: type }).event_label).toBe(label);
   });
 
+  it('labels a webhook sample-body run "Webhook (sample)" and a schedule test "Test"', () => {
+    const sample = { execution_type: 'webhook', schedule_run: { trigger: 'test' } };
+    expect(toExecutionTypeRow(sample).event_label).toBe('Webhook (sample)');
+    expect(
+      toExecutionTypeRow({ execution_type: 'schedule_manual', schedule_run: { trigger: 'test' } })
+        .event_label,
+    ).toBe('Test');
+  });
+
   it('labels a scheduled run "Scheduled"', () => {
     expect(toExecutionTypeRow({ execution_type: 'scheduled' }).event_label).toBe('Scheduled');
   });

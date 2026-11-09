@@ -5,7 +5,9 @@ import { describeRunDuration, formatRunCost } from './scheduleRuns.helpers';
 // The stored trigger `cron` reads "Scheduled" everywhere the user sees it
 export const TRIGGER_LABELS = { cron: 'Scheduled', manual: 'Manual', test: 'Test', webhook: 'Webhook' };
 
-export const toTriggerLabel = trigger => TRIGGER_LABELS[trigger] ?? trigger;
+// A test run of a webhook is its sample-body run, as in Run History
+export const toTriggerLabel = (trigger, isWebhook = false) =>
+  isWebhook && trigger === 'test' ? 'Webhook (sample)' : (TRIGGER_LABELS[trigger] ?? trigger);
 
 const newestFirst = (a, b) => compareRunTimestamp(b.started_at, a.started_at) || b.id - a.id;
 

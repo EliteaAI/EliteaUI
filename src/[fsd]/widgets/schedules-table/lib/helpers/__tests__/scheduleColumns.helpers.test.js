@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { COMPACT_MIN_PX, SCHEDULES_COLUMNS, TIER_WIDTHS, getTier } from '../scheduleColumns.helpers';
+import {
+  COMPACT_MIN_PX,
+  SCHEDULES_COLUMNS,
+  TIER_WIDTHS,
+  WEBHOOKS_COLUMNS,
+  getTier,
+} from '../scheduleColumns.helpers';
 
 describe('scheduleColumns.helpers', () => {
   it('picks the tier from the measured table width', () => {
@@ -13,7 +19,15 @@ describe('scheduleColumns.helpers', () => {
 
   it('keeps all 8 columns and a width for each fixed column in every tier', () => {
     expect(SCHEDULES_COLUMNS).toHaveLength(8);
-    const fixed = SCHEDULES_COLUMNS.filter(column => !column.width).map(column => column.field);
+    expect(WEBHOOKS_COLUMNS).toHaveLength(8);
+    // Both kinds share the tiers: the widths cover the fixed columns of either list
+    const fixed = [
+      ...new Set(
+        [...SCHEDULES_COLUMNS, ...WEBHOOKS_COLUMNS]
+          .filter(column => !column.width)
+          .map(column => column.field),
+      ),
+    ];
     Object.values(TIER_WIDTHS).forEach(widths => {
       expect(Object.keys(widths).sort()).toEqual([...fixed].sort());
     });

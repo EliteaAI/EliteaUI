@@ -142,10 +142,11 @@ export const scheduleApi = eliteaApi
       }),
 
       runSchedule: build.mutation({
-        query: ({ projectId, scheduleId, trigger = 'manual' }) => ({
+        // payload: the sample body of a webhook test run
+        query: ({ projectId, scheduleId, trigger = 'manual', payload }) => ({
           url: `${schedulePath(projectId, scheduleId)}/run`,
           method: 'POST',
-          body: { trigger },
+          body: payload === undefined ? { trigger } : { trigger, payload },
         }),
         invalidatesTags: (_, error, { scheduleId }) => (error ? [] : scheduleTags(scheduleId)),
       }),

@@ -1,3 +1,4 @@
+import { getListRoute } from '@/[fsd]/entities/schedule';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { NotificationType, SearchParams, ToolkitsTabs } from '@/common/constants';
 import RouteDefinitions, { getBasename } from '@/routes';
@@ -105,7 +106,8 @@ export const resolveHref = (eventType, meta, projectId) => {
     case NotificationType.ScheduleOwnerChanged: {
       const scheduleId = meta?.schedule_id;
       if (!scheduleId) return null;
-      const list = `${base}/${projectId}${RouteDefinitions.Schedules}`;
+      // A webhook row lives on the Webhooks page; meta without trigger_kind is a cron row
+      const list = `${base}/${projectId}${getListRoute(meta?.trigger_kind)}`;
       if (eventType === NotificationType.ScheduleOwnerChanged) return list;
       const url = `${list}/${encodeURIComponent(scheduleId)}`;
       const runId = RUN_EVENT_TYPES.has(eventType) ? meta?.conversation_id : null;
