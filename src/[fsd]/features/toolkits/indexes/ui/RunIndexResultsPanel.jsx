@@ -1,13 +1,13 @@
 import { memo } from 'react';
 
 import { ChatMessageList } from '@/[fsd]/features/chat';
+import { useCopyChatMessage } from '@/[fsd]/shared/lib/hooks';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
-import useChatCopyToClipboard from '@/hooks/chat/useChatCopyToClipboard';
 
 const RunIndexResultsPanel = memo(props => {
   const { chatHistory, chatConversation, questionItemRef } = props;
   const styles = runIndexResultsPanelStyles();
-  const onCopyToClipboard = useChatCopyToClipboard(chatHistory);
+  const onCopyToClipboard = useCopyChatMessage(chatHistory);
 
   return (
     <ChatBodyContainer sx={styles.chatBody}>

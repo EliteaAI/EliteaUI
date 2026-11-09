@@ -1,14 +1,13 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
-import { useIsSmallWindow, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { useCopyChatMessage, useIsSmallWindow, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useLazyMessageTracesQuery } from '@/api';
 import {
   buildTraceListParams,
   convertConversationToChatHistory,
 } from '@/common/convertChatConversationMessages';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
-import useChatCopyToClipboard from '@/hooks/chat/useChatCopyToClipboard';
 import { ContentContainer } from '@/pages/Common';
 
 const RunHistoryChat = memo(props => {
@@ -72,7 +71,7 @@ const RunHistoryChat = memo(props => {
     prettifyConversation,
   ]);
 
-  const onCopyToClipboard = useChatCopyToClipboard(chatHistory);
+  const onCopyToClipboard = useCopyChatMessage(chatHistory);
 
   // The run detail has no active chat, so the handler gets the conversation and the paused message.
   const conversationUuid = conversationData?.uuid;

@@ -1,22 +1,26 @@
 import { memo } from 'react';
 
-import { Box, IconButton, useTheme } from '@mui/material';
+import { Box } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { MessageCopyConstants } from '@/[fsd]/shared/lib/constants';
 import { useGetComponentWidth } from '@/[fsd]/shared/lib/hooks';
-import { BaseBtn } from '@/[fsd]/shared/ui/button';
+import { Button } from '@/[fsd]/shared/ui';
+import CopyIcon from '@/assets/copy.svg?react';
+import CopyMdIcon from '@/assets/copymd.svg?react';
+import DeleteIcon from '@/assets/delete.svg?react';
 import MicphoneIcon from '@/assets/megaphone.svg?react';
+import RegenerateIcon from '@/assets/refresh-icon.svg?react';
 import { VOICE_FEATURES_ENABLED, VOICE_FEATURES_TEMPORARILY_DISABLED } from '@/common/constants.js';
 import { ButtonsContainer } from '@/components/Chat/StyledComponents';
-import CopyIcon from '@/components/Icons/CopyIcon';
 import CopyMoveIcon from '@/components/Icons/CopyMoveIcon';
-import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
-import RegenerateIcon from '@/components/Icons/RegenerateIcon';
 
 import { ALLOW_EDIT_WHOLE_MESSAGE } from './ApplicationAnswer';
 
 const COMPACT_VIEW_BREAKPOINT = 340;
+
+const { COPY_FORMATS, COPY_LABELS } = MessageCopyConstants;
 
 const ApplicationAnswerActions = memo(props => {
   const {
@@ -33,7 +37,8 @@ const ApplicationAnswerActions = memo(props => {
     shouldDisableRegenerate,
     visibleHitlInterrupts,
     onCopy,
-    onClickCopy,
+    onClickCopyMarkdown,
+    onClickCopyText,
     onCopyToMessages,
     onRegenerate,
     onEdit,
@@ -42,7 +47,6 @@ const ApplicationAnswerActions = memo(props => {
     onAutoSpeak,
   } = props;
 
-  const theme = useTheme();
   const { componentRef, componentWidth } = useGetComponentWidth();
   const isWideView = componentWidth > COMPACT_VIEW_BREAKPOINT;
 
@@ -63,7 +67,7 @@ const ApplicationAnswerActions = memo(props => {
             placement="top"
           >
             <Box component="span">
-              <BaseBtn
+              <Button.BaseBtn
                 data-testid="chat-read-out-button"
                 aria-label="Read out"
                 disabled={
@@ -73,34 +77,66 @@ const ApplicationAnswerActions = memo(props => {
                 variant="tertiary"
                 onClick={() => onAutoSpeak(realAnswer, messageId)}
               >
-                <MicphoneIcon sx={styles.icon} />
-              </BaseBtn>
+                <Box
+                  component={MicphoneIcon}
+                  sx={styles.icon}
+                />
+              </Button.BaseBtn>
             </Box>
           </StyledTooltip>
         )}
         {onCopy && (!!answer || !!message_items?.length || !!exception) && (
-          <StyledTooltip
-            title="Copy to clipboard"
-            placement="top"
-          >
-            <IconButton
-              data-testid="chat-copy-button"
-              disabled={isProcessing || !realAnswer}
-              sx={styles.iconButton}
-              variant="elitea"
-              color="tertiary"
-              onClick={onClickCopy}
+          <>
+            <StyledTooltip
+              title={COPY_LABELS[COPY_FORMATS.markdown]}
+              placement="top"
             >
-              <CopyIcon sx={styles.icon} />
-            </IconButton>
-          </StyledTooltip>
+              <Box component="span">
+                <Button.BaseBtn
+                  data-testid="chat-copy-markdown-button"
+                  aria-label={COPY_LABELS[COPY_FORMATS.markdown]}
+                  disabled={isProcessing || !realAnswer}
+                  sx={styles.iconButton}
+                  variant="elitea"
+                  color="tertiary"
+                  onClick={onClickCopyMarkdown}
+                >
+                  <Box
+                    component={CopyMdIcon}
+                    sx={styles.icon}
+                  />
+                </Button.BaseBtn>
+              </Box>
+            </StyledTooltip>
+            <StyledTooltip
+              title={COPY_LABELS[COPY_FORMATS.text]}
+              placement="top"
+            >
+              <Box component="span">
+                <Button.BaseBtn
+                  data-testid="chat-copy-text-button"
+                  aria-label={COPY_LABELS[COPY_FORMATS.text]}
+                  disabled={isProcessing || !realAnswer}
+                  sx={styles.iconButton}
+                  variant="elitea"
+                  color="tertiary"
+                  onClick={onClickCopyText}
+                >
+                  <Box
+                    component={CopyIcon}
+                    sx={styles.icon}
+                  />
+                </Button.BaseBtn>
+              </Box>
+            </StyledTooltip>
+          </>
         )}
         {onCopyToMessages && !!answer && !isApplicationParticipant && (
           <StyledTooltip
             title="Copy to Messages"
             placement="top"
           >
-            <IconButton
+            <Button.BaseBtn
               disabled={isProcessing}
               sx={styles.iconButton}
               variant="elitea"
@@ -108,7 +144,7 @@ const ApplicationAnswerActions = memo(props => {
               onClick={onCopyToMessages}
             >
               <CopyMoveIcon sx={styles.icon} />
-            </IconButton>
+            </Button.BaseBtn>
           </StyledTooltip>
         )}
         {onRegenerate && !visibleHitlInterrupts.length && (
@@ -117,7 +153,7 @@ const ApplicationAnswerActions = memo(props => {
             placement="top"
           >
             <Box>
-              <IconButton
+              <Button.BaseBtn
                 data-testid="chat-regenerate-button"
                 sx={styles.iconButton}
                 variant="elitea"
@@ -129,15 +165,11 @@ const ApplicationAnswerActions = memo(props => {
                 }
                 onClick={onRegenerate}
               >
-                <RegenerateIcon
+                <Box
+                  component={RegenerateIcon}
                   sx={styles.icon}
-                  fill={
-                    shouldDisableRegenerate || hasCanvasBeingEdited
-                      ? theme.palette.icon.disabled
-                      : theme.palette.icon.default
-                  }
                 />
-              </IconButton>
+              </Button.BaseBtn>
             </Box>
           </StyledTooltip>
         )}
@@ -146,7 +178,7 @@ const ApplicationAnswerActions = memo(props => {
             title="Edit response"
             placement="top"
           >
-            <IconButton
+            <Button.BaseBtn
               disabled={isProcessing}
               sx={styles.iconButton}
               variant="elitea"
@@ -154,7 +186,7 @@ const ApplicationAnswerActions = memo(props => {
               onClick={onClickEdit}
             >
               <EditIcon sx={styles.icon} />
-            </IconButton>
+            </Button.BaseBtn>
           </StyledTooltip>
         )}
         {onDelete && !visibleHitlInterrupts.length && (
@@ -163,7 +195,7 @@ const ApplicationAnswerActions = memo(props => {
             placement="top"
           >
             <Box>
-              <IconButton
+              <Button.BaseBtn
                 data-testid="chat-delete-button"
                 disabled={hasCanvasBeingEdited || (isApplicationParticipant ? false : isProcessing)}
                 sx={styles.iconButton}
@@ -171,11 +203,11 @@ const ApplicationAnswerActions = memo(props => {
                 color="tertiary"
                 onClick={onDelete}
               >
-                <DeleteIcon
+                <Box
+                  component={DeleteIcon}
                   sx={styles.icon}
-                  fill={hasCanvasBeingEdited ? theme.palette.icon.disabled : theme.palette.icon.default}
                 />
-              </IconButton>
+              </Button.BaseBtn>
             </Box>
           </StyledTooltip>
         )}
@@ -209,9 +241,13 @@ const applicationAnswerActionsStyles = isWideView => ({
     height: '1.75rem',
     padding: '0',
   },
-  icon: {
-    fontSize: '1rem',
-  },
+  icon: ({ palette }) => ({
+    width: '1rem',
+    height: '1rem',
+    'button:disabled &': {
+      color: palette.icon.disabled,
+    },
+  }),
 });
 
 export default ApplicationAnswerActions;

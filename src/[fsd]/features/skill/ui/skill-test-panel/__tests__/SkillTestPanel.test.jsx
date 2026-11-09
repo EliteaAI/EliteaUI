@@ -75,6 +75,7 @@ vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
   }),
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useCopyChatMessage: () => vi.fn(),
   useSelectedProjectId: () => 2,
   useToast: () => ({ toastError: fixture.toastError, toastInfo: vi.fn() }),
 }));
