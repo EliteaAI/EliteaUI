@@ -12,7 +12,7 @@ import { AppLink } from '@/[fsd]/shared/ui';
  * Common base for Settings, Tips, Notifications, etc.
  */
 const SidebarButton = memo(props => {
-  const { icon, label, tooltip, onClick, to, linkState, isActive = false, children, tourId } = props;
+  const { icon, label, tooltip, onClick, to, isActive = false, children, tourId } = props;
 
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
 
@@ -26,7 +26,7 @@ const SidebarButton = memo(props => {
       enterNextDelay={500}
     >
       <Box
-        {...(to ? { component: AppLink, to, state: linkState } : {})}
+        {...(to ? { component: AppLink, to } : {})}
         data-tour={tourId}
         onClick={onClick}
         sx={styles.container}

@@ -16,7 +16,6 @@ const SidebarMenuItem = memo(props => {
     menuIcon,
     onClick,
     to,
-    linkState,
     selected,
     display,
     isPersonalSpace,
@@ -30,7 +29,7 @@ const SidebarMenuItem = memo(props => {
   const styles = sidebarMenuItemStyles(selected, showLabel, isPersonalSpace);
 
   // A real link (href) lets the browser offer "Open link in new tab"; a disabled item stays a plain button
-  const getLinkProps = isDisabled => (to && !isDisabled ? { component: AppLink, to, state: linkState } : {});
+  const getLinkProps = isDisabled => (to && !isDisabled ? { component: AppLink, to } : {});
 
   return isPersonalSpace ? (
     <TooltipForDisablePersonalSpace>

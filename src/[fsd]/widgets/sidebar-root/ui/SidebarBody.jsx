@@ -266,7 +266,6 @@ const SidebarBody = memo(props => {
                   selected={i.value === selectedItem}
                   onClick={navigateToPage(i.url, i.breadCrumb)}
                   to={personal_project_id ? i.url : RouteDefinitions.Onboarding}
-                  linkState={{ routeStack: [{ breadCrumb: i.breadCrumb, pagePath: i.url }] }}
                   isPersonalSpace={false}
                   disabled={i.disabled}
                   tooltip={i.tooltip}
