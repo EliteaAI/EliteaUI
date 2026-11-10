@@ -6,6 +6,7 @@ import {
 } from '@/common/constants';
 import { createSlice } from '@reduxjs/toolkit';
 
+import { applyProjectFromUrl } from '../[fsd]/shared/lib/helpers/projectContext.helpers.js';
 import { eliteaApi } from '../api/eliteaApi.js';
 
 const defaultProjects = [
@@ -86,6 +87,9 @@ const safeGet = (storage, key) => {
     return null;
   }
 };
+
+// Must run before the initial state below reads the project from storage
+applyProjectFromUrl();
 
 const settingsSlice = createSlice({
   name: 'settings',
@@ -338,6 +342,11 @@ const settingsSlice = createSlice({
     });
     builder.addMatcher(eliteaApi.endpoints.projectList.matchFulfilled, (state, { payload }) => {
       state.projects = [...(payload || defaultProjects)];
+      const currentProject = state.project.id && payload?.find(project => project.id == state.project.id);
+      if (currentProject && currentProject.name !== state.project.name) {
+        state.project = { id: currentProject.id, name: currentProject.name };
+        sessionStorage.setItem(ProjectNameStorageKey, currentProject.name);
+      }
       if (state.project.id && payload?.length && !payload.find(project => project.id == state.project.id)) {
         const firstProject = payload[0];
         state.project = {

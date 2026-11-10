@@ -1,7 +1,7 @@
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
@@ -52,7 +52,6 @@ const ApplicationControls = memo(props => {
   const isFromPipeline = useIsFromPipelineDetail();
   const formik = useFormikContext();
   const viewMode = useViewMode();
-  const navigate = useNavigate();
   const location = useLocation();
   const { tab, agentId } = useParams();
   const versionDeleteRef = useRef(null);
@@ -61,7 +60,7 @@ const ApplicationControls = memo(props => {
 
   const { values: { id } = {} } = formik;
 
-  const { goToRunHistory } = useRunHistoryNavigation({
+  const { runHistoryPath } = useRunHistoryNavigation({
     entityId: id,
     historyRoute: isFromPipeline
       ? RouteDefinitions.PipelineRunHistory
@@ -245,12 +244,12 @@ const ApplicationControls = memo(props => {
         label: 'Evaluate (Beta)',
         icon: <EvaluateIcon sx={{ fontSize: '1rem' }} />,
         addSeparator: false,
-        onClick: () => {
-          const route = isFromPipeline
-            ? RouteDefinitions.PipelineEvaluate
-            : RouteDefinitions.ApplicationsEvaluate;
-          const path = NavigationHelpers.buildRoute(route, { tab: tab ?? 'all', agentId });
-          navigate({ pathname: path, search: location.search });
+        to: {
+          pathname: NavigationHelpers.buildRoute(
+            isFromPipeline ? RouteDefinitions.PipelineEvaluate : RouteDefinitions.ApplicationsEvaluate,
+            { tab: tab ?? 'all', agentId },
+          ),
+          search: location.search,
         },
       },
       shareAgentMenuItem,
@@ -261,7 +260,7 @@ const ApplicationControls = memo(props => {
               key: 'run-history',
               label: 'Run History',
               icon: <RunHistoryIcon sx={{ fontSize: '1rem' }} />,
-              onClick: goToRunHistory,
+              to: runHistoryPath,
               slotProps: {
                 MenuItem: { 'data-testid': `${isFromPipeline ? 'pipeline' : 'agent'}-run-history-menu-item` },
               },
@@ -294,12 +293,11 @@ const ApplicationControls = memo(props => {
     canDeleteApplication,
     formik?.values?.versions,
     isPrivate,
-    navigate,
     location.search,
     tab,
     agentId,
     id,
-    goToRunHistory,
+    runHistoryPath,
   ]);
 
   return (

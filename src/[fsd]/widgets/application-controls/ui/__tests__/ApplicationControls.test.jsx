@@ -5,11 +5,10 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import darkPalette from '@/darkPalette';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 
-const { state, goToRunHistory, runHistoryArgs } = vi.hoisted(() => ({
+const { state, runHistoryArgs } = vi.hoisted(() => ({
   state: { isFromPipeline: false, viewMode: 'owner', id: 7 },
-  goToRunHistory: vi.fn(),
   runHistoryArgs: { current: null },
 }));
 
@@ -44,7 +43,7 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useProjectType: () => ({ isPrivate: true }),
   useRunHistoryNavigation: args => {
     runHistoryArgs.current = args;
-    return { goToRunHistory };
+    return { runHistoryPath: '/agents/all/7/history?versionId=3' };
   },
   useSelectedProjectId: () => 2,
   useViewMode: () => state.viewMode,
@@ -57,6 +56,7 @@ vi.mock('@/[fsd]/shared/ui', () => ({
           <li
             key={item.key}
             data-key={item.key}
+            data-to={typeof item.to === 'string' ? item.to : item.to?.pathname}
             onClick={item.onClick}
           >
             {typeof item.label === 'string' ? item.label : item.key}
@@ -130,8 +130,9 @@ describe('ApplicationControls Run History', () => {
     expect(keys.indexOf('run-history')).toBe(keys.indexOf('delete-agent') - 1);
     expect(runHistoryArgs.current).toMatchObject({ entityId: 7, historyRoute: route });
 
-    fireEvent.click(screen.getByText('Run History'));
-    expect(goToRunHistory).toHaveBeenCalledTimes(1);
+    // Navigation-only item: a link target (so it can open in a new tab), not a click handler
+    const item = screen.getByText('Run History');
+    expect(item).toHaveAttribute('data-to', '/agents/all/7/history?versionId=3');
   });
 
   it('is hidden for an unsaved entity and in public view', () => {

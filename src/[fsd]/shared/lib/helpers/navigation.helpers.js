@@ -86,3 +86,33 @@ export const pickPersistentSearch = search => {
   }
   return result.toString();
 };
+
+/**
+ * True when a click is one the browser handles itself as "open elsewhere": Ctrl/Cmd/Shift/Alt+Click or a
+ * non-primary button (middle-click). The in-app side effects of a navigation (resetting state, closing a
+ * menu that must stay open, ...) must not run for these, because the current tab does not navigate.
+ * @param {{ button?: number, ctrlKey?: boolean, metaKey?: boolean, shiftKey?: boolean, altKey?: boolean }} event
+ * @returns {boolean}
+ */
+export const isModifiedClick = event =>
+  Boolean(event && (event.button > 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey));
+
+/**
+ * Adds the active project to a link `href` as `project_id`, so a tab opened from the browser's context menu
+ * (which has no per-tab project of its own) lands in the same project. Only for the `href`: in-app clicks
+ * navigate to the clean target.
+ * @param {string} href - e.g. '/agents/all/7?viewMode=owner#top'
+ * @param {string | number | undefined | null} projectId
+ * @returns {string}
+ */
+export const appendProjectParam = (href, projectId) => {
+  if (!href || projectId === undefined || projectId === null || projectId === '') return href;
+
+  const [beforeHash, ...hashParts] = href.split('#');
+  const hash = hashParts.length ? `#${hashParts.join('#')}` : '';
+  const [path, ...queryParts] = beforeHash.split('?');
+  const params = new URLSearchParams(queryParts.join('?'));
+  params.set(SearchParams.ProjectId, String(projectId));
+
+  return `${path}?${params.toString()}${hash}`;
+};

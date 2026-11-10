@@ -5,13 +5,14 @@ import { useSelector } from 'react-redux';
 import { Box, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { AppLink } from '@/[fsd]/shared/ui';
 
 /**
  * Reusable sidebar button component following DRY principles
  * Common base for Settings, Tips, Notifications, etc.
  */
 const SidebarButton = memo(props => {
-  const { icon, label, tooltip, onClick, isActive = false, children, tourId } = props;
+  const { icon, label, tooltip, onClick, to, linkState, isActive = false, children, tourId } = props;
 
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
 
@@ -25,6 +26,7 @@ const SidebarButton = memo(props => {
       enterNextDelay={500}
     >
       <Box
+        {...(to ? { component: AppLink, to, state: linkState } : {})}
         data-tour={tourId}
         onClick={onClick}
         sx={styles.container}

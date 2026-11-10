@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { useMatch } from 'react-router-dom';
 
@@ -14,9 +14,20 @@ const SettingsButton = memo(props => {
   const isOnSettings = useMatch({ path: RouteDefinitions.SettingsWithTab });
 
   // Direct navigation to Model Configuration page when Settings is clicked
-  const handleSettingsClick = useCallback(() => {
-    navigateToPage(RouteDefinitions.SettingsWithTab.replace(':tab', 'project-general'), 'Settings')();
-  }, [navigateToPage]);
+  const settingsPath = RouteDefinitions.SettingsWithTab.replace(':tab', 'project-general');
+  const linkState = useMemo(
+    () => ({ routeStack: [{ breadCrumb: 'Settings', pagePath: settingsPath }] }),
+    [settingsPath],
+  );
+
+  const handleSettingsClick = useCallback(
+    event => {
+      // The link is only a carrier for the href; a plain click keeps the existing guarded navigation
+      event.preventDefault();
+      navigateToPage(settingsPath, 'Settings')();
+    },
+    [navigateToPage, settingsPath],
+  );
 
   return (
     <SidebarButton
@@ -24,6 +35,8 @@ const SettingsButton = memo(props => {
       label="Settings"
       tooltip="Settings"
       tourId={SIDEBAR_TOUR_TARGET_IDS.settings}
+      to={settingsPath}
+      linkState={linkState}
       onClick={handleSettingsClick}
       isActive={!!isOnSettings}
     />

@@ -322,6 +322,7 @@ export const SearchParams = {
   SharedChat: 'shared_chat',
   Bucket: 'bucket',
   SharedBucket: 'shared_bucket',
+  ProjectId: 'project_id',
 };
 
 export const ViewOptions = {

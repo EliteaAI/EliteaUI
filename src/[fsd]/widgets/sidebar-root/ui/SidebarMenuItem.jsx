@@ -6,6 +6,7 @@ import { ListItem, ListItemButton, ListItemIcon } from '@mui/material';
 import Typography from '@mui/material/Typography';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { AppLink } from '@/[fsd]/shared/ui';
 import { useDisablePersonalSpace } from '@/[fsd]/widgets/sidebar-root/lib/hooks';
 import { TooltipForDisablePersonalSpace } from '@/[fsd]/widgets/sidebar-root/ui';
 
@@ -14,6 +15,8 @@ const SidebarMenuItem = memo(props => {
     menuTitle,
     menuIcon,
     onClick,
+    to,
+    linkState,
     selected,
     display,
     isPersonalSpace,
@@ -26,6 +29,9 @@ const SidebarMenuItem = memo(props => {
   const { shouldDisablePersonalSpace } = useDisablePersonalSpace();
   const styles = sidebarMenuItemStyles(selected, showLabel, isPersonalSpace);
 
+  // A real link (href) lets the browser offer "Open link in new tab"; a disabled item stays a plain button
+  const getLinkProps = isDisabled => (to && !isDisabled ? { component: AppLink, to, state: linkState } : {});
+
   return isPersonalSpace ? (
     <TooltipForDisablePersonalSpace>
       <ListItem
@@ -33,6 +39,7 @@ const SidebarMenuItem = memo(props => {
         sx={{ ...styles.menuItem, display }}
       >
         <ListItemButton
+          {...getLinkProps(shouldDisablePersonalSpace || disabled)}
           disabled={shouldDisablePersonalSpace || disabled}
           selected={selected}
           onClick={onClick}
@@ -55,6 +62,7 @@ const SidebarMenuItem = memo(props => {
         sx={{ ...styles.menuItem, display }}
       >
         <ListItemButton
+          {...getLinkProps(disabled)}
           disabled={disabled}
           selected={selected}
           onClick={onClick}

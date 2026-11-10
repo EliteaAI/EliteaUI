@@ -51,7 +51,9 @@ const SidebarBody = memo(props => {
   const styles = sideBarBodyStyles(sideBarCollapsed, socketStatus);
 
   const navigateToPage = useCallback(
-    (pagePath, breadCrumb) => () => {
+    (pagePath, breadCrumb) => event => {
+      // The item is a real link (so the browser can open it in a new tab); a plain click is handled here
+      event?.preventDefault?.();
       if (!personal_project_id) {
         navigate(RouteDefinitions.Onboarding);
       } else {
@@ -263,6 +265,8 @@ const SidebarBody = memo(props => {
                   menuIcon={i.icon}
                   selected={i.value === selectedItem}
                   onClick={navigateToPage(i.url, i.breadCrumb)}
+                  to={personal_project_id ? i.url : RouteDefinitions.Onboarding}
+                  linkState={{ routeStack: [{ breadCrumb: i.breadCrumb, pagePath: i.url }] }}
                   isPersonalSpace={false}
                   disabled={i.disabled}
                   tooltip={i.tooltip}
