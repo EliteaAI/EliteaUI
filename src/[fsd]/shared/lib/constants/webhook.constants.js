@@ -36,6 +36,7 @@ export const DELIVERY_OUTCOME_LABELS = {
   ping: 'Ping received',
   disabled: 'Disabled',
   refused: 'Refused',
+  capped: 'Too many runs',
   start_failed: 'Start failed',
 };
 

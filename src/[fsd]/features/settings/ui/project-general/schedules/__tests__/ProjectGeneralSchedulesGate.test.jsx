@@ -39,6 +39,7 @@ vi.mock('../../../shared/SettingsFormProvider', () => ({ default: () => null }))
 vi.mock('../index', () => ({
   ScheduleNotificationsSection: () => <div data-testid="schedule-notifications" />,
   RunWithoutAskingSetting: () => <div data-testid="schedule-run-without-asking" />,
+  WebhookRunCapSetting: () => <div data-testid="schedule-webhook-run-cap" />,
 }));
 
 const theme = createTheme({ palette: lightPalette });

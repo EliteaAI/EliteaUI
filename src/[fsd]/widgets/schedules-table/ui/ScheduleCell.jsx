@@ -22,6 +22,7 @@ import AuthorContainer from '@/components/AuthorContainer';
 import CalendarIcon from '@/components/Icons/CalendarIcon';
 
 import IconWithLabel from './IconWithLabel';
+import RunCapLine, { isAtRunCap } from './RunCapLine';
 
 // The API stores run statuses in lower case (failed, skipped, blocked, ...)
 const REASON_STATUSES = ['failed', 'skipped', 'blocked'];
@@ -170,7 +171,7 @@ const ScheduleCell = memo(({ column, value, row, tier, now }) => {
       );
     }
     case 'last_delivery_at': {
-      if (!row.last_delivery_at) return '-';
+      if (!row.last_delivery_at) return isAtRunCap(row) ? <RunCapLine row={row} /> : '-';
       const outcome = toDeliveryOutcomeLabel(row.last_delivery_outcome);
       return (
         <MuiTooltip
@@ -193,6 +194,7 @@ const ScheduleCell = memo(({ column, value, row, tier, now }) => {
                 {outcome}
               </Typography>
             )}
+            {isAtRunCap(row) && <RunCapLine row={row} />}
           </Box>
         </MuiTooltip>
       );

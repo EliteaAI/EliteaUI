@@ -287,15 +287,26 @@ export const scheduleApi = eliteaApi
       // Project admin only. Optimistic so the checkbox does not flicker back; the list refetch
       // gives the schedule form the new run_without_asking_allowed flag.
       updateScheduleSettings: build.mutation({
-        query: ({ projectId, allowRunWithoutAsking }) => ({
+        // Each control sends only its own key; the API keeps a key the body leaves out (#7400)
+        query: ({ projectId, allowRunWithoutAsking, webhookMaxConcurrentRuns }) => ({
           url: `${schedulesPath(projectId)}/settings`,
           method: 'PUT',
-          body: { allow_run_without_asking: allowRunWithoutAsking },
+          body: {
+            ...(allowRunWithoutAsking !== undefined && { allow_run_without_asking: allowRunWithoutAsking }),
+            ...(webhookMaxConcurrentRuns !== undefined && {
+              webhook_max_concurrent_runs: webhookMaxConcurrentRuns,
+            }),
+          },
         }),
-        async onQueryStarted({ projectId, allowRunWithoutAsking }, { dispatch, queryFulfilled }) {
+        async onQueryStarted(
+          { projectId, allowRunWithoutAsking, webhookMaxConcurrentRuns },
+          { dispatch, queryFulfilled },
+        ) {
           const patch = dispatch(
             scheduleApi.util.updateQueryData('getScheduleSettings', { projectId }, draft => {
-              draft.allow_run_without_asking = allowRunWithoutAsking;
+              if (allowRunWithoutAsking !== undefined) draft.allow_run_without_asking = allowRunWithoutAsking;
+              if (webhookMaxConcurrentRuns !== undefined)
+                draft.webhook_max_concurrent_runs = webhookMaxConcurrentRuns;
             }),
           );
           try {
