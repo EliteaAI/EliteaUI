@@ -17,8 +17,14 @@ import { actions as chatActions } from '@/slices/chat';
 
 import BackupAlert from './BackupAlert';
 
-const { formatCount, formatSize, getRestoreErrorMessage, getDefaultRestoreChats, getChatsSummaryText } =
-  ProjectBackupHelpers;
+const {
+  formatCount,
+  formatSize,
+  getRestoreErrorMessage,
+  getDefaultRestoreChats,
+  getChatsSummaryText,
+  getSkillFilesSummaryText,
+} = ProjectBackupHelpers;
 const { CHATS_OPTION, CHAT_RESTORE_OPTION_LABELS, RESTORE_OPTION_LABELS } = ProjectBackupConstants;
 
 const NO_FILES_TOOLTIP = 'This backup has no attachment files';
@@ -136,6 +142,10 @@ const RestoreProjectDialog = memo(props => {
       if (failedAttachments && !response.result.dry_run) {
         toastWarning(`Restore completed. ${failedAttachments} attachment file(s) could not be restored.`);
       }
+      const missingSkillFiles = response?.result?.skill_files?.missing;
+      if (missingSkillFiles && !response.result.dry_run) {
+        toastWarning(`Restore completed. ${missingSkillFiles} skill file(s) could not be restored.`);
+      }
     } catch (err) {
       setError(getRestoreErrorMessage(err));
       // A project mismatch comes back as 409 with the artifact the backend read,
@@ -163,6 +173,7 @@ const RestoreProjectDialog = memo(props => {
 
   const summary = result?.result;
   const chatsSummary = getChatsSummaryText(summary);
+  const skillFilesSummary = getSkillFilesSummaryText(summary);
 
   const chatItems = useMemo(
     () =>
@@ -304,6 +315,16 @@ const RestoreProjectDialog = memo(props => {
         </>
       )}
 
+      {isMismatch && !truncate && (
+        <BackupAlert
+          severity="warning"
+          data-testid="project-restore-merge-warning"
+        >
+          Merging a backup of another project can attach its agent and skill versions to this project&apos;s
+          own. Restore it into a new project, or check &quot;{RESTORE_OPTION_LABELS.truncate}&quot;.
+        </BackupAlert>
+      )}
+
       <Box sx={styles.options}>
         <FormControlLabel
           control={
@@ -435,6 +456,16 @@ const RestoreProjectDialog = memo(props => {
               data-testid="project-restore-chats-summary"
             >
               {chatsSummary}
+            </Typography>
+          )}
+          {!!skillFilesSummary && (
+            <Typography
+              variant="bodySmall2"
+              color="inherit"
+              sx={styles.summaryBody}
+              data-testid="project-restore-skill-files-summary"
+            >
+              {skillFilesSummary}
             </Typography>
           )}
           {filledColumns.length > 0 && (

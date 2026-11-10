@@ -61,6 +61,14 @@ export const getChatsSummaryText = summary => {
   return parts.join(' · ');
 };
 
+export const getSkillFilesSummaryText = summary => {
+  const files = summary?.skill_files;
+  if (!files?.total) return '';
+  if (files.unchecked) return `Skill files: ${files.total} not checked (storage unavailable)`;
+  const text = `Skill files: ${files.total} total, ${files.present} present, ${files.uploaded} uploaded, ${files.missing} missing`;
+  return files.missing_paths?.length ? `${text} (${files.missing_paths.join(', ')})` : text;
+};
+
 // A restore rewrites the project's chat templates and, with chats, everything the chat pages show
 export const getRestoreInvalidatedTags = (error, args, chatTemplatesTag) => {
   const { projectId, dryRun, inspect, restoreChats } = args || {};

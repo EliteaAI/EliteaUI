@@ -8,6 +8,7 @@ import {
   getDefaultRestoreChats,
   getRestoreErrorMessage,
   getRestoreInvalidatedTags,
+  getSkillFilesSummaryText,
 } from '../projectBackup.helpers.js';
 
 describe('getRestoreErrorMessage', () => {
@@ -157,5 +158,34 @@ describe('getRestoreInvalidatedTags', () => {
     expect(getRestoreInvalidatedTags(undefined, { ...args, dryRun: true }, TEMPLATES)).toEqual([]);
     expect(getRestoreInvalidatedTags(undefined, { ...args, inspect: true }, TEMPLATES)).toEqual([]);
     expect(getRestoreInvalidatedTags({ status: 500 }, args, TEMPLATES)).toEqual([]);
+  });
+});
+
+describe('getSkillFilesSummaryText', () => {
+  it('is empty when the restore wrote no skill file rows', () => {
+    expect(getSkillFilesSummaryText(undefined)).toBe('');
+    expect(getSkillFilesSummaryText({ skill_files: { total: 0 } })).toBe('');
+  });
+
+  it('reports every count', () => {
+    expect(
+      getSkillFilesSummaryText({
+        skill_files: { total: 22, present: 2, uploaded: 20, missing: 0, missing_paths: [], unchecked: false },
+      }),
+    ).toBe('Skill files: 22 total, 2 present, 20 uploaded, 0 missing');
+  });
+
+  it('names the paths of the missing files', () => {
+    expect(
+      getSkillFilesSummaryText({
+        skill_files: { total: 3, present: 1, uploaded: 0, missing: 2, missing_paths: ['a.md', 'b/c.py'] },
+      }),
+    ).toBe('Skill files: 3 total, 1 present, 0 uploaded, 2 missing (a.md, b/c.py)');
+  });
+
+  it('says when storage could not be checked', () => {
+    expect(getSkillFilesSummaryText({ skill_files: { total: 4, unchecked: true } })).toBe(
+      'Skill files: 4 not checked (storage unavailable)',
+    );
   });
 });
