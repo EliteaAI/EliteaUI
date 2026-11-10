@@ -25,6 +25,11 @@ describe('storedLogin helpers', () => {
       settingsKey: 'sharepoint_configuration',
       keepBrowserToken: true,
     });
+    expect(getStoredLoginConfig('ms_graph')).toMatchObject({
+      configurationType: 'ms_graph',
+      settingsKey: 'ms_graph_configuration',
+      keepBrowserToken: true,
+    });
     expect(getStoredLoginConfig('jira')).toBeNull();
     expect(getStoredLoginConfig(undefined)).toBeNull();
   });
