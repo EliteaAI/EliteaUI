@@ -169,8 +169,6 @@ export const SocketMessageType = {
   McpAuthorizationRequired: 'mcp_authorization_required',
   AgentLlmStart: 'agent_llm_start',
   AgentLlmChunk: 'agent_llm_chunk',
-  // Text streamed while the client was away, sent once on chat_enter_room (EL-7385)
-  ChatRunSnapshot: 'chat_run_snapshot',
   AgentLlmEnd: 'agent_llm_end',
   AgentOnFunctionToolNode: 'agent_on_function_tool_node',
   AgentOnToolNode: 'agent_on_tool_node',
