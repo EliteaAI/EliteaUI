@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { GenerateEntityModal } from '@/[fsd]/entities/generate-entity-with-ai';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
+import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
+import { useRefetchConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks';
 import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd]/features/skill';
 import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
@@ -34,6 +36,7 @@ const GenerateAgentModal = memo(props => {
   const { toastWarning } = useToast();
 
   const [createApplication] = useApplicationCreateMutation();
+  const refetchStartersLimit = useRefetchConversationStartersLimit();
   const [associateToolkit] = useToolkitAssociateMutation();
   const [updateApplicationRelation] = useUpdateApplicationRelationMutation();
   const [updateSkillRelation] = useUpdateSkillRelationMutation();
@@ -228,28 +231,35 @@ const GenerateAgentModal = memo(props => {
 
   const handleApprove = useCallback(
     async draftData => {
-      const result = await createApplication({
-        projectId,
-        name: (draftData.name || '').trim(),
-        description: draftData.description || '',
-        type: 'interface',
-        versions: [
-          {
-            name: LATEST_VERSION_NAME,
-            instructions: draftData.instructions || '',
-            variables: contextResolver(draftData.instructions).map(name => ({ name, value: '' })),
-            tools: [],
-            tags: [],
-            llm_settings: generateLLMSettings(defaultModel, {}, { includeModelInfo: true }),
-            conversation_starters: filterEmptyStrings(draftData.conversation_starters),
-            agent_type: 'openai',
-            welcome_message: draftData.welcome_message || '',
-            meta: {
-              step_limit: 25,
+      let result;
+      try {
+        result = await createApplication({
+          projectId,
+          name: (draftData.name || '').trim(),
+          description: draftData.description || '',
+          type: 'interface',
+          versions: [
+            {
+              name: LATEST_VERSION_NAME,
+              instructions: draftData.instructions || '',
+              variables: contextResolver(draftData.instructions).map(name => ({ name, value: '' })),
+              tools: [],
+              tags: [],
+              llm_settings: generateLLMSettings(defaultModel, {}, { includeModelInfo: true }),
+              conversation_starters: filterEmptyStrings(draftData.conversation_starters),
+              agent_type: 'openai',
+              welcome_message: draftData.welcome_message || '',
+              meta: {
+                step_limit: 25,
+              },
             },
-          },
-        ],
-      }).unwrap();
+          ],
+        }).unwrap();
+      } catch (error) {
+        // The limit may have changed since the modal opened; the review step picks up the new one
+        if (conversationStartersHelpers.isConversationStartersLimitError(error)) refetchStartersLimit();
+        throw error;
+      }
 
       const entityId = result.id;
       const versionId = result.version_details?.id;
@@ -276,6 +286,7 @@ const GenerateAgentModal = memo(props => {
       selectedPipelineIds,
       selectedSkillIds,
       createApplication,
+      refetchStartersLimit,
       associateToolkits,
       associateApplications,
       associateSkills,
