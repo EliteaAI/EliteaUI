@@ -3,6 +3,8 @@ import { memo } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Box, ButtonBase, Chip, Typography, alpha } from '@mui/material';
 
+import { isWebhookRow } from '@/[fsd]/entities/schedule';
+
 import { describeRunFacts, formatRunStarted, toTriggerLabel } from '../lib/helpers';
 import ScheduleRunDetail from './ScheduleRunDetail';
 import ScheduleRunStatusChip from './ScheduleRunStatusChip';
@@ -51,7 +53,7 @@ const ScheduleRunCard = memo(props => {
           <Chip
             data-testid="schedule-run-trigger"
             size="small"
-            label={toTriggerLabel(run.trigger)}
+            label={toTriggerLabel(run.trigger, isWebhookRow(schedule))}
             sx={styles.trigger}
           />
           <Box sx={styles.status}>

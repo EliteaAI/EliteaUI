@@ -2,8 +2,10 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
+import SyncOutlinedIcon from '@mui/icons-material/SyncOutlined';
 import { Box, Skeleton } from '@mui/material';
 
+import Tooltip from '@/ComponentsLib/Tooltip';
 import { useResponsiveColumns, useTableSort } from '@/[fsd]/entities/grid-table/lib';
 import {
   GridTableBody,
@@ -47,7 +49,6 @@ const UsersTable = memo(props => {
     onSelectRow,
     rolesOptions,
     setSelectedUsers,
-    canDeleteUsers = true,
   } = props;
 
   const styles = usersTableStyles();
@@ -154,17 +155,34 @@ const UsersTable = memo(props => {
               testId="user-row-edit-button"
             />
           )}
-          {checkPermission(PERMISSIONS.users.delete) && canDeleteUsers && (
-            <DeleteUserButton
-              users={[row]}
-              setSelectedUsers={setSelectedUsers}
-              testId="user-row-delete-button"
-            />
+          {row.scim_synced ? (
+            <Tooltip
+              title="Synced from Entra ID: remove the user from the group there"
+              placement="top"
+            >
+              <Box
+                component="span"
+                sx={styles.syncedIconWrapper}
+              >
+                <SyncOutlinedIcon
+                  data-testid="user-row-synced-icon"
+                  sx={styles.syncedIcon}
+                />
+              </Box>
+            </Tooltip>
+          ) : (
+            checkPermission(PERMISSIONS.users.delete) && (
+              <DeleteUserButton
+                users={[row]}
+                setSelectedUsers={setSelectedUsers}
+                testId="user-row-delete-button"
+              />
+            )
           )}
         </Box>
       );
     },
-    [canDeleteUsers, checkPermission, rolesOptions, setSelectedUsers, styles.actionsContainer],
+    [checkPermission, rolesOptions, setSelectedUsers, styles],
   );
 
   return !isFetching ? (
@@ -241,6 +259,17 @@ const usersTableStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
   },
+  syncedIconWrapper: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '1.75rem',
+    height: '1.75rem',
+  },
+  syncedIcon: ({ palette }) => ({
+    fontSize: '1rem',
+    color: palette.icon.secondary,
+  }),
   actionsContainer: {
     display: 'flex',
     flexDirection: 'row',

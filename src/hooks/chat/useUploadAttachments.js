@@ -131,8 +131,9 @@ export default function useUploadAttachments() {
           };
         } catch (error) {
           setUploadingAttachments([]);
-          toastError(buildErrorMessage(error) || 'Failed to upload attachments, please try again.');
-          return { success: false, messages };
+          const errorMessage = buildErrorMessage(error) || 'Failed to upload attachments, please try again.';
+          toastError(errorMessage);
+          return { success: false, messages, error: errorMessage };
         }
       }
 

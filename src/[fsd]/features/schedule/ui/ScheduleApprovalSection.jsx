@@ -5,27 +5,29 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Box, Link, Typography } from '@mui/material';
 
 import { useGetScheduleSettingsQuery } from '@/[fsd]/entities/schedule';
+import { APPROVAL_RULE, APPROVAL_RULE_LABELS } from '@/[fsd]/entities/schedule/lib/constants';
+import { WebhookConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import RadioButtonGroup from '@/[fsd]/shared/ui/checkbox/RadioButtonGroup';
 import RouteDefinitions from '@/routes';
 
-import { APPROVAL_RULE, APPROVAL_RULE_INFO, VISUALLY_HIDDEN } from '../lib/constants';
+import { APPROVAL_RULE_INFO, VISUALLY_HIDDEN } from '../lib/constants';
 import FieldError from './FieldError';
 
 export const APPROVAL_RULE_ITEMS = [
   {
     value: APPROVAL_RULE.PAUSE_AND_ASK,
-    label: 'Pause and ask me',
+    label: APPROVAL_RULE_LABELS[APPROVAL_RULE.PAUSE_AND_ASK],
     info: APPROVAL_RULE_INFO[APPROVAL_RULE.PAUSE_AND_ASK],
     infoPinnable: true,
-    infoLabel: 'More info about Pause and ask me',
+    infoLabel: `More info about ${APPROVAL_RULE_LABELS[APPROVAL_RULE.PAUSE_AND_ASK]}`,
   },
   {
     value: APPROVAL_RULE.RUN_WITHOUT_ASKING,
-    label: 'Run without asking',
+    label: APPROVAL_RULE_LABELS[APPROVAL_RULE.RUN_WITHOUT_ASKING],
     info: APPROVAL_RULE_INFO[APPROVAL_RULE.RUN_WITHOUT_ASKING],
     infoPinnable: true,
-    infoLabel: 'More info about Run without asking',
+    infoLabel: `More info about ${APPROVAL_RULE_LABELS[APPROVAL_RULE.RUN_WITHOUT_ASKING]}`,
   },
 ];
 // "21 Oct 2026" for the line of who confirmed "Run without asking"
@@ -39,8 +41,21 @@ const formatConfirmation = (by, at) => {
     : `Confirmed by ${by}`;
 };
 
+const { RUN_WITHOUT_ASKING_SECRET_WARNING, UNSIGNED_REPLAY_WARNING } = WebhookConstants;
+
+// webhookSigned: undefined on a schedule, else whether the webhook type signs its requests
 const ScheduleApprovalSection = memo(props => {
-  const { rule, ruleChanged, confirmedBy, confirmedAt, canChangeProjectSettings, error, onChange } = props;
+  const {
+    rule,
+    ruleChanged,
+    confirmedBy,
+    confirmedAt,
+    canChangeProjectSettings,
+    webhookSigned,
+    error,
+    onChange,
+  } = props;
+  const showWebhookWarning = webhookSigned !== undefined && rule === APPROVAL_RULE.RUN_WITHOUT_ASKING;
   const projectId = useSelectedProjectId();
   const { data: scheduleSettings } = useGetScheduleSettingsQuery({ projectId }, { skip: !projectId });
   // Three states: undefined while loading or on error, then true or false; only an explicit false shows the hint
@@ -90,6 +105,17 @@ const ScheduleApprovalSection = memo(props => {
               </Link>
             </>
           )}
+        </Typography>
+      )}
+      {showWebhookWarning && (
+        <Typography
+          variant="bodySmall"
+          color="warning.main"
+          role="note"
+          data-testid="webhook-run-without-asking-warning"
+        >
+          {RUN_WITHOUT_ASKING_SECRET_WARNING}
+          {!webhookSigned && ` ${UNSIGNED_REPLAY_WARNING}`}
         </Typography>
       )}
       {confirmedBy && (

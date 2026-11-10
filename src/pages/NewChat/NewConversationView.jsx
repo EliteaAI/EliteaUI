@@ -13,6 +13,7 @@ import {
   useNewStartConversationInputKeyDownHandler,
   useSlashMention,
 } from '@/[fsd]/features/chat/lib/hooks';
+import { sendFailuresActions } from '@/[fsd]/features/chat/model';
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
 import {
@@ -21,6 +22,7 @@ import {
   SlashSuggestionList,
   WebSearchBudgetWarning,
 } from '@/[fsd]/features/chat/ui';
+import { NewChatConversationStarters } from '@/[fsd]/features/chat/ui/chat-conversation-starters';
 import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
 import RecommendationList from '@/[fsd]/features/chat/ui/recommendations/RecommendationList';
 import SearchResultList from '@/[fsd]/features/chat/ui/recommendations/SearchResultList';
@@ -54,12 +56,12 @@ import {
   ConversationNameWarningMessage,
   DefaultConversationName,
   PUBLIC_PROJECT_ID,
+  ROLES,
   sioEvents,
 } from '@/common/constants';
 import { initializeNewMessages } from '@/common/initializeNewMessages';
 import { generateMessagePayload } from '@/common/messagePayloadUtils';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
-import { EllipsisTextWithTooltip } from '@/components/ConversationStarters';
 import useValidateApplicationVersion, {
   useToolsValidationInfo,
 } from '@/hooks/application/useValidateApplicationVersion';
@@ -103,6 +105,7 @@ const NewConversationView = forwardRef(
       isUploadingAttachments,
       uploadProgress,
       setNewConversationQuestion,
+      watchConversationName,
     },
     ref,
   ) => {
@@ -311,7 +314,7 @@ const NewConversationView = forwardRef(
     const budgetWarning = useBudgetWarning({ projectId: selectedProjectId });
 
     const onPredictStream = useCallback(
-      (question, specifiedParticipant, conversation) => {
+      (question, specifiedParticipant, conversation, isOnScreen = () => true) => {
         // Guard: ensure conversation and uuid exist before emitting
         const conversationUuid = conversation?.uuid;
         if (!conversationUuid) {
@@ -332,25 +335,57 @@ const NewConversationView = forwardRef(
             name: user.name,
             avatar: user.avatar,
           });
+          // Tracked app-wide so a failure after the user left is shown in this chat on return
+          dispatch(
+            sendFailuresActions.trackSend({
+              questionId: question_id,
+              conversationUuid: uuid,
+              question,
+              userMessage: newMessages.find(message => message.role === ROLES.User),
+            }),
+          );
 
-          const { success, messages, updatedAttachments } = await uploadAttachments({
+          const {
+            success,
+            messages,
+            updatedAttachments,
+            error: uploadError,
+          } = await uploadAttachments({
             attachments,
             conversationId: conversation?.id || '',
             messages: newMessages,
           });
+          // If the user left, still send, but don't write into the chat that is open now
+          const isStillOnScreen = isOnScreen();
           if (success) {
             newMessages = messages;
           } else {
-            setActiveConversation(prev => ({
-              ...prev,
-              isSending: undefined,
-            }));
+            if (isStillOnScreen) {
+              dispatch(sendFailuresActions.settleSend({ questionId: question_id }));
+              setActiveConversation(prev => ({
+                ...prev,
+                isSending: undefined,
+              }));
+            } else {
+              dispatch(
+                sendFailuresActions.recordFailure({
+                  questionId: question_id,
+                  conversationUuid: uuid,
+                  error: uploadError,
+                }),
+              );
+            }
             return;
           }
 
-          setChatHistory(prevMessages => [...prevMessages, ...newMessages]);
+          if (isStillOnScreen) {
+            setChatHistory(prevMessages => [...prevMessages, ...newMessages]);
+          }
 
           setConversationStreamingInfo(uuid, question_id);
+          if (!isStillOnScreen) {
+            dispatch(sendFailuresActions.trackAwaySend({ questionId: question_id, conversationUuid: uuid }));
+          }
           // Use sanitized filenames from upload response to match what's stored in MinIO
           const payload = getPayload({
             question,
@@ -360,6 +395,11 @@ const NewConversationView = forwardRef(
             attachmentList: updatedAttachments || attachments,
           });
           emit(payload);
+          // Its name is announced in the chat's room, which is left as soon as the user moves on
+          if (conversation?.name === DefaultConversationName) {
+            watchConversationName?.({ id: conversation.id, uuid, questionId: question_id });
+          }
+          if (!isStillOnScreen) return;
           clearMentions();
           onClearAttachments?.();
           setActiveConversation(prev => ({
@@ -384,6 +424,7 @@ const NewConversationView = forwardRef(
         setActiveConversation,
         dispatch,
         clearMentions,
+        watchConversationName,
       ],
     );
     const onPredictStreamRef = useRef(onPredictStream);
@@ -747,6 +788,9 @@ const NewConversationView = forwardRef(
       return selectedParticipant?.version_details?.conversation_starters || [];
     }, [selectedParticipant]);
 
+    // A new chat or another participant remounts the starters list, so "Show N more" starts collapsed.
+    const conversationStartersKey = `${activeConversation?.id ?? activeConversation?.uuid}::${getChatParticipantUniqueId(selectedParticipant)}`;
+
     const welcomeMessage = useMemo(() => {
       const isAgentOrPipeline =
         selectedParticipant?.entity_name === ChatParticipantType.Applications ||
@@ -878,7 +922,7 @@ const NewConversationView = forwardRef(
       const pendingFolderId = activeConversationRef.current?.folder_id || null;
       await onCreateConversation(
         newConversation,
-        async (createdConversation, onComplete) => {
+        async (createdConversation, onComplete, isOnScreen = () => true) => {
           if (createdConversation) {
             // Update model settings for the new conversation on remote
             const userSettings = NewConversationHelpers.getChatUserSettings(createdConversation, user.id);
@@ -927,39 +971,48 @@ const NewConversationView = forwardRef(
                     return sp;
                   });
 
-                await addNewParticipants(selectedParticipantFiltered, createdConversation, participants => {
-                  onComplete?.([
-                    ...participants,
-                    ...NewConversationHelpers.setUserLLmSettings(
-                      createdConversation.participants,
-                      user.id,
-                      cleanedSettings,
-                    ),
-                  ]);
-                  const rawParticipant = participants.find(
-                    p =>
-                      (p.entity_name === selectedParticipant.entity_name ||
-                        p.entity_settings.agent_type === selectedParticipant.entity_name) &&
-                      p.entity_meta.id === selectedParticipant.entity_meta.id,
-                  );
-                  const selectedVersionId = selectedParticipant?.entity_settings?.version_id;
-                  const participant =
-                    rawParticipant && selectedVersionId && !rawParticipant.entity_settings?.version_id
-                      ? {
-                          ...rawParticipant,
-                          entity_settings: {
-                            ...(rawParticipant.entity_settings || {}),
-                            version_id: selectedVersionId,
-                          },
-                        }
-                      : rawParticipant;
-                  setActiveParticipant?.(participant);
-                  setLocalActiveParticipant(createdConversation?.id, getChatParticipantUniqueId(participant));
+                await addNewParticipants(
+                  selectedParticipantFiltered,
+                  createdConversation,
+                  participants => {
+                    onComplete?.([
+                      ...participants,
+                      ...NewConversationHelpers.setUserLLmSettings(
+                        createdConversation.participants,
+                        user.id,
+                        cleanedSettings,
+                      ),
+                    ]);
+                    const rawParticipant = participants.find(
+                      p =>
+                        (p.entity_name === selectedParticipant.entity_name ||
+                          p.entity_settings.agent_type === selectedParticipant.entity_name) &&
+                        p.entity_meta.id === selectedParticipant.entity_meta.id,
+                    );
+                    const selectedVersionId = selectedParticipant?.entity_settings?.version_id;
+                    const participant =
+                      rawParticipant && selectedVersionId && !rawParticipant.entity_settings?.version_id
+                        ? {
+                            ...rawParticipant,
+                            entity_settings: {
+                              ...(rawParticipant.entity_settings || {}),
+                              version_id: selectedVersionId,
+                            },
+                          }
+                        : rawParticipant;
+                    // Remembered for the chat either way; set active only if the user is still on it.
+                    setLocalActiveParticipant(
+                      createdConversation?.id,
+                      getChatParticipantUniqueId(participant),
+                    );
+                    if (isOnScreen()) setActiveParticipant?.(participant);
 
-                  setTimeout(() => {
-                    onPredictStreamRef.current?.(question, participant, createdConversation);
-                  }, 30);
-                });
+                    setTimeout(() => {
+                      onPredictStreamRef.current?.(question, participant, createdConversation, isOnScreen);
+                    }, 30);
+                  },
+                  isOnScreen,
+                );
                 setIsSending(false);
               }, 0);
             } else {
@@ -998,9 +1051,10 @@ const NewConversationView = forwardRef(
                         ),
                       ]);
                       setTimeout(() => {
-                        onPredictStreamRef.current?.(question, null, createdConversation);
+                        onPredictStreamRef.current?.(question, null, createdConversation, isOnScreen);
                       }, 30);
                     },
+                    isOnScreen,
                   );
                   setIsSending(false);
                 }, 0);
@@ -1013,7 +1067,7 @@ const NewConversationView = forwardRef(
                   ),
                 );
                 setTimeout(() => {
-                  onPredictStreamRef.current?.(question, null, createdConversation);
+                  onPredictStreamRef.current?.(question, null, createdConversation, isOnScreen);
                 }, 30);
               }
             }
@@ -1228,20 +1282,11 @@ const NewConversationView = forwardRef(
               />
             )}
             {conversationStarters?.length > 0 && !showRecommendationList && !query && (
-              <Box sx={styles.conversationStartersContainer}>
-                {conversationStarters
-                  .filter(item => item.trim())
-                  .map((item, index) => (
-                    <EllipsisTextWithTooltip
-                      key={index}
-                      text={item}
-                      onClick={onSendStarter(item)}
-                      sx={styles.starterItem}
-                      textSX={styles.starterTextSX}
-                      testId="chat-conversation-starter-tile"
-                    />
-                  ))}
-              </Box>
+              <NewChatConversationStarters
+                key={conversationStartersKey}
+                conversationStarters={conversationStarters}
+                onSendStarter={onSendStarter}
+              />
             )}
           </Box>
         </Box>
@@ -1308,24 +1353,6 @@ const newConversationViewStyles = () => ({
     flex: 1,
     maxHeight: 'calc(50% - 3.625rem)',
     width: '100%',
-  },
-  conversationStartersContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    width: '100%',
-    height: '100%',
-    justifyContent: 'flex-start',
-    boxSizing: 'border-box',
-    gap: '0.5rem',
-    padding: '0.5rem 0',
-  },
-  starterItem: {
-    width: '100%',
-    height: '2.5rem',
-    borderRadius: '0.75rem',
-  },
-  starterTextSX: {
-    WebkitLineClamp: 1,
   },
 });
 

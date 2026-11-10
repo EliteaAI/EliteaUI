@@ -142,10 +142,11 @@ export const scheduleApi = eliteaApi
       }),
 
       runSchedule: build.mutation({
-        query: ({ projectId, scheduleId, trigger = 'manual' }) => ({
+        // payload: the sample body of a webhook test run
+        query: ({ projectId, scheduleId, trigger = 'manual', payload }) => ({
           url: `${schedulePath(projectId, scheduleId)}/run`,
           method: 'POST',
-          body: { trigger },
+          body: payload === undefined ? { trigger } : { trigger, payload },
         }),
         invalidatesTags: (_, error, { scheduleId }) => (error ? [] : scheduleTags(scheduleId)),
       }),
@@ -286,21 +287,39 @@ export const scheduleApi = eliteaApi
       // Project admin only. Optimistic so the checkbox does not flicker back; the list refetch
       // gives the schedule form the new run_without_asking_allowed flag.
       updateScheduleSettings: build.mutation({
-        query: ({ projectId, allowRunWithoutAsking }) => ({
+        // Each control sends only its own key; the API keeps a key the body leaves out (#7400)
+        query: ({ projectId, allowRunWithoutAsking, webhookMaxConcurrentRuns }) => ({
           url: `${schedulesPath(projectId)}/settings`,
           method: 'PUT',
-          body: { allow_run_without_asking: allowRunWithoutAsking },
+          body: {
+            ...(allowRunWithoutAsking !== undefined && { allow_run_without_asking: allowRunWithoutAsking }),
+            ...(webhookMaxConcurrentRuns !== undefined && {
+              webhook_max_concurrent_runs: webhookMaxConcurrentRuns,
+            }),
+          },
         }),
-        async onQueryStarted({ projectId, allowRunWithoutAsking }, { dispatch, queryFulfilled }) {
+        async onQueryStarted(
+          { projectId, allowRunWithoutAsking, webhookMaxConcurrentRuns },
+          { dispatch, queryFulfilled },
+        ) {
           const patch = dispatch(
             scheduleApi.util.updateQueryData('getScheduleSettings', { projectId }, draft => {
-              draft.allow_run_without_asking = allowRunWithoutAsking;
+              if (allowRunWithoutAsking !== undefined) draft.allow_run_without_asking = allowRunWithoutAsking;
             }),
           );
           try {
             await queryFulfilled;
           } catch {
             patch.undo();
+            return;
+          }
+          // The cap is written only once accepted: an optimistic value and its undo would reset the field's draft
+          if (webhookMaxConcurrentRuns !== undefined) {
+            dispatch(
+              scheduleApi.util.updateQueryData('getScheduleSettings', { projectId }, draft => {
+                draft.webhook_max_concurrent_runs = webhookMaxConcurrentRuns;
+              }),
+            );
           }
         },
         invalidatesTags: (_, error) => (error ? [] : [listTag]),

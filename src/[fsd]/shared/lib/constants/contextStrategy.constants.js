@@ -26,6 +26,8 @@ export const CONTEXT_WINDOW_COPY = {
 Full: Uses the LLM’s entire context window.
 With both options, a safety margin is reserved so responses are not cut off.`,
   IDENTICAL_HINT: windowLabel => `This model’s window is ${windowLabel}, so Balanced and Full are the same.`,
+  AUTO_IDENTICAL_HINT: windowLabel =>
+    `Auto uses the smallest window among the models it can pick: ${windowLabel}, so Balanced and Full are the same.`,
   AVAILABLE_TOKENS_TOOLTIP: `Tokens available in this chat: the LLM’s context window minus the reserved safety margin.`,
   APPLIES_NEXT:
     'Applies to the next message in this conversation. Runs already in progress keep their original settings.',

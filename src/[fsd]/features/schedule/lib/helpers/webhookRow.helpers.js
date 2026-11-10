@@ -2,7 +2,13 @@ import { WebhookConstants } from '@/[fsd]/shared/lib/constants';
 
 import { formatRunStarted } from './scheduleRuns.helpers';
 
-const { GITLAB_AUTH_METHODS, WEBHOOK_SETUP_HINTS, WEBHOOK_TYPES, WEBHOOK_TYPE_LABELS } = WebhookConstants;
+const {
+  DELIVERY_OUTCOME_LABELS,
+  GITLAB_AUTH_METHODS,
+  WEBHOOK_SETUP_HINTS,
+  WEBHOOK_TYPES,
+  WEBHOOK_TYPE_LABELS,
+} = WebhookConstants;
 
 // The API sends the path only; senders need the full address
 export const toFullWebhookUrl = path => (path ? `${window.location.origin}${path}` : '');
@@ -27,3 +33,15 @@ export const rotationText = row =>
 
 export const rotationInProgressText = until =>
   `A rotation is in progress until ${until ? formatRunStarted(until) : 'later'}. Use Regenerate to replace the secret now.`;
+
+// An outcome added on the server later shows as stored rather than blank
+export const toDeliveryOutcomeLabel = outcome =>
+  outcome ? (DELIVERY_OUTCOME_LABELS[outcome] ?? outcome) : '';
+
+// The API sends both only on webhook rows; the cap line shows only once the cap is reached (#7400)
+export const isAtRunCap = row => Number.isInteger(row?.run_cap) && (row.running_runs ?? 0) >= row.run_cap;
+
+export const lastDeliveryText = row =>
+  row?.last_delivery_at
+    ? `${toDeliveryOutcomeLabel(row.last_delivery_outcome)} - ${formatRunStarted(row.last_delivery_at)}`
+    : 'No delivery yet';

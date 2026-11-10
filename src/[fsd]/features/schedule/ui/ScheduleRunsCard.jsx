@@ -17,8 +17,10 @@ import { isRunActive, runDeniedHint } from '../lib/helpers';
 import { useRunAsAdminHint } from '../lib/hooks/useRunAsAdminHint.hooks';
 import ScheduleRunCard from './ScheduleRunCard';
 import ScheduleRunsFilters, { ALL_RUNS } from './ScheduleRunsFilters';
+import WebhookSampleRunDialog from './WebhookSampleRunDialog';
 
 const RUN_NOW_NOTE = 'Runs the saved schedule and records it as Manual. Next run does not change.';
+const SAMPLE_RUN_NOTE = 'Runs the saved webhook with a body you paste, as a delivery would.';
 const TEST_RUN_NOTE = 'Runs the form as it is now, without saving. Last run and Next run do not change.';
 
 /**
@@ -62,6 +64,7 @@ const ScheduleRunsCard = memo(
     const newestId = runs[0]?.id;
     const [trigger, setTrigger] = useState(ALL_RUNS);
     const [status, setStatus] = useState(ALL_RUNS);
+    const [sampleOpen, setSampleOpen] = useState(false);
     const shownRuns = runs.filter(
       run =>
         (trigger === ALL_RUNS || run.trigger === trigger) && (status === ALL_RUNS || run.status === status),
@@ -97,7 +100,6 @@ const ScheduleRunsCard = memo(
             )}
           </Typography>
           <Box sx={styles.actions}>
-            {/* A webhook runs on a delivery; its sample-body run comes with #7399 */}
             {schedule?.id && !isWebhook && (
               <BaseBtn
                 data-testid="schedule-run-now"
@@ -109,6 +111,19 @@ const ScheduleRunsCard = memo(
                 onClick={startRun(onRunNow)}
               >
                 Run Now
+              </BaseBtn>
+            )}
+            {schedule?.id && isWebhook && (
+              <BaseBtn
+                data-testid="webhook-run-sample"
+                title={SAMPLE_RUN_NOTE}
+                variant={BUTTON_VARIANTS.secondary}
+                sx={styles.runNow}
+                startIcon={<PlayArrowOutlinedIcon />}
+                disabled={busy || !canRunNow}
+                onClick={() => setSampleOpen(true)}
+              >
+                Run with sample
               </BaseBtn>
             )}
             {!schedule?.id && !isWebhook && (
@@ -154,6 +169,7 @@ const ScheduleRunsCard = memo(
             runs={runs}
             trigger={trigger}
             status={status}
+            isWebhook={isWebhook}
             onTriggerChange={setTrigger}
             onStatusChange={setStatus}
           />
@@ -205,10 +221,25 @@ const ScheduleRunsCard = memo(
                 entityType={entityType}
                 applicationId={applicationId}
                 onToggle={onExpand}
-                onRunAgain={canRunNow && !busy ? startRun(onRunNow) : undefined}
+                // A webhook has no Run Now: its Run again opens the sample dialog
+                onRunAgain={
+                  canRunNow && !busy
+                    ? isWebhook
+                      ? () => setSampleOpen(true)
+                      : startRun(onRunNow)
+                    : undefined
+                }
               />
             ))}
           </Box>
+        )}
+        {sampleOpen && (
+          <WebhookSampleRunDialog
+            open
+            webhook={schedule}
+            onStarted={expectRun}
+            onClose={() => setSampleOpen(false)}
+          />
         )}
       </Box>
     );

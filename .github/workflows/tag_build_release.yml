@@ -16,6 +16,7 @@ on:
         options:
           - self-hosted
           - ubuntu-latest
+        default: self-hosted
         required: true
 
 # Serialize runs per ref so hotfix version bumps don't race each other

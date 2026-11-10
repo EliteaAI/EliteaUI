@@ -4,12 +4,15 @@ import { Box } from '@mui/material';
 
 import MainPanel from '@/[fsd]/app/layout/MainPanel';
 import MainSidebar from '@/[fsd]/app/layout/MainSidebar';
+import { useChatRunStatusSocket, useChatSendOutcomeTracker } from '@/[fsd]/features/chat/lib/hooks';
 import { useTourFromUrl } from '@/[fsd]/features/interactive-tours';
 
 const AppLayoutInner = memo(props => {
   const { onToggleAssistant } = props;
 
   useTourFromUrl();
+  useChatSendOutcomeTracker();
+  useChatRunStatusSocket();
   const styles = appLayoutInnerStyles();
 
   return (

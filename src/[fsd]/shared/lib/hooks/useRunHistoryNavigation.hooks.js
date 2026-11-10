@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -12,7 +12,8 @@ export const useRunHistoryNavigation = ({ entityId, historyRoute, entityParam = 
   const { tab, version } = useParams();
   const { search } = useLocation();
 
-  const goToRunHistory = useCallback(() => {
+  // Same destination for the programmatic navigation and for a real link (open in a new tab)
+  const runHistoryPath = useMemo(() => {
     const { VERSION_SEARCH_PARAM } = NavigationConstants;
     const params = new URLSearchParams(search);
 
@@ -21,13 +22,17 @@ export const useRunHistoryNavigation = ({ entityId, historyRoute, entityParam = 
 
     const query = params.toString();
 
-    navigate(
+    return (
       NavigationHelpers.buildRoute(historyRoute, {
         tab: tab ?? DEFAULT_TAB,
         [entityParam]: entityId,
-      }) + (query ? `?${query}` : ''),
+      }) + (query ? `?${query}` : '')
     );
-  }, [navigate, tab, version, entityId, entityParam, historyRoute, search]);
+  }, [tab, version, entityId, entityParam, historyRoute, search]);
 
-  return { goToRunHistory };
+  const goToRunHistory = useCallback(() => {
+    navigate(runHistoryPath);
+  }, [navigate, runHistoryPath]);
+
+  return { goToRunHistory, runHistoryPath };
 };

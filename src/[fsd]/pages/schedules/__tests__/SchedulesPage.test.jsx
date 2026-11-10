@@ -68,6 +68,7 @@ vi.mock('@/[fsd]/widgets/schedules-table', () => ({
       <button onClick={() => onChange({ ...value, webhookType: 'gitlab' })}>webhook type</button>
       <button onClick={() => onChange({ ...value, search: 'nightly' })}>search</button>
       <button onClick={() => onChange({ ...value, status: 'failed' })}>status</button>
+      <button onClick={() => onChange({ ...value, status: 'running' })}>running status</button>
       <button onClick={() => onChange({ ...value, ownerIds: [3, 4] })}>owners</button>
       <button onClick={() => onChange({ ...value, status: '', search: '' })}>clear</button>
       <button onClick={onClear}>clear all</button>
@@ -244,6 +245,13 @@ describe('SchedulesPage', () => {
     fireEvent.click(screen.getByText('next'));
     fireEvent.click(screen.getByText('status'));
     expect(lastArgs()).toMatchObject({ page: 0, status: 'failed' });
+  });
+
+  it('picking the Running status sends status running and returns to the first page', () => {
+    render(<SchedulesPage />);
+    fireEvent.click(screen.getByText('next'));
+    fireEvent.click(screen.getByText('running status'));
+    expect(lastArgs()).toMatchObject({ page: 0, status: 'running' });
   });
 
   it('a search change returns to the first page', () => {
@@ -436,7 +444,11 @@ describe('Webhooks page (#7405)', () => {
 
   it('lists webhook rows, newest delivery first', () => {
     render(<SchedulesPage kind="webhook" />);
-    expect(lastArgs()).toMatchObject({ triggerKind: 'webhook', sortBy: 'last_run', sortOrder: 'desc' });
+    expect(lastArgs()).toMatchObject({
+      triggerKind: 'webhook',
+      sortBy: 'last_delivery_at',
+      sortOrder: 'desc',
+    });
     expect(screen.getByTestId('webhooks-page-header')).toHaveTextContent('Webhooks');
     expect(screen.getByTestId('kind')).toHaveTextContent('webhook');
   });

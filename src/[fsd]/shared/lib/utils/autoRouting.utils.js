@@ -12,8 +12,9 @@ const {
 
 export const isAutoSelection = settings => settings?.selection?.mode === AUTO_SELECTION_MODE;
 
-// Auto is a picker intent, not a provider model with a known output limit.
-export const autoModel = profile => ({
+// Auto is a picker intent, not a provider model with a known output limit. Its context window is
+// the smallest among the models it can pick (#7445).
+export const autoModel = (profile, limits) => ({
   id: AUTO_MODEL_ID,
   name: AUTO_MODEL_ID,
   display_name: AUTO_MODEL_LABEL,
@@ -24,6 +25,7 @@ export const autoModel = profile => ({
     scope_mode: AUTO_SCOPE_MODE,
     reasoning: { mode: AUTO_REASONING_MODE.auto },
   },
+  ...(limits?.context_window ? { context_window: limits.context_window } : {}),
 });
 
 export const resolveModelSurface = (
@@ -41,14 +43,16 @@ const isAutoOffered = (availability, surface) =>
   [MODEL_SURFACES.chat, MODEL_SURFACES.agent].includes(surface);
 
 export const modelsWithAuto = (models, availability, surface) =>
-  isAutoOffered(availability, surface) ? [autoModel(availability.profile_ref), ...models] : models;
+  isAutoOffered(availability, surface)
+    ? [autoModel(availability.profile_ref, availability.limits), ...models]
+    : models;
 
 // Only eligible creation surfaces opt into the project default intent. The
 // catalog's existing default flag remains concrete for Pipelines/internal tools.
 // Auto is never the default while the picker hides it (not ready).
 export const defaultModelForSurface = (data, surface) =>
   isAutoOffered(data?.auto_routing, surface) && data.default_selection?.mode === AUTO_SELECTION_MODE
-    ? autoModel(data.default_selection.profile_ref)
+    ? autoModel(data.default_selection.profile_ref, data.auto_routing.limits)
     : data?.items?.find(model => model.default) || data?.items?.[0] || null;
 
 export const defaultModelRequest = (section, value) => {

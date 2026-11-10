@@ -1,10 +1,10 @@
-import { memo, useCallback, useRef } from 'react';
+import { memo, useRef } from 'react';
 
 import { Box } from '@mui/material';
 
 import { ChatButton, ChatMessageList } from '@/[fsd]/features/chat';
 import { useIndexHistory } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useCopyChatMessage } from '@/[fsd]/shared/lib/hooks';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
 import FullScreenToggle from '@/components/Chat/FullScreenToggle';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
@@ -27,39 +27,10 @@ const IndexChatContainer = memo(props => {
   } = props;
   const styles = indexChatContainerStyles();
   const questionItemRef = useRef();
-  const { toastInfo, toastError } = useToast();
 
   const { isHistoryMode, historyMessages, historyConversation, isHistoryLoading } = useIndexHistory();
 
-  const onCopyToClipboard = useCallback(
-    async id => {
-      const messages = isHistoryMode ? historyMessages : chatHistory;
-      const message = messages.find(item => item.id === id);
-
-      if (message) {
-        try {
-          let contentToCopy = '';
-
-          if (message.exception) {
-            contentToCopy = JSON.stringify(message.exception);
-          } else if (message.message_items?.length) {
-            contentToCopy = message.message_items
-              .map(item => item.content || item.item_details?.content || '')
-              .filter(Boolean)
-              .join('\n');
-          } else {
-            contentToCopy = message.content || '';
-          }
-
-          await navigator.clipboard.writeText(contentToCopy);
-          toastInfo('The content has been copied to the clipboard.');
-        } catch {
-          toastError('Failed to copy to clipboard');
-        }
-      }
-    },
-    [chatHistory, historyMessages, isHistoryMode, toastInfo, toastError],
-  );
+  const onCopyToClipboard = useCopyChatMessage(isHistoryMode ? historyMessages : chatHistory);
 
   return (
     <Box sx={styles.wrapper}>

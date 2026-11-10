@@ -25,15 +25,18 @@ export const useTextOverflow = text => {
     timeouts = [50, 200].map(delay => setTimeout(checkOverflow, delay));
 
     // Check overflow on resize
-    const resizeObserver = new ResizeObserver(() => {
-      setTimeout(checkOverflow, 10);
-    });
+    const resizeObserver =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(() => {
+            setTimeout(checkOverflow, 10);
+          })
+        : null;
 
-    resizeObserver.observe(element);
+    resizeObserver?.observe(element);
 
     return () => {
       timeouts.forEach(timeoutId => clearTimeout(timeoutId));
-      resizeObserver.disconnect();
+      resizeObserver?.disconnect();
     };
   }, [text]);
 

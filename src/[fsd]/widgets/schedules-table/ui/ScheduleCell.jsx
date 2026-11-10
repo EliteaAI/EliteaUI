@@ -6,8 +6,10 @@ import {
   ScheduleEnabledSwitch,
   ScheduleRunStatusChip,
   formatRunStarted,
+  isAtRunCap,
   isRotating,
   rotationText,
+  toDeliveryOutcomeLabel,
   toFullWebhookUrl,
   toRunStatusLabel,
   toWebhookTypeLabel,
@@ -21,6 +23,7 @@ import AuthorContainer from '@/components/AuthorContainer';
 import CalendarIcon from '@/components/Icons/CalendarIcon';
 
 import IconWithLabel from './IconWithLabel';
+import RunCapLine from './RunCapLine';
 
 // The API stores run statuses in lower case (failed, skipped, blocked, ...)
 const REASON_STATUSES = ['failed', 'skipped', 'blocked'];
@@ -165,6 +168,35 @@ const ScheduleCell = memo(({ column, value, row, tier, now }) => {
           placement="top"
         >
           {renderRunDate(value, tier)}
+        </MuiTooltip>
+      );
+    }
+    case 'last_delivery_at': {
+      if (!row.last_delivery_at) return isAtRunCap(row) ? <RunCapLine row={row} /> : '-';
+      const outcome = toDeliveryOutcomeLabel(row.last_delivery_outcome);
+      return (
+        <MuiTooltip
+          title={[outcome, formatRunStarted(row.last_delivery_at)].filter(Boolean).join(' - ')}
+          placement="top"
+        >
+          <Box
+            component="span"
+            tabIndex={isCompact ? 0 : undefined}
+            sx={styles.lastRun}
+            data-testid="webhook-last-delivery"
+          >
+            {renderRunDate(row.last_delivery_at, tier)}
+            {!isCompact && outcome && (
+              <Typography
+                variant="bodySmall"
+                component="span"
+                sx={styles.statusLabel}
+              >
+                {outcome}
+              </Typography>
+            )}
+            {isAtRunCap(row) && <RunCapLine row={row} />}
+          </Box>
         </MuiTooltip>
       );
     }

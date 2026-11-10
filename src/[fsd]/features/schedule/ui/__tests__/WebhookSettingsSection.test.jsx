@@ -68,4 +68,14 @@ describe('WebhookSettingsSection', () => {
       'previous secret stays valid until',
     );
   });
+
+  // #7456: a mark on a whole type reads as a vendor preference, so only the signing token carries it
+  it('marks the GitLab signing token as recommended and no sender type', () => {
+    renderSection({
+      values: { webhook_type: 'gitlab', gitlab_auth_method: 'secret_token', signing_secret_value: '' },
+    });
+    expect(screen.getByText('Signing token (recommended)')).toBeInTheDocument();
+    expect(screen.getByText('GitHub')).toBeInTheDocument();
+    expect(screen.queryByText('GitHub (recommended)')).not.toBeInTheDocument();
+  });
 });

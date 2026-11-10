@@ -6,6 +6,7 @@ import { Box, ListItem, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
+import { useConversationStartersAddGate } from '@/[fsd]/features/agent/lib/hooks';
 import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
@@ -13,11 +14,7 @@ import { Input, Text } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
-import {
-  MAX_CONVERSATION_STARTERS,
-  MAX_CONVERSATION_STARTER_LENGTH,
-  PROMPT_PAYLOAD_KEY,
-} from '@/common/constants.js';
+import { MAX_CONVERSATION_STARTER_LENGTH, PROMPT_PAYLOAD_KEY } from '@/common/constants.js';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 
 const ConversationStarters = memo(props => {
@@ -35,7 +32,13 @@ const ConversationStarters = memo(props => {
     () => (version_details?.conversation_starters || []).map(conversationStartersHelpers.toString),
     [version_details?.conversation_starters],
   );
-  const styles = conversationStartersStyles(values.length === 0);
+  // Blank rows aren't saved, so they don't count; an open blank row still blocks adding another
+  const filledCount = conversationStartersHelpers.countFilled(values);
+  const { maxStarters, isOverLimit, disableAdd, addTooltip } = useConversationStartersAddGate({
+    count: filledCount,
+    hasBlank: values.some(s => !s.trim()),
+  });
+  const styles = conversationStartersStyles(values.length === 0, isOverLimit);
 
   const inputRefs = useRef({});
   const [shouldFocusIndex, setShouldFocusIndex] = useState(null);
@@ -69,13 +72,6 @@ const ConversationStarters = memo(props => {
     },
     [setFieldValue, values, valuesPath],
   );
-  const disableAdd = useMemo(() => values.length >= MAX_CONVERSATION_STARTERS, [values]);
-
-  const addTooltipTitle = useMemo(() => {
-    if (values.length >= MAX_CONVERSATION_STARTERS) return 'You have reached the limit of chat starters';
-    return '';
-  }, [values]);
-
   return (
     <BasicAccordion
       data-testid="agent-conversation-starters-section"
@@ -151,26 +147,36 @@ const ConversationStarters = memo(props => {
                 );
               })}
 
-              {!disabled && (
-                <Tooltip
-                  placement="top-start"
-                  title={addTooltipTitle}
-                  extraStyles={{ maxWidth: 400 }}
+              <Box sx={styles.footer}>
+                {!disabled && (
+                  <Tooltip
+                    placement="top-start"
+                    title={addTooltip}
+                    extraStyles={{ maxWidth: 400 }}
+                  >
+                    <Box>
+                      <BaseBtn
+                        data-testid="agent-conversation-starter-add"
+                        variant={BUTTON_VARIANTS.iconLabel}
+                        disabled={disableAdd}
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={disableAdd ? null : onAdd}
+                        startIcon={<PlusIcon />}
+                      >
+                        Starter
+                      </BaseBtn>
+                    </Box>
+                  </Tooltip>
+                )}
+                <Typography
+                  variant="bodySmall"
+                  sx={styles.counter}
+                  data-testid="agent-conversation-starters-limit-counter"
+                  data-over-limit={isOverLimit ? 'true' : undefined}
                 >
-                  <Box sx={styles.addButtonWrapper}>
-                    <BaseBtn
-                      data-testid="agent-conversation-starter-add"
-                      variant={BUTTON_VARIANTS.iconLabel}
-                      disabled={disableAdd}
-                      onMouseDown={e => e.preventDefault()}
-                      onClick={disableAdd ? null : onAdd}
-                      startIcon={<PlusIcon />}
-                    >
-                      Starter
-                    </BaseBtn>
-                  </Box>
-                </Tooltip>
-              )}
+                  {filledCount}/{maxStarters} starters added.
+                </Typography>
+              </Box>
             </Box>
           ),
         },
@@ -180,7 +186,7 @@ const ConversationStarters = memo(props => {
 });
 
 /** @type {MuiSx} */
-const conversationStartersStyles = isEmpty => ({
+const conversationStartersStyles = (isEmpty, isOverLimit) => ({
   accordionSX: ({ palette }) => ({
     background: `${palette.background.default.tertiary} !important`,
   }),
@@ -199,9 +205,16 @@ const conversationStartersStyles = isEmpty => ({
   deleteButtonWrapper: {
     paddingBottom: '0.5rem',
   },
-  addButtonWrapper: {
+  footer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
     marginTop: isEmpty ? '0.75rem' : '1.5rem',
   },
+  counter: ({ palette }) => ({
+    color: isOverLimit ? palette.text.attention : palette.text.secondary,
+    flexShrink: 0,
+  }),
 });
 
 ConversationStarters.displayName = 'ConversationStarters';
@@ -209,7 +222,7 @@ ConversationStarters.displayName = 'ConversationStarters';
 export default ConversationStarters;
 
 export const EllipsisTextWithTooltip = memo(props => {
-  const { text, onClick, sx, textSX, testId } = props;
+  const { text, onClick, sx, textSX, testId, focusable = false } = props;
 
   const styles = ellipsisTextWithTooltipStyles();
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
@@ -225,6 +238,16 @@ export const EllipsisTextWithTooltip = memo(props => {
   const handleMouseLeave = useCallback(() => {
     setIsTooltipVisible(false);
   }, [setIsTooltipVisible]);
+
+  const handleKeyDown = useCallback(
+    event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        onClick?.(event);
+      }
+    },
+    [onClick],
+  );
 
   const TextComponent = (
     <Typography
@@ -245,6 +268,13 @@ export const EllipsisTextWithTooltip = memo(props => {
       onClick={onClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      {...(focusable && {
+        role: 'button',
+        tabIndex: 0,
+        onKeyDown: handleKeyDown,
+        onFocus: handleMouseEnter,
+        onBlur: handleMouseLeave,
+      })}
     >
       {isTooltipVisible ? (
         <Tooltip
@@ -274,6 +304,9 @@ const ellipsisTextWithTooltipStyles = () => ({
     background: palette.components.conversation.background.starter.strong,
     '&:hover': {
       background: palette.components.conversation.background.starter.subtle,
+    },
+    '&:focus-visible': {
+      outline: `0.0625rem solid ${palette.border.hover}`,
     },
   }),
   ellipsisText: {

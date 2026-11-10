@@ -177,9 +177,14 @@ const McpAuthModal = memo(props => {
       });
       return `${PRE_REGISTERED_APPLICATION_NOTICE} ${requestedCredentials}`;
     };
+    // A Default app (admin OAuth app) sign-in is a toolkit sign-in, not an MCP server's (#7474)
+    if (effectiveOAuthAppId) {
+      return 'Sign in with your Microsoft account to use this toolkit. Sign-in settings are managed by your administrator.';
+    }
     const flowSuffix = selectFlowSuffix();
     return `This MCP server requires OAuth authorization to access its tools.${flowSuffix ? ` ${flowSuffix}` : ''}`;
   }, [
+    effectiveOAuthAppId,
     providedSettings?.has_pat,
     hasAuthServerMetadata,
     showsCredentialFields,
@@ -367,7 +372,7 @@ const McpAuthModal = memo(props => {
         color="text.secondary"
         sx={styles.dialogTitle}
       >
-        {title || 'MCP Authorization'}
+        {title || (effectiveOAuthAppId ? 'Toolkit Authorization' : 'MCP Authorization')}
         <IconButton
           variant="elitea"
           color="tertiary"
@@ -455,8 +460,9 @@ const McpAuthModal = memo(props => {
             component={'div'}
             sx={styles.successText}
           >
-            ✓ Authorization successful! Your credentials and session have been saved. Please send your message
-            again to use the authorized MCP server.
+            {effectiveOAuthAppId
+              ? '✓ Authorization successful! You are signed in. Please send your message again to use the toolkit.'
+              : '✓ Authorization successful! Your credentials and session have been saved. Please send your message again to use the authorized MCP server.'}
           </Typography>
         )}
       </DialogContent>

@@ -1,9 +1,10 @@
 import { useCallback, useRef, useState } from 'react';
 
 import { toKindNoun } from '@/[fsd]/entities/schedule';
+import { APPROVAL_RULE } from '@/[fsd]/entities/schedule/lib/constants';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 
-import { APPROVAL_RULE, RISK_NAME_MISMATCH, RISK_SAVE_ERROR } from '../constants';
+import { RISK_NAME_MISMATCH, RISK_SAVE_ERROR } from '../constants';
 import { isPromptShown, splitRiskFindings, toCreateBody, toFieldErrors, toUpdateBody } from '../helpers';
 
 // Fields with their own message in the form; a 400 for any other field goes to the banner
@@ -142,6 +143,14 @@ export const useScheduleSave = ({
   };
   const handleReviewCancel = useCallback(() => setReview(null), []);
 
+  // The "Needs re-confirm" badge: the review opens even when the stored consent would let a save through
+  const reconfirm = async () => {
+    const risk = await riskCheck.runCheck();
+    if (!risk) return toastError('The risk check did not run. Try again.');
+    if (splitRiskFindings(risk, formik.values.approval_rule).blocking.length) return;
+    if (risk.sensitive?.length) setReview({ values: formik.values, runAfterSave: null, changed: false });
+  };
+
   // A clean form runs at once; a changed one saves first, and a failed or invalid save never reaches the run
   const runNow = useCallback(async () => {
     setRunNowPending(true);
@@ -231,6 +240,7 @@ export const useScheduleSave = ({
     submit,
     handleReviewConfirm,
     handleReviewCancel,
+    reconfirm,
     handleRunNow,
     draftTestPending,
     draftTestError,

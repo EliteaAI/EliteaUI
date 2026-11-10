@@ -17,6 +17,9 @@ import RouteDefinitions from '@/routes';
 import {
   WAITING_NEED,
   formatApprovalExpiry,
+  formatTool,
+  getPausedMoreCount,
+  getPausedTools,
   getRunActorId,
   getWaitingRunNeed,
   isStartedByUser,
@@ -29,6 +32,7 @@ import {
   useWaitingRunCredentialCheck,
 } from '../lib/hooks/useWaitingRunCredentialCheck.hooks';
 import ScheduleRunApproval from './ScheduleRunApproval';
+import ScheduleWaitingTools from './ScheduleWaitingTools';
 
 const noop = () => {};
 const STEP2_NOTE = 'Reject ends the run as Failed.';
@@ -43,13 +47,16 @@ const STEP_STATUS = {
   ready: { label: 'Done', tone: 'success' },
 };
 
-const describeNeed = ({ need, toolkit, credential }, pausedText) => {
+const describeNeed = ({ need, toolkit, credential }, pausedText, hasToolList) => {
   const name = toolkit || 'the toolkit';
   if (need === WAITING_NEED.SIGN_IN) return `Toolkit "${name}" needs you to sign in.`;
   if (need === WAITING_NEED.CREDENTIAL)
     return credential
       ? `Toolkit "${name}" has no usable credential "${credential}".`
       : `Toolkit "${name}" has no usable credential.`;
+  if (need === WAITING_NEED.TOOLS)
+    return 'Before the first tool call, this run needs your approval for these sensitive tools.';
+  if (hasToolList) return 'This run is paused and needs your approval for these sensitive tools.';
   return pausedText || 'This run is paused and waits for your decision.';
 };
 
@@ -85,6 +92,11 @@ const ScheduleWaitingCard = memo(
     const waiting = useMemo(() => getWaitingRunNeed(pausedEvent), [pausedEvent]);
     const isCredential = waiting.need === WAITING_NEED.CREDENTIAL;
     const isSignIn = waiting.need === WAITING_NEED.SIGN_IN;
+    // A call-time pause for one tool names it in its text; from two tools on, a fixed sentence and the list
+    const pausedTools = getPausedTools(pausedEvent);
+    const listedTools = waiting.need === WAITING_NEED.TOOLS || pausedTools.length > 1 ? pausedTools : [];
+    const moreToolsCount = listedTools.length > 0 ? getPausedMoreCount(pausedEvent) : 0;
+    const mayAskTools = waiting.mayAsk ?? [];
     const { authAction } = conversation;
     // The credential check and the sign-in tokens come from the user the run acts as
     const actsAsStarter = isStartedByUser(shownRun);
@@ -135,6 +147,7 @@ const ScheduleWaitingCard = memo(
     const description = describeNeed(
       { ...waiting, toolkit: waiting.toolkit || toolkitName },
       pausedEvent?.text,
+      listedTools.length > 1,
     );
     const toolkitLabel = waiting.toolkit || toolkitName || 'the toolkit';
     const authorizationRequired = `Authorization is required for toolkit "${toolkitLabel}".`;
@@ -205,6 +218,19 @@ const ScheduleWaitingCard = memo(
               {`This run will not start until you approve it. ${description} ${STEP2_NOTE}`}
             </Typography>
           </Box>
+          <ScheduleWaitingTools
+            tools={listedTools}
+            moreCount={moreToolsCount}
+          />
+          {mayAskTools.length > 0 && (
+            <Typography
+              data-testid="schedule-waiting-may-ask"
+              variant="bodySmall"
+              color="text.secondary"
+            >
+              {`These tools from the global list may still ask during the run: ${mayAskTools.map(formatTool).join(', ')}.`}
+            </Typography>
+          )}
           {expiry && (
             <Typography
               data-testid="schedule-waiting-expiry"

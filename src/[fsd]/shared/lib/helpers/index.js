@@ -1,4 +1,5 @@
 import * as AccessibilityAriaHelpers from './accessibility.helpers.js';
+import * as CardNavigationHelpers from './cardNavigation.helpers.js';
 import * as ChunkHelpers from './chunk.helpers.js';
 import * as CodeMirrorEditorHelpers from './codeMirrorEditor.helpers.js';
 import * as CodeMirrorLinterHelpers from './codeMirrorLinter.helpers.js';
@@ -16,6 +17,7 @@ export {
   FunctionHelpers,
   LinkHelpers,
   NavigationHelpers,
+  CardNavigationHelpers,
   AccessibilityAriaHelpers,
   ChunkHelpers,
   MermaidHelpers,
@@ -46,3 +48,4 @@ export * from './scrollbar.helpers';
 export * from './contextStrategy.helpers';
 export * from './stringField.helpers';
 export * as AutocompleteHelpers from './autocomplete.helpers.js';
+export * as MessageCopyHelpers from './messageCopy.helpers.js';

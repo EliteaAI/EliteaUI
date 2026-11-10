@@ -1,3 +1,4 @@
+export { default as AppLink } from './app-link';
 export * as Accordion from './accordion';
 export * as Autocomplete from './autocomplete';
 export * as Banner from './banner-message';

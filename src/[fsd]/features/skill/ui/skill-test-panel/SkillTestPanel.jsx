@@ -41,7 +41,7 @@ import {
 } from '@/[fsd]/features/skill/lib/hooks';
 import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
 import { SocketContext } from '@/[fsd]/shared/lib/context';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useCopyChatMessage, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { resetLLMSettingsForModel, selectionFields } from '@/[fsd]/shared/lib/utils';
 import { useGenerateContentStreamingMutation, useStopLlmTaskMutation } from '@/api/llm';
 import { ChatParticipantType, ROLES, SocketMessageType, sioEvents } from '@/common/constants';
@@ -98,7 +98,7 @@ const SkillTestPanel = memo(
     // This panel keeps no persisted conversation, so a dismissal lasts for the panel session
     const budgetWarning = useBudgetWarning({ projectId });
     const { values, initialValues } = useFormikContext();
-    const { toastError, toastInfo } = useToast();
+    const { toastError } = useToast();
     const socket = useContext(SocketContext);
     const currentUser = useSelector(state => state.user);
 
@@ -451,25 +451,7 @@ const SkillTestPanel = memo(
     }, [setChatHistory]);
 
     // ---- Per-message actions (all stateless / client-side or re-run predict) ----
-    const onCopyToClipboard = useCallback(
-      async messageId => {
-        const msg = (activeConversation.chat_history || []).find(m => m.id === messageId);
-        const text =
-          msg?.role === ROLES.User
-            ? msg?.message_items?.find(i => i.item_type === 'text_message')?.item_details?.content ||
-              msg?.content ||
-              ''
-            : msg?.content || '';
-        if (!text) return;
-        try {
-          await navigator.clipboard.writeText(text);
-          toastInfo('The message has been copied to the clipboard.');
-        } catch {
-          toastError('Failed to copy');
-        }
-      },
-      [activeConversation.chat_history, toastInfo, toastError],
-    );
+    const onCopyToClipboard = useCopyChatMessage(activeConversation.chat_history);
 
     const onDeleteMessage = useCallback(
       messageId => {

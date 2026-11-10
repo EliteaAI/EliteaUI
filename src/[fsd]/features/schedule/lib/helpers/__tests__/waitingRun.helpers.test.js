@@ -3,6 +3,9 @@ import { describe, expect, it } from 'vitest';
 import {
   describeRunNoteActions,
   findWaitingRun,
+  formatTool,
+  getPausedMoreCount,
+  getPausedTools,
   getRunActorId,
   getRunNoteActions,
   getWaitingRunNeed,
@@ -101,6 +104,78 @@ describe('getWaitingRunNeed', () => {
       getWaitingRunNeed({ kind: 'paused', text: 'Paused: Teams · post_message needs approval' }),
     ).toEqual({});
     expect(getWaitingRunNeed(undefined)).toEqual({});
+  });
+});
+
+describe('getWaitingRunNeed for the tools approval before the first call', () => {
+  const tools = [
+    { toolkit: 'github', tool: 'create_pull_request' },
+    { toolkit: 'github', tool: 'delete_file' },
+  ];
+
+  it('returns the need and the tools that may still ask', () => {
+    const mayAsk = [{ toolkit: 'jira', tool: 'create_issue' }];
+    expect(getWaitingRunNeed({ kind: 'paused', need: 'tools', tools, may_ask: mayAsk })).toEqual({
+      need: 'tools',
+      mayAsk,
+    });
+  });
+
+  it('returns empty lists when the event carries none', () => {
+    expect(getWaitingRunNeed({ kind: 'paused', need: 'tools' })).toEqual({
+      need: 'tools',
+      mayAsk: [],
+    });
+  });
+});
+
+describe('getPausedTools', () => {
+  it('returns the tools of a call-time pause that lists several', () => {
+    const tools = [
+      { toolkit: 'github', tool: 'create_issue' },
+      { toolkit: 'github', tool: 'delete_issue' },
+    ];
+    expect(getPausedTools({ kind: 'paused', tools })).toEqual(tools);
+  });
+
+  it('returns an empty list for an older event, a bad value or no event', () => {
+    expect(getPausedTools({ kind: 'paused', text: 'Paused' })).toEqual([]);
+    expect(getPausedTools({ kind: 'paused', tools: 'github' })).toEqual([]);
+    expect(getPausedTools({ kind: 'paused', tools: [null, { toolkit: 'x' }] })).toEqual([]);
+    expect(getPausedTools(undefined)).toEqual([]);
+  });
+});
+
+describe('getPausedMoreCount', () => {
+  const labels = count => Array.from({ length: count }, (_, index) => `a · t${index}`).join(', ');
+  const tools = count => Array.from({ length: count }, (_, index) => ({ toolkit: 'a', tool: `t${index}` }));
+
+  it('counts the tools the list lacks, not the tools the text lacks', () => {
+    // 70 tools: the text names 10 and counts 60; the list holds 50
+    expect(getPausedMoreCount({ text: `Paused: ${labels(10)} (+60 more)`, tools: tools(50) })).toBe(20);
+    expect(getPausedMoreCount({ text: `Paused: ${labels(10)} (+43 more) `, tools: tools(50) })).toBe(3);
+  });
+
+  it('returns 0 when the list holds every tool the text counts', () => {
+    expect(getPausedMoreCount({ text: `Paused: ${labels(10)} (+20 more)`, tools: tools(30) })).toBe(0);
+    expect(getPausedMoreCount({ text: `Paused: ${labels(8)} (+1 more)`, tools: tools(9) })).toBe(0);
+  });
+
+  it('returns 0 for a complete text, a count inside the text, a bad value or no event', () => {
+    expect(getPausedMoreCount({ text: `Paused: ${labels(2)}`, tools: tools(2) })).toBe(0);
+    expect(getPausedMoreCount({ text: 'Paused (+2 more) for approval: a · t0', tools: tools(1) })).toBe(0);
+    expect(getPausedMoreCount({ text: 42 })).toBe(0);
+    expect(getPausedMoreCount(undefined)).toBe(0);
+  });
+});
+
+describe('formatTool', () => {
+  it('joins the toolkit and the tool with a dot', () => {
+    expect(formatTool({ toolkit: 'github', tool: 'delete_file' })).toBe('github · delete_file');
+  });
+
+  it('shows the tool alone when the toolkit is unknown', () => {
+    expect(formatTool({ tool: 'delete_file' })).toBe('delete_file');
   });
 });
 

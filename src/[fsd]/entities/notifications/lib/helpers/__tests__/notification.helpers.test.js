@@ -205,6 +205,22 @@ describe('resolveHref for schedule notifications', () => {
     );
   });
 
+  // #7456: the meta's trigger_kind sends a webhook notice to the Webhooks page
+  it('opens the Webhooks page for a webhook row', () => {
+    const meta = { schedule_id: 19, conversation_id: 345, trigger_kind: 'webhook' };
+    expect(resolveHref(NotificationType.ScheduleRunFailed, meta, 5)).toBe(
+      `${BASE}/5/settings/webhooks/19?history_run_id=345`,
+    );
+    expect(resolveHref(NotificationType.ScheduleDisabled, meta, 5)).toBe(`${BASE}/5/settings/webhooks/19`);
+    expect(resolveHref(NotificationType.ScheduleOwnerChanged, meta, 5)).toBe(`${BASE}/5/settings/webhooks`);
+  });
+
+  it('keeps the Schedules page for trigger_kind cron', () => {
+    expect(resolveHref(NotificationType.ScheduleDisabled, { schedule_id: 12, trigger_kind: 'cron' }, 5)).toBe(
+      `${BASE}/5/settings/schedules/12`,
+    );
+  });
+
   it('shows no link when a schedule notice has no schedule_id', () => {
     for (const type of [...runTypes, ...subpageTypes]) {
       expect(resolveHref(type, {}, 5)).toBeNull();

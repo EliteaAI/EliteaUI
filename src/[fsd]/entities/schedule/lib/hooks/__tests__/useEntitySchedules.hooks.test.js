@@ -12,7 +12,12 @@ const mocks = vi.hoisted(() => ({ listQuery: vi.fn() }));
 vi.mock('../../../api/scheduleApi.js', () => ({ useGetScheduleListQuery: mocks.listQuery }));
 vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 5 }));
 
-const rowsOf = count => Array.from({ length: count }, (_, index) => ({ id: index + 1 }));
+const rowsOf = (count, from = 1) => Array.from({ length: count }, (_, index) => ({ id: index + from }));
+
+// The hook asks for the first 100 rows in one growing request, and for later pages by offset
+const firstPageCalls = () => mocks.listQuery.mock.calls.filter(([args]) => args.page === undefined);
+const lastFirstPageCall = () => firstPageCalls().at(-1);
+const offsetCalls = () => mocks.listQuery.mock.calls.filter(([args]) => args.page !== undefined);
 
 describe('useEntitySchedules', () => {
   afterEach(() => vi.clearAllMocks());
@@ -22,10 +27,10 @@ describe('useEntitySchedules', () => {
 
     const { result } = renderHook(() => useEntitySchedules({ entityType: 'agent', entityId: 12 }));
 
-    expect(mocks.listQuery).toHaveBeenLastCalledWith(
+    expect(lastFirstPageCall()).toEqual([
       { projectId: 5, entityType: 'agent', entityId: 12, pageSize: 20 },
       { skip: false },
-    );
+    ]);
     expect(result.current.rows).toEqual(rowsOf(2));
     expect(result.current.total).toBe(2);
     expect(result.current.hasMore).toBe(false);
@@ -39,10 +44,10 @@ describe('useEntitySchedules', () => {
 
     act(() => result.current.loadMore());
 
-    expect(mocks.listQuery).toHaveBeenLastCalledWith(
+    expect(lastFirstPageCall()).toEqual([
       { projectId: 5, entityType: 'pipeline', entityId: 4, pageSize: 40 },
       { skip: false },
-    );
+    ]);
   });
 
   it('TC-US35-06 starts again at 20 rows when the editor opens another entity', () => {
@@ -54,31 +59,49 @@ describe('useEntitySchedules', () => {
     act(() => result.current.loadMore());
     rerender({ entityType: 'agent', entityId: 13 });
 
-    expect(mocks.listQuery).toHaveBeenLastCalledWith(
+    expect(lastFirstPageCall()).toEqual([
       { projectId: 5, entityType: 'agent', entityId: 13, pageSize: 20 },
       { skip: false },
-    );
+    ]);
   });
 
   it('sends no request without an entity id or when skipped', () => {
     mocks.listQuery.mockReturnValue({});
 
     const { result } = renderHook(() => useEntitySchedules({ entityType: 'agent', entityId: undefined }));
-    expect(mocks.listQuery).toHaveBeenLastCalledWith(expect.anything(), { skip: true });
+    expect(lastFirstPageCall()[1]).toEqual({ skip: true });
     expect(result.current.rows).toEqual([]);
     expect(result.current.total).toBe(0);
 
     renderHook(() => useEntitySchedules({ entityType: 'agent', entityId: 3, skip: true }));
-    expect(mocks.listQuery).toHaveBeenLastCalledWith(expect.anything(), { skip: true });
+    expect(lastFirstPageCall()[1]).toEqual({ skip: true });
   });
 
-  it('stops at the 100 rows the list API answers at most', () => {
-    mocks.listQuery.mockReturnValue({ data: { rows: rowsOf(100), total: 130 } });
+  it('reads the rows past 100 by offset, so Show more never stops early', () => {
+    // A skipped query answers nothing, as RTK Query does
+    mocks.listQuery.mockImplementation((args, { skip }) => {
+      if (skip) return {};
+      if (args.page === 1) return { currentData: { rows: rowsOf(30, 101), total: 130 } };
+      return { data: { rows: rowsOf(Math.min(args.pageSize, 100)), total: 130 } };
+    });
 
     const { result } = renderHook(() => useEntitySchedules({ entityType: 'agent', entityId: 12 }));
-    for (let page = 0; page < 6; page += 1) act(() => result.current.loadMore());
+    // 20 shown, then 4 x Show more: the first 100 rows, all from the one growing request
+    for (let page = 0; page < 4; page += 1) act(() => result.current.loadMore());
+    expect(lastFirstPageCall()[0].pageSize).toBe(100);
+    expect(result.current.rows).toHaveLength(100);
+    expect(result.current.hasMore).toBe(true);
 
-    expect(mocks.listQuery.mock.calls.at(-1)[0].pageSize).toBe(100);
+    act(() => result.current.loadMore());
+    // Rows 101 to 200 come from the second page of 100, asked for only now
+    expect(
+      offsetCalls().some(([args, options]) => args.page === 1 && args.pageSize === 100 && !options.skip),
+    ).toBe(true);
+    expect(result.current.rows).toHaveLength(120);
+    expect(result.current.rows.at(-1).id).toBe(120);
+
+    act(() => result.current.loadMore());
+    expect(result.current.rows).toHaveLength(130);
     expect(result.current.hasMore).toBe(false);
   });
 
@@ -87,10 +110,10 @@ describe('useEntitySchedules', () => {
 
     renderHook(() => useEntitySchedules({ entityType: 'agent', entityId: 12, versionId: 71 }));
 
-    expect(mocks.listQuery).toHaveBeenLastCalledWith(
+    expect(lastFirstPageCall()).toEqual([
       { projectId: 5, entityType: 'agent', entityId: 12, versionId: 71, pageSize: 20 },
       { skip: false },
-    );
+    ]);
   });
 
   it('reloads from the first 20 rows when the editor version changes', () => {
@@ -100,12 +123,12 @@ describe('useEntitySchedules', () => {
       initialProps: { entityType: 'agent', entityId: 12, versionId: 71 },
     });
     act(() => result.current.loadMore());
-    expect(mocks.listQuery.mock.calls.at(-1)[0].pageSize).toBe(40);
+    expect(lastFirstPageCall()[0].pageSize).toBe(40);
     rerender({ entityType: 'agent', entityId: 12, versionId: 72 });
 
-    expect(mocks.listQuery).toHaveBeenLastCalledWith(
+    expect(lastFirstPageCall()).toEqual([
       { projectId: 5, entityType: 'agent', entityId: 12, versionId: 72, pageSize: 20 },
       { skip: false },
-    );
+    ]);
   });
 });

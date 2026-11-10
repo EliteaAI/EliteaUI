@@ -10,7 +10,7 @@ export const getPollingInterval = rows =>
 // own schedule with a version always has `run`, so without it and with a version the hint tells why: the text, else null
 export const runDeniedHint = schedule => {
   const allowed = schedule?.allowed_actions ?? [];
-  // A webhook never runs from the UI, so nobody gets the hint
+  // A webhook runs from the UI only as the owner's sample run, so nobody gets the hint
   if (isWebhookRow(schedule)) return null;
   if (allowed.includes('run') || !allowed.includes('change_owner') || schedule.version_id == null)
     return null;

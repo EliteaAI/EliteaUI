@@ -18,6 +18,10 @@ const mocks = vi.hoisted(() => ({
   onSaveTools: vi.fn(),
 }));
 
+const refetchLimit = vi.fn();
+vi.mock('@/[fsd]/features/agent/lib/hooks/useConversationStartersLimit.hooks', () => ({
+  useRefetchConversationStartersLimit: () => refetchLimit,
+}));
 vi.mock('react-redux', () => ({
   useDispatch: () => mocks.dispatch,
   useSelector: selector => selector({ pipelineEditor: { nodes: [] }, user: { id: 1 } }),
@@ -164,6 +168,40 @@ describe('useSaveVersion', () => {
     expect(mocks.applyAttachments).toHaveBeenLastCalledWith(
       expect.objectContaining({ initialTools: savedTools, tools: [] }),
     );
+  });
+
+  it('refetches the starters limit when the save is rejected for too many starters', async () => {
+    mocks.saveFn.mockResolvedValue({
+      error: {
+        status: 400,
+        data: [
+          {
+            type: 'value_error',
+            loc: ['conversation_starters'],
+            msg: 'conversation_starters cannot exceed 4 items, got 5',
+          },
+        ],
+      },
+    });
+    const { result } = renderSave();
+
+    await act(async () => {
+      await result.current.onSave();
+    });
+
+    expect(mocks.toastError).toHaveBeenCalled();
+    expect(refetchLimit).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not refetch the starters limit on other save errors', async () => {
+    mocks.saveFn.mockResolvedValue({ error: { data: { error: 'boom' } } });
+    const { result } = renderSave();
+
+    await act(async () => {
+      await result.current.onSave();
+    });
+
+    expect(refetchLimit).not.toHaveBeenCalled();
   });
 
   it('updates the form and the URL name after a save of the pipeline still on screen', async () => {
