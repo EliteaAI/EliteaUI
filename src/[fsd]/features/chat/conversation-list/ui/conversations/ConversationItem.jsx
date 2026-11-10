@@ -5,12 +5,13 @@ import { useSelector } from 'react-redux';
 import { Box, CircularProgress, ClickAwayListener, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { useCopyChatLink } from '@/[fsd]/features/chat/conversation-list/lib/hooks';
 import {
   ConversationRunIndicator,
   DraggableConversationItem,
 } from '@/[fsd]/features/chat/conversation-list/ui';
 import { useConversationRunStatus } from '@/[fsd]/features/chat/lib/hooks';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Input } from '@/[fsd]/shared/ui';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
@@ -22,7 +23,6 @@ import {
   MAX_CONVERSATION_LENGTH,
   PERMISSIONS,
   PUBLIC_PROJECT_ID,
-  SearchParams,
 } from '@/common/constants';
 import DotMenu from '@/components/DotMenu';
 import ArrowRightIcon from '@/components/Icons/ArrowRightIcon.jsx';
@@ -38,7 +38,6 @@ import PinIcon from '@/components/Icons/PinIcon';
 import PlayIcon from '@/components/Icons/PlayIcon';
 import UsersIcon from '@/components/Icons/UsersIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { getBasename } from '@/routes';
 
 const ConversationItem = memo(props => {
   const {
@@ -64,6 +63,7 @@ const ConversationItem = memo(props => {
     onShareExternal,
     onManageLinks,
     onRestrictAccess,
+    onShare,
   } = props;
   const {
     name,
@@ -79,7 +79,6 @@ const ConversationItem = memo(props => {
 
   const theme = useTheme();
 
-  const { toastInfo } = useToast();
   const { checkPermission } = useCheckPermission();
   const projectId = useSelectedProjectId();
   const { isRunning, unread } = useConversationRunStatus(projectId, conversation);
@@ -185,16 +184,13 @@ const ConversationItem = memo(props => {
     onExport?.(conversation);
   }, [conversation, onExport]);
 
-  const handleShareConversation = useCallback(async () => {
-    const baseUrl = `${window.location.protocol}//${window.location.host}`;
-    const basename = getBasename();
+  const copyChatLink = useCopyChatLink();
 
-    const destinationUrl = `${baseUrl}${basename}/${projectId}/chat/${conversation.id}?name=${encodeURIComponent(conversation.name)}&${SearchParams.SharedChat}=1`;
-
-    await navigator.clipboard.writeText(destinationUrl);
-
-    toastInfo('The link has been copied to the clipboard.');
-  }, [conversation, projectId, toastInfo]);
+  // Only the owner can change access, and the Public project has no access to change
+  const handleShare = useCallback(() => {
+    if (userId == author_id && projectId != PUBLIC_PROJECT_ID && onShare) onShare(conversation);
+    else copyChatLink(conversation, 'The link has been copied to the clipboard.');
+  }, [author_id, conversation, copyChatLink, onShare, projectId, userId]);
 
   const handleShareExternal = useCallback(() => {
     onShareExternal?.(conversation);
@@ -294,7 +290,7 @@ const ConversationItem = memo(props => {
                 <CopyLinkIcon />
               </Box>
             ),
-            onClick: handleShareConversation,
+            onClick: handleShare,
             display: projectId == personal_project_id ? 'none' : undefined,
           },
           {
@@ -377,7 +373,7 @@ const ConversationItem = memo(props => {
     handleMakePublic,
     projectId,
     personal_project_id,
-    handleShareConversation,
+    handleShare,
     handleShareExternal,
     handleManageLinks,
     handleRestrictAccess,
