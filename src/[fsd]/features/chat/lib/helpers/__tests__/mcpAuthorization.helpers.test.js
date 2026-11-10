@@ -151,6 +151,37 @@ describe('toolkit authorization helpers', () => {
     );
   });
 
+  it('keeps the Default app reference so the sign-in window needs no secret (#7474)', () => {
+    const action = buildMcpAuthorizationToolAction({
+      metadata: {
+        tool_run_id: 'call-outlook-1',
+        tool_name: 'list_messages',
+        toolkit_name: 'Outlookdefault',
+        toolkit_type: 'outlook',
+        server_url: 'https://graph.microsoft.com',
+        authorization_servers: ['https://login.microsoftonline.com/organizations'],
+        resource_metadata: {
+          provided_settings: {
+            mcp_client_id: 'admin-client-id',
+            scopes: ['offline_access', 'Mail.Read'],
+            oauth_app_id: 'app-uuid',
+            credential_type: 'outlook',
+            has_mcp_client_secret: true,
+          },
+        },
+      },
+      createdAt: '2026-11-09T12:00:00Z',
+    });
+
+    expect(action.toolMeta.provided_settings).toEqual({
+      mcp_client_id: 'admin-client-id',
+      scopes: ['offline_access', 'Mail.Read'],
+      has_mcp_client_secret: true,
+      oauth_app_id: 'app-uuid',
+      credential_type: 'outlook',
+    });
+  });
+
   it('keeps direct cards flat and groups delegated authorization by full origin path', () => {
     const direct = buildMcpAuthorizationToolAction({
       metadata: {

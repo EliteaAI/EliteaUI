@@ -182,6 +182,45 @@ describe('McpAuthModal client secret requirement (#6689)', () => {
   );
 });
 
+describe('McpAuthModal for a Default app (admin OAuth app) sign-in (#7474)', () => {
+  afterEach(() => cleanup());
+
+  it('asks for no secret and shows no MCP wording when the prompt carries the app reference', () => {
+    renderModal(findServerMetadata('Entra v2 tenant'), {
+      mcp_client_id: 'admin-client-id',
+      oauth_app_id: 'app-uuid',
+      credential_type: 'outlook',
+    });
+
+    expect(screen.queryByPlaceholderText('Enter OAuth client secret')).not.toBeInTheDocument();
+    expect(screen.queryByText(/MCP server/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Sign-in settings are managed by your administrator/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Authorize' })).toBeEnabled();
+    // No title passed (e.g. the toolkit test panel): the fallback isn't "MCP Authorization" either
+    expect(screen.getByText('Toolkit Authorization')).toBeInTheDocument();
+    expect(screen.queryByText(/MCP/)).not.toBeInTheDocument();
+  });
+
+  it('confirms a Default app sign-in without MCP wording', async () => {
+    vi.spyOn(window, 'open').mockReturnValue({
+      closed: false,
+      close: vi.fn(),
+      location: { href: 'about:blank' },
+    });
+    startMcpAuthFlow.mockResolvedValue({});
+    renderModal(findServerMetadata('Entra v2 tenant'), {
+      mcp_client_id: 'admin-client-id',
+      oauth_app_id: 'app-uuid',
+      credential_type: 'outlook',
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Authorize' }));
+
+    expect(await screen.findByText(/Authorization successful/)).toHaveTextContent('use the toolkit');
+    expect(screen.queryByText(/MCP/)).not.toBeInTheDocument();
+  });
+});
+
 describe('McpAuthModal description names only the credential fields it shows (#6689)', () => {
   const descriptionText = () => screen.getByText(/This MCP server requires OAuth authorization/).textContent;
   const secretInput = () => screen.getByPlaceholderText('Enter OAuth client secret');
