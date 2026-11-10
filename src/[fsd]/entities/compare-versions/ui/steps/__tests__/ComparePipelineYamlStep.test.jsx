@@ -184,4 +184,59 @@ describe('ComparePipelineYamlStep', () => {
     expect(textLines).toHaveLength(4);
     expect(textLines.at(-1)).toBe('    ');
   });
+
+  it('does not rewrite or recount a YAML stored with CRLF line endings', () => {
+    const base = 'nodes:\r\n  - id: keep\r\n    type: llm\r\n';
+    const compared = 'nodes:\r\n  - id: keep\r\n    type: router\r\n';
+    const onLeftEdit = vi.fn();
+    const onRightEdit = vi.fn();
+    renderStep({
+      leftData: { instructions: base },
+      rightData: { instructions: compared },
+      onLeftEdit,
+      onRightEdit,
+    });
+    act(() => vi.advanceTimersByTime(600));
+
+    // Nothing was typed, so nothing counts as an edit
+    expect(onLeftEdit).not.toHaveBeenCalled();
+    expect(onRightEdit).not.toHaveBeenCalled();
+    expect(screen.getByTestId('compare-yaml-save-left')).toBeDisabled();
+    // The editor shows the text with plain line breaks
+    const view = EditorView.findFromDOM(document.querySelector('.cm-editor.cm-merge-a'));
+    expect(view.state.doc.toString()).toBe('nodes:\n  - id: keep\n    type: llm\n');
+  });
+
+  it('opens the collapsed block that hides the id line of a changed node when its id is picked', () => {
+    // The id: line of "far" is 12 unchanged lines above its change, so it sits in a collapsed block
+    // Unique keys per line, or the YAML would have duplicate keys and no node summary
+    const filler = (prefix, count) =>
+      Array.from({ length: count }, (_, index) => `    ${prefix}${index}: value`);
+    const text = (first, last) =>
+      [
+        'nodes:',
+        '  - id: first',
+        `    prompt: ${first}`,
+        ...filler('top', 30),
+        '  - id: far',
+        ...filler('mid', 12),
+        `    prompt: ${last}`,
+        ...filler('end', 5),
+      ].join('\n');
+    renderStep({ leftData: { instructions: text('a', 'x') }, rightData: { instructions: text('b', 'y') } });
+
+    const hasIdLine = side =>
+      [...document.querySelectorAll(`.cm-merge-${side} .cm-line`)].some(
+        line => line.textContent === '  - id: far',
+      );
+    expect(hasIdLine('a')).toBe(false);
+    expect(hasIdLine('b')).toBe(false);
+
+    fireEvent.click(screen.getByTestId('compare-yaml-chip-changed'));
+    fireEvent.click(screen.getByTestId('compare-yaml-node-changed-far'));
+
+    // Both sides open the block, so the line is on screen and the editors stay in line
+    expect(hasIdLine('a')).toBe(true);
+    expect(hasIdLine('b')).toBe(true);
+  });
 });

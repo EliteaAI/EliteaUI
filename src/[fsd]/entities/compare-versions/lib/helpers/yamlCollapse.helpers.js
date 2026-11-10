@@ -120,32 +120,52 @@ const buildDecorations = state => {
   return builder.finish();
 };
 
+// One field for every editor: each editor's state keeps its own value of it
+const collapseField = StateField.define({
+  create: () => ({ isBuilt: false, deco: Decoration.none }),
+  update: (value, tr) => {
+    if (!value.isBuilt) {
+      const deco = buildDecorations(tr.state);
+      return deco ? { isBuilt: true, deco } : value;
+    }
+    let deco = value.deco.map(tr.changes);
+    tr.effects.forEach(effect => {
+      if (effect.is(expandBlock)) deco = deco.update({ filter: from => from !== effect.value });
+    });
+    // A block that a new change reaches opens, as the hidden lines are no longer unchanged
+    const info = getChunks(tr.state);
+    if (info && deco.size) {
+      const touched = [];
+      sideChunks(tr.state, info).forEach(chunk =>
+        deco.between(chunk.from, chunk.to, from => touched.push(from)),
+      );
+      if (touched.length) deco = deco.update({ filter: from => !touched.includes(from) });
+    }
+    return deco === value.deco ? value : { isBuilt: true, deco };
+  },
+  provide: field => EditorView.decorations.from(field, value => value.deco),
+});
+
 /**
  * Collapses long unchanged blocks of a MergeView editor. The blocks are worked out once, when the merge
  * view has its first diff; a block the user opens stays open until the dialog closes, also after edits.
  */
-export const collapseUnchangedBlocks = () =>
-  StateField.define({
-    create: () => ({ isBuilt: false, deco: Decoration.none }),
-    update: (value, tr) => {
-      if (!value.isBuilt) {
-        const deco = buildDecorations(tr.state);
-        return deco ? { isBuilt: true, deco } : value;
-      }
-      let deco = value.deco.map(tr.changes);
-      tr.effects.forEach(effect => {
-        if (effect.is(expandBlock)) deco = deco.update({ filter: from => from !== effect.value });
-      });
-      // A block that a new change reaches opens, as the hidden lines are no longer unchanged
-      const info = getChunks(tr.state);
-      if (info && deco.size) {
-        const touched = [];
-        sideChunks(tr.state, info).forEach(chunk =>
-          deco.between(chunk.from, chunk.to, from => touched.push(from)),
-        );
-        if (touched.length) deco = deco.update({ filter: from => !touched.includes(from) });
-      }
-      return deco === value.deco ? value : { isBuilt: true, deco };
-    },
-    provide: field => EditorView.decorations.from(field, value => value.deco),
+export const collapseUnchangedBlocks = () => collapseField;
+
+/**
+ * Opens the collapsed block that hides a line, so the line can be scrolled to. Does nothing when the line
+ * is not hidden. `view` is one editor of a MergeView; its sibling is not touched.
+ *
+ * @param {import('@codemirror/view').EditorView} view
+ * @param {number} lineNumber 1-based line of this editor
+ */
+export const expandBlockAtLine = (view, lineNumber) => {
+  const field = view.state.field(collapseField, false);
+  if (!field || lineNumber < 1 || lineNumber > view.state.doc.lines) return;
+  const pos = view.state.doc.line(lineNumber).from;
+  const hiding = [];
+  field.deco.between(pos, pos, from => {
+    hiding.push(from);
   });
+  if (hiding.length) view.dispatch({ effects: hiding.map(from => expandBlock.of(from)) });
+};

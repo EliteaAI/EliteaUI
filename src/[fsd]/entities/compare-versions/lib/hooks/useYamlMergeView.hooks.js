@@ -11,7 +11,7 @@ import { EditorView, GutterMarker, gutter, keymap, lineNumbers } from '@codemirr
 import { vscodeDarkInit, vscodeLightInit } from '@uiw/codemirror-theme-vscode';
 
 import { YAML_DIFF } from '../constants/compareVersions.constants';
-import { collapseUnchangedBlocks } from '../helpers/yamlCollapse.helpers';
+import { collapseUnchangedBlocks, expandBlockAtLine } from '../helpers/yamlCollapse.helpers';
 
 // A gutter mark that shows a change without colour: − on the base side, + on the compared side
 class ChangeSignMarker extends GutterMarker {
@@ -216,9 +216,11 @@ export const useYamlMergeView = ({ leftValue, rightValue, onLeftChange, onRightC
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, isDarkMode]);
 
-  // A save or a copy outside the editors replaces that side's text
+  // A save or a copy outside the editors replaces that side's text. The editor turns CRLF into plain line
+  // breaks, so the text is compared in the editor's own form; otherwise a stored CRLF YAML would never
+  // match and would be replaced on open, counting as an edit and dropping the collapsed blocks.
   const syncSide = useCallback((view, value) => {
-    if (!view || view.state.doc.toString() === value) return;
+    if (!view || view.state.doc.toString() === view.state.toText(value).toString()) return;
     view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: value } });
   }, []);
 
@@ -251,15 +253,17 @@ export const useYamlMergeView = ({ leftValue, rightValue, onLeftChange, onRightC
     [scrollToPositions],
   );
 
-  // Scrolls each side to a line (1-based); a missing line keeps that side where it is
+  // Scrolls each side to a line (1-based); a missing line keeps that side where it is. A line inside a
+  // collapsed block opens that block first, on both sides, so the line is on screen and the editors stay in line.
   const scrollToLines = useCallback((lineA, lineB) => {
     const mergeView = mergeViewRef.current;
     if (!mergeView) return;
-    [
+    const targets = [
       [mergeView.a, lineA],
       [mergeView.b, lineB],
-    ].forEach(([view, line]) => {
-      if (!line || line > view.state.doc.lines) return;
+    ].filter(([view, line]) => line && line <= view.state.doc.lines);
+    targets.forEach(([view, line]) => expandBlockAtLine(view, line));
+    targets.forEach(([view, line]) => {
       view.dispatch({ effects: EditorView.scrollIntoView(view.state.doc.line(line).from, { y: 'center' }) });
     });
   }, []);
