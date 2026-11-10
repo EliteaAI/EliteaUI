@@ -93,11 +93,14 @@ export default function useSelectConversation({
         if (activeConversation?.id && !activeConversation?.isPlayback) {
           stopListenCanvasEditorsChangeEvent();
           stopListenCanvasContentChangeEvent();
-          emitLeaveRoom({
-            conversation_id: activeConversation.id,
-            conversation_uuid: activeConversation.uuid,
-            project_id: projectId,
-          });
+          // A draft still being created has no room yet
+          if (activeConversation.uuid) {
+            emitLeaveRoom({
+              conversation_id: activeConversation.id,
+              conversation_uuid: activeConversation.uuid,
+              project_id: projectId,
+            });
+          }
         }
         if (!conversation.isPlayback) {
           setIsSelectingConversation(true);

@@ -5,7 +5,11 @@ import { useSelector } from 'react-redux';
 import { Box, CircularProgress, ClickAwayListener, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { DraggableConversationItem } from '@/[fsd]/features/chat/conversation-list/ui';
+import {
+  ConversationRunIndicator,
+  DraggableConversationItem,
+} from '@/[fsd]/features/chat/conversation-list/ui';
+import { useConversationRunStatus } from '@/[fsd]/features/chat/lib/hooks';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Input } from '@/[fsd]/shared/ui';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
@@ -78,6 +82,9 @@ const ConversationItem = memo(props => {
   const { toastInfo } = useToast();
   const { checkPermission } = useCheckPermission();
   const projectId = useSelectedProjectId();
+  const { isRunning, unread } = useConversationRunStatus(projectId, conversation);
+  // The open chat shows its own run; the row only speaks for chats that are not on screen
+  const showRunIndicator = !isPlayback && !isNew && (isRunning || (!!unread && !isActive));
 
   const { id: userId, personal_project_id } = useSelector(state => state.user);
 
@@ -136,8 +143,11 @@ const ConversationItem = memo(props => {
     // Add margin for playback icon
     if (isPlayback) rightMargin += 24;
 
+    // Add margin for the run spinner / unread dot
+    if (showRunIndicator) rightMargin += 20;
+
     return `calc(100% - ${rightMargin}px)`;
-  }, [isHovering, showMenu, isPinned, isPlayback, conversationType]);
+  }, [isHovering, showMenu, isPinned, isPlayback, conversationType, showRunIndicator]);
 
   const onClickConversation = useCallback(() => {
     if (!isActive) onSelectConversation(conversation);
@@ -484,6 +494,12 @@ const ConversationItem = memo(props => {
         data-has-icon={conversationType === 'private_with_users' || conversationType === 'public'}
         sx={styles.conversationIconWrapper}
       >
+        {showRunIndicator && (
+          <ConversationRunIndicator
+            isRunning={isRunning}
+            unread={isActive ? null : unread}
+          />
+        )}
         {/* Always show users icon with appropriate color based on type */}
         {conversationType === 'private_with_users' && (
           <UsersIcon

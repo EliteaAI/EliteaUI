@@ -17,9 +17,6 @@ const getEditorWarning = editorType => {
   }
 };
 
-const streamingWarning =
-  'Output is still generating.\nSwitching now will stop it and you may lose progress.\nSwitch anyway?';
-
 export default function useCloseEditorAlert({
   editorType = 'editor', // 'canvas', 'agent', 'toolkit', 'mcp', 'artifact'
   isEditorOpen,
@@ -27,9 +24,6 @@ export default function useCloseEditorAlert({
   onSelectParticipant,
   onSelectConversation,
   onSelectThisParticipant,
-  isStreaming,
-  setIsStreaming,
-  boxRef,
 }) {
   // stores the function that should execute after user confirms the warning
   const [operationInfo, setOperationInfo] = useState();
@@ -51,27 +45,18 @@ export default function useCloseEditorAlert({
     [isEditorOpen, onSelectParticipant, editorType],
   );
 
+  // A running chat is never stopped or warned about on switch; only unsaved editor changes are
   const onHandleSelectConversation = useCallback(
     conversation => {
       if (isEditorOpen) {
         setOperationInfo({ operation: () => onSelectConversation(conversation) });
         setAlertContent(getEditorWarning(editorType));
         setOpenAlert(true);
-      } else if (isStreaming) {
-        setOperationInfo({
-          operation: () => {
-            boxRef.current?.stopAll();
-            setIsStreaming(false);
-            onSelectConversation(conversation);
-          },
-        });
-        setAlertContent(streamingWarning);
-        setOpenAlert(true);
       } else {
         onSelectConversation(conversation);
       }
     },
-    [isEditorOpen, isStreaming, onSelectConversation, setIsStreaming, boxRef, editorType],
+    [isEditorOpen, onSelectConversation, editorType],
   );
 
   const onHandleSelectThisParticipant = useCallback(

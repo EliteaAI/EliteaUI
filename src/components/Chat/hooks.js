@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useStore } from 'react-redux';
 import { v4 as uuidv4, v4 } from 'uuid';
 
 import { useTrackEvent } from '@/GA';
@@ -16,6 +17,7 @@ import {
   supersedeMentionSkillAction,
 } from '@/[fsd]/features/chat/lib/helpers';
 import {
+  appendStepText,
   applyInputGuardrailBlocked,
   applyInputGuardrailNotice,
   createSyntheticToolAction,
@@ -27,6 +29,7 @@ import {
   mergeChatSocketMessage,
   reorderHistoryOnUserArrival,
 } from '@/[fsd]/features/chat/lib/helpers/chatSocket.helpers';
+import { selectIsSentFromClosedConversation } from '@/[fsd]/features/chat/model';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { AnalyticConstants, InputGuardrailConstants } from '@/[fsd]/shared/lib/constants';
@@ -306,6 +309,7 @@ export const useChatSocket = ({
   onEntityCreated,
 }) => {
   const trackEvent = useTrackEvent();
+  const store = useStore();
 
   const { contextExecutionEntity } = useContextExecutionEntity();
 
@@ -439,6 +443,8 @@ export const useChatSocket = ({
         question_id: questionIdFromContent,
       } = message.content instanceof Object ? message.content : {};
       const question_id = questionIdFromMessage || questionIdFromContent;
+      // There is no per-chat filter on this event: a run sent from another chat must not land in the open one
+      if (selectIsSentFromClosedConversation(question_id)(store.getState())) return;
       const [msgIndex, msg] = getMessage(message_id, question_id);
 
       if (RESUMED_AGENT_ACTIVITY_EVENTS.has(socketMessageType) && msg.resumingAgentPaths?.length) {
@@ -647,8 +653,10 @@ export const useChatSocket = ({
                 },
                 created_at: message.created_at,
                 type: TOOL_ACTION_TYPES.Llm,
-                content: chunkContent,
-                thinking: chunkThinking,
+                // The worker always sends agent_llm_start first; a step born from a chunk began while away
+                missedStart: true,
+                content: appendStepText('', chunkContent, true),
+                thinking: appendStepText('', chunkThinking, true),
               });
             }
             addMessageToChatHistory({
@@ -685,8 +693,8 @@ export const useChatSocket = ({
                           ...(response_metadata?.metadata || {}),
                           ...hierarchy,
                         },
-                        content: (ta.content || '') + chunkContent,
-                        thinking: (ta.thinking || '') + chunkThinking,
+                        content: appendStepText(ta.content, chunkContent, ta.missedStart),
+                        thinking: appendStepText(ta.thinking, chunkThinking, ta.missedStart),
                       }
                     : ta,
                 );
@@ -706,8 +714,10 @@ export const useChatSocket = ({
                     },
                     created_at: message.created_at,
                     type: TOOL_ACTION_TYPES.Llm,
-                    content: chunkContent,
-                    thinking: chunkThinking,
+                    // The worker always sends agent_llm_start first; a step born from a chunk began while away
+                    missedStart: true,
+                    content: appendStepText('', chunkContent, true),
+                    thinking: appendStepText('', chunkThinking, true),
                   },
                 ];
               } else {
@@ -759,6 +769,8 @@ export const useChatSocket = ({
             // Clean up verbose tool call text - remove "with inputs {...}" part
             thinkText = thinkText.replace(/\s+with inputs\s+\{[^}]*\}/g, '');
             t.content = thinkText;
+            // The full text is here now; drop the cut-text marker of a step joined mid-way
+            t.missedStart = undefined;
             t.ended_at = thinkStep.timestamp_finish;
             if (thinkStep.timestamp_start) t.startedAt = thinkStep.timestamp_start;
             if (thinkStep.timestamp_finish) t.finishedAt = thinkStep.timestamp_finish;
@@ -1785,6 +1797,7 @@ export const useChatSocket = ({
   const handleSocketErrorEvent = useCallback(
     async message => {
       const { message_id, type: socketMessageType } = message;
+      if (selectIsSentFromClosedConversation(message_id)(store.getState())) return;
 
       switch (socketMessageType) {
         case SocketMessageType.Error:
@@ -1838,7 +1851,7 @@ export const useChatSocket = ({
         }
       }
     },
-    [handleError, trackEvent],
+    [handleError, store, trackEvent],
   );
 
   useSocket(sioEvents.socket_validation_error, handleSocketErrorEvent);
