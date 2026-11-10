@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, MenuItem, Typography } from '@mui/material';
 
-import { useProjectConfigRecord } from '@/[fsd]/features/settings/lib/hooks';
+import { useCanManageProjectSettings, useProjectConfigRecord } from '@/[fsd]/features/settings/lib/hooks';
 import { projectConfigCardStyles } from '@/[fsd]/features/settings/ui/project-general/chat-configuration/projectConfigCard.styles';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Input, Select } from '@/[fsd]/shared/ui';
@@ -130,7 +130,8 @@ const AutoRoutingSettings = memo(() => {
     },
     [persist, current?.data?.enabled],
   );
-  const disabled = !checkPermission(PERMISSIONS.configuration.update) || saving;
+  const { canManageSettings } = useCanManageProjectSettings();
+  const disabled = !checkPermission(PERMISSIONS.configuration.update) || !canManageSettings || saving;
   const saveRoutingMode = useCallback(
     (_event, mode) => {
       if (disabled || mode === routingMode) return;
