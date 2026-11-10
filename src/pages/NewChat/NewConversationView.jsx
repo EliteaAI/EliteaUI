@@ -21,6 +21,7 @@ import {
   SlashSuggestionList,
   WebSearchBudgetWarning,
 } from '@/[fsd]/features/chat/ui';
+import { NewChatConversationStarters } from '@/[fsd]/features/chat/ui/chat-conversation-starters';
 import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
 import RecommendationList from '@/[fsd]/features/chat/ui/recommendations/RecommendationList';
 import SearchResultList from '@/[fsd]/features/chat/ui/recommendations/SearchResultList';
@@ -59,7 +60,6 @@ import {
 import { initializeNewMessages } from '@/common/initializeNewMessages';
 import { generateMessagePayload } from '@/common/messagePayloadUtils';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
-import { EllipsisTextWithTooltip } from '@/components/ConversationStarters';
 import useValidateApplicationVersion, {
   useToolsValidationInfo,
 } from '@/hooks/application/useValidateApplicationVersion';
@@ -747,6 +747,9 @@ const NewConversationView = forwardRef(
       return selectedParticipant?.version_details?.conversation_starters || [];
     }, [selectedParticipant]);
 
+    // A new chat or another participant remounts the starters list, so "Show N more" starts collapsed.
+    const conversationStartersKey = `${activeConversation?.id ?? activeConversation?.uuid}::${getChatParticipantUniqueId(selectedParticipant)}`;
+
     const welcomeMessage = useMemo(() => {
       const isAgentOrPipeline =
         selectedParticipant?.entity_name === ChatParticipantType.Applications ||
@@ -1228,20 +1231,11 @@ const NewConversationView = forwardRef(
               />
             )}
             {conversationStarters?.length > 0 && !showRecommendationList && !query && (
-              <Box sx={styles.conversationStartersContainer}>
-                {conversationStarters
-                  .filter(item => item.trim())
-                  .map((item, index) => (
-                    <EllipsisTextWithTooltip
-                      key={index}
-                      text={item}
-                      onClick={onSendStarter(item)}
-                      sx={styles.starterItem}
-                      textSX={styles.starterTextSX}
-                      testId="chat-conversation-starter-tile"
-                    />
-                  ))}
-              </Box>
+              <NewChatConversationStarters
+                key={conversationStartersKey}
+                conversationStarters={conversationStarters}
+                onSendStarter={onSendStarter}
+              />
             )}
           </Box>
         </Box>
@@ -1308,24 +1302,6 @@ const newConversationViewStyles = () => ({
     flex: 1,
     maxHeight: 'calc(50% - 3.625rem)',
     width: '100%',
-  },
-  conversationStartersContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    width: '100%',
-    height: '100%',
-    justifyContent: 'flex-start',
-    boxSizing: 'border-box',
-    gap: '0.5rem',
-    padding: '0.5rem 0',
-  },
-  starterItem: {
-    width: '100%',
-    height: '2.5rem',
-    borderRadius: '0.75rem',
-  },
-  starterTextSX: {
-    WebkitLineClamp: 1,
   },
 });
 

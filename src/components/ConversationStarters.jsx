@@ -209,7 +209,7 @@ ConversationStarters.displayName = 'ConversationStarters';
 export default ConversationStarters;
 
 export const EllipsisTextWithTooltip = memo(props => {
-  const { text, onClick, sx, textSX, testId } = props;
+  const { text, onClick, sx, textSX, testId, focusable = false } = props;
 
   const styles = ellipsisTextWithTooltipStyles();
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
@@ -225,6 +225,16 @@ export const EllipsisTextWithTooltip = memo(props => {
   const handleMouseLeave = useCallback(() => {
     setIsTooltipVisible(false);
   }, [setIsTooltipVisible]);
+
+  const handleKeyDown = useCallback(
+    event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        onClick?.(event);
+      }
+    },
+    [onClick],
+  );
 
   const TextComponent = (
     <Typography
@@ -245,6 +255,13 @@ export const EllipsisTextWithTooltip = memo(props => {
       onClick={onClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      {...(focusable && {
+        role: 'button',
+        tabIndex: 0,
+        onKeyDown: handleKeyDown,
+        onFocus: handleMouseEnter,
+        onBlur: handleMouseLeave,
+      })}
     >
       {isTooltipVisible ? (
         <Tooltip
@@ -274,6 +291,9 @@ const ellipsisTextWithTooltipStyles = () => ({
     background: palette.components.conversation.background.starter.strong,
     '&:hover': {
       background: palette.components.conversation.background.starter.subtle,
+    },
+    '&:focus-visible': {
+      outline: `0.0625rem solid ${palette.border.hover}`,
     },
   }),
   ellipsisText: {
