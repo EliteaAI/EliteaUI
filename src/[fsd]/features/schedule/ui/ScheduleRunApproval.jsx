@@ -11,10 +11,11 @@ import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import ArrowForwardIcon from '@/assets/icons/arrow-forward.svg?react';
 
-import { formatExpiresIn } from '../lib/helpers';
+import { OWNER_ONLY_NOTE, STARTER_ONLY_NOTE, formatExpiresIn, isStartedByUser } from '../lib/helpers';
 import { useActionButtonProps } from '../lib/hooks/useActionButtonProps.hooks';
 import { useNow } from '../lib/hooks/useNow.hooks';
 import { useWaitingRunDecision } from '../lib/hooks/useWaitingRunDecision.hooks';
+import ScheduleRunApprovalActions from './ScheduleRunApprovalActions';
 import ScheduleRunSignIn from './ScheduleRunSignIn';
 
 const PAGE_BUTTON_PROPS = {
@@ -24,10 +25,12 @@ const PAGE_BUTTON_PROPS = {
 
 /**
  * Approve and Reject at the paused line of a waiting run.
- * The same decision call as the Runs table, for the owner or a project admin; the server still checks the
- * caller. A Test run (`run.isDraftRun`) has no schedule: the user who started it decides.
- * `authAction` is the toolkit sign-in the run waits for: the owner signs in first (the chat sign-in window),
- * then Approve resumes the run with the fresh tokens. Reject skips the sign-in.
+ * The same decision call as the Runs table, for the user the run acts as; the server still checks the caller.
+ * A Test run (`run.isDraftRun`) has no schedule: the user who started it decides. Any other viewer sees both
+ * buttons disabled and a note that says why. A viewer of a run that acts as the owner also gets the actions of
+ * `ScheduleRunApprovalActions` when the run has a schedule.
+ * `authAction` is the toolkit sign-in the run waits for: the user the run acts as signs in first (the chat
+ * sign-in window), then Approve resumes the run with the fresh tokens. Reject skips the sign-in.
  * `blockedReason` keeps Approve off and names why. `compact` is the form for the Action needed card: no
  * left offset, no sign-in button and no expiry text, because the card shows them itself.
  * `plain` is the page button look (primary Approve, secondary Reject, no icons) of the short waiting notice.
@@ -99,6 +102,12 @@ const ScheduleRunApproval = memo(props => {
   const themeButtonProps = useActionButtonProps();
   const buttonProps = plain ? PAGE_BUTTON_PROPS : themeButtonProps;
   const styles = scheduleRunApprovalStyles();
+  // The note for a viewer who may not decide: the run acts as a Test run starter, a starter or the owner
+  const actsAsOwner = !run?.isDraftRun && !isStartedByUser(run);
+  let noteText = OWNER_ONLY_NOTE;
+  if (run?.isDraftRun) noteText = 'Only the user who started this Test run can approve or reject it';
+  else if (!actsAsOwner) noteText = STARTER_ONLY_NOTE;
+  const showActions = !onHitlResume && actsAsOwner && Boolean(schedule);
 
   return (
     <Box
@@ -163,15 +172,19 @@ const ScheduleRunApproval = memo(props => {
           </Typography>
         </Box>
       )}
-      {!onHitlResume && (
+      {showActions && (
+        <ScheduleRunApprovalActions
+          schedule={schedule}
+          note={noteText}
+        />
+      )}
+      {!onHitlResume && !showActions && (
         <Typography
           variant="bodySmall"
           color="text.secondary"
           sx={styles.note}
         >
-          {run?.isDraftRun
-            ? 'Only the user who started this Test run can approve or reject it'
-            : 'Only the owner or project admins can approve or reject this run'}
+          {noteText}
         </Typography>
       )}
     </Box>

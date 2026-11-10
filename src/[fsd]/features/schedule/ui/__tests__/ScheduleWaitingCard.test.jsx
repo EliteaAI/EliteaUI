@@ -34,6 +34,12 @@ vi.mock('../../lib/hooks/useWaitingRunCredentialCheck.hooks', () => ({
 vi.mock('../../lib/hooks/useWaitingRunDecision.hooks', () => ({
   useWaitingRunDecision: () => (mocks.isOwner ? mocks.decide : undefined),
 }));
+vi.mock('../../lib/hooks/useScheduleRowActions.hooks', () => ({
+  useScheduleRowActions: () => ({ onPause: vi.fn(), onResume: vi.fn(), onRun: vi.fn(), isBusy: false }),
+}));
+vi.mock('../../lib/hooks/useTestRunAsCaller.hooks', () => ({
+  useTestRunAsCaller: () => ({ start: vi.fn(), pending: false }),
+}));
 vi.mock('@/[fsd]/features/mcp', () => ({
   extractMcpAuthMetadata: () => ({ authServers: ['https://auth.example'] }),
   useMcpTokenChange: () => ({ isLoggedIn: mocks.signedIn }),
@@ -204,33 +210,38 @@ describe('ScheduleWaitingCard', () => {
     expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Missing');
   });
 
-  it('keeps Approve off for a project admin who is not the owner while the credential is missing', () => {
+  it('keeps both buttons off for a project admin who is not the owner while the credential is missing', () => {
     mocks.userId = 77;
+    mocks.isOwner = false;
     renderCard();
 
     expect(button('Approve')).toBeDisabled();
-    expect(screen.getByText('The schedule owner must provide the credential first')).toBeInTheDocument();
-    expect(screen.queryByText('Provide the credential first')).not.toBeInTheDocument();
-    expect(button('Reject')).toBeEnabled();
+    expect(button('Reject')).toBeDisabled();
+    expect(
+      screen.getByText(/The schedule owner must provide the credential, then approve\./),
+    ).toBeInTheDocument();
   });
 
-  it('lets a project admin who is not the owner approve once the owner has provided the credential', () => {
+  it('keeps both buttons off for a project admin who is not the owner once the credential is ready', () => {
     mocks.userId = 77;
+    mocks.isOwner = false;
     mocks.check = { state: 'ready', recheck: vi.fn() };
     renderCard();
 
-    expect(button('Approve')).toBeEnabled();
+    expect(button('Approve')).toBeDisabled();
+    expect(button('Reject')).toBeDisabled();
   });
 
-  it('keeps Approve off for a project admin who is not the owner on a sign-in pause', () => {
+  it('keeps both buttons off for a project admin who is not the owner on a sign-in pause', () => {
     mocks.userId = 77;
+    mocks.isOwner = false;
     mocks.signedIn = true;
     mocks.detail = { ...run, events: [paused({ need: 'sign_in', toolkit: 'Jira' })] };
     renderCard();
 
     expect(button('Approve')).toBeDisabled();
-    expect(screen.getByText('The schedule owner must sign in to the toolkit first')).toBeInTheDocument();
-    expect(button('Reject')).toBeEnabled();
+    expect(button('Reject')).toBeDisabled();
+    expect(screen.getByText('Only the owner can approve or reject this run.')).toBeInTheDocument();
   });
 
   it('lets an admin approve their own Run now once the credential is found', () => {
@@ -283,6 +294,7 @@ describe('ScheduleWaitingCard', () => {
 
   it('offers a project admin who is not the actor no authorize text and no ready step on a sign-in pause', () => {
     mocks.userId = 77;
+    mocks.isOwner = false;
     mocks.signedIn = true;
     mocks.conversation = { authAction: { toolMeta: { server_url: 'https://auth.example' } } };
     mocks.detail = { ...mocks.detail, events: [paused({ need: 'sign_in', toolkit: 'Jira' })] };
@@ -299,9 +311,10 @@ describe('ScheduleWaitingCard', () => {
 
     expect(button('Approve')).toBeDisabled();
     expect(button('Reject')).toBeDisabled();
+    expect(screen.getByText('Only the owner can approve or reject this run.')).toBeInTheDocument();
     expect(
-      screen.getByText('Only the owner or project admins can approve or reject this run'),
-    ).toBeInTheDocument();
+      screen.queryByRole('button', { name: /Pause|Change owner|Start a new run/ }),
+    ).not.toBeInTheDocument();
   });
 
   it('shows one short notice and the two buttons for a plain pause', () => {

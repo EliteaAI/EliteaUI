@@ -19,11 +19,11 @@ const FIELDS_WITH_INPUT = [
 ];
 const PROMPT_FIELDS = ['prompt', 'variables'];
 // Test Run answers 400 with this code when the project does not allow "Run without asking"
-const DRAFT_TEST_ERROR = {
+export const DRAFT_TEST_ERROR = {
   APPROVAL_NOT_ALLOWED: 'approval_rule_not_allowed',
   UNAVAILABLE: 'test_run_unavailable',
 };
-const TEST_RUN_UNAVAILABLE =
+export const TEST_RUN_UNAVAILABLE =
   'Test Run is not ready on this server yet. Ask an administrator to run the schedule migration.';
 
 /**

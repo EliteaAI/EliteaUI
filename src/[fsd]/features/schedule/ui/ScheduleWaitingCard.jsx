@@ -33,7 +33,7 @@ import ScheduleRunApproval from './ScheduleRunApproval';
 const noop = () => {};
 const STEP2_NOTE = 'Reject ends the run as Failed.';
 const BLOCKED_REASON = 'Provide the credential first';
-// A project admin can reject any run, but the sign-in and the credential belong to the user the run acts as
+// Only the user the run acts as decides it, and the sign-in and the credential are theirs too
 const ACTOR_LABEL = { owner: 'schedule owner', starter: 'user who started this run' };
 const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' };
 const ENTITY_LABELS = { agent: 'agent', pipeline: 'pipeline' };

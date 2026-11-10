@@ -84,3 +84,33 @@ export const isStartedByUser = run => MANUAL_TRIGGERS.includes(run?.trigger) && 
 
 export const getRunActorId = (run, schedule) =>
   isStartedByUser(run) ? run.requested_by : schedule?.owner?.id;
+
+export const OWNER_ONLY_NOTE = 'Only the owner can approve or reject this run.';
+export const STARTER_ONLY_NOTE = 'Only the user who started this run can approve or reject it';
+
+// What a viewer who may not decide can do instead, in the order of the note. The server's `allowed_actions`
+// decides: a member without rights gets none. Pause and Resume follow the state of the schedule.
+export const getRunNoteActions = schedule => {
+  const allowed = schedule?.allowed_actions ?? [];
+  return [
+    schedule?.enabled && allowed.includes('pause') && 'pause',
+    !schedule?.enabled && allowed.includes('resume') && 'resume',
+    allowed.includes('change_owner') && 'change_owner',
+    allowed.includes('run') && 'run',
+  ].filter(Boolean);
+};
+
+// "You can pause the schedule, change its owner, or start a new run as yourself." for all three actions
+export const describeRunNoteActions = (actions, noun) => {
+  const phrase = {
+    pause: `pause the ${noun}`,
+    resume: `resume the ${noun}`,
+    change_owner: 'change its owner',
+    run: 'start a new run as yourself',
+  };
+  const phrases = actions.map(action => phrase[action]);
+  if (!phrases.length) return '';
+  const last = phrases.pop();
+  if (!phrases.length) return `You can ${last}.`;
+  return `You can ${phrases.join(', ')}${phrases.length > 1 ? ',' : ''} or ${last}.`;
+};

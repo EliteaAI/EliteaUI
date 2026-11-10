@@ -9,16 +9,15 @@ import {
 } from '@/[fsd]/entities/schedule';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
-import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
-import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { getRunActorId } from '../helpers/waitingRun.helpers';
 
-// Approve or reject of a waiting schedule run by its owner, the user the run acts as (the starter of a manual
-// or Test run) or a project admin (`schedules.admin`). Returns undefined for any other user, so the run detail
-// shows the buttons disabled. The server still checks the caller. Edit and answer happen only in the chat of
-// the user the run acts as; this hook sends only approve, reject and the sign-in answers, never text.
+// Approve or reject of a waiting schedule run by the user the run acts as: the starter of a manual or Test run,
+// else the schedule owner. A project admin who is not that user decides nothing, because the run uses the
+// credentials of the user it acts as. Returns undefined for any other user, so the run detail shows the buttons
+// disabled. The server still checks the caller. This hook sends only approve, reject and the sign-in answers,
+// never text.
 // A run without a chat (`conversationUuid` empty) is decided through the schedule route with `runId`.
 // `authRequest` (from the sign-in pause) switches the call to the mcp_auth resume. It sends every stored token,
 // as the chat resume does, because the resumed run may call other signed-in servers.
@@ -29,8 +28,6 @@ const CREDENTIAL_MISSING = 'credential_missing';
 export const useWaitingRunDecision = ({ schedule, run, onDecided }) => {
   const projectId = useSelectedProjectId();
   const userId = useSelector(state => state.user.id);
-  const { checkPermission } = useCheckPermission();
-  const isProjectAdmin = checkPermission(PERMISSIONS.schedules.admin);
   const { toastError, toastInfo } = useToast();
   const [decideWaitingRun] = RunHistoryApi.useDecideWaitingRunMutation();
   const [decideRunWithoutChat] = useDecideRunWithoutChatMutation();
@@ -85,10 +82,8 @@ export const useWaitingRunDecision = ({ schedule, run, onDecided }) => {
     ],
   );
 
-  const isOwner = schedule?.owner?.id === userId;
-  // The schedule route needs a schedule, so an admin decides only a run that has one
-  const mayDecide = isTestRun
-    ? run?.requested_by === userId
-    : Boolean(schedule) && (isOwner || isProjectAdmin || getRunActorId(run, schedule) === userId);
+  // The schedule route needs a schedule, so a run without one (a Test run) is decided by its starter only
+  const actorId = isTestRun ? run?.requested_by : schedule && getRunActorId(run, schedule);
+  const mayDecide = actorId != null && actorId === userId;
   return mayDecide ? onHitlResume : undefined;
 };

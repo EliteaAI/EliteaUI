@@ -5,7 +5,7 @@ import { act, renderHook } from '@testing-library/react';
 
 import { useWaitingRunDecision } from '../useWaitingRunDecision.hooks';
 
-// decision on a waiting run by the owner or a project admin.
+// decision on a waiting run by the user the run acts as.
 
 const mocks = vi.hoisted(() => ({
   decide: vi.fn(),
@@ -65,6 +65,7 @@ describe('useWaitingRunDecision', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.isProjectAdmin = false;
+    mocks.user = { id: 5 };
   });
 
   it('gives a plain user who is not the owner no handler', () => {
@@ -80,8 +81,13 @@ describe('useWaitingRunDecision', () => {
     expect(setup({ id: 8, owner: { id: 9 } }, run).current).toBeTypeOf('function');
   });
 
-  it('gives the owner a handler for a manual run an admin started', () => {
+  it('gives the owner no handler for a manual run another user started', () => {
     const run = { trigger: 'manual', requested_by: 9 };
+    expect(setup({ id: 8, owner: { id: 5 } }, run).current).toBeUndefined();
+  });
+
+  it('gives the owner a handler for a cron run', () => {
+    const run = { trigger: 'cron', requested_by: null };
     expect(setup({ id: 8, owner: { id: 5 } }, run).current).toBeTypeOf('function');
   });
 
@@ -95,14 +101,28 @@ describe('useWaitingRunDecision', () => {
     expect(setup({ id: 8, owner: { id: 7 } }, run).current).toBeUndefined();
   });
 
-  it('gives a project admin who is not the owner a handler that decides the run', async () => {
+  it('gives a project admin who is not the owner no handler for an owner run', () => {
+    mocks.isProjectAdmin = true;
+    expect(setup({ id: 8, owner: { id: 9 } }).current).toBeUndefined();
+    expect(
+      setup({ id: 8, owner: { id: 9 } }, { trigger: 'cron', requested_by: null }).current,
+    ).toBeUndefined();
+  });
+
+  it('gives a project admin who started a manual run a handler that decides it', async () => {
     mocks.isProjectAdmin = true;
     mocks.decide.mockReturnValue(ok());
-    const result = setup({ id: 8, owner: { id: 9 } });
+    const run = { trigger: 'manual', requested_by: 5 };
+    const result = setup({ id: 8, owner: { id: 9 } }, run);
     expect(result.current).toBeTypeOf('function');
     await act(() => result.current({ ...request, action: 'reject' }));
     expect(mocks.decide).toHaveBeenCalledWith(expect.objectContaining({ action: 'reject' }));
     expect(mocks.refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('gives no handler when neither the actor nor the user is known', () => {
+    mocks.user = { id: undefined };
+    expect(setup({ id: 8 }).current).toBeUndefined();
   });
 
   it('gives a project admin no handler for a Test run another user started', () => {

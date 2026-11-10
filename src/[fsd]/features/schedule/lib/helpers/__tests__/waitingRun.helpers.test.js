@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  describeRunNoteActions,
   findWaitingRun,
   getRunActorId,
+  getRunNoteActions,
   getWaitingRunNeed,
   hasMissingCredential,
 } from '../waitingRun.helpers';
@@ -149,5 +151,50 @@ describe('getRunActorId', () => {
   it('returns undefined when the run has no starter to use and there is no schedule', () => {
     expect(getRunActorId({ trigger: 'cron' }, undefined)).toBeUndefined();
     expect(getRunActorId(undefined, undefined)).toBeUndefined();
+  });
+});
+
+describe('getRunNoteActions', () => {
+  const all = ['pause', 'resume', 'change_owner', 'run'];
+
+  it('lists Pause, Change owner and Run for an enabled schedule', () => {
+    expect(getRunNoteActions({ enabled: true, allowed_actions: all })).toEqual([
+      'pause',
+      'change_owner',
+      'run',
+    ]);
+  });
+
+  it('lists Resume instead of Pause for a paused schedule', () => {
+    expect(getRunNoteActions({ enabled: false, allowed_actions: all })).toEqual([
+      'resume',
+      'change_owner',
+      'run',
+    ]);
+  });
+
+  it('lists only what the server allows, and nothing for a member', () => {
+    expect(getRunNoteActions({ enabled: true, allowed_actions: ['run'] })).toEqual(['run']);
+    expect(getRunNoteActions({ enabled: true, allowed_actions: [] })).toEqual([]);
+    expect(getRunNoteActions({ enabled: true })).toEqual([]);
+  });
+});
+
+describe('describeRunNoteActions', () => {
+  it('joins three actions with commas and "or"', () => {
+    expect(describeRunNoteActions(['pause', 'change_owner', 'run'], 'schedule')).toBe(
+      'You can pause the schedule, change its owner, or start a new run as yourself.',
+    );
+  });
+
+  it('joins two actions with "or" and names the webhook', () => {
+    expect(describeRunNoteActions(['pause', 'run'], 'webhook')).toBe(
+      'You can pause the webhook or start a new run as yourself.',
+    );
+  });
+
+  it('names one action alone and gives no text for none', () => {
+    expect(describeRunNoteActions(['run'], 'schedule')).toBe('You can start a new run as yourself.');
+    expect(describeRunNoteActions([], 'schedule')).toBe('');
   });
 });
