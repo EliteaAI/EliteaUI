@@ -114,6 +114,12 @@ const BuildScheduleWithAiModal = memo(props => {
     </Box>
   );
 
+  // A warning names a field the draft cleared or left out; without a row of its own it would never show
+  const renderLeftOutWarnings = (warnings, shownFields) =>
+    [...new Set(warnings.map(warning => warning.field))]
+      .filter(field => !shownFields.includes(field))
+      .map(field => renderRow(field, FIELD_LABELS[field] ?? field, warnings));
+
   const shownError = useMemo(() => toShownError(error), [error]);
   const common = { ...TEST_IDS, open, onClose, entityLabel: 'schedule', placeholder: PLACEHOLDER };
   const generation = { onGenerate: handleGenerate, generateError: shownError, resetGenerate: reset };
@@ -125,25 +131,29 @@ const BuildScheduleWithAiModal = memo(props => {
         {...generation}
         onApprove={apply}
         approveLabel="Apply draft"
-        renderReview={({ draft, warnings = [] }) => (
-          <Box>
-            {DRAFT_FIELDS.filter(
-              field => !lockedFields.includes(field) && draft[field] !== undefined && draft[field] !== null,
-            ).map(field =>
-              renderRow(
-                field,
-                FIELD_LABELS[field],
-                warnings,
-                <Typography
-                  key="value"
-                  sx={styles.value}
-                >
-                  {show(draft[field])}
-                </Typography>,
-              ),
-            )}
-          </Box>
-        )}
+        renderReview={({ draft, warnings = [] }) => {
+          const shownFields = DRAFT_FIELDS.filter(
+            field => !lockedFields.includes(field) && draft[field] !== undefined && draft[field] !== null,
+          );
+          return (
+            <Box>
+              {shownFields.map(field =>
+                renderRow(
+                  field,
+                  FIELD_LABELS[field],
+                  warnings,
+                  <Typography
+                    key="value"
+                    sx={styles.value}
+                  >
+                    {show(draft[field])}
+                  </Typography>,
+                ),
+              )}
+              {renderLeftOutWarnings(warnings, shownFields)}
+            </Box>
+          );
+        }}
       />
     );
   }
@@ -160,33 +170,36 @@ const BuildScheduleWithAiModal = memo(props => {
         changes: changedFields(values, result.draft, lockedEntity),
       })}
       onSave={apply}
-      renderStep={(_key, { changes, warnings = [] }) =>
-        changes.length === 0 ? (
-          <Alert severity="info">The draft has no changes for the current form.</Alert>
-        ) : (
-          <Box sx={styles.changes}>
-            {changes.map(({ field, current, drafted }) =>
-              renderRow(
-                field,
-                FIELD_LABELS[field] ?? field,
-                warnings,
-                <Typography
-                  key="current"
-                  sx={styles.value}
-                >
-                  {show(current)}
-                </Typography>,
-                <Typography
-                  key="drafted"
-                  sx={[styles.value, styles.drafted]}
-                >
-                  {show(drafted)}
-                </Typography>,
-              ),
-            )}
-          </Box>
-        )
-      }
+      renderStep={(_key, { changes, warnings = [] }) => (
+        <Box sx={styles.changes}>
+          {changes.length === 0 && (
+            <Alert severity="info">The draft has no changes for the current form.</Alert>
+          )}
+          {changes.map(({ field, current, drafted }) =>
+            renderRow(
+              field,
+              FIELD_LABELS[field] ?? field,
+              warnings,
+              <Typography
+                key="current"
+                sx={styles.value}
+              >
+                {show(current)}
+              </Typography>,
+              <Typography
+                key="drafted"
+                sx={[styles.value, styles.drafted]}
+              >
+                {show(drafted)}
+              </Typography>,
+            ),
+          )}
+          {renderLeftOutWarnings(
+            warnings,
+            changes.map(({ field }) => field),
+          )}
+        </Box>
+      )}
     />
   );
 });
