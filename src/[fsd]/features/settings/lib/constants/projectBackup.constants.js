@@ -34,6 +34,21 @@ export const CHAT_RESTORE_OPTION_LABELS = {
 
 export const LARGE_BACKUP_BYTES = 500 * 1024 * 1024;
 
+// Only the start of a picked file is sent to read what it carries: the
+// envelope header, its first frame and the backup header fit in it
+export const INSPECT_BYTES = 1048576 + 16384;
+
+export const RESTORE_JOB_POLL_MS = 2000;
+
+export const RESTORE_JOB_STATUS = {
+  queued: 'queued',
+  running: 'running',
+  done: 'done',
+  failed: 'failed',
+};
+
+export const RESTORE_JOB_STORAGE_KEY = 'elitea.projectRestoreJob';
+
 // Tags of the chat list and chat views (chat/api, chat/conversation-list/api): a restore with chats
 // changes everything they show, so all of them are refetched
 export const CHAT_TAG_TYPES = [

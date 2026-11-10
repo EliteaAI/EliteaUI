@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useDispatch } from 'react-redux';
 
@@ -6,7 +6,11 @@ import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import UploadFileOutlined from '@mui/icons-material/UploadFileOutlined';
 import { Box, FormControlLabel, Tooltip, Typography } from '@mui/material';
 
-import { useRestoreProjectBackupMutation } from '@/[fsd]/features/settings/api';
+import {
+  useInvalidateAfterRestoreMutation,
+  useRestoreProjectBackupMutation,
+  useRestoreProjectJobQuery,
+} from '@/[fsd]/features/settings/api';
 import { ProjectBackupConstants } from '@/[fsd]/features/settings/lib/constants';
 import { ProjectBackupHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
@@ -25,8 +29,14 @@ const {
   getChatsSummaryText,
   getSkillFilesSummaryText,
   getRestoreWarningText,
+  isRestoreJobFinished,
+  getRestoreJobError,
+  saveRestoreJob,
+  loadRestoreJob,
+  clearRestoreJob,
 } = ProjectBackupHelpers;
-const { CHATS_OPTION, CHAT_RESTORE_OPTION_LABELS, RESTORE_OPTION_LABELS } = ProjectBackupConstants;
+const { CHATS_OPTION, CHAT_RESTORE_OPTION_LABELS, RESTORE_OPTION_LABELS, RESTORE_JOB_POLL_MS } =
+  ProjectBackupConstants;
 
 const NO_FILES_TOOLTIP = 'This backup has no attachment files';
 
@@ -44,10 +54,19 @@ const RestoreProjectDialog = memo(props => {
   const [result, setResult] = useState(null);
   const [restoreChats, setRestoreChats] = useState(CHATS_OPTION.none);
   const [isInspecting, setIsInspecting] = useState(false);
+  // The restore runs on the server after the upload; the dialog follows its job
+  const [job, setJob] = useState(null);
 
-  const [restoreProject, { isLoading: isRestoring }] = useRestoreProjectBackupMutation();
+  const [restoreProject, { isLoading: isStarting }] = useRestoreProjectBackupMutation();
+  const [invalidateAfterRestore] = useInvalidateAfterRestoreMutation();
+  // Polled while the dialog is closed too: the caches are refreshed when the restore ends
+  const { data: jobState, error: jobError } = useRestoreProjectJobQuery(
+    { projectId, jobId: job?.jobId },
+    { skip: !job?.jobId, pollingInterval: RESTORE_JOB_POLL_MS },
+  );
   const { toastWarning } = useToast();
   const dispatch = useDispatch();
+  const isRestoring = isStarting || !!job;
   const isLoading = isRestoring || isInspecting;
 
   const backupChats = artifact?.chats_included ?? CHATS_OPTION.none;
@@ -75,11 +94,66 @@ const RestoreProjectDialog = memo(props => {
     if (inputRef.current) inputRef.current.value = '';
   }, []);
 
+  // A restore started before the page was reloaded is followed again
+  useEffect(() => {
+    if (job) return;
+    const saved = loadRestoreJob(projectId);
+    if (saved?.jobId) setJob(saved);
+  }, [job, projectId]);
+
+  const handleFinished = useCallback(
+    (finished, started) => {
+      setJob(null);
+      clearRestoreJob(projectId);
+      if (finished.status === 'failed') {
+        setError(getRestoreErrorMessage(getRestoreJobError(finished)));
+        if (finished.artifact) setArtifact(finished.artifact);
+        if (finished.result) setResult(finished);
+        return;
+      }
+      const response = finished.result;
+      setResult(response);
+      if (response?.artifact) setArtifact(response.artifact);
+      const summary = response?.result;
+      invalidateAfterRestore({
+        projectId,
+        dryRun: summary?.dry_run,
+        restoreChats: started?.restoreChats,
+      });
+      // Replacing the chats deletes the one the chat page would reopen
+      if (started?.truncate && summary?.chats && !summary.dry_run) {
+        dispatch(chatActions.resetLastSelectedConversationId({ projectId }));
+      }
+      const warning = getRestoreWarningText(summary);
+      if (warning) toastWarning(warning);
+    },
+    [projectId, invalidateAfterRestore, dispatch, toastWarning],
+  );
+
+  useEffect(() => {
+    if (job && jobState?.job_id === job.jobId && isRestoreJobFinished(jobState)) {
+      handleFinished(jobState, job);
+    }
+  }, [job, jobState, handleFinished]);
+
+  // A job that can not be read any more (expired, no access) is not followed forever
+  useEffect(() => {
+    if (!job || !jobError || jobError.status === 'FETCH_ERROR') return;
+    setJob(null);
+    clearRestoreJob(projectId);
+    setError(
+      jobError.status === 404
+        ? 'The status of the last restore is no longer available.'
+        : getRestoreErrorMessage(jobError),
+    );
+  }, [job, jobError, projectId]);
+
+  // Closing does not stop a running restore: it is picked up again on reopen
   const handleClose = useCallback(() => {
-    if (isLoading) return;
-    reset();
+    if (isInspecting || isStarting) return;
+    if (!job) reset();
     onClose?.();
-  }, [isLoading, reset, onClose]);
+  }, [isInspecting, isStarting, job, reset, onClose]);
 
   const handlePick = useCallback(() => {
     inputRef.current?.click();
@@ -124,6 +198,7 @@ const RestoreProjectDialog = memo(props => {
     setError('');
     setResult(null);
 
+    const chats = hasChats ? restoreChats : undefined;
     try {
       const response = await restoreProject({
         projectId,
@@ -131,16 +206,12 @@ const RestoreProjectDialog = memo(props => {
         truncate,
         dryRun,
         allowProjectMismatch: isMismatch && allowMismatch,
-        restoreChats: hasChats ? restoreChats : undefined,
+        restoreChats: chats,
       }).unwrap();
-      setResult(response);
       if (response?.artifact) setArtifact(response.artifact);
-      // Replacing the chats deletes the one the chat page would reopen
-      if (truncate && response?.result?.chats && !response.result.dry_run) {
-        dispatch(chatActions.resetLastSelectedConversationId({ projectId }));
-      }
-      const warning = getRestoreWarningText(response?.result);
-      if (warning) toastWarning(warning);
+      const started = { jobId: response.job_id, truncate, restoreChats: chats };
+      saveRestoreJob(projectId, started);
+      setJob(started);
     } catch (err) {
       setError(getRestoreErrorMessage(err));
       // A project mismatch comes back as 409 with the artifact the backend read,
@@ -148,19 +219,7 @@ const RestoreProjectDialog = memo(props => {
       if (err?.data?.artifact) setArtifact(err.data.artifact);
       if (err?.data?.result) setResult(err.data);
     }
-  }, [
-    restoreProject,
-    projectId,
-    file,
-    truncate,
-    dryRun,
-    isMismatch,
-    allowMismatch,
-    hasChats,
-    restoreChats,
-    toastWarning,
-    dispatch,
-  ]);
+  }, [restoreProject, projectId, file, truncate, dryRun, isMismatch, allowMismatch, hasChats, restoreChats]);
 
   const handleTruncateChange = useCallback(event => setTruncate(event.target.checked), []);
   const handleDryRunChange = useCallback(event => setDryRun(event.target.checked), []);
@@ -483,10 +542,10 @@ const RestoreProjectDialog = memo(props => {
         variant={BUTTON_VARIANTS.secondary}
         size="small"
         onClick={handleClose}
-        disabled={isLoading}
+        disabled={isInspecting || isStarting}
         data-testid="project-restore-cancel"
       >
-        {isRestoreCompleted ? 'Close' : 'Cancel'}
+        {isRestoreCompleted || job ? 'Close' : 'Cancel'}
       </BaseBtn>
       <BaseBtn
         variant={BUTTON_VARIANTS.elitea}
