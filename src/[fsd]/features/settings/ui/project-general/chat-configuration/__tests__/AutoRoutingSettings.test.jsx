@@ -17,6 +17,7 @@ const api = vi.hoisted(() => ({
   refresh: vi.fn(),
   refetch: vi.fn(),
   permitted: true,
+  canManageSettings: true,
   autoEnabled: true,
   readiness: undefined,
   items: [],
@@ -36,6 +37,9 @@ vi.mock('@/api/configurations', async importOriginal => ({
   }),
 }));
 vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));
+vi.mock('@/[fsd]/features/settings/lib/hooks/useCanManageProjectSettings.hooks', () => ({
+  useCanManageProjectSettings: () => ({ canManageSettings: api.canManageSettings, isLoading: false }),
+}));
 vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => api.permitted }) }));
 vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
   useToast: () => ({ toastError: api.toastError, toastInfo: vi.fn() }),
@@ -65,6 +69,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   api.current = undefined;
   api.permitted = true;
+  api.canManageSettings = true;
   api.autoEnabled = true;
   api.readiness = undefined;
   api.items = [];
@@ -131,6 +136,11 @@ describe('project Auto permission and configuration', () => {
   });
   it('disables configuration without update permission', () => {
     api.permitted = false;
+    renderSettings();
+    expect(screen.getByTestId('auto-routing-project-setting')).toBeDisabled();
+  });
+  it('disables configuration for a team-project editor who is not a project admin', () => {
+    api.canManageSettings = false;
     renderSettings();
     expect(screen.getByTestId('auto-routing-project-setting')).toBeDisabled();
   });

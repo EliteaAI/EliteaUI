@@ -3,6 +3,7 @@ import { memo, useCallback, useState } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import { useProjectInfoQuery } from '@/[fsd]/features/settings/api/projectInfoApi';
+import { useCanManageProjectSettings } from '@/[fsd]/features/settings/lib/hooks';
 import { useSelectedProjectId, useSelectedProjectName } from '@/[fsd]/shared/lib/hooks';
 import { ProjectAvatar } from '@/[fsd]/widgets/sidebar-root';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
@@ -20,7 +21,8 @@ const ProjectParamsHeader = memo(() => {
 
   const { checkPermission } = useCheckPermission();
 
-  const canEdit = checkPermission(PERMISSIONS.projectContext.edit);
+  const { canManageSettings } = useCanManageProjectSettings();
+  const canEdit = checkPermission(PERMISSIONS.projectContext.edit) && canManageSettings;
 
   const { data: projectInfo } = useProjectInfoQuery(
     { projectId },

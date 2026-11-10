@@ -3,7 +3,7 @@ import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { useIsMidturnInjectionAvailable } from '@/[fsd]/features/chat/lib/hooks';
-import { useChatTemplates } from '@/[fsd]/features/settings/lib/hooks';
+import { useCanManageProjectSettings, useChatTemplates } from '@/[fsd]/features/settings/lib/hooks';
 import SettingsFormProvider from '@/[fsd]/features/settings/ui/shared/SettingsFormProvider';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -26,7 +26,8 @@ const ChatConfigurationSection = memo(() => {
   const { isTeam } = useProjectType();
   const isMidturnAvailable = useIsMidturnInjectionAvailable();
   const { checkPermission } = useCheckPermission();
-  const canEdit = checkPermission(PERMISSIONS.configuration.update);
+  const { canManageSettings } = useCanManageProjectSettings();
+  const canEdit = checkPermission(PERMISSIONS.configuration.update) && canManageSettings;
 
   const {
     templates,
