@@ -16,12 +16,15 @@ import RouteDefinitions from '@/routes';
 
 import {
   WAITING_NEED,
+  describeNeed,
   formatApprovalExpiry,
   formatTool,
+  getActorTexts,
   getCredentialOwnerId,
   getPausedMoreCount,
   getPausedTools,
   getWaitingRunNeed,
+  isSignInUnanswerable,
   isStartedByUser,
 } from '../lib/helpers';
 import { useActionButtonProps } from '../lib/hooks/useActionButtonProps.hooks';
@@ -36,7 +39,6 @@ import ScheduleWaitingTools from './ScheduleWaitingTools';
 
 const noop = () => {};
 const STEP2_NOTE = 'Reject ends the run as Failed.';
-const BLOCKED_REASON = 'Provide the credential first';
 // The credential and the sign-in belong to the user the run acts as; only the decider presses Approve and Reject
 const ACTOR_LABEL = { owner: 'schedule owner', starter: 'user who started this run' };
 const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' };
@@ -45,19 +47,6 @@ const STEP_STATUS = {
   missing: { label: 'Missing', tone: 'warning' },
   checking: { label: 'Checking', tone: 'info' },
   ready: { label: 'Done', tone: 'success' },
-};
-
-const describeNeed = ({ need, toolkit, credential }, pausedText, hasToolList) => {
-  const name = toolkit || 'the toolkit';
-  if (need === WAITING_NEED.SIGN_IN) return `Toolkit "${name}" needs you to sign in.`;
-  if (need === WAITING_NEED.CREDENTIAL)
-    return credential
-      ? `Toolkit "${name}" has no usable credential "${credential}".`
-      : `Toolkit "${name}" has no usable credential.`;
-  if (need === WAITING_NEED.TOOLS)
-    return 'Before the first tool call, this run needs your approval for these sensitive tools.';
-  if (hasToolList) return 'This run is paused and needs your approval for these sensitive tools.';
-  return pausedText || 'This run is paused and waits for your decision.';
 };
 
 /**
@@ -106,6 +95,7 @@ const ScheduleWaitingCard = memo(
     const actorId = getCredentialOwnerId(shownRun, schedule);
     const isOtherActor = actorId != null && actorId !== userId;
     const actorLabel = ACTOR_LABEL[isStartedByUser(shownRun) ? 'starter' : 'owner'];
+    const noSignIn = isSignIn && isSignInUnanswerable(shownRun, schedule);
 
     const {
       state: credentialState,
@@ -120,7 +110,7 @@ const ScheduleWaitingCard = memo(
     const serverUrl = authAction?.toolOutputs?.server_url || authAction?.toolMeta?.server_url || '';
     const { isLoggedIn: signedIn } = useMcpTokenChange({ serverUrl });
     // The token store is the viewer's, so it says nothing about the user the run acts as
-    const signInReady = signedIn && !isOtherActor;
+    const signInReady = signedIn && !isOtherActor && !noSignIn;
     const stepState = isSignIn
       ? signInReady
         ? CREDENTIAL_CHECK_STATE.READY
@@ -153,13 +143,6 @@ const ScheduleWaitingCard = memo(
       listedTools.length > 1,
     );
     const toolkitLabel = waiting.toolkit || toolkitName || 'the toolkit';
-    const authorizationRequired = `Authorization is required for toolkit "${toolkitLabel}".`;
-    const authorizationText = isOtherActor
-      ? `${authorizationRequired} The ${actorLabel} must provide the credential, then approve.`
-      : `${authorizationRequired} Provide the credential, then approve.`;
-    const signInText = isOtherActor
-      ? `${authorizationRequired} The ${actorLabel} must authorize it, then approve.`
-      : `${authorizationRequired} Authorize now, then approve.`;
     const credentialRows = [
       ['Toolkit', toolkitLabel],
       ['Credential', waiting.credential],
@@ -179,10 +162,14 @@ const ScheduleWaitingCard = memo(
     );
     const buttonProps = useActionButtonProps();
     const credentialPending = isCredential && credentialState !== CREDENTIAL_CHECK_STATE.READY;
-    let blockedReason;
-    if (credentialPending)
-      blockedReason = isOtherActor ? `The ${actorLabel} must provide the credential first` : BLOCKED_REASON;
-    else if (isSignIn && isOtherActor) blockedReason = `The ${actorLabel} must sign in to the toolkit first`;
+    const { blockedReason, authorizationText, signInText } = getActorTexts({
+      toolkitLabel,
+      isOtherActor,
+      actorLabel,
+      noSignIn,
+      credentialPending,
+      isSignIn,
+    });
     const approval = (
       <ScheduleRunApproval
         compact
@@ -283,7 +270,7 @@ const ScheduleWaitingCard = memo(
               {expiry}
             </Typography>
           )}
-          {isSignIn && isOtherActor && (
+          {isSignIn && (isOtherActor || noSignIn) && (
             <ToolkitActionPanel
               title={step1Title}
               message={signInText}
@@ -292,7 +279,7 @@ const ScheduleWaitingCard = memo(
               titleSx={styles.panelTitle}
             />
           )}
-          {isSignIn && !isOtherActor && authAction && (
+          {isSignIn && !isOtherActor && !noSignIn && authAction && (
             <ChatContinue
               authRequiredAction={authAction}
               title={step1Title}

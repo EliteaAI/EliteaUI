@@ -124,11 +124,22 @@ const MANUAL_TRIGGERS = ['manual', 'test'];
 export const isStartedByUser = run => Boolean(run?.isDraftRun) || MANUAL_TRIGGERS.includes(run?.trigger);
 
 /**
- * The user whose credentials and sign-in the run needs: the starter of a manual or Test run, else the decider. It
- * differs from the decider for an admin's Run now run: the admin's credentials, the owner's decision.
+ * The user whose credentials and sign-in the run needs: the starter of a manual or Test run, else the decider. For
+ * a Run now of an admin it is the admin, while the decider stays the schedule owner.
  */
 export const getCredentialOwnerId = (run, schedule) =>
   isStartedByUser(run) && run?.requested_by != null ? run.requested_by : getRunDeciderId(run, schedule);
+
+/**
+ * A sign-in token belongs to one user. When the starter of a manual run is not the decider, the starter cannot
+ * answer for the owner and the owner has no token for the starter, so nobody can finish the sign-in.
+ */
+export const isSignInUnanswerable = (run, schedule) => {
+  const deciderId = getRunDeciderId(run, schedule);
+  return (
+    isStartedByUser(run) && run?.requested_by != null && deciderId != null && run.requested_by !== deciderId
+  );
+};
 
 export const OWNER_ONLY_NOTE = 'Only the owner can approve or reject this run.';
 export const TEST_RUN_ONLY_NOTE = 'Only the user who started this Test run can approve or reject it';
@@ -158,4 +169,49 @@ export const describeRunNoteActions = (actions, noun) => {
   const last = phrases.pop();
   if (!phrases.length) return `You can ${last}.`;
   return `You can ${phrases.join(', ')}${phrases.length > 1 ? ',' : ''} or ${last}.`;
+};
+
+export const describeNeed = ({ need, toolkit, credential }, pausedText, hasToolList) => {
+  const name = toolkit || 'the toolkit';
+  if (need === WAITING_NEED.SIGN_IN) return `Toolkit "${name}" needs you to sign in.`;
+  if (need === WAITING_NEED.CREDENTIAL)
+    return credential
+      ? `Toolkit "${name}" has no usable credential "${credential}".`
+      : `Toolkit "${name}" has no usable credential.`;
+  if (need === WAITING_NEED.TOOLS)
+    return 'Before the first tool call, this run needs your approval for these sensitive tools.';
+  if (hasToolList) return 'This run is paused and needs your approval for these sensitive tools.';
+  return pausedText || 'This run is paused and waits for your decision.';
+};
+
+const BLOCKED_REASON = 'Provide the credential first';
+const NO_SIGN_IN_REASON = 'A run that an admin started cannot answer a sign-in';
+const NO_SIGN_IN_TEXT = `${NO_SIGN_IN_REASON}. The schedule owner can reject this run. The admin can start a new Test run as themselves.`;
+
+// The texts of the Action needed card for the user the run acts as (`actorLabel`) and the viewer
+export const getActorTexts = ({
+  toolkitLabel,
+  isOtherActor,
+  actorLabel,
+  noSignIn,
+  credentialPending,
+  isSignIn,
+}) => {
+  const required = `Authorization is required for toolkit "${toolkitLabel}".`;
+  let blockedReason;
+  if (credentialPending)
+    blockedReason = isOtherActor ? `The ${actorLabel} must provide the credential first` : BLOCKED_REASON;
+  else if (isSignIn && noSignIn) blockedReason = NO_SIGN_IN_REASON;
+  else if (isSignIn && isOtherActor) blockedReason = `The ${actorLabel} must sign in to the toolkit first`;
+  return {
+    blockedReason,
+    authorizationText: isOtherActor
+      ? `${required} The ${actorLabel} must provide the credential, then approve.`
+      : `${required} Provide the credential, then approve.`,
+    signInText: noSignIn
+      ? `${required} ${NO_SIGN_IN_TEXT}`
+      : isOtherActor
+        ? `${required} The ${actorLabel} must authorize it, then approve.`
+        : `${required} Authorize now, then approve.`,
+  };
 };

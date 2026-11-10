@@ -291,29 +291,57 @@ describe('ScheduleWaitingCard', () => {
     ).toBeInTheDocument();
   });
 
-  it("counts the admin's own token on a sign-in pause of their Run now, not the owner's", () => {
-    mocks.signedIn = true;
-    mocks.detail = {
-      ...mocks.detail,
-      trigger: 'manual',
-      requested_by: 77,
-      decider_id: 1,
-      events: [paused({ need: 'sign_in', toolkit: 'Jira' })],
-    };
-    mocks.userId = 77;
-    mocks.isOwner = false;
-    mocks.conversation = { authAction: { toolMeta: { server_url: 'https://auth.example' } } };
-    renderCard();
-    expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Done');
-    cleanup();
+  describe('sign-in pause of an admin Run now', () => {
+    const NOTE =
+      /A run that an admin started cannot answer a sign-in\. The schedule owner can reject this run\. The admin can start a new Test run as themselves\./;
 
-    mocks.userId = 1;
-    mocks.isOwner = true;
-    renderCard();
-    expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Missing');
-    expect(
-      screen.getByText(/The user who started this run must authorize it, then approve\./),
-    ).toBeInTheDocument();
+    beforeEach(() => {
+      mocks.signedIn = true;
+      mocks.detail = {
+        ...mocks.detail,
+        trigger: 'manual',
+        requested_by: 77,
+        decider_id: 1,
+        events: [paused({ need: 'sign_in', toolkit: 'Jira' })],
+      };
+      mocks.conversation = { authAction: { toolMeta: { server_url: 'https://auth.example' } } };
+    });
+
+    it('gives the owner the note and an enabled Reject, with Approve off and no sign-in', () => {
+      mocks.userId = 1;
+      mocks.isOwner = true;
+      renderCard();
+
+      expect(screen.getByText(NOTE)).toBeInTheDocument();
+      expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Missing');
+      expect(screen.queryByText(/Authorize now|must authorize it/)).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Authorize|Skip/ })).not.toBeInTheDocument();
+      expect(button('Approve')).toBeDisabled();
+      expect(button('Reject')).toBeEnabled();
+    });
+
+    it('gives the admin the note and no sign-in button, even with their own token', () => {
+      mocks.userId = 77;
+      mocks.isOwner = false;
+      renderCard();
+
+      expect(screen.getByText(NOTE)).toBeInTheDocument();
+      expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Missing');
+      expect(screen.queryByText(/Authorize now/)).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Authorize|Skip/ })).not.toBeInTheDocument();
+      expect(button('Approve')).toBeDisabled();
+      expect(button('Reject')).toBeDisabled();
+    });
+
+    it('keeps the sign-in for the owner who started their own Run now', () => {
+      mocks.userId = 1;
+      mocks.isOwner = true;
+      mocks.detail = { ...mocks.detail, requested_by: 1 };
+      renderCard();
+
+      expect(screen.getByText(/Authorize now, then approve\./)).toBeInTheDocument();
+      expect(screen.queryByText(NOTE)).not.toBeInTheDocument();
+    });
   });
 
   it('names the old owner as the actor of a run after Change owner', () => {

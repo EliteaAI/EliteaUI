@@ -11,6 +11,7 @@ import {
   getRunNoteActions,
   getWaitingRunNeed,
   hasMissingCredential,
+  isSignInUnanswerable,
   isStartedByUser,
 } from '../waitingRun.helpers';
 
@@ -314,5 +315,19 @@ describe('describeRunNoteActions', () => {
   it('names one action alone and gives no text for none', () => {
     expect(describeRunNoteActions(['run'], 'schedule')).toBe('You can start a new run as yourself.');
     expect(describeRunNoteActions([], 'schedule')).toBe('');
+  });
+});
+
+describe('isSignInUnanswerable', () => {
+  const schedule = { owner: { id: 5 } };
+
+  it('is true when an admin started a manual run the owner decides', () => {
+    expect(isSignInUnanswerable({ trigger: 'manual', requested_by: 9, decider_id: 5 }, schedule)).toBe(true);
+  });
+
+  it('is false when the starter is the decider, for a Test run and for a scheduled run', () => {
+    expect(isSignInUnanswerable({ trigger: 'manual', requested_by: 5, decider_id: 5 }, schedule)).toBe(false);
+    expect(isSignInUnanswerable({ isDraftRun: true, requested_by: 9, decider_id: 9 }, undefined)).toBe(false);
+    expect(isSignInUnanswerable({ trigger: 'cron', requested_by: 9, decider_id: 5 }, schedule)).toBe(false);
   });
 });
