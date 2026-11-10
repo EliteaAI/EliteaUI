@@ -6,7 +6,7 @@ import { Box, ListItem, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
-import { useConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks';
+import { useConversationStartersAddGate } from '@/[fsd]/features/agent/lib/hooks';
 import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
@@ -22,11 +22,9 @@ const ConversationStarters = memo(props => {
 
   const {
     values: { version_details },
-    initialValues,
     handleChange,
     setFieldValue,
   } = useFormikContext();
-  const maxStarters = useConversationStartersLimit();
 
   const { toggleFieldFocus, isFocused } = useFieldFocus();
   const valuesPath = 'version_details.conversation_starters';
@@ -34,20 +32,10 @@ const ConversationStarters = memo(props => {
     () => (version_details?.conversation_starters || []).map(conversationStartersHelpers.toString),
     [version_details?.conversation_starters],
   );
-  const savedCount = useMemo(
-    () => conversationStartersHelpers.countFilled(initialValues?.version_details?.conversation_starters),
-    [initialValues?.version_details?.conversation_starters],
-  );
   // Rows rather than filled starters, so blank rows can't be stacked past the limit
-  const { isOverLimit, canAdd, addTooltip } = useMemo(
-    () =>
-      conversationStartersHelpers.getStartersLimitState({
-        count: values.length,
-        savedCount,
-        max: maxStarters,
-      }),
-    [values.length, savedCount, maxStarters],
-  );
+  const { maxStarters, isOverLimit, disableAdd, addTooltip } = useConversationStartersAddGate({
+    count: values.length,
+  });
   const styles = conversationStartersStyles(values.length === 0, isOverLimit);
 
   const inputRefs = useRef({});
@@ -82,8 +70,6 @@ const ConversationStarters = memo(props => {
     },
     [setFieldValue, values, valuesPath],
   );
-  const disableAdd = !canAdd;
-
   return (
     <BasicAccordion
       data-testid="agent-conversation-starters-section"
@@ -159,10 +145,7 @@ const ConversationStarters = memo(props => {
                 );
               })}
 
-              <Box
-                sx={styles.footer}
-                data-testid={isOverLimit ? 'agent-conversation-starter-counter-over-limit' : undefined}
-              >
+              <Box sx={styles.footer}>
                 {!disabled && (
                   <Tooltip
                     placement="top-start"
@@ -186,7 +169,7 @@ const ConversationStarters = memo(props => {
                 <Typography
                   variant="bodySmall"
                   sx={styles.counter}
-                  data-testid="agent-conversation-starters-counter"
+                  data-testid="agent-conversation-starters-limit-counter"
                   data-over-limit={isOverLimit ? 'true' : undefined}
                 >
                   {values.length}/{maxStarters} starters added.
@@ -227,7 +210,7 @@ const conversationStartersStyles = (isEmpty, isOverLimit) => ({
     marginTop: isEmpty ? '0.75rem' : '1.5rem',
   },
   counter: ({ palette }) => ({
-    color: isOverLimit ? palette.text.warning : palette.text.secondary,
+    color: isOverLimit ? palette.text.attention : palette.text.secondary,
     flexShrink: 0,
   }),
 });

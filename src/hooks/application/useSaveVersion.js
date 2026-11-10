@@ -7,6 +7,7 @@ import { useParams } from 'react-router-dom';
 import { deepClone } from '@mui/x-data-grid/internals';
 
 import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
+// Not the hooks barrel: it re-exports chat hooks that import back into this file
 import { useRefetchConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks/useConversationStartersLimit.hooks';
 import { useSyncChatConfigParticipant } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';

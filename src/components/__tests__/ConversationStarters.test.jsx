@@ -13,7 +13,12 @@ import ConversationStarters from '../ConversationStarters';
 
 const shared = vi.hoisted(() => ({ max: 5 }));
 
-vi.mock('@/[fsd]/features/agent/lib/hooks', () => ({ useConversationStartersLimit: () => shared.max }));
+vi.mock('@/[fsd]/features/agent/lib/hooks', () =>
+  vi.importActual('@/[fsd]/features/agent/lib/hooks/useConversationStartersAddGate.hooks'),
+);
+vi.mock('@/[fsd]/features/agent/lib/hooks/useConversationStartersLimit.hooks', () => ({
+  useConversationStartersLimit: () => shared.max,
+}));
 
 const theme = createTheme(getDesignTokens('dark'));
 const noop = () => {};
@@ -41,7 +46,7 @@ const renderEditor = ({ saved }) =>
     </ThemeProvider>,
   );
 
-const counter = () => screen.getByTestId('agent-conversation-starters-counter');
+const counter = () => screen.getByTestId('agent-conversation-starters-limit-counter');
 const addButton = () => screen.getByTestId('agent-conversation-starter-add');
 
 describe('ConversationStarters limit', () => {
@@ -68,7 +73,7 @@ describe('ConversationStarters limit', () => {
     renderEditor({ saved: starters(5) });
     expect(counter()).toHaveTextContent('5/5 starters added.');
     expect(addButton()).toBeDisabled();
-    expect(screen.queryByTestId('agent-conversation-starter-counter-over-limit')).not.toBeInTheDocument();
+    expect(counter()).not.toHaveAttribute('data-over-limit');
   });
 
   it('marks a version saved above the limit and keeps edit and delete available', () => {
@@ -76,7 +81,6 @@ describe('ConversationStarters limit', () => {
     renderEditor({ saved: starters(8) });
     expect(counter()).toHaveTextContent('8/5 starters added.');
     expect(counter()).toHaveAttribute('data-over-limit', 'true');
-    expect(screen.getByTestId('agent-conversation-starter-counter-over-limit')).toBeInTheDocument();
     expect(addButton()).toBeDisabled();
     expect(screen.getAllByTestId('agent-conversation-starter-delete')).toHaveLength(8);
     expect(screen.getAllByTestId('agent-conversation-starter-input')[0]).toBeEnabled();
@@ -89,6 +93,14 @@ describe('ConversationStarters limit', () => {
       fireEvent.click(screen.getAllByTestId('agent-conversation-starter-delete')[0]);
     expect(counter()).toHaveTextContent('5/5 starters added.');
     expect(counter()).not.toHaveAttribute('data-over-limit');
+    expect(addButton()).toBeDisabled();
+  });
+
+  it('does not let a version saved above the limit grow back after deleting', () => {
+    shared.max = 5;
+    renderEditor({ saved: starters(8) });
+    fireEvent.click(screen.getAllByTestId('agent-conversation-starter-delete')[0]);
+    expect(counter()).toHaveTextContent('7/5 starters added.');
     expect(addButton()).toBeDisabled();
   });
 

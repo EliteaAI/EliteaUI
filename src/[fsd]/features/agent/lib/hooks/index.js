@@ -8,3 +8,4 @@ export {
   useConversationStartersLimit,
   useRefetchConversationStartersLimit,
 } from './useConversationStartersLimit.hooks';
+export { useConversationStartersAddGate } from './useConversationStartersAddGate.hooks';

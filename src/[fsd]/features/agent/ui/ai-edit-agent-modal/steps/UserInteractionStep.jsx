@@ -4,8 +4,7 @@ import { Box, IconButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { EditEntityComparisonLayout, TextDiffHighlight } from '@/[fsd]/entities/edit-entity-with-ai';
-import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
-import { useConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks';
+import { useConversationStartersAddGate } from '@/[fsd]/features/agent/lib/hooks';
 import { Input, Text } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import BaseCheckbox from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
@@ -57,28 +56,15 @@ const UserInteractionStep = memo(props => {
     onDraftChange({ ...draftData, conversation_starters: updated });
   }, [draftData, suggestedStarters, onDraftChange]);
 
-  const maxStarters = useConversationStartersLimit();
-  const startersLimit = useMemo(
-    () =>
-      conversationStartersHelpers.getStartersLimitState({
-        count: suggestedStarters.length,
-        savedCount: conversationStartersHelpers.countFilled(
-          currentData.version_details?.conversation_starters,
-        ),
-        max: maxStarters,
-      }).allowed,
-    [suggestedStarters.length, currentData.version_details?.conversation_starters, maxStarters],
-  );
-
-  const disableAddStarter = useMemo(
-    () => suggestedStarters.length >= startersLimit || suggestedStarters.some(s => !s?.trim()),
-    [suggestedStarters, startersLimit],
-  );
-
-  const addStarterTooltip = useMemo(
-    () => (suggestedStarters.length >= startersLimit ? conversationStartersHelpers.AT_LIMIT_TOOLTIP : ''),
-    [suggestedStarters, startersLimit],
-  );
+  const {
+    maxStarters,
+    isOverLimit: isOverStartersLimit,
+    disableAdd: disableAddStarter,
+    addTooltip: addStarterTooltip,
+  } = useConversationStartersAddGate({
+    count: suggestedStarters.length,
+    hasBlank: suggestedStarters.some(s => !s?.trim()),
+  });
 
   const filteredCurrentStarters = useMemo(() => currentStarters.filter(Boolean), [currentStarters]);
 
@@ -247,6 +233,7 @@ const UserInteractionStep = memo(props => {
                         variant={BUTTON_VARIANTS.iconLabel}
                         size="small"
                         disabled={disableAddStarter}
+                        data-testid="ai-edit-agent-starter-add"
                         onClick={handleAddStarter}
                         startIcon={<PlusIcon />}
                       >
@@ -254,8 +241,12 @@ const UserInteractionStep = memo(props => {
                       </BaseBtn>
                     </Box>
                   </Tooltip>
-                  <Typography sx={styles.addedCount}>
-                    {suggestedStarters.length}/{startersLimit} added.
+                  <Typography
+                    sx={[styles.addedCount, isOverStartersLimit && styles.addedCountOverLimit]}
+                    data-testid="ai-edit-agent-starters-limit-counter"
+                    data-over-limit={isOverStartersLimit ? 'true' : undefined}
+                  >
+                    {suggestedStarters.length}/{maxStarters} added.
                   </Typography>
                 </Box>
               </Box>
@@ -451,6 +442,9 @@ const styles = {
     fontSize: '0.75rem',
     lineHeight: '1rem',
     color: 'text.primary',
+  },
+  addedCountOverLimit: {
+    color: 'text.attention',
   },
 };
 

@@ -4,8 +4,7 @@ import { Box, IconButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { ToolItemCard, resolveEntityType } from '@/[fsd]/entities/edit-entity-with-ai';
-import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
-import { useConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks';
+import { useConversationStartersAddGate } from '@/[fsd]/features/agent/lib/hooks';
 import { Input, Text } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
@@ -120,28 +119,15 @@ const SummaryStep = memo(props => {
     onDraftChange({ ...draftData, conversation_starters: updated });
   }, [draftData, fieldApplyFlags, mergedStarters, onDraftChange, onToggleField]);
 
-  const maxStarters = useConversationStartersLimit();
-  const startersLimit = useMemo(
-    () =>
-      conversationStartersHelpers.getStartersLimitState({
-        count: mergedStarters.length,
-        savedCount: conversationStartersHelpers.countFilled(
-          currentData.version_details?.conversation_starters,
-        ),
-        max: maxStarters,
-      }).allowed,
-    [mergedStarters.length, currentData.version_details?.conversation_starters, maxStarters],
-  );
-
-  const disableAddStarter = useMemo(
-    () => mergedStarters.length >= startersLimit || mergedStarters.some(s => !s?.trim()),
-    [mergedStarters, startersLimit],
-  );
-
-  const addStarterTooltip = useMemo(
-    () => (mergedStarters.length >= startersLimit ? conversationStartersHelpers.AT_LIMIT_TOOLTIP : ''),
-    [mergedStarters, startersLimit],
-  );
+  const {
+    maxStarters,
+    isOverLimit: isOverStartersLimit,
+    disableAdd: disableAddStarter,
+    addTooltip: addStarterTooltip,
+  } = useConversationStartersAddGate({
+    count: mergedStarters.length,
+    hasBlank: mergedStarters.some(s => !s?.trim()),
+  });
 
   const hasStarterErrors = useMemo(
     () => mergedStarters.some(s => s && s.length > MAX_CONVERSATION_STARTER_LENGTH),
@@ -299,6 +285,7 @@ const SummaryStep = memo(props => {
                   variant={BUTTON_VARIANTS.iconLabel}
                   size="small"
                   disabled={disableAddStarter}
+                  data-testid="ai-edit-agent-summary-starter-add"
                   onClick={handleAddStarter}
                   startIcon={<PlusIcon />}
                 >
@@ -306,8 +293,12 @@ const SummaryStep = memo(props => {
                 </BaseBtn>
               </Box>
             </Tooltip>
-            <Typography sx={styles.addedCount}>
-              {mergedStarters.length}/{startersLimit} added.
+            <Typography
+              sx={[styles.addedCount, isOverStartersLimit && styles.addedCountOverLimit]}
+              data-testid="ai-edit-agent-summary-starters-limit-counter"
+              data-over-limit={isOverStartersLimit ? 'true' : undefined}
+            >
+              {mergedStarters.length}/{maxStarters} added.
             </Typography>
           </Box>
         </Box>
@@ -493,6 +484,9 @@ const styles = {
     fontSize: '0.75rem',
     lineHeight: '1rem',
     color: 'text.primary',
+  },
+  addedCountOverLimit: {
+    color: 'text.attention',
   },
   toolsList: {
     display: 'flex',

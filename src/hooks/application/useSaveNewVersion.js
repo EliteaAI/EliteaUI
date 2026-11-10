@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
-import { useRefetchConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks/useConversationStartersLimit.hooks';
+import { useRefetchConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import {
   useNameFromUrl,

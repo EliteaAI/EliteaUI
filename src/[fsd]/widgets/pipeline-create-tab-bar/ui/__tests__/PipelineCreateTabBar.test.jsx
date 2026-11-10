@@ -131,7 +131,13 @@ describe('PipelineCreateTabBar', () => {
       isError: true,
       error: {
         status: 400,
-        data: [{ type: 'value_error', loc: ['conversation_starters'], msg: 'too many' }],
+        data: [
+          {
+            type: 'value_error',
+            loc: ['conversation_starters'],
+            msg: 'conversation_starters cannot exceed 4 items, got 5',
+          },
+        ],
       },
     };
     renderTabBar({ name: 'Pipeline 1', description: '' });

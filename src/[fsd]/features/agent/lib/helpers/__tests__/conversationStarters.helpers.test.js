@@ -18,7 +18,6 @@ describe('countFilled', () => {
 describe('getStartersLimitState', () => {
   it('allows adding below the limit', () => {
     expect(getStartersLimitState({ count: 3, max: 6 })).toEqual({
-      allowed: 6,
       isOverLimit: false,
       canAdd: true,
       addTooltip: '',
@@ -26,29 +25,19 @@ describe('getStartersLimitState', () => {
   });
 
   it('stops at the limit with the at-limit tooltip', () => {
-    expect(getStartersLimitState({ count: 6, savedCount: 6, max: 6 })).toEqual({
-      allowed: 6,
+    expect(getStartersLimitState({ count: 6, max: 6 })).toEqual({
       isOverLimit: false,
       canAdd: false,
       addTooltip: AT_LIMIT_TOOLTIP,
     });
   });
 
-  it('marks a version saved above the limit as over limit but still savable', () => {
-    expect(getStartersLimitState({ count: 8, savedCount: 8, max: 5 })).toEqual({
-      allowed: 8,
+  it('marks a version saved above the limit as over limit', () => {
+    expect(getStartersLimitState({ count: 8, max: 5 })).toEqual({
       isOverLimit: true,
       canAdd: false,
       addTooltip: overLimitTooltip(5),
     });
-  });
-
-  it('returns to the at-limit state once starters are removed down to the limit', () => {
-    const state = getStartersLimitState({ count: 5, savedCount: 8, max: 5 });
-    expect(state.isOverLimit).toBe(false);
-    expect(state.canAdd).toBe(false);
-    expect(state.addTooltip).toBe(AT_LIMIT_TOOLTIP);
-    expect(state.allowed).toBe(8);
   });
 
   it('names the limit in the over-limit tooltip', () => {
@@ -71,6 +60,13 @@ describe('isConversationStartersLimitError', () => {
       ],
     };
     expect(isConversationStartersLimitError(error)).toBe(true);
+  });
+
+  it('ignores other errors on the same field', () => {
+    const error = {
+      data: [{ loc: ['conversation_starters', 0], msg: 'String should have at most 768 characters' }],
+    };
+    expect(isConversationStartersLimitError(error)).toBe(false);
   });
 
   it('ignores other errors', () => {
