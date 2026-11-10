@@ -4,11 +4,12 @@ import { Box, IconButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { ToolItemCard, resolveEntityType } from '@/[fsd]/entities/edit-entity-with-ai';
+import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
+import { useConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks';
 import { Input, Text } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 import {
-  MAX_CONVERSATION_STARTERS,
   MAX_CONVERSATION_STARTER_LENGTH,
   MAX_DESCRIPTION_LENGTH,
   MAX_NAME_LENGTH,
@@ -119,16 +120,28 @@ const SummaryStep = memo(props => {
     onDraftChange({ ...draftData, conversation_starters: updated });
   }, [draftData, fieldApplyFlags, mergedStarters, onDraftChange, onToggleField]);
 
-  const disableAddStarter = useMemo(
-    () => mergedStarters.length >= MAX_CONVERSATION_STARTERS || mergedStarters.some(s => !s?.trim()),
-    [mergedStarters],
+  const maxStarters = useConversationStartersLimit();
+  const startersLimit = useMemo(
+    () =>
+      conversationStartersHelpers.getStartersLimitState({
+        count: mergedStarters.length,
+        savedCount: conversationStartersHelpers.countFilled(
+          currentData.version_details?.conversation_starters,
+        ),
+        max: maxStarters,
+      }).allowed,
+    [mergedStarters.length, currentData.version_details?.conversation_starters, maxStarters],
   );
 
-  const addStarterTooltip = useMemo(() => {
-    if (mergedStarters.length >= MAX_CONVERSATION_STARTERS)
-      return 'You have reached the limit of chat starters';
-    return '';
-  }, [mergedStarters]);
+  const disableAddStarter = useMemo(
+    () => mergedStarters.length >= startersLimit || mergedStarters.some(s => !s?.trim()),
+    [mergedStarters, startersLimit],
+  );
+
+  const addStarterTooltip = useMemo(
+    () => (mergedStarters.length >= startersLimit ? conversationStartersHelpers.AT_LIMIT_TOOLTIP : ''),
+    [mergedStarters, startersLimit],
+  );
 
   const hasStarterErrors = useMemo(
     () => mergedStarters.some(s => s && s.length > MAX_CONVERSATION_STARTER_LENGTH),
@@ -294,7 +307,7 @@ const SummaryStep = memo(props => {
               </Box>
             </Tooltip>
             <Typography sx={styles.addedCount}>
-              {mergedStarters.length}/{MAX_CONVERSATION_STARTERS} added.
+              {mergedStarters.length}/{startersLimit} added.
             </Typography>
           </Box>
         </Box>

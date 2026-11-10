@@ -6,6 +6,7 @@ import { Box, ListItem, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
+import { useConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks';
 import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
@@ -13,11 +14,7 @@ import { Input, Text } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
-import {
-  MAX_CONVERSATION_STARTERS,
-  MAX_CONVERSATION_STARTER_LENGTH,
-  PROMPT_PAYLOAD_KEY,
-} from '@/common/constants.js';
+import { MAX_CONVERSATION_STARTER_LENGTH, PROMPT_PAYLOAD_KEY } from '@/common/constants.js';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 
 const ConversationStarters = memo(props => {
@@ -25,9 +22,11 @@ const ConversationStarters = memo(props => {
 
   const {
     values: { version_details },
+    initialValues,
     handleChange,
     setFieldValue,
   } = useFormikContext();
+  const maxStarters = useConversationStartersLimit();
 
   const { toggleFieldFocus, isFocused } = useFieldFocus();
   const valuesPath = 'version_details.conversation_starters';
@@ -35,7 +34,21 @@ const ConversationStarters = memo(props => {
     () => (version_details?.conversation_starters || []).map(conversationStartersHelpers.toString),
     [version_details?.conversation_starters],
   );
-  const styles = conversationStartersStyles(values.length === 0);
+  const savedCount = useMemo(
+    () => conversationStartersHelpers.countFilled(initialValues?.version_details?.conversation_starters),
+    [initialValues?.version_details?.conversation_starters],
+  );
+  // Rows rather than filled starters, so blank rows can't be stacked past the limit
+  const { isOverLimit, canAdd, addTooltip } = useMemo(
+    () =>
+      conversationStartersHelpers.getStartersLimitState({
+        count: values.length,
+        savedCount,
+        max: maxStarters,
+      }),
+    [values.length, savedCount, maxStarters],
+  );
+  const styles = conversationStartersStyles(values.length === 0, isOverLimit);
 
   const inputRefs = useRef({});
   const [shouldFocusIndex, setShouldFocusIndex] = useState(null);
@@ -69,12 +82,7 @@ const ConversationStarters = memo(props => {
     },
     [setFieldValue, values, valuesPath],
   );
-  const disableAdd = useMemo(() => values.length >= MAX_CONVERSATION_STARTERS, [values]);
-
-  const addTooltipTitle = useMemo(() => {
-    if (values.length >= MAX_CONVERSATION_STARTERS) return 'You have reached the limit of chat starters';
-    return '';
-  }, [values]);
+  const disableAdd = !canAdd;
 
   return (
     <BasicAccordion
@@ -151,26 +159,39 @@ const ConversationStarters = memo(props => {
                 );
               })}
 
-              {!disabled && (
-                <Tooltip
-                  placement="top-start"
-                  title={addTooltipTitle}
-                  extraStyles={{ maxWidth: 400 }}
+              <Box
+                sx={styles.footer}
+                data-testid={isOverLimit ? 'agent-conversation-starter-counter-over-limit' : undefined}
+              >
+                {!disabled && (
+                  <Tooltip
+                    placement="top-start"
+                    title={addTooltip}
+                    extraStyles={{ maxWidth: 400 }}
+                  >
+                    <Box>
+                      <BaseBtn
+                        data-testid="agent-conversation-starter-add"
+                        variant={BUTTON_VARIANTS.iconLabel}
+                        disabled={disableAdd}
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={disableAdd ? null : onAdd}
+                        startIcon={<PlusIcon />}
+                      >
+                        Starter
+                      </BaseBtn>
+                    </Box>
+                  </Tooltip>
+                )}
+                <Typography
+                  variant="bodySmall"
+                  sx={styles.counter}
+                  data-testid="agent-conversation-starters-counter"
+                  data-over-limit={isOverLimit ? 'true' : undefined}
                 >
-                  <Box sx={styles.addButtonWrapper}>
-                    <BaseBtn
-                      data-testid="agent-conversation-starter-add"
-                      variant={BUTTON_VARIANTS.iconLabel}
-                      disabled={disableAdd}
-                      onMouseDown={e => e.preventDefault()}
-                      onClick={disableAdd ? null : onAdd}
-                      startIcon={<PlusIcon />}
-                    >
-                      Starter
-                    </BaseBtn>
-                  </Box>
-                </Tooltip>
-              )}
+                  {values.length}/{maxStarters} starters added.
+                </Typography>
+              </Box>
             </Box>
           ),
         },
@@ -180,7 +201,7 @@ const ConversationStarters = memo(props => {
 });
 
 /** @type {MuiSx} */
-const conversationStartersStyles = isEmpty => ({
+const conversationStartersStyles = (isEmpty, isOverLimit) => ({
   accordionSX: ({ palette }) => ({
     background: `${palette.background.default.tertiary} !important`,
   }),
@@ -199,9 +220,16 @@ const conversationStartersStyles = isEmpty => ({
   deleteButtonWrapper: {
     paddingBottom: '0.5rem',
   },
-  addButtonWrapper: {
+  footer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
     marginTop: isEmpty ? '0.75rem' : '1.5rem',
   },
+  counter: ({ palette }) => ({
+    color: isOverLimit ? palette.text.warning : palette.text.secondary,
+    flexShrink: 0,
+  }),
 });
 
 ConversationStarters.displayName = 'ConversationStarters';

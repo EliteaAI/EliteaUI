@@ -4,11 +4,13 @@ import { Box, IconButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { EditEntityComparisonLayout, TextDiffHighlight } from '@/[fsd]/entities/edit-entity-with-ai';
+import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
+import { useConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks';
 import { Input, Text } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import BaseCheckbox from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
 import PlusIcon from '@/assets/plus-icon.svg?react';
-import { MAX_CONVERSATION_STARTERS, MAX_CONVERSATION_STARTER_LENGTH } from '@/common/constants';
+import { MAX_CONVERSATION_STARTER_LENGTH } from '@/common/constants';
 import CloseIcon from '@/components/Icons/CloseIcon';
 
 const UserInteractionStep = memo(props => {
@@ -55,16 +57,28 @@ const UserInteractionStep = memo(props => {
     onDraftChange({ ...draftData, conversation_starters: updated });
   }, [draftData, suggestedStarters, onDraftChange]);
 
-  const disableAddStarter = useMemo(
-    () => suggestedStarters.length >= MAX_CONVERSATION_STARTERS || suggestedStarters.some(s => !s?.trim()),
-    [suggestedStarters],
+  const maxStarters = useConversationStartersLimit();
+  const startersLimit = useMemo(
+    () =>
+      conversationStartersHelpers.getStartersLimitState({
+        count: suggestedStarters.length,
+        savedCount: conversationStartersHelpers.countFilled(
+          currentData.version_details?.conversation_starters,
+        ),
+        max: maxStarters,
+      }).allowed,
+    [suggestedStarters.length, currentData.version_details?.conversation_starters, maxStarters],
   );
 
-  const addStarterTooltip = useMemo(() => {
-    if (suggestedStarters.length >= MAX_CONVERSATION_STARTERS)
-      return 'You have reached the limit of chat starters';
-    return '';
-  }, [suggestedStarters]);
+  const disableAddStarter = useMemo(
+    () => suggestedStarters.length >= startersLimit || suggestedStarters.some(s => !s?.trim()),
+    [suggestedStarters, startersLimit],
+  );
+
+  const addStarterTooltip = useMemo(
+    () => (suggestedStarters.length >= startersLimit ? conversationStartersHelpers.AT_LIMIT_TOOLTIP : ''),
+    [suggestedStarters, startersLimit],
+  );
 
   const filteredCurrentStarters = useMemo(() => currentStarters.filter(Boolean), [currentStarters]);
 
@@ -241,7 +255,7 @@ const UserInteractionStep = memo(props => {
                     </Box>
                   </Tooltip>
                   <Typography sx={styles.addedCount}>
-                    {suggestedStarters.length}/{MAX_CONVERSATION_STARTERS} added.
+                    {suggestedStarters.length}/{startersLimit} added.
                   </Typography>
                 </Box>
               </Box>

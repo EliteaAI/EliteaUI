@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { Button as MuiButton } from '@mui/material';
 
+import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
+import { useRefetchConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks/useConversationStartersLimit.hooks';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { buildErrorMessage } from '@/common/utils.jsx';
@@ -58,11 +60,13 @@ const CreateApplicationTabBar = memo(({ isEditingTool }) => {
   }, [navigate, wantToCancel]);
 
   const { toastError } = useToast();
+  const refetchLimit = useRefetchConversationStartersLimit();
   useEffect(() => {
     if (isError) {
       toastError(buildErrorMessage(error));
+      if (conversationStartersHelpers.isConversationStartersLimitError(error)) refetchLimit();
     }
-  }, [error, isError, toastError]);
+  }, [error, isError, refetchLimit, toastError]);
 
   return (
     <>

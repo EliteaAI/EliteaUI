@@ -13,7 +13,12 @@ const setBlockNav = vi.fn();
 const createApplicationSpy = vi.fn();
 const attachPendingSkills = vi.fn();
 let pipelineState = { stateValidationErrors: {} };
+let createResult = { error: null, isError: false };
 
+const refetchLimit = vi.fn();
+vi.mock('@/[fsd]/features/agent/lib/hooks/useConversationStartersLimit.hooks', () => ({
+  useRefetchConversationStartersLimit: () => refetchLimit,
+}));
 vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn() }));
 vi.mock('react-redux', async importOriginal => ({
   ...(await importOriginal()),
@@ -23,7 +28,7 @@ vi.mock('react-redux', async importOriginal => ({
 vi.mock('@/hooks/application/useCreateApplication', () => ({
   default: (...args) => {
     createApplicationSpy(...args);
-    return { isLoading: false, create, error: null, isError: false };
+    return { isLoading: false, create, ...createResult };
   },
 }));
 vi.mock('@/hooks/useNavBlocker', () => ({ default: () => ({ setBlockNav }) }));
@@ -74,6 +79,7 @@ describe('PipelineCreateTabBar', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     pipelineState = { stateValidationErrors: {} };
+    createResult = { error: null, isError: false };
   });
   afterEach(() => cleanup());
 
@@ -118,5 +124,25 @@ describe('PipelineCreateTabBar', () => {
     const { onSuccess } = createApplicationSpy.mock.calls.at(-1)[2];
     onSuccess({ version_details: { id: 77 } });
     expect(attachPendingSkills).toHaveBeenCalledWith(skills, 77);
+  });
+
+  it('refetches the starters limit when the create is rejected for too many starters', () => {
+    createResult = {
+      isError: true,
+      error: {
+        status: 400,
+        data: [{ type: 'value_error', loc: ['conversation_starters'], msg: 'too many' }],
+      },
+    };
+    renderTabBar({ name: 'Pipeline 1', description: '' });
+
+    expect(refetchLimit).toHaveBeenCalled();
+  });
+
+  it('does not refetch the starters limit on other create errors', () => {
+    createResult = { isError: true, error: { status: 400, data: [{ loc: ['name'], msg: 'bad' }] } };
+    renderTabBar({ name: 'Pipeline 1', description: '' });
+
+    expect(refetchLimit).not.toHaveBeenCalled();
   });
 });

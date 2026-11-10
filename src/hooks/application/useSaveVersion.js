@@ -6,6 +6,8 @@ import { useParams } from 'react-router-dom';
 
 import { deepClone } from '@mui/x-data-grid/internals';
 
+import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
+import { useRefetchConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks/useConversationStartersLimit.hooks';
 import { useSyncChatConfigParticipant } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { useApplyPipelineAttachments } from '@/[fsd]/features/pipelines/tool-picker/lib/hooks/useApplyPipelineAttachments.hooks';
@@ -32,6 +34,7 @@ const { LAYOUT_VERSION } = FlowEditorConstants;
 
 const useSaveVersion = ({ isAgent = false } = {}) => {
   const dispatch = useDispatch();
+  const refetchLimit = useRefetchConversationStartersLimit();
   const handleChangeName = useChangeNameInUrlSearchParams();
   const projectId = useSelectedProjectId();
   const isFromChat = useIsFrom(RouteDefinitions.Chat);
@@ -136,6 +139,8 @@ const useSaveVersion = ({ isAgent = false } = {}) => {
 
     if (error) {
       toastError(buildErrorMessage(error));
+      // The limit may have been lowered since the editor opened; show the one the backend applied
+      if (conversationStartersHelpers.isConversationStartersLimitError(error)) refetchLimit();
       if (isFromPipeline) {
         // Undo the relations applied above, so Discard leaves the backend as it was
         await applyAttachments({
@@ -213,6 +218,7 @@ const useSaveVersion = ({ isAgent = false } = {}) => {
   }, [
     onSaveTools,
     applyAttachments,
+    refetchLimit,
     initialValues?.version_details?.tools,
     isFromPipeline,
     yamlCode,

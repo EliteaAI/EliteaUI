@@ -6,7 +6,9 @@ import {
   MAX_WELCOME_MESSAGE_LENGTH,
 } from '@/common/constants.js';
 
-export const validateAgentDraft = draft => {
+import { countFilled } from './conversationStarters.helpers';
+
+export const validateAgentDraft = (draft, maxStarters = MAX_CONVERSATION_STARTERS) => {
   const errors = {};
   const name = (draft.name || '').trim();
   if (!name) errors.name = 'Name is required';
@@ -22,8 +24,8 @@ export const validateAgentDraft = draft => {
     errors.welcome_message = `Welcome message must be ${MAX_WELCOME_MESSAGE_LENGTH} characters or less`;
 
   const starters = draft.conversation_starters || [];
-  if (starters.length > MAX_CONVERSATION_STARTERS)
-    errors.conversation_starters = `Maximum ${MAX_CONVERSATION_STARTERS} conversation starters allowed`;
+  if (countFilled(starters) > maxStarters)
+    errors.conversation_starters = `Maximum ${maxStarters} conversation starters allowed`;
   if (starters.some(s => s && s.length > MAX_CONVERSATION_STARTER_LENGTH))
     errors.conversation_starters_length = `Each starter must be ${MAX_CONVERSATION_STARTER_LENGTH} characters or less`;
 

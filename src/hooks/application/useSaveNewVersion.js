@@ -3,6 +3,8 @@ import { useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
+import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
+import { useRefetchConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks/useConversationStartersLimit.hooks';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import {
   useNameFromUrl,
@@ -41,6 +43,7 @@ const useSaveNewVersion = ({
   const { nodes: flowNodes } = useSelector(state => state.pipelineEditor);
   const { setBlockNav } = useNavBlocker();
   const { captureSaveTarget, isSaveTargetCurrent } = useStaleSaveGuard(applicationId);
+  const refetchLimit = useRefetchConversationStartersLimit();
 
   const [
     saveNewVersion,
@@ -183,6 +186,7 @@ const useSaveNewVersion = ({
   useEffect(() => {
     if (isSavingNewVersionError) {
       toastError(buildErrorMessage(error));
+      if (conversationStartersHelpers.isConversationStartersLimitError(error)) refetchLimit();
       reset();
     } else if (isSavingNewVersionSuccess) {
       toastSuccess && toastSuccess('Saved new version successfully');

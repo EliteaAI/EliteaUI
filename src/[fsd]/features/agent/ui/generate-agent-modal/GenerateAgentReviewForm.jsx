@@ -3,13 +3,13 @@ import { memo, useCallback, useEffect, useMemo } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { validateAgentDraft } from '@/[fsd]/features/agent/lib/helpers';
+import { conversationStartersHelpers, validateAgentDraft } from '@/[fsd]/features/agent/lib/helpers';
+import { useConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
 import { Input, Text } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 import {
-  MAX_CONVERSATION_STARTERS,
   MAX_CONVERSATION_STARTER_LENGTH,
   MAX_DESCRIPTION_LENGTH,
   MAX_NAME_LENGTH,
@@ -39,7 +39,8 @@ const GenerateAgentReviewForm = memo(props => {
   const styles = generateAgentReviewFormStyles();
   const { toggleFieldFocus, isFocused } = useFieldFocus();
 
-  const validationErrors = useMemo(() => validateAgentDraft(draft), [draft]);
+  const maxStarters = useConversationStartersLimit();
+  const validationErrors = useMemo(() => validateAgentDraft(draft, maxStarters), [draft, maxStarters]);
 
   const isValid = useMemo(() => Object.keys(validationErrors).length === 0, [validationErrors]);
 
@@ -78,15 +79,12 @@ const GenerateAgentReviewForm = memo(props => {
 
   const starters = useMemo(() => draft.conversation_starters || [], [draft.conversation_starters]);
 
-  const disableAddStarter = useMemo(
-    () => starters.length >= MAX_CONVERSATION_STARTERS || starters.some(s => !s?.trim()),
-    [starters],
+  const { canAdd, addTooltip: addStarterTooltip } = useMemo(
+    () => conversationStartersHelpers.getStartersLimitState({ count: starters.length, max: maxStarters }),
+    [starters.length, maxStarters],
   );
 
-  const addStarterTooltip = useMemo(() => {
-    if (starters.length >= MAX_CONVERSATION_STARTERS) return 'You have reached the limit of chat starters';
-    return '';
-  }, [starters]);
+  const disableAddStarter = useMemo(() => !canAdd || starters.some(s => !s?.trim()), [canAdd, starters]);
 
   return (
     <Box sx={styles.container}>
@@ -264,7 +262,7 @@ const GenerateAgentReviewForm = memo(props => {
                 </Box>
               </Tooltip>
               <Typography sx={styles.addedCount}>
-                {starters.length}/{MAX_CONVERSATION_STARTERS} added.
+                {starters.length}/{maxStarters} added.
               </Typography>
             </Box>
           </Box>

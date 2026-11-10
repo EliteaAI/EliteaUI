@@ -4,6 +4,8 @@ import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
+import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
+import { useRefetchConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks/useConversationStartersLimit.hooks';
 import { useAttachSkills } from '@/[fsd]/features/pipelines/ai-edit-pipeline';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
@@ -19,6 +21,7 @@ const PipelineCreateTabBar = memo(() => {
   const formik = useFormikContext();
   const navigate = useNavigate();
   const { toastError } = useToast();
+  const refetchLimit = useRefetchConversationStartersLimit();
   const [wantToCancel, setWantToCancel] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const isYamlCodeDirty = useIsPipelineYamlCodeDirty();
@@ -79,8 +82,9 @@ const PipelineCreateTabBar = memo(() => {
   useEffect(() => {
     if (isError) {
       toastError(buildErrorMessage(error));
+      if (conversationStartersHelpers.isConversationStartersLimitError(error)) refetchLimit();
     }
-  }, [error, isError, toastError]);
+  }, [error, isError, refetchLimit, toastError]);
 
   return (
     <TabBarItems>
