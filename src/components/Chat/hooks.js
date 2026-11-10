@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useStore } from 'react-redux';
 import { v4 as uuidv4, v4 } from 'uuid';
 
 import { useTrackEvent } from '@/GA';
@@ -28,6 +29,7 @@ import {
   mergeChatSocketMessage,
   reorderHistoryOnUserArrival,
 } from '@/[fsd]/features/chat/lib/helpers/chatSocket.helpers';
+import { selectIsSentFromClosedConversation } from '@/[fsd]/features/chat/model';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { AnalyticConstants, InputGuardrailConstants } from '@/[fsd]/shared/lib/constants';
@@ -307,6 +309,7 @@ export const useChatSocket = ({
   onEntityCreated,
 }) => {
   const trackEvent = useTrackEvent();
+  const store = useStore();
 
   const { contextExecutionEntity } = useContextExecutionEntity();
 
@@ -440,6 +443,8 @@ export const useChatSocket = ({
         question_id: questionIdFromContent,
       } = message.content instanceof Object ? message.content : {};
       const question_id = questionIdFromMessage || questionIdFromContent;
+      // There is no per-chat filter on this event: a run sent from another chat must not land in the open one
+      if (selectIsSentFromClosedConversation(question_id)(store.getState())) return;
       const [msgIndex, msg] = getMessage(message_id, question_id);
 
       if (RESUMED_AGENT_ACTIVITY_EVENTS.has(socketMessageType) && msg.resumingAgentPaths?.length) {
@@ -1792,6 +1797,7 @@ export const useChatSocket = ({
   const handleSocketErrorEvent = useCallback(
     async message => {
       const { message_id, type: socketMessageType } = message;
+      if (selectIsSentFromClosedConversation(message_id)(store.getState())) return;
 
       switch (socketMessageType) {
         case SocketMessageType.Error:
@@ -1845,7 +1851,7 @@ export const useChatSocket = ({
         }
       }
     },
-    [handleError, trackEvent],
+    [handleError, store, trackEvent],
   );
 
   useSocket(sioEvents.socket_validation_error, handleSocketErrorEvent);

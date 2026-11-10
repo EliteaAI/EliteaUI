@@ -1299,12 +1299,17 @@ const ChatBox = memo(
         if (isAwayFromConversation()) {
           if (sendResult?.success !== false) {
             const conversationUuid = eventPayload?.conversation_uuid || initialConversationUuid;
+            dispatch(sendFailuresActions.trackAwaySend({ questionId: question_id, conversationUuid }));
             emit({ ...eventPayload, conversation_uuid: conversationUuid });
             if (!isSendingToUser && participant?.entity_name !== 'user') {
               // Bound to the original chat so its Stop button shows on return
               setConversationStreamingInfo(conversationUuid, question_id);
             }
             emitted = true;
+            // One input serves every chat: the sent text must not stay in the open chat's composer
+            if (!skipInputReset && chatInput.current?.getInputContent() === question) {
+              chatInput.current.reset();
+            }
           } else {
             dispatch(sendFailuresActions.settleSend({ questionId: question_id }));
           }

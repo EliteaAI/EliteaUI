@@ -4,11 +4,21 @@ import { createSlice } from '@reduxjs/toolkit';
 // Sends tracked at once; older ones are dropped (a send is settled by its first frame within seconds)
 const MAX_PENDING_SENDS = 20;
 
+const dropOldestSends = sends => {
+  const ids = Object.keys(sends);
+  if (ids.length <= MAX_PENDING_SENDS) return;
+  ids
+    .sort((a, b) => sends[a].sentAt - sends[b].sentAt)
+    .slice(0, ids.length - MAX_PENDING_SENDS)
+    .forEach(id => delete sends[id]);
+};
+
 // Failures of chat sends that arrived after the user left that chat, shown there when it is opened again
 const sendFailuresSlice = createSlice({
   name: 'chatSendFailures',
   initialState: {
     pendingSends: {},
+    awaySends: {},
     failuresByConversation: {},
     openConversationUuid: null,
   },
@@ -20,13 +30,18 @@ const sendFailuresSlice = createSlice({
       const { questionId, conversationUuid, question, userMessage } = action.payload;
       if (!questionId || !conversationUuid) return;
       state.pendingSends[questionId] = { conversationUuid, question, userMessage, sentAt: Date.now() };
-      const ids = Object.keys(state.pendingSends);
-      if (ids.length > MAX_PENDING_SENDS) {
-        ids
-          .sort((a, b) => state.pendingSends[a].sentAt - state.pendingSends[b].sentAt)
-          .slice(0, ids.length - MAX_PENDING_SENDS)
-          .forEach(id => delete state.pendingSends[id]);
-      }
+      dropOldestSends(state.pendingSends);
+    },
+    // A send emitted after the user left its chat: the emit puts the socket back in that chat's room
+    trackAwaySend: (state, action) => {
+      const { questionId, conversationUuid } = action.payload;
+      if (!questionId || !conversationUuid) return;
+      state.awaySends[questionId] = { conversationUuid, sentAt: Date.now(), isRoomLeft: false };
+      dropOldestSends(state.awaySends);
+    },
+    markAwaySendRoomLeft: (state, action) => {
+      const awaySend = state.awaySends[action.payload.questionId];
+      if (awaySend) awaySend.isRoomLeft = true;
     },
     settleSend: (state, action) => {
       delete state.pendingSends[action.payload.questionId];
@@ -65,6 +80,13 @@ export const selectPendingSend = questionId => state =>
   state[sendFailuresSlice.name]?.pendingSends[questionId];
 
 export const selectOpenConversationUuid = state => state[sendFailuresSlice.name]?.openConversationUuid;
+
+export const selectAwaySend = questionId => state => state[sendFailuresSlice.name]?.awaySends[questionId];
+
+export const selectIsSentFromClosedConversation = questionId => state => {
+  const awaySend = selectAwaySend(questionId)(state);
+  return !!awaySend && awaySend.conversationUuid !== selectOpenConversationUuid(state);
+};
 
 export const selectConversationSendFailures = conversationUuid => state =>
   state[sendFailuresSlice.name]?.failuresByConversation[conversationUuid] || EMPTY_FAILURES;

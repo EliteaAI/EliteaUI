@@ -2,7 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/[fsd]/shared/config/reducerRegistry', () => ({ registerReducer: vi.fn() }));
 
-const { default: reducer, actions } = await import('@/[fsd]/features/chat/model/sendFailures.slice');
+const {
+  default: reducer,
+  actions,
+  name,
+  selectIsSentFromClosedConversation,
+} = await import('@/[fsd]/features/chat/model/sendFailures.slice');
 
 const initial = reducer(undefined, { type: '@@init' });
 
@@ -70,5 +75,23 @@ describe('sendFailures slice', () => {
       state = reducer(state, actions.trackSend({ questionId: `q${index}`, conversationUuid: 'A' }));
     }
     expect(Object.keys(state.pendingSends)).toHaveLength(20);
+  });
+
+  it('counts a send made away as closed only while its chat is not open', () => {
+    let state = reducer(initial, actions.trackAwaySend({ questionId: 'q1', conversationUuid: 'A' }));
+    state = reducer(state, actions.setOpenConversation({ conversationUuid: 'B' }));
+    expect(selectIsSentFromClosedConversation('q1')({ [name]: state })).toBe(true);
+    expect(selectIsSentFromClosedConversation('other')({ [name]: state })).toBe(false);
+
+    state = reducer(state, actions.setOpenConversation({ conversationUuid: 'A' }));
+    expect(selectIsSentFromClosedConversation('q1')({ [name]: state })).toBe(false);
+  });
+
+  it('keeps only the newest sends made away', () => {
+    let state = initial;
+    for (let i = 0; i < 21; i += 1) {
+      state = reducer(state, actions.trackAwaySend({ questionId: `q${i}`, conversationUuid: 'A' }));
+    }
+    expect(Object.keys(state.awaySends)).toHaveLength(20);
   });
 });

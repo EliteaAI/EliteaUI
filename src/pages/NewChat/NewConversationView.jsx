@@ -383,6 +383,9 @@ const NewConversationView = forwardRef(
           }
 
           setConversationStreamingInfo(uuid, question_id);
+          if (!isStillOnScreen) {
+            dispatch(sendFailuresActions.trackAwaySend({ questionId: question_id, conversationUuid: uuid }));
+          }
           // Use sanitized filenames from upload response to match what's stored in MinIO
           const payload = getPayload({
             question,

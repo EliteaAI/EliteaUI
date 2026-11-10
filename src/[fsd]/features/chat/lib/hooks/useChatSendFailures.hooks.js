@@ -6,9 +6,12 @@ import { SessionConstants } from '@/[fsd]/features/auth/lib/constants';
 import { useSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { applySendFailures } from '@/[fsd]/features/chat/lib/helpers/sendFailures.helpers';
 import {
+  selectAwaySend,
   selectConversationSendFailures,
+  selectIsSentFromClosedConversation,
+  selectOpenConversationUuid,
+  selectPendingSend,
   sendFailuresActions,
-  sendFailuresName,
 } from '@/[fsd]/features/chat/model';
 import { sioEvents } from '@/common/constants';
 
@@ -20,25 +23,33 @@ export const useChatSendOutcomeTracker = () => {
   // Read lazily in the handlers: subscribing would re-render the layout on every send
   const store = useStore();
 
-  const getState = useCallback(() => store.getState()[sendFailuresName] || {}, [store]);
+  const { emit: emitLeaveRoom } = useSocket(sioEvents.chat_leave_rooms);
 
   const handleChatFrame = useCallback(
     frame => {
       const questionId = frame?.question_id || frame?.content?.question_id;
-      if (!questionId || !getState().pendingSends?.[questionId]) return;
-      dispatch(sendFailuresActions.settleSend({ questionId }));
+      if (!questionId) return;
+      const state = store.getState();
+      if (selectPendingSend(questionId)(state)) dispatch(sendFailuresActions.settleSend({ questionId }));
+      const awaySend = selectAwaySend(questionId)(state);
+      if (!selectIsSentFromClosedConversation(questionId)(state) || awaySend.isRoomLeft) return;
+      emitLeaveRoom({ conversation_uuid: awaySend.conversationUuid });
+      dispatch(sendFailuresActions.markAwaySendRoomLeft({ questionId }));
     },
-    [dispatch, getState],
+    [dispatch, emitLeaveRoom, store],
   );
 
   const handleRefusal = useCallback(
     frame => {
       const questionId = frame?.message_id;
-      const { pendingSends, openConversationUuid } = getState();
-      const pending = questionId && pendingSends?.[questionId];
+      const state = store.getState();
+      const pending = selectPendingSend(questionId)(state);
       if (!pending) return;
       // The open chat shows its own failures; "no response" is expected once the user left the chat's room
-      if (pending.conversationUuid === openConversationUuid || frame.code === SEND_NO_RESPONSE_CODE) {
+      if (
+        pending.conversationUuid === selectOpenConversationUuid(state) ||
+        frame.code === SEND_NO_RESPONSE_CODE
+      ) {
         dispatch(sendFailuresActions.settleSend({ questionId }));
         return;
       }
@@ -50,7 +61,7 @@ export const useChatSendOutcomeTracker = () => {
         }),
       );
     },
-    [dispatch, getState],
+    [dispatch, store],
   );
 
   useSocket(sioEvents.chat_predict, handleChatFrame);

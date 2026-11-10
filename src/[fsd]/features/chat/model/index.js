@@ -1,7 +1,8 @@
 export {
   actions as sendFailuresActions,
-  name as sendFailuresName,
+  selectAwaySend,
   selectConversationSendFailures,
+  selectIsSentFromClosedConversation,
   selectOpenConversationUuid,
   selectPendingSend,
 } from './sendFailures.slice';

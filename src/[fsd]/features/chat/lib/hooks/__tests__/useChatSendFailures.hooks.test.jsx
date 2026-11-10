@@ -6,12 +6,13 @@ import { configureStore } from '@reduxjs/toolkit';
 import { act, cleanup, renderHook } from '@testing-library/react';
 
 const socketHandlers = vi.hoisted(() => ({}));
+const emitLeaveRoom = vi.hoisted(() => vi.fn());
 
 vi.mock('@/[fsd]/shared/config/reducerRegistry', () => ({ registerReducer: vi.fn() }));
 vi.mock('@/[fsd]/features/auth/lib/hooks', () => ({
   useSocket: (event, handler) => {
     socketHandlers[event] = handler;
-    return { emit: vi.fn() };
+    return { emit: event === 'chat_leave_rooms' ? emitLeaveRoom : vi.fn() };
   },
 }));
 vi.mock('@/[fsd]/features/auth/lib/constants', () => ({
@@ -19,7 +20,11 @@ vi.mock('@/[fsd]/features/auth/lib/constants', () => ({
 }));
 vi.mock('@/common/constants', () => ({
   ROLES: { User: 'user', Assistant: 'assistant' },
-  sioEvents: { chat_predict: 'chat_predict', socket_validation_error: 'socket_validation_error' },
+  sioEvents: {
+    chat_predict: 'chat_predict',
+    chat_leave_rooms: 'chat_leave_rooms',
+    socket_validation_error: 'socket_validation_error',
+  },
 }));
 vi.mock('@/common/utils', () => ({ convertJsonToString: value => (value ? String(value) : '') }));
 
@@ -42,12 +47,33 @@ describe('useChatSendOutcomeTracker', () => {
   let store;
 
   beforeEach(() => {
+    vi.clearAllMocks();
     store = makeStore();
     renderHook(() => useChatSendOutcomeTracker(), { wrapper: wrapperFor(store) });
     store.dispatch(actions.trackSend({ questionId: 'q1', conversationUuid: 'A', question: 'hi' }));
   });
 
   afterEach(() => cleanup());
+
+  it('leaves the room of a send made away once, on its first frame', () => {
+    store.dispatch(actions.trackAwaySend({ questionId: 'q1', conversationUuid: 'A' }));
+    store.dispatch(actions.setOpenConversation({ conversationUuid: 'B' }));
+
+    act(() => socketHandlers.chat_predict({ question_id: 'q1' }));
+    act(() => socketHandlers.chat_predict({ question_id: 'q1' }));
+
+    expect(emitLeaveRoom).toHaveBeenCalledTimes(1);
+    expect(emitLeaveRoom).toHaveBeenCalledWith({ conversation_uuid: 'A' });
+  });
+
+  it('stays in the room when the chat of a send made away is open again', () => {
+    store.dispatch(actions.trackAwaySend({ questionId: 'q1', conversationUuid: 'A' }));
+    store.dispatch(actions.setOpenConversation({ conversationUuid: 'A' }));
+
+    act(() => socketHandlers.chat_predict({ question_id: 'q1' }));
+
+    expect(emitLeaveRoom).not.toHaveBeenCalled();
+  });
 
   it('keeps a refusal for a chat the user has left', () => {
     store.dispatch(actions.setOpenConversation({ conversationUuid: 'B' }));
