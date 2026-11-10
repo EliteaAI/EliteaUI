@@ -6,6 +6,7 @@ import { EditEntityComparisonLayout, TextDiffHighlight } from '@/[fsd]/entities/
 import { CopyIconButton } from '@/[fsd]/shared/ui/button';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
+import CompareSaveButton from '../CompareSaveButton';
 import CompareVersionHeader from '../CompareVersionHeader';
 
 const CompareUserInteractionStep = memo(props => {
@@ -22,6 +23,9 @@ const CompareUserInteractionStep = memo(props => {
     onSaveRight,
     savingLeftKeys,
     savingRightKeys,
+    leftSaveDisabledReason,
+    // Pipelines always show the Chat Starters block; agents hide it when neither version has starters
+    alwaysShowStarters = false,
   } = props;
 
   const leftWelcome = leftEdits.welcome_message ?? leftData.welcome_message ?? '';
@@ -36,7 +40,8 @@ const CompareUserInteractionStep = memo(props => {
     [rightEdits.conversation_starters, rightData.conversation_starters],
   );
 
-  const maxStarters = Math.max(leftStarters.length, rightStarters.length);
+  // With alwaysShowStarters, at least one row, so a version without starters still shows an empty field
+  const maxStarters = Math.max(leftStarters.length, rightStarters.length, alwaysShowStarters ? 1 : 0);
 
   const welcomeNoDiff = leftWelcome === rightWelcome;
   const startersNoDiff = useMemo(() => {
@@ -98,15 +103,14 @@ const CompareUserInteractionStep = memo(props => {
                 onChange={handleLeftWelcomeChange}
               />
             </Box>
-            <BaseBtn
-              variant={BUTTON_VARIANTS.elitea}
-              size="small"
-              disabled={!leftWelcomeDirty || savingLeftKeys.welcome_message}
+            <CompareSaveButton
+              label={`Save ${leftVersion?.name}`}
+              isDirty={leftWelcomeDirty}
+              isSaving={Boolean(savingLeftKeys.welcome_message)}
+              disabledReason={leftSaveDisabledReason}
               onClick={() => onSaveLeft({ welcome_message: leftWelcome })}
               sx={compareUserInteractionStepStyles.saveBtn}
-            >
-              {savingLeftKeys.welcome_message ? 'Saving...' : `Save ${leftVersion?.name}`}
-            </BaseBtn>
+            />
           </Box>
 
           {maxStarters > 0 && (
@@ -147,15 +151,14 @@ const CompareUserInteractionStep = memo(props => {
                   );
                 })}
               </Box>
-              <BaseBtn
-                variant={BUTTON_VARIANTS.elitea}
-                size="small"
-                disabled={!leftStartersDirty || savingLeftKeys.conversation_starters}
+              <CompareSaveButton
+                label={`Save starters — ${leftVersion?.name}`}
+                isDirty={leftStartersDirty}
+                isSaving={Boolean(savingLeftKeys.conversation_starters)}
+                disabledReason={leftSaveDisabledReason}
                 onClick={() => onSaveLeft({ conversation_starters: leftStarters.filter(s => s?.trim()) })}
                 sx={compareUserInteractionStepStyles.saveBtn}
-              >
-                {savingLeftKeys.conversation_starters ? 'Saving...' : `Save starters — ${leftVersion?.name}`}
-              </BaseBtn>
+              />
             </Box>
           )}
         </Box>

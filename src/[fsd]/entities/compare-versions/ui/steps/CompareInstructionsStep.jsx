@@ -6,6 +6,7 @@ import { EditEntityComparisonLayout, TextDiffHighlight } from '@/[fsd]/entities/
 import { CopyIconButton } from '@/[fsd]/shared/ui/button';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
+import CompareSaveButton from '../CompareSaveButton';
 import CompareVersionHeader from '../CompareVersionHeader';
 
 const CompareInstructionsStep = memo(props => {
@@ -23,6 +24,7 @@ const CompareInstructionsStep = memo(props => {
     savingLeftKeys,
     savingRightKeys,
     instructionsRequired = false,
+    leftSaveDisabledReason,
   } = props;
 
   const leftValue = leftEdits.instructions ?? leftData.instructions ?? '';
@@ -59,19 +61,14 @@ const CompareInstructionsStep = memo(props => {
               onChange={handleLeftChange}
             />
           </Box>
-          <BaseBtn
-            variant={BUTTON_VARIANTS.elitea}
-            size="small"
-            disabled={
-              leftEdits.instructions === undefined ||
-              (instructionsRequired && !leftValue?.trim()) ||
-              savingLeftKeys.instructions
-            }
+          <CompareSaveButton
+            label={`Save ${leftVersion?.name}`}
+            isDirty={leftEdits.instructions !== undefined && !(instructionsRequired && !leftValue?.trim())}
+            isSaving={Boolean(savingLeftKeys.instructions)}
+            disabledReason={leftSaveDisabledReason}
             onClick={() => onSaveLeft({ instructions: leftValue })}
             sx={compareInstructionsStepStyles.saveBtn}
-          >
-            {savingLeftKeys.instructions ? 'Saving...' : `Save ${leftVersion?.name}`}
-          </BaseBtn>
+          />
         </Box>
       }
       suggestedContent={

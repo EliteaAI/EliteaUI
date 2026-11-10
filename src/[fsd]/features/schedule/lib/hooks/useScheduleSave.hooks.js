@@ -1,9 +1,10 @@
 import { useCallback, useRef, useState } from 'react';
 
 import { toKindNoun } from '@/[fsd]/entities/schedule';
+import { APPROVAL_RULE } from '@/[fsd]/entities/schedule/lib/constants';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 
-import { APPROVAL_RULE, RISK_NAME_MISMATCH, RISK_SAVE_ERROR } from '../constants';
+import { RISK_NAME_MISMATCH, RISK_SAVE_ERROR } from '../constants';
 import { isPromptShown, splitRiskFindings, toCreateBody, toFieldErrors, toUpdateBody } from '../helpers';
 
 // Fields with their own message in the form; a 400 for any other field goes to the banner

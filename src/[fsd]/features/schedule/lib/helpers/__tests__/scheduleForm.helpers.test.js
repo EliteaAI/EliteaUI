@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 
+import { DEFAULT_APPROVAL_RULE } from '@/[fsd]/entities/schedule/lib/constants';
 import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
 
-import { DEFAULT_APPROVAL_RULE } from '../../constants';
 import {
   DEFAULT_SCHEDULE_CRON,
   buildEditValues,

@@ -1,7 +1,7 @@
 import { memo, useCallback } from 'react';
 
 import { useSelector } from 'react-redux';
-import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link as RouterLink, useParams } from 'react-router-dom';
 
 import { Box, Link, Skeleton, Typography } from '@mui/material';
 
@@ -11,13 +11,14 @@ import {
   buildScheduleRunsLink,
   buildSchedulesListLink,
   useEntitySchedules,
+  useOpenScheduleNested,
 } from '@/[fsd]/entities/schedule';
 import { ScheduleSectionConstants } from '@/[fsd]/shared/lib/constants';
 import { Button } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button';
 import PlusIcon from '@/assets/plus-icon.svg?react';
-import { PERMISSIONS, SearchParams } from '@/common/constants';
+import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
@@ -74,23 +75,9 @@ const EntitySchedulesSection = memo(props => {
     triggerKind,
     skip: isHidden,
   });
-  const navigate = useNavigate();
   const { tab } = useParams();
-  const { pathname, search } = useLocation();
-
-  // The form opens nested in the editor and comes back to this editor location.
-  // The form URL keeps the editor search (viewMode), so the entity crumb opens the editor too.
-  const openNested = useCallback(
-    (to, formVersionId) => {
-      const params = new URLSearchParams(search);
-      // Params of the link itself win over the editor search
-      new URLSearchParams(to.search).forEach((value, key) => params.set(key, value));
-      if (formVersionId) params.set(SearchParams.VersionId, formVersionId);
-      const formSearch = params.toString();
-      navigate({ ...to, search: formSearch && `?${formSearch}` }, { state: { returnTo: pathname + search } });
-    },
-    [navigate, pathname, search],
-  );
+  // The form opens nested in the editor and comes back to this editor location
+  const openNested = useOpenScheduleNested();
   // Edit keeps the version of its schedule; "+ Schedule" takes the editor version
   const versionOf = useCallback(
     scheduleId => rows.find(row => row.id === scheduleId)?.version_id ?? versionId,
