@@ -48,6 +48,7 @@ const KINDS = {
 const WIDE = '@container (min-width: 30rem)';
 // The name every agent and pipeline gives its first version
 const BASE_VERSION_NAME = 'base';
+const INDEX_SCHEDULED_HINT = 'This index already has a schedule';
 
 // The last section of the agent and pipeline editors; entityType is 'agent' or 'pipeline'; versionId is the editor version, versionName its label (none or 'base': the base version)
 // For entityType 'toolkit_index' the entityId is the toolkit id and indexName names the index; an index has one schedule
@@ -196,6 +197,15 @@ const EntitySchedulesSection = memo(props => {
             >
               {config.add}
             </Button.BaseBtn>
+          )}
+          {canCreate && !isError && isAddBlocked && total > 0 && (
+            <Typography
+              variant="bodySmall"
+              color="text.secondary"
+              data-testid={`${sectionTestId}-add-hint`}
+            >
+              {INDEX_SCHEDULED_HINT}
+            </Typography>
           )}
           {hasMore && (
             <Button.BaseBtn

@@ -7,7 +7,7 @@ import PlayArrowOutlinedIcon from '@mui/icons-material/PlayArrowOutlined';
 import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
 import { Box, Link, Typography } from '@mui/material';
 
-import { buildScheduleHistoryLink, isWebhookRow } from '@/[fsd]/entities/schedule';
+import { TOOLKIT_INDEX_TYPE, buildScheduleHistoryLink, isWebhookRow } from '@/[fsd]/entities/schedule';
 import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { PERMISSIONS } from '@/common/constants';
@@ -20,6 +20,7 @@ import WebhookSampleRunDialog from './WebhookSampleRunDialog';
 
 const RUN_NOW_NOTE = 'Runs the saved schedule and records it as Manual. Next run does not change.';
 const SAMPLE_RUN_NOTE = 'Runs the saved webhook with a body you paste, as a delivery would.';
+const INDEX_RUN_ACTIVE_HINT = 'A run of this index is active';
 const TEST_RUN_NOTE = 'Runs the form as it is now, without saving. Last run and Next run do not change.';
 
 /**
@@ -47,6 +48,8 @@ const ScheduleRunsCard = memo(
     const { runs, total, versionNames, expandedRunId, onExpand } = view;
     const hasActiveRun = runs.some(run => isRunActive(run.status));
     const isWebhook = isWebhookRow(schedule);
+    // Test Run stays off while a run is active; for an index the card says why
+    const showIndexRunActive = entityType === TOOLKIT_INDEX_TYPE && !schedule?.id && hasActiveRun;
     const canRunNow = Boolean(schedule?.id) && Boolean(schedule?.allowed_actions?.includes('run'));
     const canTest = checkPermission(PERMISSIONS.schedules.run);
     const runHint = schedule?.id ? ownerOnlyRunHint(schedule) : null;
@@ -147,6 +150,15 @@ const ScheduleRunsCard = memo(
             data-testid="schedule-test-run-hint"
           >
             {runHint}
+          </Typography>
+        )}
+        {showIndexRunActive && (
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+            data-testid="schedule-test-run-active-hint"
+          >
+            {INDEX_RUN_ACTIVE_HINT}
           </Typography>
         )}
         {(runNowError || testRunError) && (
