@@ -5,7 +5,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import getDesignTokens from '@/MainTheme';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
 import ScheduleWaitingCard from '../ScheduleWaitingCard';
 
@@ -70,6 +70,17 @@ const renderCard = (props = {}) => {
   return onShowTest;
 };
 const button = name => screen.getByRole('button', { name });
+
+// The pause the server writes: the text names the first `named` tools and counts the rest, the list holds 50 at most
+const serverPause = (total, named) => {
+  const all = Array.from({ length: total }, (_, index) => ({ toolkit: 'a', tool: `t${index}` }));
+  const labels = all.slice(0, named).map(item => `${item.toolkit} · ${item.tool}`);
+  const more = total > named ? ` (+${total - named} more)` : '';
+  return {
+    text: `Paused for approval before the first tool call: ${labels.join(', ')}${more}`,
+    tools: all.slice(0, 50),
+  };
+};
 
 describe('ScheduleWaitingCard', () => {
   beforeEach(() => {
@@ -215,6 +226,165 @@ describe('ScheduleWaitingCard', () => {
     expect(screen.queryByText('Action needed: this run is waiting for you')).not.toBeInTheDocument();
     expect(button('Approve')).toBeEnabled();
     expect(button('Reject')).toBeEnabled();
+  });
+
+  it('lists the sensitive tools to approve before the first call and the tools that may still ask', () => {
+    mocks.detail = {
+      ...run,
+      events: [
+        paused({
+          need: 'tools',
+          text: 'Paused for approval before the first tool call: github · create_pull_request, github · delete_file',
+          tools: [
+            { toolkit: 'github', tool: 'create_pull_request' },
+            { toolkit: 'github', tool: 'delete_file' },
+          ],
+          may_ask: [{ toolkit: 'jira', tool: 'create_issue' }],
+        }),
+      ],
+    };
+    renderCard();
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'This run will not start until you approve it. Before the first tool call, this run needs your approval for these sensitive tools.',
+    );
+    const items = within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem');
+    expect(items.map(item => item.textContent)).toEqual([
+      'github · create_pull_request',
+      'github · delete_file',
+    ]);
+    expect(screen.getByTestId('schedule-waiting-may-ask')).toHaveTextContent(
+      'These tools from the global list may still ask during the run: jira · create_issue.',
+    );
+    expect(button('Approve')).toBeEnabled();
+    expect(button('Reject')).toBeEnabled();
+  });
+
+  it.each([
+    ['one tool', [['Artifact', 'create_file']], ['Artifact · create_file']],
+    [
+      'three tools of two toolkits',
+      [
+        ['Artifact', 'create_file'],
+        ['Artifact', 'delete_file'],
+        ['ADO', 'list_indexes'],
+      ],
+      ['Artifact · create_file', 'Artifact · delete_file', 'ADO · list_indexes'],
+    ],
+  ])('names every tool with its toolkit in the list for %s', (_title, pairs, expected) => {
+    mocks.detail = {
+      ...run,
+      events: [
+        paused({
+          need: 'tools',
+          tools: pairs.map(([toolkit, tool]) => ({ toolkit, tool })),
+        }),
+      ],
+    };
+    renderCard();
+
+    const items = within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem');
+    expect(items.map(item => item.textContent)).toEqual(expected);
+  });
+
+  it('keeps the tool list visible and the decision off for a user who is not the owner', () => {
+    mocks.isOwner = false;
+    mocks.detail = {
+      ...run,
+      events: [paused({ need: 'tools', tools: [{ toolkit: 'ADO', tool: 'list_indexes' }] })],
+    };
+    renderCard();
+
+    expect(within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem')).toHaveLength(1);
+    expect(button('Approve')).toBeDisabled();
+    expect(button('Reject')).toBeDisabled();
+  });
+
+  it('shows no may-ask line when no tool may still ask', () => {
+    mocks.detail = {
+      ...run,
+      events: [paused({ need: 'tools', tools: [{ toolkit: 'github', tool: 'delete_file' }] })],
+    };
+    renderCard();
+
+    expect(screen.getByTestId('schedule-waiting-tools')).toBeInTheDocument();
+    expect(screen.queryByTestId('schedule-waiting-may-ask')).not.toBeInTheDocument();
+  });
+
+  it('lists a repeated tool pair once per entry without a duplicate key warning', () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const pair = { toolkit: 'github', tool: 'delete_file' };
+    mocks.detail = { ...run, events: [paused({ need: 'tools', tools: [pair, pair] })] };
+    renderCard();
+
+    expect(within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem')).toHaveLength(2);
+    expect(errorSpy.mock.calls.flat().join(' ')).not.toContain('same key');
+    errorSpy.mockRestore();
+  });
+
+  it('lists every tool of a call-time pause that names several', () => {
+    mocks.detail = {
+      ...run,
+      events: [
+        paused({
+          text: 'Paused for approval: github · create_issue, github · delete_issue',
+          tools: [
+            { toolkit: 'github', tool: 'create_issue' },
+            { toolkit: 'github', tool: 'delete_issue' },
+          ],
+        }),
+      ],
+    };
+    renderCard();
+
+    const items = within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem');
+    expect(items.map(item => item.textContent)).toEqual(['github · create_issue', 'github · delete_issue']);
+    const notice = screen.getByRole('status');
+    expect(notice).toHaveTextContent(
+      'This run will not start until you approve it. This run is paused and needs your approval for these sensitive tools.',
+    );
+    expect(notice).not.toHaveTextContent('create_issue');
+  });
+
+  it.each([
+    ['30 tools, the text names 10', 30, 10, 30, null],
+    ['9 tools, the text names 8', 9, 8, 9, null],
+    ['70 tools, the text names 10', 70, 10, 50, '20 more'],
+    ['53 tools, the text names 10', 53, 10, 50, '3 more'],
+  ])('tells only the tools the list does not show for %s', (_title, total, named, listed, note) => {
+    const { text, tools } = serverPause(total, named);
+    mocks.detail = { ...run, events: [paused({ need: 'tools', text, tools })] };
+    renderCard();
+
+    expect(within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem')).toHaveLength(
+      listed,
+    );
+    if (note) expect(screen.getByTestId('schedule-waiting-tools-more')).toHaveTextContent(note);
+    else expect(screen.queryByTestId('schedule-waiting-tools-more')).not.toBeInTheDocument();
+  });
+
+  it('shows no list for a call-time pause of one tool', () => {
+    mocks.detail = {
+      ...run,
+      events: [
+        paused({
+          text: 'Paused for approval: github · create_issue',
+          tools: [{ toolkit: 'github', tool: 'create_issue' }],
+        }),
+      ],
+    };
+    renderCard();
+
+    expect(screen.queryByTestId('schedule-waiting-tools')).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Paused for approval: github · create_issue');
+  });
+
+  it('renders an older pause without tools as before', () => {
+    mocks.detail = { ...run, events: [paused({ text: 'Paused for approval: create_pull_request' })] };
+    renderCard();
+
+    expect(screen.queryByTestId('schedule-waiting-tools')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('schedule-waiting-may-ask')).not.toBeInTheDocument();
   });
 
   it('renders a Test run without a schedule from the entity and the run version', () => {
