@@ -42,6 +42,8 @@ export const useCompareAgentVersions = ({
 
   const versionDetailsRef = useRef({ left: null, right: null });
   const savedLeftFieldsRef = useRef({});
+  // Saves of one version run in turn, so each one sends what the previous one stored
+  const saveQueuesRef = useRef({ left: Promise.resolve(), right: Promise.resolve() });
 
   const [savingLeftKeys, setSavingLeftKeys] = useState({});
   const [savingRightKeys, setSavingRightKeys] = useState({});
@@ -99,50 +101,57 @@ export const useCompareAgentVersions = ({
         return next;
       });
       const side = versionId === versionDetailsRef.current.left?.id ? 'left' : 'right';
-      try {
-        const mergedData = { ...data, ...edits, ...fieldPayload };
-        const versionDetails = versionDetailsRef.current[side];
-        // Only the saved fields change: the other edited fields keep their stored value until saved
-        const storedFields = Object.fromEntries(
-          EDITABLE_FIELDS.map(field => [field, field in fieldPayload ? fieldPayload[field] : data[field]]),
-        );
-        await updateAgentVersion({
-          ...(versionDetails ?? {}),
-          projectId,
-          applicationId,
-          versionId,
-          ...(isPipeline
-            ? storedFields
-            : {
-                instructions: mergedData.instructions,
-                welcome_message: mergedData.welcome_message,
-                conversation_starters: mergedData.conversation_starters,
-              }),
-        }).unwrap();
-        // The next save of this version sends what is stored now, not what was loaded
-        versionDetailsRef.current = {
-          ...versionDetailsRef.current,
-          [side]: { ...(versionDetails ?? {}), ...fieldPayload },
-        };
-        setEdits(prev => {
-          const next = { ...prev };
-          keys.forEach(k => delete next[k]);
-          return next;
-        });
-        setData(prev => ({ ...prev, ...fieldPayload }));
-        toastSuccess(`Version "${versionName}" has been updated.`);
-        if (side === 'left') {
-          savedLeftFieldsRef.current = { ...savedLeftFieldsRef.current, ...fieldPayload };
+      const save = async () => {
+        try {
+          const mergedData = { ...data, ...edits, ...fieldPayload };
+          const versionDetails = versionDetailsRef.current[side];
+          // Only the saved fields change: the other edited fields keep their stored value until saved
+          const storedFields = Object.fromEntries(
+            EDITABLE_FIELDS.map(field => [
+              field,
+              field in fieldPayload ? fieldPayload[field] : (versionDetails?.[field] ?? data[field]),
+            ]),
+          );
+          await updateAgentVersion({
+            ...(versionDetails ?? {}),
+            projectId,
+            applicationId,
+            versionId,
+            ...(isPipeline
+              ? storedFields
+              : {
+                  instructions: mergedData.instructions,
+                  welcome_message: mergedData.welcome_message,
+                  conversation_starters: mergedData.conversation_starters,
+                }),
+          }).unwrap();
+          // The next save of this version sends what is stored now, not what was loaded
+          versionDetailsRef.current = {
+            ...versionDetailsRef.current,
+            [side]: { ...(versionDetails ?? {}), ...fieldPayload },
+          };
+          setEdits(prev => {
+            const next = { ...prev };
+            keys.forEach(k => delete next[k]);
+            return next;
+          });
+          setData(prev => ({ ...prev, ...fieldPayload }));
+          toastSuccess(`Version "${versionName}" has been updated.`);
+          if (side === 'left') {
+            savedLeftFieldsRef.current = { ...savedLeftFieldsRef.current, ...fieldPayload };
+          }
+        } catch {
+          toastError('Failed to save. Please try again.');
+        } finally {
+          setSavingKeys(prev => {
+            const next = { ...prev };
+            keys.forEach(k => delete next[k]);
+            return next;
+          });
         }
-      } catch {
-        toastError('Failed to save. Please try again.');
-      } finally {
-        setSavingKeys(prev => {
-          const next = { ...prev };
-          keys.forEach(k => delete next[k]);
-          return next;
-        });
-      }
+      };
+      saveQueuesRef.current[side] = saveQueuesRef.current[side].then(save);
+      return saveQueuesRef.current[side];
     },
     [updateAgentVersion, isPipeline, projectId, applicationId, toastSuccess, toastError],
   );

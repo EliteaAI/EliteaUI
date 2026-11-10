@@ -142,6 +142,39 @@ describe('useCompareAgentVersions for pipelines', () => {
     });
   });
 
+  it('keeps a first save when the same version is saved again before it returns', async () => {
+    const { result } = renderPipelineHook();
+    let loaded;
+    await act(async () => {
+      loaded = await result.current.loadVersions(1, 2);
+    });
+    let finishFirstSave;
+    mocks.updateVersion.mockImplementationOnce(() => ({
+      unwrap: () =>
+        new Promise(resolve => {
+          finishFirstSave = resolve;
+        }),
+    }));
+    let saves;
+    await act(async () => {
+      saves = [
+        result.current.onSaveLeft(saveArgs(loaded, { fieldPayload: { welcome_message: 'Hello' } })),
+        result.current.onSaveLeft(saveArgs(loaded, { fieldPayload: { conversation_starters: ['New'] } })),
+      ];
+    });
+    expect(mocks.updateVersion).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      finishFirstSave({});
+      await Promise.all(saves);
+    });
+    expect(mocks.updateVersion).toHaveBeenCalledTimes(2);
+    expect(mocks.updateVersion.mock.calls[1][0]).toMatchObject({
+      welcome_message: 'Hello',
+      conversation_starters: ['New'],
+    });
+  });
+
   it('keeps the edits and shows the error toast when the save is refused', async () => {
     mocks.updateVersion.mockImplementation(() => unwrapping(new Error('400')));
     const { result } = renderPipelineHook();
