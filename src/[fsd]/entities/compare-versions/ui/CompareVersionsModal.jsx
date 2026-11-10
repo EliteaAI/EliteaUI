@@ -68,7 +68,8 @@ const CompareVersionsModal = memo(props => {
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [loadError, setLoadError] = useState(null);
   const [discardTarget, setDiscardTarget] = useState(null);
-  const [pendingScheduleId, setPendingScheduleId] = useState(null);
+  // The schedule Open schedule asks for while the discard confirm is shown: { scheduleId, versionId }
+  const [pendingSchedule, setPendingSchedule] = useState(null);
 
   const steps = COMPARE_STEPS_BY_ENTITY[entityType] ?? SKILL_COMPARE_STEPS;
   const isPipeline = entityType === COMPARE_ENTITY_TYPES.pipeline;
@@ -108,7 +109,7 @@ const CompareVersionsModal = memo(props => {
       setActiveStepIndex(0);
       setLoadError(null);
       setDiscardTarget(null);
-      setPendingScheduleId(null);
+      setPendingSchedule(null);
       resetSavingState?.();
     }
   }, [open, resetSavingState]);
@@ -144,20 +145,20 @@ const CompareVersionsModal = memo(props => {
   }, [isDirty, onClose]);
 
   const openSchedule = useCallback(
-    scheduleId => {
+    (scheduleId, versionId) => {
       onClose();
-      onOpenSchedule?.(scheduleId);
+      onOpenSchedule?.(scheduleId, versionId);
     },
     [onClose, onOpenSchedule],
   );
 
   const handleOpenSchedule = useCallback(
-    scheduleId => {
+    (scheduleId, versionId) => {
       if (isDirty) {
-        setPendingScheduleId(scheduleId);
+        setPendingSchedule({ scheduleId, versionId });
         setDiscardTarget(DISCARD_TARGETS.navigate);
       } else {
-        openSchedule(scheduleId);
+        openSchedule(scheduleId, versionId);
       }
     },
     [isDirty, openSchedule],
@@ -169,7 +170,7 @@ const CompareVersionsModal = memo(props => {
     if (target === DISCARD_TARGETS.close) {
       onClose();
     } else if (target === DISCARD_TARGETS.navigate) {
-      openSchedule(pendingScheduleId);
+      openSchedule(pendingSchedule?.scheduleId, pendingSchedule?.versionId);
     } else if (target === DISCARD_TARGETS.changeVersions) {
       setLeftEdits({});
       setRightEdits({});
@@ -178,7 +179,7 @@ const CompareVersionsModal = memo(props => {
       setLeftVersionMeta(null);
       setRightVersionMeta(null);
     }
-  }, [discardTarget, onClose, openSchedule, pendingScheduleId]);
+  }, [discardTarget, onClose, openSchedule, pendingSchedule]);
 
   const handleSaveLeftField = useCallback(
     fieldPayload =>

@@ -7,11 +7,11 @@ import { history, historyKeymap } from '@codemirror/commands';
 import { StreamLanguage, defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { yaml } from '@codemirror/legacy-modes/mode/yaml';
 import { MergeView } from '@codemirror/merge';
-import { EditorState } from '@codemirror/state';
 import { EditorView, GutterMarker, gutter, keymap, lineNumbers } from '@codemirror/view';
 import { vscodeDarkInit, vscodeLightInit } from '@uiw/codemirror-theme-vscode';
 
 import { YAML_DIFF } from '../constants/compareVersions.constants';
+import { collapseUnchangedBlocks } from '../helpers/yamlCollapse.helpers';
 
 // A gutter mark that shows a change without colour: − on the base side, + on the compared side
 class ChangeSignMarker extends GutterMarker {
@@ -71,6 +71,8 @@ const buildDiffTheme = (palette, isDarkMode) =>
     {
       // The editors grow with their text; the merge view around them is the one scroller, so both scroll together
       '&': { fontSize: '0.8125rem' },
+      // The card around both editors shows the focus, so the editor draws none of its own
+      '&.cm-focused': { outline: 'none' },
       '.cm-scroller': { fontFamily: 'monospace', overflow: 'visible' },
       '.cm-gutters': { backgroundColor: palette.background.default.tertiary, border: 'none' },
       '&.cm-merge-a .cm-changedLine, .cm-deletedChunk': { backgroundColor: palette.diff.removed },
@@ -107,11 +109,6 @@ const buildDiffTheme = (palette, isDarkMode) =>
     { dark: isDarkMode },
   );
 
-const collapseConfig = {
-  margin: YAML_DIFF.COLLAPSE_MARGIN,
-  minSize: YAML_DIFF.MAX_UNCOLLAPSED_LINES + 1,
-};
-
 const readChunks = mergeView => mergeView?.chunks ?? [];
 
 // The chunks with the two texts they were computed for, so line counts never mix two edits
@@ -122,22 +119,6 @@ const snapshotOf = mergeView => ({
 });
 
 const EMPTY_SNAPSHOT = { chunks: [], a: '', b: '' };
-
-// The collapsed block names its hidden lines the way the spec words it
-const phrases = EditorState.phrases.of({ '$ unchanged lines': 'Show $ unchanged lines' });
-
-// The collapsed rows are plain divs; make them reachable and usable by keyboard
-const makeCollapsedRowsFocusable = root => {
-  root.querySelectorAll('.cm-collapsedLines:not([tabindex])').forEach(row => {
-    row.setAttribute('tabindex', '0');
-    row.setAttribute('role', 'button');
-    row.addEventListener('keydown', event => {
-      if (event.key !== 'Enter' && event.key !== ' ') return;
-      event.preventDefault();
-      row.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-  });
-};
 
 /**
  * Owns a side-by-side CodeMirror MergeView: both sides editable, line diff with word marks inside changed
@@ -170,6 +151,8 @@ export const useYamlMergeView = ({ leftValue, rightValue, onLeftChange, onRightC
       settings: { background: theme.palette.background.default.primary },
     });
     const sharedExtensions = [
+      // Long lines wrap inside their column instead of running under its right edge
+      EditorView.lineWrapping,
       lineNumbers(),
       history(),
       keymap.of(historyKeymap),
@@ -177,11 +160,11 @@ export const useYamlMergeView = ({ leftValue, rightValue, onLeftChange, onRightC
       syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
       editorTheme,
       buildDiffTheme(theme.palette, isDarkMode),
-      phrases,
+      // The library's own collapse counts the kept lines into its limit; this one follows the spec
+      collapseUnchangedBlocks(),
     ];
     const changeListener = onChangeRef =>
       EditorView.updateListener.of(update => {
-        makeCollapsedRowsFocusable(host);
         if (!update.docChanged) return;
         onChangeRef.current?.(update.state.doc.toString());
         clearTimeout(debounceRef.current);
@@ -219,12 +202,10 @@ export const useYamlMergeView = ({ leftValue, rightValue, onLeftChange, onRightC
       parent: host,
       gutter: true,
       highlightChanges: true,
-      collapseUnchanged: collapseConfig,
       diffConfig: { scanLimit: 10000, timeout: 1500 },
     });
     mergeViewRef.current = mergeView;
     setDiff(snapshotOf(mergeView));
-    makeCollapsedRowsFocusable(host);
 
     return () => {
       clearTimeout(debounceRef.current);

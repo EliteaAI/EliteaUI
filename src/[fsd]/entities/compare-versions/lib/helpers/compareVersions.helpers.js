@@ -13,9 +13,10 @@ const resolveToolId = tool => {
   return tool.id;
 };
 
-// The same rule ToolItemCard uses to disable its open link: the linked entity is gone or not visible
+// A linked agent or pipeline is gone, or not visible, when the version API found no version for it:
+// it then sends no agent_type. A toolkit or MCP is gone when the version carries no tool id.
 const isToolAvailable = tool =>
-  tool.type === 'application' ? Boolean(tool.settings?.application_id) : tool.id != null;
+  tool.type === 'application' ? Boolean(tool.settings?.application_id && tool.agent_type) : tool.id != null;
 
 const toCompareTool = tool => ({
   ...tool,

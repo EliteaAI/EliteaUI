@@ -6,7 +6,7 @@ import { useLocation, useParams } from 'react-router-dom';
 import { Box } from '@mui/material';
 
 import { COMPARE_ENTITY_TYPES, CompareVersionsModal } from '@/[fsd]/entities/compare-versions';
-import { buildScheduleFormLink } from '@/[fsd]/entities/schedule';
+import { buildScheduleFormLink, useOpenScheduleNested } from '@/[fsd]/entities/schedule';
 import {
   LATEST_VERSION_NAME,
   VersionDelete,
@@ -98,10 +98,15 @@ const ApplicationControls = memo(props => {
     setCompareVersionsOpen(false);
   }, [flushLeftSaves, instructionsInputRef, isFromPipeline]);
 
+  // Opens the schedule as the editor's Schedules section does: owner view mode kept, back to this editor
+  const openScheduleNested = useOpenScheduleNested();
   const handleOpenSchedule = useCallback(
-    scheduleId =>
-      navigate(buildScheduleFormLink({ entityType: compareEntityType, entityId: id, tab, scheduleId })),
-    [compareEntityType, id, navigate, tab],
+    (scheduleId, versionId) =>
+      openScheduleNested(
+        { pathname: buildScheduleFormLink({ entityType: compareEntityType, entityId: id, tab, scheduleId }) },
+        versionId,
+      ),
+    [compareEntityType, id, openScheduleNested, tab],
   );
 
   const versionDetails = formik?.values?.version_details;

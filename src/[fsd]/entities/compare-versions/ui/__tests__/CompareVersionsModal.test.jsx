@@ -25,7 +25,7 @@ vi.mock('../steps', () => {
         {props.onOpenSchedule && (
           <button
             type="button"
-            onClick={() => props.onOpenSchedule(77)}
+            onClick={() => props.onOpenSchedule(77, 2)}
           >
             open-schedule
           </button>
@@ -183,7 +183,7 @@ describe('CompareVersionsModal', () => {
     fireEvent.click(screen.getByTestId('compare-step-run-settings-schedules'));
     fireEvent.click(screen.getByText('open-schedule'));
     expect(onClose).toHaveBeenCalledTimes(1);
-    expect(onOpenSchedule).toHaveBeenCalledWith(77);
+    expect(onOpenSchedule).toHaveBeenCalledWith(77, 2);
     cleanup();
     vi.clearAllMocks();
 
@@ -196,6 +196,6 @@ describe('CompareVersionsModal', () => {
     expect(onOpenSchedule).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Discard and continue' }));
     expect(onClose).toHaveBeenCalledTimes(1);
-    expect(onOpenSchedule).toHaveBeenCalledWith(77);
+    expect(onOpenSchedule).toHaveBeenCalledWith(77, 2);
   });
 });

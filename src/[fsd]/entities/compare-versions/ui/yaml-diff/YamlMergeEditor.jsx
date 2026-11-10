@@ -39,10 +39,11 @@ const yamlMergeEditorStyles = () => ({
     '& .cm-mergeViewEditor + .cm-mergeViewEditor': {
       borderLeft: `0.0625rem solid ${palette.border.lines}`,
     },
-    '& .cm-editor.cm-focused': {
-      outline: `0.125rem solid ${palette.primary.main}`,
-      outlineOffset: '-0.125rem',
-    },
+    // Focus shows on the card border, as on the other compare fields; an outline drawn inside the
+    // editors was painted over by their full-width rows (changed lines, "Show N unchanged lines")
+    transition: 'border-color 0.2s ease',
+    '&:hover': { borderColor: palette.border.hover },
+    '&:focus-within': { borderColor: palette.primary.main },
   }),
 });
 

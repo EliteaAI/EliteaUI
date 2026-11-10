@@ -63,6 +63,8 @@ describe('extractPipelineCompareData', () => {
     tools: [
       { type: 'github', id: 11, name: 'GitHub' },
       { type: 'application', agent_type: 'pipeline', id: 5, settings: { application_id: 22 }, name: 'Sub' },
+      // A linked agent whose version is gone: the version API sends no agent_type for it
+      { type: 'application', id: 7, settings: { application_id: 30 }, name: 'Deleted agent' },
       { type: 'application', id: 6, settings: {}, name: 'Gone agent' },
     ],
   };
@@ -82,10 +84,12 @@ describe('extractPipelineCompareData', () => {
     expect(tools.map(tool => [tool.entityType, tool.id, tool.isAvailable])).toEqual([
       ['toolkit', 11, true],
       ['pipeline', 22, true],
+      ['agent', 30, false],
       ['agent', 6, false],
     ]);
     expect(matchDependencies(tools, tools.slice(0, 1)).map(row => Boolean(row.right))).toEqual([
       true,
+      false,
       false,
       false,
     ]);

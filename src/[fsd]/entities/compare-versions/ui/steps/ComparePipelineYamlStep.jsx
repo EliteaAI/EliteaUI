@@ -206,7 +206,7 @@ const ComparePipelineYamlStep = memo(props => {
 
       {isTooLarge && (
         <Box
-          sx={styles.banner}
+          sx={[styles.banner, styles.overLine]}
           data-testid="compare-yaml-too-large"
         >
           <Banner.BannerMessage
@@ -237,16 +237,18 @@ const ComparePipelineYamlStep = memo(props => {
       )}
 
       <Box sx={styles.editors}>
-        {isTooLarge ? (
-          <YamlPlainEditors
-            leftValue={leftValue}
-            rightValue={rightValue}
-            onLeftChange={handleLeftChange}
-            onRightChange={handleRightChange}
-          />
-        ) : (
-          <YamlMergeEditor hostRef={hostRef} />
-        )}
+        <Box sx={[styles.editorCard, styles.overLine]}>
+          {isTooLarge ? (
+            <YamlPlainEditors
+              leftValue={leftValue}
+              rightValue={rightValue}
+              onLeftChange={handleLeftChange}
+              onRightChange={handleRightChange}
+            />
+          ) : (
+            <YamlMergeEditor hostRef={hostRef} />
+          )}
+        </Box>
       </Box>
 
       <Box sx={styles.footerRow}>
@@ -267,12 +269,32 @@ ComparePipelineYamlStep.displayName = 'ComparePipelineYamlStep';
 
 /** @type {MuiSx} */
 const comparePipelineYamlStepStyles = () => ({
-  root: {
+  // One line between the two versions, from the headers down to the Save buttons, as in the other
+  // compare steps. The editor card covers it and draws its own line between the two editors.
+  root: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
     flex: 1,
     minHeight: 0,
-  },
+    position: 'relative',
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      left: '50%',
+      width: '0.0625rem',
+      backgroundColor: palette.border.lines,
+      pointerEvents: 'none',
+      zIndex: 1,
+    },
+  }),
+  // Content that spans both columns sits over the line, on the dialog surface colour
+  overLine: ({ palette }) => ({
+    position: 'relative',
+    zIndex: 2,
+    backgroundColor: palette.background.default.tertiary,
+  }),
   header: {
     flexShrink: 0,
     display: 'flex',
@@ -301,6 +323,13 @@ const comparePipelineYamlStepStyles = () => ({
     flex: 1,
     minHeight: 0,
     padding: '0.75rem 2rem 0',
+  },
+  editorCard: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    minHeight: 0,
+    borderRadius: '0.5rem',
   },
   footerRow: {
     display: 'flex',

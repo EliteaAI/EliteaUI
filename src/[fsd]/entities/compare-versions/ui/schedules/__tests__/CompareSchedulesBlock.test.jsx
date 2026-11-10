@@ -17,7 +17,8 @@ const { lists, details } = vi.hoisted(() => ({
 vi.mock('react-redux', () => ({ useSelector: selector => selector({ user: { id: 1 } }) }));
 vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 3 }));
 vi.mock('@/[fsd]/entities/schedule/api/scheduleApi.js', () => ({
-  useGetScheduleListQuery: (args, { skip }) => (skip ? {} : lists.current[args.versionId]),
+  // Only the first page: no test lists more than 100 schedules
+  useGetScheduleListQuery: (args, { skip }) => (skip || args.page ? {} : lists.current[args.versionId]),
   useGetScheduleQuery: ({ scheduleId }) => ({ data: { approval_rule: details.current[scheduleId] } }),
 }));
 vi.mock('@/[fsd]/shared/lib/helpers', () => ({
@@ -165,9 +166,10 @@ describe('CompareSchedulesBlock', () => {
 
   it('opens a schedule from its card', () => {
     const onOpenSchedule = vi.fn();
-    lists.current = { 1: listOf([row(10, 'Report')]), 2: listOf([]) };
+    lists.current = { 1: listOf([row(10, 'Report', { version_id: 1 })]), 2: listOf([]) };
     renderBlock({ onOpenSchedule });
     fireEvent.click(screen.getByTestId('compare-schedule-open-left-10'));
-    expect(onOpenSchedule).toHaveBeenCalledWith(10);
+    // The schedule's own version goes with it, as in the editor's Schedules section
+    expect(onOpenSchedule).toHaveBeenCalledWith(10, 1);
   });
 });

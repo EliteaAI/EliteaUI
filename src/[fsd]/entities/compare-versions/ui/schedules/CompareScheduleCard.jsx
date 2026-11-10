@@ -32,7 +32,10 @@ const CompareScheduleCard = memo(props => {
     if (approvalRule) onApprovalRuleLoaded?.(row.id, approvalRule);
   }, [approvalRule, onApprovalRuleLoaded, row.id]);
 
-  const handleOpen = useCallback(() => onOpenSchedule?.(row.id), [onOpenSchedule, row.id]);
+  const handleOpen = useCallback(
+    () => onOpenSchedule?.(row.id, row.version_id),
+    [onOpenSchedule, row.id, row.version_id],
+  );
 
   const browserTimezone = ScheduleHelpers.getBrowserTimezone() ?? row.timezone;
   const fields = [

@@ -8,7 +8,8 @@ import YamlNodeSummaryChip from './YamlNodeSummaryChip';
 
 const SUMMARY_KINDS = ['added', 'removed', 'changed'];
 
-// The line counters, the node summary and the change navigator above the two YAML editors
+// The line counters and the node summary over the base column, the change navigator over the compared
+// one, so nothing in the toolbar sits on the line between the two versions
 const YamlDiffToolbar = memo(props => {
   const {
     addedLines,
@@ -27,48 +28,50 @@ const YamlDiffToolbar = memo(props => {
       sx={styles.root}
       data-testid="compare-yaml-toolbar"
     >
-      <Typography
-        variant="bodySmall"
-        sx={styles.counter}
-        data-testid="compare-yaml-line-counter"
-      >
-        <Box
-          component="span"
-          sx={styles.added}
-        >{`+${addedLines}`}</Box>{' '}
-        <Box
-          component="span"
-          sx={styles.removed}
-        >{`−${removedLines}`}</Box>{' '}
-        lines
-      </Typography>
-
-      {nodeSummary?.error && (
+      <Box sx={[styles.half, styles.summary]}>
         <Typography
           variant="bodySmall"
-          sx={styles.summaryError}
-          data-testid="compare-yaml-node-summary-error"
+          sx={styles.counter}
+          data-testid="compare-yaml-line-counter"
         >
-          {nodeSummary.error}
+          <Box
+            component="span"
+            sx={styles.added}
+          >{`+${addedLines}`}</Box>{' '}
+          <Box
+            component="span"
+            sx={styles.removed}
+          >{`−${removedLines}`}</Box>{' '}
+          lines
         </Typography>
-      )}
-      {nodeSummary && !nodeSummary.error && (
-        <Box
-          sx={styles.chips}
-          data-testid="compare-yaml-node-summary"
-        >
-          {SUMMARY_KINDS.filter(kind => nodeSummary[kind]?.length).map(kind => (
-            <YamlNodeSummaryChip
-              key={kind}
-              kind={kind}
-              ids={nodeSummary[kind]}
-              onSelectNode={onSelectNode}
-            />
-          ))}
-        </Box>
-      )}
 
-      <Box sx={styles.navigator}>
+        {nodeSummary?.error && (
+          <Typography
+            variant="bodySmall"
+            sx={styles.summaryError}
+            data-testid="compare-yaml-node-summary-error"
+          >
+            {nodeSummary.error}
+          </Typography>
+        )}
+        {nodeSummary && !nodeSummary.error && (
+          <Box
+            sx={styles.chips}
+            data-testid="compare-yaml-node-summary"
+          >
+            {SUMMARY_KINDS.filter(kind => nodeSummary[kind]?.length).map(kind => (
+              <YamlNodeSummaryChip
+                key={kind}
+                kind={kind}
+                ids={nodeSummary[kind]}
+                onSelectNode={onSelectNode}
+              />
+            ))}
+          </Box>
+        )}
+      </Box>
+
+      <Box sx={[styles.half, styles.navigator]}>
         <BaseBtn
           variant={BUTTON_VARIANTS.secondary}
           size="small"
@@ -106,10 +109,19 @@ YamlDiffToolbar.displayName = 'YamlDiffToolbar';
 const yamlDiffToolbarStyles = () => ({
   root: {
     display: 'flex',
+    flexShrink: 0,
+  },
+  half: {
+    flex: 1,
+    minWidth: 0,
+    display: 'flex',
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: '0.75rem',
     padding: '0.75rem 2rem 0',
+  },
+  summary: {
+    justifyContent: 'flex-start',
   },
   counter: ({ palette }) => ({
     color: palette.text.primary,
@@ -126,10 +138,8 @@ const yamlDiffToolbarStyles = () => ({
     color: palette.text.warning,
   }),
   navigator: {
-    display: 'flex',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
     gap: '0.5rem',
-    marginLeft: 'auto',
   },
   position: ({ palette }) => ({
     color: palette.text.primary,

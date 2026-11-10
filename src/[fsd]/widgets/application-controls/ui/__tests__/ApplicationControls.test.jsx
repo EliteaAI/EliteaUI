@@ -38,7 +38,10 @@ vi.mock('@/[fsd]/entities/compare-versions', () => ({
   COMPARE_ENTITY_TYPES: { agent: 'agent', pipeline: 'pipeline' },
   CompareVersionsModal: () => null,
 }));
-vi.mock('@/[fsd]/entities/schedule', () => ({ buildScheduleFormLink: vi.fn() }));
+vi.mock('@/[fsd]/entities/schedule', () => ({
+  buildScheduleFormLink: vi.fn(),
+  useOpenScheduleNested: () => vi.fn(),
+}));
 vi.mock('@/pages/Pipelines/useIsPipelineYamlCodeDirty', () => ({ default: () => false }));
 vi.mock('@/[fsd]/entities/version', () => ({
   LATEST_VERSION_NAME: 'base',
