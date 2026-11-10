@@ -1,5 +1,7 @@
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
+import { useNavigate } from 'react-router-dom';
+
 import { Box, CardContent, Divider, Card as MuiCard, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
@@ -9,7 +11,6 @@ import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import {
   useCardLink,
-  useCardNavigate,
   useCardResize,
   useDataViewMode,
   useIsFrom,
@@ -105,7 +106,7 @@ const EntityCard = memo(props => {
     [supportAssistantConfig, id, projectId, type],
   );
 
-  const doNavigate = useCardNavigate({ viewMode, id, type, name });
+  const navigate = useNavigate();
   const cardLink = useCardLink({ viewMode, id, type, name });
 
   const handleMouseEnter = useCallback(() => {
@@ -137,8 +138,8 @@ const EntityCard = memo(props => {
       return;
     }
 
-    doNavigate();
-  }, [data, disableCardClick, doNavigate, onCardClick]);
+    navigate(cardLink.to, { replace: cardLink.replace, state: cardLink.state });
+  }, [cardLink, data, disableCardClick, navigate, onCardClick]);
 
   // Monitor MCP token changes for both remote and pre-built MCP toolkits
   // For remote MCPs, use serverUrl; for pre-built MCPs, use toolkitType

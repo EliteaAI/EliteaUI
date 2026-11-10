@@ -45,12 +45,7 @@ const DataTableNameCell = memo(props => {
   );
 
   return (
-    <Box
-      // A real link, so the browser offers "Open link in new tab" on the name
-      component={AppLink}
-      {...cardLink}
-      sx={styles.nameContainer}
-    >
+    <Box sx={styles.nameContainer}>
       <StyledTooltip
         placement="top"
         enterDelay={1000}
@@ -62,7 +57,12 @@ const DataTableNameCell = memo(props => {
           </>
         }
       >
-        <Box sx={styles.textContainer}>
+        <Box
+          // Only the text is the link: the icons and the assistant button beside it must not be nested in it
+          component={AppLink}
+          {...cardLink}
+          sx={styles.textContainer}
+        >
           <Typography
             variant="headingSmall"
             component="div"
