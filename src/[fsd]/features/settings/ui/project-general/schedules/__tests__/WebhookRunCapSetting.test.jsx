@@ -42,6 +42,8 @@ const renderSetting = () =>
     </ThemeProvider>,
   );
 const input = () => screen.getByTestId('schedule-webhook-run-cap-input');
+const setBadInput = badInput =>
+  Object.defineProperty(input(), 'validity', { configurable: true, value: { badInput } });
 const enter = value => {
   fireEvent.change(input(), { target: { value } });
   fireEvent.blur(input());
@@ -147,10 +149,36 @@ describe('Running runs per webhook setting', () => {
   it('refuses an unparsable entry instead of resetting the cap to the default', () => {
     api.query = { data: { ...SETTINGS, webhook_max_concurrent_runs: 2 }, isError: false };
     renderSetting();
-    Object.defineProperty(input(), 'validity', { configurable: true, value: { badInput: true } });
+    setBadInput(true);
     fireEvent.change(input(), { target: { value: '' } });
     fireEvent.blur(input());
     expect(api.save).not.toHaveBeenCalled();
     expect(screen.getByTestId('schedule-webhook-run-cap-help')).toHaveTextContent('Enter a whole number');
+  });
+
+  // React fires no onChange while the value stays '', so only the blur can see the current validity
+  it('refuses a bad entry typed into a field that is already empty', () => {
+    api.query = { data: { ...SETTINGS, webhook_max_concurrent_runs: 2 }, isError: false };
+    renderSetting();
+    fireEvent.change(input(), { target: { value: '' } });
+    setBadInput(true);
+    fireEvent.input(input(), { target: { value: '' } });
+    fireEvent.blur(input());
+    expect(api.save).not.toHaveBeenCalled();
+    expect(screen.getByTestId('schedule-webhook-run-cap-help')).toHaveTextContent('Enter a whole number');
+  });
+
+  it('treats the field as empty once the bad entry is deleted, and clears its error', async () => {
+    api.query = { data: { ...SETTINGS, webhook_max_concurrent_runs: 2 }, isError: false };
+    renderSetting();
+    setBadInput(true);
+    fireEvent.change(input(), { target: { value: '' } });
+    fireEvent.blur(input());
+    expect(screen.getByTestId('schedule-webhook-run-cap-help')).toHaveTextContent('Enter a whole number');
+    setBadInput(false);
+    fireEvent.input(input(), { target: { value: '' } });
+    fireEvent.blur(input());
+    await waitFor(() => expect(api.save.mock.calls[0][0].webhookMaxConcurrentRuns).toBeNull());
+    expect(screen.getByTestId('schedule-webhook-run-cap-help')).toHaveTextContent('Platform maximum: 20');
   });
 });

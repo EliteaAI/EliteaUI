@@ -21,7 +21,6 @@ const WebhookRunCapSetting = memo(() => {
   const [updateSettings, { isLoading: isSaving }] = useUpdateScheduleSettingsMutation();
   const [draft, setDraft] = useState('');
   const [fieldError, setFieldError] = useState('');
-  const [badInput, setBadInput] = useState(false);
 
   const saved = data?.webhook_max_concurrent_runs;
   const limit = data?.webhook_max_concurrent_runs_limit;
@@ -31,30 +30,36 @@ const WebhookRunCapSetting = memo(() => {
 
   const onChange = useCallback(event => {
     setDraft(event.target.value);
-    setBadInput(Boolean(event.target.validity?.badInput)); // `2e` or `-` reads as '' and must not reset the cap
     setFieldError('');
   }, []);
 
   // Saved on blur; an empty field goes back to the platform default
-  const onBlur = useCallback(async () => {
-    const value = draft.trim() === '' ? null : Number(draft);
-    if (isSaving || (!badInput && value === (saved ?? null))) return;
-    if (badInput || (value !== null && (!Number.isInteger(value) || value < 1 || value > limit))) {
-      setFieldError(`Enter a whole number from 1 to ${limit}, or leave it empty for the default`);
-      return;
-    }
-    try {
-      await updateSettings({ projectId, webhookMaxConcurrentRuns: value }).unwrap();
-      toastSuccess('Saved');
-    } catch (error) {
-      // A refused value stays in the field next to its error, so it can be corrected
-      if (error?.status === 400) setFieldError(error?.data?.error || 'The value is not valid');
-      else {
-        toastError(error?.data?.error || 'Unable to update the webhook run limit');
-        setDraft(toDraft(saved));
+  const onBlur = useCallback(
+    async event => {
+      if (isSaving) return;
+      // `2e` or `-` reads as '' and must not reset the cap; onChange does not fire while the value stays ''
+      const badInput = Boolean(event.target.validity?.badInput);
+      const value = draft.trim() === '' ? null : Number(draft);
+      if (!badInput && value === (saved ?? null)) return setFieldError('');
+      if (badInput || (value !== null && (!Number.isInteger(value) || value < 1 || value > limit))) {
+        setFieldError(`Enter a whole number from 1 to ${limit}, or leave it empty for the default`);
+        return;
       }
-    }
-  }, [badInput, draft, isSaving, limit, projectId, saved, toastError, toastSuccess, updateSettings]);
+      setFieldError('');
+      try {
+        await updateSettings({ projectId, webhookMaxConcurrentRuns: value }).unwrap();
+        toastSuccess('Saved');
+      } catch (error) {
+        // A refused value stays in the field next to its error, so it can be corrected
+        if (error?.status === 400) setFieldError(error?.data?.error || 'The value is not valid');
+        else {
+          toastError(error?.data?.error || 'Unable to update the webhook run limit');
+          setDraft(toDraft(saved));
+        }
+      }
+    },
+    [draft, isSaving, limit, projectId, saved, toastError, toastSuccess, updateSettings],
+  );
 
   if (isError || !data) return null; // RunWithoutAskingSetting reports a failed read
 
