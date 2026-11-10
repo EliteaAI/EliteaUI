@@ -11,7 +11,7 @@ import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import ArrowForwardIcon from '@/assets/icons/arrow-forward.svg?react';
 
-import { OWNER_ONLY_NOTE, STARTER_ONLY_NOTE, formatExpiresIn, isStartedByUser } from '../lib/helpers';
+import { OWNER_ONLY_NOTE, TEST_RUN_ONLY_NOTE, formatExpiresIn } from '../lib/helpers';
 import { useActionButtonProps } from '../lib/hooks/useActionButtonProps.hooks';
 import { useNow } from '../lib/hooks/useNow.hooks';
 import { useWaitingRunDecision } from '../lib/hooks/useWaitingRunDecision.hooks';
@@ -26,9 +26,9 @@ const PAGE_BUTTON_PROPS = {
 /**
  * Approve and Reject at the paused line of a waiting run.
  * The same decision call as the Runs table, for the user the run acts as; the server still checks the caller.
- * A Test run (`run.isDraftRun`) has no schedule: the user who started it decides. Any other viewer sees both
- * buttons disabled and a note that says why. A viewer of a run that acts as the owner also gets the actions of
- * `ScheduleRunApprovalActions` when the run has a schedule.
+ * The user in `run.decider_id` decides: the schedule owner at the start of the run, or the starter of a Test run
+ * (`run.isDraftRun`, no schedule). Any other viewer sees both buttons disabled and a note that says why. A viewer
+ * of a run with a schedule also gets the actions of `ScheduleRunApprovalActions`.
  * `authAction` is the toolkit sign-in the run waits for: the user the run acts as signs in first (the chat
  * sign-in window), then Approve resumes the run with the fresh tokens. Reject skips the sign-in.
  * `blockedReason` keeps Approve off and names why. `compact` is the form for the Action needed card: no
@@ -102,12 +102,10 @@ const ScheduleRunApproval = memo(props => {
   const themeButtonProps = useActionButtonProps();
   const buttonProps = plain ? PAGE_BUTTON_PROPS : themeButtonProps;
   const styles = scheduleRunApprovalStyles();
-  // The note for a viewer who may not decide: the run acts as a Test run starter, a starter or the owner
-  const actsAsOwner = !run?.isDraftRun && !isStartedByUser(run);
-  let noteText = OWNER_ONLY_NOTE;
-  if (run?.isDraftRun) noteText = 'Only the user who started this Test run can approve or reject it';
-  else if (!actsAsOwner) noteText = STARTER_ONLY_NOTE;
-  const showActions = !onHitlResume && actsAsOwner && Boolean(schedule);
+  // The note for a viewer who may not decide: a Test run belongs to its starter, any other run to its owner
+  const isTestRun = Boolean(run?.isDraftRun);
+  const noteText = isTestRun ? TEST_RUN_ONLY_NOTE : OWNER_ONLY_NOTE;
+  const showActions = !onHitlResume && !isTestRun && Boolean(schedule);
 
   return (
     <Box

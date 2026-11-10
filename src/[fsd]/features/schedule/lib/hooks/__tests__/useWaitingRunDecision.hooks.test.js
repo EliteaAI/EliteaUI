@@ -76,12 +76,12 @@ describe('useWaitingRunDecision', () => {
     expect(setup().current).toBeTypeOf('function');
   });
 
-  it('gives the user who started a manual run a handler without the admin permission', () => {
+  it('falls back to the starter of a manual run when the run has no decider_id', () => {
     const run = { trigger: 'manual', requested_by: 5 };
     expect(setup({ id: 8, owner: { id: 9 } }, run).current).toBeTypeOf('function');
   });
 
-  it('gives the owner no handler for a manual run another user started', () => {
+  it('falls back to the starter, not the owner, of a manual run another user started when there is no decider_id', () => {
     const run = { trigger: 'manual', requested_by: 9 };
     expect(setup({ id: 8, owner: { id: 5 } }, run).current).toBeUndefined();
   });
@@ -109,15 +109,48 @@ describe('useWaitingRunDecision', () => {
     ).toBeUndefined();
   });
 
-  it('gives a project admin who started a manual run a handler that decides it', async () => {
-    mocks.isProjectAdmin = true;
-    mocks.decide.mockReturnValue(ok());
-    const run = { trigger: 'manual', requested_by: 5 };
-    const result = setup({ id: 8, owner: { id: 9 } }, run);
-    expect(result.current).toBeTypeOf('function');
-    await act(() => result.current({ ...request, action: 'reject' }));
-    expect(mocks.decide).toHaveBeenCalledWith(expect.objectContaining({ action: 'reject' }));
-    expect(mocks.refetch).toHaveBeenCalledTimes(1);
+  describe('decider_id of the run', () => {
+    it("gives the owner a handler for an admin's Run now run", () => {
+      const run = { trigger: 'manual', requested_by: 9, decider_id: 5 };
+      expect(setup({ id: 8, owner: { id: 5 } }, run).current).toBeTypeOf('function');
+    });
+
+    it('gives the admin who started a Run now run no handler', () => {
+      mocks.isProjectAdmin = true;
+      const run = { trigger: 'manual', requested_by: 5, decider_id: 9 };
+      expect(setup({ id: 8, owner: { id: 9 } }, run).current).toBeUndefined();
+    });
+
+    it('gives the old owner a handler and the new owner none after Change owner', () => {
+      const run = { trigger: 'cron', requested_by: null, decider_id: 5 };
+      const schedule = { id: 8, owner: { id: 9 } };
+      expect(setup(schedule, run).current).toBeTypeOf('function');
+      mocks.user = { id: 9 };
+      expect(setup(schedule, run).current).toBeUndefined();
+    });
+
+    it('lets the old owner decide a run through the schedule route', async () => {
+      mocks.decideWithoutChat.mockReturnValue(ok());
+      const run = { trigger: 'cron', requested_by: null, decider_id: 5 };
+      const result = setup({ id: 8, owner: { id: 9 } }, run);
+      await act(() => result.current({ action: 'reject', runId: 41 }));
+      expect(mocks.decideWithoutChat).toHaveBeenCalledWith(
+        expect.objectContaining({ scheduleId: 8, runId: 41, action: 'reject' }),
+      );
+      expect(mocks.refetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('uses decider_id before the starter of a Test run', () => {
+      const run = (requestedBy, deciderId) =>
+        renderHook(() =>
+          useWaitingRunDecision({
+            run: { isDraftRun: true, requested_by: requestedBy, decider_id: deciderId },
+            onDecided: mocks.refetch,
+          }),
+        ).result;
+      expect(run(9, 5).current).toBeTypeOf('function');
+      expect(run(5, 9).current).toBeUndefined();
+    });
   });
 
   it('gives no handler when neither the actor nor the user is known', () => {

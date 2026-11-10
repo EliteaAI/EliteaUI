@@ -255,18 +255,32 @@ describe('ScheduleWaitingCard', () => {
     expect(screen.getByText('Only the owner can approve or reject this run.')).toBeInTheDocument();
   });
 
-  it('lets an admin approve their own Run now once the credential is found', () => {
+  it('keeps both buttons off for the admin who started the Run now, also when the credential is found', () => {
     mocks.userId = 77;
+    mocks.isOwner = false;
     mocks.check = { state: 'ready', recheck: vi.fn() };
-    mocks.detail = { ...mocks.detail, trigger: 'manual', requested_by: 77 };
+    mocks.detail = { ...mocks.detail, trigger: 'manual', requested_by: 77, decider_id: 1 };
     renderCard();
 
-    expect(button('Approve')).toBeEnabled();
+    expect(button('Approve')).toBeDisabled();
+    expect(button('Reject')).toBeDisabled();
   });
 
-  it('asks an admin for their own credential when the Run now is theirs', () => {
+  it("names the schedule owner, not the admin, for the credential of the admin's Run now", () => {
     mocks.userId = 77;
-    mocks.detail = { ...mocks.detail, trigger: 'manual', requested_by: 77 };
+    mocks.isOwner = false;
+    mocks.detail = { ...mocks.detail, trigger: 'manual', requested_by: 77, decider_id: 1 };
+    renderCard();
+
+    expect(button('Approve')).toBeDisabled();
+    expect(
+      screen.getByText(/The schedule owner must provide the credential, then approve\./),
+    ).toBeInTheDocument();
+  });
+
+  it("asks the owner for the credential of an admin's Run now run", () => {
+    mocks.userId = 1;
+    mocks.detail = { ...mocks.detail, trigger: 'manual', requested_by: 77, decider_id: 1 };
     renderCard();
 
     expect(button('Approve')).toBeDisabled();
@@ -274,7 +288,18 @@ describe('ScheduleWaitingCard', () => {
     expect(screen.getByText(/Provide the credential, then approve\./)).toBeInTheDocument();
   });
 
-  it('names the starter, not the owner, when another user started the Run now', () => {
+  it('names the old owner as the actor of a run after Change owner', () => {
+    mocks.userId = 2;
+    mocks.isOwner = false;
+    mocks.detail = { ...mocks.detail, trigger: 'cron', requested_by: null, decider_id: 1 };
+    renderCard({ schedule: { ...schedule, owner: { id: 2 } } });
+
+    expect(
+      screen.getByText(/The schedule owner must provide the credential, then approve\./),
+    ).toBeInTheDocument();
+  });
+
+  it('names the starter when an older server sends no decider_id for a Run now', () => {
     mocks.userId = 1;
     mocks.detail = { ...mocks.detail, trigger: 'manual', requested_by: 77 };
     renderCard();
@@ -282,6 +307,25 @@ describe('ScheduleWaitingCard', () => {
     expect(button('Approve')).toBeDisabled();
     expect(
       screen.getByText('The user who started this run must provide the credential first'),
+    ).toBeInTheDocument();
+  });
+
+  it('keeps the isDraftRun mark of the row when the detail has none', () => {
+    mocks.userId = 77;
+    mocks.isOwner = false;
+    mocks.detail = { ...mocks.detail, trigger: 'test', requested_by: 5, decider_id: 5 };
+    renderCard({
+      schedule: undefined,
+      run: { ...run, isDraftRun: true },
+      entityType: 'agent',
+      applicationId: 3,
+    });
+
+    expect(
+      screen.getByText(/The user who started this run must provide the credential, then approve\./),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Only the user who started this Test run can approve or reject it'),
     ).toBeInTheDocument();
   });
 

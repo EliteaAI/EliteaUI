@@ -20,9 +20,9 @@ import {
   formatTool,
   getPausedMoreCount,
   getPausedTools,
-  getRunActorId,
+  getRunDeciderId,
   getWaitingRunNeed,
-  isStartedByUser,
+  isDeciderStarter,
 } from '../lib/helpers';
 import { useActionButtonProps } from '../lib/hooks/useActionButtonProps.hooks';
 import { useNow } from '../lib/hooks/useNow.hooks';
@@ -37,7 +37,7 @@ import ScheduleWaitingTools from './ScheduleWaitingTools';
 const noop = () => {};
 const STEP2_NOTE = 'Reject ends the run as Failed.';
 const BLOCKED_REASON = 'Provide the credential first';
-// Only the user the run acts as decides it, and the sign-in and the credential are theirs too
+// Only the user named as decider decides the run, and the sign-in and the credential are theirs too
 const ACTOR_LABEL = { owner: 'schedule owner', starter: 'user who started this run' };
 const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' };
 const ENTITY_LABELS = { agent: 'agent', pipeline: 'pipeline' };
@@ -75,7 +75,11 @@ const ScheduleWaitingCard = memo(
     const now = useNow();
     const statusId = useId();
     const { run: detail } = useRunDetail(schedule?.id, applicationId, run);
-    const shownRun = detail ?? run;
+    // The detail comes from the API and lacks the `isDraftRun` mark of the list row
+    const shownRun = useMemo(
+      () => (detail ? { ...detail, ...(run.isDraftRun && { isDraftRun: true }) } : run),
+      [detail, run],
+    );
     // A Test run has no schedule row: the entity comes from the page and the version from the run
     const target = useMemo(
       () =>
@@ -99,10 +103,9 @@ const ScheduleWaitingCard = memo(
     const mayAskTools = waiting.mayAsk ?? [];
     const { authAction } = conversation;
     // The credential check and the sign-in tokens come from the user the run acts as
-    const actsAsStarter = isStartedByUser(shownRun);
-    const actorId = getRunActorId(shownRun, schedule);
+    const actorId = getRunDeciderId(shownRun, schedule);
     const isOtherActor = actorId != null && actorId !== userId;
-    const actorLabel = ACTOR_LABEL[actsAsStarter ? 'starter' : 'owner'];
+    const actorLabel = ACTOR_LABEL[isDeciderStarter(shownRun) ? 'starter' : 'owner'];
 
     const {
       state: credentialState,

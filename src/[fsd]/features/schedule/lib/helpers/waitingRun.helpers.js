@@ -106,7 +106,7 @@ export const hasMissingCredential = (result, toolkit) => !!findMissingCredential
 
 export const findWaitingRun = runs => (runs ?? []).find(run => run.status === 'waiting_for_approval');
 
-// The server runs a manual or Test run as the user who started it, any other run as the schedule owner
+// Before the server sent `decider_id`, the run acted as the starter of a manual or Test run, else the schedule owner
 const MANUAL_TRIGGERS = ['manual', 'test'];
 
 export const isStartedByUser = run => MANUAL_TRIGGERS.includes(run?.trigger) && run?.requested_by != null;
@@ -114,8 +114,23 @@ export const isStartedByUser = run => MANUAL_TRIGGERS.includes(run?.trigger) && 
 export const getRunActorId = (run, schedule) =>
   isStartedByUser(run) ? run.requested_by : schedule?.owner?.id;
 
+/**
+ * The user who may approve, reject or answer a sign-in of a waiting run: `decider_id` of the run detail. For a run
+ * of a schedule or webhook it is the owner at the start of the run, also when an admin started it; for a Test run
+ * it is the starter. A run detail without the field (an older server) falls back to the earlier rule.
+ */
+export const getRunDeciderId = (run, schedule) => {
+  if (run?.decider_id != null) return run.decider_id;
+  if (run?.isDraftRun) return run.requested_by;
+  return schedule ? getRunActorId(run, schedule) : undefined;
+};
+
+// True when the decider is the user who started the run, not a schedule owner
+export const isDeciderStarter = run =>
+  Boolean(run?.isDraftRun) || (run?.decider_id == null && isStartedByUser(run));
+
 export const OWNER_ONLY_NOTE = 'Only the owner can approve or reject this run.';
-export const STARTER_ONLY_NOTE = 'Only the user who started this run can approve or reject it';
+export const TEST_RUN_ONLY_NOTE = 'Only the user who started this Test run can approve or reject it';
 
 // What a viewer who may not decide can do instead, in the order of the note. The server's `allowed_actions`
 // decides: a member without rights gets none. Pause and Resume follow the state of the schedule.

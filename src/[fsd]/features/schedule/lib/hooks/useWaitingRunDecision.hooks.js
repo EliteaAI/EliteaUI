@@ -11,12 +11,11 @@ import { McpAuthHelpers } from '@/[fsd]/features/mcp';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { buildErrorMessage } from '@/common/utils';
 
-import { getRunActorId } from '../helpers/waitingRun.helpers';
+import { getRunDeciderId } from '../helpers/waitingRun.helpers';
 
-// Approve or reject of a waiting schedule run by the user the run acts as: the starter of a manual or Test run,
-// else the schedule owner. A project admin who is not that user decides nothing, because the run uses the
-// credentials of the user it acts as. Returns undefined for any other user, so the run detail shows the buttons
-// disabled. The server still checks the caller. This hook sends only approve, reject and the sign-in answers,
+// Approve or reject of a waiting run by the user the server names in `decider_id`: the schedule owner at the
+// start of a schedule or webhook run (also when an admin started it), the starter of a Test run. Any other user,
+// an admin included, gets undefined, so the run detail shows the buttons disabled. The server still checks the caller. This hook sends only approve, reject and the sign-in answers,
 // never text.
 // A run without a chat (`conversationUuid` empty) is decided through the schedule route with `runId`.
 // `authRequest` (from the sign-in pause) switches the call to the mcp_auth resume. It sends every stored token,
@@ -82,8 +81,7 @@ export const useWaitingRunDecision = ({ schedule, run, onDecided }) => {
     ],
   );
 
-  // The schedule route needs a schedule, so a run without one (a Test run) is decided by its starter only
-  const actorId = isTestRun ? run?.requested_by : schedule && getRunActorId(run, schedule);
-  const mayDecide = actorId != null && actorId === userId;
+  const deciderId = getRunDeciderId(run, schedule);
+  const mayDecide = deciderId != null && deciderId === userId;
   return mayDecide ? onHitlResume : undefined;
 };

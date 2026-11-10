@@ -233,14 +233,42 @@ describe('ScheduleRunApproval', () => {
       expect(button('Start a new run as yourself')).toBeDisabled();
     });
 
-    it('names the starter and offers no action for a run the starter acts as', () => {
-      renderApproval({ schedule: adminSchedule, run: { id: 5, trigger: 'manual', requested_by: 8 } });
+    it("shows the owner note and the three actions on an admin's Run now run", () => {
+      const adminRun = { id: 5, trigger: 'manual', requested_by: 8, decider_id: 1 };
+      renderApproval({ schedule: adminSchedule, run: adminRun });
 
       expect(
-        screen.getByText('Only the user who started this run can approve or reject it'),
+        screen.getByText(
+          'Only the owner can approve or reject this run. You can pause the schedule, change its owner, or start a new run as yourself.',
+        ),
       ).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /Pause|Change owner|Start a new run/ })).toBeNull();
+      expect(screen.queryByText(/user who started this run/)).not.toBeInTheDocument();
+      expect(button('Pause schedule')).toBeEnabled();
+      expect(button('Change owner')).toBeEnabled();
+      expect(button('Start a new run as yourself')).toBeEnabled();
+      expect(button('Approve')).toBeDisabled();
+      expect(button('Reject')).toBeDisabled();
     });
+
+    it('shows the same note and actions to the new owner of a run the old owner holds', () => {
+      const handedOver = { id: 5, trigger: 'cron', requested_by: null, decider_id: 4 };
+      renderApproval({ schedule: { ...adminSchedule, owner: { id: 1 } }, run: handedOver });
+
+      expect(screen.getByText(/^Only the owner can approve or reject this run\./)).toBeInTheDocument();
+      expect(button('Change owner')).toBeEnabled();
+      expect(button('Approve')).toBeDisabled();
+    });
+  });
+
+  it("enables both buttons for the owner on an admin's Run now run and shows no note", () => {
+    mocks.isOwner = true;
+    renderApproval({ run: { id: 5, trigger: 'manual', requested_by: 8, decider_id: 1 } });
+
+    expect(button('Approve')).toBeEnabled();
+    expect(button('Reject')).toBeEnabled();
+    expect(mocks.hookArgs.run).toEqual(expect.objectContaining({ decider_id: 1, requested_by: 8 }));
+    expect(screen.queryByText(/Only the owner can approve or reject this run/)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('schedule-run-approval-actions')).not.toBeInTheDocument();
   });
 
   it('says only the starter decides a Test run and offers no action', () => {
