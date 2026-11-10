@@ -80,7 +80,7 @@ const EditSkill = memo(() => {
     closeTestPanel();
   }, [closeTestPanel]);
 
-  const { goToRunHistory } = useRunHistoryNavigation({
+  const { goToRunHistory, runHistoryPath } = useRunHistoryNavigation({
     entityId: skillId,
     historyRoute: RouteDefinitions.SkillRunHistory,
     entityParam: 'skillId',
@@ -333,6 +333,7 @@ const EditSkill = memo(() => {
                   onSuccess={handleSuccess}
                   onOpenCompare={() => setCompareVersionsOpen(true)}
                   onShowHistory={goToRunHistory}
+                  historyPath={runHistoryPath}
                 />
               ),
               content: isLoadingForm ? (

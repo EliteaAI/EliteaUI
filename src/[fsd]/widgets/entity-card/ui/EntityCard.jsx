@@ -1,5 +1,7 @@
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
+import { useNavigate } from 'react-router-dom';
+
 import { Box, CardContent, Divider, Card as MuiCard, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
@@ -8,13 +10,13 @@ import { LikeButton, useApplicationLike } from '@/[fsd]/entities/like';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import {
-  useCardNavigate,
+  useCardLink,
   useCardResize,
   useDataViewMode,
   useIsFrom,
   useSelectedProjectId,
 } from '@/[fsd]/shared/lib/hooks';
-import { Button } from '@/[fsd]/shared/ui';
+import { AppLink, Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { PinButton } from '@/[fsd]/widgets/pin-toggler/ui';
@@ -104,7 +106,8 @@ const EntityCard = memo(props => {
     [supportAssistantConfig, id, projectId, type],
   );
 
-  const doNavigate = useCardNavigate({ viewMode, id, type, name });
+  const navigate = useNavigate();
+  const cardLink = useCardLink({ viewMode, id, type, name });
 
   const handleMouseEnter = useCallback(() => {
     setIsCardHovered(true);
@@ -135,8 +138,8 @@ const EntityCard = memo(props => {
       return;
     }
 
-    doNavigate();
-  }, [data, disableCardClick, doNavigate, onCardClick]);
+    navigate(cardLink.to, { replace: cardLink.replace, state: cardLink.state });
+  }, [cardLink, data, disableCardClick, navigate, onCardClick]);
 
   // Monitor MCP token changes for both remote and pre-built MCP toolkits
   // For remote MCPs, use serverUrl; for pre-built MCPs, use toolkitType
@@ -155,6 +158,9 @@ const EntityCard = memo(props => {
   const hasCardDetails = Boolean(cardDetails);
   const showCardBottom = !hideCardBottom;
   const isWholeCardClickable = hasCardDetails && Boolean(onCardClick) && !disableCardClick;
+  // A card that plainly navigates is a real link (so the browser can open it in a new tab);
+  // cards that select / pick something via onCardClick keep the click handler
+  const isLinkCard = !onCardClick && !disableCardClick && Boolean(cardLink.to.pathname);
   const isClickable = !disableCardClick;
   const hasIndexes = isToolkitCard(type) && typeof data.indexes_count === 'number';
   const styles = entityCardStyles(
@@ -186,7 +192,7 @@ const EntityCard = memo(props => {
         <CardContent sx={styles.cardContent}>
           <Box
             sx={styles.cardTopSection}
-            onClick={isWholeCardClickable || disableCardClick ? undefined : handleCardClick}
+            onClick={isWholeCardClickable || disableCardClick || isLinkCard ? undefined : handleCardClick}
           >
             <EntityIcon
               data-testid="entity-card-icon"
@@ -220,10 +226,11 @@ const EntityCard = memo(props => {
             >
               <Box sx={styles.cardTitleWrapper}>
                 <Typography
+                  {...(isLinkCard ? { component: AppLink, ...cardLink } : {})}
                   ref={cardTitleRef}
                   color="text.secondary"
                   variant="headingSmall"
-                  sx={styles.cardTitle}
+                  sx={isLinkCard ? [styles.cardTitle, styles.stretchedLink] : styles.cardTitle}
                   data-testid="entity-card-name"
                 >
                   <HighlightQuery
@@ -440,12 +447,15 @@ const entityCardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, 
     height: '100%',
   },
   topRightSection: {
+    position: 'relative',
+    zIndex: 1,
     display: 'flex',
     gap: '0.125rem',
     alignItems: 'center',
     flexShrink: 0,
   },
   cardTopSection: {
+    position: 'relative',
     maxHeight: hasCardDetails ? '3.75rem' : '4.5rem',
     height: hasCardDetails ? '3.75rem' : '4.5rem',
     cursor: isClickable ? 'pointer' : 'default',
@@ -464,6 +474,15 @@ const entityCardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, 
     flex: 1,
     minWidth: 0,
     overflow: 'hidden',
+  },
+  // Stretched link: the title anchor's overlay covers the top section, so the whole area opens the entity
+  // while right-click / Ctrl+Click / middle-click act on a real link
+  stretchedLink: {
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      inset: 0,
+    },
   },
   cardTitle: {
     maxHeight: hasIndexes ? '1.5rem' : '3rem',
