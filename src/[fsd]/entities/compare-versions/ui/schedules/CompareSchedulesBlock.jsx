@@ -14,6 +14,8 @@ import CompareLegacyScheduleCard from './CompareLegacyScheduleCard';
 import CompareScheduleCard from './CompareScheduleCard';
 
 const SIDES = ['left', 'right'];
+// Placeholder cards shown in each column while the first schedules load, as in the editor's Schedules section
+const SKELETON_CARDS = [0, 1];
 
 // Each column lists its version's cron schedules by name, 20 at a time
 const SCHEDULE_LIST_OPTIONS = { triggerKind: TRIGGER_KIND.cron, sortBy: 'name', sortOrder: 'asc' };
@@ -69,6 +71,7 @@ const CompareSchedulesBlock = memo(props => {
   const legacyTriggers = { left: leftData?.legacy_trigger, right: rightData?.legacy_trigger };
   const isError = left.isError || right.isError;
   // useEntitySchedules keeps the shown rows while a bigger page loads; only the first load has no rows yet
+  const isRetrying = isError && (left.isFetching || right.isFetching);
   const isLoading =
     (left.isFetching && !left.total && !left.rows.length) ||
     (right.isFetching && !right.total && !right.rows.length);
@@ -133,6 +136,7 @@ const CompareSchedulesBlock = memo(props => {
           <BaseBtn
             variant={BUTTON_VARIANTS.secondary}
             size="small"
+            loading={state.isFetching}
             disabled={state.isFetching}
             onClick={state.loadMore}
             sx={styles.showMore}
@@ -171,6 +175,8 @@ const CompareSchedulesBlock = memo(props => {
           <BaseBtn
             variant={BUTTON_VARIANTS.secondary}
             size="small"
+            loading={isRetrying}
+            disabled={isRetrying}
             onClick={handleRetry}
             data-testid="compare-schedules-retry"
           >
@@ -179,16 +185,25 @@ const CompareSchedulesBlock = memo(props => {
         </Box>
       )}
       {!isError && isLoading && (
-        <Box sx={styles.columns}>
+        <Box
+          sx={styles.columns}
+          role="status"
+          aria-label="Loading schedules"
+          data-testid="compare-schedules-loading"
+        >
           {SIDES.map(side => (
             <Box
               key={side}
               sx={styles.column}
             >
-              <Skeleton
-                variant="rounded"
-                height="6rem"
-              />
+              {SKELETON_CARDS.map(key => (
+                <Skeleton
+                  key={key}
+                  variant="rounded"
+                  sx={styles.skeleton}
+                  data-testid={`compare-schedules-skeleton-${side}`}
+                />
+              ))}
             </Box>
           ))}
         </Box>
@@ -258,6 +273,10 @@ const compareSchedulesBlockStyles = () => ({
   }),
   showMore: {
     alignSelf: 'flex-start',
+  },
+  skeleton: {
+    height: '12rem',
+    borderRadius: '0.5rem',
   },
 });
 

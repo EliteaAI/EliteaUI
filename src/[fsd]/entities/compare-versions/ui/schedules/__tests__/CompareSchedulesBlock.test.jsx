@@ -7,11 +7,13 @@ import darkPalette from '@/darkPalette';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
-const { lists, details } = vi.hoisted(() => ({
+const { lists, details, view } = vi.hoisted(() => ({
   // version id → the list query result
   lists: { current: {} },
   // schedule id → approval rule
   details: { current: {} },
+  // Whether the cards have been on screen, and which schedule details were asked for
+  view: { visible: true, requested: [] },
 }));
 
 vi.mock('react-redux', () => ({ useSelector: selector => selector({ user: { id: 1 } }) }));
@@ -19,7 +21,16 @@ vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelecte
 vi.mock('@/[fsd]/entities/schedule/api/scheduleApi.js', () => ({
   // Only the first page: no test lists more than 100 schedules
   useGetScheduleListQuery: (args, { skip }) => (skip || args.page ? {} : lists.current[args.versionId]),
-  useGetScheduleQuery: ({ scheduleId }) => ({ data: { approval_rule: details.current[scheduleId] } }),
+  // A skipped query answers nothing and sends no request, as RTK Query does
+  useGetScheduleQuery: ({ scheduleId }, { skip }) => {
+    if (skip) return {};
+    view.requested.push(scheduleId);
+    if (details.current[scheduleId] === 'error') return { isError: true };
+    return { data: details.current[scheduleId] ? { approval_rule: details.current[scheduleId] } : undefined };
+  },
+}));
+vi.mock('@/[fsd]/shared/lib/hooks/useInViewOnce.hooks', () => ({
+  useInViewOnce: () => ({ ref: { current: null }, hasBeenVisible: view.visible }),
 }));
 vi.mock('@/[fsd]/shared/lib/helpers', () => ({
   ScheduleHelpers: {
@@ -72,6 +83,8 @@ const renderBlock = props =>
 
 describe('CompareSchedulesBlock', () => {
   beforeEach(() => {
+    view.visible = true;
+    view.requested = [];
     details.current = {};
     lists.current = { 1: listOf([]), 2: listOf([]) };
   });
@@ -171,5 +184,56 @@ describe('CompareSchedulesBlock', () => {
     fireEvent.click(screen.getByTestId('compare-schedule-open-left-10'));
     // The schedule's own version goes with it, as in the editor's Schedules section
     expect(onOpenSchedule).toHaveBeenCalledWith(10, 1);
+  });
+
+  it('asks for the approval rule of a schedule only once its card is on screen', () => {
+    lists.current = { 1: listOf([row(10, 'A'), row(11, 'B')]), 2: listOf([]) };
+    view.visible = false;
+    renderBlock();
+    expect(view.requested).toEqual([]);
+    expect(screen.getByTestId('compare-schedule-left-10-approval_rule-loading')).toBeInTheDocument();
+    cleanup();
+
+    view.visible = true;
+    details.current = { 10: 'run_without_asking' };
+    renderBlock();
+    expect([...new Set(view.requested)].sort()).toEqual([10, 11]);
+    expect(screen.getByTestId('compare-schedule-left-10-approval_rule')).toHaveTextContent(
+      'Run without asking',
+    );
+  });
+
+  it('shows placeholder cards in both columns while the first schedules load', () => {
+    lists.current = { 1: listOf([], { isFetching: true, data: undefined }), 2: listOf([]) };
+    renderBlock();
+    expect(screen.getByRole('status', { name: 'Loading schedules' })).toBeInTheDocument();
+    expect(screen.getAllByTestId('compare-schedules-skeleton-left')).toHaveLength(2);
+    expect(screen.getAllByTestId('compare-schedules-skeleton-right')).toHaveLength(2);
+    expect(screen.queryByTestId('compare-schedules-empty-left')).not.toBeInTheDocument();
+  });
+
+  it('keeps the shown cards and busies Show more while the next schedules load', () => {
+    lists.current = {
+      1: listOf([row(10, 'A')], { isFetching: true, data: { rows: [row(10, 'A')], total: 25 } }),
+      2: listOf([]),
+    };
+    renderBlock();
+    expect(screen.getByTestId('compare-schedule-left-10')).toBeInTheDocument();
+    expect(screen.queryByTestId('compare-schedules-loading')).not.toBeInTheDocument();
+    expect(screen.getByTestId('compare-schedules-show-more-left')).toBeDisabled();
+  });
+
+  it('busies Retry while the schedules load again', () => {
+    lists.current = { 1: listOf([], { isError: true, isFetching: true }), 2: listOf([]) };
+    renderBlock();
+    expect(screen.getByTestId('compare-schedules-retry')).toBeDisabled();
+  });
+
+  it('shows a dash when the approval rule of a schedule fails to load', () => {
+    details.current = { 10: 'error' };
+    lists.current = { 1: listOf([row(10, 'Report')]), 2: listOf([]) };
+    renderBlock();
+    expect(screen.getByTestId('compare-schedule-left-10-approval_rule')).toHaveTextContent('—');
+    expect(screen.queryByTestId('compare-schedule-left-10-approval_rule-loading')).not.toBeInTheDocument();
   });
 });

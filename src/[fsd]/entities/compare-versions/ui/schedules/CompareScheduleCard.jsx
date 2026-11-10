@@ -1,10 +1,11 @@
 import { memo, useCallback, useEffect } from 'react';
 
-import { Box, Link, Typography } from '@mui/material';
+import { Box, Link, Skeleton, Typography } from '@mui/material';
 
 import { formatRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers/runHistory.helpers';
 import { useGetScheduleQuery } from '@/[fsd]/entities/schedule/api/scheduleApi.js';
 import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useInViewOnce } from '@/[fsd]/shared/lib/hooks/useInViewOnce.hooks';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks/useSelectedProject.hooks';
 
 import {
@@ -20,11 +21,12 @@ const NEXT_RUN_FORMAT = 'dd.MM.yyyy HH:mm';
 const CompareScheduleCard = memo(props => {
   const { row, side, changedFields, isUnpaired, currentUserId, onOpenSchedule, onApprovalRuleLoaded } = props;
   const projectId = useSelectedProjectId();
-
-  // The list rows have no approval rule; the details of the schedule carry it
-  const { data: details } = useGetScheduleQuery(
+  // The list rows have no approval rule; the details of the schedule carry it. They load only once the
+  // card has been on screen, so a long list asks for the cards the user sees, not for every schedule.
+  const { ref: cardRef, hasBeenVisible } = useInViewOnce();
+  const { data: details, isError: isApprovalError } = useGetScheduleQuery(
     { projectId, scheduleId: row.id },
-    { skip: !projectId || !row.id },
+    { skip: !projectId || !row.id || !hasBeenVisible },
   );
   const approvalRule = details?.approval_rule;
 
@@ -51,7 +53,9 @@ const CompareScheduleCard = memo(props => {
     {
       key: 'approval_rule',
       label: 'Approval',
-      value: approvalRule ? getApprovalRuleLabel(approvalRule) : '…',
+      // While the details load, a placeholder of the label's width; if they fail, the rule stays unknown
+      value: approvalRule ? getApprovalRuleLabel(approvalRule) : isApprovalError ? '—' : null,
+      isLoading: !approvalRule && !isApprovalError,
     },
     { key: 'owner_id', label: 'Owner', value: getOwnerLabel(row.owner, currentUserId) },
     {
@@ -65,6 +69,7 @@ const CompareScheduleCard = memo(props => {
 
   return (
     <Box
+      ref={cardRef}
       role="group"
       aria-label={row.name}
       sx={styles.card}
@@ -102,12 +107,21 @@ const CompareScheduleCard = memo(props => {
             {field.label}
           </Typography>
           <Box sx={styles.valueBox}>
-            <Typography
-              variant="bodySmall"
-              sx={styles.value}
-            >
-              {field.value}
-            </Typography>
+            {field.isLoading ? (
+              <Skeleton
+                variant="text"
+                sx={styles.valueSkeleton}
+                aria-label={`Loading ${field.label.toLowerCase()}`}
+                data-testid={`compare-schedule-${side}-${row.id}-${field.key}-loading`}
+              />
+            ) : (
+              <Typography
+                variant="bodySmall"
+                sx={styles.value}
+              >
+                {field.value}
+              </Typography>
+            )}
             {field.hint && (
               <Typography
                 variant="bodySmall2"
@@ -173,6 +187,9 @@ const compareScheduleCardStyles = isUnpaired => ({
     color: palette.text.secondary,
     textAlign: 'right',
   }),
+  valueSkeleton: {
+    width: '7rem',
+  },
   hint: ({ palette }) => ({
     color: palette.text.primary,
   }),

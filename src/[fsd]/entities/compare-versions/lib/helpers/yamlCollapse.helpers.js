@@ -37,12 +37,9 @@ export const getCollapsedLineRanges = (doc, chunks) => {
       if (toLine >= fromLine) ranges.push({ fromLine, toLine });
     }
     if (isFileEnd) break;
-    // `to` is one past the last changed line, so the line at it is the first unchanged one
-    const after = Math.min(chunk.to, doc.length);
-    nextLine =
-      chunk.to > chunk.from && chunk.to <= doc.length
-        ? doc.lineAt(after).number
-        : doc.lineAt(after).number + 1;
+    // A chunk's `to` is the start of its first unchanged line, also when this side of the change is empty
+    // (only lines added or only lines removed); past the end of the file nothing unchanged follows
+    nextLine = chunk.to > doc.length ? doc.lines + 1 : doc.lineAt(chunk.to).number;
   }
   return ranges;
 };
