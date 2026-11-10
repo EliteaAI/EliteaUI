@@ -17,6 +17,7 @@ const api = vi.hoisted(() => ({
   update: vi.fn(),
   refresh: vi.fn(),
   permitted: true,
+  canManageSettings: true,
   toastError: vi.fn(),
 }));
 vi.mock('@/api/configurations', async importOriginal => ({
@@ -33,7 +34,7 @@ vi.mock('@/[fsd]/features/settings/api', () => ({
 }));
 vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));
 vi.mock('@/[fsd]/features/settings/lib/hooks/useCanManageProjectSettings.hooks', () => ({
-  useCanManageProjectSettings: () => ({ canManageSettings: api.permitted, isLoading: false }),
+  useCanManageProjectSettings: () => ({ canManageSettings: api.canManageSettings, isLoading: false }),
 }));
 vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => api.permitted }) }));
 vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
@@ -56,6 +57,7 @@ beforeEach(() => {
   api.current = undefined;
   api.platform = { available: true };
   api.permitted = true;
+  api.canManageSettings = true;
   api.refresh.mockReturnValue(undefined);
   api.create.mockReturnValue({ unwrap: () => Promise.resolve() });
   api.update.mockReturnValue({ unwrap: () => Promise.resolve() });
@@ -157,6 +159,11 @@ describe('project skills in chat setting', () => {
 
   it('is locked without update permission', () => {
     api.permitted = false;
+    renderSettings();
+    expect(projectSetting()).toBeDisabled();
+  });
+  it('is locked for a team-project editor who is not a project admin', () => {
+    api.canManageSettings = false;
     renderSettings();
     expect(projectSetting()).toBeDisabled();
   });

@@ -1,11 +1,14 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import BaseEditor from '@/[fsd]/features/chat/ui/editors/BaseEditor';
+import { useCanManageProjectSettings } from '@/[fsd]/features/settings/lib/hooks';
 import { ProjectContextEditor as ProjectContextEditorFeature } from '@/[fsd]/features/settings/ui/project-context';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useProjectContextQuery } from '@/api/projectContext';
+import { PERMISSIONS } from '@/common/constants';
+import useCheckPermission from '@/hooks/useCheckPermission';
 
 const ProjectContextEditor = memo(props => {
   const { onCloseProjectContextEditor, isVisible, onDirtyStateChange, disableNavBlocking = false } = props;
@@ -14,6 +17,9 @@ const ProjectContextEditor = memo(props => {
     skip: !projectId,
     refetchOnMountOrArgChange: true,
   });
+  const { checkPermission } = useCheckPermission();
+  const { canManageSettings } = useCanManageProjectSettings();
+  const canEdit = checkPermission(PERMISSIONS.projectContext.edit) && canManageSettings;
   const [isDirty, setIsDirty] = useState(false);
   const saveRef = useRef(null);
   const discardRef = useRef(null);
@@ -58,7 +64,7 @@ const ProjectContextEditor = memo(props => {
       <ProjectContextEditorFeature
         serverData={serverData}
         projectId={projectId}
-        canEdit
+        canEdit={canEdit}
         inlineMode
         onDirtyChange={setIsDirty}
         saveRef={saveRef}
