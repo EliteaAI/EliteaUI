@@ -18,11 +18,11 @@ import {
   WAITING_NEED,
   formatApprovalExpiry,
   formatTool,
+  getCredentialOwnerId,
   getPausedMoreCount,
   getPausedTools,
-  getRunDeciderId,
   getWaitingRunNeed,
-  isDeciderStarter,
+  isStartedByUser,
 } from '../lib/helpers';
 import { useActionButtonProps } from '../lib/hooks/useActionButtonProps.hooks';
 import { useNow } from '../lib/hooks/useNow.hooks';
@@ -37,7 +37,7 @@ import ScheduleWaitingTools from './ScheduleWaitingTools';
 const noop = () => {};
 const STEP2_NOTE = 'Reject ends the run as Failed.';
 const BLOCKED_REASON = 'Provide the credential first';
-// Only the user named as decider decides the run, and the sign-in and the credential are theirs too
+// The credential and the sign-in belong to the user the run acts as; only the decider presses Approve and Reject
 const ACTOR_LABEL = { owner: 'schedule owner', starter: 'user who started this run' };
 const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' };
 const ENTITY_LABELS = { agent: 'agent', pipeline: 'pipeline' };
@@ -103,9 +103,9 @@ const ScheduleWaitingCard = memo(
     const mayAskTools = waiting.mayAsk ?? [];
     const { authAction } = conversation;
     // The credential check and the sign-in tokens come from the user the run acts as
-    const actorId = getRunDeciderId(shownRun, schedule);
+    const actorId = getCredentialOwnerId(shownRun, schedule);
     const isOtherActor = actorId != null && actorId !== userId;
-    const actorLabel = ACTOR_LABEL[isDeciderStarter(shownRun) ? 'starter' : 'owner'];
+    const actorLabel = ACTOR_LABEL[isStartedByUser(shownRun) ? 'starter' : 'owner'];
 
     const {
       state: credentialState,

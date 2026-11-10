@@ -118,8 +118,17 @@ export const getRunDeciderId = (run, schedule) => {
   return schedule?.owner?.id;
 };
 
-// True when the decider is the user who started the run (a Test run), not a schedule owner
-export const isDeciderStarter = run => Boolean(run?.isDraftRun);
+const MANUAL_TRIGGERS = ['manual', 'test'];
+
+// A manual run or a Test run acts with the credentials of the user who started it
+export const isStartedByUser = run => Boolean(run?.isDraftRun) || MANUAL_TRIGGERS.includes(run?.trigger);
+
+/**
+ * The user whose credentials and sign-in the run needs: the starter of a manual or Test run, else the decider. It
+ * differs from the decider for an admin's Run now run: the admin's credentials, the owner's decision.
+ */
+export const getCredentialOwnerId = (run, schedule) =>
+  isStartedByUser(run) && run?.requested_by != null ? run.requested_by : getRunDeciderId(run, schedule);
 
 export const OWNER_ONLY_NOTE = 'Only the owner can approve or reject this run.';
 export const TEST_RUN_ONLY_NOTE = 'Only the user who started this Test run can approve or reject it';

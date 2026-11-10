@@ -4,13 +4,14 @@ import {
   describeRunNoteActions,
   findWaitingRun,
   formatTool,
+  getCredentialOwnerId,
   getPausedMoreCount,
   getPausedTools,
   getRunDeciderId,
   getRunNoteActions,
   getWaitingRunNeed,
   hasMissingCredential,
-  isDeciderStarter,
+  isStartedByUser,
 } from '../waitingRun.helpers';
 
 describe('getWaitingRunNeed', () => {
@@ -239,17 +240,35 @@ describe('getRunDeciderId', () => {
   });
 });
 
-describe('isDeciderStarter', () => {
-  it('is true for a Test run', () => {
-    expect(isDeciderStarter({ isDraftRun: true, decider_id: 9 })).toBe(true);
+describe('isStartedByUser', () => {
+  it.each([{ isDraftRun: true }, { trigger: 'manual' }, { trigger: 'test' }])('is true for %o', run => {
+    expect(isStartedByUser(run)).toBe(true);
   });
 
-  it('is false for a schedule run with decider_id, whoever started it', () => {
-    expect(isDeciderStarter({ trigger: 'manual', requested_by: 9, decider_id: 5 })).toBe(false);
+  it('is false for a cron run and a webhook run', () => {
+    expect(isStartedByUser({ trigger: 'cron' })).toBe(false);
+    expect(isStartedByUser({ trigger: 'webhook' })).toBe(false);
+    expect(isStartedByUser(undefined)).toBe(false);
+  });
+});
+
+describe('getCredentialOwnerId', () => {
+  const schedule = { owner: { id: 5 } };
+
+  it("returns the starter of an admin's Run now run, not the decider", () => {
+    expect(getCredentialOwnerId({ trigger: 'manual', requested_by: 9, decider_id: 5 }, schedule)).toBe(9);
   });
 
-  it('is false for a manual run without decider_id', () => {
-    expect(isDeciderStarter({ trigger: 'manual', requested_by: 9 })).toBe(false);
+  it('returns the starter of a Test run', () => {
+    expect(getCredentialOwnerId({ isDraftRun: true, requested_by: 9, decider_id: 9 }, undefined)).toBe(9);
+  });
+
+  it('returns the decider of a cron run, whoever requested it', () => {
+    expect(getCredentialOwnerId({ trigger: 'cron', requested_by: 9, decider_id: 5 }, schedule)).toBe(5);
+  });
+
+  it('returns the decider of a manual run without a starter', () => {
+    expect(getCredentialOwnerId({ trigger: 'manual', requested_by: null, decider_id: 5 }, schedule)).toBe(5);
   });
 });
 

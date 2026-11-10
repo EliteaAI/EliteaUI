@@ -266,26 +266,54 @@ describe('ScheduleWaitingCard', () => {
     expect(button('Reject')).toBeDisabled();
   });
 
-  it("names the schedule owner, not the admin, for the credential of the admin's Run now", () => {
+  it("asks the admin for their own credential on their Run now, with Approve off for the owner's decision", () => {
     mocks.userId = 77;
     mocks.isOwner = false;
     mocks.detail = { ...mocks.detail, trigger: 'manual', requested_by: 77, decider_id: 1 };
     renderCard();
 
     expect(button('Approve')).toBeDisabled();
-    expect(
-      screen.getByText(/The schedule owner must provide the credential, then approve\./),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Provide the credential, then approve\./)).toBeInTheDocument();
+    expect(screen.queryByText(/must provide the credential/)).not.toBeInTheDocument();
   });
 
-  it("asks the owner for the credential of an admin's Run now run", () => {
+  it("names the admin who started the run, not the owner, for the credential of an admin's Run now", () => {
     mocks.userId = 1;
     mocks.detail = { ...mocks.detail, trigger: 'manual', requested_by: 77, decider_id: 1 };
     renderCard();
 
     expect(button('Approve')).toBeDisabled();
-    expect(screen.getByText('Provide the credential first')).toBeInTheDocument();
-    expect(screen.getByText(/Provide the credential, then approve\./)).toBeInTheDocument();
+    expect(
+      screen.getByText('The user who started this run must provide the credential first'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/The user who started this run must provide the credential, then approve\./),
+    ).toBeInTheDocument();
+  });
+
+  it("counts the admin's own token on a sign-in pause of their Run now, not the owner's", () => {
+    mocks.signedIn = true;
+    mocks.detail = {
+      ...mocks.detail,
+      trigger: 'manual',
+      requested_by: 77,
+      decider_id: 1,
+      events: [paused({ need: 'sign_in', toolkit: 'Jira' })],
+    };
+    mocks.userId = 77;
+    mocks.isOwner = false;
+    mocks.conversation = { authAction: { toolMeta: { server_url: 'https://auth.example' } } };
+    renderCard();
+    expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Done');
+    cleanup();
+
+    mocks.userId = 1;
+    mocks.isOwner = true;
+    renderCard();
+    expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Missing');
+    expect(
+      screen.getByText(/The user who started this run must authorize it, then approve\./),
+    ).toBeInTheDocument();
   });
 
   it('names the old owner as the actor of a run after Change owner', () => {
