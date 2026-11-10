@@ -76,14 +76,14 @@ describe('useWaitingRunDecision', () => {
     expect(setup().current).toBeTypeOf('function');
   });
 
-  it('falls back to the starter of a manual run when the run has no decider_id', () => {
+  it('gives the admin who started a manual run no handler while the run has no decider_id', () => {
     const run = { trigger: 'manual', requested_by: 5 };
-    expect(setup({ id: 8, owner: { id: 9 } }, run).current).toBeTypeOf('function');
+    expect(setup({ id: 8, owner: { id: 9 } }, run).current).toBeUndefined();
   });
 
-  it('falls back to the starter, not the owner, of a manual run another user started when there is no decider_id', () => {
+  it('gives the schedule owner a handler for a manual run another user started while there is no decider_id', () => {
     const run = { trigger: 'manual', requested_by: 9 };
-    expect(setup({ id: 8, owner: { id: 5 } }, run).current).toBeUndefined();
+    expect(setup({ id: 8, owner: { id: 5 } }, run).current).toBeTypeOf('function');
   });
 
   it('gives the owner a handler for a cron run', () => {

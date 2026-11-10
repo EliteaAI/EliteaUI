@@ -6,7 +6,6 @@ import {
   formatTool,
   getPausedMoreCount,
   getPausedTools,
-  getRunActorId,
   getRunDeciderId,
   getRunNoteActions,
   getWaitingRunNeed,
@@ -210,27 +209,6 @@ describe('findWaitingRun', () => {
   });
 });
 
-describe('getRunActorId', () => {
-  const schedule = { owner: { id: 5 } };
-
-  it.each(['manual', 'test'])('returns the starter of a %s run', trigger => {
-    expect(getRunActorId({ trigger, requested_by: 9 }, schedule)).toBe(9);
-  });
-
-  it('returns the schedule owner for a cron run', () => {
-    expect(getRunActorId({ trigger: 'cron', requested_by: 9 }, schedule)).toBe(5);
-  });
-
-  it('returns the schedule owner for a manual run without a starter', () => {
-    expect(getRunActorId({ trigger: 'manual', requested_by: null }, schedule)).toBe(5);
-  });
-
-  it('returns undefined when the run has no starter to use and there is no schedule', () => {
-    expect(getRunActorId({ trigger: 'cron' }, undefined)).toBeUndefined();
-    expect(getRunActorId(undefined, undefined)).toBeUndefined();
-  });
-});
-
 describe('getRunDeciderId', () => {
   const schedule = { owner: { id: 5 } };
 
@@ -246,9 +224,12 @@ describe('getRunDeciderId', () => {
     expect(getRunDeciderId({ isDraftRun: true, requested_by: 9, decider_id: 9 }, undefined)).toBe(9);
   });
 
-  it('falls back to the earlier rule when the run has no decider_id', () => {
-    expect(getRunDeciderId({ trigger: 'manual', requested_by: 9 }, schedule)).toBe(9);
+  it('falls back to the schedule owner, not the starter, for a schedule run without decider_id', () => {
+    expect(getRunDeciderId({ trigger: 'manual', requested_by: 9 }, schedule)).toBe(5);
     expect(getRunDeciderId({ trigger: 'cron' }, schedule)).toBe(5);
+  });
+
+  it('falls back to the starter of a Test run without decider_id', () => {
     expect(getRunDeciderId({ isDraftRun: true, requested_by: 9 }, undefined)).toBe(9);
   });
 
@@ -267,9 +248,8 @@ describe('isDeciderStarter', () => {
     expect(isDeciderStarter({ trigger: 'manual', requested_by: 9, decider_id: 5 })).toBe(false);
   });
 
-  it('is true for a manual run of an older server without decider_id', () => {
-    expect(isDeciderStarter({ trigger: 'manual', requested_by: 9 })).toBe(true);
-    expect(isDeciderStarter({ trigger: 'cron' })).toBe(false);
+  it('is false for a manual run without decider_id', () => {
+    expect(isDeciderStarter({ trigger: 'manual', requested_by: 9 })).toBe(false);
   });
 });
 

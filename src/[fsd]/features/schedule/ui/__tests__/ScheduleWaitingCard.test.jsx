@@ -299,15 +299,14 @@ describe('ScheduleWaitingCard', () => {
     ).toBeInTheDocument();
   });
 
-  it('names the starter when an older server sends no decider_id for a Run now', () => {
-    mocks.userId = 1;
-    mocks.detail = { ...mocks.detail, trigger: 'manual', requested_by: 77 };
-    renderCard();
+  it('keeps both buttons off for the admin who started the Run now before the run detail has loaded', () => {
+    mocks.userId = 77;
+    mocks.isOwner = false;
+    mocks.detail = null;
+    renderCard({ run: { ...run, trigger: 'manual', requested_by: 77 } });
 
     expect(button('Approve')).toBeDisabled();
-    expect(
-      screen.getByText('The user who started this run must provide the credential first'),
-    ).toBeInTheDocument();
+    expect(button('Reject')).toBeDisabled();
   });
 
   it('keeps the isDraftRun mark of the row when the detail has none', () => {
