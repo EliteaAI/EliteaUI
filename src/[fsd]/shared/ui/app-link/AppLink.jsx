@@ -12,14 +12,15 @@ import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
  * - Plain left click: runs `onClick`, then navigates client-side to the clean `to` (no extra params).
  * - Ctrl/Cmd/Shift+Click and middle-click: left to the browser ("Open link in new tab"); `onClick` is
  *   skipped so side effects never run for a tab that does not navigate.
- * - The `href` carries the active `project_id`, because a new tab has no per-tab project of its own.
+ * - The `href` is prefixed with the active project (`/:projectId/...`, handled by ProjectSwitcher), because a
+ *   new tab has no per-tab project of its own.
  * The native context menu is never touched.
  */
 const AppLink = memo(
   forwardRef((props, ref) => {
     const { to, state, replace, onClick, children, sx, ...restProps } = props;
     const projectId = useSelector(reduxState => reduxState.settings?.project?.id);
-    const href = NavigationHelpers.appendProjectParam(useHref(to), projectId);
+    const href = NavigationHelpers.prependProjectSegment(useHref(to), projectId);
     const handleRouterClick = useLinkClickHandler(to, { state, replace });
 
     const handleClick = useCallback(

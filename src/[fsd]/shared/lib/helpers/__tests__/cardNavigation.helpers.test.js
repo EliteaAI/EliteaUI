@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { ContentType } from '@/common/constants';
 
 import { buildCardNavigation } from '../cardNavigation.helpers';
-import { appendProjectParam, isModifiedClick } from '../navigation.helpers';
+import { isModifiedClick, prependProjectSegment } from '../navigation.helpers';
 
 describe('buildCardNavigation', () => {
   const base = { id: 12, tab: 'all', viewMode: 'owner', name: 'My agent' };
@@ -68,22 +68,31 @@ describe('isModifiedClick', () => {
   });
 });
 
-describe('appendProjectParam', () => {
-  it('adds the project to a path with and without a query', () => {
-    expect(appendProjectParam('/agents/all/7', 5)).toBe('/agents/all/7?project_id=5');
-    expect(appendProjectParam('/agents/all/7?viewMode=owner', 5)).toBe(
-      '/agents/all/7?viewMode=owner&project_id=5',
+describe('prependProjectSegment', () => {
+  it('prefixes the project as a leading path segment, keeping query and hash', () => {
+    expect(prependProjectSegment('/agents/all/7', 5)).toBe('/5/agents/all/7');
+    expect(prependProjectSegment('/agents/all/7?viewMode=owner#top', 5)).toBe(
+      '/5/agents/all/7?viewMode=owner#top',
     );
   });
 
-  it('keeps the hash and replaces an existing project_id', () => {
-    expect(appendProjectParam('/a?x=1#top', 5)).toBe('/a?x=1&project_id=5#top');
-    expect(appendProjectParam('/a?project_id=2', 5)).toBe('/a?project_id=5');
+  it('handles the root path', () => {
+    expect(prependProjectSegment('/', 5)).toBe('/5');
+  });
+
+  it('does not double-prefix an href that already names a project', () => {
+    expect(prependProjectSegment('/9/agents/all/7', 5)).toBe('/9/agents/all/7');
+    expect(prependProjectSegment('/9', 5)).toBe('/9');
+    expect(prependProjectSegment('/9?x=1', 5)).toBe('/9?x=1');
+  });
+
+  it('does not mistake a path that merely starts with digits for a project', () => {
+    expect(prependProjectSegment('/2fa/setup', 5)).toBe('/5/2fa/setup');
   });
 
   it('returns the href untouched without a project', () => {
-    expect(appendProjectParam('/a?x=1', undefined)).toBe('/a?x=1');
-    expect(appendProjectParam('/a?x=1', null)).toBe('/a?x=1');
-    expect(appendProjectParam('/a?x=1', '')).toBe('/a?x=1');
+    expect(prependProjectSegment('/a?x=1', undefined)).toBe('/a?x=1');
+    expect(prependProjectSegment('/a?x=1', null)).toBe('/a?x=1');
+    expect(prependProjectSegment('/a?x=1', '')).toBe('/a?x=1');
   });
 });

@@ -37,15 +37,15 @@ const renderLink = (props = {}) =>
 describe('AppLink', () => {
   afterEach(cleanup);
 
-  it('renders a real anchor whose href carries the active project', () => {
+  it('renders a real anchor whose href is prefixed with the active project', () => {
     renderLink();
     expect(screen.getByTestId('link').tagName).toBe('A');
-    expect(screen.getByTestId('link')).toHaveAttribute('href', '/agents/all/7?viewMode=owner&project_id=5');
+    expect(screen.getByTestId('link')).toHaveAttribute('href', '/5/agents/all/7?viewMode=owner');
   });
 
   it('computes the href itself even if a wrapper passes one down', () => {
     renderLink({ href: '/agents/all/7?viewMode=owner' });
-    expect(screen.getByTestId('link')).toHaveAttribute('href', '/agents/all/7?viewMode=owner&project_id=5');
+    expect(screen.getByTestId('link')).toHaveAttribute('href', '/5/agents/all/7?viewMode=owner');
   });
 
   it('leaves the href alone when there is no project', () => {
