@@ -57,6 +57,19 @@ describe('useCreateApplication', () => {
     expect(mocks.refetchLimit).toHaveBeenCalledTimes(1);
   });
 
+  it('refetches the starters limit once while the form keeps changing after a rejected create', () => {
+    mocks.createResult = { error: tooManyStarters, isError: true, isLoading: false };
+    const { rerender } = renderHook(
+      ({ currentFormik }) => useCreateApplication(currentFormik, null, { skipNavigation: true }),
+      { initialProps: { currentFormik: formik } },
+    );
+
+    rerender({ currentFormik: { ...formik } });
+    rerender({ currentFormik: { ...formik } });
+
+    expect(mocks.refetchLimit).toHaveBeenCalledTimes(1);
+  });
+
   it('does not refetch the starters limit on other create errors', () => {
     mocks.createResult = {
       error: { status: 400, data: [{ loc: ['name'], msg: 'bad' }] },

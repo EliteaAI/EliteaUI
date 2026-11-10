@@ -86,10 +86,14 @@ const useCreateApplication = (formik, resetBlockNav, options = {}) => {
     flowNodes,
   ]);
 
+  // Separate from the effect below: formik changes on every render, and this must run once per error
+  useEffect(() => {
+    // The limit may have been lowered since the editor opened; show the one the backend applied
+    if (conversationStartersHelpers.isConversationStartersLimitError(error)) refetchLimit();
+  }, [error, refetchLimit]);
+
   useEffect(() => {
     if (error) {
-      // The limit may have been lowered since the editor opened; show the one the backend applied
-      if (conversationStartersHelpers.isConversationStartersLimitError(error)) refetchLimit();
       // todo: handle generic errors
       Array.isArray(error.data)
         ? error.data?.forEach(i => {
@@ -110,7 +114,7 @@ const useCreateApplication = (formik, resetBlockNav, options = {}) => {
         : // eslint-disable-next-line no-console
           console.error(error);
     }
-  }, [error, formik, refetchLimit]);
+  }, [error, formik]);
 
   useEffect(() => {
     if (data) {
