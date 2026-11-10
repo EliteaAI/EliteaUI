@@ -1,34 +1,63 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
-import { useCopyChatLink, useShareChat } from '@/[fsd]/features/chat/conversation-list/lib/hooks';
+import {
+  useCopyChatLink,
+  useShareChat,
+  useShareChatMessages,
+} from '@/[fsd]/features/chat/conversation-list/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { useDebounceValue, useToast } from '@/[fsd]/shared/lib/hooks';
-import { Button, Modal } from '@/[fsd]/shared/ui';
+import { Banner, Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { CountBadge } from '@/[fsd]/shared/ui/chip';
+import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import LinkIconSvg from '@/assets/copy-link-icon.svg?react';
+import { getBasename } from '@/routes';
 
-import { SHARE_MESSAGES } from '../../lib/constants/shareChat.constants';
-import { getCopyLinkMessage, isSameAccessList } from '../../lib/helpers/shareChat.helpers';
+import {
+  DEFAULT_LINK_FORM,
+  SHARE_MESSAGES,
+  SHARE_MODES,
+  SHARE_TABS,
+} from '../../lib/constants/shareChat.constants';
+import {
+  buildShareLinkUrl,
+  canGenerateLink,
+  countShareLinks,
+  getCopyLinkMessage,
+  isLinkExpired,
+  isSameAccessList,
+  sortShareLinks,
+} from '../../lib/helpers/shareChat.helpers';
+import ShareLinkCard from './ShareLinkCard';
+import ShareLinkForm from './ShareLinkForm';
 import ShareTeamTab from './ShareTeamTab';
 
 const SEARCH_DEBOUNCE_MS = 300;
 
+const isSameForm = (left, right) => JSON.stringify(left) === JSON.stringify(right);
+
 const ShareChatModal = memo(props => {
   const { conversation, onClose, onAccessSaved } = props;
 
-  const { toastSuccess, toastError } = useToast();
+  const { toastSuccess, toastInfo, toastError } = useToast();
   const copyChatLink = useCopyChatLink();
 
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebounceValue(query, SEARCH_DEBOUNCE_MS);
   const share = useShareChat({ conversation, query: debouncedQuery.trim() });
-  const { savedAccess, membersTotal } = share;
+  const { mode, savedAccess, links, membersTotal } = share;
 
+  const [tab, setTab] = useState(mode === SHARE_MODES.personal ? SHARE_TABS.externally : SHARE_TABS.team);
   const [access, setAccess] = useState(savedAccess);
   const [isSaving, setIsSaving] = useState(false);
-  const [isWarningOpen, setIsWarningOpen] = useState(false);
+  const [isFormRequested, setIsFormRequested] = useState(false);
+  const [form, setForm] = useState(DEFAULT_LINK_FORM);
+  const [warning, setWarning] = useState(null);
+  const [revoking, setRevoking] = useState(null);
+  const [now, setNow] = useState(Date.now);
 
   // The list is filled once the details fetched after opening arrive; later refetches keep the edits
   const [isAccessLoaded, setIsAccessLoaded] = useState(false);
@@ -37,13 +66,45 @@ const ShareChatModal = memo(props => {
     setAccess(savedAccess);
   }
 
+  const showsExternally = mode === SHARE_MODES.personal || tab === SHARE_TABS.externally;
+  const {
+    messages,
+    total: messagesTotal,
+    isFetching: isMessagesFetching,
+    onLoadMore,
+  } = useShareChatMessages({
+    projectId: share.projectId,
+    conversationId: conversation?.id,
+    authorNames: share.authorNames,
+    enabled: showsExternally,
+  });
+
+  // A chat with no links shows the form, but only once the list has really loaded
+  const hasNoLinks = share.isLinksLoaded && !share.isLinksFetching && !links.length;
+  const isFormOpen = isFormRequested || hasNoLinks;
+
   const isTeamDirty = isAccessLoaded && !isSameAccessList(access, savedAccess);
+  const isFormDirty = isFormOpen && !isSameForm(form, DEFAULT_LINK_FORM);
+  const sortedLinks = useMemo(() => sortShareLinks(links, now), [links, now]);
+  const counts = useMemo(() => countShareLinks(links, now), [links, now]);
+  const totals = useMemo(
+    () => ({ messages: messagesTotal, files: share.filesTotal }),
+    [messagesTotal, share.filesTotal],
+  );
+  const showTabs = mode === SHARE_MODES.owner;
+  const canGenerate = canGenerateLink(form) && !share.isCreatingLink;
+
+  const askOrRun = useCallback(
+    (isDirty, action) => (isDirty ? setWarning({ onLeave: action }) : action()),
+    [],
+  );
 
   const handleClose = useCallback(() => {
     if (isSaving) return;
-    if (isTeamDirty) setIsWarningOpen(true);
-    else onClose?.();
-  }, [isSaving, isTeamDirty, onClose]);
+    askOrRun(isTeamDirty || isFormDirty, () => onClose?.());
+  }, [askOrRun, isSaving, isTeamDirty, isFormDirty, onClose]);
+
+  const handleTab = useCallback((_, value) => setTab(value), []);
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
@@ -59,13 +120,128 @@ const ShareChatModal = memo(props => {
     [conversation, copyChatLink, isTeamDirty, savedAccess],
   );
 
-  const handleStay = useCallback(() => setIsWarningOpen(false), []);
+  const handleCreateLink = useCallback(() => {
+    setForm(DEFAULT_LINK_FORM);
+    setIsFormRequested(true);
+  }, []);
+
+  const handleBackToList = useCallback(
+    () => askOrRun(isFormDirty, () => setIsFormRequested(false)),
+    [askOrRun, isFormDirty],
+  );
+
+  const handleGenerate = useCallback(async () => {
+    try {
+      await share.createLink(form);
+      setNow(Date.now());
+      setIsFormRequested(false);
+      setForm(DEFAULT_LINK_FORM);
+      toastSuccess(SHARE_MESSAGES.linkCreated);
+    } catch {
+      toastError(SHARE_MESSAGES.linkCreateFailed);
+    }
+  }, [form, share, toastError, toastSuccess]);
+
+  const handleCopyLink = useCallback(
+    link => {
+      navigator.clipboard?.writeText(buildShareLinkUrl(getBasename(), link.token)).catch(() => {});
+      toastInfo(SHARE_MESSAGES.linkCopied);
+    },
+    [toastInfo],
+  );
+
+  const removeLink = useCallback(
+    async (link, successMessage) => {
+      try {
+        await share.revokeLink(link.token);
+        toastSuccess(successMessage);
+      } catch {
+        toastError(SHARE_MESSAGES.linkRevokeFailed);
+      }
+    },
+    [share, toastError, toastSuccess],
+  );
+
+  const handleConfirmRevoke = useCallback(() => {
+    const link = revoking;
+    setRevoking(null);
+    removeLink(link, SHARE_MESSAGES.linkRevoked);
+  }, [removeLink, revoking]);
+
+  const handleDelete = useCallback(link => removeLink(link, SHARE_MESSAGES.linkDeleted), [removeLink]);
+
+  const handleCancelRevoke = useCallback(() => setRevoking(null), []);
+  const handleStay = useCallback(() => setWarning(null), []);
   const handleLeave = useCallback(() => {
-    setIsWarningOpen(false);
-    onClose?.();
-  }, [onClose]);
+    const action = warning?.onLeave;
+    setWarning(null);
+    action?.();
+  }, [warning]);
 
   const styles = shareChatModalStyles();
+
+  const headingText =
+    counts.expired > 0
+      ? `Active links – ${counts.active} · Expired – ${counts.expired}`
+      : `Active links – ${counts.active}`;
+
+  const externallyBody = isFormOpen ? (
+    <ShareLinkForm
+      form={form}
+      messages={messages}
+      messagesTotal={messagesTotal}
+      totalFiles={share.filesTotal}
+      isMessagesFetching={isMessagesFetching}
+      onLoadMoreMessages={onLoadMore}
+      onChange={setForm}
+    />
+  ) : (
+    <Box sx={styles.section}>
+      <Banner.BannerMessage
+        variant="info"
+        message={SHARE_MESSAGES.externalInfo}
+        containerSx={styles.banner}
+      >
+        <Typography
+          variant="bodySmall"
+          color="inherit"
+        >
+          {SHARE_MESSAGES.externalInfo}
+        </Typography>
+      </Banner.BannerMessage>
+      <Box sx={styles.linksHeader}>
+        <Typography
+          variant="labelMedium"
+          color="text.secondary"
+          sx={styles.linksHeading}
+        >
+          {headingText}
+        </Typography>
+        <Button.BaseBtn
+          data-testid="share-create-link"
+          variant={BUTTON_VARIANTS.elitea}
+          color={BUTTON_COLORS.primary}
+          onClick={handleCreateLink}
+        >
+          Create Link
+        </Button.BaseBtn>
+      </Box>
+      <Box sx={styles.linkList}>
+        {sortedLinks.map(link => (
+          <ShareLinkCard
+            key={link.token}
+            link={link}
+            totals={totals}
+            now={now}
+            isExpired={isLinkExpired(link, now)}
+            onRevoke={setRevoking}
+            onDelete={handleDelete}
+            onCopy={handleCopyLink}
+          />
+        ))}
+      </Box>
+    </Box>
+  );
 
   const title = (
     <Box sx={styles.titleBlock}>
@@ -89,60 +265,144 @@ const ShareChatModal = memo(props => {
 
   const content = (
     <Box sx={styles.content}>
+      {showTabs && (
+        <BaseTabs
+          value={tab}
+          onChange={handleTab}
+          sx={styles.tabs}
+        >
+          <BaseTab
+            data-testid="share-tab-team"
+            value={SHARE_TABS.team}
+            label="Team"
+          />
+          <BaseTab
+            data-testid="share-tab-externally"
+            value={SHARE_TABS.externally}
+            label={
+              <Box sx={styles.tabLabel}>
+                Externally
+                {counts.active > 0 && (
+                  <CountBadge
+                    count={counts.active}
+                    ariaLabel={`${counts.active} active links`}
+                    testId="share-tab-externally-count"
+                    sx={styles.tabCount}
+                  />
+                )}
+              </Box>
+            }
+          />
+        </BaseTabs>
+      )}
       <Box sx={styles.body}>
-        <ShareTeamTab
-          owner={share.owner}
-          list={access}
-          members={share.members}
-          membersTotal={membersTotal}
-          query={query}
-          membersFetched={share.membersFetched}
-          membersQueryTotal={share.membersQueryTotal}
-          isMembersFetching={share.isMembersFetching}
-          onLoadMoreMembers={share.onLoadMoreMembers}
-          onQueryChange={setQuery}
-          onChangeList={setAccess}
-        />
+        {showsExternally ? (
+          externallyBody
+        ) : (
+          <ShareTeamTab
+            owner={share.owner}
+            list={access}
+            members={share.members}
+            membersTotal={membersTotal}
+            query={query}
+            membersFetched={share.membersFetched}
+            membersQueryTotal={share.membersQueryTotal}
+            isMembersFetching={share.isMembersFetching}
+            onLoadMoreMembers={share.onLoadMoreMembers}
+            onQueryChange={setQuery}
+            onChangeList={setAccess}
+          />
+        )}
       </Box>
     </Box>
   );
 
-  const left = (
-    <Tooltip title="Copy link">
+  let left = null;
+  let right = null;
+  if (!showsExternally) {
+    left = (
+      <Tooltip title="Copy link">
+        <Button.BaseBtn
+          data-testid="share-copy-link"
+          aria-label="Copy link"
+          variant={BUTTON_VARIANTS.secondary}
+          size="small"
+          startIcon={<LinkIconSvg />}
+          onClick={handleCopyChatLink}
+          sx={styles.copyButton}
+        />
+      </Tooltip>
+    );
+    right = (
+      <>
+        <Button.BaseBtn
+          data-testid="share-cancel"
+          variant={BUTTON_VARIANTS.elitea}
+          color={BUTTON_COLORS.secondary}
+          disabled={isSaving}
+          onClick={handleClose}
+        >
+          Cancel
+        </Button.BaseBtn>
+        <Button.BaseBtn
+          data-testid="share-save"
+          variant={BUTTON_VARIANTS.elitea}
+          color={BUTTON_COLORS.primary}
+          loading={isSaving}
+          disabled={!isTeamDirty || isSaving}
+          onClick={handleSave}
+        >
+          Save
+        </Button.BaseBtn>
+      </>
+    );
+  } else if (isFormOpen) {
+    left = links.length ? (
       <Button.BaseBtn
-        data-testid="share-copy-link"
-        aria-label="Copy link"
-        variant={BUTTON_VARIANTS.secondary}
-        size="small"
-        startIcon={<LinkIconSvg />}
-        onClick={handleCopyChatLink}
-        sx={styles.copyButton}
-      />
-    </Tooltip>
-  );
-  const right = (
-    <>
-      <Button.BaseBtn
-        data-testid="share-cancel"
+        data-testid="share-back-to-list"
         variant={BUTTON_VARIANTS.elitea}
         color={BUTTON_COLORS.secondary}
-        disabled={isSaving}
+        onClick={handleBackToList}
+      >
+        Back to list
+      </Button.BaseBtn>
+    ) : null;
+    right = (
+      <>
+        {!links.length && (
+          <Button.BaseBtn
+            data-testid="share-cancel"
+            variant={BUTTON_VARIANTS.elitea}
+            color={BUTTON_COLORS.secondary}
+            onClick={handleClose}
+          >
+            Cancel
+          </Button.BaseBtn>
+        )}
+        <Button.BaseBtn
+          data-testid="share-generate-link"
+          variant={BUTTON_VARIANTS.elitea}
+          color={BUTTON_COLORS.primary}
+          loading={share.isCreatingLink}
+          disabled={!canGenerate}
+          onClick={handleGenerate}
+        >
+          Generate Link
+        </Button.BaseBtn>
+      </>
+    );
+  } else {
+    right = (
+      <Button.BaseBtn
+        data-testid="share-close-button"
+        variant={BUTTON_VARIANTS.elitea}
+        color={BUTTON_COLORS.secondary}
         onClick={handleClose}
       >
-        Cancel
+        Close
       </Button.BaseBtn>
-      <Button.BaseBtn
-        data-testid="share-save"
-        variant={BUTTON_VARIANTS.elitea}
-        color={BUTTON_COLORS.primary}
-        loading={isSaving}
-        disabled={!isTeamDirty || isSaving}
-        onClick={handleSave}
-      >
-        Save
-      </Button.BaseBtn>
-    </>
-  );
+    );
+  }
 
   const actions = (
     <Box sx={styles.footer}>
@@ -165,7 +425,7 @@ const ShareChatModal = memo(props => {
         dialogSx={styles.dialogContent}
       />
       <Modal.BaseModal
-        open={isWarningOpen}
+        open={!!warning}
         variant={ModalConstants.MODAL_VARIANT.simple}
         titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
         title="Warning"
@@ -175,6 +435,17 @@ const ShareChatModal = memo(props => {
         confirmButtonText={ModalConstants.WARNING_BUTTONS.LEAVE}
         onConfirm={handleLeave}
         onClose={handleStay}
+      />
+      <Modal.BaseModal
+        open={!!revoking}
+        variant={ModalConstants.MODAL_VARIANT.simple}
+        titleIcon={ModalConstants.MODAL_ICON_TYPE.destructive}
+        title={SHARE_MESSAGES.revokeTitle}
+        content={<Typography variant="bodyMedium">{SHARE_MESSAGES.revokeText}</Typography>}
+        confirmButtonText="Revoke"
+        alarm
+        onConfirm={handleConfirmRevoke}
+        onClose={handleCancelRevoke}
       />
     </>
   );
@@ -195,7 +466,7 @@ const shareChatModalStyles = () => ({
     height: 'min(40rem, calc(100vh - 4rem))',
     '& .MuiDialogActions-root': { alignSelf: 'stretch' },
   },
-  // BaseModal pads the body with !important; the inner body sets its own side padding
+  // BaseModal pads the body with !important; the tabs and sections set their own side padding
   dialogContent: {
     padding: '0 !important',
     overflowY: 'hidden',
@@ -223,6 +494,22 @@ const shareChatModalStyles = () => ({
     fontSize: '0.75rem',
     lineHeight: '1rem',
   },
+  tabs: ({ palette }) => ({
+    flexShrink: 0,
+    margin: '0.75rem 2rem 0',
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
+    '& .MuiTab-root': { textTransform: 'none', minWidth: 0, padding: '0.5rem 1rem' },
+  }),
+  tabLabel: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  tabCount: {
+    padding: '0 0.375rem',
+    minWidth: '1.25rem',
+    height: '1.25rem',
+  },
   body: {
     flex: 1,
     minHeight: 0,
@@ -231,6 +518,33 @@ const shareChatModalStyles = () => ({
     flexDirection: 'column',
     marginTop: '1rem',
     padding: '0 2rem 1.5rem',
+  },
+  section: {
+    flex: 1,
+    minHeight: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+  },
+  banner: {
+    marginTop: 0,
+  },
+  linksHeading: {
+    '&&&': { fontWeight: 600 },
+  },
+  linksHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingLeft: '0.5rem',
+  },
+  linkList: {
+    flex: '1 1 0',
+    minHeight: 0,
+    overflowY: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
   },
   footer: {
     width: '100%',

@@ -166,4 +166,27 @@ describe('useShareChat', () => {
     expect(result.current.members.map(item => item.id)).toEqual([2, 3]);
     expect(result.current.owner.name).toBe('Owner');
   });
+
+  it('creates a link with the scope the form maps to', async () => {
+    details.current = { author_id: 1, is_private: true, participants: [] };
+    const result = renderShare();
+
+    await act(async () => {
+      await result.current.createLink({
+        includeMessages: true,
+        includeAttachments: false,
+        whichMessages: 'all',
+        selectedIds: [],
+        expiry: 'never',
+        password: '',
+      });
+    });
+
+    expect(createShareLink).toHaveBeenCalledWith({
+      projectId: 406,
+      conversationId: 500,
+      expiry: 'never',
+      scope: 'messages',
+    });
+  });
 });

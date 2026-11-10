@@ -6,13 +6,21 @@ import {
   useAddParticipantIntoConversationMutation,
   useConversationDetailsQuery,
   useConversationEditMutation,
+  useConversationExportSummaryQuery,
   useDeleteParticipantFromConversationMutation,
 } from '@/[fsd]/features/chat/api';
+import {
+  useCreateShareLinkMutation,
+  useListShareLinksQuery,
+  useRevokeShareLinkMutation,
+} from '@/[fsd]/features/chat/conversation-list/api/sharedLinksApi';
+import { SHARE_MODES } from '@/[fsd]/features/chat/conversation-list/lib/constants/shareChat.constants';
 import {
   buildNewParticipants,
   diffUserParticipants,
 } from '@/[fsd]/features/chat/conversation-list/lib/helpers/restrictAccess.helpers';
 import {
+  buildCreateLinkBody,
   buildSavedAccess,
   hasWholeTeam,
   toMemberItem,
@@ -21,6 +29,7 @@ import { useSelectedProjectId, useUserList } from '@/[fsd]/shared/lib/hooks';
 import { ChatParticipantType } from '@/common/constants';
 
 const MEMBERS_PAGE_SIZE = 20;
+const NO_LINKS = [];
 
 export const useShareChat = ({ conversation, query = '' }) => {
   const projectId = useSelectedProjectId();
@@ -53,9 +62,21 @@ export const useShareChat = ({ conversation, query = '' }) => {
     setMembersTotal(membersData.total);
   }
 
+  const {
+    data: links = NO_LINKS,
+    isFetching: isLinksFetching,
+    isSuccess: isLinksLoaded,
+  } = useListShareLinksQuery({ projectId, conversationId }, { skip: !conversationId });
+  const { data: summary } = useConversationExportSummaryQuery(
+    { projectId, conversationId },
+    { skip: !conversationId },
+  );
+
   const [conversationEdit] = useConversationEditMutation();
   const [addParticipant] = useAddParticipantIntoConversationMutation();
   const [deleteParticipant] = useDeleteParticipantFromConversationMutation();
+  const [createShareLink, { isLoading: isCreatingLink }] = useCreateShareLinkMutation();
+  const [revokeShareLink] = useRevokeShareLinkMutation();
 
   const ownerId = details?.author_id ?? conversation?.author_id;
   const isPrivate = !!(details?.is_private ?? conversation?.is_private);
@@ -82,6 +103,12 @@ export const useShareChat = ({ conversation, query = '' }) => {
   const members = useMemo(
     () => (membersData?.rows ?? []).filter(item => item.id != ownerId).map(toMemberItem),
     [membersData?.rows, ownerId],
+  );
+
+  const authorNames = useMemo(
+    () =>
+      Object.fromEntries(participants.map(item => [item.id, item.meta?.user_name || item.meta?.name || ''])),
+    [participants],
   );
 
   // Resolves with what the server confirmed even when a later call fails, so the chat list stays in step
@@ -136,7 +163,19 @@ export const useShareChat = ({ conversation, query = '' }) => {
     ],
   );
 
+  const createLink = useCallback(
+    form => createShareLink({ projectId, conversationId, ...buildCreateLinkBody(form) }).unwrap(),
+    [conversationId, createShareLink, projectId],
+  );
+
+  const revokeLink = useCallback(
+    token => revokeShareLink({ projectId, token, conversationId }).unwrap(),
+    [conversationId, projectId, revokeShareLink],
+  );
+
   return {
+    mode: isPersonal ? SHARE_MODES.personal : SHARE_MODES.owner,
+    projectId,
     chatName: details?.name ?? conversation?.name,
     isReady: isDetailsFresh,
     owner,
@@ -147,6 +186,14 @@ export const useShareChat = ({ conversation, query = '' }) => {
     isMembersFetching: isUsersFetching,
     onLoadMoreMembers: onLoadMoreUsers,
     savedAccess,
+    links,
+    isLinksFetching,
+    isLinksLoaded,
+    isCreatingLink,
+    filesTotal: summary?.attachments_count ?? 0,
+    authorNames,
     saveAccess,
+    createLink,
+    revokeLink,
   };
 };

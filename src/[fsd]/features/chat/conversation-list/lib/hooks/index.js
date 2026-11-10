@@ -10,3 +10,4 @@ export * from './useMoveToFolderConversation.hooks';
 export * from './usePinConversation.hooks';
 export * from './useQueryFoldersList.hooks';
 export * from './useShareChat.hooks';
+export * from './useShareChatMessages.hooks';
