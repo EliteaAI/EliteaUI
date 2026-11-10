@@ -155,17 +155,34 @@ const UsersTable = memo(props => {
               testId="user-row-edit-button"
             />
           )}
-          {checkPermission(PERMISSIONS.users.delete) && !row.scim_synced && (
-            <DeleteUserButton
-              users={[row]}
-              setSelectedUsers={setSelectedUsers}
-              testId="user-row-delete-button"
-            />
+          {row.scim_synced ? (
+            <Tooltip
+              title="Synced from Entra ID: remove the user from the group there"
+              placement="top"
+            >
+              <Box
+                component="span"
+                sx={styles.syncedIconWrapper}
+              >
+                <SyncOutlinedIcon
+                  data-testid="user-row-synced-icon"
+                  sx={styles.syncedIcon}
+                />
+              </Box>
+            </Tooltip>
+          ) : (
+            checkPermission(PERMISSIONS.users.delete) && (
+              <DeleteUserButton
+                users={[row]}
+                setSelectedUsers={setSelectedUsers}
+                testId="user-row-delete-button"
+              />
+            )
           )}
         </Box>
       );
     },
-    [checkPermission, rolesOptions, setSelectedUsers, styles.actionsContainer],
+    [checkPermission, rolesOptions, setSelectedUsers, styles],
   );
 
   return !isFetching ? (
@@ -205,19 +222,6 @@ const UsersTable = memo(props => {
               columns={dataColumns}
               renderCell={renderCell}
               actions={renderActions(row)}
-              namePrefix={
-                row.scim_synced ? (
-                  <Tooltip
-                    title="Synced from Entra ID: remove the user from the group there"
-                    placement="top"
-                  >
-                    <SyncOutlinedIcon
-                      data-testid="user-row-synced-icon"
-                      sx={styles.syncedIcon}
-                    />
-                  </Tooltip>
-                ) : null
-              }
               dataCellSx={styles.dataCell}
               data-testid="user-row"
               checkboxTestId="user-row-checkbox"
@@ -255,9 +259,15 @@ const usersTableStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
   },
+  syncedIconWrapper: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '1.75rem',
+    height: '1.75rem',
+  },
   syncedIcon: ({ palette }) => ({
     fontSize: '1rem',
-    marginRight: '0.5rem',
     color: palette.icon.secondary,
   }),
   actionsContainer: {
