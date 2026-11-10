@@ -305,14 +305,21 @@ export const scheduleApi = eliteaApi
           const patch = dispatch(
             scheduleApi.util.updateQueryData('getScheduleSettings', { projectId }, draft => {
               if (allowRunWithoutAsking !== undefined) draft.allow_run_without_asking = allowRunWithoutAsking;
-              if (webhookMaxConcurrentRuns !== undefined)
-                draft.webhook_max_concurrent_runs = webhookMaxConcurrentRuns;
             }),
           );
           try {
             await queryFulfilled;
           } catch {
             patch.undo();
+            return;
+          }
+          // The cap is written only once accepted: an optimistic value and its undo would reset the field's draft
+          if (webhookMaxConcurrentRuns !== undefined) {
+            dispatch(
+              scheduleApi.util.updateQueryData('getScheduleSettings', { projectId }, draft => {
+                draft.webhook_max_concurrent_runs = webhookMaxConcurrentRuns;
+              }),
+            );
           }
         },
         invalidatesTags: (_, error) => (error ? [] : [listTag]),

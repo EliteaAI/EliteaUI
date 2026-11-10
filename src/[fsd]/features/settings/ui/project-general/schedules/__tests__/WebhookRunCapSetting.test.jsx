@@ -123,4 +123,34 @@ describe('Running runs per webhook setting', () => {
     renderSetting();
     expect(input()).toBeDisabled();
   });
+
+  // #7400 review: InputBase blurs 10 ms after each change unless told not to, which saved on the first keystroke
+  it('does not save while typing, only when the field is left', async () => {
+    vi.useFakeTimers();
+    try {
+      renderSetting();
+      input().focus();
+      fireEvent.change(input(), { target: { value: '1' } });
+      vi.advanceTimersByTime(50);
+      fireEvent.change(input(), { target: { value: '12' } });
+      vi.advanceTimersByTime(50);
+      expect(api.save).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+    fireEvent.blur(input());
+    await waitFor(() => expect(api.save).toHaveBeenCalledTimes(1));
+    expect(api.save.mock.calls[0][0].webhookMaxConcurrentRuns).toBe(12);
+  });
+
+  // #7400 review: a number input reports an unparsable entry such as `2e` as an empty value
+  it('refuses an unparsable entry instead of resetting the cap to the default', () => {
+    api.query = { data: { ...SETTINGS, webhook_max_concurrent_runs: 2 }, isError: false };
+    renderSetting();
+    Object.defineProperty(input(), 'validity', { configurable: true, value: { badInput: true } });
+    fireEvent.change(input(), { target: { value: '' } });
+    fireEvent.blur(input());
+    expect(api.save).not.toHaveBeenCalled();
+    expect(screen.getByTestId('schedule-webhook-run-cap-help')).toHaveTextContent('Enter a whole number');
+  });
 });

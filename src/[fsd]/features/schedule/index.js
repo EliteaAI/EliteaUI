@@ -5,6 +5,7 @@ export {
   findWaitingRun,
   formatRunStarted,
   getPollingInterval,
+  isAtRunCap,
   isRotating,
   lastDeliveryText,
   rotationText,

@@ -21,6 +21,7 @@ const WebhookRunCapSetting = memo(() => {
   const [updateSettings, { isLoading: isSaving }] = useUpdateScheduleSettingsMutation();
   const [draft, setDraft] = useState('');
   const [fieldError, setFieldError] = useState('');
+  const [badInput, setBadInput] = useState(false);
 
   const saved = data?.webhook_max_concurrent_runs;
   const limit = data?.webhook_max_concurrent_runs_limit;
@@ -30,14 +31,15 @@ const WebhookRunCapSetting = memo(() => {
 
   const onChange = useCallback(event => {
     setDraft(event.target.value);
+    setBadInput(Boolean(event.target.validity?.badInput)); // `2e` or `-` reads as '' and must not reset the cap
     setFieldError('');
   }, []);
 
   // Saved on blur; an empty field goes back to the platform default
   const onBlur = useCallback(async () => {
     const value = draft.trim() === '' ? null : Number(draft);
-    if (isSaving || value === (saved ?? null)) return;
-    if (value !== null && (!Number.isInteger(value) || value < 1 || value > limit)) {
+    if (isSaving || (!badInput && value === (saved ?? null))) return;
+    if (badInput || (value !== null && (!Number.isInteger(value) || value < 1 || value > limit))) {
       setFieldError(`Enter a whole number from 1 to ${limit}, or leave it empty for the default`);
       return;
     }
@@ -52,7 +54,7 @@ const WebhookRunCapSetting = memo(() => {
         setDraft(toDraft(saved));
       }
     }
-  }, [draft, isSaving, limit, projectId, saved, toastError, toastSuccess, updateSettings]);
+  }, [badInput, draft, isSaving, limit, projectId, saved, toastError, toastSuccess, updateSettings]);
 
   if (isError || !data) return null; // RunWithoutAskingSetting reports a failed read
 
@@ -66,6 +68,7 @@ const WebhookRunCapSetting = memo(() => {
         placeholder={fallback != null ? `Default: ${fallback}` : ''}
         onChange={onChange}
         onBlur={onBlur}
+        enableAutoBlur={false}
         disabled={!isAdmin || isSaving}
         error={!!fieldError}
         inputProps={{ min: 1, max: limit, 'data-testid': 'schedule-webhook-run-cap-input' }}

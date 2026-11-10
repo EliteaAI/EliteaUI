@@ -6,6 +6,7 @@ import {
   ScheduleEnabledSwitch,
   ScheduleRunStatusChip,
   formatRunStarted,
+  isAtRunCap,
   isRotating,
   rotationText,
   toDeliveryOutcomeLabel,
@@ -22,7 +23,7 @@ import AuthorContainer from '@/components/AuthorContainer';
 import CalendarIcon from '@/components/Icons/CalendarIcon';
 
 import IconWithLabel from './IconWithLabel';
-import RunCapLine, { isAtRunCap } from './RunCapLine';
+import RunCapLine from './RunCapLine';
 
 // The API stores run statuses in lower case (failed, skipped, blocked, ...)
 const REASON_STATUSES = ['failed', 'skipped', 'blocked'];
