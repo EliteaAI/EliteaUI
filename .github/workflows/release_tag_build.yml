@@ -1,0 +1,198 @@
+# =============================================================================
+# Started by the Repo (repo_target) - see repo_core docs/Release-Repo-Guide.md, section 11.
+#
+# STARTED AUTOMATICALLY ONLY BY the Repo task "tag_release".
+#
+# How:
+#   1. tag_release (repo_target) does NOT tag EliteaUI itself. It sends a
+#      repository_dispatch with event type "repo-tag-release" and payload
+#      {tag, sha, message}. Nothing else in the organisation sends this type.
+#   2. This workflow creates/moves the tag using its own GITHUB_TOKEN.
+#      GitHub rule: events made with GITHUB_TOKEN start NO workflow runs,
+#      so this tag push cannot start tag_build_release.yml (push: tags)
+#      or any other workflow.
+#   3. It builds the tagged commit and attaches EliteAUI.zip to the GitHub
+#      Release of the same name. It pushes NO commits, so
+#      build_and_release.yml (push: main) cannot be started either.
+#
+# repository_dispatch always uses the workflow file from the default branch,
+# so this file only needs to exist on main.
+# =============================================================================
+name: Release tag build (tag_release)
+
+on:
+  repository_dispatch:
+    types: [repo-tag-release]
+
+  # Manual re-build of a tag that ALREADY exists (does not create/move tags)
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to build (for example 2.0.8)"
+        required: true
+      runner:
+        type: choice
+        description: "Action runs on"
+        options:
+          - self-hosted
+          - ubuntu-latest
+        default: self-hosted
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: eliteaui-release-${{ github.event.client_payload.tag || inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    name: Validate request and create the tag
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.validate.outputs.tag }}
+    steps:
+      - name: Validate request
+        id: validate
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          P_TAG: ${{ github.event.client_payload.tag }}
+          P_SHA: ${{ github.event.client_payload.sha }}
+          I_TAG: ${{ inputs.tag }}
+        run: |
+          if [ "$EVENT_NAME" = "repository_dispatch" ]; then
+            tag="$P_TAG"; sha="$P_SHA"
+            if ! [[ "$sha" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "::error::Invalid commit SHA in request: '$sha'"; exit 1
+            fi
+          else
+            tag="$I_TAG"; sha=""
+          fi
+          if ! [[ "$tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::'$tag' is not a release version (X.Y.Z)"; exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "::notice title=Request::event=$EVENT_NAME tag=$tag sha=${sha:-'(existing tag)'}"
+
+      - name: Create or move the tag (GITHUB_TOKEN - starts no other workflow)
+        if: steps.validate.outputs.sha != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ steps.validate.outputs.tag }}
+          SHA: ${{ steps.validate.outputs.sha }}
+          MESSAGE: ${{ github.event.client_payload.message || steps.validate.outputs.tag }}
+        run: |
+          tag_object=$(gh api -X POST "repos/$REPO/git/tags" \
+            -f tag="$TAG" -f message="$MESSAGE" -f object="$SHA" -f type=commit --jq .sha)
+
+          if gh api "repos/$REPO/git/ref/tags/$TAG" > /dev/null 2>&1; then
+            gh api -X PATCH "repos/$REPO/git/refs/tags/$TAG" -f sha="$tag_object" -F force=true > /dev/null
+            echo "::notice title=Tag moved::$TAG -> $SHA"
+          else
+            gh api -X POST "repos/$REPO/git/refs" -f ref="refs/tags/$TAG" -f sha="$tag_object" > /dev/null
+            echo "::notice title=Tag created::$TAG -> $SHA"
+          fi
+
+      - name: Check the tag exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ steps.validate.outputs.tag }}
+        run: |
+          gh api "repos/$REPO/git/ref/tags/$TAG" > /dev/null \
+            || { echo "::error::Tag $TAG does not exist in $REPO"; exit 1; }
+
+  build:
+    name: Build and attach EliteAUI.zip
+    needs: tag
+    runs-on: ${{ github.event_name == 'workflow_dispatch' && inputs.runner || fromJSON('["self-hosted", "Linux"]') }}
+    env:
+      RELEASE_TAG: ${{ needs.tag.outputs.tag }}
+    steps:
+      - name: Clear repository
+        run: rm -rf $GITHUB_WORKSPACE && mkdir $GITHUB_WORKSPACE
+
+      - name: Checkout the tagged commit
+        uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ needs.tag.outputs.tag }}
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23.11.0
+
+      - name: Install dependencies
+        env:
+          NODE_OPTIONS: "--max-old-space-size=8192"
+        run: npm install
+
+      # NOTE: no version bump and no git push - nothing here can start another workflow
+
+      - name: Build project
+        env:
+          NODE_OPTIONS: "--max-old-space-size=8192"
+        run: npm run build -- --base=./
+
+      - name: Collect head version
+        run: |
+          head_version=$(git rev-parse HEAD)
+          echo "$head_version" >> ./dist/head.txt
+
+      - name: Zip artifacts
+        run: zip -r ../EliteAUI.zip .
+        working-directory: ./dist
+
+      # Uses GITHUB_TOKEN (default), so the "release" event starts no workflow either
+      - name: Create or update GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: ./EliteAUI.zip
+          tag: ${{ needs.tag.outputs.tag }}
+          # repo_target finds the release by its NAME, so keep name == tag
+          name: ${{ needs.tag.outputs.tag }}
+          makeLatest: false
+          allowUpdates: true
+          replacesArtifacts: true
+
+      - name: Verify the bundle is attached
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          curl -fsSL \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/$REPO/releases/tags/$RELEASE_TAG" -o release.json
+          node -e "
+            const r = require('./release.json');
+            if (!(r.assets || []).some(a => a.name === 'EliteAUI.zip')) {
+              console.error('EliteAUI.zip is NOT attached to release ' + process.env.RELEASE_TAG);
+              process.exit(1);
+            }
+          "
+          echo "::notice title=Bundle ready::EliteAUI.zip is attached to release $RELEASE_TAG - you can now run collect_release_files"
+
+      - name: Read version from package.json
+        id: ui_version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "::notice title=UI Version::Released EliteaUI version $version for tag $RELEASE_TAG"
+
+      # Same notification the old tag build sent (affects the elitea_core repo only)
+      - name: Notify elitea_core of UI version
+        if: steps.ui_version.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ secrets.CROSS_REPO_DISPATCH_TOKEN }}
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/EliteaAI/elitea_core/dispatches" \
+            -d '{"event_type":"ui-version-updated","client_payload":{"ui_version":"${{ steps.ui_version.outputs.version }}","ref":"release/${{ needs.tag.outputs.tag }}"}}' \
+            || echo "::warning::Failed to notify elitea_core of UI version"

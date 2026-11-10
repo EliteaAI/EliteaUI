@@ -8,6 +8,8 @@ import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
+import { useCanManageProjectSettings } from './useCanManageProjectSettings.hooks.js';
+
 export const useCanDeleteProjectData = () => {
   const projectId = useSelectedProjectId();
   const personalProjectId = useSelector(state => state.user?.personal_project_id);
@@ -16,7 +18,10 @@ export const useCanDeleteProjectData = () => {
   // A private project makes its owner an editor, not an admin; owning it stands in for the permission
   const isPersonalProject = Boolean(personalProjectId) && String(projectId) === String(personalProjectId);
 
-  return checkPermission(PERMISSIONS.projectData.delete) || isPersonalProject;
+  // #6789: team-project editors may hold the permission, but deleting project data is admin-only
+  const { canManageSettings } = useCanManageProjectSettings();
+
+  return (checkPermission(PERMISSIONS.projectData.delete) || isPersonalProject) && canManageSettings;
 };
 
 export const useProjectDataDelete = () => {
