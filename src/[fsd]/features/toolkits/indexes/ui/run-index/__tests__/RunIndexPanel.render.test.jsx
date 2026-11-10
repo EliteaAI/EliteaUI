@@ -105,7 +105,7 @@ vi.mock('@/[fsd]/features/toolkits/indexes/lib/hooks', () => ({
 vi.mock('@/[fsd]/features/toolkits/lib/helpers', () => ({
   ToolkitsHelpers: { prettifyToolkitConversation: m => m },
 }));
-vi.mock('@/[fsd]/features/toolkits/lib/hooks', () => ({
+vi.mock('@/[fsd]/features/toolkits', () => ({
   useToolkitChat: options => {
     traceNewIndex.current = options.traceNewIndex;
     return {

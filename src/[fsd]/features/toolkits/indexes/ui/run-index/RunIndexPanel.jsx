@@ -37,7 +37,7 @@ import {
 import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { IndexActivityPanel, RunIndexBanner } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
-import { useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
+import { useToolkitChat } from '@/[fsd]/features/toolkits';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';

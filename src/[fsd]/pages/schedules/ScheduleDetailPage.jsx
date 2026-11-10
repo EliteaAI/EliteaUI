@@ -51,9 +51,7 @@ const ScheduleDetailPage = memo(props => {
   // A toolkit index schedule is found by its toolkit id and index name, an agent or pipeline by its application id
   const isIndex = schedule?.entity_type === TOOLKIT_INDEX_TYPE;
   const targetId = isIndex ? schedule.toolkit_id : schedule?.application_id;
-  const runsView = useScheduleRunsView(
-    ...(isIndex ? [schedule.id, targetId, schedule.index_name] : [schedule?.id, targetId]),
-  );
+  const runsView = useScheduleRunsView(schedule?.id, targetId, isIndex ? schedule.index_name : undefined);
 
   // A schedule belongs to one project, so a project switch opens the list
   const openedProjectId = useRef();

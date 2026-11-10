@@ -154,6 +154,8 @@ export const scheduleApi = eliteaApi
             scheduled: !!row.scheduled,
             schedulable: row.schedulable !== false,
           })),
+        // The `scheduled` flag changes with every schedule create, delete, pause and import
+        providesTags: [listTag],
       }),
 
       // Dry run of the save risk scan; it writes nothing, so it invalidates nothing

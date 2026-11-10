@@ -82,7 +82,8 @@ const lastRunTooltip = (row, label, reason) => {
   return reason ? `${text}. ${reason}` : text;
 };
 
-const ScheduleCell = memo(({ column, value, row, tier, now }) => {
+const ScheduleCell = memo(props => {
+  const { column, value, row, tier, now } = props;
   const styles = cellStyles;
   // A toolkit index has no version: its second line names the index
   const entitySubLabel = row.entity_type === 'toolkit_index' ? row.index_name : row.version_name;
