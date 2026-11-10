@@ -11,6 +11,8 @@ import ScheduleRowActions from '../ScheduleRowActions';
 
 // row action menu filtered by allowed_actions.
 
+vi.mock('../../lib/hooks/useRunAsAdminHint.hooks', () => ({ useRunAsAdminHint: () => null }));
+
 vi.mock('../ChangeOwnerDialog', () => ({
   default: ({ open, schedule, onClose }) =>
     open ? (

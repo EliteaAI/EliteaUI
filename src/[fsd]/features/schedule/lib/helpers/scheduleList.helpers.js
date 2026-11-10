@@ -19,3 +19,14 @@ export const runDeniedHint = schedule => {
     ? `You do not have the right to run this schedule. The owner is ${name}.`
     : 'You do not have the right to run this schedule.';
 };
+
+export const RUN_AS_ADMIN_HINT = 'Runs as you, with your credentials. It pauses before sensitive actions.';
+
+// A project admin who runs a schedule owned by someone else starts a run that acts as the admin, not as the owner.
+// The text shows only to that viewer: an owner, an admin who owns the schedule and a viewer without `run` get null.
+// A schedule whose owner is unknown gets null too, because the viewer cannot be told apart from the owner.
+export const runAsAdminHint = (schedule, { isAdmin, userId }) => {
+  if (!isAdmin || isWebhookRow(schedule) || !schedule?.allowed_actions?.includes('run')) return null;
+  const ownerId = schedule.owner?.id;
+  return ownerId == null || ownerId === userId ? null : RUN_AS_ADMIN_HINT;
+};

@@ -54,6 +54,23 @@ describe('getWaitingRunNeed', () => {
     expect(getWaitingRunNeed({ kind: 'paused', text })).toMatchObject({ toolkit: 'GitHub' });
   });
 
+  it('keeps every word of a quoted toolkit name', () => {
+    const text = "Paused: credential gh-main not found. Fix toolkit 'Jira Cloud' in this project.";
+    expect(getWaitingRunNeed({ kind: 'paused', text })).toMatchObject({ toolkit: 'Jira Cloud' });
+  });
+
+  it('reads an unquoted toolkit name up to the first space', () => {
+    const text = 'Paused: credential gh-main not found. Fix toolkit GitHub in this project.';
+    expect(getWaitingRunNeed({ kind: 'paused', text })).toMatchObject({ toolkit: 'GitHub' });
+  });
+
+  it('parses a long toolkit text in linear time', () => {
+    const text = `credential gh not found. toolkit ${'"'.repeat(20000)}`;
+    const started = Date.now();
+    getWaitingRunNeed({ kind: 'paused', text });
+    expect(Date.now() - started).toBeLessThan(1000);
+  });
+
   it('parses long text without a hit in linear time', () => {
     const text = 'credential '.repeat(20000);
     const started = Date.now();

@@ -12,6 +12,7 @@ import PersonIcon from '@/components/Icons/Person';
 import PlayIcon from '@/components/Icons/PlayIcon';
 
 import { runDeniedHint } from '../lib/helpers';
+import { useRunAsAdminHint } from '../lib/hooks/useRunAsAdminHint.hooks';
 import ChangeOwnerDialog from './ChangeOwnerDialog';
 import RotateSecretDialog from './RotateSecretDialog';
 
@@ -40,6 +41,7 @@ const ScheduleRowActions = memo(props => {
   } = props;
   const allowed = row.allowed_actions;
   const runHint = runDeniedHint(row);
+  const runAsAdmin = useRunAsAdminHint(row);
   const [isOwnerDialogOpen, setIsOwnerDialogOpen] = useState(false);
   const openOwnerDialog = useCallback(() => setIsOwnerDialogOpen(true), []);
   const closeOwnerDialog = useCallback(() => setIsOwnerDialogOpen(false), []);
@@ -63,7 +65,7 @@ const ScheduleRowActions = memo(props => {
           ),
           // Shown disabled with the reason when the viewer has no run right; no handler then
           disabled: !!runHint,
-          tooltip: runHint,
+          tooltip: runHint ?? runAsAdmin ?? undefined,
           onClick: runHint ? undefined : onRun,
         },
         !hideEdit &&
@@ -142,6 +144,7 @@ const ScheduleRowActions = memo(props => {
     [
       allowed,
       runHint,
+      runAsAdmin,
       row.enabled,
       row.name,
       onRun,

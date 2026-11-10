@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({ canRun: true, cardProps: [] }));
 vi.mock('@/hooks/useCheckPermission', () => ({
   default: () => ({ checkPermission: () => mocks.canRun }),
 }));
+vi.mock('../../lib/hooks/useRunAsAdminHint.hooks', () => ({ useRunAsAdminHint: () => null }));
 vi.mock('../ScheduleRunCard', () => ({
   default: props => {
     mocks.cardProps.push(props);

@@ -5,8 +5,13 @@ export const WAITING_NEED = { CREDENTIAL: 'credential', SIGN_IN: 'sign_in' };
 const CREDENTIAL_PREFIX = /credential\s/gi;
 const CREDENTIAL_SUFFIX = /\snot found\./gi;
 const SIGN_IN_PREFIX = /a sign-in is needed for\s/gi;
-// The toolkit name is the first word after "toolkit": it ends at a space, a quote or a full stop
-const TOOLKIT_TEXT = /toolkit\s+["']?([^\s"'.]+)/i;
+// A quoted toolkit name keeps all its words (up to 100 characters, which bounds the scan); an unquoted one is the
+// first word after "toolkit" and ends at a space, a quote or a full stop
+const TOOLKIT_TEXT = /toolkit\s+(?:["']([^"']{1,100})["']|["']?([^\s"'.]+))/i;
+const toolkitFromText = text => {
+  const hit = TOOLKIT_TEXT.exec(text);
+  return hit?.[1] ?? hit?.[2];
+};
 
 const matchFrom = (pattern, text, from) => {
   pattern.lastIndex = from;
@@ -51,7 +56,7 @@ export const getWaitingRunNeed = pausedEvent => {
   if (missing)
     return {
       need: WAITING_NEED.CREDENTIAL,
-      toolkit: unquote(toolkit) ?? unquote(TOOLKIT_TEXT.exec(text)?.[1]),
+      toolkit: unquote(toolkit) ?? unquote(toolkitFromText(text)),
       credential: unquote(credential) ?? unquote(missing),
     };
   const signIn = signInTarget(text);

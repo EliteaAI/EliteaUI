@@ -64,7 +64,18 @@ export const useWaitingRunCredentialCheck = ({ schedule, toolkit, runId, enabled
     } finally {
       inFlight.current -= 1;
     }
-  }, [checkRisk, enabled, projectId, id, entity_type, application_id, version_id, approval_rule, toolkit, runId]);
+  }, [
+    checkRisk,
+    enabled,
+    projectId,
+    id,
+    entity_type,
+    application_id,
+    version_id,
+    approval_rule,
+    toolkit,
+    runId,
+  ]);
 
   useEffect(() => {
     recheck();
