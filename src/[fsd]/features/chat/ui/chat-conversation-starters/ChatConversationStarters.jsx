@@ -46,7 +46,9 @@ const ChatConversationStarters = memo(props => {
     [onSend],
   );
 
-  const styles = chatConversationStartersStyles(Math.min(startersCount, 4));
+  const styles = chatConversationStartersStyles(
+    Math.min(startersCount, ConversationStartersLayoutHelpers.MAX_STARTER_TILES),
+  );
 
   if (filteredStarters.length === 0) return null;
 

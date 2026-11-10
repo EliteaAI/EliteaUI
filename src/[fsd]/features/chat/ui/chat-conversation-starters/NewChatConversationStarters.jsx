@@ -70,10 +70,14 @@ const newChatConversationStartersStyles = () => ({
     boxSizing: 'border-box',
     gap: '0.5rem',
     padding: '0.5rem 0',
+    // The parent caps the height and hides overflow, so an expanded list has to scroll here
+    minHeight: 0,
+    overflowY: 'auto',
   },
   starterItem: {
     width: '100%',
     height: '2.5rem',
+    flexShrink: 0,
     borderRadius: '0.75rem',
   },
   starterTextSX: {
@@ -81,6 +85,7 @@ const newChatConversationStartersStyles = () => ({
   },
   showMoreLink: ({ palette }) => ({
     alignSelf: 'flex-start',
+    flexShrink: 0,
     padding: '0.25rem 1rem',
     color: palette.text.secondary,
     '&:hover': {
