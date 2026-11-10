@@ -38,6 +38,9 @@ export const rotationInProgressText = until =>
 export const toDeliveryOutcomeLabel = outcome =>
   outcome ? (DELIVERY_OUTCOME_LABELS[outcome] ?? outcome) : '';
 
+// The API sends both only on webhook rows; the cap line shows only once the cap is reached (#7400)
+export const isAtRunCap = row => Number.isInteger(row?.run_cap) && (row.running_runs ?? 0) >= row.run_cap;
+
 export const lastDeliveryText = row =>
   row?.last_delivery_at
     ? `${toDeliveryOutcomeLabel(row.last_delivery_outcome)} - ${formatRunStarted(row.last_delivery_at)}`

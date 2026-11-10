@@ -48,7 +48,8 @@ const WebhookSampleRunDialog = memo(props => {
       onStarted?.();
       onClose();
     } catch (error) {
-      if (error?.status === 400 || error?.status === 409) setErrorMessage(buildErrorMessage(error));
+      // 429: the webhook or the project is at its running-run cap; the owner retries later (#7400)
+      if ([400, 409, 429].includes(error?.status)) setErrorMessage(buildErrorMessage(error));
       else {
         toastError(buildErrorMessage(error));
         onClose();

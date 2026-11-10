@@ -18,7 +18,7 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 
 import SettingsFormProvider from '../shared/SettingsFormProvider';
 import { ChatConfigurationSection } from './chat-configuration';
-import { RunWithoutAskingSetting, ScheduleNotificationsSection } from './schedules';
+import { RunWithoutAskingSetting, ScheduleNotificationsSection, WebhookRunCapSetting } from './schedules';
 
 const ProjectGeneralContent = memo(() => {
   const styles = componentStyles();
@@ -126,6 +126,7 @@ const ProjectGeneralContent = memo(() => {
                     <Box sx={styles.schedulesStyles}>
                       <ScheduleNotificationsSection />
                       <RunWithoutAskingSetting />
+                      <WebhookRunCapSetting />
                     </Box>
                   ),
                 },
