@@ -5,12 +5,13 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Box, Link, Typography } from '@mui/material';
 
 import { useGetScheduleSettingsQuery } from '@/[fsd]/entities/schedule';
+import { APPROVAL_RULE, APPROVAL_RULE_LABELS } from '@/[fsd]/entities/schedule/lib/constants';
 import { WebhookConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import RadioButtonGroup from '@/[fsd]/shared/ui/checkbox/RadioButtonGroup';
 import RouteDefinitions from '@/routes';
 
-import { APPROVAL_RULE, APPROVAL_RULE_INFO, APPROVAL_RULE_LABELS, VISUALLY_HIDDEN } from '../lib/constants';
+import { APPROVAL_RULE_INFO, VISUALLY_HIDDEN } from '../lib/constants';
 import FieldError from './FieldError';
 
 export const APPROVAL_RULE_ITEMS = [

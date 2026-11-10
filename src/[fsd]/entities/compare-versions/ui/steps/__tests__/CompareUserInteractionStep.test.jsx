@@ -23,7 +23,7 @@ const { default: CompareUserInteractionStep } = await import('../CompareUserInte
 
 const theme = createTheme({ palette: darkPalette });
 
-const renderStep = (leftData, rightData) =>
+const renderStep = (leftData, rightData, extraProps) =>
   render(
     <ThemeProvider theme={theme}>
       <CompareUserInteractionStep
@@ -39,6 +39,7 @@ const renderStep = (leftData, rightData) =>
         onSaveRight={vi.fn()}
         savingLeftKeys={{}}
         savingRightKeys={{}}
+        {...extraProps}
       />
     </ThemeProvider>,
   );
@@ -46,10 +47,11 @@ const renderStep = (leftData, rightData) =>
 describe('CompareUserInteractionStep', () => {
   afterEach(() => cleanup());
 
-  it('shows Chat Starters with an empty field when neither version has starters', () => {
+  it('shows Chat Starters with an empty field for a pipeline without starters', () => {
     renderStep(
       { welcome_message: '', conversation_starters: [] },
       { welcome_message: '', conversation_starters: [] },
+      { alwaysShowStarters: true },
     );
     ['left', 'right'].forEach(side => {
       const column = screen.getByTestId(side);
@@ -63,5 +65,13 @@ describe('CompareUserInteractionStep', () => {
   it('shows one row per starter of the longer list', () => {
     renderStep({ conversation_starters: ['a', 'b', 'c'] }, { conversation_starters: ['a'] });
     expect(screen.getByTestId('right').querySelectorAll('[data-testid="diff-field"]')).toHaveLength(4);
+  });
+
+  it('keeps an agent without starters as it was: no Chat Starters block', () => {
+    renderStep({ conversation_starters: [] }, { conversation_starters: [] });
+    ['left', 'right'].forEach(side => {
+      expect(screen.getByTestId(side)).not.toHaveTextContent('Chat Starters');
+    });
+    expect(screen.queryByRole('button', { name: /Save starters/ })).not.toBeInTheDocument();
   });
 });

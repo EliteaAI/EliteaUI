@@ -1,18 +1,13 @@
 import * as Yup from 'yup';
 
 import { TRIGGER_KIND, getListRoute } from '@/[fsd]/entities/schedule';
+import { APPROVAL_RULE, DEFAULT_APPROVAL_RULE } from '@/[fsd]/entities/schedule/lib/constants';
 import { WebhookConstants } from '@/[fsd]/shared/lib/constants';
 import { ScheduleHelpers, WebhookHelpers } from '@/[fsd]/shared/lib/helpers';
 import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
 import { contextResolver } from '@/common/utils';
 
-import {
-  APPROVAL_RULE,
-  DEFAULT_APPROVAL_RULE,
-  UNKNOWN_WARNING_LABEL,
-  WAIT_FOR_OWNER_CODES,
-  WARNING_LABELS,
-} from '../constants';
+import { UNKNOWN_WARNING_LABEL, WAIT_FOR_OWNER_CODES, WARNING_LABELS } from '../constants';
 
 const { GITLAB_AUTH_METHODS, WEBHOOK_TYPES } = WebhookConstants;
 

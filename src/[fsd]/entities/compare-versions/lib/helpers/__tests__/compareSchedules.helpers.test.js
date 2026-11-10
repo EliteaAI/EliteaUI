@@ -40,7 +40,8 @@ describe('getScheduleStatusLabel', () => {
 describe('schedule field labels', () => {
   it('labels the run mode, approval rule and owner', () => {
     expect(getRunModeLabel('prompt')).toBe('Prompt');
-    expect(getRunModeLabel(null)).toBe('Entrypoint');
+    expect(getRunModeLabel(null)).toBe('Entry point');
+    expect(getRunModeLabel('entry_point')).toBe('Entry point');
     expect(getApprovalRuleLabel('run_without_asking')).toBe('Run without asking');
     expect(getApprovalRuleLabel(undefined)).toBe('Pause and ask me');
     expect(getOwnerLabel({ id: 5, name: 'Ann' }, 5)).toBe('You');

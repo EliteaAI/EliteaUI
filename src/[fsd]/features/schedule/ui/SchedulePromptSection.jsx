@@ -2,7 +2,7 @@ import { memo, useCallback } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { RUN_MODE, RUN_MODE_LABELS } from '@/[fsd]/entities/schedule/lib/constants';
+import { RUN_MODE } from '@/[fsd]/entities/schedule/lib/constants';
 import { INPUT_VARIANTS } from '@/[fsd]/shared/ui/input';
 import StyledInputEnhancer from '@/[fsd]/shared/ui/input/StyledInputEnhancer';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
@@ -12,7 +12,10 @@ import { isPromptShown, syncPromptVariables } from '../lib/helpers';
 import FieldError from './FieldError';
 import ScheduleSegmentedToggle from './ScheduleSegmentedToggle';
 
-const RUN_MODE_ITEMS = Object.values(RUN_MODE).map(value => ({ value, label: RUN_MODE_LABELS[value] }));
+const RUN_MODE_ITEMS = [
+  { value: RUN_MODE.ENTRY_POINT, label: 'Entrypoint' },
+  { value: RUN_MODE.PROMPT, label: 'Prompt' },
+];
 
 const RUN_MODE_INFO =
   'Entrypoint starts the pipeline from its entry point. Prompt sends the text below as the first message.';

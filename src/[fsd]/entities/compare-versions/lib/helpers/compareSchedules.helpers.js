@@ -2,9 +2,14 @@ import {
   APPROVAL_RULE_LABELS,
   DEFAULT_APPROVAL_RULE,
   RUN_MODE,
-  RUN_MODE_LABELS,
   SYSTEM_PAUSE_LABELS,
 } from '@/[fsd]/entities/schedule/lib/constants';
+
+// AC-25 words the run mode "Entry point"; the schedule form says "Entrypoint", so the card has its own labels
+const RUN_MODE_CARD_LABELS = {
+  [RUN_MODE.ENTRY_POINT]: 'Entry point',
+  [RUN_MODE.PROMPT]: 'Prompt',
+};
 
 /** The status shown for a schedule: active, paused by a person, or paused by the system and why. */
 export const getScheduleStatusLabel = row => {
@@ -12,7 +17,8 @@ export const getScheduleStatusLabel = row => {
   return SYSTEM_PAUSE_LABELS[row?.disabled_reason] ?? 'Paused';
 };
 
-export const getRunModeLabel = runMode => RUN_MODE_LABELS[runMode] ?? RUN_MODE_LABELS[RUN_MODE.ENTRY_POINT];
+export const getRunModeLabel = runMode =>
+  RUN_MODE_CARD_LABELS[runMode] ?? RUN_MODE_CARD_LABELS[RUN_MODE.ENTRY_POINT];
 
 // A schedule saved before the rule existed runs with the default rule
 export const getApprovalRuleLabel = rule =>

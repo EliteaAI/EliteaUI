@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTheme } from '@mui/material';
 
 import { useEliteATheme } from '@/[fsd]/shared/lib/hooks/useEliteATheme.hooks';
-import { history, historyKeymap } from '@codemirror/commands';
+import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { StreamLanguage, defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { yaml } from '@codemirror/legacy-modes/mode/yaml';
 import { MergeView } from '@codemirror/merge';
@@ -155,7 +155,7 @@ export const useYamlMergeView = ({ leftValue, rightValue, onLeftChange, onRightC
       EditorView.lineWrapping,
       lineNumbers(),
       history(),
-      keymap.of(historyKeymap),
+      keymap.of([...defaultKeymap, ...historyKeymap]),
       StreamLanguage.define(yaml),
       syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
       editorTheme,

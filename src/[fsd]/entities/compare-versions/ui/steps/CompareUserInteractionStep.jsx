@@ -24,6 +24,8 @@ const CompareUserInteractionStep = memo(props => {
     savingLeftKeys,
     savingRightKeys,
     leftSaveDisabledReason,
+    // Pipelines always show the Chat Starters block; agents hide it when neither version has starters
+    alwaysShowStarters = false,
   } = props;
 
   const leftWelcome = leftEdits.welcome_message ?? leftData.welcome_message ?? '';
@@ -38,8 +40,8 @@ const CompareUserInteractionStep = memo(props => {
     [rightEdits.conversation_starters, rightData.conversation_starters],
   );
 
-  // At least one row, so a version without starters still shows an empty field to fill in
-  const maxStarters = Math.max(leftStarters.length, rightStarters.length, 1);
+  // With alwaysShowStarters, at least one row, so a version without starters still shows an empty field
+  const maxStarters = Math.max(leftStarters.length, rightStarters.length, alwaysShowStarters ? 1 : 0);
 
   const welcomeNoDiff = leftWelcome === rightWelcome;
   const startersNoDiff = useMemo(() => {
@@ -111,52 +113,54 @@ const CompareUserInteractionStep = memo(props => {
             />
           </Box>
 
-          <Box sx={compareUserInteractionStepStyles.fieldSectionGrow}>
-            <Box sx={compareUserInteractionStepStyles.fieldHeader}>
-              <Typography sx={compareUserInteractionStepStyles.sectionLabel}>Chat Starters</Typography>
-            </Box>
-            {startersNoDiff && (
-              <Typography sx={compareUserInteractionStepStyles.noDiffNote}>
-                No differences in this section.
-              </Typography>
-            )}
-            <Box sx={compareUserInteractionStepStyles.startersList}>
-              {Array.from({ length: maxStarters }, (_, i) => {
-                const lVal = leftStarters[i] ?? null;
-                const rVal = rightStarters[i] ?? null;
+          {maxStarters > 0 && (
+            <Box sx={compareUserInteractionStepStyles.fieldSectionGrow}>
+              <Box sx={compareUserInteractionStepStyles.fieldHeader}>
+                <Typography sx={compareUserInteractionStepStyles.sectionLabel}>Chat Starters</Typography>
+              </Box>
+              {startersNoDiff && (
+                <Typography sx={compareUserInteractionStepStyles.noDiffNote}>
+                  No differences in this section.
+                </Typography>
+              )}
+              <Box sx={compareUserInteractionStepStyles.startersList}>
+                {Array.from({ length: maxStarters }, (_, i) => {
+                  const lVal = leftStarters[i] ?? null;
+                  const rVal = rightStarters[i] ?? null;
 
-                return (
-                  <Box
-                    key={i}
-                    sx={compareUserInteractionStepStyles.starterRow}
-                  >
-                    <Box sx={compareUserInteractionStepStyles.editableCard}>
-                      <TextDiffHighlight
-                        original={rVal ?? ''}
-                        modified={lVal ?? ''}
-                        mode="modified"
-                        editable
-                        onChange={val => handleLeftStarterChange(i, val)}
+                  return (
+                    <Box
+                      key={i}
+                      sx={compareUserInteractionStepStyles.starterRow}
+                    >
+                      <Box sx={compareUserInteractionStepStyles.editableCard}>
+                        <TextDiffHighlight
+                          original={rVal ?? ''}
+                          modified={lVal ?? ''}
+                          mode="modified"
+                          editable
+                          onChange={val => handleLeftStarterChange(i, val)}
+                        />
+                      </Box>
+                      <CopyIconButton
+                        value={lVal ?? ''}
+                        tooltip={`Copy Chat Starter ${i + 1} from version ${leftVersion?.name}`}
+                        iconSx={{ fontSize: '1rem' }}
                       />
                     </Box>
-                    <CopyIconButton
-                      value={lVal ?? ''}
-                      tooltip={`Copy Chat Starter ${i + 1} from version ${leftVersion?.name}`}
-                      iconSx={{ fontSize: '1rem' }}
-                    />
-                  </Box>
-                );
-              })}
+                  );
+                })}
+              </Box>
+              <CompareSaveButton
+                label={`Save starters — ${leftVersion?.name}`}
+                isDirty={leftStartersDirty}
+                isSaving={Boolean(savingLeftKeys.conversation_starters)}
+                disabledReason={leftSaveDisabledReason}
+                onClick={() => onSaveLeft({ conversation_starters: leftStarters.filter(s => s?.trim()) })}
+                sx={compareUserInteractionStepStyles.saveBtn}
+              />
             </Box>
-            <CompareSaveButton
-              label={`Save starters — ${leftVersion?.name}`}
-              isDirty={leftStartersDirty}
-              isSaving={Boolean(savingLeftKeys.conversation_starters)}
-              disabledReason={leftSaveDisabledReason}
-              onClick={() => onSaveLeft({ conversation_starters: leftStarters.filter(s => s?.trim()) })}
-              sx={compareUserInteractionStepStyles.saveBtn}
-            />
-          </Box>
+          )}
         </Box>
       }
       suggestedContent={
@@ -194,53 +198,57 @@ const CompareUserInteractionStep = memo(props => {
             </BaseBtn>
           </Box>
 
-          <Box sx={compareUserInteractionStepStyles.fieldSectionGrow}>
-            <Box sx={compareUserInteractionStepStyles.fieldHeader}>
-              <Typography sx={compareUserInteractionStepStyles.sectionLabel}>Chat Starters</Typography>
-            </Box>
-            {startersNoDiff && (
-              <Typography sx={compareUserInteractionStepStyles.noDiffNote}>
-                No differences in this section.
-              </Typography>
-            )}
-            <Box sx={compareUserInteractionStepStyles.startersList}>
-              {Array.from({ length: maxStarters }, (_, i) => {
-                const lVal = leftStarters[i] ?? null;
-                const rVal = rightStarters[i] ?? null;
+          {maxStarters > 0 && (
+            <Box sx={compareUserInteractionStepStyles.fieldSectionGrow}>
+              <Box sx={compareUserInteractionStepStyles.fieldHeader}>
+                <Typography sx={compareUserInteractionStepStyles.sectionLabel}>Chat Starters</Typography>
+              </Box>
+              {startersNoDiff && (
+                <Typography sx={compareUserInteractionStepStyles.noDiffNote}>
+                  No differences in this section.
+                </Typography>
+              )}
+              <Box sx={compareUserInteractionStepStyles.startersList}>
+                {Array.from({ length: maxStarters }, (_, i) => {
+                  const lVal = leftStarters[i] ?? null;
+                  const rVal = rightStarters[i] ?? null;
 
-                return (
-                  <Box
-                    key={i}
-                    sx={compareUserInteractionStepStyles.starterRow}
-                  >
-                    <Box sx={compareUserInteractionStepStyles.editableCard}>
-                      <TextDiffHighlight
-                        original={lVal ?? ''}
-                        modified={rVal ?? ''}
-                        mode="modified"
-                        editable
-                        onChange={val => handleRightStarterChange(i, val)}
+                  return (
+                    <Box
+                      key={i}
+                      sx={compareUserInteractionStepStyles.starterRow}
+                    >
+                      <Box sx={compareUserInteractionStepStyles.editableCard}>
+                        <TextDiffHighlight
+                          original={lVal ?? ''}
+                          modified={rVal ?? ''}
+                          mode="modified"
+                          editable
+                          onChange={val => handleRightStarterChange(i, val)}
+                        />
+                      </Box>
+                      <CopyIconButton
+                        value={rVal ?? ''}
+                        tooltip={`Copy Chat Starter ${i + 1} from version ${rightVersion?.name}`}
+                        iconSx={{ fontSize: '1rem' }}
                       />
                     </Box>
-                    <CopyIconButton
-                      value={rVal ?? ''}
-                      tooltip={`Copy Chat Starter ${i + 1} from version ${rightVersion?.name}`}
-                      iconSx={{ fontSize: '1rem' }}
-                    />
-                  </Box>
-                );
-              })}
+                  );
+                })}
+              </Box>
+              <BaseBtn
+                variant={BUTTON_VARIANTS.elitea}
+                size="small"
+                disabled={!rightStartersDirty || savingRightKeys.conversation_starters}
+                onClick={() => onSaveRight({ conversation_starters: rightStarters.filter(s => s?.trim()) })}
+                sx={compareUserInteractionStepStyles.saveBtn}
+              >
+                {savingRightKeys.conversation_starters
+                  ? 'Saving...'
+                  : `Save starters — ${rightVersion?.name}`}
+              </BaseBtn>
             </Box>
-            <BaseBtn
-              variant={BUTTON_VARIANTS.elitea}
-              size="small"
-              disabled={!rightStartersDirty || savingRightKeys.conversation_starters}
-              onClick={() => onSaveRight({ conversation_starters: rightStarters.filter(s => s?.trim()) })}
-              sx={compareUserInteractionStepStyles.saveBtn}
-            >
-              {savingRightKeys.conversation_starters ? 'Saving...' : `Save starters — ${rightVersion?.name}`}
-            </BaseBtn>
-          </Box>
+          )}
         </Box>
       }
     />

@@ -190,4 +190,30 @@ describe('useCompareAgentVersions for pipelines', () => {
     expect(result.current.flushLeftSaves()).toBeNull();
     expect(mocks.dispatch).not.toHaveBeenCalled();
   });
+
+  it('still patches the editor after the versions are loaded again (Change versions, then Compare)', async () => {
+    const { result } = renderPipelineHook();
+    let loaded;
+    await act(async () => {
+      loaded = await result.current.loadVersions(1, 2);
+    });
+    await act(async () => {
+      await result.current.onSaveLeft(saveArgs(loaded, { fieldPayload: { instructions: 'nodes: []\n' } }));
+    });
+
+    // The user goes back to the selection and compares again, then closes the dialog
+    await act(async () => {
+      await result.current.loadVersions(1, 2);
+    });
+    let fields;
+    act(() => {
+      fields = result.current.flushLeftSaves();
+    });
+
+    expect(fields).toEqual({ instructions: 'nodes: []\n' });
+    expect(mocks.updateQueryData.mock.calls.map(call => call[0])).toEqual([
+      'applicationDetails',
+      'getApplicationVersionDetail',
+    ]);
+  });
 });

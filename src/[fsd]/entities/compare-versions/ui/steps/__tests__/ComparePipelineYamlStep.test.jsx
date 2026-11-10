@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material';
 
 import darkPalette from '@/darkPalette';
+import { EditorView, runScopeHandlers } from '@codemirror/view';
 import '@testing-library/jest-dom/vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 
@@ -165,5 +166,22 @@ describe('ComparePipelineYamlStep', () => {
     );
     expect(screen.getByTestId('compare-yaml-plain-editors')).toBeInTheDocument();
     expect(screen.queryByTestId('compare-yaml-toolbar')).not.toBeInTheDocument();
+  });
+
+  it('keeps the indent when Enter is pressed in the YAML editor', () => {
+    renderStep({ leftData: { instructions: 'nodes:\n  - id: a\n    type: llm' } });
+    const editor = document.querySelector('.cm-merge-a .cm-content');
+    const view = EditorView.findFromDOM(editor.closest('.cm-editor'));
+    view.dispatch({ selection: { anchor: view.state.doc.length } });
+
+    runScopeHandlers(
+      view,
+      new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13 }),
+      'editor',
+    );
+
+    const textLines = view.state.doc.toString().split('\n');
+    expect(textLines).toHaveLength(4);
+    expect(textLines.at(-1)).toBe('    ');
   });
 });

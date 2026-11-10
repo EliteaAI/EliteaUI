@@ -2,9 +2,10 @@ import { memo, useId } from 'react';
 
 import { Box, Chip, Radio, RadioGroup, Typography, alpha } from '@mui/material';
 
+import { APPROVAL_RULE, APPROVAL_RULE_LABELS } from '@/[fsd]/entities/schedule/lib/constants';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 
-import { APPROVAL_RULE, APPROVAL_RULE_INFO, APPROVAL_RULE_LABELS } from '../lib/constants';
+import { APPROVAL_RULE_INFO } from '../lib/constants';
 
 const CARDS = [
   {

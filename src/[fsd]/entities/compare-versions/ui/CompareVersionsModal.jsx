@@ -256,7 +256,12 @@ const CompareVersionsModal = memo(props => {
           />
         );
       case 'user-interaction':
-        return <CompareUserInteractionStep {...stepProps} />;
+        return (
+          <CompareUserInteractionStep
+            {...stepProps}
+            alwaysShowStarters={isPipeline}
+          />
+        );
       case 'tools-skills':
         return <CompareToolsSkillsStep {...stepProps} />;
       case 'run-settings':

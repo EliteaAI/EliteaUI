@@ -53,7 +53,8 @@ export const useCompareAgentVersions = ({
 
   const loadVersions = useCallback(
     async (leftId, rightId) => {
-      savedLeftFieldsRef.current = {};
+      // The fields saved to the open version stay until the dialog closes (flushLeftSaves clears them),
+      // also when the user goes back to the selection and compares again
       const versionRequests = [
         fetchAgentVersion({ projectId, applicationId, versionId: leftId }).unwrap(),
         fetchAgentVersion({ projectId, applicationId, versionId: rightId }).unwrap(),

@@ -8,11 +8,6 @@ export const SYSTEM_PAUSE_LABELS = {
 // How a pipeline schedule starts its run (`run_mode`)
 export const RUN_MODE = { ENTRY_POINT: 'entry_point', PROMPT: 'prompt' };
 
-export const RUN_MODE_LABELS = {
-  [RUN_MODE.ENTRY_POINT]: 'Entrypoint',
-  [RUN_MODE.PROMPT]: 'Prompt',
-};
-
 // What a run does at a sensitive tool (`approval_rule`)
 export const APPROVAL_RULE = { PAUSE_AND_ASK: 'pause_and_ask', RUN_WITHOUT_ASKING: 'run_without_asking' };
 

@@ -15,6 +15,7 @@ vi.mock('../steps', () => {
         data-testid={`stub-${name}`}
         data-left-save-reason={props.leftSaveDisabledReason ?? ''}
         data-empty-text={props.emptyText ?? ''}
+        data-always-show-starters={String(Boolean(props.alwaysShowStarters))}
       >
         <button
           type="button"
@@ -197,5 +198,18 @@ describe('CompareVersionsModal', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Discard and continue' }));
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(onOpenSchedule).toHaveBeenCalledWith(77, 2);
+  });
+
+  it('asks for the Chat Starters block only for a pipeline, not for an agent', async () => {
+    renderModal();
+    await openWizard();
+    fireEvent.click(screen.getByTestId('compare-step-user-interaction'));
+    expect(screen.getByTestId('stub-user-interaction')).toHaveAttribute('data-always-show-starters', 'true');
+    cleanup();
+
+    renderModal({ entityType: 'agent' });
+    await openWizard();
+    fireEvent.click(screen.getByTestId('compare-step-user-interaction'));
+    expect(screen.getByTestId('stub-user-interaction')).toHaveAttribute('data-always-show-starters', 'false');
   });
 });

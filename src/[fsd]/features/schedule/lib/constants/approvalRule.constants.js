@@ -1,12 +1,5 @@
 import { APPROVAL_RULE } from '@/[fsd]/entities/schedule/lib/constants';
 
-// The values and labels live with the schedule entity, so the compare dialog reads the same ones
-export {
-  APPROVAL_RULE,
-  APPROVAL_RULE_LABELS,
-  DEFAULT_APPROVAL_RULE,
-} from '@/[fsd]/entities/schedule/lib/constants';
-
 // Help text of the info icon beside each option
 export const APPROVAL_RULE_INFO = {
   [APPROVAL_RULE.PAUSE_AND_ASK]:
