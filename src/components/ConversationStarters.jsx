@@ -32,9 +32,11 @@ const ConversationStarters = memo(props => {
     () => (version_details?.conversation_starters || []).map(conversationStartersHelpers.toString),
     [version_details?.conversation_starters],
   );
-  // Rows rather than filled starters, so blank rows can't be stacked past the limit
+  // Blank rows aren't saved, so they don't count; an open blank row still blocks adding another
+  const filledCount = conversationStartersHelpers.countFilled(values);
   const { maxStarters, isOverLimit, disableAdd, addTooltip } = useConversationStartersAddGate({
-    count: values.length,
+    count: filledCount,
+    hasBlank: values.some(s => !s.trim()),
   });
   const styles = conversationStartersStyles(values.length === 0, isOverLimit);
 
@@ -172,7 +174,7 @@ const ConversationStarters = memo(props => {
                   data-testid="agent-conversation-starters-limit-counter"
                   data-over-limit={isOverLimit ? 'true' : undefined}
                 >
-                  {values.length}/{maxStarters} starters added.
+                  {filledCount}/{maxStarters} starters added.
                 </Typography>
               </Box>
             </Box>

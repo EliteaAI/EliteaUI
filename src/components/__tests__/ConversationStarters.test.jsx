@@ -59,7 +59,32 @@ describe('ConversationStarters limit', () => {
     expect(counter()).not.toHaveAttribute('data-over-limit');
     expect(addButton()).toBeEnabled();
     fireEvent.click(addButton());
-    expect(counter()).toHaveTextContent('3/5 starters added.');
+    expect(counter()).toHaveTextContent('2/5 starters added.');
+    expect(addButton()).toBeDisabled();
+  });
+
+  it('counts a blank row only once it is filled', () => {
+    shared.max = 4;
+    renderEditor({ saved: [...starters(3), ''] });
+    expect(counter()).toHaveTextContent('3/4 starters added.');
+    expect(addButton()).toBeDisabled();
+    fireEvent.change(screen.getAllByTestId('agent-conversation-starter-input')[3], {
+      target: { value: 'Starter 4' },
+    });
+    expect(counter()).toHaveTextContent('4/4 starters added.');
+    expect(addButton()).toBeDisabled();
+  });
+
+  it('leaves the over-limit state once starters are cleared down to the limit', () => {
+    shared.max = 5;
+    renderEditor({ saved: starters(8) });
+    for (let i = 0; i < 3; i += 1)
+      fireEvent.change(screen.getAllByTestId('agent-conversation-starter-input')[i], {
+        target: { value: '' },
+      });
+    expect(counter()).toHaveTextContent('5/5 starters added.');
+    expect(counter()).not.toHaveAttribute('data-over-limit');
+    expect(addButton()).toBeDisabled();
   });
 
   it('shows 0/M on an empty list', () => {
