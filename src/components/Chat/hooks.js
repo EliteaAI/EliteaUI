@@ -16,6 +16,7 @@ import {
   supersedeMentionSkillAction,
 } from '@/[fsd]/features/chat/lib/helpers';
 import {
+  appendStepText,
   applyInputGuardrailBlocked,
   applyInputGuardrailNotice,
   createSyntheticToolAction,
@@ -647,8 +648,10 @@ export const useChatSocket = ({
                 },
                 created_at: message.created_at,
                 type: TOOL_ACTION_TYPES.Llm,
-                content: chunkContent,
-                thinking: chunkThinking,
+                // The worker always sends agent_llm_start first; a step born from a chunk began while away
+                missedStart: true,
+                content: appendStepText('', chunkContent, true),
+                thinking: appendStepText('', chunkThinking, true),
               });
             }
             addMessageToChatHistory({
@@ -685,8 +688,8 @@ export const useChatSocket = ({
                           ...(response_metadata?.metadata || {}),
                           ...hierarchy,
                         },
-                        content: (ta.content || '') + chunkContent,
-                        thinking: (ta.thinking || '') + chunkThinking,
+                        content: appendStepText(ta.content, chunkContent, ta.missedStart),
+                        thinking: appendStepText(ta.thinking, chunkThinking, ta.missedStart),
                       }
                     : ta,
                 );
@@ -706,8 +709,10 @@ export const useChatSocket = ({
                     },
                     created_at: message.created_at,
                     type: TOOL_ACTION_TYPES.Llm,
-                    content: chunkContent,
-                    thinking: chunkThinking,
+                    // The worker always sends agent_llm_start first; a step born from a chunk began while away
+                    missedStart: true,
+                    content: appendStepText('', chunkContent, true),
+                    thinking: appendStepText('', chunkThinking, true),
                   },
                 ];
               } else {
@@ -759,6 +764,8 @@ export const useChatSocket = ({
             // Clean up verbose tool call text - remove "with inputs {...}" part
             thinkText = thinkText.replace(/\s+with inputs\s+\{[^}]*\}/g, '');
             t.content = thinkText;
+            // The full text is here now; drop the cut-text marker of a step joined mid-way
+            t.missedStart = undefined;
             t.ended_at = thinkStep.timestamp_finish;
             if (thinkStep.timestamp_start) t.startedAt = thinkStep.timestamp_start;
             if (thinkStep.timestamp_finish) t.finishedAt = thinkStep.timestamp_finish;
