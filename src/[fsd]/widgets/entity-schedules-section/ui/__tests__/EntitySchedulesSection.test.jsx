@@ -502,6 +502,19 @@ describe('EntitySchedulesSection', () => {
       expect(screen.getByTestId('toolkit_index-schedules-section-add')).toBeDisabled();
     });
 
+    it('tells with a text that the index already has a schedule next to the disabled "+ Schedule"', () => {
+      mocks.entitySchedules.mockReturnValue(listOf([{ id: 2, name: 'Nightly refresh' }]));
+      renderIndexSection();
+
+      const add = screen.getByTestId('toolkit_index-schedules-section-add');
+      expect(add).toBeDisabled();
+      const hintShown =
+        screen.queryByText('This index already has a schedule') !== null ||
+        add.getAttribute('title') === 'This index already has a schedule' ||
+        add.closest('[aria-label="This index already has a schedule"]') !== null;
+      expect(hintShown).toBe(true);
+    });
+
     it('keeps "+ Schedule" off while the first load runs', () => {
       mocks.entitySchedules.mockReturnValue(listOf([], { isFetching: true }));
       renderIndexSection();
