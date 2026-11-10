@@ -8,13 +8,12 @@ import { selectIndexesListToolkitId } from '@/[fsd]/features/toolkits/indexes/mo
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 
 // The clock icon of an index in the listed toolkit; the index summary tells whether the index has a schedule.
-// The summary has no tag that a schedule save clears, so each mount asks again.
 export const useIndexScheduleIndicator = indexName => {
   const projectId = useSelectedProjectId();
   const toolkitId = useSelector(selectIndexesListToolkitId);
   const { data: options } = useGetToolkitIndexOptionsQuery(
     { projectId, toolkitId },
-    { skip: !projectId || !toolkitId || !indexName, refetchOnMountOrArgChange: true },
+    { skip: !projectId || !toolkitId || !indexName },
   );
 
   return useMemo(() => {

@@ -78,15 +78,12 @@ describe('useIndexScheduleIndicator', () => {
     expect(renderIndicator('docs', indexesLoaded(7))).toBeNull();
   });
 
-  it('asks the summary of the listed toolkit again on each mount', () => {
+  it('asks the summary of the listed toolkit without a refetch on each mount', () => {
     mocks.options.mockReturnValue(summary());
 
     renderIndicator('docs', indexesLoaded(7));
 
-    expect(mocks.options).toHaveBeenCalledWith(
-      { projectId: 2, toolkitId: 7 },
-      { skip: false, refetchOnMountOrArgChange: true },
-    );
+    expect(mocks.options).toHaveBeenCalledWith({ projectId: 2, toolkitId: 7 }, { skip: false });
   });
 
   it('skips the summary while no toolkit is listed', () => {
