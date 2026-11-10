@@ -5,7 +5,7 @@ import { useFormik } from 'formik';
 import { Box, Grid } from '@mui/material';
 
 import { GenerateEntityButton } from '@/[fsd]/entities/generate-entity-with-ai';
-import { isWebhookRow } from '@/[fsd]/entities/schedule';
+import { isWebhookRow, toKindNoun } from '@/[fsd]/entities/schedule';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { WebhookHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -19,18 +19,25 @@ import useNavBlocker from '@/hooks/useNavBlocker';
 import { StyledGridContainer } from '@/pages/Common/Components/StyledComponents';
 
 import { RISK_CHECK_STATUS } from '../lib/constants';
-import { resetWhatToRun, scheduleFormSchema } from '../lib/helpers';
-import { useScheduleEntityDetails, useScheduleRiskCheck, useScheduleSave } from '../lib/hooks';
+import { connectionsBlockSave, connectionsHint, resetWhatToRun, scheduleFormSchema } from '../lib/helpers';
+import {
+  useScheduleConnections,
+  useScheduleEntityDetails,
+  useScheduleRiskCheck,
+  useScheduleSave,
+} from '../lib/hooks';
 import BuildScheduleWithAiModal from './BuildScheduleWithAiModal';
 import ReconfirmBadge from './ReconfirmBadge';
 import RiskReviewDialog from './RiskReviewDialog';
 import SaveWarningsDialog from './SaveWarningsDialog';
 import ScheduleApprovalSection, { APPROVAL_RULE_ITEMS } from './ScheduleApprovalSection';
+import ScheduleConnectionsPanel from './ScheduleConnectionsPanel';
 import ScheduleEntitySection from './ScheduleEntitySection';
 import ScheduleFormActions from './ScheduleFormActions';
 import ScheduleGeneralSection from './ScheduleGeneralSection';
 import ScheduleLockedEntity from './ScheduleLockedEntity';
 import SchedulePromptSection from './SchedulePromptSection';
+import ScheduleReenableBanner from './ScheduleReenableBanner';
 import ScheduleRiskNotices from './ScheduleRiskNotices';
 import ScheduleSettingsHeader from './ScheduleSettingsHeader';
 import ScheduleVersionField from './ScheduleVersionField';
@@ -94,11 +101,31 @@ const ScheduleForm = memo(props => {
     versionId: values.version_id,
     scheduleId: schedule?.id,
     approvalRule: values.approval_rule,
+    isWebhook: isWebhookRow(values),
   });
-  const save = useScheduleSave({ formik, riskCheck, schedule, onSubmit, onSaved, onRunNow, onDraftTestRun });
+  const connections = useScheduleConnections({
+    projectId,
+    entityType: values.type,
+    applicationId: values.application_id,
+    versionId: values.version_id,
+    scheduleId: schedule?.id,
+    isWebhook: isWebhookRow(values),
+  });
+  const save = useScheduleSave({
+    formik,
+    riskCheck,
+    connections,
+    schedule,
+    onSubmit,
+    onSaved,
+    onRunNow,
+    onDraftTestRun,
+  });
   // Without edit in allowed_actions the server refuses a save, so the form only shows the values
   const readOnly = Array.isArray(schedule?.allowed_actions) && !schedule.allowed_actions.includes('edit');
   const riskBlocksSave = RISK_STATES_WITHOUT_SAVE.includes(riskCheck.status);
+  // A webhook runs with no one signed in, so it saves only when every connection is OK (#7401)
+  const connectionsHoldSave = connectionsBlockSave(isWebhookRow(values), connections);
 
   // Unsaved changes open the leave dialog; a save in progress never does
   const blockOptions = useMemo(
@@ -157,6 +184,7 @@ const ScheduleForm = memo(props => {
       entityId={values.application_id}
       versionId={values.version_id}
       projectId={projectId}
+      kind={toKindNoun(values.trigger_kind)}
       onRetry={riskCheck.runCheck}
     />
   );
@@ -245,6 +273,10 @@ const ScheduleForm = memo(props => {
             disabled={!values.application_id || readOnly}
             error={fieldError('version_id')}
           />
+          <ScheduleConnectionsPanel
+            connections={connections}
+            isWebhook={isWebhookRow(values)}
+          />
           {promptFields}
         </Box>
       ),
@@ -305,8 +337,13 @@ const ScheduleForm = memo(props => {
               <ScheduleFormActions
                 riskStatus={riskCheck.status}
                 riskBlocksSave={riskBlocksSave}
+                connectionsHint={connectionsHint(isWebhookRow(values), connections)}
                 saveDisabled={
-                  formik.isSubmitting || riskBlocksSave || readOnly || (!!schedule && !formik.dirty)
+                  formik.isSubmitting ||
+                  riskBlocksSave ||
+                  connectionsHoldSave ||
+                  readOnly ||
+                  (!!schedule && !formik.dirty)
                 }
                 onSave={formik.handleSubmit}
                 onCancel={handleCancel}
@@ -339,6 +376,10 @@ const ScheduleForm = memo(props => {
                     onSubmit={formik.handleSubmit}
                     sx={styles.root}
                   >
+                    <ScheduleReenableBanner
+                      schedule={schedule}
+                      onRefused={connections.recheck}
+                    />
                     {save.banner && (
                       <BannerMessage
                         message={save.banner}

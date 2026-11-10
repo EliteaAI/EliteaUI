@@ -49,6 +49,8 @@ let runAllowed = true;
 let listFailed = false;
 let reviewProps;
 const checkRisk = vi.fn();
+// #7401 Connections check: every row ok unless a test sets other rows
+const checkConnections = vi.fn();
 
 vi.mock('@/hooks/useCheckPermission', () => ({
   default: () => ({
@@ -62,6 +64,21 @@ vi.mock('@/[fsd]/entities/schedule', async () => ({
     isError: listFailed,
   }),
   useCheckScheduleRiskMutation: () => [checkRisk],
+  useCheckScheduleConnectionsMutation: () => [checkConnections],
+}));
+// The sign-in bar needs the store and the auth modal; the panel only passes it the credential
+vi.mock('@/[fsd]/features/credentials/ui', () => ({
+  StoredLoginStatus: props => (
+    <button
+      type="button"
+      data-testid="connection-sign-in"
+      data-title={props.credentialRef?.elitea_title}
+      onClick={props.onLoginChange}
+    />
+  ),
+}));
+vi.mock('../ScheduleReenableAction', () => ({
+  default: () => <span data-testid="schedule-reenable-button" />,
 }));
 vi.mock('../ScheduleActiveToggle', () => ({
   default: props => (
@@ -249,6 +266,7 @@ describe('ScheduleForm', () => {
     listFailed = false;
     listQuery.mockReturnValue({ data: { rows: ROWS, total: 2 }, isFetching: false });
     checkRisk.mockReturnValue(answer(CLEAR));
+    checkConnections.mockReturnValue(answer({ rows: [], all_ok: true, blocking: false }));
   });
 
   afterEach(() => {
@@ -1861,6 +1879,169 @@ describe('ScheduleForm', () => {
     it('never shows on a schedule, even with needs_reconfirm', () => {
       renderForm({ schedule: { ...owned, trigger_kind: 'cron' } }, '/settings/schedules/3');
       expect(screen.queryByTestId('schedule-needs-reconfirm')).toBeNull();
+    });
+  });
+
+  // #7401: one row per toolkit; a webhook saves only when every row is OK
+  describe('Connections panel', () => {
+    const VERSIONED = { ...INITIAL, application_id: '7', version_id: 71, prompt: 'Hi' };
+    const WEBHOOK = {
+      ...VERSIONED,
+      trigger_kind: 'webhook',
+      webhook_type: 'custom',
+      cron: undefined,
+      timezone: undefined,
+    };
+    const SIGN_IN = {
+      toolkit: 'Mail',
+      status: 'sign_in_required',
+      credential_title: 'team_outlook',
+      credential_type: 'outlook',
+      reason: 'no saved login: sign in on the credential',
+    };
+    const REMOTE = { toolkit: 'Remote', status: 'unsupported', reason: 'Webhooks cannot wait for a sign-in' };
+    const saveButton = () => screen.getByTestId('schedule-save-button');
+    const renderWith = initialValues =>
+      renderForm(
+        { initialValues, lockedEntity: { type: 'agent', id: '7' } },
+        '/agents/all/7/webhooks/create',
+      );
+
+    it('blocks a webhook save while a row is not OK, under both rules', async () => {
+      checkConnections.mockReturnValue(answer({ rows: [{ toolkit: 'GH', status: 'ok' }, REMOTE] }));
+      renderWith({ ...WEBHOOK, approval_rule: 'run_without_asking' });
+
+      expect(await screen.findByTestId('schedule-connections-panel')).toBeInTheDocument();
+      expect(screen.getAllByTestId('schedule-connection-row').map(row => row.dataset.status)).toEqual([
+        'ok',
+        'unsupported',
+      ]);
+      expect(screen.getByText('Webhooks cannot wait for a sign-in')).toBeInTheDocument();
+      expect(saveButton()).toBeDisabled();
+      expect(screen.getByText('Sign in to every connection to save')).toBeInTheDocument();
+      expect(checkConnections).toHaveBeenCalledWith(
+        expect.objectContaining({ trigger_kind: 'webhook', version_id: 71 }),
+      );
+    });
+
+    it('saves a webhook once every row is OK', async () => {
+      checkConnections.mockReturnValue(answer({ rows: [{ toolkit: 'Mail', status: 'ok' }] }));
+      renderWith(WEBHOOK);
+
+      await waitFor(() => expect(saveButton()).toBeEnabled());
+    });
+
+    it('shows a sign-in on a saved-login row and checks again after it', async () => {
+      checkConnections.mockReturnValueOnce(answer({ rows: [SIGN_IN] }));
+      renderWith(WEBHOOK);
+
+      const signIn = await screen.findByTestId('connection-sign-in');
+      expect(signIn).toHaveAttribute('data-title', 'team_outlook');
+      checkConnections.mockReturnValue(answer({ rows: [{ ...SIGN_IN, status: 'ok', login: 'ok' }] }));
+      fireEvent.click(signIn);
+
+      await waitFor(() => expect(saveButton()).toBeEnabled());
+      expect(checkConnections).toHaveBeenCalledTimes(2);
+    });
+
+    it('lets a schedule under "Pause and ask me" save with a notice', async () => {
+      checkConnections.mockReturnValue(answer({ rows: [REMOTE] }));
+      renderWith(VERSIONED);
+
+      expect(await screen.findByText(/a run waits for you to sign in/)).toBeInTheDocument();
+      await waitFor(() => expect(saveButton()).toBeEnabled());
+      expect(checkConnections).toHaveBeenCalledWith(expect.objectContaining({ trigger_kind: 'cron' }));
+    });
+
+    it('shows the rows of a refused webhook save in the panel', async () => {
+      checkConnections.mockReturnValue(answer({ rows: [{ toolkit: 'Mail', status: 'ok' }] }));
+      const refused = { status: 409, data: { code: 'connections_not_ready', error: 'x', rows: [REMOTE] } };
+      const onSubmit = vi.fn().mockRejectedValue(refused);
+      renderForm(
+        { initialValues: WEBHOOK, lockedEntity: { type: 'agent', id: '7' }, onSubmit },
+        '/agents/all/7/webhooks/create',
+      );
+      await waitFor(() => expect(saveButton()).toBeEnabled());
+
+      await save();
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+      expect(await screen.findByText('Webhooks cannot wait for a sign-in')).toBeInTheDocument();
+      expect(saveButton()).toBeDisabled();
+    });
+
+    it('says the connections could not be checked when the check fails', async () => {
+      checkConnections.mockReturnValue({ unwrap: () => Promise.reject(new Error('down')) });
+      renderWith(WEBHOOK);
+
+      expect(
+        await screen.findByText('Connections could not be checked; try again to save'),
+      ).toBeInTheDocument();
+      expect(screen.queryByText('Sign in to every connection to save')).toBeNull();
+      expect(saveButton()).toBeDisabled();
+    });
+
+    it('never shows the rows of the previous version while the new one is checked', async () => {
+      checkConnections.mockReturnValueOnce(answer({ rows: [REMOTE] }));
+      renderForm(
+        {
+          initialValues: { ...WEBHOOK, application_id: '' },
+          lockedEntity: undefined,
+        },
+        '/settings/webhooks/create',
+      );
+      pickEntity(7);
+      await waitFor(() => expect(versionProps.value).toBe(71));
+      expect(await screen.findByText('Webhooks cannot wait for a sign-in')).toBeInTheDocument();
+
+      checkConnections.mockReturnValue({ unwrap: () => new Promise(() => {}) });
+      await act(async () => versionProps.onChange(70));
+
+      expect(screen.queryByText('Webhooks cannot wait for a sign-in')).toBeNull();
+      expect(screen.getByText('Checking connections')).toBeInTheDocument();
+    });
+
+    it('shows the server error when a refused save carries no rows', async () => {
+      checkConnections.mockReturnValue(answer({ rows: [{ toolkit: 'Mail', status: 'ok' }] }));
+      const refused = {
+        status: 409,
+        data: { code: 'connections_not_ready', error: 'Every toolkit must run unattended' },
+      };
+      const onSubmit = vi.fn().mockRejectedValue(refused);
+      renderForm(
+        { initialValues: WEBHOOK, lockedEntity: { type: 'agent', id: '7' }, onSubmit },
+        '/agents/all/7/webhooks/create',
+      );
+      await waitFor(() => expect(saveButton()).toBeEnabled());
+
+      await save();
+
+      expect(await screen.findByText('Every toolkit must run unattended')).toBeInTheDocument();
+    });
+
+    it('offers Re-enable on a webhook switched off by an expired login', async () => {
+      checkConnections.mockReturnValue(answer({ rows: [SIGN_IN] }));
+      renderForm(
+        {
+          initialValues: WEBHOOK,
+          lockedEntity: { type: 'agent', id: '7' },
+          schedule: {
+            id: 3,
+            trigger_kind: 'webhook',
+            enabled: false,
+            disabled_reason: 'credential_expired',
+            allowed_actions: ['edit', 'resume'],
+            owner: { name: 'Ann Lee' },
+          },
+        },
+        '/agents/all/7/webhooks/3',
+      );
+
+      expect(await screen.findByTestId('schedule-reenable-banner')).toHaveTextContent(
+        /saved login stopped working/,
+      );
+      expect(screen.getByTestId('schedule-reenable-button')).toBeInTheDocument();
+      expect(checkConnections).toHaveBeenCalledWith(expect.objectContaining({ schedule_id: 3 }));
     });
   });
 });

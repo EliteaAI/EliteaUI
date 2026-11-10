@@ -469,4 +469,12 @@ describe('splitRiskFindings', () => {
   it('accepts a missing answer', () => {
     expect(splitRiskFindings(null, 'pause_and_ask')).toEqual({ blocking: [], waiting: [] });
   });
+
+  // #7401: a webhook fires too often to wait for a person to sign in
+  it('keeps a sign-in and a missing credential blocking for a webhook under "Pause and ask me"', () => {
+    expect(splitRiskFindings({ blocking: [signin, credential] }, 'pause_and_ask', true)).toEqual({
+      blocking: [signin, credential],
+      waiting: [],
+    });
+  });
 });

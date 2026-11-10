@@ -20,8 +20,16 @@ const WAIT_NOTE = 'You can save this schedule. With "Pause and ask me", the run 
 const stepName = ({ step_label, step }) => step_label ?? step;
 
 // Title lines, the line above the list and the closing line of one cause kind.
-// `waiting` is the yellow box: the save goes on and the run waits for the owner.
-const describeGroup = (code, findings, entityType, waiting) => {
+// `waiting` is the yellow box: the save goes on and the run waits for the owner. `kind` is the trigger noun.
+const describeGroup = (code, findings, entityType, waiting, kind = 'schedule') => {
+  const runs = kind === 'webhook' ? 'Webhook runs' : 'Scheduled runs';
+  if (code === 'delegated_credential')
+    return {
+      title: [`This ${entityType} acts with a person's Microsoft sign-in.`, `${runs} can't use it.`],
+      intro: `You can't save this ${kind}:`,
+      items: findings.map(({ toolkit }) => ({ name: toolkit, reason: 'uses an Entra-delegated credential' })),
+      outro: 'Use a credential with a saved login (a team or service account) instead.',
+    };
   if (waiting && code === 'personal_signin_required')
     return {
       title: [`This ${entityType} needs a personal sign-in.`, 'The run waits until you sign in and approve.'],
@@ -40,31 +48,34 @@ const describeGroup = (code, findings, entityType, waiting) => {
     };
   if (code === 'personal_signin_required')
     return {
-      title: [`This ${entityType} needs a personal sign-in.`, "Scheduled runs can't sign in for you."],
-      intro: "You can't save this schedule. These tools need a person to sign in:",
+      title: [`This ${entityType} needs a personal sign-in.`, `${runs} can't sign in for you.`],
+      intro: `You can't save this ${kind}. These tools need a person to sign in:`,
       items: findings.map(({ toolkit, reason }) => ({ name: toolkit, reason })),
-      outro: 'Use a toolkit with a shared project credential instead.',
+      outro:
+        kind === 'webhook'
+          ? 'Webhooks cannot wait for a sign-in; use a toolkit with a saved login.'
+          : 'Use a toolkit with a shared project credential instead.',
     };
   if (code === 'human_input_step') {
     const [first, ...rest] = findings;
     const step = stepName(first) ? ` at step '${stepName(first)}'` : '';
     const more = rest.length ? ` and ${rest.length} more ${rest.length === 1 ? 'step' : 'steps'}` : '';
     return {
-      title: [`This ${entityType} asks a person for input${step}${more}.`, "Scheduled runs can't answer it."],
-      intro: "You can't save this schedule.",
+      title: [`This ${entityType} asks a person for input${step}${more}.`, `${runs} can't answer it.`],
+      intro: `You can't save this ${kind}.`,
       outro: `Remove the human-input step, or run the ${entityType} from the chat.`,
     };
   }
   if (code === 'missing_credential')
     return {
-      title: ['A toolkit has no usable credential.', "Scheduled runs can't work without it."],
-      intro: "You can't save this schedule.",
+      title: ['A toolkit has no usable credential.', `${runs} can't work without it.`],
+      intro: `You can't save this ${kind}.`,
       items: findings.map(({ toolkit }) => ({
         reason: `Toolkit '${toolkit}' has no usable credential for the owner.`,
       })),
     };
   return {
-    title: ["You can't save this schedule."],
+    title: [`You can't save this ${kind}.`],
     items: findings.map(({ message }) => ({ reason: message })),
   };
 };
@@ -72,12 +83,12 @@ const describeGroup = (code, findings, entityType, waiting) => {
 // The boxes under the entity when the risk check finds a cause: one box per cause kind. Red boxes block the
 // save; with `waiting` the boxes are yellow, the save goes on and the run waits for the owner.
 const ScheduleRiskBlockBox = memo(props => {
-  const { blocking, waiting = false, entityType, entityId, versionId, projectId } = props;
+  const { blocking, waiting = false, entityType, entityId, versionId, projectId, kind } = props;
   const groups = useMemo(() => toRiskItems(blocking), [blocking]);
   const styles = scheduleRiskBlockBoxStyles();
 
   return groups.map(({ code, findings }) => {
-    const { title, intro, items, outro } = describeGroup(code, findings, entityType, waiting);
+    const { title, intro, items, outro } = describeGroup(code, findings, entityType, waiting, kind);
     // The server names what to fix; the form entity and version stand in when it does not
     const fix = findings.find(finding => finding.fix)?.fix ?? {
       entity_type: entityType,

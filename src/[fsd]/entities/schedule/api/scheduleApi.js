@@ -141,6 +141,15 @@ export const scheduleApi = eliteaApi
         }),
       }),
 
+      // #7401: can each toolkit run with no person signed in; a webhook is blocked by any row that is not ok
+      checkScheduleConnections: build.mutation({
+        query: ({ projectId, ...body }) => ({
+          url: `${schedulesPath(projectId)}/connections`,
+          method: 'POST',
+          body,
+        }),
+      }),
+
       runSchedule: build.mutation({
         // payload: the sample body of a webhook test run
         query: ({ projectId, scheduleId, trigger = 'manual', payload }) => ({
@@ -333,6 +342,7 @@ export const {
   useGetScheduleRunQuery,
   useGetScheduleListQuery,
   useCreateScheduleMutation,
+  useCheckScheduleConnectionsMutation,
   useCheckScheduleRiskMutation,
   useDecideRunWithoutChatMutation,
   useRunScheduleMutation,
