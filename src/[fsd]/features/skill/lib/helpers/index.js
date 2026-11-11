@@ -1,4 +1,5 @@
 export { filterAttachedSkills } from './attachedSkills.helpers';
+export { isUserInvocable, userInvocableMeta, withSkillVersionInvocation } from './skillInvocation.helpers';
 export { normalizeTagsForSave } from './tags.helpers';
 export { isSkillZip, readSkillZip } from './skillPackage.helpers';
 export {
