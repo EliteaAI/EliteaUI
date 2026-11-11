@@ -71,6 +71,7 @@ const mocks = vi.hoisted(() => {
     runQuery: { currentData: undefined },
     settingsQuery: { data: { allow_run_without_asking: true }, isError: false },
     riskMutation: [() => ({ unwrap: () => Promise.resolve(riskResult) })],
+    connectionsMutation: [vi.fn()],
     indexOptionsQuery: { data: [], isFetching: false, isError: false },
     applicationQuery: { currentData: undefined, isFetching: false },
     toolkitQuery: { currentData: { id: 3, toolkit_name: 'Docs toolkit' } },
@@ -94,6 +95,7 @@ vi.mock('@/[fsd]/entities/schedule', async importOriginal => ({
   useGetScheduleRunQuery: () => mocks.runQuery,
   useGetScheduleSettingsQuery: () => mocks.settingsQuery,
   useCheckScheduleRiskMutation: () => mocks.riskMutation,
+  useCheckScheduleConnectionsMutation: () => mocks.connectionsMutation,
   useGetToolkitIndexOptionsQuery: () => mocks.indexOptionsQuery,
 }));
 vi.mock('@/[fsd]/features/schedule/lib/hooks/useScheduleRowActions.hooks', () => ({
