@@ -8,6 +8,7 @@ export { default as AutomatedActivityTable } from './components/AutomatedActivit
 export { default as RunFailedCallsTable } from './components/RunFailedCallsTable';
 export { default as CostTable } from './components/CostTable';
 export { default as DeletedChip } from './components/DeletedChip';
+export { default as UserLabel } from './components/UserLabel';
 export { default as AnalyticsBreakdownTable } from './components/AnalyticsBreakdownTable';
 export { default as AgentRecentRunsTable } from './components/AgentRecentRunsTable';
 export { default as SkillsEmptyState } from './components/SkillsEmptyState';

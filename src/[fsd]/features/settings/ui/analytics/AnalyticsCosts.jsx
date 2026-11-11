@@ -84,7 +84,11 @@ const AnalyticsCosts = memo(props => {
   );
 
   const userTableData = useMemo(
-    () => toCostRows(data?.by_user, u => ({ name: u.user_email })),
+    () =>
+      toCostRows(data?.by_user, u => ({
+        name: u.user_email || `User ${u.user_id}`,
+        userDeleted: Boolean(u.user_deleted),
+      })),
     [data?.by_user],
   );
 

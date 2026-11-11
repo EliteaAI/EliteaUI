@@ -28,6 +28,11 @@ export const isValidDate = date => date instanceof Date && !Number.isNaN(date.ge
 
 export const toValidISOString = date => (isValidDate(date) ? date.toISOString() : undefined);
 
+// A request must carry both bounds or neither. With one bound missing, the backend fills it in
+// with its own default (a seven-day window), which silently widens what the user selected.
+export const isCompleteDateRange = (from, to) =>
+  isValidDate(from) && isValidDate(to) && from.getTime() <= to.getTime();
+
 export const fmtNum = n => {
   // Missing data renders as an em-dash, mirroring fmtCost/fmtDuration. A real
   // zero is distinct from "unknown" and still formats as '0'.

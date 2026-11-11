@@ -6,7 +6,7 @@ import { Box, CircularProgress, IconButton, TableSortLabel, Typography, useTheme
 
 import { useAnalyticsToolDetailQuery } from '@/[fsd]/features/settings/api/analyticsApi';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { ChartTooltip, KPICard } from '@/[fsd]/features/settings/ui/analytics';
+import { ChartTooltip, KPICard, UserLabel } from '@/[fsd]/features/settings/ui/analytics';
 import {
   analyticsColumnSx,
   analyticsHeaderCellSx,
@@ -219,7 +219,7 @@ const AnalyticsToolDetailed = memo(props => {
                     sx={[styles.tableCellValue, analyticsColumnSx(USER_COLUMNS[0])]}
                     noWrap
                   >
-                    {u.user_email || `User ${u.user_id}`}
+                    <UserLabel user={u} />
                   </Typography>
                   <Typography sx={[styles.tableCellValue, analyticsColumnSx(USER_COLUMNS[1])]}>
                     {AnalyticCommonHelpers.fmtNum(u.calls)}

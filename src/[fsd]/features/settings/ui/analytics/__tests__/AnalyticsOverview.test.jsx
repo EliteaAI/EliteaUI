@@ -26,9 +26,10 @@ vi.mock('@/[fsd]/shared/ui/tooltip', () => ({
   ),
 }));
 
-vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
+vi.mock('@/[fsd]/features/settings/ui/analytics', async () => ({
   AutomatedActivityTable: () => null,
   ChartTooltip: () => null,
+  DeletedChip: (await vi.importActual('../components/DeletedChip')).default,
   KPICard: ({ label, value, tooltip }) => (
     <div
       data-testid={`kpi-${label}`}
@@ -138,7 +139,7 @@ describe('AnalyticsOverview', () => {
     render(<AnalyticsOverview data={MOCK_DATA} />, { wrapper: Wrapper });
     expect(screen.getByTestId('kpi-TEAM')).toBeInTheDocument();
     expect(screen.getByTestId('kpi-AI ACTIVE')).toBeInTheDocument();
-    expect(screen.getByTestId('kpi-LLM CALLS')).toBeInTheDocument();
+    expect(screen.getByTestId('kpi-MODEL CALLS')).toBeInTheDocument();
     expect(screen.getByTestId('kpi-TOOL RUNS')).toBeInTheDocument();
     expect(screen.getByTestId('kpi-CHAT MSG')).toBeInTheDocument();
     expect(screen.getByTestId('kpi-AGENT & PIPELINE RUNS')).toBeInTheDocument();
@@ -157,6 +158,28 @@ describe('AnalyticsOverview', () => {
     expect(screen.getByText('Top 5 AI Adopters')).toBeInTheDocument();
     expect(screen.getByText('alice@example.com')).toBeInTheDocument();
     expect(screen.getByText('bob@example.com')).toBeInTheDocument();
+  });
+
+  it('marks a deleted user with a Deleted user chip beside their id, and not a live one', () => {
+    const data = {
+      ...MOCK_DATA,
+      top_ai_users: [
+        { ...MOCK_DATA.top_ai_users[0], user_id: 9, user_email: null, user_deleted: true },
+        { ...MOCK_DATA.top_ai_users[1], user_id: 12, user_email: null, user_deleted: false },
+      ],
+    };
+    render(<AnalyticsOverview data={data} />, { wrapper: Wrapper });
+    expect(screen.getByText('User 9')).toBeInTheDocument();
+    expect(screen.getByText('User 12')).toBeInTheDocument();
+    const chips = screen.getAllByTestId('analytics-leaderboard-deleted-chip');
+    expect(chips).toHaveLength(1);
+    expect(chips[0]).toHaveTextContent('Deleted user');
+    expect(screen.getByText('User 9').closest('[class*="MuiBox"]')).toContainElement(chips[0]);
+  });
+
+  it('shows no Deleted user chip for ordinary users', () => {
+    render(<AnalyticsOverview data={MOCK_DATA} />, { wrapper: Wrapper });
+    expect(screen.queryByTestId('analytics-leaderboard-deleted-chip')).not.toBeInTheDocument();
   });
 
   it('renders model usage table', () => {
@@ -231,10 +254,10 @@ describe('AnalyticsOverview', () => {
         />,
         { wrapper: Wrapper },
       );
-      const aliceRow = screen.getByText('alice@example.com').parentElement;
+      const aliceRow = screen.getByText('alice@example.com').parentElement.parentElement;
       expect(aliceRow).toHaveTextContent('30 Agent / Pipeline · 3 Skill');
       expect(screen.getByText(/Leaderboard by AI events/)).toHaveTextContent(
-        'Leaderboard by AI events (LLM + Tool + Agent / Pipeline + Skill)',
+        'Leaderboard by AI events (Model + Tool + Agent / Pipeline + Skill)',
       );
       expect(tooltipTitles()).toContain(
         'Ranks users by combined LLM calls, tool runs, and Agent & Pipeline runs. Model and tool calls made by skill runs count toward the score.',
@@ -245,14 +268,26 @@ describe('AnalyticsOverview', () => {
       render(<AnalyticsOverview data={MOCK_DATA} />, { wrapper: Wrapper });
       expect(screen.queryByTestId('kpi-SKILL RUNS')).not.toBeInTheDocument();
       expect(screen.queryByTestId('area-Skill Runs')).not.toBeInTheDocument();
-      expect(screen.getByText('alice@example.com').parentElement).not.toHaveTextContent('Skill');
+      expect(screen.getByText('alice@example.com').parentElement.parentElement).not.toHaveTextContent(
+        'Skill',
+      );
       expect(screen.getByText(/Leaderboard by AI events/)).toHaveTextContent(
-        'Leaderboard by AI events (LLM + Tool + Agent / Pipeline)',
+        'Leaderboard by AI events (Model + Tool + Agent / Pipeline)',
       );
       expect(tooltipTitles()).toEqual([
         'Shows daily AI usage for the selected period.',
         'Ranks users by combined LLM calls, tool runs, and Agent & Pipeline runs.',
       ]);
     });
+  });
+});
+
+describe('AnalyticsOverview model calls (#6879)', () => {
+  afterEach(() => cleanup());
+
+  it('labels the card Model Calls, not LLM Calls', () => {
+    render(<AnalyticsOverview data={MOCK_DATA} />, { wrapper: Wrapper });
+    expect(screen.getByTestId('kpi-MODEL CALLS')).toBeInTheDocument();
+    expect(screen.queryByTestId('kpi-LLM CALLS')).not.toBeInTheDocument();
   });
 });

@@ -17,7 +17,9 @@ export const formatAgentModelLabel = model =>
 export const formatAgentRunModels = models =>
   models?.length ? models.map(formatAgentModelLabel).join(', ') : NO_MODEL_VALUE;
 
-export const formatAgentUserLabel = row => row.user_email || `User ${row.user_id}`;
+// Plain-text user label for exports: a deleted account is marked, since a table cell has no chip.
+export const formatAgentUserLabel = row =>
+  row.user_deleted ? `User ${row.user_id} (Deleted user)` : row.user_email || `User ${row.user_id}`;
 
 const isLocalRun = (run, projectId) => String(run.root_project_id) === String(projectId);
 

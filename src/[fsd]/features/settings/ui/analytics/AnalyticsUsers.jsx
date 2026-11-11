@@ -3,7 +3,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { Box, CircularProgress, TablePagination, TableSortLabel, Typography } from '@mui/material';
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { AnalyticsUserDetailed } from '@/[fsd]/features/settings/ui/analytics';
+import { AnalyticsUserDetailed, UserLabel } from '@/[fsd]/features/settings/ui/analytics';
 import {
   analyticsColumnSx,
   analyticsHeaderCellSx,
@@ -17,9 +17,9 @@ import StyledSearchInput from '@/components/SearchInput';
 const DEFAULT_USER_SORT = { sortBy: 'total_events', sortOrder: 'desc' };
 
 const USER_COLUMNS = [
-  { key: 'user_email', label: 'User', flex: 3, render: u => u.user_email || `User ${u.user_id}` },
+  { key: 'user_email', label: 'User', flex: 3, render: u => <UserLabel user={u} /> },
   { key: 'active_days', label: 'Active Days', render: u => u.active_days },
-  { key: 'llm_events', label: 'LLM Calls', render: u => AnalyticCommonHelpers.fmtNum(u.llm_events) },
+  { key: 'llm_events', label: 'Model Calls', render: u => AnalyticCommonHelpers.fmtNum(u.llm_events) },
   { key: 'tool_events', label: 'Tool Calls', render: u => AnalyticCommonHelpers.fmtNum(u.tool_events) },
   {
     key: 'agent_events',

@@ -19,7 +19,7 @@ import {
 
 const COLUMNS = [
   { key: 'runs', label: 'Runs', format: AnalyticCommonHelpers.fmtNum },
-  { key: 'llm_calls', label: 'LLM Calls', format: AnalyticCommonHelpers.fmtNum },
+  { key: 'llm_calls', label: 'Model Calls', format: AnalyticCommonHelpers.fmtNum },
   { key: 'tool_runs', label: 'Tool Runs', format: AnalyticCommonHelpers.fmtNum },
   { key: 'llm_cost', label: 'Cost', format: AnalyticCommonHelpers.fmtCost },
 ];

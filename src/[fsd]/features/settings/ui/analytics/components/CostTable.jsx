@@ -5,6 +5,7 @@ import { Box, TableSortLabel, Typography } from '@mui/material';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
+import DeletedChip from './DeletedChip';
 import {
   analyticsColumnSx,
   analyticsHeaderCellSx,
@@ -111,10 +112,22 @@ const CostTable = memo(props => {
               sx={[styles.tableRow, rowMinWidth]}
             >
               <Typography
+                component="div"
                 sx={[styles.tableCellValue, styles.nameCell]}
                 noWrap
               >
                 {row.name}
+                {row.userDeleted && (
+                  <Box
+                    component="span"
+                    sx={styles.deletedChipGap}
+                  >
+                    <DeletedChip
+                      testId="analytics-cost-user-deleted-chip"
+                      label="Deleted user"
+                    />
+                  </Box>
+                )}
               </Typography>
               {extraColumns.map(col => (
                 <Box
@@ -202,6 +215,7 @@ const costTableStyles = () => ({
   }),
   extraCell: { display: 'flex', alignItems: 'center' },
   nameCell: analyticsColumnSx(NAME_FLEX),
+  deletedChipGap: { marginLeft: '0.5rem' },
   costCell: analyticsColumnSx(COST_FLEX),
   shareCell: analyticsColumnSx(SHARE_FLEX),
 });

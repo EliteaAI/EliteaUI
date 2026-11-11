@@ -348,14 +348,14 @@ describe('buildAnalyticsSheets — skill usage', () => {
       expect(headers(section(sheets, 'Overview', 'Daily Activity'))).toEqual([
         'Date',
         'Active Users',
-        'LLM Calls',
+        'Model Calls',
         'Tool Runs',
         'Agent & Pipeline Runs',
       ]);
       expect(headers(section(sheets, 'Overview', 'Top AI Adopters'))).toEqual([
         'User',
         'AI Events',
-        'LLM Calls',
+        'Model Calls',
         'Tool Runs',
         'Agent & Pipeline Runs',
       ]);
@@ -491,7 +491,7 @@ describe('buildAgentDetailSheet', () => {
     );
     expect(sectionOf(sheet, 'KPIs').rows).toContainEqual({ metric: 'Total Tokens', value: 1500 });
     const models = sectionOf(sheet, 'Models');
-    const llmCalls = models.columns.find(column => column.header === 'LLM Calls');
+    const llmCalls = models.columns.find(column => column.header === 'Model Calls');
     expect(models.rows[0][llmCalls.key]).toBe(5);
   });
 

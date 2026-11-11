@@ -6,6 +6,7 @@ import {
   buildAgentRunAnalyticsUrl,
   formatAgentModelLabel,
   formatAgentRunModels,
+  formatAgentUserLabel,
 } from '../agentAnalytics.helpers';
 
 const OWN_AGENT = { agentId: 42, kind: 'agent', projectId: 2 };
@@ -75,5 +76,26 @@ describe('agent analytics labels', () => {
       ]),
     ).toBe('GPT-4o, Claude Sonnet');
     expect(formatAgentRunModels([])).toBe('—');
+  });
+});
+
+describe('formatAgentUserLabel (plain-text user name for exports)', () => {
+  it('uses the email of a live user', () => {
+    expect(formatAgentUserLabel({ user_id: 1, user_email: 'alice@example.com' })).toBe('alice@example.com');
+  });
+
+  it('names a deleted account by its id and marks it as a deleted user', () => {
+    expect(formatAgentUserLabel({ user_id: 9, user_email: null, user_deleted: true })).toBe(
+      'User 9 (Deleted user)',
+    );
+  });
+
+  it('never exports the email of a deleted account', () => {
+    const label = formatAgentUserLabel({ user_id: 9, user_email: 'gone@example.com', user_deleted: true });
+    expect(label).not.toContain('gone@example.com');
+  });
+
+  it('falls back to the id, unmarked, when the email is only unknown', () => {
+    expect(formatAgentUserLabel({ user_id: 12, user_email: null })).toBe('User 12');
   });
 });

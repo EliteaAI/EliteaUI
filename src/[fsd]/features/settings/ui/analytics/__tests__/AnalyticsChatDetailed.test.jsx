@@ -46,6 +46,7 @@ vi.mock('@/[fsd]/features/settings/ui/analytics', async () => ({
   AnalyticsBreakdownTable: (await vi.importActual('../components/AnalyticsBreakdownTable')).default,
   ChatRecentRunsTable: () => <div data-testid="chat-recent-runs-stub" />,
   DeletedChip: (await vi.importActual('../components/DeletedChip')).default,
+  UserLabel: (await vi.importActual('../components/UserLabel')).default,
   ChartTooltip: () => null,
   KPICard: ({ label, value, subtitle, testId }) => (
     <div data-testid={testId || `kpi-${label}`}>
