@@ -17,4 +17,7 @@ export const VISUALLY_HIDDEN = {
 export const DISABLED_REASON_LABELS = {
   governance_refused: SYSTEM_PAUSE_LABELS.governance_refused,
   prerun_refused: 'Paused: runs could not start, fix the agent or pipeline and resume',
+  owner_changed: 'Paused: the owner changed, check the connections and re-enable',
+  credential_expired: 'Paused: a saved login stopped working, sign in again and re-enable',
+  connections_changed: 'Paused: the agent now uses a toolkit that needs a person to sign in',
 };

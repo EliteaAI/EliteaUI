@@ -236,4 +236,15 @@ describe('useScheduleRiskCheck', () => {
     expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR);
     expect(result.current.result).toEqual({ ...CLEAR, sensitive: SENSITIVE, fingerprint: 'fp-2' });
   });
+
+  // #7401: a webhook is scanned for a webhook, which never waits for a sign-in
+  it('asks for a webhook scan and keeps a sign-in blocking under "Pause and ask me"', async () => {
+    const signin = { code: 'personal_signin_required', toolkit: 'Remote' };
+    mocks.check.mockReturnValue(answer({ ...CLEAR, blocking: [signin] }));
+    const { result } = setup({ ...DEFAULT_INITIAL, approvalRule: 'pause_and_ask', isWebhook: true });
+
+    await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.BLOCKED));
+    expect(mocks.check).toHaveBeenCalledWith({ ...CHECK_CALL, trigger_kind: 'webhook' });
+    expect(result.current.waiting).toEqual([]);
+  });
 });

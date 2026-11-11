@@ -1,6 +1,6 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useContext, useState } from 'react';
 
-import { useFormikContext } from 'formik';
+import { FormikContext } from 'formik';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
@@ -14,17 +14,26 @@ import OnlineIcon from '@/assets/online-icon.svg?react';
 const MANAGE_LOGIN_HINT = 'Only project admins can log in or out on a team credential';
 
 // A toolkit-page "Connected / Login" bar for credentials that keep a Microsoft login in the vault.
+// `credentialRef` ({ elitea_title, private }) lets it work outside the toolkit form, e.g. the Connections panel.
 const StoredLoginStatus = memo(props => {
-  const { configurationType, settingsKey, getAuthority, keepBrowserToken, loginExpired, onLoginChange } =
-    props;
-  const { values } = useFormikContext();
+  const {
+    configurationType,
+    settingsKey,
+    getAuthority,
+    keepBrowserToken,
+    loginExpired,
+    onLoginChange,
+    credentialRef,
+    compact = false,
+  } = props;
+  const values = useContext(FormikContext)?.values;
   const projectId = useSelectedProjectId();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const { hasCredential, credentialTitle, isConnected, isBusy, canManageLogin, login, logout, modalProps } =
     useStoredOAuthLogin({
       configurationType,
-      credentialRef: values?.settings?.[settingsKey],
+      credentialRef: credentialRef ?? values?.settings?.[settingsKey],
       projectId,
       getAuthority,
       keepBrowserToken,
@@ -39,7 +48,7 @@ const StoredLoginStatus = memo(props => {
     logout();
   }, [logout]);
 
-  const styles = storedLoginStatusStyles(isConnected);
+  const styles = storedLoginStatusStyles(isConnected, compact);
 
   if (!hasCredential) return null;
 
@@ -86,7 +95,7 @@ const StoredLoginStatus = memo(props => {
 StoredLoginStatus.displayName = 'StoredLoginStatus';
 
 /** @type {MuiSx} */
-const storedLoginStatusStyles = isConnected => ({
+const storedLoginStatusStyles = (isConnected, compact) => ({
   statusIcon: {
     width: '.875rem',
     height: '.875rem',
@@ -108,9 +117,9 @@ const storedLoginStatusStyles = isConnected => ({
     justifyContent: 'space-between',
     gap: '0.5rem',
     width: '100%',
-    height: '2.75rem',
-    marginTop: '1rem',
-    marginBottom: '1rem',
+    height: compact ? '2.25rem' : '2.75rem',
+    marginTop: compact ? 0 : '1rem',
+    marginBottom: compact ? 0 : '1rem',
     padding: '.5rem .5rem .5rem 1rem',
     borderRadius: '2.345rem',
     backgroundColor: isConnected

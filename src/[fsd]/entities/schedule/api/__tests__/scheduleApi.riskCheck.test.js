@@ -100,3 +100,70 @@ describe('schedule risk check API', () => {
     expect(request.body).toEqual({ name: 'Daily digest', risk_ack: RISK_ACK });
   });
 });
+
+// The owner's connections check of a saved trigger can switch it off on the server (#7401)
+describe('schedule connections check API', () => {
+  let fetchSpy;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    fetchSpy = vi.spyOn(globalThis, 'fetch');
+  });
+
+  const CHECK = {
+    projectId: 5,
+    entity_type: 'agent',
+    application_id: 7,
+    version_id: 71,
+    trigger_kind: 'webhook',
+  };
+
+  it('posts to .../connections and returns the rows', async () => {
+    fetchSpy.mockResolvedValue(jsonResponse({ rows: [], all_ok: true, blocking: false, lost_login: false }));
+
+    const result = await makeStore().dispatch(scheduleApi.endpoints.checkScheduleConnections.initiate(CHECK));
+
+    const request = await requestAt(fetchSpy, 0);
+    expect(request.url.pathname).toBe(`${BASE}/connections`);
+    expect(request.body).toEqual({
+      entity_type: 'agent',
+      application_id: 7,
+      version_id: 71,
+      trigger_kind: 'webhook',
+    });
+    expect(result.data.all_ok).toBe(true);
+  });
+
+  it('refetches the saved schedule only when the check switched it off', async () => {
+    const store = makeStore();
+    const detail = { id: 3, enabled: true };
+    fetchSpy.mockImplementation(async arg => {
+      const { pathname } = new URL(arg.url);
+      return pathname.endsWith('/connections')
+        ? jsonResponse({
+            rows: [],
+            all_ok: false,
+            blocking: true,
+            lost_login: pathname.length > 0 && store.lost,
+          })
+        : jsonResponse(detail);
+    });
+    await store.dispatch(scheduleApi.endpoints.getSchedule.initiate({ projectId: 5, scheduleId: 3 }));
+    const detailCalls = () =>
+      fetchSpy.mock.calls.filter(([arg]) => new URL(arg.url).pathname === `${BASE}/3`).length;
+    expect(detailCalls()).toBe(1);
+
+    store.lost = false;
+    await store.dispatch(
+      scheduleApi.endpoints.checkScheduleConnections.initiate({ ...CHECK, schedule_id: 3 }),
+    );
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(detailCalls()).toBe(1);
+
+    store.lost = true;
+    await store.dispatch(
+      scheduleApi.endpoints.checkScheduleConnections.initiate({ ...CHECK, schedule_id: 3 }),
+    );
+    await vi.waitFor(() => expect(detailCalls()).toBe(2));
+  });
+});
