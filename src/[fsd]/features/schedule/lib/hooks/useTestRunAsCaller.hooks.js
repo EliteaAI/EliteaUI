@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import { useStartDraftTestRunMutation } from '@/[fsd]/entities/schedule';
+import { APPROVAL_RULE, useStartDraftTestRunMutation } from '@/[fsd]/entities/schedule';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 
 import { buildEditValues, toCreateBody } from '../helpers';
@@ -16,9 +16,9 @@ const testRunErrorText = error => {
 };
 
 /**
- * Starts a Test run of a saved schedule as the viewer. The body is the Save body of the schedule, so the server
- * runs it as a run with no schedule row. It acts as the caller, and a run that waits on the schedule does not
- * block it. `start()` resolves true when the run started, false after a failure (a toast names it).
+ * Starts a Test run of a saved schedule as the viewer. The body is the Save body of the schedule with the rule
+ * `pause_and_ask` and no `enabled`, so the server runs it as a run with no schedule row. It acts as the caller,
+ * and a run that waits on the schedule does not block it. `start()` resolves true when the run started, false after a failure (a toast names it).
  */
 export const useTestRunAsCaller = schedule => {
   const projectId = useSelectedProjectId();
@@ -29,7 +29,13 @@ export const useTestRunAsCaller = schedule => {
   const start = useCallback(async () => {
     setPending(true);
     try {
-      await startDraftTestRun({ projectId, ...toCreateBody(buildEditValues(schedule).values) }).unwrap();
+      // The owner's consent to run without asking and the enabled flag stay behind: the caller's run always asks
+      const values = {
+        ...buildEditValues(schedule).values,
+        approval_rule: APPROVAL_RULE.PAUSE_AND_ASK,
+        enabled: undefined,
+      };
+      await startDraftTestRun({ projectId, ...toCreateBody(values) }).unwrap();
       toastSuccess('Test run started as you');
       return true;
     } catch (error) {
