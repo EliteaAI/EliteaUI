@@ -5,7 +5,9 @@ import { Box, ClickAwayListener, Link, Paper, Popper, Typography } from '@mui/ma
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
 import { Button, Input } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { PERMISSIONS } from '@/common/constants';
 import InfoIcon from '@/components/Icons/InfoIcon';
+import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { WHOLE_TEAM_ID } from '../../lib/constants/shareChat.constants';
 import {
@@ -70,8 +72,11 @@ const ShareTeamTab = memo(props => {
   const alreadyAdded = useMemo(() => {
     const text = query.trim().toLowerCase();
     if (!text) return null;
-    return list.find(item => item.id !== WHOLE_TEAM_ID && item.name.toLowerCase() === text) ?? null;
-  }, [list, query]);
+    return (
+      [owner, ...list].find(item => item.id !== WHOLE_TEAM_ID && item.name.toLowerCase().includes(text)) ??
+      null
+    );
+  }, [list, owner, query]);
 
   const message = useMemo(() => {
     if (isWholeTeamAdded) return 'Everyone already has access';
@@ -125,7 +130,10 @@ const ShareTeamTab = memo(props => {
   const handleInvite = useCallback(() => setIsInviteOpen(true), []);
   const closeInvite = useCallback(() => setIsInviteOpen(false), []);
 
-  const styles = shareTeamTabStyles();
+  const { checkPermission } = useCheckPermission();
+  const canInvite = checkPermission(PERMISSIONS.users.create);
+
+  const styles = shareTeamTabStyles(dropdownBox);
 
   return (
     <Box sx={styles.root}>
@@ -157,7 +165,6 @@ const ShareTeamTab = memo(props => {
               data-testid="share-dropdown"
               elevation={8}
               sx={styles.dropdown}
-              style={{ width: dropdownBox.width }}
             >
               {message ? (
                 <Box sx={styles.messageBlock}>
@@ -170,27 +177,28 @@ const ShareTeamTab = memo(props => {
                       {message}
                     </Typography>
                   </Box>
-                  <Typography
-                    variant="bodyMedium"
-                    color="text.primary"
-                  >
-                    Not in the project?{' '}
-                    <Link
-                      component="button"
-                      type="button"
-                      underline="none"
-                      sx={styles.inviteLink}
-                      onClick={handleInvite}
+                  {canInvite && (
+                    <Typography
+                      variant="bodyMedium"
+                      color="text.primary"
                     >
-                      Invite to project
-                    </Link>
-                  </Typography>
+                      Not in the project?{' '}
+                      <Link
+                        component="button"
+                        type="button"
+                        underline="none"
+                        sx={styles.inviteLink}
+                        onClick={handleInvite}
+                      >
+                        Invite to project
+                      </Link>
+                    </Typography>
+                  )}
                 </Box>
               ) : (
                 <Box
                   role="listbox"
                   sx={styles.options}
-                  style={{ maxHeight: dropdownBox.optionsMaxHeight }}
                 >
                   {candidates.map(item => (
                     <ShareAccessRow
@@ -283,7 +291,7 @@ const POPPER_MODIFIERS = [{ name: 'offset', options: { offset: [0, 4] } }];
 const POPPER_OPTIONS = { strategy: 'fixed' };
 
 /** @type {MuiSx} */
-const shareTeamTabStyles = () => ({
+const shareTeamTabStyles = dropdownBox => ({
   root: {
     flex: 1,
     minHeight: 0,
@@ -298,12 +306,14 @@ const shareTeamTabStyles = () => ({
     position: 'relative',
   },
   dropdown: ({ palette }) => ({
+    width: dropdownBox.width,
     borderRadius: '0.5rem',
     border: `0.0625rem solid ${palette.border.lines}`,
     background: palette.background.default.secondary,
     overflow: 'hidden',
   }),
   options: {
+    maxHeight: dropdownBox.optionsMaxHeight,
     overflowY: 'auto',
     padding: '0.25rem 0',
   },

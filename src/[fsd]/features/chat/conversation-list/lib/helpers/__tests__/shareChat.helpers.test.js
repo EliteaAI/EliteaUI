@@ -7,6 +7,7 @@ import {
   countPeopleWithAccess,
   getCopyLinkMessage,
   getWholeTeamName,
+  isSameAccessList,
   togglePick,
 } from '../shareChat.helpers';
 
@@ -73,5 +74,15 @@ describe('getCopyLinkMessage', () => {
     expect(getCopyLinkMessage({ saved: [], isDirty: false })).toBe(SHARE_MESSAGES.ownerOnly);
     expect(getCopyLinkMessage({ saved: [ann], isDirty: true })).toBe(SHARE_MESSAGES.unsaved);
     expect(getCopyLinkMessage({ saved: [ann], isDirty: false })).toBe(SHARE_MESSAGES.saved);
+  });
+});
+
+describe('isSameAccessList', () => {
+  it('treats the same people in another order as no change', () => {
+    expect(isSameAccessList([ann, bob], [bob, ann])).toBe(true);
+  });
+
+  it('sees a removed person as a change', () => {
+    expect(isSameAccessList([ann, bob], [ann])).toBe(false);
   });
 });

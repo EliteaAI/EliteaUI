@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { Box, CircularProgress, ClickAwayListener, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { SHARE_MESSAGES } from '@/[fsd]/features/chat/conversation-list/lib/constants';
 import { useCopyChatLink } from '@/[fsd]/features/chat/conversation-list/lib/hooks';
 import {
   ConversationRunIndicator,
@@ -189,7 +190,7 @@ const ConversationItem = memo(props => {
   // Only the owner can change access, and the Public project has no access to change
   const handleShare = useCallback(() => {
     if (userId == author_id && projectId != PUBLIC_PROJECT_ID && onShare) onShare(conversation);
-    else copyChatLink(conversation, 'The link has been copied to the clipboard.');
+    else copyChatLink(conversation, SHARE_MESSAGES.saved);
   }, [author_id, conversation, copyChatLink, onShare, projectId, userId]);
 
   const handleShareExternal = useCallback(() => {

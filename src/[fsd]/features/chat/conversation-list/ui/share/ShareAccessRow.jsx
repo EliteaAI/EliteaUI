@@ -6,8 +6,8 @@ import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
-import UsersIcon from '@/assets/users-icon.svg?react';
 import CloseIcon from '@/components/Icons/CloseIcon';
+import UsersIcon from '@/components/Icons/UsersIcon';
 import UserAvatar from '@/components/UserAvatar';
 
 import { WHOLE_TEAM_ID } from '../../lib/constants/shareChat.constants';
@@ -41,7 +41,7 @@ const ShareAccessRow = memo(props => {
     >
       {isWholeTeam ? (
         <Avatar sx={styles.teamAvatar}>
-          <UsersIcon />
+          <UsersIcon sx={styles.teamIcon} />
         </Avatar>
       ) : (
         <UserAvatar
@@ -118,10 +118,12 @@ const shareAccessRowStyles = (isOption, selected) => ({
     width: '1.25rem',
     height: '1.25rem',
     fontSize: '0.625rem',
-    backgroundColor: palette.text.link,
-    color: palette.text.alwaysWhite,
-    '& svg': { display: 'block' },
+    backgroundColor: palette.primary.main,
+    color: palette.primary.contrastText,
   }),
+  teamIcon: {
+    fontSize: '0.75rem',
+  },
   name: {
     flex: 1,
     minWidth: 0,

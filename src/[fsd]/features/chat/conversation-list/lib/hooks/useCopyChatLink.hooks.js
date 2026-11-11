@@ -12,7 +12,11 @@ export const useCopyChatLink = () => {
     async (conversation, message) => {
       const baseUrl = `${window.location.protocol}//${window.location.host}`;
       const url = `${baseUrl}${getBasename()}/${projectId}/chat/${conversation.id}?name=${encodeURIComponent(conversation.name)}&${SearchParams.SharedChat}=1`;
-      await navigator.clipboard?.writeText(url).catch(() => {});
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch {
+        return;
+      }
       toastInfo(message);
     },
     [projectId, toastInfo],
