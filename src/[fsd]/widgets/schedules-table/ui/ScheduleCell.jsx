@@ -82,8 +82,11 @@ const lastRunTooltip = (row, label, reason) => {
   return reason ? `${text}. ${reason}` : text;
 };
 
-const ScheduleCell = memo(({ column, value, row, tier, now }) => {
+const ScheduleCell = memo(props => {
+  const { column, value, row, tier, now } = props;
   const styles = cellStyles;
+  // A toolkit index has no version: its second line names the index
+  const entitySubLabel = row.entity_type === 'toolkit_index' ? row.index_name : row.version_name;
   const isCompact = tier === 'compact';
   switch (column.field) {
     case 'entity_name':
@@ -93,14 +96,14 @@ const ScheduleCell = memo(({ column, value, row, tier, now }) => {
             type={row.entity_type}
             label={row.entity_name}
           />
-          {row.version_name && (
+          {entitySubLabel && (
             <Tooltip.TypographyWithConditionalTooltip
-              title={row.version_name}
+              title={entitySubLabel}
               placement="top"
               variant="bodySmall"
               color="text.secondary"
             >
-              {row.version_name}
+              {entitySubLabel}
             </Tooltip.TypographyWithConditionalTooltip>
           )}
         </Box>

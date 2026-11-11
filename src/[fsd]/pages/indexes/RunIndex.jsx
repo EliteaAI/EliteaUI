@@ -7,7 +7,6 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
-import { useGetIndexScheduleQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model';
@@ -49,11 +48,6 @@ const RunIndex = memo(() => {
     projectId,
     skip: !projectId || !toolkitId,
   });
-
-  useGetIndexScheduleQuery(
-    { projectId, toolkitId },
-    { skip: !projectId || !toolkitId, refetchOnMountOrArgChange: true },
-  );
 
   const {
     data: indexesList,

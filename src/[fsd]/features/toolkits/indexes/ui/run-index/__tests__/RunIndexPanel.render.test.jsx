@@ -42,11 +42,6 @@ const chatIsRunning = vi.hoisted(() => ({ current: false }));
 const chatIsWaitingForTaskStart = vi.hoisted(() => ({ current: false }));
 const polling = vi.hoisted(() => ({ current: { startedTimeStamp: 0, fulfilledTimeStamp: 0 } }));
 const formik = vi.hoisted(() => ({ current: { values: {} } }));
-const toolkitSchema = vi.hoisted(() => ({ current: {} }));
-const scheduleModalProps = vi.hoisted(() => ({ current: null }));
-const toolkitScheduler = vi.hoisted(() => ({ current: null }));
-const credentialLabel = vi.hoisted(() => vi.fn(() => null));
-const scheduleContentProps = vi.hoisted(() => ({ current: null }));
 
 const stub = (testid, keys) =>
   vi.fn(props => (
@@ -71,13 +66,10 @@ const footerStub = vi.fn(props => (
 ));
 const deleteStub = stub('delete-action', ['disabled']);
 const leftBandStub = stub('left-band', []);
+const schedulesSectionStub = stub('schedules-section', ['entityType', 'entityId', 'indexName', 'entityName']);
 
 vi.mock('@/[fsd]/features/toolkits/indexes/ui', () => ({
   IndexActivityPanel: () => <div />,
-  IndexScheduleModal: props => {
-    scheduleModalProps.current = props;
-    return <div />;
-  },
   RunIndexBanner: props => bannerStub(props),
 }));
 vi.mock('../IndexDetailsFooterBand', () => ({ default: props => footerStub(props) }));
@@ -86,19 +78,12 @@ vi.mock('../IndexDetailsLeftBand', () => ({ default: props => leftBandStub(props
 vi.mock('../IndexDetailsTabsBand', () => ({ default: () => <div /> }));
 vi.mock('../IndexConfigurationTab', () => ({ default: () => <div /> }));
 vi.mock('../RunIndexGeneralSection', () => ({ default: () => <div /> }));
-vi.mock('../RunIndexScheduleContent', () => ({
-  default: props => {
-    scheduleContentProps.current = props;
-    return <div />;
-  },
+vi.mock('@/[fsd]/widgets/entity-schedules-section', () => ({
+  EntitySchedulesSection: props => schedulesSectionStub(props),
 }));
+vi.mock('@/[fsd]/entities/schedule', () => ({ TOOLKIT_INDEX_TYPE: 'toolkit_index' }));
 
 vi.mock('formik', () => ({ useFormikContext: () => formik.current }));
-vi.mock('react-redux', () => ({
-  useSelector: selector =>
-    selector({ user: { id: 7 }, settings: { project: {} }, scheduler: toolkitScheduler.current }),
-}));
-vi.mock('@/[fsd]/features/credentials/lib/hooks', () => ({ useCredentialLabel: credentialLabel }));
 vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn() }));
 vi.mock('@/[fsd]/entities/run-history/lib/hooks', () => ({
   useConversationTranscript: () => ({ transcript: [], isTranscriptLoading: false }),
@@ -113,7 +98,6 @@ vi.mock('@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader', () => ({
 vi.mock('@/[fsd]/features/toolkits/indexes/api', () => ({
   useDeleteIndexItemMutation: () => [vi.fn(), { isLoading: deleteInFlight.current }],
   useSaveIndexConfigurationMutation: () => [vi.fn(), { isLoading: false }],
-  useUpdateIndexScheduleMutation: () => [vi.fn(), { isLoading: false }],
 }));
 vi.mock('@/[fsd]/features/toolkits/indexes/lib/hooks', () => ({
   useIndexesListPolling: () => polling.current,
@@ -121,8 +105,7 @@ vi.mock('@/[fsd]/features/toolkits/indexes/lib/hooks', () => ({
 vi.mock('@/[fsd]/features/toolkits/lib/helpers', () => ({
   ToolkitsHelpers: { prettifyToolkitConversation: m => m },
 }));
-vi.mock('@/[fsd]/features/toolkits/lib/hooks', () => ({
-  useGetCurrentToolkitSchemas: () => ({ schemas: [] }),
+vi.mock('@/[fsd]/features/toolkits', () => ({
   useToolkitChat: options => {
     traceNewIndex.current = options.traceNewIndex;
     return {
@@ -156,15 +139,6 @@ vi.mock('@/[fsd]/shared/ui', () => ({
       ) : null,
   },
 }));
-vi.mock('@/[fsd]/shared/ui/accordion', () => ({
-  BasicAccordion: props => (
-    <div>
-      {props.items.map(item => (
-        <div key={item.title}>{item.content}</div>
-      ))}
-    </div>
-  ),
-}));
 vi.mock('@/[fsd]/shared/ui/breadcrumbs', () => ({ default: () => <div /> }));
 // The legacy slices import the api object from its own module rather than the barrel,
 // so both specifiers must resolve to the same stub or their extraReducers see undefined.
@@ -188,7 +162,6 @@ const makeApiMock = () => {
     middleware: () => next => action => next(action),
     reducer: (state = {}) => state,
     reducerPath: 'eliteaApi',
-    useDeleteIndexScheduleMutation: () => [vi.fn(), { isLoading: false }],
   };
 };
 
@@ -200,12 +173,10 @@ vi.mock('@/api', () => apiMock);
 vi.mock('@/api/eliteaApi.js', () => apiMock);
 
 vi.mock('@/[fsd]/features/toolkits/indexes/model/indexes.slice', () => ({
-  selectToolkitScheduler: state => state.scheduler,
   name: 'indexes',
   actions: {},
   default: (state = {}) => state,
 }));
-vi.mock('@/common/toolkitSchemaUtils', () => ({ convertToolkitSchema: () => toolkitSchema.current }));
 vi.mock('@/hooks/toolkit/useGetSelectedToolSchema', () => ({ useGetSelectedToolSchema: () => ({}) }));
 vi.mock('@/hooks/useNavBlocker', () => ({ default: () => ({ setBlockNav: vi.fn() }) }));
 vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 1 }));
@@ -258,11 +229,6 @@ afterEach(() => {
   polling.current = { startedTimeStamp: 0, fulfilledTimeStamp: 0 };
   deleteInFlight.current = false;
   formik.current = { values: {} };
-  toolkitSchema.current = {};
-  scheduleModalProps.current = null;
-  toolkitScheduler.current = null;
-  scheduleContentProps.current = null;
-  credentialLabel.mockClear();
 });
 
 describe('RunIndexPanel — the liveness flags reach the right consumers', () => {
@@ -400,54 +366,15 @@ describe('RunIndexPanel — the liveness flags reach the right consumers', () =>
   });
 });
 
-describe('RunIndexPanel — the schedule dialog is seeded from the saved toolkit', () => {
-  it('hands the modal the credential the saved toolkit settings hold, keyed by the credentials field', () => {
-    const credentialsField = { section: ['credentials'], description: 'GitHub credentials' };
-    toolkitSchema.current = {
-      properties: { repository: { section: ['general'] }, github_configuration: credentialsField },
-    };
-    formik.current = {
-      initialValues: { settings: { github_configuration: { elitea_title: 'saved-b', private: false } } },
-      values: { settings: { github_configuration: { elitea_title: 'unsaved-a', private: false } } },
-    };
-
+describe('RunIndexPanel — the Schedules section', () => {
+  it('hands the section the toolkit, the index and the toolkit name', () => {
     renderPanel({ stale: false, reclaimable: false });
 
-    expect(scheduleModalProps.current.toolkitCredentials).toEqual({
-      elitea_title: 'saved-b',
-      private: false,
+    expect(propsOf('schedules-section')).toEqual({
+      entityType: 'toolkit_index',
+      entityId: 1,
+      indexName: 'docs',
+      entityName: 'T1',
     });
-    expect(scheduleModalProps.current.credentialsData).toBe(credentialsField);
-  });
-
-  it('seeds nothing when the toolkit schema has no credentials field', () => {
-    formik.current = {
-      initialValues: { settings: { github_configuration: { elitea_title: 'saved-b', private: false } } },
-      values: {},
-    };
-
-    renderPanel({ stale: false, reclaimable: false });
-
-    expect(scheduleModalProps.current.toolkitCredentials).toBeNull();
-    expect(scheduleModalProps.current.credentialsData).toBeNull();
-  });
-});
-
-describe('RunIndexPanel — the schedule card names its credential', () => {
-  it('shows the display name resolved for the schedule credential of the toolkit type', () => {
-    const scheduleCredential = { elitea_title: 'aasd', private: false };
-    toolkitSchema.current = {
-      properties: { github_configuration: { section: ['credentials'], configuration_types: ['github'] } },
-    };
-    toolkitScheduler.current = {
-      docs: { schedules: { 7: { cron: '0 9 * * *', enabled: true, credentials: scheduleCredential } } },
-    };
-    credentialLabel.mockImplementation(({ credential, type }) =>
-      credential === scheduleCredential && type === 'github' ? 'AA' : null,
-    );
-
-    renderPanel({ stale: false, reclaimable: false });
-
-    expect(scheduleContentProps.current.credentialsTitle).toBe('AA');
   });
 });

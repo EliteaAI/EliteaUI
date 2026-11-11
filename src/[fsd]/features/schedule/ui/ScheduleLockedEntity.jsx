@@ -5,22 +5,23 @@ import { Link } from 'react-router-dom';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { Box, Typography } from '@mui/material';
 
-import { TRIGGER_KIND, toKindNoun } from '@/[fsd]/entities/schedule';
+import { TOOLKIT_INDEX_TYPE, TRIGGER_KIND, toKindNoun } from '@/[fsd]/entities/schedule';
 import StyledInputEnhancer from '@/[fsd]/shared/ui/input/StyledInputEnhancer';
 import RouteDefinitions from '@/routes';
 
-const TYPE_LABEL = { agent: 'Agent', pipeline: 'Pipeline' };
+const TYPE_LABEL = { agent: 'Agent', pipeline: 'Pipeline', [TOOLKIT_INDEX_TYPE]: 'Toolkit' };
 
 /**
- * The agent or pipeline of a form opened from its own editor: shown, not changeable.
- * `editing` words the hint for a saved schedule.
+ * The agent, pipeline or toolkit index of a form opened from its own page: shown, not changeable.
+ * `editing` words the hint for a saved schedule. A toolkit index shows its toolkit (`name`) and its `indexName`.
  */
 const ScheduleLockedEntity = memo(props => {
-  const { type, name, editing = false, isWebhook = false } = props;
+  const { type, name, indexName, editing = false, isWebhook = false } = props;
   const noun = toKindNoun(isWebhook ? TRIGGER_KIND.webhook : TRIGGER_KIND.cron);
 
   const label = TYPE_LABEL[type] ?? 'Agent';
   const lowerLabel = label.toLowerCase();
+  const isIndex = type === TOOLKIT_INDEX_TYPE;
   const styles = scheduleLockedEntityStyles();
 
   return (
@@ -38,14 +39,34 @@ const ScheduleLockedEntity = memo(props => {
           sx={styles.lock}
         />
       </Box>
+      {isIndex && (
+        <Box
+          data-testid="schedule-locked-index"
+          sx={styles.field}
+        >
+          <StyledInputEnhancer
+            disabled
+            required
+            label="Index"
+            value={indexName ?? ''}
+            sx={styles.input}
+          />
+          <LockOutlinedIcon
+            fontSize="small"
+            sx={styles.lock}
+          />
+        </Box>
+      )}
       <Typography
         variant="bodySmall"
         color="text.secondary"
         sx={styles.hint}
       >
-        {editing
-          ? `To change the ${lowerLabel}, create a new ${noun} in `
-          : `To ${isWebhook ? 'start' : 'schedule'} a different ${lowerLabel}, create the ${noun} in `}
+        {isIndex
+          ? 'To change the toolkit or index, create a new schedule in '
+          : editing
+            ? `To change the ${lowerLabel}, create a new ${noun} in `
+            : `To ${isWebhook ? 'start' : 'schedule'} a different ${lowerLabel}, create the ${noun} in `}
         <Box
           component={Link}
           to={isWebhook ? RouteDefinitions.Webhooks : RouteDefinitions.Schedules}

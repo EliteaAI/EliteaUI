@@ -5,7 +5,4 @@ export {
   useDeleteIndexItemMutation,
   useStopIndexingItemMutation,
   useSaveIndexConfigurationMutation,
-  useUpdateIndexScheduleMutation,
-  useGetIndexScheduleQuery,
-  useLazyGetIndexScheduleQuery,
 } from './indexesApi';

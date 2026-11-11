@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 
 import { Box, Link, List, ListItem, Typography } from '@mui/material';
 
-import { buildEntityEditorLink } from '@/[fsd]/entities/schedule';
+import { TOOLKIT_INDEX_TYPE, buildEntityEditorLink } from '@/[fsd]/entities/schedule';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import BannerMessage from '@/[fsd]/shared/ui/banner-message/BannerMessage';
 import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
@@ -10,18 +10,31 @@ import { SearchParams, ViewMode } from '@/common/constants';
 
 import { toRiskItems } from '../lib/helpers';
 
-const FIX_LINK_TEXT = { agent: 'Open agent to change tools', pipeline: 'Open pipeline to change steps' };
+const FIX_LINK_TEXT = {
+  agent: 'Open agent to change tools',
+  pipeline: 'Open pipeline to change steps',
+  [TOOLKIT_INDEX_TYPE]: 'Open index to check the toolkit credential',
+};
 const WAIT_LINK_TEXT = {
   agent: 'Open agent to sign in or add credentials',
   pipeline: 'Open pipeline to sign in or add credentials',
+  [TOOLKIT_INDEX_TYPE]: 'Open index to check the toolkit credential',
 };
+// The word in the title lines; the entity type of an index is not a word
+const ENTITY_NOUN = { [TOOLKIT_INDEX_TYPE]: 'index' };
+// The index check names this cause `credential_missing`; the text is the one of `missing_credential`.
+// The alias is for the wording only: `splitRiskFindings` keeps `credential_missing` in `blocking`, so an index
+// with an unusable toolkit credential shows the red box and cannot be saved, whatever the approval rule is.
+const CAUSE_ALIAS = { credential_missing: 'missing_credential' };
 const WAIT_NOTE = 'You can save this schedule. With "Pause and ask me", the run waits for your approval.';
 
 const stepName = ({ step_label, step }) => step_label ?? step;
 
 // Title lines, the line above the list and the closing line of one cause kind.
 // `waiting` is the yellow box: the save goes on and the run waits for the owner. `kind` is the trigger noun.
-const describeGroup = (code, findings, entityType, waiting, kind = 'schedule') => {
+const describeGroup = (cause, findings, entityKind, waiting, kind = 'schedule') => {
+  const code = CAUSE_ALIAS[cause] ?? cause;
+  const entityType = ENTITY_NOUN[entityKind] ?? entityKind;
   const runs = kind === 'webhook' ? 'Webhook runs' : 'Scheduled runs';
   if (code === 'delegated_credential')
     return {
@@ -41,8 +54,8 @@ const describeGroup = (code, findings, entityType, waiting, kind = 'schedule') =
     return {
       title: ['A toolkit has no usable credential.', 'The run waits until you add one and approve.'],
       intro: WAIT_NOTE,
-      items: findings.map(({ toolkit }) => ({
-        reason: `Toolkit '${toolkit}' has no usable credential for the owner.`,
+      items: findings.map(({ toolkit, message }) => ({
+        reason: toolkit ? `Toolkit '${toolkit}' has no usable credential for the owner.` : message,
       })),
       outro: 'Add the credential in the toolkit settings.',
     };
@@ -70,8 +83,8 @@ const describeGroup = (code, findings, entityType, waiting, kind = 'schedule') =
     return {
       title: ['A toolkit has no usable credential.', `${runs} can't work without it.`],
       intro: `You can't save this ${kind}.`,
-      items: findings.map(({ toolkit }) => ({
-        reason: `Toolkit '${toolkit}' has no usable credential for the owner.`,
+      items: findings.map(({ toolkit, message }) => ({
+        reason: toolkit ? `Toolkit '${toolkit}' has no usable credential for the owner.` : message,
       })),
     };
   return {
@@ -83,7 +96,7 @@ const describeGroup = (code, findings, entityType, waiting, kind = 'schedule') =
 // The boxes under the entity when the risk check finds a cause: one box per cause kind. Red boxes block the
 // save; with `waiting` the boxes are yellow, the save goes on and the run waits for the owner.
 const ScheduleRiskBlockBox = memo(props => {
-  const { blocking, waiting = false, entityType, entityId, versionId, projectId, kind } = props;
+  const { blocking, waiting = false, entityType, entityId, versionId, indexName, projectId, kind } = props;
   const groups = useMemo(() => toRiskItems(blocking), [blocking]);
   const styles = scheduleRiskBlockBoxStyles();
 
@@ -94,15 +107,22 @@ const ScheduleRiskBlockBox = memo(props => {
       entity_type: entityType,
       id: entityId,
       version_id: versionId,
+      index_name: indexName,
     };
     // A new tab, so the form keeps its input; it is outside the router, so the URL carries the
     // origin, the router basename and the project segment
-    const entityLink = buildEntityEditorLink({ entityType: fix.entity_type, entityId: fix.id });
-    const editorLink = NavigationHelpers.buildAbsoluteAppUrl(
-      projectId,
-      // The editor route opens only in the owner view mode
-      `${fix.version_id ? `${entityLink}/${fix.version_id}` : entityLink}?${SearchParams.ViewMode}=${ViewMode.Owner}`,
-    );
+    // An index page needs its index name; without it there is no page to open
+    const hasEditor = fix.entity_type !== TOOLKIT_INDEX_TYPE || !!fix.index_name;
+    const entityLink =
+      hasEditor &&
+      buildEntityEditorLink({ entityType: fix.entity_type, entityId: fix.id, indexName: fix.index_name });
+    const editorLink =
+      hasEditor &&
+      NavigationHelpers.buildAbsoluteAppUrl(
+        projectId,
+        // The editor route opens only in the owner view mode
+        `${fix.version_id ? `${entityLink}/${fix.version_id}` : entityLink}?${SearchParams.ViewMode}=${ViewMode.Owner}`,
+      );
     return (
       <BannerMessage
         key={code}
@@ -166,20 +186,22 @@ const ScheduleRiskBlockBox = memo(props => {
               {outro}
             </Typography>
           )}
-          <Link
-            href={editorLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            variant="bodySmall"
-            sx={styles.link}
-          >
-            {(waiting ? WAIT_LINK_TEXT : FIX_LINK_TEXT)[fix.entity_type]}
-            <Box
-              component={OpenInNewIcon}
-              aria-hidden
-              sx={styles.linkIcon}
-            />
-          </Link>
+          {hasEditor && (
+            <Link
+              href={editorLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="bodySmall"
+              sx={styles.link}
+            >
+              {(waiting ? WAIT_LINK_TEXT : FIX_LINK_TEXT)[fix.entity_type]}
+              <Box
+                component={OpenInNewIcon}
+                aria-hidden
+                sx={styles.linkIcon}
+              />
+            </Link>
+          )}
         </Box>
       </BannerMessage>
     );

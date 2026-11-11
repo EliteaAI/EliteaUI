@@ -1,6 +1,6 @@
 import * as Yup from 'yup';
 
-import { TRIGGER_KIND, getListRoute } from '@/[fsd]/entities/schedule';
+import { TOOLKIT_INDEX_TYPE, TRIGGER_KIND, getListRoute } from '@/[fsd]/entities/schedule';
 import { APPROVAL_RULE, DEFAULT_APPROVAL_RULE } from '@/[fsd]/entities/schedule/lib/constants';
 import { WebhookConstants } from '@/[fsd]/shared/lib/constants';
 import { ScheduleHelpers, WebhookHelpers } from '@/[fsd]/shared/lib/helpers';
@@ -12,6 +12,7 @@ import { UNKNOWN_WARNING_LABEL, WAIT_FOR_OWNER_CODES, WARNING_LABELS } from '../
 const { GITLAB_AUTH_METHODS, WEBHOOK_TYPES } = WebhookConstants;
 
 const ENTITY_TYPES = ['agent', 'pipeline'];
+const APPLICATION_TYPES = ENTITY_TYPES;
 const ENTRY_POINT = 'entry_point';
 // An in-app path: one leading slash, so `//host` and `https://host` never pass
 const IN_APP_PATH = /^\/(?!\/)/;
@@ -20,14 +21,31 @@ export const DEFAULT_SCHEDULE_CRON = '0 0 * * 6';
 
 const defaultRunMode = type => (type === 'pipeline' ? ENTRY_POINT : null);
 
-export const isPromptShown = ({ type, run_mode }) => type === 'agent' || run_mode === 'prompt';
+// A toolkit index runs with its saved settings: no version, no starting input, no prompt
+export const isIndexType = type => type === TOOLKIT_INDEX_TYPE;
+
+export const isPromptShown = ({ type, run_mode }) =>
+  !isIndexType(type) && (type === 'agent' || run_mode === 'prompt');
+
+const requiredForApplication = message => schema =>
+  schema.when('type', { is: isIndexType, then: s => s.notRequired(), otherwise: s => s.required(message) });
+const requiredForIndex = message => schema =>
+  schema.when('type', { is: isIndexType, then: s => s.required(message), otherwise: s => s.notRequired() });
 
 export const scheduleFormSchema = Yup.object({
   name: Yup.string().trim().required('Name is required'),
   description: Yup.string().max(MAX_DESCRIPTION_LENGTH),
-  application_id: Yup.string().required('Choose an agent or a pipeline'),
-  version_id: Yup.string().required('Choose a version'),
+  application_id: requiredForApplication('Choose an agent or a pipeline')(Yup.string()),
+  version_id: requiredForApplication('Choose a version')(Yup.string()),
+  toolkit_id: requiredForIndex('Choose a toolkit')(Yup.string()),
+  index_name: requiredForIndex('Choose an index')(Yup.string()),
 })
+  // A toolkit index runs at most once a day; the cron field of SCHEDULE SETTINGS shows the same message
+  .test('index-daily-floor', '', function (values) {
+    if (!isIndexType(values.type) || values.trigger_kind === TRIGGER_KIND.webhook) return true;
+    const { isValid, message } = ScheduleHelpers.validateCronExpression(values.cron);
+    return isValid || this.createError({ path: 'cron', message });
+  })
   .test('prompt-required', 'Prompt is required', function (values) {
     return !isPromptShown(values) || !!values.prompt?.trim() || this.createError({ path: 'prompt' });
   })
@@ -60,6 +78,8 @@ export const resetWhatToRun = (values, type) => ({
   type,
   application_id: '',
   version_id: '',
+  toolkit_id: '',
+  index_name: '',
   run_mode: defaultRunMode(type),
   prompt: '',
   variables: [],
@@ -83,14 +103,16 @@ export const buildInitialValues = (
   const urlEntity =
     entityRoute.lockedEntity ??
     // Numeric, as the entity options are: a string id would leave the locked field empty
-    (ENTITY_TYPES.includes(entityType) && entityId ? { type: entityType, id: Number(entityId) } : null);
+    (APPLICATION_TYPES.includes(entityType) && entityId ? { type: entityType, id: Number(entityId) } : null);
   const type = urlEntity?.type ?? 'agent';
   const returnTo = locationState?.returnTo;
 
   return {
     values: {
       ...resetWhatToRun({ name: '', description: '' }, type),
-      application_id: urlEntity?.id ?? '',
+      ...(isIndexType(type)
+        ? { toolkit_id: urlEntity.id, index_name: urlEntity.indexName }
+        : { application_id: urlEntity?.id ?? '' }),
       ...triggerValues(kind),
       approval_rule: DEFAULT_APPROVAL_RULE,
       enabled: true,
@@ -127,8 +149,9 @@ export const buildEditValues = (schedule, locationState, entityRoute) => {
       name: schedule.name,
       description: schedule.description ?? '',
       type: schedule.entity_type,
-      application_id: schedule.application_id,
-      version_id: schedule.version_id,
+      ...(isIndexType(schedule.entity_type)
+        ? { toolkit_id: schedule.toolkit_id, index_name: schedule.index_name }
+        : { application_id: schedule.application_id, version_id: schedule.version_id }),
       run_mode: schedule.run_mode,
       prompt: schedule.prompt ?? '',
       variables: syncPromptVariables(schedule.prompt, schedule.variables),
@@ -152,6 +175,8 @@ export const toCreateBody = ({
   type,
   application_id,
   version_id,
+  toolkit_id,
+  index_name,
   run_mode,
   prompt,
   variables,
@@ -167,16 +192,22 @@ export const toCreateBody = ({
 }) => {
   const mode = type === 'agent' ? null : run_mode;
   const sendsPrompt = isPromptShown({ type, run_mode: mode });
+  // The server refuses version, run mode, prompt and variables on a toolkit index
+  const target = isIndexType(type)
+    ? { toolkit_id, index_name }
+    : {
+        application_id,
+        version_id,
+        run_mode: mode,
+        prompt: sendsPrompt ? prompt : null,
+        variables: sendsPrompt ? variables : [],
+      };
 
   return {
     name,
     description: description || null,
     entity_type: type,
-    application_id,
-    version_id,
-    run_mode: mode,
-    prompt: sendsPrompt ? prompt : null,
-    variables: sendsPrompt ? variables : [],
+    ...target,
     // The server refuses cron fields on a webhook and webhook fields on a schedule
     ...(trigger_kind === TRIGGER_KIND.webhook
       ? {
@@ -187,7 +218,8 @@ export const toCreateBody = ({
             webhook_type === WEBHOOK_TYPES.gitlab && { signing_secret_value: signing_secret_value?.trim() }),
         }
       : { cron, timezone, expires_at }),
-    approval_rule,
+    // The server refuses a non-default rule on an index and the form hides the field for it
+    approval_rule: isIndexType(type) ? DEFAULT_APPROVAL_RULE : approval_rule,
     // set on a new schedule only; a saved one pauses and resumes through its own calls
     ...(enabled !== undefined && { enabled }),
   };

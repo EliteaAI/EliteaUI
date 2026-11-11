@@ -11,12 +11,23 @@ import ScheduleRunStatusChip from './ScheduleRunStatusChip';
 
 // One run of the Runs card: the compact line always, the detail only while the card is open
 const ScheduleRunCard = memo(props => {
-  const { run, isLatest, expanded, versionNames, schedule, entityType, applicationId, onToggle, onRunAgain } =
-    props;
+  const {
+    run,
+    isLatest,
+    expanded,
+    versionNames,
+    schedule,
+    entityType,
+    applicationId,
+    indexName,
+    onToggle,
+    onRunAgain,
+  } = props;
 
   const facts = describeRunFacts({
     ...run,
     version_label: run.version_label ?? versionNames[run.version_id],
+    index_name: run.index_name ?? indexName,
   });
   const styles = scheduleRunCardStyles(expanded, isLatest);
 
@@ -79,6 +90,7 @@ const ScheduleRunCard = memo(props => {
           schedule={schedule}
           entityType={entityType}
           applicationId={applicationId}
+          indexName={indexName}
           onRunAgain={onRunAgain}
         />
       )}

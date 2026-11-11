@@ -64,6 +64,7 @@ vi.mock('@/[fsd]/entities/schedule', async () => ({
     isError: listFailed,
   }),
   useCheckScheduleRiskMutation: () => [checkRisk],
+  useGetToolkitIndexOptionsQuery: () => ({ data: [], isFetching: false, isError: false }),
   useCheckScheduleConnectionsMutation: () => [checkConnections],
 }));
 // The sign-in bar needs the store and the auth modal; the panel only passes it the credential
@@ -125,6 +126,14 @@ vi.mock('@/api/applications', async importOriginal => ({
     isFetching: false,
   }),
 }));
+
+vi.mock('@/api/toolkits', async importOriginal => ({
+  ...(await importOriginal()),
+  useToolkitsDetailsQuery: () => ({ currentData: undefined }),
+  useToolkitsListQuery: () => ({ data: undefined, isFetching: false }),
+}));
+
+vi.mock('@/hooks/application/useLibraryToolkits', () => ({ useGetToolkitIconMeta: () => () => ({}) }));
 
 vi.mock('@/[fsd]/shared/lib/hooks', async () => ({
   useModal: (await import('@/[fsd]/shared/lib/hooks/useModal.hooks')).useModal,

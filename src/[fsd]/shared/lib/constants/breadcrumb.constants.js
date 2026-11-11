@@ -40,6 +40,14 @@ export const BREADCRUMB_REGISTRY = {
     parent: RouteDefinitions.ToolkitIndex,
     label: 'Search',
   },
+  [RouteDefinitions.ToolkitIndexCreateSchedule]: {
+    parent: RouteDefinitions.ToolkitIndex,
+    label: 'Add Schedule',
+  },
+  [RouteDefinitions.ToolkitIndexScheduleDetail]: {
+    parent: RouteDefinitions.ToolkitIndex,
+    label: 'Edit Schedule',
+  },
 
   [RouteDefinitions.MCPDetail]: {
     parent: RouteDefinitions.MCPsWithTab,

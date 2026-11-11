@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import {
+  TOOLKIT_INDEX_TYPE,
   TRIGGER_KIND,
   useCreateScheduleMutation,
   useStartDraftTestRunMutation,
@@ -18,6 +19,17 @@ import {
 } from '@/[fsd]/features/schedule';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { ScheduleSettingsSection, StopOnDateField } from '@/[fsd]/shared/ui/schedule';
+
+const isIndex = formValues => formValues.type === TOOLKIT_INDEX_TYPE;
+
+// The Test runs of the form: an index is the toolkit id plus the index name. A toolkit without an index has
+// no target yet, and its bare id would read as an application id.
+const draftTarget = formValues => {
+  if (!isIndex(formValues))
+    return { applicationId: formValues.application_id || undefined, indexName: undefined };
+  const indexName = formValues.index_name || undefined;
+  return { applicationId: indexName ? formValues.toolkit_id || undefined : undefined, indexName };
+};
 
 // entityType: the form is nested in that editor and locks its entity; kind 'webhook' creates a webhook
 const CreateSchedulePage = props => {
@@ -62,7 +74,7 @@ const CreateSchedulePage = props => {
     ({ values: formValues, onTestRun, testRunPending, testRunError }) => (
       <ScheduleDraftRuns
         entityType={formValues.type}
-        applicationId={formValues.application_id || undefined}
+        {...draftTarget(formValues)}
         onTestRun={onTestRun}
         testRunPending={testRunPending}
         testRunError={testRunError}

@@ -116,6 +116,33 @@ describe('ScheduleRiskBlockBox', () => {
     );
   });
 
+  it('words the credential_missing cause of an index like the missing credential of a toolkit', () => {
+    setup({
+      entityType: 'toolkit_index',
+      entityId: 3,
+      indexName: 'docs',
+      blocking: [{ code: 'credential_missing', toolkit: 'github' }],
+    });
+
+    expect(screen.getByText('A toolkit has no usable credential.')).toBeInTheDocument();
+    expect(screen.getByText("Toolkit 'github' has no usable credential for the owner.")).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Open index to check the toolkit credential/ })).toHaveAttribute(
+      'href',
+      expect.stringContaining('/docs'),
+    );
+  });
+
+  it('shows no editor link for an index without an index name', () => {
+    setup({
+      entityType: 'toolkit_index',
+      entityId: 3,
+      blocking: [{ code: 'credential_missing', toolkit: 'github' }],
+    });
+
+    expect(screen.getByTestId('schedule-risk-block-box')).toBeInTheDocument();
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  });
+
   it('shows the server message of a blocking code it does not know', () => {
     setup({ blocking: [{ code: 'brand_new_block', message: 'Something blocks the run.' }] });
 

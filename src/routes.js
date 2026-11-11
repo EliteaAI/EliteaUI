@@ -77,6 +77,8 @@ const RouteDefinitions = {
   ToolkitIndex: '/toolkits/:tab/:toolkitId/index/:indexName',
   ToolkitIndexHistory: '/toolkits/:tab/:toolkitId/index/:indexName/history',
   ToolkitIndexSearch: '/toolkits/:tab/:toolkitId/index/:indexName/search',
+  ToolkitIndexCreateSchedule: '/toolkits/:tab/:toolkitId/index/:indexName/schedules/create',
+  ToolkitIndexScheduleDetail: '/toolkits/:tab/:toolkitId/index/:indexName/schedules/:scheduleId',
 
   Apps: '/apps',
   AppsApplications: '/apps/applications',
@@ -149,6 +151,8 @@ export const BLOCK_NAV_PATTERNS = [
   RouteDefinitions.ApplicationsScheduleDetail,
   RouteDefinitions.PipelineCreateSchedule,
   RouteDefinitions.PipelineScheduleDetail,
+  RouteDefinitions.ToolkitIndexCreateSchedule,
+  RouteDefinitions.ToolkitIndexScheduleDetail,
   RouteDefinitions.CreateWebhook,
   RouteDefinitions.WebhookDetail,
   RouteDefinitions.ApplicationsCreateWebhook,

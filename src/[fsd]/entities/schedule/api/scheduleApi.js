@@ -11,6 +11,11 @@ const SCHEDULE_SETTINGS_TAG = 'SCHEDULE_SETTINGS_TAG';
 // false is a real value (enabled=false); only unset, blank and empty list are left out
 const isSet = value => value !== undefined && value !== null && value !== '' && value?.length !== 0;
 
+// A toolkit index is named by its toolkit id and index name; an agent or pipeline by its application id.
+// `entityId` is the application id, or the toolkit id when an `indexName` comes with it.
+const toTargetParams = (entityId, indexName) =>
+  indexName ? { toolkit_id: entityId, index_name: indexName } : { application_id: entityId };
+
 const schedulesPath = projectId => `/elitea_core/schedules/prompt_lib/${projectId}`;
 const LIST_ID = 'LIST';
 const listTag = { type: SCHEDULES_TAG, id: LIST_ID };
@@ -66,6 +71,7 @@ export const scheduleApi = eliteaApi
           entityType,
           entityId,
           versionId,
+          indexName,
           status,
           enabled,
           search,
@@ -79,6 +85,7 @@ export const scheduleApi = eliteaApi
             entity_type: entityType,
             entity_id: entityId,
             version_id: versionId,
+            index_name: indexName,
             status,
             enabled,
             search,
@@ -132,6 +139,25 @@ export const scheduleApi = eliteaApi
         invalidatesTags: (_, error) => (error ? [] : [listTag]),
       }),
 
+      // The indexes of one toolkit with what the schedule picker needs: `scheduled` and `schedulable`.
+      // A row can name the index `name` or `index_name`.
+      getToolkitIndexOptions: build.query({
+        query: ({ projectId, toolkitId }) => ({
+          url: `/elitea_core/index_meta/prompt_lib/${projectId}/${toolkitId}`,
+          params: { summary: true },
+        }),
+        transformResponse: response =>
+          (Array.isArray(response) ? response : (response?.rows ?? [])).map(row => ({
+            name: row.name ?? row.index_name,
+            state: row.state,
+            updatedOn: row.updated_on,
+            scheduled: !!row.scheduled,
+            schedulable: row.schedulable !== false,
+          })),
+        // The `scheduled` flag changes with every schedule create, delete, pause and import
+        providesTags: [listTag],
+      }),
+
       // Dry run of the save risk scan; it writes nothing, so it invalidates nothing
       checkScheduleRisk: build.mutation({
         query: ({ projectId, ...body }) => ({
@@ -173,20 +199,20 @@ export const scheduleApi = eliteaApi
         invalidatesTags: (_, error) => (error ? [] : [{ type: SCHEDULE_RUNS_TAG, id: DRAFT_RUNS_ID }]),
       }),
 
-      // The caller's Test runs of one application, newest first
+      // The caller's Test runs of one application or toolkit index, newest first
       getDraftTestRuns: build.query({
-        query: ({ projectId, applicationId, page = 0, pageSize = PAGE_SIZE }) => ({
+        query: ({ projectId, applicationId, indexName, page = 0, pageSize = PAGE_SIZE }) => ({
           url: `${schedulesPath(projectId)}/test_run`,
-          params: { application_id: applicationId, limit: pageSize, offset: page * pageSize },
+          params: { ...toTargetParams(applicationId, indexName), limit: pageSize, offset: page * pageSize },
         }),
         providesTags: [{ type: SCHEDULE_RUNS_TAG, id: DRAFT_RUNS_ID }],
       }),
 
       // One Test run with its log `events` and `summary`
       getDraftTestRun: build.query({
-        query: ({ projectId, applicationId, runId }) => ({
+        query: ({ projectId, applicationId, indexName, runId }) => ({
           url: `${schedulesPath(projectId)}/test_run/${runId}`,
-          params: { application_id: applicationId },
+          params: toTargetParams(applicationId, indexName),
         }),
         providesTags: [{ type: SCHEDULE_RUNS_TAG, id: DRAFT_RUNS_ID }],
       }),
@@ -347,6 +373,7 @@ export const {
   useCreateScheduleMutation,
   useCheckScheduleConnectionsMutation,
   useCheckScheduleRiskMutation,
+  useGetToolkitIndexOptionsQuery,
   useDecideRunWithoutChatMutation,
   useRunScheduleMutation,
   useStartDraftTestRunMutation,

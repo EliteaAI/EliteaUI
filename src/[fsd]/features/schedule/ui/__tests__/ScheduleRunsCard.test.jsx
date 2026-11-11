@@ -196,6 +196,29 @@ describe('ScheduleRunsCard', () => {
     expect(screen.getByTestId('schedule-test-run')).toBeDisabled();
   });
 
+  it('tells that a run of the index is active while Test Run is off for a new index schedule', () => {
+    renderCard({
+      schedule: undefined,
+      entityType: 'toolkit_index',
+      indexName: 'docs',
+      view: makeView([run(1, { status: 'running' })]),
+    });
+
+    expect(screen.getByTestId('schedule-test-run')).toBeDisabled();
+    expect(screen.getByTestId('schedule-test-run-active-hint')).toHaveTextContent(
+      'A run of this index is active',
+    );
+  });
+
+  it('shows no active-run text for an index without an active run, or for an agent', () => {
+    renderCard({ schedule: undefined, entityType: 'toolkit_index', view: makeView([run(1)]) });
+    expect(screen.queryByTestId('schedule-test-run-active-hint')).not.toBeInTheDocument();
+    cleanup();
+
+    renderCard({ schedule: undefined, view: makeView([run(1, { status: 'running' })]) });
+    expect(screen.queryByTestId('schedule-test-run-active-hint')).not.toBeInTheDocument();
+  });
+
   it('disables Run Now without the run action', () => {
     renderCard({ schedule: { id: 9, allowed_actions: [] } });
 
