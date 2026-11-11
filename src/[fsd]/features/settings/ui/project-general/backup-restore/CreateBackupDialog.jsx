@@ -144,7 +144,7 @@ const CreateBackupDialog = memo(props => {
         other secrets are excluded.
       </Typography>
 
-      <Box sx={styles.chats}>
+      <Box sx={styles.section}>
         <Typography
           variant="labelMedium"
           color="text.secondary"
@@ -266,11 +266,6 @@ const createBackupDialogStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
-  },
-  chats: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
   },
   section: {
     display: 'flex',

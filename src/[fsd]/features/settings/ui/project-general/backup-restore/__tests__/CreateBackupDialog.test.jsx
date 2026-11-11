@@ -283,9 +283,6 @@ describe('CreateBackupDialog', () => {
 
     fireEvent.click(option('with_attachments'));
     fireEvent.click(skillOption('none'));
-    fireEvent.click(skillOption('all'));
-    fireEvent.click(skillOption('none'));
-    fireEvent.click(option('with_attachments'));
 
     const order = [
       screen.getByText('Chats'),

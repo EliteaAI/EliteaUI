@@ -61,12 +61,30 @@ export const getChatsSummaryText = summary => {
   return parts.join(' · ');
 };
 
+const MAX_LISTED_MISSING_PATHS = 5;
+
+const listMissingPaths = paths => {
+  const listed = paths.slice(0, MAX_LISTED_MISSING_PATHS).join(', ');
+  return paths.length > MAX_LISTED_MISSING_PATHS ? `${listed} and more` : listed;
+};
+
 export const getSkillFilesSummaryText = summary => {
   const files = summary?.skill_files;
   if (!files?.total) return '';
   if (files.unchecked) return `Skill files: ${files.total} not checked (storage unavailable)`;
   const text = `Skill files: ${files.total} total, ${files.present} present, ${files.uploaded} uploaded, ${files.missing} missing`;
-  return files.missing_paths?.length ? `${text} (${files.missing_paths.join(', ')})` : text;
+  return files.missing_paths?.length ? `${text} (${listMissingPaths(files.missing_paths)})` : text;
+};
+
+export const getRestoreWarningText = summary => {
+  if (!summary || summary.dry_run) return '';
+  const failedAttachments = summary.attachments?.failed;
+  const missingSkillFiles = summary.skill_files?.missing;
+  const parts = [
+    failedAttachments ? `${failedAttachments} attachment file(s)` : '',
+    missingSkillFiles ? `${missingSkillFiles} skill file(s)` : '',
+  ].filter(Boolean);
+  return parts.length ? `Restore completed. ${parts.join(' and ')} could not be restored.` : '';
 };
 
 // A restore rewrites the project's chat templates and, with chats, everything the chat pages show

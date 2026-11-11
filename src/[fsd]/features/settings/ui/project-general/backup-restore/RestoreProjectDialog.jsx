@@ -24,6 +24,7 @@ const {
   getDefaultRestoreChats,
   getChatsSummaryText,
   getSkillFilesSummaryText,
+  getRestoreWarningText,
 } = ProjectBackupHelpers;
 const { CHATS_OPTION, CHAT_RESTORE_OPTION_LABELS, RESTORE_OPTION_LABELS } = ProjectBackupConstants;
 
@@ -138,14 +139,8 @@ const RestoreProjectDialog = memo(props => {
       if (truncate && response?.result?.chats && !response.result.dry_run) {
         dispatch(chatActions.resetLastSelectedConversationId({ projectId }));
       }
-      const failedAttachments = response?.result?.attachments?.failed;
-      if (failedAttachments && !response.result.dry_run) {
-        toastWarning(`Restore completed. ${failedAttachments} attachment file(s) could not be restored.`);
-      }
-      const missingSkillFiles = response?.result?.skill_files?.missing;
-      if (missingSkillFiles && !response.result.dry_run) {
-        toastWarning(`Restore completed. ${missingSkillFiles} skill file(s) could not be restored.`);
-      }
+      const warning = getRestoreWarningText(response?.result);
+      if (warning) toastWarning(warning);
     } catch (err) {
       setError(getRestoreErrorMessage(err));
       // A project mismatch comes back as 409 with the artifact the backend read,
@@ -564,6 +559,7 @@ const restoreProjectDialogStyles = () => ({
   },
   summaryBody: {
     marginTop: '0.25rem',
+    overflowWrap: 'anywhere',
   },
 });
 
