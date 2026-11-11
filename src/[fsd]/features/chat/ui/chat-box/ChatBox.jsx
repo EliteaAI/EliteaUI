@@ -78,6 +78,7 @@ import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { MentionSkillList } from '@/[fsd]/features/skill';
 import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
+import { withSkillVersionInvocation } from '@/[fsd]/features/skill/lib/helpers';
 import {
   InputGuardrailConstants,
   LLMSettingsConstants,
@@ -2691,7 +2692,11 @@ const ChatBox = memo(
                 version_id: versionDetails.id,
                 icon_meta: versionDetails.meta?.icon_meta || {},
               },
-              meta: { ...activeParticipant.meta, version_name: versionDetails.name, is_available: true },
+              meta: {
+                ...withSkillVersionInvocation(activeParticipant.meta, versionDetails),
+                version_name: versionDetails.name,
+                is_available: true,
+              },
             },
             true,
           );

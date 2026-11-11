@@ -100,6 +100,9 @@ describe('useChatSkillMention without an active agent', () => {
   const writer = skillParticipant(1, 'writer');
   const reviewer = skillParticipant(2, 'reviewer');
   const retired = skillParticipant(3, 'retired', { meta: { name: 'retired', is_available: false } });
+  const houseStyle = skillParticipant(4, 'house-style', {
+    meta: { name: 'house-style', user_invocable: false },
+  });
   const agent = buildParticipant({ id: AGENT_ONE_ID, versionId: AGENT_ONE_VERSION_ID });
 
   const listFor = (activeParticipant, participants) =>
@@ -116,6 +119,21 @@ describe('useChatSkillMention without an active agent', () => {
   it("lists the conversation's runnable skill participants, except the one answering", () => {
     expect(listFor(undefined, [agent, writer, reviewer, retired])).toEqual(['reviewer', 'writer']);
     expect(listFor(writer, [agent, writer, reviewer])).toEqual(['reviewer']);
+  });
+
+  it('hides a skill participant that only the model may start', () => {
+    expect(listFor(undefined, [agent, writer, houseStyle])).toEqual(['writer']);
+  });
+
+  it("hides an attached skill that only the model may start, and its name still shadows the chat's copy", () => {
+    shared.agentSkills = {
+      skills: [
+        { name: 'writer', skill_id: 90, user_invocable: false },
+        { name: 'auditor', skill_id: 91 },
+      ],
+    };
+    expect(listFor(agent, [agent, writer, reviewer])).toEqual(['auditor', 'reviewer']);
+    shared.agentSkills = undefined;
   });
 
   it('names the empty list after where the skills come from', () => {
