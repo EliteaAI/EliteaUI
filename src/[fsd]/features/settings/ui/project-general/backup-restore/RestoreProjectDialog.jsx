@@ -37,6 +37,7 @@ const { CHATS_OPTION, CHAT_RESTORE_OPTION_LABELS, RESTORE_OPTION_LABELS, RESTORE
   ProjectBackupConstants;
 
 const NO_FILES_TOOLTIP = 'This backup has no attachment files';
+const STOP_POLLING_STATUSES = [401, 403, 404];
 
 const RestoreProjectDialog = memo(props => {
   const { open, onClose, projectId, projectName } = props;
@@ -57,7 +58,8 @@ const RestoreProjectDialog = memo(props => {
 
   const [restoreProject, { isLoading: isStarting }] = useRestoreProjectBackupMutation();
   const [invalidateAfterRestore] = useInvalidateAfterRestoreMutation();
-  // Polled while the dialog is closed too: the caches are refreshed when the restore ends
+  // Polled while the dialog is closed too, as long as the settings page stays open;
+  // after leaving it the job is picked up again from sessionStorage on return
   const { data: jobState, error: jobError } = useRestoreProjectJobQuery(
     { projectId, jobId: job?.jobId },
     { skip: !job?.jobId, pollingInterval: RESTORE_JOB_POLL_MS },
@@ -136,9 +138,10 @@ const RestoreProjectDialog = memo(props => {
     }
   }, [job, jobState, handleFinished]);
 
-  // A job that can not be read any more (expired, no access) is not followed forever
+  // A job that can not be read any more (expired, no access) is not followed forever;
+  // other errors (gateway, timeout, network) are transient and polling goes on
   useEffect(() => {
-    if (!job || !jobError || jobError.status === 'FETCH_ERROR') return;
+    if (!job || !STOP_POLLING_STATUSES.includes(jobError?.status)) return;
     setJob(null);
     clearRestoreJob(projectId);
     setError(
@@ -209,7 +212,12 @@ const RestoreProjectDialog = memo(props => {
         restoreChats: chats,
       }).unwrap();
       if (response?.artifact) setArtifact(response.artifact);
-      const started = { jobId: response.job_id, truncate, restoreChats: chats };
+      const started = { jobId: response?.job_id, truncate, restoreChats: chats };
+      // A backend without restore jobs answers with the synchronous result
+      if (!started.jobId) {
+        handleFinished({ status: 'done', result: response }, started);
+        return;
+      }
       saveRestoreJob(projectId, started);
       setJob(started);
     } catch (err) {
@@ -219,7 +227,18 @@ const RestoreProjectDialog = memo(props => {
       if (err?.data?.artifact) setArtifact(err.data.artifact);
       if (err?.data?.result) setResult(err.data);
     }
-  }, [restoreProject, projectId, file, truncate, dryRun, isMismatch, allowMismatch, hasChats, restoreChats]);
+  }, [
+    restoreProject,
+    projectId,
+    file,
+    truncate,
+    dryRun,
+    isMismatch,
+    allowMismatch,
+    hasChats,
+    restoreChats,
+    handleFinished,
+  ]);
 
   const handleTruncateChange = useCallback(event => setTruncate(event.target.checked), []);
   const handleDryRunChange = useCallback(event => setDryRun(event.target.checked), []);
