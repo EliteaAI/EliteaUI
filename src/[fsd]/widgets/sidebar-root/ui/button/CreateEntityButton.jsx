@@ -33,7 +33,7 @@ const CreateEntityButton = memo(props => {
   const isCreatingNewConversation = useSelector(state => state.chat.isCreatingNewConversation);
 
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
-  const [selectedOption, setSelectedOption] = useState('Chat');
+  const [selectedOption, setSelectedOption] = useState(CreateEntityConstants.OptionsMap.Chat);
   const [openMenu, setOpenMenu] = useState(false);
   const { pathname, state } = useLocation();
   const locationState = useMemo(() => ({ from: [], routeStack: [], ...state }), [state]);
@@ -76,13 +76,6 @@ const CreateEntityButton = memo(props => {
   );
   const { shouldDisablePersonalSpace } = useDisablePersonalSpace();
   const projectId = useSelectedProjectId();
-  const shouldDisableOwnLLMs = useMemo(
-    () =>
-      selectedOption === 'Configuration' &&
-      ALLOW_PROJECT_OWN_LLMS === false &&
-      projectId != PUBLIC_PROJECT_ID,
-    [selectedOption, projectId],
-  );
 
   const isSimpleCreateRoute = useMemo(() => {
     const lowerPathname = pathname.toLowerCase();
@@ -94,6 +87,15 @@ const CreateEntityButton = memo(props => {
       CreateEntityConstants.DropdownItems.some(item => pathname.includes(item.route));
     return isSimple || !isKnownRoute;
   }, [pathname]);
+
+  const shouldDisableOwnLLMs = useMemo(
+    () =>
+      !isSimpleCreateRoute &&
+      selectedOption === CreateEntityConstants.OptionsMap.AIProvider &&
+      ALLOW_PROJECT_OWN_LLMS === false &&
+      projectId != PUBLIC_PROJECT_ID,
+    [isSimpleCreateRoute, selectedOption, projectId],
+  );
 
   const currentLabel = useMemo(() => {
     const lowerPathname = pathname.toLowerCase();
@@ -115,7 +117,7 @@ const CreateEntityButton = memo(props => {
       }
 
       switch (stateOption) {
-        case 'Secret':
+        case CreateEntityConstants.OptionsMap.Secret:
           {
             // Navigate to settings/secrets with a flag to trigger row creation
             const secretsPath = RouteDefinitions.SettingsWithTab.replace(':tab', 'secrets');
@@ -129,7 +131,7 @@ const CreateEntityButton = memo(props => {
             );
           }
           return;
-        case 'User':
+        case CreateEntityConstants.OptionsMap.User:
           {
             // Navigate to settings/users with a flag to trigger invite user dialog
             const usersPath = RouteDefinitions.SettingsWithTab.replace(':tab', 'users');
@@ -143,7 +145,7 @@ const CreateEntityButton = memo(props => {
             );
           }
           return;
-        case 'Application':
+        case CreateEntityConstants.OptionsMap.Application:
           navigate(RouteDefinitions.AppsCatalog, { state: locationState });
           return;
         default: {
@@ -154,7 +156,7 @@ const CreateEntityButton = memo(props => {
               ? 'create=1'
               : `${SearchParams.ViewMode}=${ViewMode.Owner}`;
 
-          if (stateOption === 'AI Provider') {
+          if (stateOption === CreateEntityConstants.OptionsMap.AIProvider) {
             search += '&from=ai-providers';
           }
 
