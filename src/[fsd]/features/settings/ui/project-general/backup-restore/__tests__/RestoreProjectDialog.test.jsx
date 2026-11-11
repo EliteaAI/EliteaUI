@@ -9,7 +9,13 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 
 import RestoreProjectDialog from '../RestoreProjectDialog';
 
-const mocks = vi.hoisted(() => ({ restore: vi.fn(), toastWarning: vi.fn(), dispatch: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  restore: vi.fn(),
+  toastWarning: vi.fn(),
+  dispatch: vi.fn(),
+  invalidate: vi.fn(),
+  jobQuery: vi.fn(),
+}));
 
 vi.mock('react-redux', () => ({ useDispatch: () => mocks.dispatch }));
 vi.mock('@/slices/chat', () => ({
@@ -20,6 +26,8 @@ vi.mock('@/slices/chat', () => ({
 
 vi.mock('@/[fsd]/features/settings/api', () => ({
   useRestoreProjectBackupMutation: () => [mocks.restore, { isLoading: false }],
+  useInvalidateAfterRestoreMutation: () => [mocks.invalidate],
+  useRestoreProjectJobQuery: (args, options) => mocks.jobQuery(args, options),
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useToast: () => ({ toastWarning: mocks.toastWarning }),
@@ -59,8 +67,19 @@ const pickFile = async (name = 'backup.zip.enc') => {
 const option = value =>
   within(screen.getByTestId(`project-restore-chats-option-${value}`)).getByRole('radio');
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  sessionStorage.clear();
+  mocks.jobQuery.mockReturnValue({ data: undefined });
+});
 afterEach(cleanup);
+
+// The restore answers with its job; the job query then reports it finished
+const finishJobWith = body => {
+  mocks.jobQuery.mockImplementation((args, options) =>
+    options.skip ? { data: undefined } : { data: { job_id: args.jobId, status: 'done', result: body } },
+  );
+};
 
 describe('RestoreProjectDialog', () => {
   it('keeps the existing controls and accepts zip backups', () => {
@@ -142,20 +161,19 @@ describe('RestoreProjectDialog', () => {
     );
     fireEvent.click(screen.getByTestId('project-restore-dry-run').querySelector('input'));
 
-    mocks.restore.mockReturnValueOnce(
-      answer({
-        ok: true,
-        artifact: artifactOf({ chats_included: 'with_attachments', has_attachment_files: true }),
-        result: {
-          dry_run: false,
-          statements: 10,
-          total_rows: 100,
-          applied_tables: [],
-          chats: { restored: 42, skipped: 3 },
-          attachments: { total: 118, uploaded: 115, linked: 0, failed: 3 },
-        },
-      }),
-    );
+    mocks.restore.mockReturnValueOnce(answer({ ok: true, job_id: 'job-1', status: 'running' }));
+    finishJobWith({
+      ok: true,
+      artifact: artifactOf({ chats_included: 'with_attachments', has_attachment_files: true }),
+      result: {
+        dry_run: false,
+        statements: 10,
+        total_rows: 100,
+        applied_tables: [],
+        chats: { restored: 42, skipped: 3 },
+        attachments: { total: 118, uploaded: 115, linked: 0, failed: 3 },
+      },
+    });
     fireEvent.click(screen.getByTestId('project-restore-submit'));
 
     expect(await screen.findByTestId('project-restore-chats-summary')).toHaveTextContent(
@@ -168,6 +186,12 @@ describe('RestoreProjectDialog', () => {
     expect(mocks.toastWarning).toHaveBeenCalledWith(
       'Restore completed. 3 attachment file(s) could not be restored.',
     );
+    expect(mocks.invalidate).toHaveBeenCalledWith({
+      projectId: 10,
+      dryRun: false,
+      restoreChats: 'with_attachments',
+    });
+    expect(sessionStorage.getItem('elitea.projectRestoreJob.10')).toBeNull();
   });
 
   it('hides the replace-chats warning when chats are not restored', async () => {
@@ -182,5 +206,83 @@ describe('RestoreProjectDialog', () => {
     fireEvent.click(screen.getByTestId('project-restore-truncate').querySelector('input'));
 
     expect(screen.queryByTestId('project-restore-replace-chats-warning')).not.toBeInTheDocument();
+  });
+
+  it('sends only the start of the picked file to inspect it', async () => {
+    mocks.restore.mockReturnValue(answer({ ok: true, inspect: true, artifact: artifactOf() }));
+    renderDialog();
+
+    await pickFile('backup.sql.enc');
+
+    expect(mocks.restore).toHaveBeenCalledWith(expect.objectContaining({ inspect: true }));
+  });
+
+  it('polls the job while the restore runs and keeps it across a reopen', async () => {
+    mocks.restore.mockReturnValueOnce(answer({ ok: true, artifact: artifactOf() }));
+    renderDialog();
+    await pickFile('backup.sql.enc');
+    await waitFor(() => expect(screen.getByTestId('project-restore-submit')).not.toBeDisabled());
+
+    mocks.restore.mockReturnValueOnce(answer({ ok: true, job_id: 'job-7', status: 'running' }));
+    mocks.jobQuery.mockImplementation((args, options) =>
+      options.skip ? { data: undefined } : { data: { job_id: args.jobId, status: 'running' } },
+    );
+    fireEvent.click(screen.getByTestId('project-restore-submit'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('project-restore-submit')).toHaveTextContent('Restoring...'),
+    );
+    expect(mocks.jobQuery).toHaveBeenLastCalledWith(
+      { projectId: 10, jobId: 'job-7' },
+      expect.objectContaining({ skip: false, pollingInterval: 2000 }),
+    );
+    expect(screen.getByTestId('project-restore-cancel')).not.toBeDisabled();
+    expect(JSON.parse(sessionStorage.getItem('elitea.projectRestoreJob.10'))).toMatchObject({
+      jobId: 'job-7',
+    });
+
+    cleanup();
+    renderDialog();
+    await waitFor(() =>
+      expect(mocks.jobQuery).toHaveBeenLastCalledWith(
+        { projectId: 10, jobId: 'job-7' },
+        expect.objectContaining({ skip: false }),
+      ),
+    );
+  });
+
+  it('shows the error of a failed job', async () => {
+    sessionStorage.setItem('elitea.projectRestoreJob.10', JSON.stringify({ jobId: 'job-9' }));
+    mocks.jobQuery.mockImplementation((args, options) =>
+      options.skip
+        ? { data: undefined }
+        : {
+            data: {
+              job_id: args.jobId,
+              status: 'failed',
+              status_code: 400,
+              ok: false,
+              error: 'insert failed on tags',
+            },
+          },
+    );
+    renderDialog();
+
+    expect(await screen.findByText(/insert failed on tags/)).toBeInTheDocument();
+    expect(sessionStorage.getItem('elitea.projectRestoreJob.10')).toBeNull();
+  });
+
+  it('stops following a job that can not be read any more', async () => {
+    sessionStorage.setItem('elitea.projectRestoreJob.10', JSON.stringify({ jobId: 'job-old' }));
+    mocks.jobQuery.mockImplementation((args, options) =>
+      options.skip ? { data: undefined } : { data: undefined, error: { status: 404, data: { ok: false } } },
+    );
+    renderDialog();
+
+    expect(
+      await screen.findByText('The status of the last restore is no longer available.'),
+    ).toBeInTheDocument();
+    expect(sessionStorage.getItem('elitea.projectRestoreJob.10')).toBeNull();
+    expect(screen.getByTestId('project-restore-submit')).not.toHaveTextContent('Restoring...');
   });
 });
