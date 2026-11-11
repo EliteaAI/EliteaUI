@@ -25,11 +25,15 @@ vi.mock('@/[fsd]/shared/ui/accordion/BasicAccordion', () => ({
   ),
 }));
 vi.mock('@/[fsd]/shared/ui/button', () => ({ CopyToClipboardButton: () => null }));
+const mocks = vi.hoisted(() => ({
+  trigger: { type: 'schedule', cron: '0 * * * *', timezone: 'UTC', last_run: null },
+}));
 vi.mock('@/api/applications', () => ({
   useForkedFromApplicationDetailsQuery: () => ({}),
-  useGetPipelineTriggerQuery: () => ({
-    data: { type: 'schedule', cron: '0 * * * *', timezone: 'UTC', last_run: null },
-  }),
+  useGetPipelineTriggerQuery: () => ({ data: mocks.trigger }),
+}));
+vi.mock('@/[fsd]/features/schedule/ui/LegacyWebhookNotice', () => ({
+  default: () => <div data-testid="legacy-webhook-notice" />,
 }));
 vi.mock('@/common/utils.jsx', () => ({ buildForkedEntityHref: () => '', capitalizeFirstChar: s => s }));
 vi.mock('@/components/Fork/LabelLinkWithToolTip.jsx', () => ({ LabelLinkWithToolTip: () => null }));
@@ -41,5 +45,12 @@ describe('ApplicationInformation', () => {
     render(<ApplicationInformation />);
     expect(screen.getByTestId('information-trigger-row')).toHaveTextContent('Schedule');
     expect(screen.queryByTestId('schedule-info')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('legacy-webhook-notice')).not.toBeInTheDocument();
+  });
+
+  it('shows the deprecation notice for a stored legacy webhook (#7402)', () => {
+    mocks.trigger = { type: 'webhook', webhook_type: 'github' };
+    render(<ApplicationInformation />);
+    expect(screen.getByTestId('legacy-webhook-notice')).toBeInTheDocument();
   });
 });

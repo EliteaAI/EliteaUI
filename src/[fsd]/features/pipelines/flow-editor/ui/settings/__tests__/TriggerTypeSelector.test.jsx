@@ -112,12 +112,41 @@ describe('TriggerTypeSelector', () => {
     setForm(PLAIN_YAML);
   });
 
-  it('lists only Chat Message and Webhook when no schedule is stored', () => {
+  it('lists only Chat Message when no legacy trigger is stored (#7402)', () => {
     render(<TriggerTypeSelector />);
 
     expect(screen.getByTestId('option-chat_message')).toBeTruthy();
-    expect(screen.getByTestId('option-webhook')).toBeTruthy();
+    expect(screen.queryByTestId('option-webhook')).toBeNull();
     expect(screen.queryByTestId('option-schedule')).toBeNull();
+  });
+
+  it('keeps a stored legacy webhook selectable and shows the deprecation notice', () => {
+    mocks.triggerData = { type: 'webhook', webhook_type: 'github' };
+    render(<TriggerTypeSelector />);
+
+    expect(screen.getByTestId('select').dataset.value).toBe('webhook');
+    expect(screen.getByTestId('option-webhook').dataset.disabled).toBe('false');
+    expect(screen.getByTestId('legacy-webhook-notice').textContent).toMatch(/deprecated URL/);
+  });
+
+  it('shows no deprecation notice without a stored webhook', () => {
+    render(<TriggerTypeSelector />);
+
+    expect(screen.queryByTestId('legacy-webhook-notice')).toBeNull();
+  });
+
+  it('asks before switching a stored legacy webhook to Chat Message', async () => {
+    mocks.triggerData = { type: 'webhook', webhook_type: 'github' };
+    render(<TriggerTypeSelector />);
+
+    fireEvent.click(screen.getByTestId('option-chat_message'));
+    expect(mocks.updateTrigger).not.toHaveBeenCalled();
+    expect(screen.getByText(/cannot be set up here again/)).toBeTruthy();
+
+    fireEvent.click(screen.getByText('confirm'));
+    await waitFor(() =>
+      expect(mocks.updateTrigger).toHaveBeenCalledWith(expect.objectContaining({ type: 'chat_message' })),
+    );
   });
 
   it('shows a stored schedule as a disabled option in an enabled select', () => {
@@ -144,14 +173,10 @@ describe('TriggerTypeSelector', () => {
     expect(screen.queryByTestId('replace-dialog')).toBeNull();
   });
 
-  it('asks before replacing a stored schedule with Webhook', async () => {
+  it('does not offer Webhook in place of a stored schedule', () => {
     renderStoredSchedule();
 
-    confirmSwitchTo('webhook');
-
-    await waitFor(() =>
-      expect(mocks.updateTrigger).toHaveBeenCalledWith(expect.objectContaining({ type: 'webhook' })),
-    );
+    expect(screen.queryByTestId('option-webhook')).toBeNull();
   });
 
   it('shows a success toast after a confirmed switch from a stored schedule to Chat Message', async () => {
@@ -177,12 +202,6 @@ describe('TriggerTypeSelector', () => {
     await waitFor(() => expect(mocks.toastError).toHaveBeenCalledWith('Failed to update trigger'));
   });
 
-  it('shows an error toast when the switch from a stored schedule to Webhook fails', async () => {
-    failSwitchTo('webhook', { data: { error: 'Webhook denied' } });
-
-    await waitFor(() => expect(mocks.toastError).toHaveBeenCalledWith('Webhook denied'));
-  });
-
   it('keeps a stored schedule when the replace dialog is cancelled', () => {
     renderStoredSchedule();
 
@@ -190,15 +209,6 @@ describe('TriggerTypeSelector', () => {
     fireEvent.click(screen.getByText('cancel'));
 
     expect(mocks.updateTrigger).not.toHaveBeenCalled();
-    expect(screen.queryByTestId('replace-dialog')).toBeNull();
-  });
-
-  it('switches without a dialog when no schedule is stored', async () => {
-    render(<TriggerTypeSelector />);
-
-    fireEvent.click(screen.getByTestId('option-webhook'));
-
-    await waitFor(() => expect(mocks.updateTrigger).toHaveBeenCalledTimes(1));
     expect(screen.queryByTestId('replace-dialog')).toBeNull();
   });
 
@@ -220,7 +230,8 @@ describe('TriggerTypeSelector', () => {
     expect(screen.getByText(/no longer editable here/i)).toBeTruthy();
   });
 
-  it('greys out Webhook when the pipeline gains an interactive node', () => {
+  it('greys out a stored Webhook when the pipeline gains an interactive node', () => {
+    mocks.triggerData = { type: 'webhook' };
     setForm(HITL_YAML);
 
     render(<TriggerTypeSelector />);
