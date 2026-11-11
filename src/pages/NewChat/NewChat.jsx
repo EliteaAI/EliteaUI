@@ -485,7 +485,9 @@ const NewChat = props => {
 
   const handleRestrictAccessSuccess = useCallback(
     async (conversationId, participantChanges = {}) => {
-      const applyPrivate = conv => (conv.id === conversationId ? { ...conv, is_private: true } : conv);
+      // The Share window can also make the chat public
+      const isPrivate = participantChanges.isPrivate ?? true;
+      const applyPrivate = conv => (conv.id === conversationId ? { ...conv, is_private: isPrivate } : conv);
 
       setConversations(prev => prev.map(applyPrivate));
       setPinnedConversations(prev => prev.map(applyPrivate));
@@ -501,7 +503,7 @@ const NewChat = props => {
           return {
             ...prev,
             participants: applyParticipantChanges(participants ?? prev.participants, participantChanges),
-            is_private: true,
+            is_private: isPrivate,
           };
         });
 

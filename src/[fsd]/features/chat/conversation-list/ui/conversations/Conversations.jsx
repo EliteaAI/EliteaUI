@@ -34,6 +34,7 @@ import useDragAndDrop from '@/hooks/chat/useDragAndDrop';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 
+import { ShareChatModal } from '../share';
 import ChatImportButton from './ChatImportButton';
 import ExportConversationModal from './ExportConversationModal';
 import ImportConversationModal from './ImportConversationModal';
@@ -110,6 +111,7 @@ const Conversations = memo(props => {
   const [shareDialogConversation, setShareDialogConversation] = useState(null);
   const [manageLinksConversation, setManageLinksConversation] = useState(null);
   const [restrictAccessConversation, setRestrictAccessConversation] = useState(null);
+  const [shareChatConversation, setShareChatConversation] = useState(null);
   const [exportConversation, setExportConversation] = useState(null);
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -140,6 +142,10 @@ const Conversations = memo(props => {
 
   const handleCloseManageLinksDialog = useCallback(() => {
     setManageLinksConversation(null);
+  }, []);
+
+  const handleCloseShareChat = useCallback(() => {
+    setShareChatConversation(null);
   }, []);
 
   const handleCloseRestrictAccessDialog = useCallback(() => {
@@ -509,6 +515,7 @@ const Conversations = memo(props => {
         onShareExternal={handleOpenShareDialog}
         onManageLinks={handleOpenManageLinksDialog}
         onRestrictAccess={setRestrictAccessConversation}
+        onShare={setShareChatConversation}
       />
     ),
     [
@@ -531,6 +538,7 @@ const Conversations = memo(props => {
       handleOpenShareDialog,
       handleOpenManageLinksDialog,
       setRestrictAccessConversation,
+      setShareChatConversation,
       setExportConversation,
     ],
   );
@@ -818,6 +826,13 @@ const Conversations = memo(props => {
         conversation={manageLinksConversation ?? {}}
         onClose={handleCloseManageLinksDialog}
       />
+      {shareChatConversation && (
+        <ShareChatModal
+          conversation={shareChatConversation}
+          onClose={handleCloseShareChat}
+          onAccessSaved={onRestrictAccessSuccess}
+        />
+      )}
       {restrictAccessConversation && (
         <RestrictAccessDialog
           conversation={restrictAccessConversation}
