@@ -32,6 +32,12 @@ describe('UserLabel', () => {
     expect(screen.queryByTestId('analytics-user-deleted-chip')).not.toBeInTheDocument();
   });
 
+  it('shows the stored email and a Deleted user chip for a deleted account', () => {
+    renderLabel({ user_id: 9, user_email: 'gone@example.com', user_deleted: true });
+    expect(screen.getByText('gone@example.com')).toBeInTheDocument();
+    expect(screen.getByTestId('analytics-user-deleted-chip')).toHaveTextContent('Deleted user');
+  });
+
   it('shows the id and a Deleted user chip for a deleted account', () => {
     renderLabel({ user_id: 9, user_email: null, user_deleted: true });
     expect(screen.getByText('User 9')).toBeInTheDocument();

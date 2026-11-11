@@ -84,15 +84,16 @@ describe('formatAgentUserLabel (plain-text user name for exports)', () => {
     expect(formatAgentUserLabel({ user_id: 1, user_email: 'alice@example.com' })).toBe('alice@example.com');
   });
 
-  it('names a deleted account by its id and marks it as a deleted user', () => {
-    expect(formatAgentUserLabel({ user_id: 9, user_email: null, user_deleted: true })).toBe(
-      'User 9 (Deleted user)',
+  it('keeps the stored email of a deleted account and marks it as a deleted user', () => {
+    expect(formatAgentUserLabel({ user_id: 9, user_email: 'gone@example.com', user_deleted: true })).toBe(
+      'gone@example.com (Deleted user)',
     );
   });
 
-  it('never exports the email of a deleted account', () => {
-    const label = formatAgentUserLabel({ user_id: 9, user_email: 'gone@example.com', user_deleted: true });
-    expect(label).not.toContain('gone@example.com');
+  it('names a deleted account by its id when no email was stored', () => {
+    expect(formatAgentUserLabel({ user_id: 9, user_email: null, user_deleted: true })).toBe(
+      'User 9 (Deleted user)',
+    );
   });
 
   it('falls back to the id, unmarked, when the email is only unknown', () => {

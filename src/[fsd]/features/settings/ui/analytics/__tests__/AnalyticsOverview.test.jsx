@@ -164,17 +164,17 @@ describe('AnalyticsOverview', () => {
     const data = {
       ...MOCK_DATA,
       top_ai_users: [
-        { ...MOCK_DATA.top_ai_users[0], user_id: 9, user_email: null, user_deleted: true },
+        { ...MOCK_DATA.top_ai_users[0], user_id: 9, user_email: 'gone@example.com', user_deleted: true },
         { ...MOCK_DATA.top_ai_users[1], user_id: 12, user_email: null, user_deleted: false },
       ],
     };
     render(<AnalyticsOverview data={data} />, { wrapper: Wrapper });
-    expect(screen.getByText('User 9')).toBeInTheDocument();
+    expect(screen.getByText('gone@example.com')).toBeInTheDocument();
     expect(screen.getByText('User 12')).toBeInTheDocument();
     const chips = screen.getAllByTestId('analytics-leaderboard-deleted-chip');
     expect(chips).toHaveLength(1);
     expect(chips[0]).toHaveTextContent('Deleted user');
-    expect(screen.getByText('User 9').closest('[class*="MuiBox"]')).toContainElement(chips[0]);
+    expect(screen.getByText('gone@example.com').closest('[class*="MuiBox"]')).toContainElement(chips[0]);
   });
 
   it('shows no Deleted user chip for ordinary users', () => {
