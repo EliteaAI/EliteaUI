@@ -1,21 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
-import { ownerOnlyRunHint } from '../scheduleList.helpers';
+import { RUN_AS_ADMIN_HINT, runAsAdminHint, runDeniedHint } from '../scheduleList.helpers';
 
-// #7254: Run now and Test run are the owner's; an admin is told who can run the schedule
+// A viewer who manages a schedule but has no run right is told why Run now is off
 
 const ADMIN_ACTIONS = ['edit', 'pause', 'delete', 'change_owner'];
 
-describe('ownerOnlyRunHint', () => {
+describe('runDeniedHint', () => {
   it('names the owner for an admin viewing a schedule with a version', () => {
-    expect(
-      ownerOnlyRunHint({ version_id: 4, owner: { name: 'Ann Lee' }, allowed_actions: ADMIN_ACTIONS }),
-    ).toBe('Only the schedule owner, Ann Lee, can run it.');
+    expect(runDeniedHint({ version_id: 4, owner: { name: 'Ann Lee' }, allowed_actions: ADMIN_ACTIONS })).toBe(
+      'You do not have the right to run this schedule. The owner is Ann Lee.',
+    );
   });
 
   it('says it without a name when the owner has none', () => {
-    expect(ownerOnlyRunHint({ version_id: 4, owner: { id: 1 }, allowed_actions: ADMIN_ACTIONS })).toBe(
-      'Only the schedule owner can run it.',
+    expect(runDeniedHint({ version_id: 4, owner: { id: 1 }, allowed_actions: ADMIN_ACTIONS })).toBe(
+      'You do not have the right to run this schedule.',
     );
   });
 
@@ -26,6 +26,25 @@ describe('ownerOnlyRunHint', () => {
     ['a row without actions', { version_id: 4 }],
     ['no row', undefined],
   ])('is null for %s', (_label, schedule) => {
-    expect(ownerOnlyRunHint(schedule)).toBeNull();
+    expect(runDeniedHint(schedule)).toBeNull();
+  });
+});
+
+describe('runAsAdminHint', () => {
+  const schedule = { allowed_actions: ['run', 'edit'], owner: { id: 9 } };
+
+  it('gives the text to an admin who may run a schedule of another owner', () => {
+    expect(runAsAdminHint(schedule, { isAdmin: true, userId: 5 })).toBe(RUN_AS_ADMIN_HINT);
+  });
+
+  it.each([
+    ['not an admin', schedule, { isAdmin: false, userId: 5 }],
+    ['the owner', schedule, { isAdmin: true, userId: 9 }],
+    ['no run right', { ...schedule, allowed_actions: ['edit'] }, { isAdmin: true, userId: 5 }],
+    ['a webhook', { ...schedule, trigger_kind: 'webhook' }, { isAdmin: true, userId: 5 }],
+    ['an unknown owner', { ...schedule, owner: undefined }, { isAdmin: true, userId: 5 }],
+    ['no schedule', undefined, { isAdmin: true, userId: 5 }],
+  ])('is null for %s', (_label, row, viewer) => {
+    expect(runAsAdminHint(row, viewer)).toBeNull();
   });
 });

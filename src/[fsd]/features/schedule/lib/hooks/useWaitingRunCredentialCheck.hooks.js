@@ -17,8 +17,10 @@ export const FOCUS_RECHECK_MIN_INTERVAL_MS = 30000;
  * credential in another tab. A focus event starts no check while one is running or when the last one
  * started less than FOCUS_RECHECK_MIN_INTERVAL_MS ago. `enabled` false skips every check and reports `ready`.
  * A failed check keeps the state `missing`, so the Approve button stays locked.
+ * `runId` tells the server which run the check is for, so it scans as the user the run acts as.
+ * It is sent only with a saved schedule (a Test run has none). A new run id starts a new check.
  */
-export const useWaitingRunCredentialCheck = ({ schedule, toolkit, enabled = true }) => {
+export const useWaitingRunCredentialCheck = ({ schedule, toolkit, runId, enabled = true }) => {
   const projectId = useSelectedProjectId();
   const [checkRisk] = useCheckScheduleRiskMutation();
   const [state, setState] = useState(CREDENTIAL_CHECK_STATE.CHECKING);
@@ -49,6 +51,7 @@ export const useWaitingRunCredentialCheck = ({ schedule, toolkit, enabled = true
         application_id,
         version_id,
         schedule_id: id,
+        ...(id != null && runId != null && { run_id: runId }),
         ...(approval_rule && { approval_rule }),
       }).unwrap();
       if (call === latestCall.current) {
@@ -61,7 +64,18 @@ export const useWaitingRunCredentialCheck = ({ schedule, toolkit, enabled = true
     } finally {
       inFlight.current -= 1;
     }
-  }, [checkRisk, enabled, projectId, id, entity_type, application_id, version_id, approval_rule, toolkit]);
+  }, [
+    checkRisk,
+    enabled,
+    projectId,
+    id,
+    entity_type,
+    application_id,
+    version_id,
+    approval_rule,
+    toolkit,
+    runId,
+  ]);
 
   useEffect(() => {
     recheck();

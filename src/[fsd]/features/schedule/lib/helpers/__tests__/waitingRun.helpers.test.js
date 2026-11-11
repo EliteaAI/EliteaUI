@@ -1,12 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  describeRunNoteActions,
   findWaitingRun,
   formatTool,
+  getCredentialOwnerId,
   getPausedMoreCount,
   getPausedTools,
+  getRunDeciderId,
+  getRunNoteActions,
   getWaitingRunNeed,
   hasMissingCredential,
+  isSignInUnanswerable,
+  isStartedByUser,
 } from '../waitingRun.helpers';
 
 describe('getWaitingRunNeed', () => {
@@ -28,6 +34,56 @@ describe('getWaitingRunNeed', () => {
       toolkit: undefined,
       credential: 'gh-main',
     });
+  });
+
+  it('finds a later "credential X not found." after an earlier word that starts the same', () => {
+    const text = 'Credentials are missing. Credential foo not found.';
+    expect(getWaitingRunNeed({ kind: 'paused', text })).toEqual({
+      need: 'credential',
+      toolkit: undefined,
+      credential: 'foo',
+    });
+  });
+
+  it('reads the credential in any letter case and over a line break', () => {
+    expect(getWaitingRunNeed({ kind: 'paused', text: 'CREDENTIAL\n gh-main \nNOT FOUND.' })).toMatchObject({
+      need: 'credential',
+      credential: 'gh-main',
+    });
+  });
+
+  it('returns no need when no credential name stands between the words', () => {
+    expect(getWaitingRunNeed({ kind: 'paused', text: 'Credential not found.' })).toEqual({});
+    expect(getWaitingRunNeed({ kind: 'paused', text: 'Credential foo not found' })).toEqual({});
+  });
+
+  it('reads the first word after "toolkit" as the toolkit name', () => {
+    const text = 'Paused: credential gh-main not found. Fix toolkit "GitHub" in this project.';
+    expect(getWaitingRunNeed({ kind: 'paused', text })).toMatchObject({ toolkit: 'GitHub' });
+  });
+
+  it('keeps every word of a quoted toolkit name', () => {
+    const text = "Paused: credential gh-main not found. Fix toolkit 'Jira Cloud' in this project.";
+    expect(getWaitingRunNeed({ kind: 'paused', text })).toMatchObject({ toolkit: 'Jira Cloud' });
+  });
+
+  it('reads an unquoted toolkit name up to the first space', () => {
+    const text = 'Paused: credential gh-main not found. Fix toolkit GitHub in this project.';
+    expect(getWaitingRunNeed({ kind: 'paused', text })).toMatchObject({ toolkit: 'GitHub' });
+  });
+
+  it('parses a long toolkit text in linear time', () => {
+    const text = `credential gh not found. toolkit ${'"'.repeat(20000)}`;
+    const started = Date.now();
+    getWaitingRunNeed({ kind: 'paused', text });
+    expect(Date.now() - started).toBeLessThan(1000);
+  });
+
+  it('parses long text without a hit in linear time', () => {
+    const text = 'credential '.repeat(20000);
+    const started = Date.now();
+    expect(getWaitingRunNeed({ kind: 'paused', text })).toEqual({});
+    expect(Date.now() - started).toBeLessThan(1000);
   });
 
   it('parses the toolkit of a sign-in pause from the text', () => {
@@ -152,5 +208,126 @@ describe('findWaitingRun', () => {
     const waiting = { id: 2, status: 'waiting_for_approval' };
     expect(findWaitingRun([{ id: 1, status: 'success' }, waiting])).toBe(waiting);
     expect(findWaitingRun(undefined)).toBeUndefined();
+  });
+});
+
+describe('getRunDeciderId', () => {
+  const schedule = { owner: { id: 5 } };
+
+  it('returns decider_id of the run, also when an admin started it', () => {
+    expect(getRunDeciderId({ trigger: 'manual', requested_by: 9, decider_id: 5 }, schedule)).toBe(5);
+  });
+
+  it('returns decider_id of a run whose schedule has a new owner', () => {
+    expect(getRunDeciderId({ trigger: 'cron', decider_id: 3 }, schedule)).toBe(3);
+  });
+
+  it('returns decider_id of a Test run without a schedule', () => {
+    expect(getRunDeciderId({ isDraftRun: true, requested_by: 9, decider_id: 9 }, undefined)).toBe(9);
+  });
+
+  it('falls back to the schedule owner, not the starter, for a schedule run without decider_id', () => {
+    expect(getRunDeciderId({ trigger: 'manual', requested_by: 9 }, schedule)).toBe(5);
+    expect(getRunDeciderId({ trigger: 'cron' }, schedule)).toBe(5);
+  });
+
+  it('falls back to the starter of a Test run without decider_id', () => {
+    expect(getRunDeciderId({ isDraftRun: true, requested_by: 9 }, undefined)).toBe(9);
+  });
+
+  it('returns undefined for a run with neither a decider nor a schedule', () => {
+    expect(getRunDeciderId({ id: 1 }, undefined)).toBeUndefined();
+    expect(getRunDeciderId(undefined, undefined)).toBeUndefined();
+  });
+});
+
+describe('isStartedByUser', () => {
+  it.each([{ isDraftRun: true }, { trigger: 'manual' }, { trigger: 'test' }])('is true for %o', run => {
+    expect(isStartedByUser(run)).toBe(true);
+  });
+
+  it('is false for a cron run and a webhook run', () => {
+    expect(isStartedByUser({ trigger: 'cron' })).toBe(false);
+    expect(isStartedByUser({ trigger: 'webhook' })).toBe(false);
+    expect(isStartedByUser(undefined)).toBe(false);
+  });
+});
+
+describe('getCredentialOwnerId', () => {
+  const schedule = { owner: { id: 5 } };
+
+  it("returns the starter of an admin's Run now run, not the decider", () => {
+    expect(getCredentialOwnerId({ trigger: 'manual', requested_by: 9, decider_id: 5 }, schedule)).toBe(9);
+  });
+
+  it('returns the starter of a Test run', () => {
+    expect(getCredentialOwnerId({ isDraftRun: true, requested_by: 9, decider_id: 9 }, undefined)).toBe(9);
+  });
+
+  it('returns the decider of a cron run, whoever requested it', () => {
+    expect(getCredentialOwnerId({ trigger: 'cron', requested_by: 9, decider_id: 5 }, schedule)).toBe(5);
+  });
+
+  it('returns the decider of a manual run without a starter', () => {
+    expect(getCredentialOwnerId({ trigger: 'manual', requested_by: null, decider_id: 5 }, schedule)).toBe(5);
+  });
+});
+
+describe('getRunNoteActions', () => {
+  const all = ['pause', 'resume', 'change_owner', 'run'];
+
+  it('lists Pause, Change owner and Run for an enabled schedule', () => {
+    expect(getRunNoteActions({ enabled: true, allowed_actions: all })).toEqual([
+      'pause',
+      'change_owner',
+      'run',
+    ]);
+  });
+
+  it('lists Resume instead of Pause for a paused schedule', () => {
+    expect(getRunNoteActions({ enabled: false, allowed_actions: all })).toEqual([
+      'resume',
+      'change_owner',
+      'run',
+    ]);
+  });
+
+  it('lists only what the server allows, and nothing for a member', () => {
+    expect(getRunNoteActions({ enabled: true, allowed_actions: ['run'] })).toEqual(['run']);
+    expect(getRunNoteActions({ enabled: true, allowed_actions: [] })).toEqual([]);
+    expect(getRunNoteActions({ enabled: true })).toEqual([]);
+  });
+});
+
+describe('describeRunNoteActions', () => {
+  it('joins three actions with commas and "or"', () => {
+    expect(describeRunNoteActions(['pause', 'change_owner', 'run'], 'schedule')).toBe(
+      'You can pause the schedule, change its owner, or start a new run as yourself.',
+    );
+  });
+
+  it('joins two actions with "or" and names the webhook', () => {
+    expect(describeRunNoteActions(['pause', 'run'], 'webhook')).toBe(
+      'You can pause the webhook or start a new run as yourself.',
+    );
+  });
+
+  it('names one action alone and gives no text for none', () => {
+    expect(describeRunNoteActions(['run'], 'schedule')).toBe('You can start a new run as yourself.');
+    expect(describeRunNoteActions([], 'schedule')).toBe('');
+  });
+});
+
+describe('isSignInUnanswerable', () => {
+  const schedule = { owner: { id: 5 } };
+
+  it('is true when an admin started a manual run the owner decides', () => {
+    expect(isSignInUnanswerable({ trigger: 'manual', requested_by: 9, decider_id: 5 }, schedule)).toBe(true);
+  });
+
+  it('is false when the starter is the decider, for a Test run and for a scheduled run', () => {
+    expect(isSignInUnanswerable({ trigger: 'manual', requested_by: 5, decider_id: 5 }, schedule)).toBe(false);
+    expect(isSignInUnanswerable({ isDraftRun: true, requested_by: 9, decider_id: 9 }, undefined)).toBe(false);
+    expect(isSignInUnanswerable({ trigger: 'cron', requested_by: 9, decider_id: 5 }, schedule)).toBe(false);
   });
 });

@@ -62,6 +62,9 @@ const rowActions = vi.hoisted(() => ({
   onDelete: vi.fn(),
   isBusy: false,
 }));
+vi.mock('@/[fsd]/features/schedule/lib/hooks/useRunAsAdminHint.hooks', () => ({
+  useRunAsAdminHint: () => null,
+}));
 vi.mock('@/[fsd]/features/schedule/lib/hooks/useScheduleRowActions.hooks', () => ({
   useScheduleRowActions: () => rowActions,
 }));

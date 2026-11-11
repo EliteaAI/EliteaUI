@@ -42,7 +42,7 @@ const ScheduleRunDetail = memo(props => {
     return (
       <ScheduleWaitingCard
         schedule={schedule}
-        run={shown}
+        run={run}
         entityType={entityType}
         applicationId={applicationId}
       />

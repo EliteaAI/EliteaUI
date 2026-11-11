@@ -18,6 +18,9 @@ const mocks = vi.hoisted(() => ({
   actions: { onRun: vi.fn(), onPause: vi.fn(), onResume: vi.fn(), onDelete: vi.fn(), isBusy: false },
 }));
 
+vi.mock('@/[fsd]/features/schedule/lib/hooks/useRunAsAdminHint.hooks', () => ({
+  useRunAsAdminHint: () => null,
+}));
 vi.mock('@/[fsd]/features/schedule/lib/hooks/useScheduleRowActions.hooks', () => ({
   useScheduleRowActions: () => mocks.actions,
 }));

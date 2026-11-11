@@ -5,13 +5,14 @@ import { act, renderHook } from '@testing-library/react';
 
 import { useWaitingRunDecision } from '../useWaitingRunDecision.hooks';
 
-// owner-only decision on a waiting run.
+// decision on a waiting run by the user the run acts as.
 
 const mocks = vi.hoisted(() => ({
   decide: vi.fn(),
   decideWithoutChat: vi.fn(),
   decideTestRun: vi.fn(),
   user: { id: 5 },
+  isProjectAdmin: false,
   toastError: vi.fn(),
   toastInfo: vi.fn(),
   toastSuccess: vi.fn(),
@@ -23,6 +24,12 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('react-redux', () => ({ useSelector: select => select({ user: mocks.user }) }));
+vi.mock('@/hooks/useCheckPermission', () => ({
+  default: () => ({
+    checkPermission: permission =>
+      permission === 'models.applications.schedules.admin' ? mocks.isProjectAdmin : false,
+  }),
+}));
 vi.mock('@/[fsd]/features/mcp', () => ({
   McpAuthHelpers: {
     getAllTokens: () => mocks.tokens,
@@ -51,14 +58,131 @@ const request = { action: 'approve', conversationUuid: 'c-1', messageId: 'm-1' }
 
 const DEFAULT_SCHEDULE = { id: 8, owner: { id: 5 }, created_by: 9 };
 
-const setup = (schedule = DEFAULT_SCHEDULE) =>
-  renderHook(() => useWaitingRunDecision({ schedule, onDecided: mocks.refetch })).result;
+const setup = (schedule = DEFAULT_SCHEDULE, run) =>
+  renderHook(() => useWaitingRunDecision({ schedule, run, onDecided: mocks.refetch })).result;
 
 describe('useWaitingRunDecision', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.isProjectAdmin = false;
+    mocks.user = { id: 5 };
+  });
 
-  it('gives a non-owner no handler', () => {
+  it('gives a plain user who is not the owner no handler', () => {
     expect(setup({ owner: { id: 9 }, created_by: 5 }).current).toBeUndefined();
+  });
+
+  it('gives the owner a handler', () => {
+    expect(setup().current).toBeTypeOf('function');
+  });
+
+  it('gives the admin who started a manual run no handler while the run has no decider_id', () => {
+    const run = { trigger: 'manual', requested_by: 5 };
+    expect(setup({ id: 8, owner: { id: 9 } }, run).current).toBeUndefined();
+  });
+
+  it('gives the schedule owner a handler for a manual run another user started while there is no decider_id', () => {
+    const run = { trigger: 'manual', requested_by: 9 };
+    expect(setup({ id: 8, owner: { id: 5 } }, run).current).toBeTypeOf('function');
+  });
+
+  it('gives the owner a handler for a cron run', () => {
+    const run = { trigger: 'cron', requested_by: null };
+    expect(setup({ id: 8, owner: { id: 5 } }, run).current).toBeTypeOf('function');
+  });
+
+  it('gives a plain user no handler for a manual run another user started', () => {
+    const run = { trigger: 'manual', requested_by: 9 };
+    expect(setup({ id: 8, owner: { id: 7 } }, run).current).toBeUndefined();
+  });
+
+  it('gives a plain user no handler for a cron run even when requested_by is the user', () => {
+    const run = { trigger: 'cron', requested_by: 5 };
+    expect(setup({ id: 8, owner: { id: 7 } }, run).current).toBeUndefined();
+  });
+
+  it('gives a project admin who is not the owner no handler for an owner run', () => {
+    mocks.isProjectAdmin = true;
+    expect(setup({ id: 8, owner: { id: 9 } }).current).toBeUndefined();
+    expect(
+      setup({ id: 8, owner: { id: 9 } }, { trigger: 'cron', requested_by: null }).current,
+    ).toBeUndefined();
+  });
+
+  describe('decider_id of the run', () => {
+    it("gives the owner a handler for an admin's Run now run", () => {
+      const run = { trigger: 'manual', requested_by: 9, decider_id: 5 };
+      expect(setup({ id: 8, owner: { id: 5 } }, run).current).toBeTypeOf('function');
+    });
+
+    it('gives the admin who started a Run now run no handler', () => {
+      mocks.isProjectAdmin = true;
+      const run = { trigger: 'manual', requested_by: 5, decider_id: 9 };
+      expect(setup({ id: 8, owner: { id: 9 } }, run).current).toBeUndefined();
+    });
+
+    it('gives the old owner a handler and the new owner none after Change owner', () => {
+      const run = { trigger: 'cron', requested_by: null, decider_id: 5 };
+      const schedule = { id: 8, owner: { id: 9 } };
+      expect(setup(schedule, run).current).toBeTypeOf('function');
+      mocks.user = { id: 9 };
+      expect(setup(schedule, run).current).toBeUndefined();
+    });
+
+    it('lets the old owner decide a run through the schedule route', async () => {
+      mocks.decideWithoutChat.mockReturnValue(ok());
+      const run = { trigger: 'cron', requested_by: null, decider_id: 5 };
+      const result = setup({ id: 8, owner: { id: 9 } }, run);
+      await act(() => result.current({ action: 'reject', runId: 41 }));
+      expect(mocks.decideWithoutChat).toHaveBeenCalledWith(
+        expect.objectContaining({ scheduleId: 8, runId: 41, action: 'reject' }),
+      );
+      expect(mocks.refetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('uses decider_id before the starter of a Test run', () => {
+      const run = (requestedBy, deciderId) =>
+        renderHook(() =>
+          useWaitingRunDecision({
+            run: { isDraftRun: true, requested_by: requestedBy, decider_id: deciderId },
+            onDecided: mocks.refetch,
+          }),
+        ).result;
+      expect(run(9, 5).current).toBeTypeOf('function');
+      expect(run(5, 9).current).toBeUndefined();
+    });
+  });
+
+  it('gives no handler when neither the actor nor the user is known', () => {
+    mocks.user = { id: undefined };
+    expect(setup({ id: 8 }).current).toBeUndefined();
+  });
+
+  it('gives a project admin no handler for a Test run another user started', () => {
+    mocks.isProjectAdmin = true;
+    const { result } = renderHook(() =>
+      useWaitingRunDecision({ run: { isDraftRun: true, requested_by: 9 }, onDecided: mocks.refetch }),
+    );
+    expect(result.current).toBeUndefined();
+  });
+
+  it('gives the user who started a Test run a handler that decides it without a schedule', async () => {
+    mocks.decideTestRun.mockReturnValue(ok());
+    const { result } = renderHook(() =>
+      useWaitingRunDecision({
+        run: { id: 41, isDraftRun: true, requested_by: 5 },
+        onDecided: mocks.refetch,
+      }),
+    );
+    await act(() => result.current({ action: 'approve', runId: 41 }));
+    expect(mocks.decideTestRun).toHaveBeenCalledWith({ projectId: 3, runId: 41, action: 'approve' });
+    expect(mocks.refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('gives a project admin no handler for a run without a schedule that is not a Test run', () => {
+    mocks.isProjectAdmin = true;
+    const { result } = renderHook(() => useWaitingRunDecision({ run: { id: 41 }, onDecided: mocks.refetch }));
+    expect(result.current).toBeUndefined();
   });
 
   it('sends the decision and refetches the run rows', async () => {
