@@ -10,9 +10,13 @@ import {
   buildAccessDeniedMessage,
   filterSelected,
   getErrorImportUUID,
+  getErrorMessagesByImportUUID,
   getImportedUUIDMap,
+  pruneDeselectedSkillRefs,
+  updateErrorMessages,
   updateValidationStatus,
 } from '@/[fsd]/entities/import-wizard/lib/helpers';
+import { useImportSkillLimit } from '@/[fsd]/entities/import-wizard/lib/hooks';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { buildErrorMessage } from '@/common/utils';
@@ -25,22 +29,25 @@ const IWModalImportButton = memo(props => {
   const { values, setFieldValue } = useFormikContext();
 
   const [importWizard, { isLoading }] = useImportWizardMutation();
+  const { hasSkillLimitErrors } = useImportSkillLimit(values?.importItems, selectedProject?.id);
 
   const selectedProjectId = useMemo(() => selectedProject?.id, [selectedProject?.id]);
   const selectedProjectName = selectedProject?.name;
   const importedData = useMemo(() => values?.importItems, [values?.importItems]);
-  const selectedData = useMemo(() => filterSelected(importedData), [importedData]);
+  const selectedData = useMemo(() => pruneDeselectedSkillRefs(filterSelected(importedData)), [importedData]);
   const isNewApplication = useMemo(
     () => values?.importItems.find(item => item.entity === 'toolkits'),
     [values?.importItems],
   );
 
   const generateValidationPromises = useCallback(
-    ({ errorImportUUID, importedUUIDMap }) =>
+    ({ errorImportUUID, errorMessagesByUUID, importedUUIDMap }) =>
       importedData.map(async (item, index) => {
         if (!item.isSelected) return true;
 
         const isValid = !errorImportUUID.includes(item.import_uuid);
+        if (isValid && item.errorMessages?.length)
+          await updateErrorMessages({ index, errorMessages: [], setFieldValue });
 
         if (isValid) {
           await updateValidationStatus({
@@ -59,6 +66,11 @@ const IWModalImportButton = memo(props => {
             data: importedData,
             index,
             validationStatus: 'error',
+            setFieldValue,
+          });
+          await updateErrorMessages({
+            index,
+            errorMessages: errorMessagesByUUID[item.import_uuid] ?? [],
             setFieldValue,
           });
         }
@@ -111,13 +123,18 @@ const IWModalImportButton = memo(props => {
       const { errors, result } = response.data || response?.error?.data || { errors: {} };
 
       const errorImportUUID = getErrorImportUUID(errors, selectedData);
+      const errorMessagesByUUID = getErrorMessagesByImportUUID(errors, selectedData);
       const importedUUIDMap = getImportedUUIDMap(result, selectedData);
 
-      const validationPromises = generateValidationPromises({ errorImportUUID, importedUUIDMap });
+      const validationPromises = generateValidationPromises({
+        errorImportUUID,
+        errorMessagesByUUID,
+        importedUUIDMap,
+      });
 
       Promise.all(validationPromises).then(() => {
         if (errorImportUUID.length) {
-          toastError('Some fields have missing or invalid data!');
+          toastError('Some items could not be imported. See the highlighted items for details.');
         } else {
           onSuccess && onSuccess(result, errors);
         }
@@ -146,7 +163,7 @@ const IWModalImportButton = memo(props => {
     >
       <Box component="span">
         <Button.BaseBtn
-          disabled={isDisabled || isLoading}
+          disabled={isDisabled || isLoading || hasSkillLimitErrors}
           variant="elitea"
           onClick={handleClickOnImport}
           data-testid="agent-import-confirm-button"

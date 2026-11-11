@@ -7,11 +7,15 @@ import {
   buildAccessDeniedMessage,
   filterSelected,
   getErrorImportUUID,
+  getErrorMessagesByImportUUID,
   getExistingUUIDMap,
   getImportedUUIDMap,
+  pruneDeselectedSkillRefs,
   updateAgentToolImportUUIDs,
+  updateErrorMessages,
   updateValidationStatus,
 } from '@/[fsd]/entities/import-wizard/lib/helpers';
+import { useImportSkillLimit } from '@/[fsd]/entities/import-wizard/lib/hooks';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { useToolkitForkMutation } from '@/api/toolkits.js';
@@ -31,6 +35,7 @@ const IWModalForkButton = memo(props => {
   const [forkToolkit, { isLoading: isForkingToolkit }] = useToolkitForkMutation();
 
   const importedData = useMemo(() => values?.importItems, [values?.importItems]);
+  const { hasSkillLimitErrors } = useImportSkillLimit(importedData, selectedProjectId);
 
   const selectedSkills = useMemo(
     () => filterSelected(importedData).filter(item => item.entity === 'skills'),
@@ -38,7 +43,7 @@ const IWModalForkButton = memo(props => {
   );
 
   const selectedData = useMemo(() => {
-    const inputData = filterSelected(importedData);
+    const inputData = pruneDeselectedSkillRefs(filterSelected(importedData));
 
     if (importedData[0]?.entity === 'skills') {
       return inputData.filter(item => item.entity === 'skills');
@@ -82,12 +87,21 @@ const IWModalForkButton = memo(props => {
   );
 
   const generateValidationPromises = useCallback(
-    async ({ errorImportUUID, importedUUIDMap, existingUUIDMap, result, already_exists }) =>
+    async ({
+      errorImportUUID,
+      errorMessagesByUUID,
+      importedUUIDMap,
+      existingUUIDMap,
+      result,
+      already_exists,
+    }) =>
       importedData.map(async (item, index) => {
         if (!item.isSelected) {
           return true;
         }
         const isValid = !errorImportUUID.includes(item.import_uuid);
+        if (isValid && item.errorMessages?.length)
+          await updateErrorMessages({ index, errorMessages: [], setFieldValue });
         if (isValid) {
           const foundInResult = result[item.entity].find(it => it.index === index);
           if (foundInResult) {
@@ -152,6 +166,11 @@ const IWModalForkButton = memo(props => {
             data: importedData,
             index,
             validationStatus: 'error',
+            setFieldValue,
+          });
+          await updateErrorMessages({
+            index,
+            errorMessages: errorMessagesByUUID[item.import_uuid] ?? [],
             setFieldValue,
           });
         }
@@ -228,11 +247,13 @@ const IWModalForkButton = memo(props => {
         already_exists = { agents: [], toolkits: [], skills: [] },
       } = response.data || response?.error?.data || { errors: {} };
       const errorImportUUID = getErrorImportUUID(errors, selectedData);
+      const errorMessagesByUUID = getErrorMessagesByImportUUID(errors, selectedData);
       const importedUUIDMap = getImportedUUIDMap(result, selectedData);
       const existingUUIDMap = getExistingUUIDMap(already_exists, selectedData);
 
       const validationPromises = await generateValidationPromises({
         errorImportUUID,
+        errorMessagesByUUID,
         importedUUIDMap,
         existingUUIDMap,
         result,
@@ -241,7 +262,7 @@ const IWModalForkButton = memo(props => {
 
       Promise.all(validationPromises).then(() => {
         if (errorImportUUID.length) {
-          toastError('Some fields have missing or invalid data!');
+          toastError('Some items could not be forked. See the highlighted items for details.');
         } else {
           const mainItemInResult = result[mainEntityName].find(item => !item.index);
           const mainItemInExisting = already_exists[mainEntityName].find(
@@ -283,6 +304,7 @@ const IWModalForkButton = memo(props => {
     <Button.BaseBtn
       disabled={
         !selectedProjectId ||
+        hasSkillLimitErrors ||
         !selectedData?.length ||
         isForkingAgent ||
         isForkingToolkit ||
