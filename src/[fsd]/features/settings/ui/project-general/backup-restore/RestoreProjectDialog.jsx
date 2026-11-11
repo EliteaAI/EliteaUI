@@ -27,6 +27,8 @@ const {
   getRestoreErrorMessage,
   getDefaultRestoreChats,
   getChatsSummaryText,
+  getSkillFilesSummaryText,
+  getRestoreWarningText,
   isRestoreJobFinished,
   getRestoreJobError,
   saveRestoreJob,
@@ -122,10 +124,8 @@ const RestoreProjectDialog = memo(props => {
       if (started?.truncate && summary?.chats && !summary.dry_run) {
         dispatch(chatActions.resetLastSelectedConversationId({ projectId }));
       }
-      const failedAttachments = summary?.attachments?.failed;
-      if (failedAttachments && !summary.dry_run) {
-        toastWarning(`Restore completed. ${failedAttachments} attachment file(s) could not be restored.`);
-      }
+      const warning = getRestoreWarningText(summary);
+      if (warning) toastWarning(warning);
     },
     [projectId, invalidateAfterRestore, dispatch, toastWarning],
   );
@@ -227,6 +227,7 @@ const RestoreProjectDialog = memo(props => {
 
   const summary = result?.result;
   const chatsSummary = getChatsSummaryText(summary);
+  const skillFilesSummary = getSkillFilesSummaryText(summary);
 
   const chatItems = useMemo(
     () =>
@@ -368,6 +369,16 @@ const RestoreProjectDialog = memo(props => {
         </>
       )}
 
+      {isMismatch && !truncate && (
+        <BackupAlert
+          severity="warning"
+          data-testid="project-restore-merge-warning"
+        >
+          Merging a backup of another project can attach its agent and skill versions to this project&apos;s
+          own. Restore it into a new project, or check &quot;{RESTORE_OPTION_LABELS.truncate}&quot;.
+        </BackupAlert>
+      )}
+
       <Box sx={styles.options}>
         <FormControlLabel
           control={
@@ -501,6 +512,16 @@ const RestoreProjectDialog = memo(props => {
               {chatsSummary}
             </Typography>
           )}
+          {!!skillFilesSummary && (
+            <Typography
+              variant="bodySmall2"
+              color="inherit"
+              sx={styles.summaryBody}
+              data-testid="project-restore-skill-files-summary"
+            >
+              {skillFilesSummary}
+            </Typography>
+          )}
           {filledColumns.length > 0 && (
             <Typography
               variant="bodySmall2"
@@ -597,6 +618,7 @@ const restoreProjectDialogStyles = () => ({
   },
   summaryBody: {
     marginTop: '0.25rem',
+    overflowWrap: 'anywhere',
   },
 });
 

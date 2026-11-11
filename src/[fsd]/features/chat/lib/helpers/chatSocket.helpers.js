@@ -71,6 +71,22 @@ export const createSyntheticToolAction = (id, name, type, createdAt) => ({
   ...(createdAt !== undefined ? { created_at: createdAt } : {}),
 });
 
+// Marks text whose beginning streamed while this client was away (EL-7385)
+export const MISSED_TEXT_PREFIX = '…';
+
+/**
+ * Appends a chunk to one text field (content or thinking) of an LLM step.
+ *
+ * `missedStart` marks a step first seen through a chunk, not its agent_llm_start: the client joined
+ * mid-step, so the beginning of the step's text never reached it. The first text of each field then gets
+ * the prefix, so the cut shows; agent_llm_end replaces both fields with the step's full text.
+ */
+export const appendStepText = (current, chunk, missedStart = false) => {
+  if (!chunk) return current || '';
+  if (!current) return missedStart ? `${MISSED_TEXT_PREFIX}${chunk}` : chunk;
+  return current + chunk;
+};
+
 export const mergeChatSocketMessage = (history, message, { messageId = message?.id, questionId } = {}) => {
   const messageIndex = findChatSocketMessageIndex(history, messageId, questionId);
   // Preserve the original reference when no message matches so React state

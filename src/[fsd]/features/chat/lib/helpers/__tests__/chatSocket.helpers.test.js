@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { ROLES, TOOL_ACTION_NAMES, TOOL_ACTION_TYPES, ToolActionStatus } from '@/common/constants';
 
 import {
+  MISSED_TEXT_PREFIX,
+  appendStepText,
   applyInputGuardrailBlocked,
   applyInputGuardrailNotice,
   createSyntheticToolAction,
@@ -175,6 +177,36 @@ describe('reorderHistoryOnUserArrival — late ChatUserMessage delivery', () => 
 
     expect(result).toHaveLength(3);
     expect(result[2]).toBe(userMsg);
+  });
+});
+
+describe('appendStepText — a step joined mid-way (EL-7385)', () => {
+  it('appends chunks as before for a step whose start the client saw', () => {
+    expect(appendStepText('', 'Hello', false)).toBe('Hello');
+    expect(appendStepText('Hello', ' world', false)).toBe('Hello world');
+  });
+
+  it('marks the first text of a step joined mid-way, once', () => {
+    let content = appendStepText('', 'ians could', true);
+    content = appendStepText(content, "n't be", true);
+    expect(content).toBe(`${MISSED_TEXT_PREFIX}ians couldn't be`);
+  });
+
+  it('marks each field when its first text arrives, in any order', () => {
+    // thinking streams first, the answer later: both are cut
+    let thinking = appendStepText('', 'so the plan', true);
+    let content = appendStepText('', '', true);
+    expect(content).toBe('');
+    content = appendStepText(content, 'Bruce', true);
+    thinking = appendStepText(thinking, ' is', true);
+    expect(content).toBe(`${MISSED_TEXT_PREFIX}Bruce`);
+    expect(thinking).toBe(`${MISSED_TEXT_PREFIX}so the plan is`);
+  });
+
+  it('treats a missing field as empty', () => {
+    expect(appendStepText(undefined, 'a', true)).toBe(`${MISSED_TEXT_PREFIX}a`);
+    expect(appendStepText(undefined, '', true)).toBe('');
+    expect(appendStepText('kept', undefined, true)).toBe('kept');
   });
 });
 

@@ -127,4 +127,21 @@ describe('WebhookSampleRunDialog', () => {
     );
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  // #7400: the webhook or the project is at its running-run cap
+  it('keeps the dialog open with the server text on 429', async () => {
+    const onClose = vi.fn();
+    mocks.runSchedule.mockReturnValue({
+      unwrap: () =>
+        Promise.reject({
+          status: 429,
+          data: { error: 'Too many runs at once (3 running, cap 3); try again later' },
+        }),
+    });
+    renderDialog({ onClose });
+    typeBody('{}');
+    confirm();
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Too many runs at once'));
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });

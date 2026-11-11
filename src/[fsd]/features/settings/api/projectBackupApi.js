@@ -21,11 +21,12 @@ const projectBackupApi = eliteaApi
         keepUnusedDataFor: 0,
       }),
       downloadProjectBackup: build.query({
-        query: ({ projectId, excludeTables = '', includeChats }) => ({
+        query: ({ projectId, excludeTables = '', includeChats, includeSkillFiles }) => ({
           url: `${apiSlicePath}/project_backup/prompt_lib/${projectId}`,
           params: {
             ...(excludeTables ? { exclude_tables: excludeTables } : {}),
             ...(includeChats ? { include_chats: includeChats } : {}),
+            ...(includeSkillFiles ? { include_skill_files: includeSkillFiles } : {}),
           },
           responseHandler: async response => {
             // fetchBaseQuery rejects non-ok responses on its own via .unwrap(), surfacing

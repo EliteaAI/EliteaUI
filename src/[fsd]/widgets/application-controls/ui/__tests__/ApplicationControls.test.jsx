@@ -8,13 +8,25 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 
 const { state, runHistoryArgs } = vi.hoisted(() => ({
-  state: { isFromPipeline: false, viewMode: 'owner', id: 7 },
+  state: {
+    isFromPipeline: false,
+    viewMode: 'owner',
+    id: 7,
+    versionCount: 0,
+    isPrivate: true,
+    canUpdate: true,
+  },
   runHistoryArgs: { current: null },
 }));
 
 vi.mock('formik', () => ({
   useFormikContext: () => ({
-    values: { id: state.id, versions: [], meta: {}, version_details: { id: 3, name: 'base' } },
+    values: {
+      id: state.id,
+      versions: Array.from({ length: state.versionCount }, (_, index) => ({ id: index + 1 })),
+      meta: {},
+      version_details: { id: 3, name: 'base' },
+    },
   }),
 }));
 vi.mock('react-router-dom', () => ({
@@ -22,7 +34,15 @@ vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
   useParams: () => ({ tab: 'all', agentId: '7' }),
 }));
-vi.mock('@/[fsd]/entities/compare-versions', () => ({ CompareVersionsModal: () => null }));
+vi.mock('@/[fsd]/entities/compare-versions', () => ({
+  COMPARE_ENTITY_TYPES: { agent: 'agent', pipeline: 'pipeline' },
+  CompareVersionsModal: () => null,
+}));
+vi.mock('@/[fsd]/entities/schedule', () => ({
+  buildScheduleFormLink: vi.fn(),
+  useOpenScheduleNested: () => vi.fn(),
+}));
+vi.mock('@/pages/Pipelines/useIsPipelineYamlCodeDirty', () => ({ default: () => false }));
 vi.mock('@/[fsd]/entities/version', () => ({
   LATEST_VERSION_NAME: 'base',
   VersionDelete: () => null,
@@ -38,9 +58,11 @@ vi.mock('@/[fsd]/shared/lib/constants', () => ({
 vi.mock('@/[fsd]/shared/lib/context', () => ({ useInstructionsInputRefContext: () => ({ current: null }) }));
 vi.mock('@/[fsd]/shared/lib/helpers', () => ({ NavigationHelpers: { buildRoute: vi.fn() } }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useFormDirtyExcluding: () => false,
   useIsFromPipelineDetail: () => state.isFromPipeline,
+  useIsPipelineLayoutDirty: () => false,
   useProjectEntityLink: () => ({}),
-  useProjectType: () => ({ isPrivate: true }),
+  useProjectType: () => ({ isPrivate: state.isPrivate }),
   useRunHistoryNavigation: args => {
     runHistoryArgs.current = args;
     return { runHistoryPath: '/agents/all/7/history?versionId=3' };
@@ -72,7 +94,11 @@ vi.mock('@/[fsd]/widgets/pin-toggler/lib/hooks', () => ({
   usePinMenu: () => ({ pinMenuItem: { key: 'pin', label: 'Pin to top' } }),
 }));
 vi.mock('@/common/constants', () => ({
-  PERMISSIONS: { applications: { export: 'export', update: 'update', delete: 'delete' }, versions: {} },
+  PERMISSIONS: {
+    applications: { export: 'export', update: 'update', delete: 'delete' },
+    schedules: { list: 'schedules.list', admin: 'schedules.admin' },
+    versions: {},
+  },
   ViewMode: { Public: 'public', Owner: 'owner' },
 }));
 vi.mock('@/components/CopyLinkToEntityButton.jsx', () => ({
@@ -82,7 +108,9 @@ vi.mock('@/components/Fork/ForkEntityButton', () => ({ useForkEntityMenu: () => 
 vi.mock('@/components/Icons/DeleteIcon', () => ({ default: () => null }));
 vi.mock('@/components/Icons/DifferenceIcon', () => ({ default: () => null }));
 vi.mock('@/components/Icons/PinIcon', () => ({ default: () => null }));
-vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => true }) }));
+vi.mock('@/hooks/useCheckPermission', () => ({
+  default: () => ({ checkPermission: permission => permission !== 'update' || state.canUpdate }),
+}));
 vi.mock('@/pages/Applications/Components/Applications/DeleteApplicationButton', () => ({
   useDeleteApplicationMenu: () => ({ deleteApplicationMenuItem: { key: 'delete-agent' } }),
 }));
@@ -116,6 +144,9 @@ describe('ApplicationControls Run History', () => {
     state.isFromPipeline = false;
     state.viewMode = 'owner';
     state.id = 7;
+    state.versionCount = 0;
+    state.isPrivate = true;
+    state.canUpdate = true;
   });
   afterEach(() => cleanup());
 
@@ -145,5 +176,42 @@ describe('ApplicationControls Run History', () => {
     state.viewMode = 'public';
     renderControls();
     expect(menuKeys()).not.toContain('run-history');
+  });
+});
+
+describe('ApplicationControls Compare versions', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    state.isFromPipeline = true;
+    state.viewMode = 'owner';
+    state.id = 7;
+    state.versionCount = 2;
+    state.isPrivate = true;
+    state.canUpdate = true;
+  });
+  afterEach(() => cleanup());
+
+  it.each([
+    ['in a private project', true, false, true],
+    ['for a team editor with applications.update', false, true, true],
+    ['for a team viewer without applications.update', false, false, false],
+  ])('is shown for a pipeline %s: %s', (_, isPrivate, canUpdate, isShown) => {
+    state.isPrivate = isPrivate;
+    state.canUpdate = canUpdate;
+    renderControls();
+    expect(menuKeys().includes('compare-versions')).toBe(isShown);
+  });
+
+  it('is hidden for a pipeline with a single version', () => {
+    state.versionCount = 1;
+    renderControls();
+    expect(menuKeys()).not.toContain('compare-versions');
+  });
+
+  it('sits after the share link item, as for agents', () => {
+    renderControls();
+    const keys = menuKeys();
+    expect(keys).toContain('compare-versions');
+    expect(keys.indexOf('compare-versions')).toBeGreaterThan(keys.indexOf('export'));
   });
 });

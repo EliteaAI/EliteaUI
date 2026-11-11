@@ -117,3 +117,42 @@ describe('useAddNewParticipants when the chat changes before the add resolves', 
     expect(onAdded).toHaveBeenCalledWith([ADDED_TOOLKIT]);
   });
 });
+
+describe('useAddNewParticipants for a chat that is being created', () => {
+  const CREATED = { id: 300, participants: [USER] };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    addParticipant.mockResolvedValue({ data: [ADDED_TOOLKIT] });
+  });
+
+  const addToCreated = async isOnScreen => {
+    const hook = renderAddHook();
+    const onAdded = vi.fn();
+    await act(async () => {
+      await hook.result.current.addParticipantsToNewConversation(
+        [{ participantType: 'toolkit', id: 9, project_id: 2 }],
+        CREATED,
+        onAdded,
+        isOnScreen,
+      );
+    });
+    return { ...hook, onAdded };
+  };
+
+  it('opens the created chat while the user is still on it', async () => {
+    const { setActiveConversation } = await addToCreated(() => true);
+
+    expect(setActiveConversation).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 300, participants: [USER, ADDED_TOOLKIT] }),
+    );
+  });
+
+  it('does not take the user back once they opened another chat', async () => {
+    const { setActiveConversation, setConversations, onAdded } = await addToCreated(() => false);
+
+    expect(setActiveConversation).not.toHaveBeenCalled();
+    expect(setConversations).toHaveBeenCalled();
+    expect(onAdded).toHaveBeenCalledWith([ADDED_TOOLKIT]);
+  });
+});

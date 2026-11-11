@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 
-import { lastDeliveryText, toDeliveryOutcomeLabel } from '../webhookRow.helpers';
+import { isAtRunCap, lastDeliveryText, toDeliveryOutcomeLabel } from '../webhookRow.helpers';
 
 // #7456: the outcome the delivery door stores for the last authentic request
 describe('toDeliveryOutcomeLabel', () => {
@@ -31,5 +31,14 @@ describe('lastDeliveryText', () => {
     expect(
       lastDeliveryText({ last_delivery_at: '2026-11-09T10:00:00Z', last_delivery_outcome: 'ping' }),
     ).toMatch(/^Ping received - /);
+  });
+});
+
+describe('isAtRunCap (#7400)', () => {
+  it('is true only at or over the cap, and never on rows without one', () => {
+    expect(isAtRunCap({ running_runs: 3, run_cap: 3 })).toBe(true);
+    expect(isAtRunCap({ running_runs: 2, run_cap: 3 })).toBe(false);
+    expect(isAtRunCap({ running_runs: 0, run_cap: null })).toBe(false); // a cron row
+    expect(isAtRunCap({})).toBe(false);
   });
 });

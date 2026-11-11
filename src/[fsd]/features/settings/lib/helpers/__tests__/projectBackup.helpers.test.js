@@ -8,6 +8,8 @@ import {
   getDefaultRestoreChats,
   getRestoreErrorMessage,
   getRestoreInvalidatedTags,
+  getRestoreWarningText,
+  getSkillFilesSummaryText,
 } from '../projectBackup.helpers.js';
 
 describe('getRestoreErrorMessage', () => {
@@ -157,5 +159,81 @@ describe('getRestoreInvalidatedTags', () => {
     expect(getRestoreInvalidatedTags(undefined, { ...args, dryRun: true }, TEMPLATES)).toEqual([]);
     expect(getRestoreInvalidatedTags(undefined, { ...args, inspect: true }, TEMPLATES)).toEqual([]);
     expect(getRestoreInvalidatedTags({ status: 500 }, args, TEMPLATES)).toEqual([]);
+  });
+});
+
+describe('getSkillFilesSummaryText', () => {
+  it('is empty when the restore wrote no skill file rows', () => {
+    expect(getSkillFilesSummaryText(undefined)).toBe('');
+    expect(getSkillFilesSummaryText({ skill_files: { total: 0 } })).toBe('');
+  });
+
+  it('reports every count', () => {
+    expect(
+      getSkillFilesSummaryText({
+        skill_files: { total: 22, present: 2, uploaded: 20, missing: 0, missing_paths: [], unchecked: false },
+      }),
+    ).toBe('Skill files: 22 total, 2 present, 20 uploaded, 0 missing');
+  });
+
+  it('names the paths of the missing files', () => {
+    expect(
+      getSkillFilesSummaryText({
+        skill_files: { total: 3, present: 1, uploaded: 0, missing: 2, missing_paths: ['a.md', 'b/c.py'] },
+      }),
+    ).toBe('Skill files: 3 total, 1 present, 0 uploaded, 2 missing (a.md, b/c.py)');
+  });
+
+  it('names at most five missing paths and says when there are more', () => {
+    const paths = ['a.md', 'b.md', 'c.md', 'd.md', 'e.md', 'f.md', 'g.md'];
+    expect(
+      getSkillFilesSummaryText({
+        skill_files: { total: 7, present: 0, uploaded: 0, missing: 7, missing_paths: paths },
+      }),
+    ).toBe('Skill files: 7 total, 0 present, 0 uploaded, 7 missing (a.md, b.md, c.md, d.md, e.md and more)');
+  });
+
+  it('names exactly five missing paths without "and more"', () => {
+    const paths = ['a.md', 'b.md', 'c.md', 'd.md', 'e.md'];
+    expect(
+      getSkillFilesSummaryText({
+        skill_files: { total: 5, present: 0, uploaded: 0, missing: 5, missing_paths: paths },
+      }),
+    ).toBe('Skill files: 5 total, 0 present, 0 uploaded, 5 missing (a.md, b.md, c.md, d.md, e.md)');
+  });
+
+  it('says when storage could not be checked', () => {
+    expect(getSkillFilesSummaryText({ skill_files: { total: 4, unchecked: true } })).toBe(
+      'Skill files: 4 not checked (storage unavailable)',
+    );
+  });
+});
+
+describe('getRestoreWarningText', () => {
+  it('is empty when every file was restored, and after a preview', () => {
+    expect(getRestoreWarningText(undefined)).toBe('');
+    expect(getRestoreWarningText({ attachments: { failed: 0 }, skill_files: { missing: 0 } })).toBe('');
+    expect(
+      getRestoreWarningText({ dry_run: true, attachments: { failed: 2 }, skill_files: { missing: 3 } }),
+    ).toBe('');
+  });
+
+  it('names failed attachments or missing skill files', () => {
+    expect(getRestoreWarningText({ attachments: { failed: 3 } })).toBe(
+      'Restore completed. 3 attachment file(s) could not be restored.',
+    );
+    expect(getRestoreWarningText({ skill_files: { missing: 2 } })).toBe(
+      'Restore completed. 2 skill file(s) could not be restored.',
+    );
+  });
+
+  it('folds both into one warning', () => {
+    expect(getRestoreWarningText({ attachments: { failed: 3 }, skill_files: { missing: 2 } })).toBe(
+      'Restore completed. 3 attachment file(s) and 2 skill file(s) could not be restored.',
+    );
+  });
+
+  it('does not warn when the skill files could not be checked', () => {
+    expect(getRestoreWarningText({ skill_files: { total: 4, missing: 0, unchecked: true } })).toBe('');
   });
 });

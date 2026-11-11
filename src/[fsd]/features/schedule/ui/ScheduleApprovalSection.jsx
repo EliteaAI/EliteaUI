@@ -5,28 +5,29 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Box, Link, Typography } from '@mui/material';
 
 import { useGetScheduleSettingsQuery } from '@/[fsd]/entities/schedule';
+import { APPROVAL_RULE, APPROVAL_RULE_LABELS } from '@/[fsd]/entities/schedule/lib/constants';
 import { WebhookConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import RadioButtonGroup from '@/[fsd]/shared/ui/checkbox/RadioButtonGroup';
 import RouteDefinitions from '@/routes';
 
-import { APPROVAL_RULE, APPROVAL_RULE_INFO, VISUALLY_HIDDEN } from '../lib/constants';
+import { APPROVAL_RULE_INFO, VISUALLY_HIDDEN } from '../lib/constants';
 import FieldError from './FieldError';
 
 export const APPROVAL_RULE_ITEMS = [
   {
     value: APPROVAL_RULE.PAUSE_AND_ASK,
-    label: 'Pause and ask me',
+    label: APPROVAL_RULE_LABELS[APPROVAL_RULE.PAUSE_AND_ASK],
     info: APPROVAL_RULE_INFO[APPROVAL_RULE.PAUSE_AND_ASK],
     infoPinnable: true,
-    infoLabel: 'More info about Pause and ask me',
+    infoLabel: `More info about ${APPROVAL_RULE_LABELS[APPROVAL_RULE.PAUSE_AND_ASK]}`,
   },
   {
     value: APPROVAL_RULE.RUN_WITHOUT_ASKING,
-    label: 'Run without asking',
+    label: APPROVAL_RULE_LABELS[APPROVAL_RULE.RUN_WITHOUT_ASKING],
     info: APPROVAL_RULE_INFO[APPROVAL_RULE.RUN_WITHOUT_ASKING],
     infoPinnable: true,
-    infoLabel: 'More info about Run without asking',
+    infoLabel: `More info about ${APPROVAL_RULE_LABELS[APPROVAL_RULE.RUN_WITHOUT_ASKING]}`,
   },
 ];
 // "21 Oct 2026" for the line of who confirmed "Run without asking"

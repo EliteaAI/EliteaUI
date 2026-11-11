@@ -980,6 +980,8 @@ export const sioEvents = {
   chat_message_sync: 'chat_message_sync',
   chat_participant_update: 'chat_participant_update',
   chat_conversation_name_updated: 'chat_conversation_name_updated',
+  // Run state of a chat for the chat list, on the user's own room (EL-7385)
+  chat_run_status: 'chat_run_status',
   application_predict: 'application_predict',
   application_leave_rooms: 'application_leave_rooms',
   promptlib_predict: 'promptlib_predict',

@@ -43,6 +43,7 @@ import MicphoneIcon from '@/assets/megaphone.svg?react';
 import MemoryIcon from '@/assets/memory.svg?react';
 import MicIcon from '@/assets/microphone.svg?react';
 import MiroIcon from '@/assets/miro.svg?react';
+import MsGraphIcon from '@/assets/ms_graph.svg?react';
 import OllamaIcon from '@/assets/ollama.svg?react';
 import OutlookIcon from '@/assets/outlook.svg?react';
 import PieChartIcon from '@/assets/pie-chart-icon.svg?react';
@@ -298,6 +299,8 @@ const getPredefinedIcon = (type, iconProps) => {
       return <OutlookIcon {...iconProps} />;
     case 'teams':
       return <TeamsIcon {...iconProps} />;
+    case 'ms_graph':
+      return <MsGraphIcon {...iconProps} />;
     case 'postman':
       return <PostmanIcon {...iconProps} />;
     case 'ado':
@@ -514,6 +517,8 @@ export const getToolIcon = toolType => {
       return OutlookIcon;
     case 'teams':
       return TeamsIcon;
+    case 'ms_graph':
+      return MsGraphIcon;
     case 'postman':
       return PostmanIcon;
     case 'ado':

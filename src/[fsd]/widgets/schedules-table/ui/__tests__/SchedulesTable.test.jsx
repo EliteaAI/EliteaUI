@@ -597,6 +597,33 @@ describe('FilterSelect', () => {
       expect(screen.getByTestId('webhook-last-delivery')).toBeInTheDocument();
     });
 
+    // #7400: the cap line shows only once the webhook is at its cap
+    it('shows N running / cap on a webhook at its cap, and nothing below it', () => {
+      renderWebhooks([
+        webhookRow({
+          last_delivery_at: '2026-11-10T10:00:00Z',
+          last_delivery_outcome: 'capped',
+          running_runs: 3,
+          run_cap: 3,
+        }),
+        webhookRow({
+          id: 12,
+          name: 'Calm',
+          last_delivery_at: '2026-11-10T10:00:00Z',
+          running_runs: 1,
+          run_cap: 3,
+        }),
+      ]);
+      expect(screen.getAllByTestId('webhook-run-cap')).toHaveLength(1);
+      expect(screen.getByTestId('webhook-run-cap')).toHaveTextContent('3 running / 3');
+      expect(screen.getByText('Too many runs')).toBeInTheDocument();
+    });
+
+    it('shows the cap line on a webhook at its cap with no delivery recorded yet', () => {
+      renderWebhooks([webhookRow({ last_delivery_at: null, running_runs: 3, run_cap: 3 })]);
+      expect(screen.getByTestId('webhook-run-cap')).toHaveTextContent('3 running / 3');
+    });
+
     it('the name opens the webhook page, not the schedule page', () => {
       renderWebhooks([webhookRow()]);
       expect(screen.getByRole('link', { name: 'On push' })).toHaveAttribute('href', '/settings/webhooks/11');

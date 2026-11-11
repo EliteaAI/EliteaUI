@@ -10,8 +10,8 @@ import { splitRiskFindings } from '../helpers';
 const ANSWERED = 'answered';
 const IDLE_STATE = { phase: RISK_CHECK_STATUS.IDLE, result: null };
 
-const statusOf = (result, approvalRule) =>
-  splitRiskFindings(result, approvalRule).blocking.length
+const statusOf = (result, approvalRule, isWebhook) =>
+  splitRiskFindings(result, approvalRule, isWebhook).blocking.length
     ? RISK_CHECK_STATUS.BLOCKED
     : RISK_CHECK_STATUS.CLEAR;
 
@@ -21,7 +21,7 @@ const statusOf = (result, approvalRule) =>
  * and resolves to the findings, or null when the check did not run. `approvalRule` is the rule of the form:
  * under "Pause and ask me" a missing credential or a personal sign-in is `waiting`, not `blocking`. `applyFindings(data)` takes the
  * findings of a 409 save answer. On an edit, `scheduleId` makes the server scan as the schedule owner
- * and answer `confirmed`.
+ * and answer `confirmed`. `isWebhook`: the server scans for a webhook, which never waits for a sign-in.
  */
 export const useScheduleRiskCheck = ({
   projectId,
@@ -30,6 +30,7 @@ export const useScheduleRiskCheck = ({
   versionId,
   scheduleId,
   approvalRule,
+  isWebhook = false,
 }) => {
   const [checkRisk] = useCheckScheduleRiskMutation();
   const [state, setState] = useState(IDLE_STATE);
@@ -52,6 +53,7 @@ export const useScheduleRiskCheck = ({
         application_id: applicationId,
         version_id: versionId,
         ...(scheduleId && { schedule_id: scheduleId }),
+        ...(isWebhook && { trigger_kind: 'webhook' }),
       }).unwrap();
       if (call === latestCall.current) setState({ phase: ANSWERED, result, key });
       return result;
@@ -66,7 +68,7 @@ export const useScheduleRiskCheck = ({
       }
       return null;
     }
-  }, [checkRisk, projectId, entityType, applicationId, versionId, scheduleId]);
+  }, [checkRisk, projectId, entityType, applicationId, versionId, scheduleId, isWebhook]);
 
   useEffect(() => {
     runCheck();
@@ -97,8 +99,11 @@ export const useScheduleRiskCheck = ({
   // The rule can change after the answer came, so the findings are split again for the current rule
   // without a new request
   const { phase, result, key } = state;
-  const findings = useMemo(() => splitRiskFindings(result, approvalRule), [result, approvalRule]);
-  const status = phase === ANSWERED ? statusOf(result, approvalRule) : phase;
+  const findings = useMemo(
+    () => splitRiskFindings(result, approvalRule, isWebhook),
+    [result, approvalRule, isWebhook],
+  );
+  const status = phase === ANSWERED ? statusOf(result, approvalRule, isWebhook) : phase;
 
   return { status, result, key, ...findings, runCheck, applyFindings };
 };
