@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   rowActions: { onPause: vi.fn(), onResume: vi.fn(), onRun: vi.fn(), isBusy: false },
   testRun: { start: vi.fn(), pending: false },
   ownerDialog: null,
+  sampleDialog: null,
 }));
 
 vi.mock('../../lib/hooks/useWaitingRunDecision.hooks', () => ({
@@ -35,6 +36,12 @@ vi.mock('../../lib/hooks/useScheduleRowActions.hooks', () => ({
 }));
 vi.mock('../../lib/hooks/useTestRunAsCaller.hooks', () => ({
   useTestRunAsCaller: () => mocks.testRun,
+}));
+vi.mock('../WebhookSampleRunDialog', () => ({
+  default: props => {
+    mocks.sampleDialog = props;
+    return <div data-testid="webhook-sample-run-dialog" />;
+  },
 }));
 vi.mock('../ChangeOwnerDialog', () => ({
   default: props => {
@@ -90,6 +97,7 @@ describe('ScheduleRunApproval', () => {
     mocks.rowActions.isBusy = false;
     mocks.testRun.pending = false;
     mocks.ownerDialog = null;
+    mocks.sampleDialog = null;
   });
 
   it('Approve and Reject send the decision for the paused message', async () => {
@@ -200,9 +208,10 @@ describe('ScheduleRunApproval', () => {
 
       expect(mocks.testRun.start).toHaveBeenCalledTimes(1);
       expect(mocks.rowActions.onRun).not.toHaveBeenCalled();
+      expect(screen.queryByTestId('webhook-sample-run-dialog')).not.toBeInTheDocument();
     });
 
-    it('starts the sample run of a webhook row', () => {
+    it('opens the sample dialog for a webhook row, since a webhook runs only as a test with a body', () => {
       const webhook = { ...adminSchedule, trigger_kind: 'webhook', allowed_actions: ['run', 'pause'] };
       renderApproval({ schedule: webhook, run: ownerRun });
 
@@ -211,10 +220,15 @@ describe('ScheduleRunApproval', () => {
           'Only the owner can approve or reject this run. You can pause the webhook or start a new run as yourself.',
         ),
       ).toBeInTheDocument();
+      expect(screen.queryByTestId('webhook-sample-run-dialog')).not.toBeInTheDocument();
       fireEvent.click(button('Start a new run as yourself'));
 
-      expect(mocks.rowActions.onRun).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId('webhook-sample-run-dialog')).toBeInTheDocument();
+      expect(mocks.sampleDialog.webhook).toBe(webhook);
+      expect(mocks.rowActions.onRun).not.toHaveBeenCalled();
       expect(mocks.testRun.start).not.toHaveBeenCalled();
+      act(() => mocks.sampleDialog.onClose());
+      expect(screen.queryByTestId('webhook-sample-run-dialog')).not.toBeInTheDocument();
     });
 
     it('shows the first sentence only and no action to a member without rights', () => {

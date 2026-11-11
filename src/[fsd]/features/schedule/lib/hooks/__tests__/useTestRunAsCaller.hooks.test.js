@@ -71,6 +71,18 @@ describe('useTestRunAsCaller', () => {
     expect(result.current.pending).toBe(false);
   });
 
+  it('asks for approval and leaves out enabled, whatever the owner saved', async () => {
+    mocks.startDraftTestRun.mockReturnValue(ok());
+    const ownerSchedule = { ...schedule, approval_rule: 'run_without_asking', enabled: true };
+    const { result } = renderHook(() => useTestRunAsCaller(ownerSchedule));
+
+    await act(() => result.current.start());
+
+    const body = mocks.startDraftTestRun.mock.calls[0][0];
+    expect(body.approval_rule).toBe('pause_and_ask');
+    expect(body).not.toHaveProperty('enabled');
+  });
+
   it('shows the server text of a 409 while a run is active and clears the busy flag', async () => {
     mocks.startDraftTestRun.mockReturnValue(
       fail({ status: 409, data: { code: 'run_active', error: 'A run is already active' } }),

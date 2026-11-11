@@ -10,12 +10,14 @@ import { useActionButtonProps } from '../lib/hooks/useActionButtonProps.hooks';
 import { useScheduleRowActions } from '../lib/hooks/useScheduleRowActions.hooks';
 import { useTestRunAsCaller } from '../lib/hooks/useTestRunAsCaller.hooks';
 import ChangeOwnerDialog from './ChangeOwnerDialog';
+import WebhookSampleRunDialog from './WebhookSampleRunDialog';
 
 /**
  * The note of a viewer who may not decide a run that acts as the schedule owner, with what the viewer can do
  * instead: pause or resume, change the owner, start a new run as themselves. Each action shows when the server
  * lists it in `allowed_actions` of the schedule. `note` is the first sentence; the second one names the actions.
- * A webhook row starts its sample run, which acts as the caller; a schedule starts a Test run of its saved body.
+ * A webhook row opens the sample dialog (a webhook runs only as a test with a body); a schedule starts a Test run
+ * of its saved body.
  */
 const ScheduleRunApprovalActions = memo(props => {
   const { schedule, note } = props;
@@ -25,6 +27,9 @@ const ScheduleRunApprovalActions = memo(props => {
   const [isOwnerDialogOpen, setIsOwnerDialogOpen] = useState(false);
   const openOwnerDialog = useCallback(() => setIsOwnerDialogOpen(true), []);
   const closeOwnerDialog = useCallback(() => setIsOwnerDialogOpen(false), []);
+  const [isSampleDialogOpen, setIsSampleDialogOpen] = useState(false);
+  const openSampleDialog = useCallback(() => setIsSampleDialogOpen(true), []);
+  const closeSampleDialog = useCallback(() => setIsSampleDialogOpen(false), []);
 
   const isWebhook = isWebhookRow(schedule);
   const actions = getRunNoteActions(schedule);
@@ -84,12 +89,19 @@ const ScheduleRunApprovalActions = memo(props => {
               sx={styles.button}
               data-testid="schedule-run-approval-new-run"
               disabled={busy}
-              onClick={isWebhook ? rowActions.onRun : testRun.start}
+              onClick={isWebhook ? openSampleDialog : testRun.start}
             >
               Start a new run as yourself
             </BaseBtn>
           )}
         </Box>
+      )}
+      {isSampleDialogOpen && (
+        <WebhookSampleRunDialog
+          open
+          webhook={schedule}
+          onClose={closeSampleDialog}
+        />
       )}
       {isOwnerDialogOpen && (
         <ChangeOwnerDialog
