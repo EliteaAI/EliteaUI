@@ -9,6 +9,7 @@ import { getBasename } from '@/routes';
 
 import { useListShareLinksQuery, useRevokeShareLinkMutation } from '../../api/sharedLinksApi';
 import { SCOPE_LABELS } from '../../lib/constants';
+import { buildShareLinkUrl, formatShareDate } from '../../lib/helpers/shareChat.helpers';
 
 const ManageLinksDialog = memo(props => {
   const { open, conversation = {}, onClose } = props;
@@ -39,10 +40,7 @@ const ManageLinksDialog = memo(props => {
     [conversationId, projectId, revokeShareLink, toastError, toastInfo],
   );
 
-  const buildLinkUrl = useCallback(token => {
-    const basename = getBasename();
-    return `${window.location.protocol}//${window.location.host}${basename}/shared/chat/${token}`;
-  }, []);
+  const buildLinkUrl = useCallback(token => buildShareLinkUrl(getBasename(), token), []);
 
   const handleCopyLink = useCallback(
     async token => {
@@ -92,16 +90,14 @@ const ManageLinksDialog = memo(props => {
               color="text.secondary"
             >
               {SCOPE_LABELS[link.scope] ?? 'Full chat'}
-              {link.expires_at
-                ? ` · Expires ${new Date(link.expires_at).toLocaleDateString()}`
-                : ' · Never expires'}
+              {link.expires_at ? ` · Expires ${formatShareDate(link.expires_at)}` : ' · Never expires'}
               {link.has_password ? ' · Password protected' : ''}
             </Typography>
             <Typography
               variant="bodySmall"
               color="text.disabled"
             >
-              {`Accessed ${link.access_count} time${link.access_count !== 1 ? 's' : ''} · Created ${new Date(link.created_at).toLocaleDateString()}`}
+              {`Accessed ${link.access_count} time${link.access_count !== 1 ? 's' : ''} · Created ${formatShareDate(link.created_at)}`}
             </Typography>
           </Box>
           <Box sx={styles.linkActions}>

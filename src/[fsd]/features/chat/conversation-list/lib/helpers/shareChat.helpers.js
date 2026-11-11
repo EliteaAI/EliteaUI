@@ -10,14 +10,26 @@ import {
 
 const pad = value => String(value).padStart(2, '0');
 
-export const formatShareDate = value => {
+const SHARE_DATE_FORMAT = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+});
+
+const toValidDate = value => {
+  if (!value) return null;
   const date = new Date(value);
-  return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}`;
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+export const formatShareDate = value => {
+  const date = toValidDate(value);
+  return date ? SHARE_DATE_FORMAT.format(date) : '';
 };
 
 export const formatShareTime = value => {
-  const date = new Date(value);
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  const date = toValidDate(value);
+  return date ? `${pad(date.getHours())}:${pad(date.getMinutes())}` : '';
 };
 
 export const isLinkExpired = (link, now) => !!link.expires_at && new Date(link.expires_at).getTime() < now;
@@ -34,22 +46,18 @@ export const countShareLinks = (links, now) => {
   return { active: links.length - expired, expired };
 };
 
+// Counts are left out until they load, so a card never reads "All 0 messages"
 export const buildLinkContentLabel = (link, totals) => {
   switch (link.scope) {
-    case LINK_SCOPES.partial: {
-      // The link list does not return the picked messages, only the answer to the create call does
-      const count = link.message_group_ids?.length;
-      if (!count) return 'Selected messages';
-      return count >= totals.messages
-        ? `All ${totals.messages} messages`
-        : `${count} of ${totals.messages} messages`;
-    }
+    // The link list does not return which messages a partial link holds
+    case LINK_SCOPES.partial:
+      return 'Selected messages';
     case LINK_SCOPES.messages:
-      return `Messages only (${totals.messages})`;
+      return totals.isLoaded ? `Messages only (${totals.messages})` : 'Messages only';
     case LINK_SCOPES.attachments:
-      return `Attachments only (${totals.files} files)`;
+      return totals.isLoaded ? `Attachments only (${totals.files} files)` : 'Attachments only';
     default:
-      return `All ${totals.messages} messages`;
+      return totals.isLoaded ? `All ${totals.messages} messages` : 'All messages';
   }
 };
 
@@ -62,8 +70,10 @@ export const buildLinkTitle = (link, totals, now) => {
 };
 
 export const buildLinkMeta = link => {
-  const times = link.access_count === 1 ? 'time' : 'times';
-  return `Accessed ${link.access_count} ${times} - Created ${formatShareDate(link.created_at)}`;
+  const accessCount = link.access_count ?? 0;
+  const times = accessCount === 1 ? 'time' : 'times';
+  const created = formatShareDate(link.created_at);
+  return `Accessed ${accessCount} ${times}${created ? ` - Created ${created}` : ''}`;
 };
 
 export const buildShareLinkUrl = (basename, token) =>
@@ -76,25 +86,36 @@ export const resolveLinkScope = ({ whichMessages, includeMessages, includeAttach
   return LINK_SCOPES.attachments;
 };
 
-export const buildCreateLinkBody = form => {
-  const scope = resolveLinkScope(form);
-  const body = { expiry: form.expiry, scope };
-  const password = form.password.trim();
-  if (password) body.password = password;
-  if (scope === LINK_SCOPES.partial) body.message_group_ids = form.selectedIds;
+export const buildLinkBody = ({ expiry, scope, password, messageGroupIds }) => {
+  const body = { expiry, scope };
+  const trimmed = password.trim();
+  if (trimmed) body.password = trimmed;
+  if (scope === LINK_SCOPES.partial) body.message_group_ids = messageGroupIds;
   return body;
 };
 
+export const buildCreateLinkBody = form =>
+  buildLinkBody({
+    expiry: form.expiry,
+    scope: resolveLinkScope(form),
+    password: form.password,
+    messageGroupIds: form.selectedIds,
+  });
+
 export const getPasswordError = password => {
   const trimmed = password.trim();
-  return trimmed.length > 0 && trimmed.length < MIN_PASSWORD_LENGTH ? 'Minimum 8 characters' : '';
+  return trimmed.length > 0 && trimmed.length < MIN_PASSWORD_LENGTH
+    ? `Minimum ${MIN_PASSWORD_LENGTH} characters`
+    : '';
 };
 
-export const canGenerateLink = form =>
-  !getPasswordError(form.password) &&
-  (form.whichMessages === WHICH_MESSAGES.selected
-    ? form.selectedIds.length > 0
-    : form.includeMessages || form.includeAttachments);
+// Until the counts load, only the ticks are checked
+export const canGenerateLink = (form, totals = { isLoaded: false }) => {
+  if (getPasswordError(form.password)) return false;
+  if (form.whichMessages === WHICH_MESSAGES.selected) return form.selectedIds.length > 0;
+  if (!totals.isLoaded) return form.includeMessages || form.includeAttachments;
+  return (form.includeMessages && totals.messages > 0) || (form.includeAttachments && totals.files > 0);
+};
 
 export const isSameAccessList = (left, right) => {
   const leftIds = new Set(left.map(item => item.id));
@@ -149,12 +170,20 @@ export const toMemberItem = user => ({
   avatar: user.avatar,
 });
 
+export const UNKNOWN_AUTHOR = 'Unknown';
+
+export const getMessagePreview = message => {
+  if (message.text) return message.text;
+  if (!message.files) return '';
+  return `${message.files} ${message.files === 1 ? 'attachment' : 'attachments'}`;
+};
+
 export const toShareMessage = (group, authorNames) => {
   const items = group.message_items ?? [];
   const textItem = items.find(item => item.item_type === 'text_message');
   return {
     id: group.id,
-    author: authorNames[group.author_participant_id] || '',
+    author: authorNames[group.author_participant_id] || UNKNOWN_AUTHOR,
     created_at: group.created_at,
     text: textItem?.item_details?.content ? String(textItem.item_details.content) : '',
     files: items.filter(item => item.item_type === 'attachment_message').length,

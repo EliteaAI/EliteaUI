@@ -5,16 +5,20 @@ import {
   addPicked,
   buildCreateLinkBody,
   buildLinkContentLabel,
+  buildLinkMeta,
   buildSavedAccess,
   canGenerateLink,
   countPeopleWithAccess,
   countShareLinks,
+  formatShareDate,
   getCopyLinkMessage,
+  getMessagePreview,
   getPasswordError,
   getWholeTeamName,
   isSameAccessList,
   resolveLinkScope,
   sortShareLinks,
+  toShareMessage,
   togglePick,
 } from '../shareChat.helpers';
 
@@ -71,6 +75,13 @@ describe('canGenerateLink', () => {
     expect(canGenerateLink({ ...DEFAULT_LINK_FORM, whichMessages: 'selected' })).toBe(false);
     expect(canGenerateLink({ ...DEFAULT_LINK_FORM, password: 'short' })).toBe(false);
   });
+
+  it('refuses a link with nothing in it once the counts are known', () => {
+    const noFiles = { messages: 4, files: 0, isLoaded: true };
+    const onlyAttachments = { ...DEFAULT_LINK_FORM, includeMessages: false, includeAttachments: true };
+    expect(canGenerateLink(onlyAttachments, noFiles)).toBe(false);
+    expect(canGenerateLink(DEFAULT_LINK_FORM, noFiles)).toBe(true);
+  });
 });
 
 describe('getPasswordError', () => {
@@ -101,17 +112,47 @@ describe('links', () => {
   });
 
   it('labels a partial link the list returns without its messages', () => {
-    expect(buildLinkContentLabel({ scope: 'partial' }, { messages: 3, files: 1 })).toBe('Selected messages');
+    expect(buildLinkContentLabel({ scope: 'partial' }, { messages: 3, files: 1, isLoaded: true })).toBe(
+      'Selected messages',
+    );
   });
 
-  it('labels a partial link with every message picked as all messages', () => {
-    const totals = { messages: 3, files: 1 };
-    expect(buildLinkContentLabel({ scope: 'partial', message_group_ids: [1, 2] }, totals)).toBe(
-      '2 of 3 messages',
+  it('leaves the counts out until they load', () => {
+    const loading = { messages: 0, files: 0, isLoaded: false };
+    expect(buildLinkContentLabel({ scope: 'all' }, loading)).toBe('All messages');
+    expect(buildLinkContentLabel({ scope: 'attachments' }, loading)).toBe('Attachments only');
+    expect(buildLinkContentLabel({ scope: 'all' }, { messages: 12, files: 5, isLoaded: true })).toBe(
+      'All 12 messages',
     );
-    expect(buildLinkContentLabel({ scope: 'partial', message_group_ids: [1, 2, 3] }, totals)).toBe(
-      'All 3 messages',
+  });
+
+  it('reads a link with no access count as never opened', () => {
+    expect(buildLinkMeta({ created_at: '2026-11-05T10:00:00Z' })).toBe(
+      'Accessed 0 times - Created 5 Nov 2026',
     );
+  });
+});
+
+describe('formatShareDate', () => {
+  it('writes the day, the short month and the year', () => {
+    expect(formatShareDate('2026-11-05T10:00:00Z')).toBe('5 Nov 2026');
+  });
+
+  it('writes nothing for a missing or broken date', () => {
+    expect(formatShareDate(undefined)).toBe('');
+    expect(formatShareDate('not a date')).toBe('');
+  });
+});
+
+describe('message rows', () => {
+  it('names an author it does not know Unknown', () => {
+    expect(toShareMessage({ id: 1, author_participant_id: 9, message_items: [] }, {}).author).toBe('Unknown');
+  });
+
+  it('previews a message with only files by their number', () => {
+    expect(getMessagePreview({ text: '', files: 2 })).toBe('2 attachments');
+    expect(getMessagePreview({ text: '', files: 1 })).toBe('1 attachment');
+    expect(getMessagePreview({ text: 'Hi', files: 1 })).toBe('Hi');
   });
 });
 

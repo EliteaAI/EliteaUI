@@ -31,7 +31,7 @@ import { ChatParticipantType } from '@/common/constants';
 const MEMBERS_PAGE_SIZE = 20;
 const NO_LINKS = [];
 
-export const useShareChat = ({ conversation, query = '' }) => {
+export const useShareChat = ({ conversation, query = '', isExternallyShown = false }) => {
   const projectId = useSelectedProjectId();
   const user = useSelector(state => state.user);
   const conversationId = conversation?.id;
@@ -66,10 +66,13 @@ export const useShareChat = ({ conversation, query = '' }) => {
     data: links = NO_LINKS,
     isFetching: isLinksFetching,
     isSuccess: isLinksLoaded,
+    isError: isLinksError,
+    refetch: refetchLinks,
   } = useListShareLinksQuery({ projectId, conversationId }, { skip: !conversationId });
-  const { data: summary } = useConversationExportSummaryQuery(
+  // Only the Externally content shows the file count
+  const { data: summary, isSuccess: isFilesLoaded } = useConversationExportSummaryQuery(
     { projectId, conversationId },
-    { skip: !conversationId },
+    { skip: !conversationId || !(isPersonal || isExternallyShown) },
   );
 
   const [conversationEdit] = useConversationEditMutation();
@@ -189,8 +192,11 @@ export const useShareChat = ({ conversation, query = '' }) => {
     links,
     isLinksFetching,
     isLinksLoaded,
+    isLinksError,
+    refetchLinks,
     isCreatingLink,
     filesTotal: summary?.attachments_count ?? 0,
+    isFilesLoaded,
     authorNames,
     saveAccess,
     createLink,

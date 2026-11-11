@@ -3,7 +3,6 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { Box, FormControlLabel, Tooltip, Typography } from '@mui/material';
 
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Checkbox, Input, Select } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import OpenEyeIcon from '@/assets/open-eye-icon.svg?react';
@@ -12,17 +11,27 @@ import CopyIcon from '@/components/Icons/CopyIcon';
 
 import { EXPIRY_OPTIONS } from '../../lib/constants';
 import { SHARE_MESSAGES, WHICH_MESSAGES } from '../../lib/constants/shareChat.constants';
-import { formatShareTime, getPasswordError } from '../../lib/helpers/shareChat.helpers';
+import { formatShareTime, getMessagePreview, getPasswordError } from '../../lib/helpers/shareChat.helpers';
+import { useCopyToClipboard } from '../../lib/hooks/useCopyToClipboard.hooks';
 
 const PREVIEW_LENGTH = 80;
 
 const ShareLinkForm = memo(props => {
-  const { form, messages, messagesTotal, totalFiles, isMessagesFetching, onLoadMoreMessages, onChange } =
-    props;
+  const {
+    form,
+    messages,
+    messagesTotal,
+    totalFiles,
+    isFilesLoaded,
+    isMessagesFetching,
+    onLoadMoreMessages,
+    onChange,
+  } = props;
 
   const [showPassword, setShowPassword] = useState(false);
 
   const isSelected = form.whichMessages === WHICH_MESSAGES.selected;
+  const hasNoFiles = isFilesLoaded && totalFiles === 0;
   const checkedCount = form.selectedIds.length;
   const checkedFiles = useMemo(
     () =>
@@ -43,12 +52,13 @@ const ShareLinkForm = memo(props => {
   const handleExpiry = useCallback(value => update({ expiry: value }), [update]);
   const handlePassword = useCallback(event => update({ password: event.target.value }), [update]);
   const handleToggleShow = useCallback(() => setShowPassword(prev => !prev), []);
-  const { toastInfo } = useToast();
+  const copyToClipboard = useCopyToClipboard();
   const hasPassword = form.password.length > 0;
-  const handleCopyPassword = useCallback(() => {
-    navigator.clipboard?.writeText(form.password).catch(() => {});
-    toastInfo(SHARE_MESSAGES.passwordCopied);
-  }, [form.password, toastInfo]);
+  // The server stores the trimmed password, so the copy must match it
+  const handleCopyPassword = useCallback(
+    () => copyToClipboard(form.password.trim(), SHARE_MESSAGES.passwordCopied),
+    [copyToClipboard, form.password],
+  );
   const handleToggleMessage = useCallback(
     id =>
       update({
@@ -112,8 +122,8 @@ const ShareLinkForm = memo(props => {
             sx={styles.checkLine}
             control={
               <Checkbox.BaseCheckbox
-                checked={isSelected || form.includeAttachments}
-                disabled={isSelected}
+                checked={!hasNoFiles && (isSelected || form.includeAttachments)}
+                disabled={isSelected || hasNoFiles}
                 onChange={handleAttachments}
               />
             }
@@ -147,45 +157,48 @@ const ShareLinkForm = memo(props => {
 
       {isSelected && (
         <Box sx={styles.messageList}>
-          {messages.map(item => (
-            <Box
-              key={item.id}
-              data-testid="message-row"
-              component="label"
-              sx={styles.messageRow}
-            >
-              <Checkbox.BaseCheckbox
-                checked={form.selectedIds.includes(item.id)}
-                onChange={() => handleToggleMessage(item.id)}
-                inputProps={{ 'aria-label': `${item.author} ${formatShareTime(item.created_at)}` }}
-                sx={styles.rowCheckbox}
-              />
-              <Box sx={styles.messageText}>
-                <Box sx={styles.messageHead}>
-                  <Typography
-                    variant="bodyMedium"
-                    color="text.secondary"
-                    sx={styles.author}
-                  >
-                    {item.author}
-                  </Typography>
+          {messages.map(item => {
+            const preview = getMessagePreview(item);
+            return (
+              <Box
+                key={item.id}
+                data-testid="message-row"
+                component="label"
+                sx={styles.messageRow}
+              >
+                <Checkbox.BaseCheckbox
+                  checked={form.selectedIds.includes(item.id)}
+                  onChange={() => handleToggleMessage(item.id)}
+                  inputProps={{ 'aria-label': `${item.author} ${formatShareTime(item.created_at)}` }}
+                  sx={styles.rowCheckbox}
+                />
+                <Box sx={styles.messageText}>
+                  <Box sx={styles.messageHead}>
+                    <Typography
+                      variant="bodyMedium"
+                      color="text.secondary"
+                      sx={styles.author}
+                    >
+                      {item.author}
+                    </Typography>
+                    <Typography
+                      variant="bodySmall"
+                      color="text.primary"
+                    >
+                      {formatShareTime(item.created_at)}
+                    </Typography>
+                  </Box>
                   <Typography
                     variant="bodySmall"
                     color="text.primary"
+                    noWrap
                   >
-                    {formatShareTime(item.created_at)}
+                    {preview.length > PREVIEW_LENGTH ? `${preview.slice(0, PREVIEW_LENGTH)}…` : preview}
                   </Typography>
                 </Box>
-                <Typography
-                  variant="bodySmall"
-                  color="text.primary"
-                  noWrap
-                >
-                  {item.text.length > PREVIEW_LENGTH ? `${item.text.slice(0, PREVIEW_LENGTH)}…` : item.text}
-                </Typography>
               </Box>
-            </Box>
-          ))}
+            );
+          })}
           <ListInfiniteMoreLoader
             listCurrentSize={messages.length}
             totalAvailableCount={messagesTotal}

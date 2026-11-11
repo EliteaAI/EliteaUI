@@ -23,6 +23,8 @@ export const SHARE_MESSAGES = {
   linkDeleted: 'Link deleted',
   linkRevokeFailed: 'Failed to revoke link. Please try again.',
   passwordCopied: 'Password copied',
+  copyFailed: 'Failed to copy to the clipboard.',
+  linksLoadFailed: 'Failed to load the links of this chat.',
   externalInfo:
     'Each link provides read-only access to selected chat content. Avoid sharing links that contain sensitive data.',
   revokeTitle: 'Revoke this link?',

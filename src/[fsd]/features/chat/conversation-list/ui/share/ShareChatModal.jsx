@@ -1,9 +1,10 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
 import {
   useCopyChatLink,
+  useCopyToClipboard,
   useShareChat,
   useShareChatMessages,
 } from '@/[fsd]/features/chat/conversation-list/lib/hooks';
@@ -27,7 +28,6 @@ import {
   canGenerateLink,
   countShareLinks,
   getCopyLinkMessage,
-  isLinkExpired,
   isSameAccessList,
   sortShareLinks,
 } from '../../lib/helpers/shareChat.helpers';
@@ -36,21 +36,27 @@ import ShareLinkForm from './ShareLinkForm';
 import ShareTeamTab from './ShareTeamTab';
 
 const SEARCH_DEBOUNCE_MS = 300;
+const EXPIRY_CHECK_MS = 60 * 1000;
 
 const isSameForm = (left, right) => JSON.stringify(left) === JSON.stringify(right);
 
 const ShareChatModal = memo(props => {
   const { conversation, onClose, onAccessSaved } = props;
 
-  const { toastSuccess, toastInfo, toastError } = useToast();
+  const { toastSuccess, toastError } = useToast();
   const copyChatLink = useCopyChatLink();
+  const copyToClipboard = useCopyToClipboard();
 
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebounceValue(query, SEARCH_DEBOUNCE_MS);
-  const share = useShareChat({ conversation, query: debouncedQuery.trim() });
-  const { mode, savedAccess, links, membersTotal } = share;
-
-  const [tab, setTab] = useState(mode === SHARE_MODES.personal ? SHARE_TABS.externally : SHARE_TABS.team);
+  const [tab, setTab] = useState(null);
+  const share = useShareChat({
+    conversation,
+    query: debouncedQuery.trim(),
+    isExternallyShown: tab === SHARE_TABS.externally,
+  });
+  const { mode, savedAccess, links, membersTotal, createLink, revokeLink, saveAccess, refetchLinks } = share;
+  const currentTab = tab ?? (mode === SHARE_MODES.personal ? SHARE_TABS.externally : SHARE_TABS.team);
   const [access, setAccess] = useState(savedAccess);
   const [isSaving, setIsSaving] = useState(false);
   const [isFormRequested, setIsFormRequested] = useState(false);
@@ -58,6 +64,21 @@ const ShareChatModal = memo(props => {
   const [warning, setWarning] = useState(null);
   const [revoking, setRevoking] = useState(null);
   const [now, setNow] = useState(Date.now);
+  const [awaitedToken, setAwaitedToken] = useState(null);
+  const removingTokens = useRef(new Set());
+
+  const hasExpiringLinks = links.some(link => link.expires_at);
+  useEffect(() => {
+    if (!hasExpiringLinks) return undefined;
+    const timer = setInterval(() => setNow(Date.now()), EXPIRY_CHECK_MS);
+    return () => clearInterval(timer);
+  }, [hasExpiringLinks]);
+
+  if (awaitedToken && (share.isLinksError || links.some(link => link.token === awaitedToken))) {
+    setAwaitedToken(null);
+    setIsFormRequested(false);
+    setForm(DEFAULT_LINK_FORM);
+  }
 
   // The list is filled once the details fetched after opening arrive; later refetches keep the edits
   const [isAccessLoaded, setIsAccessLoaded] = useState(false);
@@ -66,11 +87,12 @@ const ShareChatModal = memo(props => {
     setAccess(savedAccess);
   }
 
-  const showsExternally = mode === SHARE_MODES.personal || tab === SHARE_TABS.externally;
+  const showsExternally = mode === SHARE_MODES.personal || currentTab === SHARE_TABS.externally;
   const {
     messages,
     total: messagesTotal,
     isFetching: isMessagesFetching,
+    isLoaded: isMessagesLoaded,
     onLoadMore,
   } = useShareChatMessages({
     projectId: share.projectId,
@@ -81,18 +103,20 @@ const ShareChatModal = memo(props => {
 
   // A chat with no links shows the form, but only once the list has really loaded
   const hasNoLinks = share.isLinksLoaded && !share.isLinksFetching && !links.length;
-  const isFormOpen = isFormRequested || hasNoLinks;
+  const isFormOpen = isFormRequested || hasNoLinks || !!awaitedToken;
+  const showsLinksError = share.isLinksError && !links.length && !isFormRequested;
 
   const isTeamDirty = isAccessLoaded && !isSameAccessList(access, savedAccess);
   const isFormDirty = isFormOpen && !isSameForm(form, DEFAULT_LINK_FORM);
   const sortedLinks = useMemo(() => sortShareLinks(links, now), [links, now]);
   const counts = useMemo(() => countShareLinks(links, now), [links, now]);
+  const isTotalsLoaded = isMessagesLoaded && share.isFilesLoaded;
   const totals = useMemo(
-    () => ({ messages: messagesTotal, files: share.filesTotal }),
-    [messagesTotal, share.filesTotal],
+    () => ({ messages: messagesTotal, files: share.filesTotal, isLoaded: isTotalsLoaded }),
+    [isTotalsLoaded, messagesTotal, share.filesTotal],
   );
   const showTabs = mode === SHARE_MODES.owner;
-  const canGenerate = canGenerateLink(form) && !share.isCreatingLink;
+  const canGenerate = canGenerateLink(form, totals) && !share.isCreatingLink && !awaitedToken;
 
   const askOrRun = useCallback(
     (isDirty, action) => (isDirty ? setWarning({ onLeave: action }) : action()),
@@ -108,12 +132,12 @@ const ShareChatModal = memo(props => {
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
-    const { failed, ...changes } = await share.saveAccess(access);
+    const { failed, ...changes } = await saveAccess(access);
     onAccessSaved?.(conversation.id, changes);
     if (failed) toastError(SHARE_MESSAGES.accessFailed);
     else toastSuccess(SHARE_MESSAGES.accessUpdated);
     setIsSaving(false);
-  }, [access, conversation?.id, onAccessSaved, share, toastError, toastSuccess]);
+  }, [access, conversation?.id, onAccessSaved, saveAccess, toastError, toastSuccess]);
 
   const handleCopyChatLink = useCallback(
     () => copyChatLink(conversation, getCopyLinkMessage({ saved: savedAccess, isDirty: isTeamDirty })),
@@ -132,34 +156,39 @@ const ShareChatModal = memo(props => {
 
   const handleGenerate = useCallback(async () => {
     try {
-      await share.createLink(form);
+      const created = await createLink(form);
       setNow(Date.now());
-      setIsFormRequested(false);
-      setForm(DEFAULT_LINK_FORM);
+      if (created?.token) setAwaitedToken(created.token);
+      else {
+        setIsFormRequested(false);
+        setForm(DEFAULT_LINK_FORM);
+      }
       toastSuccess(SHARE_MESSAGES.linkCreated);
     } catch {
       toastError(SHARE_MESSAGES.linkCreateFailed);
     }
-  }, [form, share, toastError, toastSuccess]);
+  }, [createLink, form, toastError, toastSuccess]);
 
   const handleCopyLink = useCallback(
-    link => {
-      navigator.clipboard?.writeText(buildShareLinkUrl(getBasename(), link.token)).catch(() => {});
-      toastInfo(SHARE_MESSAGES.linkCopied);
-    },
-    [toastInfo],
+    link => copyToClipboard(buildShareLinkUrl(getBasename(), link.token), SHARE_MESSAGES.linkCopied),
+    [copyToClipboard],
   );
 
+  // A second click while the request runs would fail and report an error for a link already gone
   const removeLink = useCallback(
     async (link, successMessage) => {
+      if (removingTokens.current.has(link.token)) return;
+      removingTokens.current.add(link.token);
       try {
-        await share.revokeLink(link.token);
+        await revokeLink(link.token);
         toastSuccess(successMessage);
       } catch {
         toastError(SHARE_MESSAGES.linkRevokeFailed);
+      } finally {
+        removingTokens.current.delete(link.token);
       }
     },
-    [share, toastError, toastSuccess],
+    [revokeLink, toastError, toastSuccess],
   );
 
   const handleConfirmRevoke = useCallback(() => {
@@ -185,63 +214,95 @@ const ShareChatModal = memo(props => {
       ? `Active links – ${counts.active} · Expired – ${counts.expired}`
       : `Active links – ${counts.active}`;
 
-  const externallyBody = isFormOpen ? (
-    <ShareLinkForm
-      form={form}
-      messages={messages}
-      messagesTotal={messagesTotal}
-      totalFiles={share.filesTotal}
-      isMessagesFetching={isMessagesFetching}
-      onLoadMoreMessages={onLoadMore}
-      onChange={setForm}
-    />
-  ) : (
+  const linksError = (
     <Box sx={styles.section}>
       <Banner.BannerMessage
-        variant="info"
-        message={SHARE_MESSAGES.externalInfo}
+        variant="error"
+        message={SHARE_MESSAGES.linksLoadFailed}
         containerSx={styles.banner}
       >
         <Typography
           variant="bodySmall"
           color="inherit"
         >
-          {SHARE_MESSAGES.externalInfo}
+          {SHARE_MESSAGES.linksLoadFailed}
         </Typography>
       </Banner.BannerMessage>
-      <Box sx={styles.linksHeader}>
-        <Typography
-          variant="labelMedium"
-          color="text.secondary"
-          sx={styles.linksHeading}
-        >
-          {headingText}
-        </Typography>
+      <Box>
         <Button.BaseBtn
-          data-testid="share-create-link"
+          data-testid="share-links-retry"
           variant={BUTTON_VARIANTS.elitea}
-          color={BUTTON_COLORS.primary}
-          onClick={handleCreateLink}
+          color={BUTTON_COLORS.secondary}
+          onClick={refetchLinks}
         >
-          Create Link
+          Try again
         </Button.BaseBtn>
-      </Box>
-      <Box sx={styles.linkList}>
-        {sortedLinks.map(link => (
-          <ShareLinkCard
-            key={link.token}
-            link={link}
-            totals={totals}
-            now={now}
-            isExpired={isLinkExpired(link, now)}
-            onRevoke={setRevoking}
-            onDelete={handleDelete}
-            onCopy={handleCopyLink}
-          />
-        ))}
       </Box>
     </Box>
   );
+
+  let externallyBody;
+  if (showsLinksError) externallyBody = linksError;
+  else if (isFormOpen)
+    externallyBody = (
+      <ShareLinkForm
+        form={form}
+        messages={messages}
+        messagesTotal={messagesTotal}
+        totalFiles={share.filesTotal}
+        isFilesLoaded={share.isFilesLoaded}
+        isMessagesFetching={isMessagesFetching}
+        onLoadMoreMessages={onLoadMore}
+        onChange={setForm}
+      />
+    );
+  else
+    externallyBody = (
+      <Box sx={styles.section}>
+        <Banner.BannerMessage
+          variant="info"
+          message={SHARE_MESSAGES.externalInfo}
+          containerSx={styles.banner}
+        >
+          <Typography
+            variant="bodySmall"
+            color="inherit"
+          >
+            {SHARE_MESSAGES.externalInfo}
+          </Typography>
+        </Banner.BannerMessage>
+        <Box sx={styles.linksHeader}>
+          <Typography
+            variant="labelMedium"
+            color="text.secondary"
+            sx={styles.linksHeading}
+          >
+            {headingText}
+          </Typography>
+          <Button.BaseBtn
+            data-testid="share-create-link"
+            variant={BUTTON_VARIANTS.elitea}
+            color={BUTTON_COLORS.primary}
+            onClick={handleCreateLink}
+          >
+            Create Link
+          </Button.BaseBtn>
+        </Box>
+        <Box sx={styles.linkList}>
+          {sortedLinks.map(link => (
+            <ShareLinkCard
+              key={link.token}
+              link={link}
+              totals={totals}
+              now={now}
+              onRevoke={setRevoking}
+              onDelete={handleDelete}
+              onCopy={handleCopyLink}
+            />
+          ))}
+        </Box>
+      </Box>
+    );
 
   const title = (
     <Box sx={styles.titleBlock}>
@@ -267,7 +328,7 @@ const ShareChatModal = memo(props => {
     <Box sx={styles.content}>
       {showTabs && (
         <BaseTabs
-          value={tab}
+          value={currentTab}
           onChange={handleTab}
           sx={styles.tabs}
         >
@@ -356,7 +417,7 @@ const ShareChatModal = memo(props => {
         </Button.BaseBtn>
       </>
     );
-  } else if (isFormOpen) {
+  } else if (isFormOpen && !showsLinksError) {
     left = links.length ? (
       <Button.BaseBtn
         data-testid="share-back-to-list"

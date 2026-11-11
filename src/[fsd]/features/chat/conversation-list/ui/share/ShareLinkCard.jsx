@@ -8,10 +8,11 @@ import LinkIconSvg from '@/assets/copy-link-icon.svg?react';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import LockSimple from '@/components/Icons/LockSimple';
 
-import { buildLinkContentLabel, buildLinkMeta, buildLinkTitle } from '../../lib/helpers/shareChat.helpers';
+import { buildLinkMeta, buildLinkTitle, isLinkExpired } from '../../lib/helpers/shareChat.helpers';
 
 const ShareLinkCard = memo(props => {
-  const { link, totals, now, isExpired, onRevoke, onDelete, onCopy } = props;
+  const { link, totals, now, onRevoke, onDelete, onCopy } = props;
+  const isExpired = isLinkExpired(link, now);
 
   const handleRevoke = useCallback(() => onRevoke(link), [link, onRevoke]);
   const handleDelete = useCallback(() => onDelete(link), [link, onDelete]);
@@ -46,7 +47,7 @@ const ShareLinkCard = memo(props => {
             color="text.secondary"
             noWrap
           >
-            {isExpired ? buildLinkContentLabel(link, totals) : buildLinkTitle(link, totals, now)}
+            {buildLinkTitle(link, totals, now)}
           </Typography>
           {isExpired && (
             <Typography
@@ -135,8 +136,9 @@ const shareLinkCardStyles = () => ({
     fontSize: '0.75rem',
     fontWeight: 500,
     lineHeight: '1.25rem',
-    backgroundColor: palette.border.attention,
-    color: palette.text.secondary,
+    backgroundColor: palette.background.attention,
+    border: `0.0625rem solid ${palette.border.attention}`,
+    color: palette.text.attention,
   }),
   actions: {
     display: 'flex',
