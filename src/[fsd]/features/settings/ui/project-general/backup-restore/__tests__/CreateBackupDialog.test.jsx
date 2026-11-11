@@ -33,6 +33,8 @@ const renderDialog = props =>
   );
 
 const option = value => within(screen.getByTestId(`project-backup-chats-option-${value}`)).getByRole('radio');
+const skillOption = value =>
+  within(screen.getByTestId(`project-backup-skill-files-option-${value}`)).getByRole('radio');
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -71,7 +73,7 @@ describe('CreateBackupDialog', () => {
     fireEvent.click(screen.getByTestId('project-backup-confirm'));
 
     await waitFor(() => expect(onClose).toHaveBeenCalled());
-    expect(onBackup).toHaveBeenCalledWith({ chats: 'none', missingAttachments: 0 });
+    expect(onBackup).toHaveBeenCalledWith({ chats: 'none', skillFiles: 'all', missingAttachments: 0 });
   });
 
   it('passes the selected chat option and shows the privacy note', async () => {
@@ -83,7 +85,11 @@ describe('CreateBackupDialog', () => {
 
     fireEvent.click(screen.getByTestId('project-backup-confirm'));
     await waitFor(() =>
-      expect(onBackup).toHaveBeenCalledWith({ chats: 'with_attachments', missingAttachments: 0 }),
+      expect(onBackup).toHaveBeenCalledWith({
+        chats: 'with_attachments',
+        skillFiles: 'all',
+        missingAttachments: 0,
+      }),
     );
   });
 
@@ -171,5 +177,147 @@ describe('CreateBackupDialog', () => {
     expect(screen.getByTestId('project-backup-cancel')).toBeDisabled();
     fireEvent.keyDown(screen.getByTestId('project-backup-modal'), { key: 'Escape' });
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('includes all skill files by default and counts them in the large-backup warning', () => {
+    summaryQuery.current = {
+      data: {
+        chats_count: 0,
+        attachments_count: 0,
+        attachments_size: 0,
+        missing_attachments: 0,
+        skill_files_count: 22,
+        skill_files_size: 600 * 1024 * 1024,
+      },
+      isFetching: false,
+    };
+    renderDialog();
+
+    expect(option('none')).toBeChecked();
+    expect(skillOption('all')).toBeChecked();
+    expect(screen.getByTestId('project-backup-skill-files-summary')).toHaveTextContent(
+      '22 skill files · ~600 MB',
+    );
+    expect(screen.getByText('Large backup (~600 MB). It may take a while.')).toBeInTheDocument();
+    expect(screen.queryByTestId('project-backup-no-skill-files-warning')).not.toBeInTheDocument();
+  });
+
+  it('adds the skill files to the attachments in the estimate', () => {
+    summaryQuery.current = {
+      data: {
+        chats_count: 3,
+        attachments_count: 9,
+        attachments_size: 300 * 1024 * 1024,
+        missing_attachments: 0,
+        skill_files_count: 5,
+        skill_files_size: 300 * 1024 * 1024,
+      },
+      isFetching: false,
+    };
+    renderDialog();
+
+    expect(screen.queryByText(/Large backup/)).not.toBeInTheDocument();
+    fireEvent.click(option('with_attachments'));
+    expect(screen.getByText('Large backup (~600 MB). It may take a while.')).toBeInTheDocument();
+  });
+
+  it('leaves the skill files out on request, warns about broken skills and drops them from the estimate', async () => {
+    summaryQuery.current = {
+      data: {
+        chats_count: 0,
+        attachments_count: 0,
+        attachments_size: 0,
+        missing_attachments: 0,
+        skill_files_count: 22,
+        skill_files_size: 600 * 1024 * 1024,
+      },
+      isFetching: false,
+    };
+    const onBackup = vi.fn().mockResolvedValue(true);
+    renderDialog({ onBackup });
+
+    fireEvent.click(skillOption('none'));
+
+    expect(screen.getByTestId('project-backup-no-skill-files-warning')).toHaveTextContent(
+      'Skill files will not be in this backup. Restored into another project, its skills list their files, but the files cannot be opened.',
+    );
+    expect(screen.queryByText(/Large backup/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('project-backup-confirm'));
+    await waitFor(() =>
+      expect(onBackup).toHaveBeenCalledWith({ chats: 'none', skillFiles: 'none', missingAttachments: 0 }),
+    );
+  });
+
+  it('sends all skill files by default', async () => {
+    const onBackup = vi.fn().mockResolvedValue(true);
+    renderDialog({ onBackup });
+
+    fireEvent.click(screen.getByTestId('project-backup-confirm'));
+
+    await waitFor(() =>
+      expect(onBackup).toHaveBeenCalledWith({ chats: 'none', skillFiles: 'all', missingAttachments: 0 }),
+    );
+  });
+
+  it('disables leaving out skill files for a project without them', () => {
+    renderDialog();
+
+    expect(screen.getByTestId('project-backup-skill-files-summary')).toHaveTextContent('No skill files');
+    expect(skillOption('none')).toBeDisabled();
+    expect(skillOption('all')).toBeChecked();
+  });
+
+  it('puts each note under its own section and the size warning last', () => {
+    summaryQuery.current = {
+      data: {
+        chats_count: 3,
+        attachments_count: 9,
+        attachments_size: 300 * 1024 * 1024,
+        missing_attachments: 0,
+        skill_files_count: 5,
+        skill_files_size: 300 * 1024 * 1024,
+      },
+      isFetching: false,
+    };
+    renderDialog();
+
+    fireEvent.click(option('with_attachments'));
+    fireEvent.click(skillOption('none'));
+
+    const order = [
+      screen.getByText('Chats'),
+      screen.getByText(/Store the backup file securely/),
+      screen.getByText('Skills'),
+      screen.getByTestId('project-backup-no-skill-files-warning'),
+    ];
+    order.slice(1).forEach((node, index) => {
+      expect(order[index].compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+  });
+
+  it('shows the size warning after both sections', () => {
+    summaryQuery.current = {
+      data: {
+        chats_count: 3,
+        attachments_count: 9,
+        attachments_size: 400 * 1024 * 1024,
+        missing_attachments: 0,
+        skill_files_count: 5,
+        skill_files_size: 300 * 1024 * 1024,
+      },
+      isFetching: false,
+    };
+    renderDialog();
+
+    fireEvent.click(option('with_attachments'));
+
+    const warning = screen.getByText(/Large backup/);
+    expect(
+      screen.getByText('Skills').compareDocumentPosition(warning) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      screen.getByText(/Store the backup file securely/).compareDocumentPosition(warning) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 });

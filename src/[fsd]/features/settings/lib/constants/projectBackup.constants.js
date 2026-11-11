@@ -16,6 +16,16 @@ export const CHAT_BACKUP_OPTION_LABELS = {
   [CHATS_OPTION.withAttachments]: 'All chats with attachments',
 };
 
+export const SKILL_FILES_OPTION = {
+  all: 'all',
+  none: 'none',
+};
+
+export const SKILL_FILES_BACKUP_OPTION_LABELS = {
+  [SKILL_FILES_OPTION.all]: 'All skill files',
+  [SKILL_FILES_OPTION.none]: 'Do not include skill files',
+};
+
 export const CHAT_RESTORE_OPTION_LABELS = {
   [CHATS_OPTION.none]: 'Do not restore chats',
   [CHATS_OPTION.withoutAttachments]: 'Restore all chats without attachments',
