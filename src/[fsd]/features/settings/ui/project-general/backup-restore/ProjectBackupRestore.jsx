@@ -74,6 +74,8 @@ const ProjectBackupRestore = memo(() => {
 
       {canRestore && (
         <RestoreProjectDialog
+          // The followed restore job belongs to one project
+          key={projectId}
           open={isRestoreOpen}
           onClose={handleCloseRestore}
           projectId={projectId}
