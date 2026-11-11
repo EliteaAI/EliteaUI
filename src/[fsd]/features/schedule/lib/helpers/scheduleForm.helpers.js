@@ -218,7 +218,8 @@ export const toCreateBody = ({
             webhook_type === WEBHOOK_TYPES.gitlab && { signing_secret_value: signing_secret_value?.trim() }),
         }
       : { cron, timezone, expires_at }),
-    approval_rule,
+    // The server refuses a non-default rule on an index and the form hides the field for it
+    approval_rule: isIndexType(type) ? DEFAULT_APPROVAL_RULE : approval_rule,
     // set on a new schedule only; a saved one pauses and resumes through its own calls
     ...(enabled !== undefined && { enabled }),
   };

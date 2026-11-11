@@ -15,7 +15,7 @@ import { buildErrorMessage } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import RouteDefinitions from '@/routes';
 
-const ENTITY_TYPE_LABELS = { agent: 'Agent', pipeline: 'Pipeline' };
+const ENTITY_TYPE_LABELS = { agent: 'Agent', pipeline: 'Pipeline', toolkit_index: 'Toolkit Index' };
 
 const NO_FILTERS = { entityType: '', status: '', enabled: '', search: '', ownerIds: [], webhookType: '' };
 
@@ -58,8 +58,12 @@ const SchedulesPage = memo(props => {
   const [searchParams, setSearchParams] = useSearchParams();
   const urlEntityType = searchParams.get('entityType');
   const urlEntityId = searchParams.get('entityId');
+  // Only an index link carries indexName: without it the list shows every index of the toolkit
+  const urlIndexName = searchParams.get('indexName');
   const urlEntity =
-    urlEntityType && urlEntityId ? { entityType: urlEntityType, entityId: urlEntityId } : null;
+    urlEntityType && urlEntityId
+      ? { entityType: urlEntityType, entityId: urlEntityId, ...(urlIndexName ? { indexName: urlIndexName } : {}) }
+      : null;
   // The editor link carries the entity name, so the chip names it even when the list has no rows
   const { state: locationState } = useLocation();
 
@@ -125,6 +129,7 @@ const SchedulesPage = memo(props => {
     setSearchParams(prev => {
       prev.delete('entityType');
       prev.delete('entityId');
+      prev.delete('indexName');
       return prev;
     });
     setPage(0);
@@ -203,7 +208,7 @@ const SchedulesPage = memo(props => {
               {urlEntity && (
                 <Chip
                   data-testid={`${config.testId}-entity-chip`}
-                  label={`${ENTITY_TYPE_LABELS[urlEntityType] ?? urlEntityType}: ${locationState?.entityName ?? currentData?.rows?.[0]?.entity_name ?? urlEntityId}`}
+                  label={`${ENTITY_TYPE_LABELS[urlEntityType] ?? urlEntityType}: ${urlIndexName ?? locationState?.entityName ?? currentData?.rows?.[0]?.entity_name ?? urlEntityId}`}
                   onDelete={onClearUrlEntity}
                 />
               )}

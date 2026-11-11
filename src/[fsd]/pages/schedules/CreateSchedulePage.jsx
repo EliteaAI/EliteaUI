@@ -22,6 +22,15 @@ import { ScheduleSettingsSection, StopOnDateField } from '@/[fsd]/shared/ui/sche
 
 const isIndex = formValues => formValues.type === TOOLKIT_INDEX_TYPE;
 
+// The Test runs of the form: an index is the toolkit id plus the index name. A toolkit without an index has
+// no target yet, and its bare id would read as an application id.
+const draftTarget = formValues => {
+  if (!isIndex(formValues))
+    return { applicationId: formValues.application_id || undefined, indexName: undefined };
+  const indexName = formValues.index_name || undefined;
+  return { applicationId: indexName ? formValues.toolkit_id || undefined : undefined, indexName };
+};
+
 // entityType: the form is nested in that editor and locks its entity; kind 'webhook' creates a webhook
 const CreateSchedulePage = props => {
   const { entityType, kind = TRIGGER_KIND.cron } = props;
@@ -65,8 +74,7 @@ const CreateSchedulePage = props => {
     ({ values: formValues, onTestRun, testRunPending, testRunError }) => (
       <ScheduleDraftRuns
         entityType={formValues.type}
-        applicationId={(isIndex(formValues) ? formValues.toolkit_id : formValues.application_id) || undefined}
-        indexName={isIndex(formValues) ? formValues.index_name || undefined : undefined}
+        {...draftTarget(formValues)}
         onTestRun={onTestRun}
         testRunPending={testRunPending}
         testRunError={testRunError}

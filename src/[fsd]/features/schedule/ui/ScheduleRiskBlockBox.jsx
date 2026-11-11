@@ -22,7 +22,9 @@ const WAIT_LINK_TEXT = {
 };
 // The word in the title lines; the entity type of an index is not a word
 const ENTITY_NOUN = { [TOOLKIT_INDEX_TYPE]: 'index' };
-// The index check names this cause `credential_missing`; the text is the one of `missing_credential`
+// The index check names this cause `credential_missing`; the text is the one of `missing_credential`.
+// The alias is for the wording only: `splitRiskFindings` keeps `credential_missing` in `blocking`, so an index
+// with an unusable toolkit credential shows the red box and cannot be saved, whatever the approval rule is.
 const CAUSE_ALIAS = { credential_missing: 'missing_credential' };
 const WAIT_NOTE = 'You can save this schedule. With "Pause and ask me", the run waits for your approval.';
 

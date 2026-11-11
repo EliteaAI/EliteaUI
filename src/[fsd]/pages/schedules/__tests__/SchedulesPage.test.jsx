@@ -381,6 +381,21 @@ describe('SchedulesPage', () => {
     expect(update(new URLSearchParams('entityType=pipeline&entityId=9&tab=x')).toString()).toBe('tab=x');
   });
 
+  it('lists one index of a toolkit when the link carries indexName, and the chip removes it too', () => {
+    mocks.searchParams = new URLSearchParams('entityType=toolkit_index&entityId=7&indexName=docs');
+    render(<SchedulesPage />);
+
+    expect(lastArgs()).toMatchObject({ entityType: 'toolkit_index', entityId: '7', indexName: 'docs' });
+    expect(screen.getByTestId('schedules-entity-chip')).toHaveTextContent('Toolkit Index: docs');
+
+    fireEvent.click(within(screen.getByTestId('schedules-entity-chip')).getByTestId('CancelIcon'));
+
+    const [update] = mocks.setSearchParams.mock.calls.at(-1);
+    expect(
+      update(new URLSearchParams('entityType=toolkit_index&entityId=7&indexName=docs&tab=x')).toString(),
+    ).toBe('tab=x');
+  });
+
   it('without the URL entity the page shows no chip and sends no entity id', () => {
     render(<SchedulesPage />);
 

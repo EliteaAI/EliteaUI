@@ -540,6 +540,16 @@ describe('toolkit index form', () => {
     );
   });
 
+  it('sends the default approval rule for an index, also when the form still holds another one', () => {
+    const values = { ...indexValues, approval_rule: 'run_without_asking' };
+
+    expect(toCreateBody(values).approval_rule).toBe('pause_and_ask');
+    expect(toUpdateBody(values).approval_rule).toBe('pause_and_ask');
+    expect(toCreateBody({ ...agentValues, approval_rule: 'run_without_asking' }).approval_rule).toBe(
+      'run_without_asking',
+    );
+  });
+
   it('keeps the toolkit fields out of an agent body', () => {
     const body = toCreateBody(agentValues);
 
