@@ -31,7 +31,13 @@ export const importWizardApi = eliteaApi
         }),
         invalidatesTags: [TAG_TYPE_APPLICATIONS, TAG_TYPE_TOTAL_APPLICATIONS],
       }),
+
+      skillsLimits: build.query({
+        query: ({ projectId }) => ({
+          url: `${apiSlicePath}/skills_limits/prompt_lib/${projectId}`,
+        }),
+      }),
     }),
   });
 
-export const { useImportWizardMutation, useForkAgentMutation } = importWizardApi;
+export const { useImportWizardMutation, useForkAgentMutation, useSkillsLimitsQuery } = importWizardApi;

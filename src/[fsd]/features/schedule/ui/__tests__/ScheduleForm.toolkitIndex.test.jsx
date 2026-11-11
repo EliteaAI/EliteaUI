@@ -30,6 +30,7 @@ const NO_TOOLKIT_HINT = 'Select a toolkit first to choose an index.';
 const LOCKED_HINT_START = 'To change the toolkit or index, create a new schedule in';
 
 const checkRisk = vi.fn();
+const checkConnections = vi.fn();
 
 vi.mock('@/hooks/useCheckPermission', () => ({
   default: () => ({ checkPermission: () => true }),
@@ -38,6 +39,7 @@ vi.mock('@/[fsd]/entities/schedule', async () => ({
   ...(await vi.importActual('@/[fsd]/entities/schedule/lib/helpers')),
   useGetScheduleSettingsQuery: () => ({ data: { allow_run_without_asking: true }, isError: false }),
   useCheckScheduleRiskMutation: () => [checkRisk],
+  useCheckScheduleConnectionsMutation: () => [checkConnections],
   useGetToolkitIndexOptionsQuery: () => ({ data: INDEX_OPTIONS, isFetching: false, isError: false }),
 }));
 vi.mock('../ScheduleActiveToggle', () => ({ default: () => null }));
@@ -183,6 +185,14 @@ describe('ScheduleForm for a toolkit index', () => {
     expect(whatToRun.getByText(/^Index\s*\*/)).toBeInTheDocument();
     expect(whatToRun.queryByText(/^Version/)).not.toBeInTheDocument();
     expect(whatToRun.queryByText(/^Starting input/)).not.toBeInTheDocument();
+  });
+
+  it('does not run the Connections check or show its panel for a toolkit index', async () => {
+    renderForm(INDEX_VALUES);
+    await act(async () => {});
+
+    expect(checkConnections).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('schedule-connections-panel')).not.toBeInTheDocument();
   });
 
   it('disables Index with a hint while no toolkit is chosen', async () => {

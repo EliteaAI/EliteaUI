@@ -261,9 +261,10 @@ export const toRiskItems = (blocking = []) => {
 
 // Splits the risk answer by the approval rule. Under "Pause and ask me" a missing credential or a personal
 // sign-in does not stop the save: the run waits for the owner, so these findings move to `waiting`.
-export const splitRiskFindings = (result, approvalRule) => {
+// A webhook never waits for a sign-in (#7401), so for it they always block.
+export const splitRiskFindings = (result, approvalRule, isWebhook = false) => {
   const blocking = result?.blocking ?? [];
-  if (approvalRule !== APPROVAL_RULE.PAUSE_AND_ASK) return { blocking, waiting: [] };
+  if (isWebhook || approvalRule !== APPROVAL_RULE.PAUSE_AND_ASK) return { blocking, waiting: [] };
   const waitsForOwner = finding => WAIT_FOR_OWNER_CODES.includes(finding.code);
   return {
     blocking: blocking.filter(finding => !waitsForOwner(finding)),

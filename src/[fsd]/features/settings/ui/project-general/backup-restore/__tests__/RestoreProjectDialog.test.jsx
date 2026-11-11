@@ -183,4 +183,121 @@ describe('RestoreProjectDialog', () => {
 
     expect(screen.queryByTestId('project-restore-replace-chats-warning')).not.toBeInTheDocument();
   });
+
+  it('shows the skill files result and warns when some could not be restored', async () => {
+    mocks.restore.mockReturnValueOnce(answer({ ok: true, artifact: artifactOf() }));
+    renderDialog();
+    await pickFile();
+    fireEvent.click(screen.getByTestId('project-restore-dry-run').querySelector('input'));
+
+    mocks.restore.mockReturnValueOnce(
+      answer({
+        ok: true,
+        artifact: artifactOf(),
+        result: {
+          dry_run: false,
+          statements: 4,
+          total_rows: 49,
+          applied_tables: ['skill_version_files'],
+          skill_files: {
+            total: 22,
+            present: 0,
+            uploaded: 20,
+            missing: 2,
+            missing_paths: ['notes.txt', 'references/guide.md'],
+            unchecked: false,
+          },
+        },
+      }),
+    );
+    fireEvent.click(screen.getByTestId('project-restore-submit'));
+
+    expect(await screen.findByTestId('project-restore-skill-files-summary')).toHaveTextContent(
+      'Skill files: 22 total, 0 present, 20 uploaded, 2 missing (notes.txt, references/guide.md)',
+    );
+    expect(mocks.toastWarning).toHaveBeenCalledWith(
+      'Restore completed. 2 skill file(s) could not be restored.',
+    );
+  });
+
+  it('does not warn about missing skill files after a preview', async () => {
+    mocks.restore.mockReturnValueOnce(answer({ ok: true, artifact: artifactOf() }));
+    renderDialog();
+    await pickFile();
+
+    mocks.restore.mockReturnValueOnce(
+      answer({
+        ok: true,
+        artifact: artifactOf(),
+        result: {
+          dry_run: true,
+          applied_tables: [],
+          skill_files: { total: 2, present: 0, uploaded: 1, missing: 1 },
+        },
+      }),
+    );
+    fireEvent.click(screen.getByTestId('project-restore-submit'));
+
+    expect(await screen.findByTestId('project-restore-skill-files-summary')).toHaveTextContent(
+      'Skill files: 2 total, 0 present, 1 uploaded, 1 missing',
+    );
+    expect(mocks.toastWarning).not.toHaveBeenCalled();
+  });
+
+  it("warns that merging another project's backup can mix entities, until replace is checked", async () => {
+    mocks.restore.mockReturnValue(answer({ ok: true, artifact: artifactOf({ project_id: 7 }) }));
+    renderDialog();
+    await pickFile();
+
+    expect(await screen.findByTestId('project-restore-merge-warning')).toHaveTextContent(
+      'Restore it into a new project, or check "Replace existing data - do not merge".',
+    );
+    fireEvent.click(screen.getByTestId('project-restore-truncate').querySelector('input'));
+    expect(screen.queryByTestId('project-restore-merge-warning')).not.toBeInTheDocument();
+  });
+
+  it('does not warn about merging a backup of this project', async () => {
+    mocks.restore.mockReturnValue(answer({ ok: true, artifact: artifactOf() }));
+    renderDialog();
+    await pickFile();
+    await screen.findByTestId('project-restore-no-chats');
+
+    expect(screen.queryByTestId('project-restore-merge-warning')).not.toBeInTheDocument();
+  });
+
+  it('shows one warning toast for failed attachments and missing skill files together', async () => {
+    mocks.restore.mockReturnValueOnce(
+      answer({
+        ok: true,
+        artifact: artifactOf({ chats_included: 'with_attachments', has_attachment_files: true }),
+      }),
+    );
+    renderDialog();
+    await pickFile();
+    await screen.findByTestId('project-restore-chats-info');
+    fireEvent.click(screen.getByTestId('project-restore-dry-run').querySelector('input'));
+
+    mocks.restore.mockReturnValueOnce(
+      answer({
+        ok: true,
+        artifact: artifactOf({ chats_included: 'with_attachments', has_attachment_files: true }),
+        result: {
+          dry_run: false,
+          statements: 1,
+          total_rows: 1,
+          applied_tables: [],
+          chats: { restored: 1, skipped: 0 },
+          attachments: { total: 3, uploaded: 0, linked: 0, failed: 3 },
+          skill_files: { total: 2, present: 0, uploaded: 0, missing: 2, missing_paths: ['a.md', 'b.md'] },
+        },
+      }),
+    );
+    fireEvent.click(screen.getByTestId('project-restore-submit'));
+
+    await screen.findByTestId('project-restore-skill-files-summary');
+    expect(mocks.toastWarning).toHaveBeenCalledTimes(1);
+    expect(mocks.toastWarning).toHaveBeenCalledWith(
+      'Restore completed. 3 attachment file(s) and 2 skill file(s) could not be restored.',
+    );
+  });
 });

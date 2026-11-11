@@ -9,13 +9,15 @@ import { RISK_CHECK_STATUS } from '../lib/constants';
 import ScheduleRiskBlockBox from './ScheduleRiskBlockBox';
 
 const ScheduleRiskNotices = memo(props => {
-  const { status, blocking, waiting, entityType, entityId, indexName, versionId, projectId, onRetry } = props;
+  const { status, blocking, waiting, entityType, entityId, indexName, versionId, projectId, kind, onRetry } =
+    props;
   const styles = scheduleRiskNoticesStyles();
 
   return (
     <>
       {status === RISK_CHECK_STATUS.BLOCKED && (
         <ScheduleRiskBlockBox
+          kind={kind}
           blocking={blocking}
           entityType={entityType}
           entityId={entityId}

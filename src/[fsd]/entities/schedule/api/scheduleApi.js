@@ -167,6 +167,18 @@ export const scheduleApi = eliteaApi
         }),
       }),
 
+      // #7401: can each toolkit run with no person signed in; a webhook is blocked by any row that is not ok
+      checkScheduleConnections: build.mutation({
+        query: ({ projectId, ...body }) => ({
+          url: `${schedulesPath(projectId)}/connections`,
+          method: 'POST',
+          body,
+        }),
+        // The owner's check of a saved trigger switches it off on a lost login: refresh what the page shows
+        invalidatesTags: (result, error, { schedule_id: scheduleId }) =>
+          !error && scheduleId && result?.lost_login ? scheduleTags(scheduleId) : [],
+      }),
+
       runSchedule: build.mutation({
         // payload: the sample body of a webhook test run
         query: ({ projectId, scheduleId, trigger = 'manual', payload }) => ({
@@ -359,6 +371,7 @@ export const {
   useGetScheduleRunQuery,
   useGetScheduleListQuery,
   useCreateScheduleMutation,
+  useCheckScheduleConnectionsMutation,
   useCheckScheduleRiskMutation,
   useGetToolkitIndexOptionsQuery,
   useDecideRunWithoutChatMutation,
