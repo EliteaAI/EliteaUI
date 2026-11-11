@@ -192,6 +192,7 @@ describe('CredentialForm stored Microsoft login', () => {
     await act(async () => mocks.oauthOptions.onSuccess());
 
     expect(mocks.storedLogin.saveLogin).toHaveBeenCalledWith({ isFormDirty: false });
+    // saveLogin mock resolves undefined here (nothing stored-login specific), so the re-test still runs
     expect(onTestConnection).toHaveBeenCalledTimes(1);
   });
 
@@ -310,5 +311,75 @@ describe('CredentialForm stored Microsoft login', () => {
     await act(async () => mocks.LogoutModal.mock.calls.at(-1)[0].onConfirm());
 
     expect(mocks.logout).not.toHaveBeenCalled();
+  });
+
+  // Reported as #7492: on a Dataverse credential (tenant_id, no oauth_discovery_endpoint) the page built an
+  // empty token key, so the save never found the token and the re-test reopened the sign-in forever.
+  describe('Dataverse credential', () => {
+    const DATAVERSE = {
+      id: 21,
+      project_id: 596,
+      type: 'dataverse',
+      uuid: 'uuid-dv',
+      has_test_connection: true,
+      data: { url: 'https://org.crm4.dynamics.com', tenant_id: 'tenant-1' },
+      settings: { url: 'https://org.crm4.dynamics.com', tenant_id: 'tenant-1' },
+    };
+    const DV_KEY = 'uuid-dv:https://login.microsoftonline.com/tenant-1';
+
+    it('keys the login by the tenant authority, the same key as the toolkit page', () => {
+      renderForm({ credentialDetails: DATAVERSE });
+      expect(mocks.useCreateConfiguration.mock.calls.at(-1)[0].oauthTokenKey).toBe(DV_KEY);
+    });
+
+    it('stores the sign-in token under that key, not the bare authority', () => {
+      renderForm({ credentialDetails: DATAVERSE });
+      const { onConfigAuthRequired } = mocks.useCreateConfiguration.mock.calls.at(-1)[0];
+      const errorData = { auth_metadata: { server_url: 'https://login.microsoftonline.com/tenant-1' } };
+
+      act(() => onConfigAuthRequired(errorData, undefined, DV_KEY));
+
+      expect(mocks.handleConfigAuthRequired).toHaveBeenCalledWith(errorData, undefined, DV_KEY);
+    });
+
+    it('offers Login and Logout on the Dataverse credential page', () => {
+      renderForm({ credentialDetails: DATAVERSE });
+      expect(screen.getByText('Login')).toBeInTheDocument();
+    });
+
+    it('does not re-test the connection after a failed save, so the sign-in does not reopen', async () => {
+      const onTestConnection = vi.fn();
+      mocks.useCreateConfiguration.mockReturnValue({ onTestConnection, isTestingConnection: false });
+      mocks.storedLogin.saveLogin = vi.fn().mockResolvedValue(false);
+      renderForm({ credentialDetails: DATAVERSE });
+
+      await act(async () => mocks.oauthOptions.onSuccess());
+
+      expect(onTestConnection).not.toHaveBeenCalled();
+    });
+
+    // The re-test ran before the page reloaded the credential, so it sent the old settings without the
+    // new refresh token and the sign-in reopened even after a successful save (found in the browser test).
+    it('does not re-test after a saved login either; the save toast reports it', async () => {
+      const onTestConnection = vi.fn();
+      mocks.useCreateConfiguration.mockReturnValue({ onTestConnection, isTestingConnection: false });
+      mocks.storedLogin.saveLogin = vi.fn().mockResolvedValue(true);
+      renderForm({ credentialDetails: DATAVERSE });
+
+      await act(async () => mocks.oauthOptions.onSuccess());
+
+      expect(onTestConnection).not.toHaveBeenCalled();
+    });
+
+    it('still re-tests after sign-in for credentials that do not store a login', async () => {
+      const onTestConnection = vi.fn();
+      mocks.useCreateConfiguration.mockReturnValue({ onTestConnection, isTestingConnection: false });
+      mocks.storedLogin.saveLogin = vi.fn().mockResolvedValue(undefined);
+      renderForm({ credentialDetails: { ...DATAVERSE, type: 'github' } });
+
+      await act(async () => mocks.oauthOptions.onSuccess());
+
+      expect(onTestConnection).toHaveBeenCalledTimes(1);
+    });
   });
 });

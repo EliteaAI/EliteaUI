@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildStoredLoginBody,
+  getCredentialAuthority,
   getLockedLoginHint,
   getStoredLoginConfig,
   isLoginExpired,
@@ -86,5 +87,28 @@ describe('storedLogin helpers', () => {
   it('tells a member who manages a team login, connected or not', () => {
     expect(getLockedLoginHint(true)).toBe('Login managed by a project admin');
     expect(getLockedLoginHint(false)).toBe('Not connected, ask a project admin to log in');
+  });
+
+  // Dataverse credentials have tenant_id and no oauth_discovery_endpoint, so the credential page built an
+  // empty token key: the sign-in token was stored under the bare authority and the save never found it.
+  it('builds the Dataverse authority from tenant_id, as the SDK login-required response does', () => {
+    expect(getCredentialAuthority('dataverse', { tenant_id: ' tenant-1 ' })).toBe(
+      'https://login.microsoftonline.com/tenant-1',
+    );
+    expect(getCredentialAuthority('dataverse', { tenant_id: '' })).toBe('');
+    expect(getCredentialAuthority('dataverse', undefined)).toBe('');
+  });
+
+  it('matches the toolkit page key for Dataverse (server_url of the login-required response)', () => {
+    const authority = getCredentialAuthority('dataverse', { tenant_id: 'tenant-1' });
+    const errorData = { auth_metadata: { server_url: 'https://login.microsoftonline.com/tenant-1' } };
+    expect(getStoredLoginConfig('dataverse').getAuthority({}, errorData)).toBe(authority);
+  });
+
+  it('uses the discovery endpoint for every other type', () => {
+    const settings = { oauth_discovery_endpoint: 'https://login.microsoftonline.com/t', tenant_id: 'x' };
+    expect(getCredentialAuthority('teams', settings)).toBe('https://login.microsoftonline.com/t');
+    expect(getCredentialAuthority('sharepoint', settings)).toBe('https://login.microsoftonline.com/t');
+    expect(getCredentialAuthority('github', {})).toBe('');
   });
 });
