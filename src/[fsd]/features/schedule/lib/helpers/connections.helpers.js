@@ -4,11 +4,13 @@ import { CONNECTIONS_CHECK_STATUS, CONNECTION_STATUS } from '../constants';
 export const allConnectionsOk = rows =>
   Array.isArray(rows) && rows.every(row => row.status === CONNECTION_STATUS.OK);
 
-// Only a webhook is held back: a schedule under "Pause and ask me" may wait for a sign-in during the run
+// Only a webhook is held back: a schedule under "Pause and ask me" may wait for a sign-in during the run.
+// Idle means no version chosen yet: the form schema asks for it, so Save stays clickable to show that.
 export const connectionsBlockSave = (isWebhook, { status, rows }) =>
-  isWebhook && (status !== CONNECTIONS_CHECK_STATUS.ANSWERED || !allConnectionsOk(rows));
+  isWebhook &&
+  status !== CONNECTIONS_CHECK_STATUS.IDLE &&
+  (status !== CONNECTIONS_CHECK_STATUS.ANSWERED || !allConnectionsOk(rows));
 
-// A row the owner can fix from the panel: a saved Microsoft login to sign in to
 // The Save hint of a webhook held by its connections; empty when they do not hold it
 export const connectionsHint = (isWebhook, { status, rows }) => {
   if (!connectionsBlockSave(isWebhook, { status, rows })) return '';
@@ -18,6 +20,7 @@ export const connectionsHint = (isWebhook, { status, rows }) => {
   return 'Sign in to every connection to save';
 };
 
+// A row the owner can fix from the panel: a saved Microsoft login to sign in to
 export const canSignInHere = row =>
   row.status === CONNECTION_STATUS.SIGN_IN && !!row.credential_title && !!row.credential_type;
 

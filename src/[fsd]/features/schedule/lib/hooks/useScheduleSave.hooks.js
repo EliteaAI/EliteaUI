@@ -7,6 +7,7 @@ import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { CONNECTIONS_NOT_READY, RISK_NAME_MISMATCH, RISK_SAVE_ERROR } from '../constants';
 import {
   connectionsBlockSave,
+  connectionsHint,
   isPromptShown,
   splitRiskFindings,
   toCreateBody,
@@ -126,7 +127,10 @@ export const useScheduleSave = ({
   const submit = async (values, helpers) => {
     setBanner('');
     // Enter in a field or Run Now can submit while the connections hold Save; the server would refuse it
-    if (connections && connectionsBlockSave(isWebhookRow(values), connections)) return;
+    if (connections && connectionsBlockSave(isWebhookRow(values), connections)) {
+      if (afterSave.current) setRunNowError(connectionsHint(isWebhookRow(values), connections));
+      return;
+    }
     const runAfterSave = afterSave.current;
     // A fresh check on Save: a blocked or failed check shows in the form, sensitive tools open the review
     const risk = await riskCheck.runCheck();

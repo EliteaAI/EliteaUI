@@ -148,6 +148,9 @@ export const scheduleApi = eliteaApi
           method: 'POST',
           body,
         }),
+        // The owner's check of a saved trigger switches it off on a lost login: refresh what the page shows
+        invalidatesTags: (result, error, { schedule_id: scheduleId }) =>
+          !error && scheduleId && result?.lost_login ? scheduleTags(scheduleId) : [],
       }),
 
       runSchedule: build.mutation({

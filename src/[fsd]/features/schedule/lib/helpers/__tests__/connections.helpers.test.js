@@ -36,6 +36,11 @@ describe('connections helpers', () => {
     expect(connectionsBlockSave(true, { status: CONNECTIONS_CHECK_STATUS.FAILED, rows: [] })).toBe(true);
   });
 
+  it('does not hold a webhook save before a version is chosen: the form schema asks for it', () => {
+    expect(connectionsBlockSave(true, { status: CONNECTIONS_CHECK_STATUS.IDLE, rows: [] })).toBe(false);
+    expect(connectionsHint(true, { status: CONNECTIONS_CHECK_STATUS.IDLE, rows: [] })).toBe('');
+  });
+
   it('never holds a schedule save: a schedule under "Pause and ask me" may wait for a sign-in', () => {
     expect(connectionsBlockSave(false, answered([REMOTE, SIGN_IN]))).toBe(false);
   });

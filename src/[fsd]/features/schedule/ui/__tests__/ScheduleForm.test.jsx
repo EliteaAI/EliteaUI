@@ -2019,6 +2019,54 @@ describe('ScheduleForm', () => {
       expect(await screen.findByText('Every toolkit must run unattended')).toBeInTheDocument();
     });
 
+    it('keeps Save clickable before an agent and a version are chosen, so its errors show', async () => {
+      checkConnections.mockClear();
+      renderForm(
+        { initialValues: { ...WEBHOOK, application_id: '', version_id: '' } },
+        '/settings/webhooks/create',
+      );
+      await act(async () => {});
+
+      expect(saveButton()).toBeEnabled();
+      expect(screen.queryByText('Checking connections')).toBeNull();
+      expect(checkConnections).not.toHaveBeenCalled();
+      fireEvent.click(saveButton());
+      expect(await screen.findByText('Choose an agent or a pipeline')).toBeInTheDocument();
+    });
+
+    it('says why Run Now did nothing while the connections hold the save', async () => {
+      checkConnections.mockReturnValue(answer({ rows: [REMOTE] }));
+      const onRunNow = vi.fn().mockResolvedValue(undefined);
+      renderForm(
+        {
+          initialValues: { ...WEBHOOK, name: 'Changed' },
+          lockedEntity: { type: 'agent', id: '7' },
+          schedule: { id: 3, trigger_kind: 'webhook', enabled: true, allowed_actions: ['edit', 'run'] },
+          onRunNow,
+          sidePanel: ({ onRunNow: run, runNowError }) => (
+            <div>
+              <button
+                type="button"
+                data-testid="run-now"
+                onClick={run}
+              />
+              {runNowError && <p data-testid="run-now-error">{runNowError}</p>}
+            </div>
+          ),
+        },
+        '/agents/all/7/webhooks/3',
+      );
+      await screen.findByTestId('schedule-connections-panel');
+      fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Renamed' } });
+
+      fireEvent.click(screen.getByTestId('run-now'));
+
+      expect(await screen.findByTestId('run-now-error')).toHaveTextContent(
+        'Sign in to every connection to save',
+      );
+      expect(onRunNow).not.toHaveBeenCalled();
+    });
+
     it('offers Re-enable on a webhook switched off by an expired login', async () => {
       checkConnections.mockReturnValue(answer({ rows: [SIGN_IN] }));
       renderForm(
