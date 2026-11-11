@@ -24,10 +24,18 @@ vi.mock('@/[fsd]/features/schedule', () => ({
   toRunStatusLabel: () => '',
   toWebhookTypeLabel: () => '',
 }));
-vi.mock('../IconWithLabel', () => ({ default: ({ label }) => <span data-testid="entity-label">{label}</span> }));
+vi.mock('../IconWithLabel', () => ({
+  default: ({ label }) => <span data-testid="entity-label">{label}</span>,
+}));
 
 const column = { field: 'entity_name' };
-const renderCell = row => renderWithTheme(<ScheduleCell column={column} row={row} />);
+const renderCell = row =>
+  renderWithTheme(
+    <ScheduleCell
+      column={column}
+      row={row}
+    />,
+  );
 
 describe('ScheduleCell entity column', () => {
   afterEach(cleanup);

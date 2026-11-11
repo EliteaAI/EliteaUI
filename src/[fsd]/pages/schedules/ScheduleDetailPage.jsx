@@ -88,7 +88,7 @@ const ScheduleDetailPage = memo(props => {
         {...runProps}
       />
     ),
-    [schedule, runsView],
+    [schedule, runsView, targetId, isIndex],
   );
 
   if (isError)

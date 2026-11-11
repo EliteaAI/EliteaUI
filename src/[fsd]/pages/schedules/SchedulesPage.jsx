@@ -62,7 +62,11 @@ const SchedulesPage = memo(props => {
   const urlIndexName = searchParams.get('indexName');
   const urlEntity =
     urlEntityType && urlEntityId
-      ? { entityType: urlEntityType, entityId: urlEntityId, ...(urlIndexName ? { indexName: urlIndexName } : {}) }
+      ? {
+          entityType: urlEntityType,
+          entityId: urlEntityId,
+          ...(urlIndexName ? { indexName: urlIndexName } : {}),
+        }
       : null;
   // The editor link carries the entity name, so the chip names it even when the list has no rows
   const { state: locationState } = useLocation();

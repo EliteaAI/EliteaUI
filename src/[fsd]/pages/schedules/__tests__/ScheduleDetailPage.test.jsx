@@ -341,7 +341,11 @@ describe('ScheduleDetailPage', () => {
     render(<ScheduleDetailPage entityType="toolkit_index" />);
 
     expect(mocks.runsViewArgs).toEqual([9, 3, 'docs']);
-    expect(mocks.cardProps).toMatchObject({ applicationId: 3, indexName: 'docs', entityType: 'toolkit_index' });
+    expect(mocks.cardProps).toMatchObject({
+      applicationId: 3,
+      indexName: 'docs',
+      entityType: 'toolkit_index',
+    });
     expect(mocks.formProps.lockedEntity).toEqual({ type: 'toolkit_index', id: 3, indexName: 'docs' });
   });
 

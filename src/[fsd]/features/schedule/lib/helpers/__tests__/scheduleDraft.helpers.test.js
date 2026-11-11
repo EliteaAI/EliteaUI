@@ -294,7 +294,10 @@ describe('draft for a toolkit index', () => {
 
   it('keeps the toolkit and takes the drafted index of the same toolkit', () => {
     const draft = { entity_type: 'toolkit_index', toolkit_id: '8', index_name: 'wiki' };
-    expect(draftToFormValues(draft, indexValues, null)).toMatchObject({ toolkit_id: '8', index_name: 'wiki' });
+    expect(draftToFormValues(draft, indexValues, null)).toMatchObject({
+      toolkit_id: '8',
+      index_name: 'wiki',
+    });
   });
 
   it('keeps the current target where the draft clears it', () => {

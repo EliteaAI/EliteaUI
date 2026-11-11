@@ -70,7 +70,11 @@ vi.mock('@/[fsd]/features/schedule', async importOriginal => {
             setFieldValue: vi.fn(),
             fieldError: name => mocks.fieldErrors[name] ?? '',
           })}
-          {props.sidePanel?.({ values: mocks.sidePanelValues ?? initialValues, onTestRun: 'test-run', testRunPending: false })}
+          {props.sidePanel?.({
+            values: mocks.sidePanelValues ?? initialValues,
+            onTestRun: 'test-run',
+            testRunPending: false,
+          })}
           <button onClick={() => props.onCancel(initialValues)}>Cancel</button>
           <button onClick={() => props.onDraftTestRun({ name: 'Draft' })}>Test run</button>
           <button onClick={async () => onSaved(await onSubmit(toCreateBody(initialValues)))}>Save</button>

@@ -75,7 +75,17 @@ export const useScheduleRiskCheck = ({
       }
       return null;
     }
-  }, [checkRisk, projectId, entityType, applicationId, versionId, toolkitId, indexName, scheduleId, isWebhook]);
+  }, [
+    checkRisk,
+    projectId,
+    entityType,
+    applicationId,
+    versionId,
+    toolkitId,
+    indexName,
+    scheduleId,
+    isWebhook,
+  ]);
 
   useEffect(() => {
     runCheck();

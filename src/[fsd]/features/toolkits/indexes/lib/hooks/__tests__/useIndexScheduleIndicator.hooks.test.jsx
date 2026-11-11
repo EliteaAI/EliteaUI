@@ -55,7 +55,7 @@ describe('useIndexScheduleIndicator', () => {
       summary({ name: 'docs', scheduled: true }, { name: 'wiki', scheduled: false }),
     );
 
-    expect(renderIndicator('docs', indexesLoaded(7))).toEqual({ enabled: true, tooltip: 'Scheduled' });
+    expect(renderIndicator('docs', indexesLoaded(7))).toEqual({ enabled: true, tooltip: 'Has a schedule' });
   });
 
   it('shows nothing for an index the summary marks as not scheduled', () => {

@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
-import { MemoryRouter } from 'react-router-dom';
-
 import { enGB } from 'date-fns/locale';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material';
@@ -9,12 +8,11 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 
 import getDesignTokens from '@/MainTheme';
+import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
+import { ScheduleSettingsSection, StopOnDateField } from '@/[fsd]/shared/ui/schedule';
 import '@testing-library/jest-dom/vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-
-import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
-import { ScheduleSettingsSection, StopOnDateField } from '@/[fsd]/shared/ui/schedule';
 
 import ScheduleForm from '../ScheduleForm';
 
@@ -212,7 +210,9 @@ describe('ScheduleForm for a toolkit index', () => {
   });
 
   it('locks the toolkit and the index when the form is opened from the index page', () => {
-    renderForm(INDEX_VALUES, { lockedEntity: { type: 'toolkit_index', toolkit_id: '3', index_name: 'docs-index' } });
+    renderForm(INDEX_VALUES, {
+      lockedEntity: { type: 'toolkit_index', toolkit_id: '3', index_name: 'docs-index' },
+    });
     const whatToRun = section('schedule-section-what-to-run');
 
     expect(whatToRun.queryByTestId('schedule-type')).not.toBeInTheDocument();
@@ -247,7 +247,9 @@ describe('ScheduleForm for a toolkit index', () => {
 
       await save();
 
-      await waitFor(() => expect(section('schedule-section-settings').getAllByRole('alert').length).toBeGreaterThan(0));
+      await waitFor(() =>
+        expect(section('schedule-section-settings').getAllByRole('alert').length).toBeGreaterThan(0),
+      );
       expect(onSubmit).not.toHaveBeenCalled();
     });
 

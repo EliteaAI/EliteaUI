@@ -148,6 +148,7 @@ export const IndexRunInitiators = {
 
 export const RUN_TEST_OPERATION_TYPES = new Set(INDEX_SEARCH_TOOL_LABELS.keys());
 
+// The index summary only tells whether a schedule exists, not whether it is paused or expired
 export const IndexScheduleIndicatorLabel = {
-  enabled: 'Scheduled',
+  enabled: 'Has a schedule',
 };
