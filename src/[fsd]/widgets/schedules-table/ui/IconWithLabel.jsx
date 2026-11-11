@@ -4,7 +4,7 @@ import { Box } from '@mui/material';
 
 import { Icon, Tooltip } from '@/[fsd]/shared/ui';
 
-const ENTITY_TYPE_LABELS = { agent: 'Agent', pipeline: 'Pipeline' };
+const ENTITY_TYPE_LABELS = { agent: 'Agent', pipeline: 'Pipeline', toolkit_index: 'Toolkit Index' };
 
 // Plain object: every row shares the same sx reference
 const iconWithLabelStyles = {
@@ -12,7 +12,8 @@ const iconWithLabelStyles = {
   icon: { display: 'flex', flexShrink: 0 },
 };
 
-const IconWithLabel = memo(({ type, label }) => {
+const IconWithLabel = memo(props => {
+  const { type, label } = props;
   const typeLabel = ENTITY_TYPE_LABELS[type] ?? type;
 
   return (

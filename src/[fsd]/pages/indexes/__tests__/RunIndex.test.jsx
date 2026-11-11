@@ -36,8 +36,6 @@ vi.mock('@/[fsd]/features/toolkits/indexes/model', async importOriginal => ({
   selectIndexesList: () => served.indexesList,
 }));
 
-vi.mock('@/[fsd]/features/toolkits/indexes/api', () => ({ useGetIndexScheduleQuery: vi.fn() }));
-
 vi.mock('@/[fsd]/features/toolkits/indexes/lib/hooks', () => ({
   useIndexesListPolling: () => ({ refetch: vi.fn() }),
 }));

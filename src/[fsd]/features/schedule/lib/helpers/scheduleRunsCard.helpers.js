@@ -19,10 +19,12 @@ const newestFirst = (a, b) => compareRunTimestamp(b.started_at, a.started_at) ||
 export const mergeRuns = (savedRuns, draftRuns, baselineDraftId) =>
   [...savedRuns, ...draftRuns.filter(run => run.id > baselineDraftId)].sort(newestFirst);
 
-// "Version base · 10s · 1,704 tokens · $0.0024": the facts of a run in one line; a missing figure is left out
+// "Version base · 10s · 1,704 tokens · $0.0024": the facts of a run in one line; a missing figure is left out.
+// A toolkit index run names its index in place of the version.
 export const describeRunFacts = run =>
   [
     run.version_label && `Version ${run.version_label}`,
+    run.index_name && `Index ${run.index_name}`,
     describeRunDuration(run),
     run.tokens != null && `${run.tokens.toLocaleString('en-US')} tokens`,
     run.cost_usd != null && formatRunCost(run.cost_usd),

@@ -7,7 +7,6 @@ import {
   BannerSeverity,
   BannerTitleMap,
   INDEX_ABANDONED_BANNER_MESSAGE,
-  INDEX_DATA_DISABLED_REASON,
   INDEX_FAILURE_BANNER_SUFFIX,
   INDEX_PARTIAL_BANNER_MESSAGE,
   INDEX_PARTIAL_BANNER_SUFFIX,
@@ -28,14 +27,11 @@ import {
   bannerOutlivesRun,
   bannerVariant,
   buildReindexStub,
-  findVisibleIndexSchedule,
   hasLiveRun,
   hasRetainedIndexData,
   indexBuildBlockedReason,
   indexListCounts,
   indexRunControls,
-  indexScheduleBlockedReason,
-  indexScheduleIndicator,
   indexSearchBlockedReason,
   indexSearchToolOptions,
   isAbandonedRun,
@@ -201,68 +197,6 @@ describe('indexBuildBlockedReason', () => {
   it('allows a rebuild when the toolkit restricts nothing, since that exposes every tool', () => {
     expect(indexBuildBlockedReason([])).toBeNull();
     expect(indexBuildBlockedReason(undefined)).toBeNull();
-  });
-});
-
-const scheduleState = over => ({
-  state: IndexStatuses.success,
-  hasSchedulePermission: true,
-  projectName: 'Private',
-  scheduleEnabled: false,
-  buildBlockedReason: null,
-  ...over,
-});
-
-describe('indexScheduleBlockedReason', () => {
-  it('allows scheduling a healthy index', () => {
-    expect(indexScheduleBlockedReason(scheduleState())).toBeNull();
-  });
-
-  it('blocks arming a schedule the toolkit could not run', () => {
-    expect(
-      indexScheduleBlockedReason(scheduleState({ buildBlockedReason: INDEX_DATA_DISABLED_REASON })),
-    ).toMatch(/Index data/);
-  });
-
-  it('keeps an armed schedule switchable off once builds become blocked', () => {
-    expect(
-      indexScheduleBlockedReason(
-        scheduleState({ scheduleEnabled: true, buildBlockedReason: INDEX_DATA_DISABLED_REASON }),
-      ),
-    ).toBeNull();
-  });
-
-  it('keeps an armed schedule switchable off from a state that forbids arming', () => {
-    expect(
-      indexScheduleBlockedReason(scheduleState({ scheduleEnabled: true, state: IndexStatuses.created })),
-    ).toBeNull();
-  });
-
-  it('still reports the reasons that outrank the armed-schedule escape hatch', () => {
-    expect(
-      indexScheduleBlockedReason(scheduleState({ scheduleEnabled: true, state: IndexStatuses.fail })),
-    ).toMatch(/stopped\/error state/);
-    expect(
-      indexScheduleBlockedReason(scheduleState({ scheduleEnabled: true, hasSchedulePermission: false })),
-    ).toMatch(/Insufficient permissions/);
-  });
-
-  it('allows scheduling a failed reindex whose previous data is still there to rebuild from', () => {
-    expect(
-      indexScheduleBlockedReason(scheduleState({ state: IndexStatuses.fail, hasRetainedData: true })),
-    ).toBeNull();
-  });
-
-  it('keeps a failure without retained data blocked', () => {
-    expect(
-      indexScheduleBlockedReason(scheduleState({ state: IndexStatuses.fail, hasRetainedData: false })),
-    ).toMatch(/stopped\/error state/);
-  });
-
-  it('keeps a stopped index blocked whatever data it retains', () => {
-    expect(
-      indexScheduleBlockedReason(scheduleState({ state: IndexStatuses.cancelled, hasRetainedData: true })),
-    ).toMatch(/stopped\/error state/);
   });
 });
 
@@ -1632,67 +1566,5 @@ describe('isReclaimableRun', () => {
   it('tolerates a missing index or metadata', () => {
     expect(isReclaimableRun(undefined)).toBe(false);
     expect(isReclaimableRun({})).toBe(false);
-  });
-});
-
-describe('findVisibleIndexSchedule', () => {
-  const own = { cron: '0 1 * * *' };
-  const team = { cron: '0 2 * * *' };
-  const someoneElse = { cron: '0 3 * * *' };
-
-  it("prefers the user's own schedule over the team one", () => {
-    const scheduler = { docs: { schedules: { 5: own, '-1': team } } };
-
-    expect(findVisibleIndexSchedule(scheduler, 'docs', 5)).toEqual({ ownerId: 5, schedule: own });
-  });
-
-  it('falls back to the team schedule', () => {
-    const scheduler = { docs: { schedules: { '-1': team } } };
-
-    expect(findVisibleIndexSchedule(scheduler, 'docs', 5)).toEqual({ ownerId: -1, schedule: team });
-  });
-
-  it("never shows another user's private schedule", () => {
-    const scheduler = { docs: { schedules: { 9: someoneElse } } };
-
-    expect(findVisibleIndexSchedule(scheduler, 'docs', 5)).toBeNull();
-  });
-
-  it('returns null for an index or toolkit with no schedules', () => {
-    expect(findVisibleIndexSchedule({ docs: { schedules: { 5: own } } }, 'other', 5)).toBeNull();
-    expect(findVisibleIndexSchedule({ docs: {} }, 'docs', 5)).toBeNull();
-    expect(findVisibleIndexSchedule(undefined, 'docs', 5)).toBeNull();
-  });
-});
-
-describe('indexScheduleIndicator', () => {
-  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const schedule = over => ({ cron: '0 2 * * *', timezone: browserTimezone, enabled: true, ...over });
-
-  it('describes an enabled schedule', () => {
-    expect(indexScheduleIndicator(schedule())).toEqual({ enabled: true, tooltip: 'Scheduled: At 02:00' });
-  });
-
-  it('marks a schedule that is turned off', () => {
-    expect(indexScheduleIndicator(schedule({ enabled: false }))).toEqual({
-      enabled: false,
-      tooltip: 'Schedule is off: At 02:00',
-    });
-  });
-
-  it('marks a schedule the backend turned off at expiry', () => {
-    expect(indexScheduleIndicator(schedule({ enabled: false, expired: true }))).toEqual({
-      enabled: false,
-      tooltip: 'Schedule expired: At 02:00',
-    });
-  });
-
-  it('reads a re-enabled schedule as scheduled even if it still carries the expired flag', () => {
-    expect(indexScheduleIndicator(schedule({ expired: true })).tooltip).toBe('Scheduled: At 02:00');
-  });
-
-  it('shows nothing where the index page would say the schedule is not configured', () => {
-    expect(indexScheduleIndicator(undefined)).toBeNull();
-    expect(indexScheduleIndicator(schedule({ cron: '' }))).toBeNull();
   });
 });

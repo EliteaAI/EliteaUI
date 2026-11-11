@@ -148,12 +148,7 @@ export const IndexRunInitiators = {
 
 export const RUN_TEST_OPERATION_TYPES = new Set(INDEX_SEARCH_TOOL_LABELS.keys());
 
-export const IndexCronDefault = '0 0 * * 6';
-
-export const TEAM_SCHEDULE_OWNER_ID = -1;
-
+// The index summary only tells whether a schedule exists, not whether it is paused or expired
 export const IndexScheduleIndicatorLabel = {
-  enabled: 'Scheduled',
-  off: 'Schedule is off',
-  expired: 'Schedule expired',
+  enabled: 'Has a schedule',
 };

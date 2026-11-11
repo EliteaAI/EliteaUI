@@ -30,6 +30,18 @@ describe('IconWithLabel', () => {
     expect(screen.getByText('Report pipeline')).toBeInTheDocument();
   });
 
+  it('names a toolkit index icon "Toolkit Index" and draws the toolkit_index icon', () => {
+    renderWithTheme(
+      <IconWithLabel
+        type="toolkit_index"
+        label="Docs"
+      />,
+    );
+    expect(screen.getByRole('img', { name: 'Toolkit Index' })).toBeInTheDocument();
+    expect(screen.getByTestId('icon-toolkit_index')).toBeInTheDocument();
+    expect(screen.getByText('Docs')).toBeInTheDocument();
+  });
+
   it('falls back to the raw type for an unknown entity type', () => {
     renderWithTheme(
       <IconWithLabel

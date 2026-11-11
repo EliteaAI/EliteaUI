@@ -1,22 +1,20 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
-import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 import { Box, Typography } from '@mui/material';
 
 import { useConversationTranscript } from '@/[fsd]/entities/run-history/lib/hooks';
-import { useCredentialLabel } from '@/[fsd]/features/credentials/lib/hooks';
+import { TOOLKIT_INDEX_TYPE } from '@/[fsd]/entities/schedule';
 import { McpAuthModal, useMcpAuthModal } from '@/[fsd]/features/mcp';
 import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
+import { useToolkitChat } from '@/[fsd]/features/toolkits';
 import {
   useDeleteIndexItemMutation,
   useSaveIndexConfigurationMutation,
-  useUpdateIndexScheduleMutation,
 } from '@/[fsd]/features/toolkits/indexes/api';
 import {
-  IndexCronDefault,
   IndexDetailsTabs,
   IndexStatuses,
   IndexesToolsEnum,
@@ -31,29 +29,22 @@ import {
 import {
   bannerOutlivesRun,
   bannerVariant,
-  findVisibleIndexSchedule,
   hasRetainedIndexData,
   indexBuildBlockedReason,
   indexRunControls,
-  indexScheduleBlockedReason,
   indexSearchBlockedReason,
   shouldDropIndexStateOverride,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
-import { findLastFinishedRunTimestamp } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexHistoryRow.helpers';
 import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
-import { selectToolkitScheduler } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
-import { IndexActivityPanel, IndexScheduleModal, RunIndexBanner } from '@/[fsd]/features/toolkits/indexes/ui';
+import { IndexActivityPanel, RunIndexBanner } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
-import { useGetCurrentToolkitSchemas, useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
-import { NavigationHelpers, ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
+import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
-import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
-import { useDeleteIndexScheduleMutation } from '@/api';
-import { PERMISSIONS, ROLES, WELCOME_MESSAGE_ID } from '@/common/constants';
-import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
+import { EntitySchedulesSection } from '@/[fsd]/widgets/entity-schedules-section';
+import { ROLES, WELCOME_MESSAGE_ID } from '@/common/constants';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import RouteDefinitions from '@/routes';
@@ -64,15 +55,6 @@ import IndexDetailsFooterBand from './IndexDetailsFooterBand';
 import IndexDetailsLeftBand from './IndexDetailsLeftBand';
 import IndexDetailsTabsBand from './IndexDetailsTabsBand';
 import RunIndexGeneralSection from './RunIndexGeneralSection';
-import RunIndexScheduleContent from './RunIndexScheduleContent';
-
-const SCHEDULE_DATE_FORMAT = {
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-};
 
 const RunIndexPanel = memo(props => {
   const {
@@ -90,7 +72,7 @@ const RunIndexPanel = memo(props => {
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
   const { toastSuccess, toastError } = useToast();
-  const { values, initialValues } = useFormikContext();
+  const { values } = useFormikContext();
 
   const [activeTab, setActiveTab] = useState(IndexDetailsTabs.activity);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -99,20 +81,8 @@ const RunIndexPanel = memo(props => {
   const [savedConfig, setSavedConfig] = useState(null);
   const [localMetaOverride, setLocalMetaOverride] = useState(null);
   const overrideObservedAtRef = useRef(null);
-  const [deleteScheduleOpen, setDeleteScheduleOpen] = useState(false);
 
-  const { id: userId, permissions: userPermissions } = useSelector(state => state.user);
-  const currentProjectName = useSelector(state => state.settings.project.name);
-  const toolkitScheduler = useSelector(selectToolkitScheduler);
-  const [updateIndexSchedule] = useUpdateIndexScheduleMutation();
   const [saveIndexConfiguration, { isLoading: isSavingConfig }] = useSaveIndexConfigurationMutation();
-  const [deleteIndexSchedule] = useDeleteIndexScheduleMutation();
-
-  const visibleSchedule = useMemo(
-    () => findVisibleIndexSchedule(toolkitScheduler, indexName, userId),
-    [toolkitScheduler, indexName, userId],
-  );
-  const scheduleData = useMemo(() => visibleSchedule?.schedule ?? {}, [visibleSchedule]);
 
   const configSchema = useGetSelectedToolSchema({
     toolkitType: values.type,
@@ -174,29 +144,6 @@ const RunIndexPanel = memo(props => {
 
   const [deleteIndex, { isLoading: isDeleting }] = useDeleteIndexItemMutation();
 
-  const { toolkitSchemas } = useGetCurrentToolkitSchemas({ isMCP: false });
-  const toolkitType = values?.type || '';
-  const toolkitSchema = useMemo(
-    () => convertToolkitSchema(toolkitSchemas?.[toolkitType]),
-    [toolkitSchemas, toolkitType],
-  );
-
-  const [credentialsKey, credentialsData] = useMemo(
-    () =>
-      Object.entries(toolkitSchema?.properties || {}).find(
-        // eslint-disable-next-line no-unused-vars
-        ([_key, prop]) => prop.section?.includes('credentials') ?? null,
-      ) ?? [null, null],
-    [toolkitSchema],
-  );
-
-  const savedToolkitCredentials = credentialsKey ? (initialValues?.settings?.[credentialsKey] ?? null) : null;
-
-  const scheduleCredentialsLabel = useCredentialLabel({
-    credential: scheduleData.credentials,
-    type: credentialsData?.configuration_types?.[0],
-  });
-
   const effectiveState = localMetaOverride?.state ?? index?.metadata?.state;
   // The panel's own notion of "running", which is the row's state OR an active chat run;
   // `chatIsIndexing` keeps the hook's narrower flag distinguishable from it.
@@ -243,125 +190,6 @@ const RunIndexPanel = memo(props => {
 
   const retainsIndexedData = hasRetainedIndexData(index?.metadata);
 
-  const schedulingTooltipMessage = useMemo(
-    () =>
-      indexScheduleBlockedReason({
-        state: effectiveState,
-        hasSchedulePermission:
-          !Array.isArray(userPermissions) || userPermissions.includes(PERMISSIONS.index.schedule),
-        projectName: currentProjectName,
-        scheduleEnabled: scheduleData.enabled,
-        buildBlockedReason,
-        hasRetainedData: retainsIndexedData,
-      }),
-    [
-      buildBlockedReason,
-      effectiveState,
-      userPermissions,
-      scheduleData.enabled,
-      currentProjectName,
-      retainsIndexedData,
-    ],
-  );
-
-  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
-  const [scheduleModalIsEdit, setScheduleModalIsEdit] = useState(false);
-
-  const handleChangeIndexSchedule = useCallback(
-    async (data, enabling) => {
-      try {
-        await updateIndexSchedule({
-          ...data,
-          projectId,
-          toolkitId,
-          indexName,
-          // Keep the timezone the cron is expressed in. Only the modal converts the cron, and it passes
-          // its own timezone along; enabling or disabling must not reinterpret the stored times.
-          timezone: data.timezone || ScheduleHelpers.getBrowserTimezone(),
-        }).unwrap();
-        if (enabling) {
-          toastSuccess(`Schedule has been successfully ${data.enabled ? 'enabled' : 'disabled'}.`);
-        } else {
-          toastSuccess(`Schedule has been successfully ${scheduleModalIsEdit ? 'updated' : 'created'}.`);
-        }
-      } catch {
-        if (enabling) {
-          toastError(`Failed to ${data.enabled ? 'enable' : 'disable'} schedule.`);
-        } else {
-          toastError(`Failed to ${scheduleModalIsEdit ? 'update' : 'create'} schedule.`);
-        }
-      }
-    },
-    [updateIndexSchedule, projectId, toolkitId, indexName, toastSuccess, scheduleModalIsEdit, toastError],
-  );
-  const scheduleSummary = useMemo(() => {
-    if (!scheduleData.cron) return null;
-    const cron = scheduleData.cron || IndexCronDefault;
-    // Convert cron time to browser timezone for display
-    return ScheduleHelpers.getCronSummaryInBrowserTimezone(cron, scheduleData.timezone);
-  }, [scheduleData.cron, scheduleData.timezone]);
-
-  const scheduleTimezoneHint = useMemo(() => {
-    const scheduleTz = scheduleData.timezone;
-    if (!scheduleTz) return null;
-
-    try {
-      const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      if (scheduleTz === browserTz) return null;
-      // Only show the browser timezone (where it's shown), not the original scheduled timezone
-      return `Shown: ${browserTz}`;
-    } catch {
-      return null;
-    }
-  }, [scheduleData.timezone]);
-
-  const scheduleNextRun = useMemo(() => {
-    if (!scheduleData.cron) return null;
-    const cron = scheduleData.cron || IndexCronDefault;
-    const date = ScheduleHelpers.getNextCronRunInTimezone(cron, scheduleData.timezone);
-
-    if (!date) return null;
-    return date.toLocaleString(undefined, SCHEDULE_DATE_FORMAT);
-  }, [scheduleData.cron, scheduleData.timezone]);
-
-  const scheduleLastRun = useMemo(() => {
-    const finishedOn = findLastFinishedRunTimestamp(index?.metadata?.history);
-    if (finishedOn === null) return null;
-    return new Date(finishedOn * 1000).toLocaleString(undefined, SCHEDULE_DATE_FORMAT);
-  }, [index?.metadata?.history]);
-
-  const scheduleExpiration = useMemo(() => {
-    // An absent value means the scheduler has not priced this schedule yet, not that it
-    // never expires.
-    if (!scheduleData.expires_at) return null;
-    const date = new Date(scheduleData.expires_at);
-    if (Number.isNaN(date.getTime())) return null;
-    return {
-      text: date.toLocaleString(undefined, SCHEDULE_DATE_FORMAT),
-      // Read, never inferred: a schedule its owner switched off by hand keeps its deadline too,
-      // so `!enabled && deadline passed` describes that one just as well as a retired one. The
-      // scheduler sets this flag only where it did the switching off itself.
-      expired: Boolean(scheduleData.expired),
-    };
-  }, [scheduleData.expires_at, scheduleData.expired]);
-
-  const handleApplyScheduleModal = useCallback(
-    (cron, credentials) => {
-      handleChangeIndexSchedule(
-        {
-          ...scheduleData,
-          cron,
-          credentials,
-          enabled: scheduleModalIsEdit ? scheduleData.enabled : true,
-          // The modal edits the cron in the viewer's timezone, so the schedule now belongs to it.
-          timezone: ScheduleHelpers.getBrowserTimezone(),
-        },
-        false,
-      );
-    },
-    [handleChangeIndexSchedule, scheduleData, scheduleModalIsEdit],
-  );
-
   useEffect(() => {
     if (shouldDropIndexStateOverride(localMetaOverride?.state, index?.metadata?.state, rowReadAfterOverride))
       setLocalMetaOverride(null);
@@ -394,34 +222,6 @@ const RunIndexPanel = memo(props => {
       toastError('Failed to delete index');
     }
   }, [deleteIndex, index, navigate, projectId, tab, toastError, toastSuccess, toolkitId]);
-
-  const closeDeleteSchedule = useCallback(() => setDeleteScheduleOpen(false), []);
-
-  const scheduleOwnerUserId = visibleSchedule?.ownerId ?? userId;
-
-  const confirmDeleteSchedule = useCallback(async () => {
-    setDeleteScheduleOpen(false);
-    try {
-      await deleteIndexSchedule({
-        toolkitId,
-        projectId,
-        indexName: index.metadata?.collection ?? indexName,
-        userId: scheduleOwnerUserId,
-      }).unwrap();
-      toastSuccess('Schedule has been successfully deleted.');
-    } catch {
-      toastError('Failed to delete schedule.');
-    }
-  }, [
-    deleteIndexSchedule,
-    index.metadata?.collection,
-    indexName,
-    projectId,
-    scheduleOwnerUserId,
-    toastError,
-    toastSuccess,
-    toolkitId,
-  ]);
 
   const configFields = useMemo(() => Object.keys(configSchema?.properties || {}), [configSchema]);
 
@@ -581,48 +381,6 @@ const RunIndexPanel = memo(props => {
     ],
   );
 
-  const onAddSchedule = useCallback(() => {
-    setScheduleModalIsEdit(false);
-    setScheduleModalOpen(true);
-  }, []);
-
-  const onEditSchedule = useCallback(() => {
-    setScheduleModalIsEdit(true);
-    setScheduleModalOpen(true);
-  }, []);
-
-  const onDeleteSchedule = useCallback(() => {
-    setDeleteScheduleOpen(true);
-  }, []);
-
-  const scheduleAccordionItems = [
-    {
-      title: 'Schedule',
-      testId: 'index-schedule-accordion-summary',
-      content: (
-        <RunIndexScheduleContent
-          enabled={scheduleData.enabled}
-          scheduleSummary={scheduleSummary}
-          timezoneHint={scheduleTimezoneHint}
-          lastRun={scheduleLastRun}
-          // A retired schedule will not fire again until it is turned back on, so showing the
-          // cron's next occurrence next to "Expired" would promise a run that cannot happen.
-          nextRun={scheduleExpiration?.expired ? null : scheduleNextRun}
-          expiresAt={scheduleExpiration?.text}
-          expired={Boolean(scheduleExpiration?.expired)}
-          credentialsTitle={scheduleCredentialsLabel}
-          onAddSchedule={onAddSchedule}
-          onEdit={onEditSchedule}
-          onDelete={onDeleteSchedule}
-          onToggle={() =>
-            handleChangeIndexSchedule({ ...scheduleData, enabled: !scheduleData.enabled }, true)
-          }
-          disabledReason={schedulingTooltipMessage}
-          toolkitName={toolkitName}
-        />
-      ),
-    },
-  ];
   const liveMessages = useMemo(
     () => chatHistory?.filter(msg => msg.id !== WELCOME_MESSAGE_ID),
     [chatHistory],
@@ -717,11 +475,11 @@ const RunIndexPanel = memo(props => {
                 reindexStats={reindexStats}
               />
             </Box>
-            <BasicAccordion
-              card
-              accordionSX={styles.accordion}
-              accordionDetailsSX={styles.accordionDetails}
-              items={scheduleAccordionItems}
+            <EntitySchedulesSection
+              entityType={TOOLKIT_INDEX_TYPE}
+              entityId={toolkitId}
+              indexName={indexName}
+              entityName={toolkitName}
             />
           </Box>
         </Box>
@@ -776,14 +534,6 @@ const RunIndexPanel = memo(props => {
       </Box>
 
       <Modal.DeleteEntityModal
-        name="schedule"
-        shouldRequestInputName={false}
-        open={deleteScheduleOpen}
-        onClose={closeDeleteSchedule}
-        onConfirm={confirmDeleteSchedule}
-      />
-
-      <Modal.DeleteEntityModal
         name={index?.metadata?.collection || indexName}
         shouldRequestInputName
         open={deleteOpen}
@@ -810,18 +560,6 @@ const RunIndexPanel = memo(props => {
         alarm={false}
         titleIcon={ModalConstants.MODAL_ICON_TYPE.info}
       />
-      <IndexScheduleModal
-        open={scheduleModalOpen}
-        onClose={() => setScheduleModalOpen(false)}
-        onSubmit={handleApplyScheduleModal}
-        cron={scheduleData.cron ?? IndexCronDefault}
-        timezone={scheduleData.timezone}
-        credentials={scheduleData.credentials}
-        toolkitCredentials={savedToolkitCredentials}
-        credentialsData={credentialsData}
-        isEdit={scheduleModalIsEdit}
-        toolkitName={toolkitName}
-      />
       <McpAuthModal {...getModalProps()} />
     </>
   );
@@ -843,12 +581,6 @@ const runIndexPanelStyles = () => ({
     minHeight: 0,
     borderRight: ({ palette }) => `0.0625rem solid ${palette.border.default}`,
     background: ({ palette }) => palette.components.indexDetail.background.left,
-  },
-  accordion: {
-    background: 'transparent',
-  },
-  accordionDetails: {
-    padding: '1rem 0.75rem 0.75rem',
   },
   leftBody: ({ palette }) => ({
     flex: 1,
