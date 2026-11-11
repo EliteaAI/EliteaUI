@@ -436,24 +436,21 @@ describe('ScheduleWaitingCard', () => {
     renderCard();
 
     expect(screen.getByRole('status')).toHaveTextContent(
-      'This run will not start until you approve it. Paused for approval: create_pull_request',
+      'This run is paused before a sensitive tool call. Paused for approval: create_pull_request',
     );
     expect(screen.queryByText('Action needed: this run is waiting for you')).not.toBeInTheDocument();
     expect(button('Approve')).toBeEnabled();
     expect(button('Reject')).toBeEnabled();
   });
 
-  it('lists the sensitive tools to approve before the first call and the tools that may still ask', () => {
+  it('shows no pre-start list and keeps the plain pause text for an event of the earlier pre-start kind', () => {
     mocks.detail = {
       ...run,
       events: [
         paused({
           need: 'tools',
-          text: 'Paused for approval before the first tool call: github · create_pull_request, github · delete_file',
-          tools: [
-            { toolkit: 'github', tool: 'create_pull_request' },
-            { toolkit: 'github', tool: 'delete_file' },
-          ],
+          text: 'Paused for approval before the first tool call: github · delete_file',
+          tools: [{ toolkit: 'github', tool: 'delete_file' }],
           may_ask: [{ toolkit: 'jira', tool: 'create_issue' }],
         }),
       ],
@@ -461,22 +458,21 @@ describe('ScheduleWaitingCard', () => {
     renderCard();
 
     expect(screen.getByRole('status')).toHaveTextContent(
-      'This run will not start until you approve it. Before the first tool call, this run needs your approval for these sensitive tools.',
+      'This run is paused before a sensitive tool call. Paused for approval before the first tool call: github · delete_file',
     );
-    const items = within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem');
-    expect(items.map(item => item.textContent)).toEqual([
-      'github · create_pull_request',
-      'github · delete_file',
-    ]);
-    expect(screen.getByTestId('schedule-waiting-may-ask')).toHaveTextContent(
-      'These tools from the global list may still ask during the run: jira · create_issue.',
-    );
+    expect(screen.queryByTestId('schedule-waiting-tools')).not.toBeInTheDocument();
     expect(button('Approve')).toBeEnabled();
-    expect(button('Reject')).toBeEnabled();
   });
 
   it.each([
-    ['one tool', [['Artifact', 'create_file']], ['Artifact · create_file']],
+    [
+      'two tools',
+      [
+        ['Artifact', 'create_file'],
+        ['Artifact', 'delete_file'],
+      ],
+      ['Artifact · create_file', 'Artifact · delete_file'],
+    ],
     [
       'three tools of two toolkits',
       [
@@ -491,7 +487,6 @@ describe('ScheduleWaitingCard', () => {
       ...run,
       events: [
         paused({
-          need: 'tools',
           tools: pairs.map(([toolkit, tool]) => ({ toolkit, tool })),
         }),
       ],
@@ -506,30 +501,26 @@ describe('ScheduleWaitingCard', () => {
     mocks.isOwner = false;
     mocks.detail = {
       ...run,
-      events: [paused({ need: 'tools', tools: [{ toolkit: 'ADO', tool: 'list_indexes' }] })],
+      events: [
+        paused({
+          tools: [
+            { toolkit: 'ADO', tool: 'list_indexes' },
+            { toolkit: 'ADO', tool: 'delete_index' },
+          ],
+        }),
+      ],
     };
     renderCard();
 
-    expect(within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem')).toHaveLength(1);
+    expect(within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem')).toHaveLength(2);
     expect(button('Approve')).toBeDisabled();
     expect(button('Reject')).toBeDisabled();
-  });
-
-  it('shows no may-ask line when no tool may still ask', () => {
-    mocks.detail = {
-      ...run,
-      events: [paused({ need: 'tools', tools: [{ toolkit: 'github', tool: 'delete_file' }] })],
-    };
-    renderCard();
-
-    expect(screen.getByTestId('schedule-waiting-tools')).toBeInTheDocument();
-    expect(screen.queryByTestId('schedule-waiting-may-ask')).not.toBeInTheDocument();
   });
 
   it('lists a repeated tool pair once per entry without a duplicate key warning', () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const pair = { toolkit: 'github', tool: 'delete_file' };
-    mocks.detail = { ...run, events: [paused({ need: 'tools', tools: [pair, pair] })] };
+    mocks.detail = { ...run, events: [paused({ tools: [pair, pair] })] };
     renderCard();
 
     expect(within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem')).toHaveLength(2);
@@ -556,7 +547,7 @@ describe('ScheduleWaitingCard', () => {
     expect(items.map(item => item.textContent)).toEqual(['github · create_issue', 'github · delete_issue']);
     const notice = screen.getByRole('status');
     expect(notice).toHaveTextContent(
-      'This run will not start until you approve it. This run is paused and needs your approval for these sensitive tools.',
+      'This run is paused before a sensitive tool call. It needs your approval for these sensitive tools.',
     );
     expect(notice).not.toHaveTextContent('create_issue');
   });
@@ -568,7 +559,7 @@ describe('ScheduleWaitingCard', () => {
     ['53 tools, the text names 10', 53, 10, 50, '3 more'],
   ])('tells only the tools the list does not show for %s', (_title, total, named, listed, note) => {
     const { text, tools } = serverPause(total, named);
-    mocks.detail = { ...run, events: [paused({ need: 'tools', text, tools })] };
+    mocks.detail = { ...run, events: [paused({ text, tools })] };
     renderCard();
 
     expect(within(screen.getByTestId('schedule-waiting-tools')).getAllByRole('listitem')).toHaveLength(
@@ -594,12 +585,77 @@ describe('ScheduleWaitingCard', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Paused for approval: github · create_issue');
   });
 
+  it('offers Approve all tools for this run on the plain card of a run with a chat', () => {
+    mocks.conversation = { conversationUuid: 'conv-uuid', pausedMessageId: 'msg-7' };
+    mocks.detail = {
+      ...run,
+      conversation_id: 7,
+      events: [paused({ text: 'Paused for approval: github · create_issue' })],
+    };
+    renderCard();
+
+    expect(screen.getByRole('checkbox', { name: 'Approve all tools for this run' })).toBeEnabled();
+  });
+
+  it.each([
+    ['the server field is missing (an older core)', {}, true],
+    ['the server says it is available', { can_approve_all: true }, true],
+    ['the server says it is refused (setting off or not the run actor)', { can_approve_all: false }, false],
+  ])('shows the approve all box when %s', (_title, field, shown) => {
+    mocks.conversation = { conversationUuid: 'conv-uuid', pausedMessageId: 'msg-7' };
+    mocks.detail = {
+      ...run,
+      ...field,
+      conversation_id: 7,
+      events: [paused({ text: 'Paused for approval: github · create_issue' })],
+    };
+    renderCard();
+
+    expect(screen.queryByTestId('schedule-approve-all') !== null).toBe(shown);
+    expect(button('Approve')).toBeEnabled();
+  });
+
+  it('offers no approve all for a credential pause or a plain pause of a run without a chat', () => {
+    mocks.conversation = { conversationUuid: 'conv-uuid' };
+    mocks.detail = { ...mocks.detail, conversation_id: 7 };
+    renderCard();
+    expect(screen.queryByTestId('schedule-approve-all')).not.toBeInTheDocument();
+    cleanup();
+
+    mocks.detail = { ...run, events: [paused({ text: 'Paused for approval: github · create_issue' })] };
+    renderCard();
+    expect(screen.queryByTestId('schedule-approve-all')).not.toBeInTheDocument();
+  });
+
+  it('reads once, without a tool-call claim, when the run has no pause text and no tools', () => {
+    mocks.detail = { ...run, events: [paused({ text: undefined })] };
+    renderCard();
+
+    const text = screen.getByRole('status').textContent;
+    expect(text).toContain('This run is paused and waits for your decision.');
+    expect(text).not.toContain('sensitive tool call');
+    expect(text.match(/This run is paused/g)).toHaveLength(1);
+  });
+
+  it('names the single tool when the pause has no text', () => {
+    mocks.detail = {
+      ...run,
+      events: [paused({ text: undefined, tools: [{ toolkit: 'github', tool: 'delete_file' }] })],
+    };
+    renderCard();
+
+    const text = screen.getByRole('status').textContent;
+    expect(text).toContain(
+      'This run is paused before a sensitive tool call. Paused for approval: github · delete_file',
+    );
+    expect(text.match(/This run is paused/g)).toHaveLength(1);
+  });
+
   it('renders an older pause without tools as before', () => {
     mocks.detail = { ...run, events: [paused({ text: 'Paused for approval: create_pull_request' })] };
     renderCard();
 
     expect(screen.queryByTestId('schedule-waiting-tools')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('schedule-waiting-may-ask')).not.toBeInTheDocument();
   });
 
   it('renders a Test run without a schedule from the entity and the run version', () => {

@@ -2,12 +2,13 @@ import { memo, useCallback, useId, useMemo, useState } from 'react';
 
 import { useDispatch } from 'react-redux';
 
-import { Box, Typography } from '@mui/material';
+import { Box, FormControlLabel, Typography } from '@mui/material';
 
 import { SCHEDULE_RUNS_TAG, scheduleApi } from '@/[fsd]/entities/schedule';
 import { getToolkitAuthorizationContext } from '@/[fsd]/features/chat';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
+import { BaseCheckbox } from '@/[fsd]/shared/ui/checkbox';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import ArrowForwardIcon from '@/assets/icons/arrow-forward.svg?react';
 
@@ -34,6 +35,10 @@ const PAGE_BUTTON_PROPS = {
  * `blockedReason` keeps Approve off and names why. `compact` is the form for the Action needed card: no
  * left offset, no sign-in button and no expiry text, because the card shows them itself.
  * `plain` is the page button look (primary Approve, secondary Reject, no icons) of the short waiting notice.
+ * Only the plain form of a sensitive-tool pause with a chat offers "Approve all tools for this run"; the tick
+ * rides on Approve, Reject ignores it, and it is cleared when the decision went through. A failed request keeps
+ * it, so a retry still approves all. `approveAllAllowed` is false when the
+ * server refuses it (the project setting is off or the caller is not the run's actor): the box is then hidden.
  */
 const ScheduleRunApproval = memo(props => {
   const {
@@ -48,12 +53,16 @@ const ScheduleRunApproval = memo(props => {
     blockedReason,
     compact = false,
     plain = false,
+    approveAllAllowed = true,
   } = props;
 
   const dispatch = useDispatch();
   const signInNoteId = useId();
   const blockedNoteId = useId();
+  const approveAllId = useId();
   const [deciding, setDeciding] = useState(false);
+  // The card keys this component by run, so the tick resets for another run
+  const [approveAllChecked, setApproveAllChecked] = useState(false);
   const authContext = useMemo(
     () => (authAction ? getToolkitAuthorizationContext(authAction) : null),
     [authAction],
@@ -62,12 +71,15 @@ const ScheduleRunApproval = memo(props => {
   // The token store answers for a sign-in done here or in another tab
   const { isLoggedIn: signedIn } = useMcpTokenChange({ serverUrl });
   const now = useNow();
-  // A decision changes the run on the server, so the run and the list load again
-  const onDecided = useCallback(
-    () => dispatch(scheduleApi.util.invalidateTags([SCHEDULE_RUNS_TAG])),
-    [dispatch],
-  );
+  // A decision changes the run on the server, so the run and the list load again. The hook calls this only
+  // when the run was decided or the server answered that it changed; a failed request leaves the tick as it is
+  const onDecided = useCallback(() => {
+    setApproveAllChecked(false);
+    return dispatch(scheduleApi.util.invalidateTags([SCHEDULE_RUNS_TAG]));
+  }, [dispatch]);
   const onHitlResume = useWaitingRunDecision({ schedule, run, onDecided });
+  const canApproveAll = plain && hasChat && !authAction && approveAllAllowed;
+  const approveAll = canApproveAll && approveAllChecked;
 
   const decide = useCallback(
     async action => {
@@ -78,6 +90,7 @@ const ScheduleRunApproval = memo(props => {
           conversationUuid,
           runId,
           messageId: pausedMessageId,
+          ...(action === 'approve' && approveAll && { approveAll: true }),
           ...(authAction && {
             authRequest: {
               authorizationRequestId: authAction.authorizationRequestId,
@@ -91,8 +104,9 @@ const ScheduleRunApproval = memo(props => {
         setDeciding(false);
       }
     },
-    [onHitlResume, conversationUuid, runId, pausedMessageId, authAction, serverUrl],
+    [onHitlResume, conversationUuid, runId, pausedMessageId, authAction, serverUrl, approveAll],
   );
+  const handleApproveAllChange = useCallback(event => setApproveAllChecked(event.target.checked), []);
 
   // A run with a chat waits until its chat has loaded; a run without one (it waits for credentials) is ready
   const disabled = !onHitlResume || (hasChat && !conversationUuid) || deciding;
@@ -118,6 +132,31 @@ const ScheduleRunApproval = memo(props => {
           primary={needsSignIn}
           disabled={disabled}
         />
+      )}
+      {canApproveAll && (
+        <Box sx={styles.approveAll}>
+          <FormControlLabel
+            control={
+              <BaseCheckbox
+                checked={approveAll}
+                disabled={disabled}
+                onChange={handleApproveAllChange}
+                slotProps={{
+                  input: { 'data-testid': 'schedule-approve-all', 'aria-describedby': approveAllId },
+                }}
+              />
+            }
+            label={<Typography variant="bodyMedium">Approve all tools for this run</Typography>}
+          />
+          <Typography
+            id={approveAllId}
+            variant="bodySmall"
+            color="text.secondary"
+            sx={styles.approveAllHint}
+          >
+            The run should not ask again until it ends, also for tools it has not called yet.
+          </Typography>
+        </Box>
       )}
       <BaseBtn
         {...(needsSignIn ? buttonProps.secondary : buttonProps.primary)}
@@ -203,6 +242,8 @@ const scheduleRunApprovalStyles = () => ({
   },
   compact: { padding: 0 },
   note: { flexBasis: '100%' },
+  approveAll: { flexBasis: '100%', display: 'flex', flexDirection: 'column' },
+  approveAllHint: { paddingLeft: '2rem' },
   button: { width: 'auto !important' },
 });
 

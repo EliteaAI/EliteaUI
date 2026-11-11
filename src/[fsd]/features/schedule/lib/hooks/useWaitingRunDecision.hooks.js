@@ -20,8 +20,21 @@ import { getRunDeciderId } from '../helpers/waitingRun.helpers';
 // A run without a chat (`conversationUuid` empty) is decided through the schedule route with `runId`.
 // `authRequest` (from the sign-in pause) switches the call to the mcp_auth resume. It sends every stored token,
 // as the chat resume does, because the resumed run may call other signed-in servers.
+// `approveAll` (Approve all tools for this run) goes only with a sensitive-tool pause that has a chat: the
+// no-chat route and the sign-in resume never send it.
 // A 409 with `credential_missing` is not a stale run: the run still waits, so the server text is shown.
+// A 409 `approve_all_off` (the project does not allow Run without asking) and a 403 on an approve all (the caller
+// did not start the run) also leave the run waiting: the reason is shown and the list loads again, so the box hides.
 const CREDENTIAL_MISSING = 'credential_missing';
+const APPROVE_ALL_OFF = 'approve_all_off';
+const APPROVE_ALL_WEBHOOK = 'approve_all_webhook';
+const APPROVE_ALL_NOT_ACTOR = 'Only the person who started this run can approve all its tools.';
+
+// Only the webhook refusal has a server text that fits; any other 403 keeps the fixed sentence
+const getApproveAllRefusalText = data => {
+  const { code, error: serverText } = data || {};
+  return code === APPROVE_ALL_WEBHOOK && serverText ? serverText : APPROVE_ALL_NOT_ACTOR;
+};
 
 // A Test run has no schedule: the user who started it (`requested_by`) decides it, through the test run route.
 export const useWaitingRunDecision = ({ schedule, run, onDecided }) => {
@@ -34,7 +47,7 @@ export const useWaitingRunDecision = ({ schedule, run, onDecided }) => {
   const isTestRun = Boolean(run?.isDraftRun);
 
   const onHitlResume = useCallback(
-    async ({ action, conversationUuid, messageId, authRequest, runId }) => {
+    async ({ action, conversationUuid, messageId, authRequest, runId, approveAll }) => {
       try {
         if (!conversationUuid) {
           // A run that waits for credentials has no chat; a route without a chat decides it
@@ -54,12 +67,17 @@ export const useWaitingRunDecision = ({ schedule, run, onDecided }) => {
           conversationUuid,
           messageId,
           action,
+          ...(approveAll && !mcpAuth && { approveAll }),
           ...(mcpAuth && { mcpAuth }),
         }).unwrap();
         onDecided?.();
       } catch (error) {
-        if (error?.status === 409 && error?.data?.code === CREDENTIAL_MISSING) {
+        if (error?.status === 409 && [CREDENTIAL_MISSING, APPROVE_ALL_OFF].includes(error?.data?.code)) {
           toastError(error.data.error || buildErrorMessage(error));
+          if (error.data.code === APPROVE_ALL_OFF) onDecided?.();
+        } else if (error?.status === 403 && approveAll) {
+          toastError(getApproveAllRefusalText(error?.data));
+          onDecided?.();
         } else if (error?.status === 409) {
           toastInfo('The run no longer waits for approval.');
           onDecided?.();

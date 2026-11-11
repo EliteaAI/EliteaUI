@@ -1,4 +1,4 @@
-export const WAITING_NEED = { CREDENTIAL: 'credential', SIGN_IN: 'sign_in', TOOLS: 'tools' };
+export const WAITING_NEED = { CREDENTIAL: 'credential', SIGN_IN: 'sign_in' };
 
 const MORE_TEXT = /\(\+(\d+) more\)$/;
 
@@ -69,15 +69,13 @@ export const getPausedMoreCount = pausedEvent => {
 export const formatTool = ({ toolkit, tool }) => (toolkit ? `${toolkit}${TOOL_SEPARATOR}${tool}` : `${tool}`);
 
 /**
- * What a paused run waits for, read from its paused event: `{ need, toolkit, credential }`, or
- * `{ need, mayAsk }` for a run that waits for the sensitive tools to be approved before it starts.
+ * What a paused run waits for, read from its paused event: `{ need, toolkit, credential }`.
  * The server sends the structured fields `need`, `toolkit` and `credential`. A run paused before it did
  * has only the text, so the text is parsed as a fallback. `need` is undefined for any other pause.
  */
 export const getWaitingRunNeed = pausedEvent => {
   if (!pausedEvent) return {};
   const { need, toolkit, credential, text = '' } = pausedEvent;
-  if (need === WAITING_NEED.TOOLS) return { need, mayAsk: toToolList(pausedEvent.may_ask) };
   if (need === WAITING_NEED.CREDENTIAL || need === WAITING_NEED.SIGN_IN)
     return { need, toolkit: unquote(toolkit), credential: unquote(credential) };
 
@@ -178,9 +176,7 @@ export const describeNeed = ({ need, toolkit, credential }, pausedText, hasToolL
     return credential
       ? `Toolkit "${name}" has no usable credential "${credential}".`
       : `Toolkit "${name}" has no usable credential.`;
-  if (need === WAITING_NEED.TOOLS)
-    return 'Before the first tool call, this run needs your approval for these sensitive tools.';
-  if (hasToolList) return 'This run is paused and needs your approval for these sensitive tools.';
+  if (hasToolList) return 'It needs your approval for these sensitive tools.';
   return pausedText || 'This run is paused and waits for your decision.';
 };
 
