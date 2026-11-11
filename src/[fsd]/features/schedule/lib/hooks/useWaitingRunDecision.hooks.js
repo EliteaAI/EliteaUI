@@ -11,8 +11,12 @@ import { McpAuthHelpers } from '@/[fsd]/features/mcp';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { buildErrorMessage } from '@/common/utils';
 
-// Owner-only approve or reject of a waiting schedule run. Returns undefined for any other
-// user, so the run detail shows the buttons disabled. The server still checks the owner.
+import { getRunDeciderId } from '../helpers/waitingRun.helpers';
+
+// Approve or reject of a waiting run by the user the server names in `decider_id`: the schedule owner at the
+// start of a schedule or webhook run (also when an admin started it), the starter of a Test run. Any other user,
+// an admin included, gets undefined, so the run detail shows the buttons disabled. The server still checks the caller. This hook sends only approve, reject and the sign-in answers,
+// never text.
 // A run without a chat (`conversationUuid` empty) is decided through the schedule route with `runId`.
 // `authRequest` (from the sign-in pause) switches the call to the mcp_auth resume. It sends every stored token,
 // as the chat resume does, because the resumed run may call other signed-in servers.
@@ -77,6 +81,7 @@ export const useWaitingRunDecision = ({ schedule, run, onDecided }) => {
     ],
   );
 
-  const mayDecide = isTestRun ? run?.requested_by === userId : schedule?.owner?.id === userId;
+  const deciderId = getRunDeciderId(run, schedule);
+  const mayDecide = deciderId != null && deciderId === userId;
   return mayDecide ? onHitlResume : undefined;
 };

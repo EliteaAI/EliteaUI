@@ -12,7 +12,8 @@ import ExportIcon from '@/components/Icons/ExportIcon';
 import PersonIcon from '@/components/Icons/Person';
 import PlayIcon from '@/components/Icons/PlayIcon';
 
-import { ownerOnlyRunHint } from '../lib/helpers';
+import { runDeniedHint } from '../lib/helpers';
+import { useRunAsAdminHint } from '../lib/hooks/useRunAsAdminHint.hooks';
 import ChangeOwnerDialog from './ChangeOwnerDialog';
 import RotateSecretDialog from './RotateSecretDialog';
 import WebhookSampleRunDialog from './WebhookSampleRunDialog';
@@ -41,7 +42,8 @@ const ScheduleRowActions = memo(props => {
     hideToggle,
   } = props;
   const allowed = row.allowed_actions;
-  const runHint = ownerOnlyRunHint(row);
+  const runHint = runDeniedHint(row);
+  const runAsAdmin = useRunAsAdminHint(row);
   const [isOwnerDialogOpen, setIsOwnerDialogOpen] = useState(false);
   const openOwnerDialog = useCallback(() => setIsOwnerDialogOpen(true), []);
   const closeOwnerDialog = useCallback(() => setIsOwnerDialogOpen(false), []);
@@ -68,9 +70,9 @@ const ScheduleRowActions = memo(props => {
               sx={ICON_SX}
             />
           ),
-          // #7254: shown to an admin, disabled, with who can run it; no handler then
+          // Shown disabled with the reason when the viewer has no run right; no handler then
           disabled: !!runHint,
-          tooltip: runHint,
+          tooltip: runHint ?? runAsAdmin ?? undefined,
           onClick: runHint ? undefined : isWebhook ? openSampleDialog : onRun,
         },
         !hideEdit &&
@@ -149,6 +151,7 @@ const ScheduleRowActions = memo(props => {
     [
       allowed,
       runHint,
+      runAsAdmin,
       isWebhook,
       openSampleDialog,
       row.enabled,

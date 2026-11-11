@@ -11,6 +11,8 @@ import ScheduleRowActions from '../ScheduleRowActions';
 
 // row action menu filtered by allowed_actions.
 
+vi.mock('../../lib/hooks/useRunAsAdminHint.hooks', () => ({ useRunAsAdminHint: () => null }));
+
 vi.mock('../ChangeOwnerDialog', () => ({
   default: ({ open, schedule, onClose }) =>
     open ? (
@@ -276,7 +278,7 @@ describe('ScheduleRowActions', () => {
     expect(screen.queryByTestId('delete-confirm-dialog')).not.toBeInTheDocument();
   });
 
-  it('#7254: an admin sees Run now disabled, with who can run it', () => {
+  it('a viewer without the run right sees Run now disabled, with the reason', () => {
     const onRun = vi.fn();
     renderMenu(
       {
@@ -292,12 +294,12 @@ describe('ScheduleRowActions', () => {
     fireEvent.click(item);
     expect(onRun).not.toHaveBeenCalled();
     // the menu's tooltip names the item with the hint
-    expect(screen.getByLabelText('Only the schedule owner, Ann Lee, can run it.')).toHaveTextContent(
-      'Run now',
-    );
+    expect(
+      screen.getByLabelText('You do not have the right to run this schedule. The owner is Ann Lee.'),
+    ).toHaveTextContent('Run now');
   });
 
-  it('#7254: the owner of a schedule without a version gets no Run now, as before', () => {
+  it('the owner of a schedule without a version gets no Run now', () => {
     renderMenu({
       version_id: null,
       owner: { id: 1, name: 'Ann Lee' },

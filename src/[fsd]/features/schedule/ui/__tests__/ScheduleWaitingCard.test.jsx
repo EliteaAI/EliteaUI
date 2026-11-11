@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   isOwner: true,
   decide: vi.fn(),
   signedIn: false,
+  userId: 1,
 }));
 
 vi.mock('../../lib/hooks/useScheduleRuns.hooks', () => ({
@@ -33,6 +34,12 @@ vi.mock('../../lib/hooks/useWaitingRunCredentialCheck.hooks', () => ({
 vi.mock('../../lib/hooks/useWaitingRunDecision.hooks', () => ({
   useWaitingRunDecision: () => (mocks.isOwner ? mocks.decide : undefined),
 }));
+vi.mock('../../lib/hooks/useScheduleRowActions.hooks', () => ({
+  useScheduleRowActions: () => ({ onPause: vi.fn(), onResume: vi.fn(), onRun: vi.fn(), isBusy: false }),
+}));
+vi.mock('../../lib/hooks/useTestRunAsCaller.hooks', () => ({
+  useTestRunAsCaller: () => ({ start: vi.fn(), pending: false }),
+}));
 vi.mock('@/[fsd]/features/mcp', () => ({
   extractMcpAuthMetadata: () => ({ authServers: ['https://auth.example'] }),
   useMcpTokenChange: () => ({ isLoggedIn: mocks.signedIn }),
@@ -43,7 +50,11 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: () => 5,
   useToast: () => ({ toastSuccess: vi.fn() }),
 }));
-vi.mock('react-redux', async importOriginal => ({ ...(await importOriginal()), useDispatch: () => vi.fn() }));
+vi.mock('react-redux', async importOriginal => ({
+  ...(await importOriginal()),
+  useDispatch: () => vi.fn(),
+  useSelector: select => select({ user: { id: mocks.userId } }),
+}));
 
 const schedule = {
   id: 9,
@@ -95,6 +106,7 @@ describe('ScheduleWaitingCard', () => {
     mocks.check = { state: 'missing', recheck: vi.fn() };
     mocks.isOwner = true;
     mocks.signedIn = false;
+    mocks.userId = 1;
   });
   afterEach(() => {
     cleanup();
@@ -116,6 +128,12 @@ describe('ScheduleWaitingCard', () => {
     expect(screen.getByTestId('schedule-waiting-expiry')).toHaveTextContent('Expires in 23 h 58 min');
     expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Missing');
     expect(mocks.checkArgs).toMatchObject({ toolkit: 'GitHub', enabled: true });
+  });
+
+  it('asks the credential check to scan for the shown run', () => {
+    renderCard();
+
+    expect(mocks.checkArgs).toMatchObject({ runId: 41 });
   });
 
   it('takes the toolkit name from the credential check when the run does not name it', () => {
@@ -146,7 +164,7 @@ describe('ScheduleWaitingCard', () => {
     expect(approve).toBeDisabled();
     expect(screen.getByText('Provide the credential first')).toBeInTheDocument();
     expect(button('Reject')).toBeEnabled();
-    expect(screen.getByText('Reject ends the run as Failed: rejected by the owner.')).toBeInTheDocument();
+    expect(screen.getByText('Reject ends the run as Failed.')).toBeInTheDocument();
   });
 
   it('runs the check again from Check again', () => {
@@ -203,13 +221,210 @@ describe('ScheduleWaitingCard', () => {
     expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Missing');
   });
 
+  it('keeps both buttons off for a project admin who is not the owner while the credential is missing', () => {
+    mocks.userId = 77;
+    mocks.isOwner = false;
+    renderCard();
+
+    expect(button('Approve')).toBeDisabled();
+    expect(button('Reject')).toBeDisabled();
+    expect(
+      screen.getByText(/The schedule owner must provide the credential, then approve\./),
+    ).toBeInTheDocument();
+  });
+
+  it('keeps both buttons off for a project admin who is not the owner once the credential is ready', () => {
+    mocks.userId = 77;
+    mocks.isOwner = false;
+    mocks.check = { state: 'ready', recheck: vi.fn() };
+    renderCard();
+
+    expect(button('Approve')).toBeDisabled();
+    expect(button('Reject')).toBeDisabled();
+  });
+
+  it('keeps both buttons off for a project admin who is not the owner on a sign-in pause', () => {
+    mocks.userId = 77;
+    mocks.isOwner = false;
+    mocks.signedIn = true;
+    mocks.detail = { ...run, events: [paused({ need: 'sign_in', toolkit: 'Jira' })] };
+    renderCard();
+
+    expect(button('Approve')).toBeDisabled();
+    expect(button('Reject')).toBeDisabled();
+    expect(screen.getByText('Only the owner can approve or reject this run.')).toBeInTheDocument();
+  });
+
+  it('keeps both buttons off for the admin who started the Run now, also when the credential is found', () => {
+    mocks.userId = 77;
+    mocks.isOwner = false;
+    mocks.check = { state: 'ready', recheck: vi.fn() };
+    mocks.detail = { ...mocks.detail, trigger: 'manual', requested_by: 77, decider_id: 1 };
+    renderCard();
+
+    expect(button('Approve')).toBeDisabled();
+    expect(button('Reject')).toBeDisabled();
+  });
+
+  it("asks the admin for their own credential on their Run now, with Approve off for the owner's decision", () => {
+    mocks.userId = 77;
+    mocks.isOwner = false;
+    mocks.detail = { ...mocks.detail, trigger: 'manual', requested_by: 77, decider_id: 1 };
+    renderCard();
+
+    expect(button('Approve')).toBeDisabled();
+    expect(screen.getByText(/Provide the credential, then approve\./)).toBeInTheDocument();
+    expect(screen.queryByText(/must provide the credential/)).not.toBeInTheDocument();
+  });
+
+  it("names the admin who started the run, not the owner, for the credential of an admin's Run now", () => {
+    mocks.userId = 1;
+    mocks.detail = { ...mocks.detail, trigger: 'manual', requested_by: 77, decider_id: 1 };
+    renderCard();
+
+    expect(button('Approve')).toBeDisabled();
+    expect(
+      screen.getByText('The user who started this run must provide the credential first'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/The user who started this run must provide the credential, then approve\./),
+    ).toBeInTheDocument();
+  });
+
+  describe('sign-in pause of an admin Run now', () => {
+    const NOTE =
+      /A run that an admin started cannot answer a sign-in\. The schedule owner can reject this run\. The admin can start a new Test run as themselves\./;
+
+    beforeEach(() => {
+      mocks.signedIn = true;
+      mocks.detail = {
+        ...mocks.detail,
+        trigger: 'manual',
+        requested_by: 77,
+        decider_id: 1,
+        events: [paused({ need: 'sign_in', toolkit: 'Jira' })],
+      };
+      mocks.conversation = { authAction: { toolMeta: { server_url: 'https://auth.example' } } };
+    });
+
+    it('gives the owner the note and an enabled Reject, with Approve off and no sign-in', () => {
+      mocks.userId = 1;
+      mocks.isOwner = true;
+      renderCard();
+
+      expect(screen.getByText(NOTE)).toBeInTheDocument();
+      expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Missing');
+      expect(screen.queryByText(/Authorize now|must authorize it/)).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Authorize|Skip/ })).not.toBeInTheDocument();
+      expect(button('Approve')).toBeDisabled();
+      expect(button('Reject')).toBeEnabled();
+    });
+
+    it('gives the admin the note and no sign-in button, even with their own token', () => {
+      mocks.userId = 77;
+      mocks.isOwner = false;
+      renderCard();
+
+      expect(screen.getByText(NOTE)).toBeInTheDocument();
+      expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Missing');
+      expect(screen.queryByText(/Authorize now/)).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Authorize|Skip/ })).not.toBeInTheDocument();
+      expect(button('Approve')).toBeDisabled();
+      expect(button('Reject')).toBeDisabled();
+    });
+
+    it('keeps the sign-in for the owner who started their own Run now', () => {
+      mocks.userId = 1;
+      mocks.isOwner = true;
+      mocks.detail = { ...mocks.detail, requested_by: 1 };
+      renderCard();
+
+      expect(screen.getByText(/Authorize now, then approve\./)).toBeInTheDocument();
+      expect(screen.queryByText(NOTE)).not.toBeInTheDocument();
+    });
+  });
+
+  it('names the old owner as the actor of a run after Change owner', () => {
+    mocks.userId = 2;
+    mocks.isOwner = false;
+    mocks.detail = { ...mocks.detail, trigger: 'cron', requested_by: null, decider_id: 1 };
+    renderCard({ schedule: { ...schedule, owner: { id: 2 } } });
+
+    expect(
+      screen.getByText(/The schedule owner must provide the credential, then approve\./),
+    ).toBeInTheDocument();
+  });
+
+  it('keeps both buttons off for the admin who started the Run now before the run detail has loaded', () => {
+    mocks.userId = 77;
+    mocks.isOwner = false;
+    mocks.detail = null;
+    renderCard({ run: { ...run, trigger: 'manual', requested_by: 77 } });
+
+    expect(button('Approve')).toBeDisabled();
+    expect(button('Reject')).toBeDisabled();
+  });
+
+  it('keeps the isDraftRun mark of the row when the detail has none', () => {
+    mocks.userId = 77;
+    mocks.isOwner = false;
+    mocks.detail = { ...mocks.detail, trigger: 'test', requested_by: 5, decider_id: 5 };
+    renderCard({
+      schedule: undefined,
+      run: { ...run, isDraftRun: true },
+      entityType: 'agent',
+      applicationId: 3,
+    });
+
+    expect(
+      screen.getByText(/The user who started this run must provide the credential, then approve\./),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Only the user who started this Test run can approve or reject it'),
+    ).toBeInTheDocument();
+  });
+
+  it('keeps the schedule owner as the actor of a scheduled run', () => {
+    mocks.userId = 1;
+    mocks.detail = { ...mocks.detail, trigger: 'cron', requested_by: 77 };
+    renderCard();
+
+    expect(screen.getByText('Provide the credential first')).toBeInTheDocument();
+  });
+
+  it('gives the owner on a sign-in pause the authorize button and the sign-in text', () => {
+    mocks.signedIn = true;
+    mocks.conversation = { authAction: { toolMeta: { server_url: 'https://auth.example' } } };
+    mocks.detail = { ...mocks.detail, events: [paused({ need: 'sign_in', toolkit: 'Jira' })] };
+    renderCard();
+
+    expect(screen.getByText(/Authorize now, then approve\./)).toBeInTheDocument();
+    expect(button('Approve')).toBeEnabled();
+  });
+
+  it('offers a project admin who is not the actor no authorize text and no ready step on a sign-in pause', () => {
+    mocks.userId = 77;
+    mocks.isOwner = false;
+    mocks.signedIn = true;
+    mocks.conversation = { authAction: { toolMeta: { server_url: 'https://auth.example' } } };
+    mocks.detail = { ...mocks.detail, events: [paused({ need: 'sign_in', toolkit: 'Jira' })] };
+    renderCard();
+
+    expect(screen.queryByText(/Authorize now/)).not.toBeInTheDocument();
+    expect(screen.getByText(/The schedule owner must authorize it, then approve\./)).toBeInTheDocument();
+    expect(screen.getByTestId('schedule-waiting-step1-status')).toHaveTextContent('Missing');
+  });
+
   it('shows the owner-only note and no decision for another user', () => {
     mocks.isOwner = false;
     renderCard();
 
     expect(button('Approve')).toBeDisabled();
     expect(button('Reject')).toBeDisabled();
-    expect(screen.getByText('Only the owner can approve or reject this run')).toBeInTheDocument();
+    expect(screen.getByText('Only the owner can approve or reject this run.')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Pause|Change owner|Start a new run/ }),
+    ).not.toBeInTheDocument();
   });
 
   it('shows one short notice and the two buttons for a plain pause', () => {

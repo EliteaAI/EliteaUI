@@ -13,7 +13,8 @@ import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
-import { isRunActive, ownerOnlyRunHint } from '../lib/helpers';
+import { isRunActive, runDeniedHint } from '../lib/helpers';
+import { useRunAsAdminHint } from '../lib/hooks/useRunAsAdminHint.hooks';
 import ScheduleRunCard from './ScheduleRunCard';
 import ScheduleRunsFilters, { ALL_RUNS } from './ScheduleRunsFilters';
 import WebhookSampleRunDialog from './WebhookSampleRunDialog';
@@ -47,7 +48,8 @@ const ScheduleRunsCard = memo(
     const isWebhook = isWebhookRow(schedule);
     const canRunNow = Boolean(schedule?.id) && Boolean(schedule?.allowed_actions?.includes('run'));
     const canTest = checkPermission(PERMISSIONS.schedules.run);
-    const runHint = schedule?.id ? ownerOnlyRunHint(schedule) : null;
+    const runHint = schedule?.id ? runDeniedHint(schedule) : null;
+    const runAsAdmin = useRunAsAdminHint(schedule);
     const { expectRun, cancelExpectRun, draftSettled = true } = view;
     const busy = hasActiveRun || runNowPending || testRunPending;
     const startRun = start => async () => {
@@ -101,7 +103,7 @@ const ScheduleRunsCard = memo(
             {schedule?.id && !isWebhook && (
               <BaseBtn
                 data-testid="schedule-run-now"
-                title={RUN_NOW_NOTE}
+                title={runAsAdmin ? `${RUN_NOW_NOTE} ${runAsAdmin}` : RUN_NOW_NOTE}
                 variant={BUTTON_VARIANTS.secondary}
                 sx={styles.runNow}
                 startIcon={<PlayArrowOutlinedIcon />}
@@ -145,6 +147,15 @@ const ScheduleRunsCard = memo(
             data-testid="schedule-test-run-hint"
           >
             {runHint}
+          </Typography>
+        )}
+        {runAsAdmin && schedule?.id && !isWebhook && (
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+            data-testid="schedule-run-as-admin-hint"
+          >
+            {runAsAdmin}
           </Typography>
         )}
         {(runNowError || testRunError) && (

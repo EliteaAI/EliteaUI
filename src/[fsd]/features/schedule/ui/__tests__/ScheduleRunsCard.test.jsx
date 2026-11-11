@@ -22,6 +22,7 @@ vi.mock('@/hooks/useCheckPermission', () => ({
 vi.mock('../WebhookSampleRunDialog', () => ({
   default: () => <div data-testid="webhook-sample-run-dialog" />,
 }));
+vi.mock('../../lib/hooks/useRunAsAdminHint.hooks', () => ({ useRunAsAdminHint: () => null }));
 vi.mock('../ScheduleRunCard', () => ({
   default: props => {
     mocks.cardProps.push(props);
