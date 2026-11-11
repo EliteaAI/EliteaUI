@@ -33,8 +33,13 @@ const {
   loadRestoreJob,
   clearRestoreJob,
 } = ProjectBackupHelpers;
-const { CHATS_OPTION, CHAT_RESTORE_OPTION_LABELS, RESTORE_OPTION_LABELS, RESTORE_JOB_POLL_MS } =
-  ProjectBackupConstants;
+const {
+  CHATS_OPTION,
+  CHAT_RESTORE_OPTION_LABELS,
+  RESTORE_OPTION_LABELS,
+  RESTORE_JOB_POLL_MS,
+  RESTORE_JOB_STATUS,
+} = ProjectBackupConstants;
 
 const NO_FILES_TOOLTIP = 'This backup has no attachment files';
 const STOP_POLLING_STATUSES = [401, 403, 404];
@@ -105,7 +110,7 @@ const RestoreProjectDialog = memo(props => {
     (finished, started) => {
       setJob(null);
       clearRestoreJob(projectId);
-      if (finished.status === 'failed') {
+      if (finished.status === RESTORE_JOB_STATUS.failed) {
         setError(getRestoreErrorMessage(getRestoreJobError(finished)));
         if (finished.artifact) setArtifact(finished.artifact);
         if (finished.result) setResult(finished);
@@ -215,7 +220,7 @@ const RestoreProjectDialog = memo(props => {
       const started = { jobId: response?.job_id, truncate, restoreChats: chats };
       // A backend without restore jobs answers with the synchronous result
       if (!started.jobId) {
-        handleFinished({ status: 'done', result: response }, started);
+        handleFinished({ status: RESTORE_JOB_STATUS.done, result: response }, started);
         return;
       }
       saveRestoreJob(projectId, started);

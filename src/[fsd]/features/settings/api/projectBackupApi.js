@@ -55,7 +55,6 @@ const projectBackupApi = eliteaApi
             form.append('size', String(file.size));
           } else {
             form.append('file', file);
-            // Answer with the job right away; the result is read with restoreProjectJob
             form.append('background', 'true');
           }
           form.append('truncate', truncate ? 'true' : 'false');
