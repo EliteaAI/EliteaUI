@@ -3,6 +3,15 @@ import { isNullOrUndefined } from '@/common/utils';
 const isBlockingImportError = item =>
   !item?.msg?.includes('was reused') && !item?.msg?.includes('existing toolkit ID:');
 
+/**
+ * Finds the `import_uuid` of the item a backend error belongs to.
+ *
+ * Errors that name their target (`import_uuid`) are matched by it. Older entries only carry the
+ * `index` into the request payload, so that stays as the fallback.
+ */
+const getErrorTargetUUID = (error, selectedData) =>
+  error?.import_uuid ?? selectedData[error?.index]?.import_uuid;
+
 export const getErrorImportUUID = (errors, selectedData) => {
   // Look through each key in the errors object
   const errorIndex = [];
@@ -11,7 +20,9 @@ export const getErrorImportUUID = (errors, selectedData) => {
     // eslint-disable-next-line no-prototype-builtins
     if (errors.hasOwnProperty(key)) {
       errors[key].forEach(item => {
-        if (isBlockingImportError(item)) errorIndex.push(selectedData[item.index].import_uuid);
+        const importUUID = getErrorTargetUUID(item, selectedData);
+
+        if (importUUID && isBlockingImportError(item)) errorIndex.push(importUUID);
       });
     }
   }
@@ -31,7 +42,7 @@ export const getErrorMessagesByImportUUID = (errors, selectedData) => {
     // eslint-disable-next-line no-prototype-builtins
     if (errors.hasOwnProperty(key)) {
       errors[key].forEach(item => {
-        const importUUID = selectedData[item.index]?.import_uuid;
+        const importUUID = getErrorTargetUUID(item, selectedData);
 
         if (!importUUID || !item?.msg || !isBlockingImportError(item)) return;
 
