@@ -4,14 +4,29 @@ import { useFormikContext } from 'formik';
 
 import { Box, Typography } from '@mui/material';
 
+import { useImportSkillLimit } from '@/[fsd]/entities/import-wizard/lib/hooks';
 import IWModalEntityCard from '@/[fsd]/entities/import-wizard/ui/import-wizard-modal/IWModalEntityCard';
 
 const IWModalDetails = memo(props => {
   const { isForking } = props;
 
-  const { values } = useFormikContext();
+  const { values, setFieldValue } = useFormikContext();
 
   const styles = iWModalDetailsStyles();
+
+  const { maxSkillsPerAgent, skillLimitErrors } = useImportSkillLimit(
+    values?.importItems,
+    values?.selectedProject?.id,
+  );
+
+  const handleSkillSelectionChange = useCallback(
+    (importUUID, checked) => {
+      const itemIndex = values?.importItems?.findIndex(item => item.import_uuid === importUUID);
+
+      if (itemIndex >= 0) setFieldValue(`importItems[${itemIndex}].isSelected`, checked);
+    },
+    [setFieldValue, values?.importItems],
+  );
 
   const prepareApplicationEntity = useCallback(
     entity => {
@@ -57,17 +72,33 @@ const IWModalDetails = memo(props => {
     [isForking, prepareApplicationEntity],
   );
 
+  const withSkillLimitErrors = useCallback(
+    entity =>
+      entity && skillLimitErrors[entity.import_uuid]
+        ? {
+            ...entity,
+            errorMessages: [...(entity.errorMessages ?? []), ...skillLimitErrors[entity.import_uuid]],
+          }
+        : entity,
+    [skillLimitErrors],
+  );
+
   const { mainEntity, nestedEntities, skillEntities } = useMemo(() => {
     const mainItem = values?.importItems?.[0];
     const nestedItems = values?.importItems?.slice(1);
-    const prepared = prepareNestedApplications(nestedItems);
+    const prepared = prepareNestedApplications(nestedItems).map(withSkillLimitErrors);
 
     return {
-      mainEntity: prepareApplicationEntity(mainItem),
+      mainEntity: withSkillLimitErrors(prepareApplicationEntity(mainItem)),
       nestedEntities: prepared.filter(item => item?.entity !== 'skills'),
       skillEntities: prepared.filter(item => item?.entity === 'skills'),
     };
-  }, [prepareApplicationEntity, prepareNestedApplications, values?.importItems]);
+  }, [prepareApplicationEntity, prepareNestedApplications, values?.importItems, withSkillLimitErrors]);
+
+  const selectedSkillsCount = useMemo(
+    () => skillEntities.filter(entity => entity.isSelected !== false).length,
+    [skillEntities],
+  );
 
   return (
     <Box sx={styles.root}>
@@ -100,11 +131,24 @@ const IWModalDetails = memo(props => {
       {skillEntities.length > 0 && (
         <Box sx={styles.entityBlock}>
           <Typography sx={styles.label}>Skills</Typography>
+          <Typography
+            variant="bodySmall"
+            sx={styles.skillsSummary}
+            data-testid="agent-import-skills-summary"
+          >
+            {`${selectedSkillsCount} of ${skillEntities.length} skills selected`}
+            {maxSkillsPerAgent ? ` (the target project allows at most ${maxSkillsPerAgent} per agent)` : ''}
+          </Typography>
           <Box sx={styles.column}>
-            {skillEntities.map((entity, index) => (
+            {skillEntities.map(entity => (
               <IWModalEntityCard
-                key={index}
+                key={entity.import_uuid}
                 entity={entity}
+                selection={{
+                  checked: entity.isSelected !== false,
+                  onChange: checked => handleSkillSelectionChange(entity.import_uuid, checked),
+                  testId: 'agent-import-skill-select-checkbox',
+                }}
                 titleTestId="agent-import-preview-skill-name"
                 toggleTestId="agent-import-preview-card-toggle"
                 instructionsTestId="agent-import-preview-skill-instructions"
@@ -129,6 +173,11 @@ const iWModalDetailsStyles = () => ({
   root: {
     padding: '.15rem 0rem',
   },
+  skillsSummary: ({ palette }) => ({
+    display: 'block',
+    marginBottom: '0.75rem',
+    color: palette.text.secondary,
+  }),
   entityBlock: {
     margin: '1rem 0',
   },

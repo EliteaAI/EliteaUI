@@ -1,5 +1,8 @@
 import { isNullOrUndefined } from '@/common/utils';
 
+const isBlockingImportError = item =>
+  !item?.msg?.includes('was reused') && !item?.msg?.includes('existing toolkit ID:');
+
 export const getErrorImportUUID = (errors, selectedData) => {
   // Look through each key in the errors object
   const errorIndex = [];
@@ -8,13 +11,46 @@ export const getErrorImportUUID = (errors, selectedData) => {
     // eslint-disable-next-line no-prototype-builtins
     if (errors.hasOwnProperty(key)) {
       errors[key].forEach(item => {
-        if (!item?.msg?.includes('was reused') && !item?.msg?.includes('existing toolkit ID:'))
-          errorIndex.push(selectedData[item.index].import_uuid);
+        if (isBlockingImportError(item)) errorIndex.push(selectedData[item.index].import_uuid);
       });
     }
   }
 
   return errorIndex.sort((a, b) => a - b);
+};
+
+/**
+ * Groups the backend error messages by the `import_uuid` of the item they belong to,
+ * so the import dialog can show them on the matching card.
+ * @returns {Record<string, string[]>}
+ */
+export const getErrorMessagesByImportUUID = (errors, selectedData) => {
+  const messagesByUUID = {};
+
+  for (const key in errors) {
+    // eslint-disable-next-line no-prototype-builtins
+    if (errors.hasOwnProperty(key)) {
+      errors[key].forEach(item => {
+        const importUUID = selectedData[item.index]?.import_uuid;
+
+        if (!importUUID || !item?.msg || !isBlockingImportError(item)) return;
+
+        const messages = messagesByUUID[importUUID] ?? [];
+
+        if (!messages.includes(item.msg)) messages.push(item.msg);
+
+        messagesByUUID[importUUID] = messages;
+      });
+    }
+  }
+
+  return messagesByUUID;
+};
+
+export const updateErrorMessages = async params => {
+  const { index, errorMessages, setFieldValue } = params;
+
+  await setFieldValue(`importItems[${index}].errorMessages`, errorMessages);
 };
 
 export const getImportedUUIDMap = (result, selectedData) => {
