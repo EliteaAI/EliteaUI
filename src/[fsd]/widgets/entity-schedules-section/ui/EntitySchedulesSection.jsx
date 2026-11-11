@@ -12,9 +12,11 @@ import {
   buildScheduleRunsLink,
   buildSchedulesListLink,
   useEntitySchedules,
+  useGetToolkitIndexOptionsQuery,
   useOpenScheduleNested,
 } from '@/[fsd]/entities/schedule';
 import { ScheduleSectionConstants } from '@/[fsd]/shared/lib/constants';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button';
@@ -81,6 +83,12 @@ const EntitySchedulesSection = memo(props => {
     triggerKind,
     skip: isHidden,
   });
+  const projectId = useSelectedProjectId();
+  // The schedule list keeps the rows the user may see; the index summary tells for every user whether the index has a schedule
+  const { data: indexOptions } = useGetToolkitIndexOptionsQuery(
+    { projectId, toolkitId: entityId },
+    { skip: isHidden || !isIndex || kind !== TRIGGER_KIND.cron || !projectId },
+  );
   const { tab } = useParams();
   // The form opens nested in the editor and comes back to this editor location
   const openNested = useOpenScheduleNested();
@@ -111,8 +119,10 @@ const EntitySchedulesSection = memo(props => {
   const testId = `${entityType}-schedules-section`;
   const emptyText = isIndex ? 'No schedule runs this index yet.' : `No ${config.noun}s run ${version} yet.`;
   const showSkeleton = !isError && isFetching && rows.length === 0;
-  // The server keeps one schedule for each index; until the list loads, the index may already have it
-  const isAddBlocked = isIndex && kind === TRIGGER_KIND.cron && (total > 0 || showSkeleton);
+  // The server keeps one schedule for each index, owned by anyone; until the list loads, the index may already have it
+  const hasIndexSchedule =
+    total > 0 || !!indexOptions?.some(option => option.name === indexName && option.scheduled);
+  const isAddBlocked = isIndex && kind === TRIGGER_KIND.cron && (hasIndexSchedule || showSkeleton);
 
   const styles = entitySchedulesSectionStyles(entityType === 'agent');
 
@@ -198,7 +208,7 @@ const EntitySchedulesSection = memo(props => {
               {config.add}
             </Button.BaseBtn>
           )}
-          {canCreate && !isError && isAddBlocked && total > 0 && (
+          {canCreate && !isError && isAddBlocked && hasIndexSchedule && (
             <Typography
               variant="bodySmall"
               color="text.secondary"

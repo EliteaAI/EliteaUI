@@ -22,6 +22,9 @@ vi.mock('@/[fsd]/features/schedule/lib/hooks/useScheduleRowActions.hooks', () =>
     isBusy: false,
   }),
 }));
+vi.mock('@/[fsd]/features/schedule/lib/hooks/useRunAsAdminHint.hooks', () => ({
+  useRunAsAdminHint: () => null,
+}));
 // Only the viewer's zone is pinned; the rule text comes from the real cron summary
 vi.mock('@/[fsd]/shared/lib/helpers/schedule.helpers', async importOriginal => ({
   ...(await importOriginal()),

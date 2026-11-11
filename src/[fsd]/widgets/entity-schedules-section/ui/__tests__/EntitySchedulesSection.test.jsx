@@ -15,6 +15,7 @@ import EntitySchedulesSection from '../EntitySchedulesSection';
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   entitySchedules: vi.fn(),
+  indexOptions: vi.fn(),
   permissions: [],
   cardProps: [],
 }));
@@ -33,6 +34,11 @@ vi.mock('@/hooks/useCheckPermission', () => ({
 vi.mock('@/[fsd]/entities/schedule', async importOriginal => ({
   ...(await importOriginal()),
   useEntitySchedules: args => mocks.entitySchedules(args),
+  useGetToolkitIndexOptionsQuery: (args, options) => mocks.indexOptions(args, options),
+}));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', async importOriginal => ({
+  ...(await importOriginal()),
+  useSelectedProjectId: () => 7,
 }));
 vi.mock('../EntityScheduleCard', () => ({
   default: props => {
@@ -94,6 +100,7 @@ describe('EntitySchedulesSection', () => {
   beforeEach(() => {
     mocks.permissions = ALL_RIGHTS;
     mocks.cardProps = [];
+    mocks.indexOptions.mockReturnValue({ data: undefined });
     mocks.entitySchedules.mockReturnValue(
       listOf([
         { id: 1, name: 'Daily digest' },
@@ -577,6 +584,43 @@ describe('EntitySchedulesSection', () => {
         { pathname: `${INDEX_PATH}/schedules/2`, hash: '#runs', search: '?viewMode=owner' },
         { state: { returnTo: INDEX_PATH } },
       );
+    });
+
+    it('asks the index summary of the toolkit for the scheduled flag', () => {
+      renderIndexSection();
+
+      expect(mocks.indexOptions).toHaveBeenLastCalledWith({ projectId: 7, toolkitId: 5 }, { skip: false });
+    });
+
+    it('keeps "+ Schedule" off and tells why when only the index summary shows a schedule of another user', () => {
+      mocks.entitySchedules.mockReturnValue(listOf([]));
+      mocks.indexOptions.mockReturnValue({
+        data: [
+          { name: 'other', scheduled: false },
+          { name: 'docs', scheduled: true },
+        ],
+      });
+      renderIndexSection();
+
+      expect(screen.getByTestId('toolkit_index-schedules-section-add')).toBeDisabled();
+      expect(screen.getByTestId('toolkit_index-schedules-section-add-hint')).toHaveTextContent(
+        'This index already has a schedule',
+      );
+    });
+
+    it('keeps "+ Schedule" on when the summary marks another index as scheduled', () => {
+      mocks.entitySchedules.mockReturnValue(listOf([]));
+      mocks.indexOptions.mockReturnValue({ data: [{ name: 'other', scheduled: true }] });
+      renderIndexSection();
+
+      expect(screen.getByTestId('toolkit_index-schedules-section-add')).toBeEnabled();
+      expect(screen.queryByTestId('toolkit_index-schedules-section-add-hint')).not.toBeInTheDocument();
+    });
+
+    it('skips the index summary for an agent', () => {
+      renderSection();
+
+      expect(mocks.indexOptions).toHaveBeenLastCalledWith(expect.anything(), { skip: true });
     });
 
     it('"Manage Schedules" lists the schedules of this index', () => {

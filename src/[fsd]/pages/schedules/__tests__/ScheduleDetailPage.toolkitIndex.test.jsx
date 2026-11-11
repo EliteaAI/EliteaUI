@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
-
 import { enGB } from 'date-fns/locale';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material';
@@ -112,6 +111,9 @@ vi.mock('@/[fsd]/features/schedule/ui/ScheduleActiveToggle', () => ({
     />
   ),
 }));
+vi.mock('@/[fsd]/features/schedule/lib/hooks/useRunAsAdminHint.hooks', () => ({
+  useRunAsAdminHint: () => null,
+}));
 vi.mock('@/[fsd]/features/schedule/ui/RiskReviewDialog', () => ({ default: () => null }));
 vi.mock('@/[fsd]/features/schedule/ui/SaveWarningsDialog', () => ({ default: () => null }));
 vi.mock('@/[fsd]/features/schedule/ui/BuildScheduleWithAiModal', () => ({ default: () => null }));
@@ -148,7 +150,9 @@ const renderPage = () =>
         dateAdapter={AdapterDateFns}
         adapterLocale={enGB}
       >
-        <MemoryRouter initialEntries={[{ pathname: ROUTE, state: { returnTo: '/toolkits/all/3/index/docs-index' } }]}>
+        <MemoryRouter
+          initialEntries={[{ pathname: ROUTE, state: { returnTo: '/toolkits/all/3/index/docs-index' } }]}
+        >
           <Routes>
             <Route
               path="/toolkits/:tab/:toolkitId/index/:indexName/schedules/:scheduleId"
@@ -233,7 +237,9 @@ describe('ScheduleDetailPage for a toolkit index', () => {
       const indexField = within(whatToRun.getByTestId('schedule-locked-index')).getByLabelText(/^Index/);
       expect(indexField).toBeDisabled();
       expect(indexField).toHaveValue('docs-index');
-      expect(whatToRun.getByText(/To change the toolkit or index, create a new schedule in/)).toBeInTheDocument();
+      expect(
+        whatToRun.getByText(/To change the toolkit or index, create a new schedule in/),
+      ).toBeInTheDocument();
       expect(whatToRun.getByRole('link', { name: 'Settings / Schedules' })).toBeInTheDocument();
       expect(whatToRun.queryByText(/^Version/)).not.toBeInTheDocument();
       expect(whatToRun.queryByText(/^Starting input/)).not.toBeInTheDocument();
