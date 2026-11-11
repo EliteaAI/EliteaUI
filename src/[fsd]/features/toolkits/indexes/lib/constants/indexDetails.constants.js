@@ -150,6 +150,4 @@ export const RUN_TEST_OPERATION_TYPES = new Set(INDEX_SEARCH_TOOL_LABELS.keys())
 
 export const IndexScheduleIndicatorLabel = {
   enabled: 'Scheduled',
-  off: 'Schedule is off',
-  expired: 'Schedule expired',
 };
