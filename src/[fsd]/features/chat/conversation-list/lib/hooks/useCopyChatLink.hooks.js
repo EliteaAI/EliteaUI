@@ -1,24 +1,21 @@
 import { useCallback } from 'react';
 
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { SearchParams } from '@/common/constants';
 import { getBasename } from '@/routes';
 
+import { useCopyToClipboard } from './useCopyToClipboard.hooks';
+
 export const useCopyChatLink = () => {
   const projectId = useSelectedProjectId();
-  const { toastInfo } = useToast();
+  const copyToClipboard = useCopyToClipboard();
 
   return useCallback(
-    async (conversation, message) => {
+    (conversation, message) => {
       const baseUrl = `${window.location.protocol}//${window.location.host}`;
       const url = `${baseUrl}${getBasename()}/${projectId}/chat/${conversation.id}?name=${encodeURIComponent(conversation.name)}&${SearchParams.SharedChat}=1`;
-      try {
-        await navigator.clipboard.writeText(url);
-      } catch {
-        return;
-      }
-      toastInfo(message);
+      return copyToClipboard(url, message);
     },
-    [projectId, toastInfo],
+    [copyToClipboard, projectId],
   );
 };

@@ -1,8 +1,7 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { useLazyMessageListQuery } from '@/[fsd]/features/chat/api';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Input, Select } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -10,7 +9,9 @@ import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';
 import { getBasename } from '@/routes';
 
 import { useCreateShareLinkMutation, useRevokeShareLinkMutation } from '../../api/sharedLinksApi';
-import { EXPIRY_OPTIONS, SCOPE_OPTIONS } from '../../lib/constants';
+import { EXPIRY_OPTIONS, MIN_PASSWORD_LENGTH, SCOPE_OPTIONS } from '../../lib/constants';
+import { buildLinkBody, buildShareLinkUrl, getPasswordError } from '../../lib/helpers/shareChat.helpers';
+import { useMessageGroupPages } from '../../lib/hooks/useMessageGroupPages.hooks';
 import MessageGroupChecklist from './MessageGroupChecklist';
 
 const MESSAGE_PAGE_SIZE = 4;
@@ -28,52 +29,23 @@ const ShareConversationDialog = memo(props => {
   const [createdToken, setCreatedToken] = useState(null);
   const [createError, setCreateError] = useState('');
   const [selectedGroupIds, setSelectedGroupIds] = useState([]);
-  const [messagesPage, setMessagesPage] = useState(0);
 
   const conversationId = conversation?.id;
 
   const [createShareLink, { isLoading: isCreating }] = useCreateShareLinkMutation();
   const [revokeShareLink, { isLoading: isRevoking }] = useRevokeShareLinkMutation();
 
-  const [fetchMessages, { isFetching: isLoadingMessages }] = useLazyMessageListQuery();
-  const [accumulatedRows, setAccumulatedRows] = useState([]);
-  const [messagesTotal, setMessagesTotal] = useState(0);
-
-  useEffect(() => {
-    if (scope === 'partial' && open && conversationId) {
-      setAccumulatedRows([]);
-      setMessagesTotal(0);
-      setMessagesPage(0);
-      fetchMessages({ projectId, conversationId, page: 0, pageSize: MESSAGE_PAGE_SIZE }).then(result => {
-        if (result.data) {
-          setAccumulatedRows(result.data.rows ?? []);
-          setMessagesTotal(result.data.total ?? 0);
-        }
-      });
-    }
-  }, [scope, open, conversationId, fetchMessages, projectId]);
-
-  useEffect(() => {
-    if (messagesPage === 0) return;
-    if (scope === 'partial' && open && conversationId) {
-      fetchMessages({ projectId, conversationId, page: messagesPage, pageSize: MESSAGE_PAGE_SIZE }).then(
-        result => {
-          if (result.data) {
-            const newRows = result.data.rows ?? [];
-            setAccumulatedRows(prev => {
-              const existingIds = new Set(prev.map(r => r.id));
-              return [...prev, ...newRows.filter(r => !existingIds.has(r.id))];
-            });
-            setMessagesTotal(result.data.total ?? 0);
-          }
-        },
-      );
-    }
-  }, [messagesPage, scope, open, conversationId, fetchMessages, projectId]);
-
-  const handleLoadMoreMessages = useCallback(() => {
-    setMessagesPage(prev => prev + 1);
-  }, []);
+  const {
+    rows: accumulatedRows,
+    total: messagesTotal,
+    isFetching: isLoadingMessages,
+    onLoadMore: handleLoadMoreMessages,
+  } = useMessageGroupPages({
+    projectId,
+    conversationId,
+    enabled: scope === 'partial' && open,
+    pageSize: MESSAGE_PAGE_SIZE,
+  });
 
   const messageGroups = useMemo(() => {
     return [...accumulatedRows].reverse().map((group, index) => {
@@ -101,7 +73,8 @@ const ShareConversationDialog = memo(props => {
     setSelectedGroupIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
   }, []);
 
-  const isPasswordValid = useMemo(() => !password.trim() || password.trim().length >= 8, [password]);
+  const passwordError = getPasswordError(password);
+  const isPasswordValid = !passwordError;
 
   const canGenerate = useMemo(() => {
     if (!isPasswordValid || isCreating) return false;
@@ -113,14 +86,11 @@ const ShareConversationDialog = memo(props => {
   const handleCreate = useCallback(async () => {
     if (!canGenerate) return;
     setCreateError('');
-    const body = { expiry, scope };
-    if (password.trim()) body.password = password.trim();
-    if (scope === 'partial') body.message_group_ids = selectedGroupIds;
-    const basename = getBasename();
+    const body = buildLinkBody({ expiry, scope, password, messageGroupIds: selectedGroupIds });
 
     try {
       const result = await createShareLink({ projectId, conversationId, ...body }).unwrap();
-      const shareUrl = `${window.location.protocol}//${window.location.host}${basename}/shared/chat/${result.token}`;
+      const shareUrl = buildShareLinkUrl(getBasename(), result.token);
       setCreatedLink(shareUrl);
       setCreatedToken(result.token);
       setPassword('');
@@ -209,12 +179,12 @@ const ShareConversationDialog = memo(props => {
         showBorder
       />
       <Input.StyledInputEnhancer
-        label="Password protection (optional, at least 8 characters)"
+        label={`Password protection (optional, at least ${MIN_PASSWORD_LENGTH} characters)`}
         type="password"
         value={password}
         onChange={e => setPassword(e.target.value)}
         error={!isPasswordValid}
-        helperText={!isPasswordValid ? 'Minimum 8 characters.' : ''}
+        helperText={passwordError ? `${passwordError}.` : ''}
         variant="standard"
         fullWidth
         sx={{ marginTop: '-1rem' }}

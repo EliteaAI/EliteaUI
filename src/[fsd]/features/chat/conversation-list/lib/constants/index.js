@@ -13,4 +13,4 @@ export {
   IMPORT_MESSAGES,
   IMPORT_STEPS,
 } from './importConversation.constants';
-export { SHARE_MESSAGES, WHOLE_TEAM_ID } from './shareChat.constants';
+export { MIN_PASSWORD_LENGTH, SHARE_MESSAGES, WHOLE_TEAM_ID } from './shareChat.constants';

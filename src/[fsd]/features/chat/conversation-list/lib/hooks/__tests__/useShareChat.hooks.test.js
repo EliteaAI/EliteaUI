@@ -10,6 +10,7 @@ const addParticipant = vi.hoisted(() => vi.fn());
 const deleteParticipant = vi.hoisted(() => vi.fn());
 const createShareLink = vi.hoisted(() => vi.fn());
 const details = vi.hoisted(() => ({ current: null }));
+const summaryQuery = vi.hoisted(() => vi.fn());
 
 const unwrapped = value => ({ unwrap: () => Promise.resolve(value) });
 
@@ -22,7 +23,7 @@ vi.mock('@/[fsd]/features/chat/api', () => ({
   useConversationEditMutation: () => [conversationEdit],
   useAddParticipantIntoConversationMutation: () => [addParticipant],
   useDeleteParticipantFromConversationMutation: () => [deleteParticipant],
-  useConversationExportSummaryQuery: () => ({ data: { attachments_count: 5 } }),
+  useConversationExportSummaryQuery: (args, options) => summaryQuery(args, options),
 }));
 
 vi.mock('@/[fsd]/features/chat/conversation-list/api/sharedLinksApi', () => ({
@@ -64,6 +65,16 @@ describe('useShareChat', () => {
     addParticipant.mockReturnValue(unwrapped([{ id: 30 }]));
     deleteParticipant.mockReturnValue(unwrapped({}));
     createShareLink.mockReturnValue(unwrapped({ token: 't' }));
+    summaryQuery.mockReturnValue({ data: { attachments_count: 5 }, isSuccess: true });
+  });
+
+  it('asks for the file count only while the Externally content is shown', () => {
+    details.current = { author_id: 1, is_private: false, participants: [] };
+    renderHook(() => useShareChat({ conversation: { id: 500, author_id: 1 } }));
+    expect(summaryQuery).toHaveBeenLastCalledWith(expect.anything(), { skip: true });
+
+    renderHook(() => useShareChat({ conversation: { id: 500, author_id: 1 }, isExternallyShown: true }));
+    expect(summaryQuery).toHaveBeenLastCalledWith(expect.anything(), { skip: false });
   });
 
   it('makes a private chat public for Whole team and leaves its participants alone', async () => {
@@ -165,5 +176,28 @@ describe('useShareChat', () => {
     expect(result.current.savedAccess).toEqual([{ id: 2, name: 'Ann', avatar: '' }]);
     expect(result.current.members.map(item => item.id)).toEqual([2, 3]);
     expect(result.current.owner.name).toBe('Owner');
+  });
+
+  it('creates a link with the scope the form maps to', async () => {
+    details.current = { author_id: 1, is_private: true, participants: [] };
+    const result = renderShare();
+
+    await act(async () => {
+      await result.current.createLink({
+        includeMessages: true,
+        includeAttachments: false,
+        whichMessages: 'all',
+        selectedIds: [],
+        expiry: 'never',
+        password: '',
+      });
+    });
+
+    expect(createShareLink).toHaveBeenCalledWith({
+      projectId: 406,
+      conversationId: 500,
+      expiry: 'never',
+      scope: 'messages',
+    });
   });
 });
