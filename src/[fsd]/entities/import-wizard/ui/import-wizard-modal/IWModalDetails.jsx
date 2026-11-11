@@ -7,6 +7,12 @@ import { Box, Typography } from '@mui/material';
 import { useImportSkillLimit } from '@/[fsd]/entities/import-wizard/lib/hooks';
 import IWModalEntityCard from '@/[fsd]/entities/import-wizard/ui/import-wizard-modal/IWModalEntityCard';
 
+// A skill that already imported stays in the dialog after a partial failure: the import flow marks it
+// as not selected, so it is shown as checked and locked instead of as an unchecked, re-importable item.
+const isImportedSkill = entity => entity.versions?.[0]?.validationStatus === 'success';
+
+const isSkillIncluded = entity => isImportedSkill(entity) || entity.isSelected !== false;
+
 const IWModalDetails = memo(props => {
   const { isForking } = props;
 
@@ -95,10 +101,7 @@ const IWModalDetails = memo(props => {
     };
   }, [prepareApplicationEntity, prepareNestedApplications, values?.importItems, withSkillLimitErrors]);
 
-  const selectedSkillsCount = useMemo(
-    () => skillEntities.filter(entity => entity.isSelected !== false).length,
-    [skillEntities],
-  );
+  const selectedSkillsCount = useMemo(() => skillEntities.filter(isSkillIncluded).length, [skillEntities]);
 
   return (
     <Box sx={styles.root}>
@@ -145,7 +148,8 @@ const IWModalDetails = memo(props => {
                 key={entity.import_uuid}
                 entity={entity}
                 selection={{
-                  checked: entity.isSelected !== false,
+                  checked: isSkillIncluded(entity),
+                  disabled: isImportedSkill(entity),
                   onChange: checked => handleSkillSelectionChange(entity.import_uuid, checked),
                   testId: 'agent-import-skill-select-checkbox',
                 }}

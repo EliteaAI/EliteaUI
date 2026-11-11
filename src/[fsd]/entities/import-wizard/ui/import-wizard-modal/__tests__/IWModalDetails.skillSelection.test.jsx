@@ -33,6 +33,7 @@ vi.mock('../IWModalEntityCard', () => ({
           type="checkbox"
           data-testid={`select-${entity.import_uuid}`}
           checked={selection.checked}
+          disabled={selection.disabled}
           onChange={event => selection.onChange(event.target.checked)}
         />
       )}
@@ -144,5 +145,46 @@ describe('IWModalDetails skill selection', () => {
     renderDetails();
 
     expect(state.limitQuery).toHaveBeenCalledWith({ projectId: 5 }, { skip: false });
+  });
+
+  describe('after a partial failure', () => {
+    // The import flow marks every item that imported as not selected, on the item and on its versions.
+    const markImported = (values, indexes) => {
+      indexes.forEach(index => {
+        const item = values.importItems[index];
+        item.isSelected = false;
+        item.versions.forEach(version => {
+          version.isSelected = false;
+          version.validationStatus = 'success';
+        });
+      });
+    };
+
+    it('shows skills that already imported as checked and locked', () => {
+      state.values = buildValues(3);
+      markImported(state.values, [1, 2, 3]);
+
+      renderDetails();
+
+      [1, 2, 3].forEach(index => {
+        const checkbox = screen.getByTestId(`select-skill-${index - 1}`);
+
+        expect(checkbox).toBeChecked();
+        expect(checkbox).toBeDisabled();
+      });
+      expect(screen.getByTestId('agent-import-skills-summary')).toHaveTextContent('3 of 3 skills selected');
+    });
+
+    it('keeps skills that did not import selectable', () => {
+      state.values = buildValues(3);
+      markImported(state.values, [1]);
+      state.values.importItems[2].versions[0].validationStatus = 'error';
+
+      renderDetails();
+
+      expect(screen.getByTestId('select-skill-0')).toBeDisabled();
+      expect(screen.getByTestId('select-skill-1')).not.toBeDisabled();
+      expect(screen.getByTestId('select-skill-2')).not.toBeDisabled();
+    });
   });
 });
