@@ -1,7 +1,13 @@
 import { ProjectBackupConstants } from '@/[fsd]/features/settings/lib/constants';
 
-const { CHATS_OPTION, CHAT_TAG_TYPES, PROJECT_ENTITY_TAG_TYPES, RESTORE_OPTION_LABELS } =
-  ProjectBackupConstants;
+const {
+  CHATS_OPTION,
+  CHAT_TAG_TYPES,
+  PROJECT_ENTITY_TAG_TYPES,
+  RESTORE_OPTION_LABELS,
+  RESTORE_JOB_STATUS,
+  RESTORE_JOB_STORAGE_KEY,
+} = ProjectBackupConstants;
 
 export const formatCount = (count, singular, plural = `${singular}s`) =>
   `${count} ${count === 1 ? singular : plural}`;
@@ -32,6 +38,14 @@ export const getRestoreErrorMessage = error => {
 
   if (data?.error === 'access_denied') {
     return 'You do not have permission to restore data into this project.';
+  }
+
+  if (data?.error === 'restore_in_progress') {
+    return 'A restore of this project is already running. Wait for it to finish.';
+  }
+
+  if (data?.error === 'restore_capacity_busy') {
+    return 'The server is busy with another restore. Try again in a minute.';
   }
 
   const message = data?.error ?? error?.error ?? 'Restore failed.';
@@ -94,4 +108,39 @@ export const getRestoreInvalidatedTags = (error, args, chatTemplatesTag) => {
   const tags = [{ type: chatTemplatesTag, id: projectId }, ...PROJECT_ENTITY_TAG_TYPES];
   if (restoreChats && restoreChats !== CHATS_OPTION.none) tags.push(...CHAT_TAG_TYPES);
   return tags;
+};
+
+export const isRestoreJobFinished = job =>
+  job?.status === RESTORE_JOB_STATUS.done || job?.status === RESTORE_JOB_STATUS.failed;
+
+// A failed job carries the body a synchronous restore answered with; it is
+// shaped like an RTK Query error so the dialog handles both the same way
+export const getRestoreJobError = job => ({ status: job?.status_code ?? 500, data: job });
+
+const restoreJobKey = projectId => `${RESTORE_JOB_STORAGE_KEY}.${projectId}`;
+
+// The running restore of a project survives closing the dialog or reloading the page
+export const saveRestoreJob = (projectId, job) => {
+  try {
+    sessionStorage.setItem(restoreJobKey(projectId), JSON.stringify(job));
+  } catch {
+    // storage unavailable: polling just does not resume after a reload
+  }
+};
+
+export const loadRestoreJob = projectId => {
+  try {
+    const value = sessionStorage.getItem(restoreJobKey(projectId));
+    return value ? JSON.parse(value) : null;
+  } catch {
+    return null;
+  }
+};
+
+export const clearRestoreJob = projectId => {
+  try {
+    sessionStorage.removeItem(restoreJobKey(projectId));
+  } catch {
+    // nothing to clear
+  }
 };

@@ -5,7 +5,7 @@ import { eliteaApi } from '@/api';
 
 import { TAG_TYPE_CHAT_TEMPLATES } from './chatTemplateApi';
 
-const { CHATS_OPTION, CHAT_TAG_TYPES } = ProjectBackupConstants;
+const { CHATS_OPTION, CHAT_TAG_TYPES, INSPECT_BYTES } = ProjectBackupConstants;
 const { getRestoreInvalidatedTags } = ProjectBackupHelpers;
 
 const apiSlicePath = '/admin';
@@ -45,15 +45,23 @@ const projectBackupApi = eliteaApi
         keepUnusedDataFor: 0,
         providesTags: [],
       }),
+      // Starts the restore and answers with its job right away; the result is
+      // read with restoreProjectJob. With inspect it only reads the file header.
       restoreProjectBackup: build.mutation({
         query: ({ projectId, file, truncate, dryRun, allowProjectMismatch, restoreChats, inspect }) => {
           const form = new FormData();
-          form.append('file', file);
+          if (inspect) {
+            form.append('file', file.slice(0, INSPECT_BYTES), file.name);
+            form.append('inspect', 'true');
+            form.append('size', String(file.size));
+          } else {
+            form.append('file', file);
+            form.append('background', 'true');
+          }
           form.append('truncate', truncate ? 'true' : 'false');
           form.append('dry_run', dryRun ? 'true' : 'false');
           form.append('allow_project_mismatch', allowProjectMismatch ? 'true' : 'false');
           if (restoreChats) form.append('restore_chats', restoreChats);
-          if (inspect) form.append('inspect', 'true');
 
           return {
             url: `${apiSlicePath}/project_restore/prompt_lib/${projectId}`,
@@ -62,7 +70,17 @@ const projectBackupApi = eliteaApi
             formData: true,
           };
         },
-        // A restore rewrites the project's chat templates, which stay cached otherwise
+      }),
+      restoreProjectJob: build.query({
+        query: ({ projectId, jobId }) => ({
+          url: `${apiSlicePath}/project_restore_job/prompt_lib/${projectId}/${jobId}`,
+        }),
+        keepUnusedDataFor: 0,
+      }),
+      // Called once the job has finished: a restore rewrites the project's chat
+      // templates (and chats), which stay cached otherwise
+      invalidateAfterRestore: build.mutation({
+        queryFn: () => ({ data: null }),
         invalidatesTags: (_, error, args) => getRestoreInvalidatedTags(error, args, TAG_TYPE_CHAT_TEMPLATES),
       }),
     }),
@@ -72,6 +90,8 @@ export const {
   useLazyDownloadProjectBackupQuery,
   useProjectBackupSummaryQuery,
   useRestoreProjectBackupMutation,
+  useRestoreProjectJobQuery,
+  useInvalidateAfterRestoreMutation,
 } = projectBackupApi;
 
 export default projectBackupApi;
