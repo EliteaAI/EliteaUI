@@ -202,3 +202,48 @@ describe('useChatSkillMention without an active agent', () => {
     shared.agentSkills = undefined;
   });
 });
+
+describe('useChatSkillMention argument hints', () => {
+  const agent = buildParticipant({ id: AGENT_ONE_ID, versionId: AGENT_ONE_VERSION_ID });
+  const trip = {
+    id: 5,
+    entity_name: 'skill',
+    entity_meta: { id: 5, project_id: PROJECT_ID },
+    entity_settings: { version_id: 50 },
+    meta: { name: 'trip', argument_hint: '[city like Paris, London, Rome]' },
+  };
+  const writer = { ...trip, id: 6, entity_meta: { id: 6, project_id: PROJECT_ID }, meta: { name: 'writer' } };
+
+  const itemsFor = (activeParticipant, participants) =>
+    renderHook(() =>
+      useChatSkillMention({
+        chatInput: { current: null },
+        activeParticipant,
+        activeParticipantDetails: undefined,
+        projectId: PROJECT_ID,
+        participants,
+      }),
+    ).result.current.filteredItems.map(item => [item.name, item.argument_hint]);
+
+  it("carries a chat skill participant's hint into its row", () => {
+    expect(itemsFor(undefined, [trip, writer])).toEqual([
+      ['trip', '[city like Paris, London, Rome]'],
+      ['writer', undefined],
+    ]);
+  });
+
+  it("carries an attached skill's hint into its row", () => {
+    shared.agentSkills = {
+      skills: [
+        { name: 'greet', skill_id: 90, argument_hint: '[name]' },
+        { name: 'auditor', skill_id: 91 },
+      ],
+    };
+    expect(itemsFor(agent, [agent, trip])).toEqual([
+      ['auditor', undefined],
+      ['greet', '[name]'],
+      ['trip', '[city like Paris, London, Rome]'],
+    ]);
+    shared.agentSkills = undefined;
+  });
+});

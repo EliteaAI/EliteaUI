@@ -31,6 +31,7 @@ const toConversationSkillItems = (participants, activeParticipant) => {
       if (name && !items.has(name))
         items.set(name, {
           name,
+          argument_hint: participant.meta?.argument_hint,
           skill_id: participant.entity_meta?.id,
           icon_meta: participant.entity_settings?.icon_meta || participant.meta?.icon_meta,
           isToolkit: false,
@@ -97,6 +98,7 @@ export const useChatSkillMention = ({
       .map(skill => ({
         name: skill.name,
         description: skill.description,
+        argument_hint: skill.argument_hint,
         skill_id: skill.skill_id,
         icon_meta: skill.icon_meta,
         isToolkit: false,

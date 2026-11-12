@@ -28,7 +28,11 @@ import RecommendationList from '@/[fsd]/features/chat/ui/recommendations/Recomme
 import SearchResultList from '@/[fsd]/features/chat/ui/recommendations/SearchResultList';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useGetChatTemplatesQuery } from '@/[fsd]/features/settings/api';
-import { userInvocableMeta } from '@/[fsd]/features/skill/lib/helpers';
+import {
+  skillComposerPlaceholder,
+  skillVersionMeta,
+  withSkillVersionMeta,
+} from '@/[fsd]/features/skill/lib/helpers';
 import { MentionSkillList } from '@/[fsd]/features/skill/ui';
 import {
   AutoRoutingConstants,
@@ -562,7 +566,7 @@ const NewConversationView = forwardRef(
           meta: {
             name: participant.name,
             mcp: details.meta?.mcp,
-            ...userInvocableMeta(details.version_details),
+            ...skillVersionMeta(details.version_details),
           },
           originalLatestVersionId: details.version_details?.id,
         };
@@ -826,6 +830,9 @@ const NewConversationView = forwardRef(
         );
         const updatedParticipant = {
           ...(selectedParticipant || {}),
+          ...(selectedParticipant?.entity_name === ChatParticipantType.Skills && {
+            meta: withSkillVersionMeta(selectedParticipant.meta, versionDetails),
+          }),
           version_details: {
             ...(versionDetails || selectedParticipant.version_details || {}),
           },
@@ -1201,7 +1208,7 @@ const NewConversationView = forwardRef(
             />
             <NewChatInput
               fromTheChat
-              placeholder="Type your message..."
+              placeholder={skillComposerPlaceholder(selectedParticipant, 'Type your message...')}
               ref={chatInput}
               onSend={onSend}
               isLoading={isSending || isFetchingParticipant || isUploadingAttachments}

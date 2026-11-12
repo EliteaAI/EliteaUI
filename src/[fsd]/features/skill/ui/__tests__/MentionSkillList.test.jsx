@@ -10,7 +10,12 @@ import MentionSkillList from '../MentionSkillList';
 
 vi.mock('@/[fsd]/shared/ui', () => ({
   Mention: {
-    MentionToolItem: props => <div data-testid={props.testId}>{props.label}</div>,
+    MentionToolItem: props => (
+      <div data-testid={props.testId}>
+        {props.label}
+        {props.hint && <span data-testid={`${props.testId}-hint`}>{props.hint}</span>}
+      </div>
+    ),
   },
 }));
 vi.mock('@/assets/skill-icon.svg?react', () => ({ default: () => null }));
@@ -85,5 +90,19 @@ describe('MentionSkillList groups', () => {
       </ThemeProvider>,
     );
     expect(screen.getByTestId('skill-mention-list-empty')).toHaveTextContent('No skills in this chat');
+  });
+});
+
+describe('MentionSkillList argument hints', () => {
+  afterEach(() => cleanup());
+
+  it('hands each row its hint and nothing when the skill has none', () => {
+    renderList([
+      { name: 'greet', group: 'attached', argument_hint: '[name]' },
+      { name: 'plain', group: 'attached' },
+    ]);
+
+    expect(screen.getByTestId('skill-mention-item-greet-hint')).toHaveTextContent('[name]');
+    expect(screen.queryByTestId('skill-mention-item-plain-hint')).not.toBeInTheDocument();
   });
 });
