@@ -15,7 +15,6 @@ import { Box, Typography, useTheme } from '@mui/material';
 import { ANALYTICS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { formatUserName } from '@/[fsd]/features/settings/lib/helpers/analyticsCommon.helpers.js';
 import {
   AutomatedActivityTable,
   ChartTooltip,
@@ -277,7 +276,7 @@ const AnalyticsOverview = memo(props => {
                     ]}
                   >
                     <Typography sx={styles.leaderboardInitial}>
-                      {(formatUserName(u)[0] || '?').toUpperCase()}
+                      {(AnalyticCommonHelpers.formatUserName(u)[0] || '?').toUpperCase()}
                     </Typography>
                   </Box>
                   <Box sx={{ flex: 1, minWidth: 0 }}>

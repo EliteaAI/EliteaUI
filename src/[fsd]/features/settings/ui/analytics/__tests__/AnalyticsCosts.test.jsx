@@ -50,6 +50,9 @@ vi.mock('recharts', () => ({
 vi.mock('@/[fsd]/features/settings/lib/helpers', async () => ({
   AnalyticCommonHelpers: {
     fmtCost: v => `$${v ?? 0}`,
+    formatUserName: (
+      await vi.importActual('@/[fsd]/features/settings/lib/helpers/analyticsCommon.helpers.js')
+    ).formatUserName,
     fmtNum: v => String(v ?? 0),
     axisTick: stroke => ({ fill: stroke, fontSize: 11 }),
     barChartCursor: () => ({}),
@@ -68,7 +71,8 @@ vi.mock('@/[fsd]/shared/ui/tooltip', () => ({
   ),
 }));
 
-vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
+vi.mock('@/[fsd]/features/settings/ui/analytics', async () => ({
+  UserLabel: (await vi.importActual('@/[fsd]/features/settings/ui/analytics/components/UserLabel')).default,
   ChartTooltip: () => null,
   KPICard: ({ label, value, subtitle }) => (
     <div data-testid={`kpi-${label}`}>

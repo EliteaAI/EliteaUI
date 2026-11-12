@@ -5,7 +5,6 @@ import { Box, TableSortLabel, Typography } from '@mui/material';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
-import UserLabel from './UserLabel';
 import {
   analyticsColumnSx,
   analyticsHeaderCellSx,
@@ -38,6 +37,7 @@ const CostTable = memo(props => {
     sortBy,
     sortOrder,
     onSort,
+    renderName,
   } = props;
 
   const styles = costTableStyles();
@@ -111,12 +111,16 @@ const CostTable = memo(props => {
               key={`${row.name}-${index}`}
               sx={[styles.tableRow, rowMinWidth]}
             >
-              <Box sx={[styles.tableCellValue, styles.nameCell]}>
-                <UserLabel
-                  user={{ user_email: row.name, user_deleted: row.userDeleted }}
-                  testId="analytics-cost-user-deleted-chip"
-                />
-              </Box>
+              {renderName ? (
+                <Box sx={[styles.tableCellValue, styles.nameCell]}>{renderName(row)}</Box>
+              ) : (
+                <Typography
+                  sx={[styles.tableCellValue, styles.nameCell]}
+                  noWrap
+                >
+                  {row.name}
+                </Typography>
+              )}
               {extraColumns.map(col => (
                 <Box
                   key={col.key}
