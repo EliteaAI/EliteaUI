@@ -21,6 +21,8 @@ export {
 export {
   getAttachmentsSelectionSummary,
   getConversationImportPath,
+  getParticipantStatusText,
   getSelectableAttachments,
   isImportFileSupported,
+  isParticipantLinkable,
 } from './importConversation.helpers';

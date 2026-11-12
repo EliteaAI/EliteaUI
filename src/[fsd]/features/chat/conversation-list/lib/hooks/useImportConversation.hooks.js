@@ -93,6 +93,7 @@ export const useImportConversation = props => {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [selectedPaths, setSelectedPaths] = useState([]);
+  const [skippedParticipantIds, setSkippedParticipantIds] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const xhrRef = useRef(null);
@@ -119,6 +120,7 @@ export const useImportConversation = props => {
     setFile(null);
     setPreview(null);
     setSelectedPaths([]);
+    setSkippedParticipantIds([]);
     setUploadProgress(0);
     setStep(IMPORT_STEPS.select);
   }, []);
@@ -145,6 +147,7 @@ export const useImportConversation = props => {
 
       setFile(newFile);
       setPreview(null);
+      setSkippedParticipantIds([]);
       setUploadProgress(0);
       setStep(IMPORT_STEPS.checking);
       try {
@@ -182,6 +185,12 @@ export const useImportConversation = props => {
     );
   }, []);
 
+  const toggleParticipant = useCallback(participantId => {
+    setSkippedParticipantIds(prev =>
+      prev.includes(participantId) ? prev.filter(id => id !== participantId) : [...prev, participantId],
+    );
+  }, []);
+
   const toggleAll = useCallback(() => {
     const selectable = getSelectableAttachments(preview?.attachments).map(item => item.export_path);
     setSelectedPaths(prev => (prev.length === selectable.length ? [] : selectable));
@@ -192,7 +201,12 @@ export const useImportConversation = props => {
     if (!importId) return false;
 
     setStep(IMPORT_STEPS.importing);
-    const result = await commitImport({ projectId, importId, selectedAttachments: selectedPaths });
+    const result = await commitImport({
+      projectId,
+      importId,
+      selectedAttachments: selectedPaths,
+      skipParticipants: skippedParticipantIds,
+    });
     // The server discards the staging on commit, success or failure
     importIdRef.current = null;
 
@@ -213,6 +227,7 @@ export const useImportConversation = props => {
     projectId,
     resetToSelect,
     selectedPaths,
+    skippedParticipantIds,
     toastError,
     toastSuccess,
     toastWarning,
@@ -230,10 +245,12 @@ export const useImportConversation = props => {
     file,
     preview,
     selectedPaths,
+    skippedParticipantIds,
     uploadProgress,
     selectFile,
     toggleAttachment,
     toggleAll,
+    toggleParticipant,
     startImport,
     cancel,
   };

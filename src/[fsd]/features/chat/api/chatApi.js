@@ -550,11 +550,11 @@ export const apiSlice = eliteaApi
         },
       }),
       conversationImportCommit: build.mutation({
-        query: ({ projectId, importId, selectedAttachments }) => ({
+        query: ({ projectId, importId, selectedAttachments, skipParticipants }) => ({
           url: getConversationImportPath(projectId, importId),
           method: 'PUT',
           headers,
-          body: { selected_attachments: selectedAttachments },
+          body: { selected_attachments: selectedAttachments, skip_participants: skipParticipants },
         }),
         invalidatesTags: (result, error) => (error ? [] : [TAG_TYPE_TOTAL_CONVERSATIONS]),
       }),
