@@ -6,6 +6,7 @@ import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
 
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers, SkillAnalyticsHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { formatUserName } from '@/[fsd]/features/settings/lib/helpers/analyticsCommon.helpers.js';
 import { ChartTooltip, KPICard } from '@/[fsd]/features/settings/ui/analytics';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { useClientSort, useSortedRows } from '@/[fsd]/shared/lib/hooks';
@@ -86,7 +87,7 @@ const AnalyticsCosts = memo(props => {
   const userTableData = useMemo(
     () =>
       toCostRows(data?.by_user, u => ({
-        name: u.user_email || `User ${u.user_id}`,
+        name: formatUserName(u),
         userDeleted: Boolean(u.user_deleted),
       })),
     [data?.by_user],

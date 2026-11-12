@@ -2,6 +2,8 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
+import { formatUserName } from '@/[fsd]/features/settings/lib/helpers/analyticsCommon.helpers.js';
+
 import DeletedChip from './DeletedChip';
 
 const UserLabel = memo(props => {
@@ -19,7 +21,7 @@ const UserLabel = memo(props => {
         className="user-label-name"
         sx={styles.name}
       >
-        {user.user_email || `User ${user.user_id}`}
+        {formatUserName(user)}
       </Box>
       {user.user_deleted && (
         <DeletedChip

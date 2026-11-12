@@ -111,21 +111,12 @@ const CostTable = memo(props => {
               key={`${row.name}-${index}`}
               sx={[styles.tableRow, rowMinWidth]}
             >
-              {row.userDeleted ? (
-                <Box sx={[styles.tableCellValue, styles.nameCell]}>
-                  <UserLabel
-                    user={{ user_email: row.name, user_deleted: true }}
-                    testId="analytics-cost-user-deleted-chip"
-                  />
-                </Box>
-              ) : (
-                <Typography
-                  sx={[styles.tableCellValue, styles.nameCell]}
-                  noWrap
-                >
-                  {row.name}
-                </Typography>
-              )}
+              <Box sx={[styles.tableCellValue, styles.nameCell]}>
+                <UserLabel
+                  user={{ user_email: row.name, user_deleted: row.userDeleted }}
+                  testId="analytics-cost-user-deleted-chip"
+                />
+              </Box>
               {extraColumns.map(col => (
                 <Box
                   key={col.key}

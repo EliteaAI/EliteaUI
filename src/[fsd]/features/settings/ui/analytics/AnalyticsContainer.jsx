@@ -146,10 +146,10 @@ const AnalyticsContainer = memo(() => {
   // Commit only a complete range. A cleared field is not an error, but it must not reach the
   // request as a missing bound: the backend would widen the window to its default.
   useEffect(() => {
-    if (isDateRangeValid && AnalyticCommonHelpers.isCompleteDateRange(dateFrom, dateTo)) {
+    if (AnalyticCommonHelpers.isCompleteDateRange(dateFrom, dateTo)) {
       setCommittedRange({ from: dateFrom, to: dateTo });
     }
-  }, [isDateRangeValid, dateFrom, dateTo]);
+  }, [dateFrom, dateTo]);
 
   const handledTourStep = useRef(null);
   const pendingTourTab = useRef(null);

@@ -13,6 +13,7 @@ import {
   fmtDuration,
   fmtNum,
   formatTriggerLabel,
+  formatUserName,
   formatVersionLabel,
   getPresetRange,
   isCompleteDateRange,
@@ -303,5 +304,22 @@ describe('analytics texts name the trigger sources', () => {
     manualTexts.forEach(text => expect(text).not.toMatch(/Schedule run now.*(manual|user activity)/i));
     expect(overview.TEAM).toContain('Schedule run now');
     expect(overview.AI_ACTIVE).toContain('Schedule run now');
+  });
+});
+
+describe('formatUserName', () => {
+  it('prefers a display name, then the email, then the id', () => {
+    expect(formatUserName({ user_id: 1, user_display_name: 'Alice A', user_email: 'a@x.y' })).toBe('Alice A');
+    expect(formatUserName({ user_id: 1, user_email: 'a@x.y' })).toBe('a@x.y');
+    expect(formatUserName({ user_id: 12, user_email: null })).toBe('User 12');
+  });
+
+  it('is empty, not "User undefined", when nothing is known', () => {
+    expect(formatUserName({})).toBe('');
+    expect(formatUserName({ user_id: null, user_email: '' })).toBe('');
+  });
+
+  it('keeps an id of 0', () => {
+    expect(formatUserName({ user_id: 0 })).toBe('User 0');
   });
 });

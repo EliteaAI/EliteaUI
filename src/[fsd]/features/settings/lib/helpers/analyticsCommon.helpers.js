@@ -28,6 +28,11 @@ export const isValidDate = date => date instanceof Date && !Number.isNaN(date.ge
 
 export const toValidISOString = date => (isValidDate(date) ? date.toISOString() : undefined);
 
+// The one place that decides what a user is called: display name, else email, else the id.
+// Empty when none of them is known, so a caller never prints "User undefined".
+export const formatUserName = user =>
+  user.user_display_name || user.user_email || (user.user_id == null ? '' : `User ${user.user_id}`);
+
 // A request must carry both bounds or neither. With one bound missing, the backend fills it in
 // with its own default (a seven-day window), which silently widens what the user selected.
 export const isCompleteDateRange = (from, to) =>

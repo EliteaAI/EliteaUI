@@ -44,6 +44,12 @@ describe('UserLabel', () => {
     expect(screen.getByTestId('analytics-user-deleted-chip')).toHaveTextContent('Deleted user');
   });
 
+  it('uses the same name rule as the exports, so a display name shows here too', () => {
+    renderLabel({ user_id: 3, user_display_name: 'Alice A', user_email: 'a@x.y' });
+    expect(screen.getByText('Alice A')).toBeInTheDocument();
+    expect(screen.queryByText('a@x.y')).not.toBeInTheDocument();
+  });
+
   it('keeps the chip outside the name, so only the name is ellipsized', () => {
     renderLabel({ user_id: 9, user_email: 'a-very-long-address@example.com', user_deleted: true });
     const name = screen.getByText('a-very-long-address@example.com');

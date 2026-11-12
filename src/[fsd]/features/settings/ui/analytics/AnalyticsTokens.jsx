@@ -12,6 +12,7 @@ import { useClientSort, useSortedRows } from '@/[fsd]/shared/lib/hooks';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 import { useAnalyticsCostsQuery } from '@/api';
 
+import { formatUserName } from '../../lib/helpers/analyticsCommon.helpers.js';
 import { tokenStats } from '../../lib/helpers/analyticsToken.helpers.js';
 import RunAnalyticsEmptyState from './components/RunAnalyticsEmptyState';
 import TokenTable from './components/TokenTable';
@@ -45,11 +46,7 @@ const AnalyticsTokens = memo(props => {
       (data?.by_user || []).map(user => {
         const tokens = tokenStats(user);
         return {
-          name:
-            user.user_display_name ||
-            user.user_email ||
-            `User ${user.user_id ?? ''}`.trim() ||
-            'Unknown user',
+          name: formatUserName(user),
           ...tokens,
           share: toPercentage(tokens.total, totalProjectTokens),
         };
