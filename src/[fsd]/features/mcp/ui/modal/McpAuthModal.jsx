@@ -26,6 +26,17 @@ const { MCP_OAUTH_FLOWS, MCP_OAUTH_ERRORS } = McpAuthFlowConstants;
 
 const PRE_REGISTERED_APPLICATION_NOTICE = 'This server requires a pre-registered OAuth application.';
 
+// Microsoft credentials sign in with the user's own Entra app; none of them is an MCP server (#7496)
+const MICROSOFT_CREDENTIAL_LABELS = {
+  dataverse: 'Dataverse (OneCRM)',
+  outlook: 'Outlook',
+  teams: 'MS Teams',
+  sharepoint: 'SharePoint',
+  ms_graph: 'Microsoft Graph',
+};
+// The toolkit needs exactly the scopes the server sent, so an edit could only break the login
+const FIXED_SCOPE_CREDENTIAL_TYPES = new Set(['dataverse']);
+
 const describeRequestedCredentials = ({ needClientId, needsClientSecret, mustEnterClientSecret }) => {
   if (needClientId && mustEnterClientSecret) return 'Please provide your client credentials.';
   if (needClientId && needsClientSecret) {
@@ -79,6 +90,10 @@ const McpAuthModal = memo(props => {
   // From the credential form, or from the runtime's sign-in prompt for a Default-app credential
   const effectiveOAuthAppId = oauthAppId || providedSettings?.oauth_app_id;
   const effectiveCredentialType = oauthAppCredentialType || providedSettings?.credential_type;
+  const microsoftCredentialLabel = MICROSOFT_CREDENTIAL_LABELS[effectiveCredentialType];
+  const isToolkitSignIn = Boolean(effectiveOAuthAppId || microsoftCredentialLabel);
+  const isScopeLocked =
+    Boolean(effectiveOAuthAppId) || FIXED_SCOPE_CREDENTIAL_TYPES.has(effectiveCredentialType);
   const resourceScopes = mcpAuthMetadata?.resourceScopes;
   const protectedResource = mcpAuthMetadata?.protectedResource;
 
@@ -181,10 +196,17 @@ const McpAuthModal = memo(props => {
     if (effectiveOAuthAppId) {
       return 'Sign in with your Microsoft account to use this toolkit. Sign-in settings are managed by your administrator.';
     }
+    if (microsoftCredentialLabel) {
+      const requestedCredentials = showsCredentialFields
+        ? ` ${describeRequestedCredentials({ needClientId, needsClientSecret, mustEnterClientSecret })}`
+        : '';
+      return `Sign in with your Microsoft account to connect ${microsoftCredentialLabel}.${requestedCredentials}`;
+    }
     const flowSuffix = selectFlowSuffix();
     return `This MCP server requires OAuth authorization to access its tools.${flowSuffix ? ` ${flowSuffix}` : ''}`;
   }, [
     effectiveOAuthAppId,
+    microsoftCredentialLabel,
     providedSettings?.has_pat,
     hasAuthServerMetadata,
     showsCredentialFields,
@@ -335,11 +357,11 @@ const McpAuthModal = memo(props => {
 
   const onScopeChange = useCallback(
     e => {
-      // The default app's scopes are set by the administrator
-      if (effectiveOAuthAppId) return;
+      // The default app's scopes are set by the administrator; Dataverse needs its scopes as sent
+      if (isScopeLocked) return;
       setScope(e.target.value);
     },
-    [effectiveOAuthAppId],
+    [isScopeLocked],
   );
 
   const onSaveCredentialsChange = useCallback(e => {
@@ -372,7 +394,7 @@ const McpAuthModal = memo(props => {
         color="text.secondary"
         sx={styles.dialogTitle}
       >
-        {title || (effectiveOAuthAppId ? 'Toolkit Authorization' : 'MCP Authorization')}
+        {title || (isToolkitSignIn ? 'Toolkit Authorization' : 'MCP Authorization')}
         <IconButton
           variant="elitea"
           color="tertiary"
@@ -427,7 +449,7 @@ const McpAuthModal = memo(props => {
             saveCredentials={saveCredentials}
             onSaveCredentialsChange={onSaveCredentialsChange}
             showSaveCredentials={showsCredentialFields}
-            scopeLocked={Boolean(effectiveOAuthAppId)}
+            scopeLocked={isScopeLocked}
           />
         ) : (
           <Typography
@@ -460,7 +482,7 @@ const McpAuthModal = memo(props => {
             component={'div'}
             sx={styles.successText}
           >
-            {effectiveOAuthAppId
+            {isToolkitSignIn
               ? '✓ Authorization successful! You are signed in. Please send your message again to use the toolkit.'
               : '✓ Authorization successful! Your credentials and session have been saved. Please send your message again to use the authorized MCP server.'}
           </Typography>
