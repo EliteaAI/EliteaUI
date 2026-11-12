@@ -250,14 +250,17 @@ describe('TriggerTypeSelector', () => {
     expect(mocks.updateTrigger).not.toHaveBeenCalled();
   });
 
-  it('still resets a stored webhook when the pipeline becomes restricted', () => {
+  it('keeps a stored legacy webhook, greyed out, when the pipeline becomes restricted (#7402)', () => {
+    // A reset would delete it for good: the option is gone once the trigger is Chat Message
     mocks.triggerData = { type: 'webhook' };
     const { rerender } = render(<TriggerTypeSelector />);
 
     setForm(HITL_YAML);
     rerender(<TriggerTypeSelector disabled={false} />);
 
-    expect(mocks.updateTrigger).toHaveBeenCalledTimes(1);
+    expect(mocks.updateTrigger).not.toHaveBeenCalled();
+    expect(screen.getByTestId('select').dataset.value).toBe('webhook');
+    expect(screen.getByTestId('option-webhook').dataset.disabled).toBe('true');
   });
 
   it('shows a hint that names the Schedules section', () => {
