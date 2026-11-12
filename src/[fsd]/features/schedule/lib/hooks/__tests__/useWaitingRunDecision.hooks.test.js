@@ -288,6 +288,109 @@ describe('useWaitingRunDecision', () => {
     expect(mocks.decide.mock.calls[0][0]).not.toHaveProperty('mcpAuth');
   });
 
+  it('keeps the run waiting and shows the server text when approve all is off for the project', async () => {
+    mocks.decide.mockReturnValue(
+      fail({
+        status: 409,
+        data: { field: 'approve_all', code: 'approve_all_off', error: 'Run without asking is off.' },
+      }),
+    );
+    const result = setup();
+    await act(() => result.current({ ...request, approveAll: true }));
+    expect(mocks.toastError).toHaveBeenCalledWith('Run without asking is off.');
+    expect(mocks.toastInfo).not.toHaveBeenCalled();
+    expect(mocks.refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the usual message on a 409 approve_all_off without server text', async () => {
+    mocks.decide.mockReturnValue(fail({ status: 409, data: { code: 'approve_all_off' } }));
+    const result = setup();
+    await act(() => result.current({ ...request, approveAll: true }));
+    expect(mocks.toastError).toHaveBeenCalledTimes(1);
+    expect(mocks.toastInfo).not.toHaveBeenCalled();
+  });
+
+  it('shows a clear message on a 403 of an approve all and keeps the run waiting', async () => {
+    mocks.decide.mockReturnValue(fail({ status: 403 }));
+    const result = setup();
+    await act(() => result.current({ ...request, approveAll: true }));
+    expect(mocks.toastError).toHaveBeenCalledWith(
+      'Only the person who started this run can approve all its tools.',
+    );
+    expect(mocks.toastInfo).not.toHaveBeenCalled();
+    expect(mocks.refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the server text on a 403 of an approve all for a webhook run and reloads the run', async () => {
+    mocks.decide.mockReturnValue(
+      fail({
+        status: 403,
+        data: { code: 'approve_all_webhook', error: 'Approve all is not available for a webhook run.' },
+      }),
+    );
+    const result = setup();
+    await act(() => result.current({ ...request, approveAll: true }));
+    expect(mocks.toastError).toHaveBeenCalledWith('Approve all is not available for a webhook run.');
+    expect(mocks.refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['no body', {}],
+    ['a body without a code', { data: { error: 'Internal detail.' } }],
+    ['another code', { data: { code: 'forbidden', error: 'Internal detail.' } }],
+    ['the webhook code without a text', { data: { code: 'approve_all_webhook' } }],
+  ])('keeps the fixed sentence on a 403 of an approve all with %s', async (_name, extra) => {
+    mocks.decide.mockReturnValue(fail({ status: 403, ...extra }));
+    const result = setup();
+    await act(() => result.current({ ...request, approveAll: true }));
+    expect(mocks.toastError).toHaveBeenCalledWith(
+      'Only the person who started this run can approve all its tools.',
+    );
+    expect(mocks.refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('passes approveAll to the chat decision only when it is set', async () => {
+    mocks.decide.mockReturnValue(ok());
+    const result = setup();
+    await act(() => result.current({ ...request, approveAll: true }));
+    expect(mocks.decide).toHaveBeenLastCalledWith(
+      expect.objectContaining({ action: 'approve', approveAll: true }),
+    );
+
+    await act(() => result.current(request));
+    expect(mocks.decide.mock.calls[1][0]).not.toHaveProperty('approveAll');
+  });
+
+  it('never sends approveAll through the routes of a run without a chat', async () => {
+    mocks.decideWithoutChat.mockReturnValue(ok());
+    mocks.decideTestRun.mockReturnValue(ok());
+    const scheduleHook = setup();
+    await act(() => scheduleHook.current({ action: 'approve', runId: 41, approveAll: true }));
+    expect(mocks.decideWithoutChat.mock.calls[0][0]).not.toHaveProperty('approveAll');
+
+    const testRun = { isDraftRun: true, requested_by: 5 };
+    const { result } = renderHook(() => useWaitingRunDecision({ run: testRun, onDecided: mocks.refetch }));
+    await act(() => result.current({ action: 'approve', runId: 41, approveAll: true }));
+    expect(mocks.decideTestRun.mock.calls[0][0]).not.toHaveProperty('approveAll');
+  });
+
+  it('never sends approveAll with the sign-in request', async () => {
+    mocks.decide.mockReturnValue(ok());
+    const result = setup();
+    await act(() =>
+      result.current({
+        ...request,
+        approveAll: true,
+        authRequest: {
+          authorizationRequestId: 'auth-1',
+          toolCallId: 'call-1',
+          serverUrl: 'https://mcp.example',
+        },
+      }),
+    );
+    expect(mocks.decide.mock.calls[0][0]).not.toHaveProperty('approveAll');
+  });
+
   it('decides a run without a chat through the schedule route', async () => {
     mocks.decideWithoutChat.mockReturnValue(ok());
     const result = setup();

@@ -110,25 +110,10 @@ describe('getWaitingRunNeed', () => {
   });
 });
 
-describe('getWaitingRunNeed for the tools approval before the first call', () => {
-  const tools = [
-    { toolkit: 'github', tool: 'create_pull_request' },
-    { toolkit: 'github', tool: 'delete_file' },
-  ];
-
-  it('returns the need and the tools that may still ask', () => {
-    const mayAsk = [{ toolkit: 'jira', tool: 'create_issue' }];
-    expect(getWaitingRunNeed({ kind: 'paused', need: 'tools', tools, may_ask: mayAsk })).toEqual({
-      need: 'tools',
-      mayAsk,
-    });
-  });
-
-  it('returns empty lists when the event carries none', () => {
-    expect(getWaitingRunNeed({ kind: 'paused', need: 'tools' })).toEqual({
-      need: 'tools',
-      mayAsk: [],
-    });
+describe('getWaitingRunNeed for an event of the earlier pre-start kind', () => {
+  it('returns no need for need tools, so the pause is read as a plain call-time pause', () => {
+    const tools = [{ toolkit: 'github', tool: 'create_pull_request' }];
+    expect(getWaitingRunNeed({ kind: 'paused', need: 'tools', tools, may_ask: tools })).toEqual({});
   });
 });
 

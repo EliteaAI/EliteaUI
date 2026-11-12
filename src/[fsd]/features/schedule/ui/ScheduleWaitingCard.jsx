@@ -38,6 +38,7 @@ import ScheduleRunApproval from './ScheduleRunApproval';
 import ScheduleWaitingTools from './ScheduleWaitingTools';
 
 const noop = () => {};
+const TOOL_CALL_LEAD = 'This run is paused before a sensitive tool call.';
 const STEP2_NOTE = 'Reject ends the run as Failed.';
 // The credential and the sign-in belong to the user the run acts as; only the decider presses Approve and Reject
 const ACTOR_LABEL = { owner: 'schedule owner', starter: 'user who started this run' };
@@ -87,9 +88,10 @@ const ScheduleWaitingCard = memo(
     const isSignIn = waiting.need === WAITING_NEED.SIGN_IN;
     // A call-time pause for one tool names it in its text; from two tools on, a fixed sentence and the list
     const pausedTools = getPausedTools(pausedEvent);
-    const listedTools = waiting.need === WAITING_NEED.TOOLS || pausedTools.length > 1 ? pausedTools : [];
+    const listedTools = pausedTools.length > 1 ? pausedTools : [];
+    // The lead sentence claims a tool-call pause, so it needs a tool or the server's pause text behind it
+    const knowsToolCall = pausedTools.length > 0 || Boolean(pausedEvent?.text);
     const moreToolsCount = listedTools.length > 0 ? getPausedMoreCount(pausedEvent) : 0;
-    const mayAskTools = waiting.mayAsk ?? [];
     const { authAction } = conversation;
     // The credential check and the sign-in tokens come from the user the run acts as
     const actorId = getCredentialOwnerId(shownRun, schedule);
@@ -137,9 +139,13 @@ const ScheduleWaitingCard = memo(
       now,
     );
 
+    // A single tool without a pause text is still named
+    const pausedText =
+      pausedEvent?.text ||
+      (pausedTools.length === 1 ? `Paused for approval: ${formatTool(pausedTools[0])}` : '');
     const description = describeNeed(
       { ...waiting, toolkit: waiting.toolkit || toolkitName },
-      pausedEvent?.text,
+      pausedText,
       listedTools.length > 1,
     );
     const toolkitLabel = waiting.toolkit || toolkitName || 'the toolkit';
@@ -172,8 +178,10 @@ const ScheduleWaitingCard = memo(
     });
     const approval = (
       <ScheduleRunApproval
+        key={shownRun.id}
         compact
         plain={!isCredential && !isSignIn}
+        approveAllAllowed={Boolean(detail) && detail.can_approve_all !== false}
         schedule={schedule}
         run={shownRun}
         runId={shownRun.id}
@@ -205,22 +213,13 @@ const ScheduleWaitingCard = memo(
               variant="bodySmall"
               sx={styles.noticeText}
             >
-              {`This run will not start until you approve it. ${description} ${STEP2_NOTE}`}
+              {`${knowsToolCall ? `${TOOL_CALL_LEAD} ` : ''}${description} ${STEP2_NOTE}`}
             </Typography>
           </Box>
           <ScheduleWaitingTools
             tools={listedTools}
             moreCount={moreToolsCount}
           />
-          {mayAskTools.length > 0 && (
-            <Typography
-              data-testid="schedule-waiting-may-ask"
-              variant="bodySmall"
-              color="text.secondary"
-            >
-              {`These tools from the global list may still ask during the run: ${mayAskTools.map(formatTool).join(', ')}.`}
-            </Typography>
-          )}
           {expiry && (
             <Typography
               data-testid="schedule-waiting-expiry"

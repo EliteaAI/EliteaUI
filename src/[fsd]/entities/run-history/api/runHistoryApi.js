@@ -78,7 +78,7 @@ export const runHistoryApi = eliteaApi
       // action is 'approve' or 'reject'; await_task_timeout -1 returns without waiting for the run.
       // A sign-in pause (`mcpAuth` set) resumes with the mcp_auth fields; a sensitive-tool pause with hitl_*.
       decideWaitingRun: build.mutation({
-        query: ({ projectId, conversationUuid, messageId, action, mcpAuth }) => ({
+        query: ({ projectId, conversationUuid, messageId, action, mcpAuth, approveAll }) => ({
           url: `/elitea_core/continue_predict/prompt_lib/${projectId}/${conversationUuid}`,
           method: 'POST',
           body: mcpAuth
@@ -100,7 +100,14 @@ export const runHistoryApi = eliteaApi
                 ...(action === 'approve' && { mcp_tokens: mcpAuth.mcpTokens }),
                 await_task_timeout: -1,
               }
-            : { message_id: messageId, hitl_resume: true, hitl_action: action, await_task_timeout: -1 },
+            : {
+                message_id: messageId,
+                hitl_resume: true,
+                hitl_action: action,
+                // Only an approve may carry it; the server refuses any other mix
+                ...(action === 'approve' && approveAll && { approve_all: true }),
+                await_task_timeout: -1,
+              },
         }),
         invalidatesTags: [LIST_TAG],
       }),

@@ -86,6 +86,49 @@ describe('run history decideWaitingRun', () => {
   });
 });
 
+describe('run history decideWaitingRun with approve all', () => {
+  let fetchSpy;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    fetchSpy = vi.spyOn(globalThis, 'fetch');
+  });
+
+  it('approve with approveAll adds approve_all true to the hitl body', async () => {
+    const { body } = await decide('approve', fetchSpy, { approveAll: true });
+
+    expect(body).toEqual({
+      message_id: 42,
+      hitl_resume: true,
+      hitl_action: 'approve',
+      approve_all: true,
+      await_task_timeout: -1,
+    });
+  });
+
+  it('approve without approveAll sends no approve_all', async () => {
+    const { body } = await decide('approve', fetchSpy, { approveAll: false });
+
+    expect(body).not.toHaveProperty('approve_all');
+  });
+
+  it('reject never sends approve_all', async () => {
+    const { body } = await decide('reject', fetchSpy, { approveAll: true });
+
+    expect(body).not.toHaveProperty('approve_all');
+  });
+
+  it('the sign-in body never carries approve_all', async () => {
+    const { body } = await decide('approve', fetchSpy, {
+      approveAll: true,
+      mcpAuth: { authorizationRequestId: 'auth-1', toolCallId: 'call-1', mcpTokens: {} },
+    });
+
+    expect(body.mcp_auth_resume).toBe(true);
+    expect(body).not.toHaveProperty('approve_all');
+  });
+});
+
 describe('run history decideWaitingRun for a sign-in pause', () => {
   let fetchSpy;
   const mcpAuth = {
