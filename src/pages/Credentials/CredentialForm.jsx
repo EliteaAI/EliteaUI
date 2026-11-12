@@ -223,8 +223,9 @@ const CredentialForm = memo(props => {
   const isFormDirtyRef = useRef(false);
   const configOAuth = useConfigOAuthModal({
     onSuccess: async () => {
-      await storedLoginRef.current?.saveLogin({ isFormDirty: isFormDirtyRef.current });
-      onTestConnectionRef.current?.();
+      const saved = await storedLoginRef.current?.saveLogin({ isFormDirty: isFormDirtyRef.current });
+      // Stored-login types report through the save; a re-test would still see the old settings and reopen the login
+      if (saved === undefined) onTestConnectionRef.current?.();
     },
     // The stored-login save reports the outcome itself
     showSuccessToast: !(
@@ -246,7 +247,10 @@ const CredentialForm = memo(props => {
   // (which is the integer DB ID) — so the key matches the backend's configuration_uuid
   // that is set during expand_configuration().
   const { toastSuccess } = useToast();
-  const oauthServerUrl = credentialDetails?.settings?.oauth_discovery_endpoint;
+  const oauthServerUrl = StoredLoginHelpers.getCredentialAuthority(
+    credentialDetails?.type,
+    credentialDetails?.settings,
+  );
   // Build a credential-scoped key when we have both a UUID and a discovery endpoint.
   const credentialUuid = credentialDetails?.uuid;
   const oauthTokenKey = useMemo(() => {
