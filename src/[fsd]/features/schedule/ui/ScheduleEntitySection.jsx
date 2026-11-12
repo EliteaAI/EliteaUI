@@ -21,6 +21,8 @@ const TYPE_ITEMS = [
   { value: 'pipeline', label: 'Pipeline' },
   { value: TOOLKIT_INDEX_TYPE, label: 'Toolkit Index' },
 ];
+// The server refuses a webhook on an index (it runs on a cron only), so the webhook form does not offer it
+const WEBHOOK_TYPE_ITEMS = TYPE_ITEMS.filter(item => item.value !== TOOLKIT_INDEX_TYPE);
 const TYPE_LABEL = {
   agent: 'Agent',
   pipeline: 'Pipeline',
@@ -40,6 +42,7 @@ const ScheduleEntitySection = memo(props => {
     details,
     lockFailed,
     readOnly,
+    isWebhook = false,
     error,
     indexError,
     onTypeChange,
@@ -145,7 +148,7 @@ const ScheduleEntitySection = memo(props => {
       )}
       <ScheduleSegmentedToggle
         testId="schedule-type"
-        items={TYPE_ITEMS}
+        items={isWebhook ? WEBHOOK_TYPE_ITEMS : TYPE_ITEMS}
         value={type}
         onChange={handleTypeChange}
       />
