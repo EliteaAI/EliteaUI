@@ -3,10 +3,12 @@ import { memo, useCallback, useState } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import { useProjectInfoQuery } from '@/[fsd]/features/settings/api/projectInfoApi';
+import { dateFormatter } from '@/[fsd]/features/settings/lib/helpers/dateFormatter.helpers';
 import { useCanManageProjectSettings } from '@/[fsd]/features/settings/lib/hooks';
 import { useSelectedProjectId, useSelectedProjectName } from '@/[fsd]/shared/lib/hooks';
 import { ProjectAvatar } from '@/[fsd]/widgets/sidebar-root';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
+import CalendarIcon from '@/components/Icons/CalendarIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 import UsersIcon from '@/components/Icons/UsersIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
@@ -35,6 +37,7 @@ const ProjectParamsHeader = memo(() => {
 
   const iconMeta = projectInfo?.icon_meta;
   const teammatesCount = projectInfo?.teammates_count ?? 0;
+  const projectCreated = dateFormatter(projectInfo?.created_at);
 
   const handleOpenDialog = useCallback(() => {
     if (!canEdit) return;
@@ -79,6 +82,13 @@ const ProjectParamsHeader = memo(() => {
                 <Typography sx={styles.metaLabel}>Teammates:</Typography>
                 <Typography sx={styles.metaValue}>{teammatesCount}</Typography>
               </Box>
+              {projectCreated && (
+                <Box sx={styles.metaItem}>
+                  <CalendarIcon sx={styles.metaIconSvg} />
+                  <Typography sx={styles.metaLabel}>Project created:</Typography>
+                  <Typography sx={styles.metaValue}>{projectCreated}</Typography>
+                </Box>
+              )}
             </Box>
           )}
         </Box>

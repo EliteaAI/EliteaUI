@@ -10,6 +10,7 @@ const { MCP_SESSION_STORAGE_KEYS } = McpAuthConstants;
 const initialState = () => ({
   id: null,
   email: null,
+  first_login: null,
   last_login: null,
   name: null,
   permissions: sessionStorage.getItem(PermissionStorageKey)
