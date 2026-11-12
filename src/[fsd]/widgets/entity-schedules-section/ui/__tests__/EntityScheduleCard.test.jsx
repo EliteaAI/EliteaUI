@@ -372,6 +372,8 @@ describe('EntityScheduleCard', () => {
       cron: null,
       timezone: null,
       next_run: null,
+      last_delivery_at: new Date(2026, 9, 19, 8, 30).toISOString(),
+      last_delivery_outcome: 'started',
       allowed_actions: ['edit', 'pause', 'rotate_secret', 'delete'],
     };
     const webhookCard = () => screen.getByTestId('agent-webhook-card-7');
@@ -381,13 +383,20 @@ describe('EntityScheduleCard', () => {
       expect(screen.getByTestId('agent-webhook-card-title-7')).toHaveTextContent('Daily digest · GitLab');
       expect(screen.getByTestId('agent-webhook-card-url-7-copy')).toBeInTheDocument();
       expect(webhookCard()).toHaveTextContent('/hooks/prompt_lib/5/abc');
-      expect(webhookCard()).toHaveTextContent(/Last delivery:\s*19.10.2026/);
+      expect(webhookCard()).toHaveTextContent(/Last delivery:\s*19-10-2026, 08:30 AM/);
       expect(webhookCard()).not.toHaveTextContent('Next run');
     });
 
     it('says when no delivery came yet', () => {
-      renderCard({ ...WEBHOOK, last_run: null, last_run_status: null });
+      // A run time alone (a sample run) is not a delivery
+      renderCard({ ...WEBHOOK, last_delivery_at: null, last_delivery_outcome: null });
       expect(webhookCard()).toHaveTextContent('No deliveries yet');
+      expect(within(webhookCard()).queryByTestId('schedule-run-status')).not.toBeInTheDocument();
+    });
+
+    it('shows the run status chip next to a delivery', () => {
+      renderCard(WEBHOOK);
+      expect(within(webhookCard()).getByTestId('schedule-run-status')).toBeInTheDocument();
     });
 
     it('names the end of the rotation window while the old secret is still accepted', () => {

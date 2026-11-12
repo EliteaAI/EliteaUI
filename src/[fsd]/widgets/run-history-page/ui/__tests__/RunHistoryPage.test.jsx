@@ -52,11 +52,19 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 2 }));
 
 vi.mock('@/api/applications', () => ({ useApplicationDetailsQuery: () => ({ data: undefined }) }));
 
-const scheduleList = vi.hoisted(() => ({ args: null, rows: [{ id: 4, name: 'Daily digest' }] }));
+const scheduleList = vi.hoisted(() => ({
+  args: null,
+  calls: [],
+  rows: [{ id: 4, name: 'Daily digest' }],
+  webhookRows: [{ id: 8, name: 'Push hook', trigger_kind: 'webhook' }],
+}));
 
 vi.mock('@/[fsd]/entities/schedule', async () => ({
   ...(await vi.importActual('@/[fsd]/entities/schedule/lib/helpers')),
+  // Run History loads the cron and the webhook rows in two calls; `args` keeps the cron one
   useAllEntitySchedules: args => {
+    scheduleList.calls.push(args);
+    if (args.triggerKind === 'webhook') return { rows: args.skip ? [] : scheduleList.webhookRows };
     scheduleList.args = args;
     return { rows: args.skip ? [] : scheduleList.rows };
   },
@@ -116,7 +124,10 @@ const renderAt = (url, extraProps) =>
   );
 
 describe('RunHistoryPage opening run analytics', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    scheduleList.calls = [];
+  });
 
   afterEach(() => cleanup());
 
@@ -168,16 +179,41 @@ describe('RunHistoryPage schedule filter and links', () => {
 
     expect(scheduleList.args).toMatchObject({ entityType: 'agent', entityId: '127', skip: false });
     expect(containerProps.current.queryParams).toEqual({ schedule_id: 4 });
-    expect(screen.getByLabelText('Schedule')).toHaveValue('4');
+    expect(screen.getByLabelText('Schedule/Webhook')).toHaveValue('4');
 
-    fireEvent.change(screen.getByLabelText('Schedule'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('Schedule/Webhook'), { target: { value: '' } });
     expect(containerProps.current.queryParams).toEqual({});
   });
 
   it('loads every page of the entity schedules so every name can link', () => {
     renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
 
-    expect(scheduleList.args).toEqual({ entityType: 'agent', entityId: '127', skip: false });
+    expect(scheduleList.args).toEqual({
+      entityType: 'agent',
+      entityId: '127',
+      triggerKind: 'cron',
+      skip: false,
+    });
+    expect(scheduleList.calls).toContainEqual({
+      entityType: 'agent',
+      entityId: '127',
+      triggerKind: 'webhook',
+      skip: false,
+    });
+  });
+
+  it('a webhook name links to the webhook editor, not the schedule one', () => {
+    renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
+    const [scheduleColumn] = containerProps.current.extraColumns;
+
+    render(
+      <ThemeProvider theme={LIGHT_THEME}>
+        <MemoryRouter>
+          {scheduleColumn.render({ schedule_run: { schedule_id: 8, schedule_name: 'Push hook' } })}
+        </MemoryRouter>
+      </ThemeProvider>,
+    );
+    expect(screen.getByRole('link', { name: 'Push hook' }).getAttribute('href')).toMatch(/webhooks\/8\?/);
   });
 
   it('a schedule not in the caller list shows a plain name', () => {
@@ -212,19 +248,19 @@ describe('RunHistoryPage schedule filter and links', () => {
   it('ignores a schedule_id that is not a number, and keeps an unknown valid id as an option', () => {
     renderAt('/agents/all/127/history?schedule_id=abc', { scheduleEntityType: 'agent' });
     expect(containerProps.current.queryParams).toEqual({});
-    expect(screen.getByLabelText('Schedule')).toHaveValue('');
+    expect(screen.getByLabelText('Schedule/Webhook')).toHaveValue('');
     cleanup();
 
     renderAt('/agents/all/127/history?schedule_id=55', { scheduleEntityType: 'agent' });
     expect(containerProps.current.queryParams).toEqual({ schedule_id: 55 });
-    expect(screen.getByLabelText('Schedule')).toHaveValue('55');
+    expect(screen.getByLabelText('Schedule/Webhook')).toHaveValue('55');
     expect(screen.getByRole('option', { name: 'Schedule 55' })).toBeInTheDocument();
   });
 
   it('shows "All" as the value when no schedule is chosen', () => {
     renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
 
-    const select = screen.getByLabelText('Schedule');
+    const select = screen.getByLabelText('Schedule/Webhook');
     expect(select).toHaveValue('');
     expect(select).toHaveAttribute('data-display-empty', 'true');
     // the label sits above the shown "All", not on top of it
@@ -272,7 +308,7 @@ describe('RunHistoryPage schedule filter and links', () => {
     expect(containerProps.current.queryParams).toEqual({});
   });
 
-  it('offers the three trigger types and ignores an unknown value in the link', () => {
+  it('offers the four trigger types and ignores an unknown value in the link', () => {
     renderAt('/agents/all/127/history?trigger=bogus&status=bogus', { scheduleEntityType: 'agent' });
 
     expect(containerProps.current.queryParams).toEqual({});
@@ -281,6 +317,7 @@ describe('RunHistoryPage schedule filter and links', () => {
       'All',
       'Scheduled',
       'Manual',
+      'Webhook',
       'Test',
     ]);
   });
@@ -288,7 +325,7 @@ describe('RunHistoryPage schedule filter and links', () => {
   it('histories without schedules show no Schedule filter and no extra columns', () => {
     renderAt('/agents/all/127/history');
 
-    expect(screen.queryByLabelText('Schedule')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Schedule/Webhook')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Status')).toBeInTheDocument();
     expect(containerProps.current.extraColumns).toBeUndefined();
     expect(scheduleList.args.skip).toBe(true);

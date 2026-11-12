@@ -464,7 +464,7 @@ describe('EntitySchedulesSection', () => {
       expect(mocks.entitySchedules.mock.calls.at(-1)[0].triggerKind).toBeUndefined();
     });
 
-    it('has its own anchor, "+ Webhook" and the "Open all in Webhooks" link', () => {
+    it('has its own anchor, "+ Webhook" and the "Manage Webhooks" link', () => {
       renderSection({ kind: 'webhook' });
       expect(document.getElementById('entity-webhooks-section')).not.toBeNull();
       expect(screen.getByText('Webhooks')).toBeInTheDocument();

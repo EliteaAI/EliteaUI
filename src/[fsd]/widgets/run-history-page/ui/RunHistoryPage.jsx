@@ -6,6 +6,7 @@ import { Box, Link } from '@mui/material';
 
 import { RunHistoryContainer, SCHEDULE_RUN_COLUMNS } from '@/[fsd]/entities/run-history';
 import {
+  TRIGGER_KIND,
   buildOwnerViewModeParams,
   buildScheduleFormLink,
   useAllEntitySchedules,
@@ -47,21 +48,29 @@ const RunHistoryPage = memo(props => {
   const versions = data?.versions ?? [];
 
   // The caller's schedules of this agent or pipeline fill the filter and decide which names link
-  const { rows: schedules } = useAllEntitySchedules({
+  const { rows: cronSchedules } = useAllEntitySchedules({
     entityType: scheduleEntityType,
     entityId: agentId,
+    triggerKind: TRIGGER_KIND.cron,
     skip: !scheduleEntityType,
   });
+  const { rows: webhooks } = useAllEntitySchedules({
+    entityType: scheduleEntityType,
+    entityId: agentId,
+    triggerKind: TRIGGER_KIND.webhook,
+    skip: !scheduleEntityType,
+  });
+  const schedules = useMemo(() => [...cronSchedules, ...webhooks], [cronSchedules, webhooks]);
   const filters = useRunHistoryFilters({ schedules, versions });
   const extraColumns = useMemo(() => {
     if (!scheduleEntityType) return undefined;
-    const openable = new Set(schedules.map(schedule => schedule.id));
+    const kindById = new Map(schedules.map(schedule => [schedule.id, schedule.trigger_kind]));
     const [scheduleColumn, ...rest] = SCHEDULE_RUN_COLUMNS;
     const renderSchedule = row => {
       const name = scheduleColumn.render(row);
       const scheduleId = row.schedule_run?.schedule_id;
       // A schedule the caller cannot open stays plain text, so no link leads to a dead page
-      if (!openable.has(scheduleId)) return name;
+      if (!kindById.has(scheduleId)) return name;
       return (
         // The theme link, so the name reads well in dark and light
         <Link
@@ -72,6 +81,7 @@ const RunHistoryPage = memo(props => {
               entityId: agentId,
               tab,
               scheduleId,
+              kind: kindById.get(scheduleId),
             }),
             // Without the owner view mode the editor falls back to the public mode and fails to load
             search: `?${buildOwnerViewModeParams()}`,
