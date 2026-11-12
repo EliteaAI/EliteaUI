@@ -166,7 +166,7 @@ describe('RestoreProjectDialog', () => {
     );
     expect(mocks.dispatch).toHaveBeenCalledWith({ type: 'chat/reset', payload: { projectId: 10 } });
     expect(mocks.toastWarning).toHaveBeenCalledWith(
-      'Restore completed. 3 attachment file(s) could not be restored.',
+      'Restore completed. 3 chat attachment(s) could not be restored.',
     );
   });
 
@@ -213,10 +213,10 @@ describe('RestoreProjectDialog', () => {
     fireEvent.click(screen.getByTestId('project-restore-submit'));
 
     expect(await screen.findByTestId('project-restore-skill-files-summary')).toHaveTextContent(
-      'Skill files: 22 total, 0 present, 20 uploaded, 2 missing (notes.txt, references/guide.md)',
+      'Skill attachments: 22 total, 0 present, 20 uploaded, 2 missing (notes.txt, references/guide.md)',
     );
     expect(mocks.toastWarning).toHaveBeenCalledWith(
-      'Restore completed. 2 skill file(s) could not be restored.',
+      'Restore completed. 2 skill attachment(s) could not be restored.',
     );
   });
 
@@ -239,7 +239,7 @@ describe('RestoreProjectDialog', () => {
     fireEvent.click(screen.getByTestId('project-restore-submit'));
 
     expect(await screen.findByTestId('project-restore-skill-files-summary')).toHaveTextContent(
-      'Skill files: 2 total, 0 present, 1 uploaded, 1 missing',
+      'Skill attachments: 2 total, 0 present, 1 uploaded, 1 missing',
     );
     expect(mocks.toastWarning).not.toHaveBeenCalled();
   });
@@ -297,7 +297,7 @@ describe('RestoreProjectDialog', () => {
     await screen.findByTestId('project-restore-skill-files-summary');
     expect(mocks.toastWarning).toHaveBeenCalledTimes(1);
     expect(mocks.toastWarning).toHaveBeenCalledWith(
-      'Restore completed. 3 attachment file(s) and 2 skill file(s) could not be restored.',
+      'Restore completed. 3 chat attachment(s) and 2 skill attachment(s) could not be restored.',
     );
   });
 });

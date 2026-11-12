@@ -17,13 +17,13 @@ export const CHAT_BACKUP_OPTION_LABELS = {
 };
 
 export const SKILL_FILES_OPTION = {
-  all: 'all',
   none: 'none',
+  all: 'all',
 };
 
 export const SKILL_FILES_BACKUP_OPTION_LABELS = {
-  [SKILL_FILES_OPTION.all]: 'All skill files',
-  [SKILL_FILES_OPTION.none]: 'Do not include skill files',
+  [SKILL_FILES_OPTION.none]: 'Do not include attachments',
+  [SKILL_FILES_OPTION.all]: 'Include attachments',
 };
 
 export const CHAT_RESTORE_OPTION_LABELS = {
