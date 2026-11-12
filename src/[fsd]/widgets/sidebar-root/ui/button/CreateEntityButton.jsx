@@ -6,18 +6,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, ClickAwayListener, Paper, Popper, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { useIsOwnLLMsRestricted } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { CreateEntityConstants } from '@/[fsd]/widgets/sidebar-root/lib/constants';
 import { useDisablePersonalSpace } from '@/[fsd]/widgets/sidebar-root/lib/hooks';
 import PlusIcon from '@/assets/plus-icon.svg?react';
-import {
-  ALLOW_PROJECT_OWN_LLMS,
-  PERMISSIONS,
-  PUBLIC_PROJECT_ID,
-  SearchParams,
-  ViewMode,
-} from '@/common/constants';
+import { PERMISSIONS, SearchParams, ViewMode } from '@/common/constants';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
 import CheckIcon from '@/components/Icons/CheckIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
@@ -33,7 +27,7 @@ const CreateEntityButton = memo(props => {
   const isCreatingNewConversation = useSelector(state => state.chat.isCreatingNewConversation);
 
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
-  const [selectedOption, setSelectedOption] = useState('Chat');
+  const [selectedOption, setSelectedOption] = useState(CreateEntityConstants.OptionsMap.Chat);
   const [openMenu, setOpenMenu] = useState(false);
   const { pathname, state } = useLocation();
   const locationState = useMemo(() => ({ from: [], routeStack: [], ...state }), [state]);
@@ -75,14 +69,6 @@ const CreateEntityButton = memo(props => {
     ],
   );
   const { shouldDisablePersonalSpace } = useDisablePersonalSpace();
-  const projectId = useSelectedProjectId();
-  const shouldDisableOwnLLMs = useMemo(
-    () =>
-      selectedOption === 'Configuration' &&
-      ALLOW_PROJECT_OWN_LLMS === false &&
-      projectId != PUBLIC_PROJECT_ID,
-    [selectedOption, projectId],
-  );
 
   const isSimpleCreateRoute = useMemo(() => {
     const lowerPathname = pathname.toLowerCase();
@@ -94,6 +80,16 @@ const CreateEntityButton = memo(props => {
       CreateEntityConstants.DropdownItems.some(item => pathname.includes(item.route));
     return isSimple || !isKnownRoute;
   }, [pathname]);
+
+  const isOwnLLMsRestricted = useIsOwnLLMsRestricted();
+
+  const shouldDisableOwnLLMs = useMemo(
+    () =>
+      !isSimpleCreateRoute &&
+      selectedOption === CreateEntityConstants.OptionsMap.AIProvider &&
+      isOwnLLMsRestricted,
+    [isSimpleCreateRoute, selectedOption, isOwnLLMsRestricted],
+  );
 
   const currentLabel = useMemo(() => {
     const lowerPathname = pathname.toLowerCase();
@@ -115,7 +111,7 @@ const CreateEntityButton = memo(props => {
       }
 
       switch (stateOption) {
-        case 'Secret':
+        case CreateEntityConstants.OptionsMap.Secret:
           {
             // Navigate to settings/secrets with a flag to trigger row creation
             const secretsPath = RouteDefinitions.SettingsWithTab.replace(':tab', 'secrets');
@@ -129,7 +125,7 @@ const CreateEntityButton = memo(props => {
             );
           }
           return;
-        case 'User':
+        case CreateEntityConstants.OptionsMap.User:
           {
             // Navigate to settings/users with a flag to trigger invite user dialog
             const usersPath = RouteDefinitions.SettingsWithTab.replace(':tab', 'users');
@@ -143,7 +139,7 @@ const CreateEntityButton = memo(props => {
             );
           }
           return;
-        case 'Application':
+        case CreateEntityConstants.OptionsMap.Application:
           navigate(RouteDefinitions.AppsCatalog, { state: locationState });
           return;
         default: {
@@ -154,7 +150,7 @@ const CreateEntityButton = memo(props => {
               ? 'create=1'
               : `${SearchParams.ViewMode}=${ViewMode.Owner}`;
 
-          if (stateOption === 'AI Provider') {
+          if (stateOption === CreateEntityConstants.OptionsMap.AIProvider) {
             search += '&from=ai-providers';
           }
 
@@ -253,11 +249,14 @@ const CreateEntityButton = memo(props => {
 
   const getHasPermissionForDropdownItem = useCallback(
     option => {
+      // IntegrationGuard redirects away from AI Provider creation under the same condition
+      if (option === CreateEntityConstants.OptionsMap.AIProvider && isOwnLLMsRestricted) return false;
+
       const permissions = CreateEntityConstants.CreationPermissions[option];
       if (!permissions || !permissions.length) return true;
       return permissions.some(permission => checkPermission(permission));
     },
-    [checkPermission],
+    [checkPermission, isOwnLLMsRestricted],
   );
 
   const handleDropdownItemClick = useCallback(

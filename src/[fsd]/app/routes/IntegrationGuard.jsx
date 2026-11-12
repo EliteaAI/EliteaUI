@@ -2,15 +2,14 @@ import { memo } from 'react';
 
 import { Navigate } from 'react-router-dom';
 
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
-import { ALLOW_PROJECT_OWN_LLMS, PUBLIC_PROJECT_ID } from '@/common/constants';
+import { useIsOwnLLMsRestricted } from '@/[fsd]/shared/lib/hooks';
 import RouteDefinitions from '@/routes';
 
 const IntegrationGuard = memo(props => {
   const { children } = props;
-  const projectId = useSelectedProjectId();
+  const isOwnLLMsRestricted = useIsOwnLLMsRestricted();
 
-  if (ALLOW_PROJECT_OWN_LLMS === false && projectId != PUBLIC_PROJECT_ID) {
+  if (isOwnLLMsRestricted) {
     return (
       <Navigate
         to={RouteDefinitions.SettingsWithTab.replace(':tab', 'ai-providers')}
