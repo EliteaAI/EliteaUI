@@ -1,5 +1,6 @@
 export { default as ScheduleForm } from './ScheduleForm';
 export { default as LegacyScheduleNotice } from './LegacyScheduleNotice';
+export { default as LegacyWebhookNotice } from './LegacyWebhookNotice';
 export { default as SaveWarningsDialog } from './SaveWarningsDialog';
 export { default as ScheduleRunsCard } from './ScheduleRunsCard';
 export { default as ScheduleRunStatusChip } from './ScheduleRunStatusChip';

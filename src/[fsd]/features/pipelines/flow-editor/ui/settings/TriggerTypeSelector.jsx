@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 import YAML from 'js-yaml';
@@ -11,7 +11,7 @@ import {
   FlowEditorConstants,
   NodeFieldInfoConstants,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { LegacyScheduleNotice } from '@/[fsd]/features/schedule';
+import { LegacyScheduleNotice, LegacyWebhookNotice } from '@/[fsd]/features/schedule';
 import { useDelegatedOauthToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ModalConstants, ScheduleSectionConstants, WebhookConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProject, useToast } from '@/[fsd]/shared/lib/hooks';
@@ -25,15 +25,14 @@ import PipelineWebhookModal from './PipelineWebhookModal';
 
 const { PipelineNodeTypes } = FlowEditorConstants;
 const { GITLAB_AUTH_METHODS, TRIGGER_TYPES, WEBHOOK_TYPES } = WebhookConstants;
-const { SCHEDULES_SECTION_ID } = ScheduleSectionConstants;
+const { SCHEDULES_SECTION_ID, WEBHOOKS_SECTION_ID } = ScheduleSectionConstants;
 
 // Node types that require user interaction and thus only support Chat Message trigger
 const INTERACTIVE_NODE_TYPES = [PipelineNodeTypes.Hitl, PipelineNodeTypes.Printer];
 
-const TRIGGER_OPTIONS = [
-  { label: 'Chat Message', value: TRIGGER_TYPES.chat_message },
-  { label: 'Webhook', value: TRIGGER_TYPES.webhook },
-];
+const TRIGGER_OPTIONS = [{ label: 'Chat Message', value: TRIGGER_TYPES.chat_message }];
+// Offered only while the version still stores a legacy webhook; new webhooks live in the Webhooks section (#7402)
+const LEGACY_WEBHOOK_OPTION = { label: 'Webhook', value: TRIGGER_TYPES.webhook };
 
 const TriggerTypeSelector = memo(props => {
   const { disabled } = props;
@@ -74,8 +73,10 @@ const TriggerTypeSelector = memo(props => {
 
   // Toolkits authenticated by a per-user OAuth login only hold a token for the browser session of the
   // person who logged in, so a pipeline using them cannot run unattended on a schedule or webhook.
-  const { delegatedOauthToolkitNames, hasDelegatedOauthToolkit, isResolvingCredentials } =
-    useDelegatedOauthToolkits(values?.version_details?.tools, projectId);
+  const { delegatedOauthToolkitNames, hasDelegatedOauthToolkit } = useDelegatedOauthToolkits(
+    values?.version_details?.tools,
+    projectId,
+  );
 
   const restrictedToChatMessage = hasInteractiveElements || hasDelegatedOauthToolkit;
 
@@ -98,63 +99,19 @@ const TriggerTypeSelector = memo(props => {
 
   // Schedule is no longer selectable. A version that still stores one shows it as a disabled option; the user can switch away.
   const isLegacySchedule = currentTriggerType === TRIGGER_TYPES.schedule;
+  const isLegacyWebhook = currentTriggerType === TRIGGER_TYPES.webhook;
 
   // Unattended triggers stay visible but greyed out so the restriction is discoverable; the Trigger
   // label tooltip explains why.
   const availableTriggerOptions = useMemo(() => {
+    const stored = isLegacyWebhook ? [...TRIGGER_OPTIONS, LEGACY_WEBHOOK_OPTION] : TRIGGER_OPTIONS;
     const options = restrictedToChatMessage
-      ? TRIGGER_OPTIONS.map(opt =>
-          opt.value === TRIGGER_TYPES.chat_message ? opt : { ...opt, disabled: true },
-        )
-      : TRIGGER_OPTIONS;
+      ? stored.map(opt => (opt.value === TRIGGER_TYPES.chat_message ? opt : { ...opt, disabled: true }))
+      : stored;
     return isLegacySchedule
       ? [...options, { label: 'Schedule', value: TRIGGER_TYPES.schedule, disabled: true }]
       : options;
-  }, [restrictedToChatMessage, isLegacySchedule]);
-
-  // Previous restriction state, used to detect a change from false to true. Stays `null` until the
-  // credentials behind it have resolved: those queries settle after mount, so the pre-resolution `false`
-  // is not a real state and treating it as one would reset a trigger the user never touched.
-  const prevRestrictedRef = useRef(null);
-
-  // Auto-reset to Chat Message when the pipeline becomes incompatible with its configured trigger
-  useEffect(() => {
-    if (isResolvingCredentials) return;
-
-    const wasNotRestricted = prevRestrictedRef.current === false;
-    const hasIncompatibleTrigger = currentTriggerType === TRIGGER_TYPES.webhook;
-
-    // Only reset if: became restricted AND has incompatible trigger AND we can make the API call
-    if (wasNotRestricted && restrictedToChatMessage && hasIncompatibleTrigger && projectId && versionId) {
-      updateTrigger({
-        projectId,
-        versionId,
-        type: TRIGGER_TYPES.chat_message,
-      })
-        .unwrap()
-        .then(() => {
-          const reason = hasInteractiveElements
-            ? 'pipeline now contains interactive elements'
-            : 'pipeline now contains a toolkit that requires user authorization';
-          toastSuccess(`Trigger reset to Chat Message (${reason})`);
-        })
-        .catch(() => {
-          toastError('Failed to reset trigger');
-        });
-    }
-
-    prevRestrictedRef.current = restrictedToChatMessage;
-  }, [
-    isResolvingCredentials,
-    restrictedToChatMessage,
-    hasInteractiveElements,
-    currentTriggerType,
-    projectId,
-    versionId,
-    updateTrigger,
-    toastSuccess,
-    toastError,
-  ]);
+  }, [restrictedToChatMessage, isLegacySchedule, isLegacyWebhook]);
 
   const currentWebhookType = useMemo(
     () => triggerData?.webhook_type || WEBHOOK_TYPES.github,
@@ -188,31 +145,21 @@ const TriggerTypeSelector = memo(props => {
     return args;
   }, [projectId, versionId, currentWebhookType, currentGitlabAuthMethod]);
 
+  // Only Chat Message can be chosen here: new webhooks live in the Webhooks section (#7402)
   const switchTrigger = useCallback(
     async newType => {
-      if (newType === TRIGGER_TYPES.webhook) {
-        // Save webhook trigger first to generate secret, then open modal
-        try {
-          await updateTrigger(buildWebhookSaveArgs()).unwrap();
-          setIsWebhookModalOpen(true);
-        } catch (error) {
-          toastError(error?.data?.error || 'Failed to configure webhook');
-        }
-      } else {
-        // Switch to chat_message
-        try {
-          await updateTrigger({
-            projectId,
-            versionId,
-            type: newType,
-          }).unwrap();
-          toastSuccess('Trigger updated to Chat Message');
-        } catch (error) {
-          toastError(error?.data?.error || 'Failed to update trigger');
-        }
+      try {
+        await updateTrigger({
+          projectId,
+          versionId,
+          type: newType,
+        }).unwrap();
+        toastSuccess('Trigger updated to Chat Message');
+      } catch (error) {
+        toastError(error?.data?.error || 'Failed to update trigger');
       }
     },
-    [buildWebhookSaveArgs, projectId, versionId, updateTrigger, toastSuccess, toastError],
+    [projectId, versionId, updateTrigger, toastSuccess, toastError],
   );
 
   // Under credential governance an unattended trigger runs only a bound version with a mandate; the backend
@@ -229,17 +176,17 @@ const TriggerTypeSelector = memo(props => {
     [toastSuccess, toastWarning],
   );
 
-  // Replacing a stored schedule deletes it, so the user confirms first
+  // Replacing a stored schedule or legacy webhook deletes it for good, so the user confirms first
   const handleTriggerTypeChange = useCallback(
     newType => {
       if (newType === currentTriggerType) return;
-      if (isLegacySchedule) {
+      if (isLegacySchedule || isLegacyWebhook) {
         setPendingTriggerType(newType);
         return;
       }
       switchTrigger(newType);
     },
-    [currentTriggerType, isLegacySchedule, switchTrigger],
+    [currentTriggerType, isLegacySchedule, isLegacyWebhook, switchTrigger],
   );
 
   const handleCancelReplace = useCallback(() => setPendingTriggerType(null), []);
@@ -318,6 +265,10 @@ const TriggerTypeSelector = memo(props => {
     document.getElementById(SCHEDULES_SECTION_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
+  const scrollToWebhooks = useCallback(() => {
+    document.getElementById(WEBHOOKS_SECTION_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
   const triggerTooltip = useMemo(() => {
     const baseTooltip =
       NodeFieldInfoConstants.COMMON_NODE_FIELD_INFO[NodeFieldInfoConstants.NODE_FIELD_KEYS.trigger];
@@ -392,6 +343,8 @@ const TriggerTypeSelector = memo(props => {
         </Typography>
       </BannerMessage>
 
+      {isLegacyWebhook && <LegacyWebhookNotice onOpenWebhooks={scrollToWebhooks} />}
+
       {isLegacySchedule && (
         <LegacyScheduleNotice
           cron={triggerData?.cron}
@@ -403,8 +356,12 @@ const TriggerTypeSelector = memo(props => {
         open={Boolean(pendingTriggerType)}
         variant={ModalConstants.MODAL_VARIANT.simple}
         titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
-        title="Replace schedule"
-        content="The old schedule of this version will be deleted and replaced by the new trigger. Continue?"
+        title={isLegacyWebhook ? 'Replace webhook' : 'Replace schedule'}
+        content={
+          isLegacyWebhook
+            ? 'The old webhook of this version stops working and cannot be set up here again. Continue?'
+            : 'The old schedule of this version will be deleted and replaced by the new trigger. Continue?'
+        }
         onClose={handleCancelReplace}
         onConfirm={handleConfirmReplace}
         confirmButtonText="Replace"
