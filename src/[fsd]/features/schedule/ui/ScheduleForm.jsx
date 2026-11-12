@@ -287,6 +287,7 @@ const ScheduleForm = memo(props => {
               details={isIndex ? toolkitDetails : details}
               lockFailed={lockFailed}
               readOnly={readOnly}
+              isWebhook={isWebhookRow(values)}
               error={fieldError(isIndex ? 'toolkit_id' : 'application_id')}
               indexError={fieldError('index_name')}
               onTypeChange={handleTypeChange}

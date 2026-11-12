@@ -109,6 +109,24 @@ describe('ScheduleEntitySection', () => {
     expect(onTypeChange).toHaveBeenCalledWith('pipeline');
   });
 
+  it('offers Agent, Pipeline and Toolkit Index for a schedule', () => {
+    listQuery.mockReturnValue({ data: { rows: [], total: 0 } });
+    renderSection();
+
+    expect(screen.getByTestId('schedule-type-agent')).toBeInTheDocument();
+    expect(screen.getByTestId('schedule-type-pipeline')).toBeInTheDocument();
+    expect(screen.getByTestId('schedule-type-toolkit_index')).toBeInTheDocument();
+  });
+
+  it('offers only Agent and Pipeline for a webhook, which the server refuses on an index', () => {
+    listQuery.mockReturnValue({ data: { rows: [], total: 0 } });
+    renderSection({ isWebhook: true });
+
+    expect(screen.getByTestId('schedule-type-agent')).toBeInTheDocument();
+    expect(screen.getByTestId('schedule-type-pipeline')).toBeInTheDocument();
+    expect(screen.queryByTestId('schedule-type-toolkit_index')).not.toBeInTheDocument();
+  });
+
   it('reports the chosen entity', () => {
     listQuery.mockReturnValue({ data: { rows: [{ id: 7, name: 'Digest agent' }], total: 1 } });
     const onEntityChange = vi.fn();
