@@ -96,6 +96,17 @@ describe('formatAgentUserLabel (plain-text user name for exports)', () => {
     );
   });
 
+  it('prefers a display name and still marks a deleted account', () => {
+    expect(
+      formatAgentUserLabel({
+        user_id: 9,
+        user_display_name: 'Gone Person',
+        user_email: 'g@x.y',
+        user_deleted: true,
+      }),
+    ).toBe('Gone Person (Deleted user)');
+  });
+
   it('falls back to the id, unmarked, when the email is only unknown', () => {
     expect(formatAgentUserLabel({ user_id: 12, user_email: null })).toBe('User 12');
   });

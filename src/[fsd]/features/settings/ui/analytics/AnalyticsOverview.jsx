@@ -18,9 +18,9 @@ import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import {
   AutomatedActivityTable,
   ChartTooltip,
-  DeletedChip,
   KPICard,
   ModelUsageTable,
+  UserLabel,
 } from '@/[fsd]/features/settings/ui/analytics';
 import { analyticsTableWrapperSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { CHART_COLORS, EVENT_TYPE_COLORS, MEDAL_COLORS } from '@/[fsd]/shared/config/theme';
@@ -239,7 +239,7 @@ const AnalyticsOverview = memo(props => {
               variant="bodySmall"
               sx={styles.chartSubtitle}
             >
-              {`Leaderboard by AI events (Model + Tool + Agent / Pipeline${canViewSkills ? ' + Skill' : ''})`}
+              Leaderboard by AI events (Model + Tool)
             </Typography>
             <InfoTooltip
               infoTooltip={{
@@ -280,24 +280,14 @@ const AnalyticsOverview = memo(props => {
                     </Typography>
                   </Box>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Box sx={styles.leaderboardNameRow}>
-                      <Typography
-                        variant="bodySmall"
-                        noWrap
-                        sx={[
-                          styles.leaderboardEmail,
-                          onUserClick && { '&:hover': { textDecoration: 'underline' } },
-                        ]}
-                      >
-                        {u.user_email || `User ${u.user_id}`}
-                      </Typography>
-                      {u.user_deleted && (
-                        <DeletedChip
-                          testId="analytics-leaderboard-deleted-chip"
-                          label="Deleted user"
-                        />
-                      )}
-                    </Box>
+                    <UserLabel
+                      user={u}
+                      testId="analytics-leaderboard-deleted-chip"
+                      sx={[
+                        styles.leaderboardEmail,
+                        onUserClick && { '&:hover .user-label-name': { textDecoration: 'underline' } },
+                      ]}
+                    />
                     <Typography
                       variant="bodySmall"
                       sx={styles.leaderboardStats}
@@ -399,12 +389,11 @@ const analyticsOverviewStyles = () => ({
     color: palette.components.button.text.primary,
     lineHeight: 1,
   }),
-  leaderboardNameRow: { display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 },
   leaderboardEmail: ({ palette }) => ({
     color: palette.text.secondary,
+    fontSize: '0.75rem',
     fontWeight: 500,
-    display: 'block',
-    minWidth: 0,
+    display: 'flex',
   }),
   leaderboardStats: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,

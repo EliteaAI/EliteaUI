@@ -16,6 +16,7 @@ const UserLabel = memo(props => {
     >
       <Box
         component="span"
+        className="user-label-name"
         sx={styles.name}
       >
         {user.user_email || `User ${user.user_id}`}

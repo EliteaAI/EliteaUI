@@ -19,7 +19,8 @@ export const formatAgentRunModels = models =>
 
 // Plain-text user label for exports: a deleted account is marked, since a table cell has no chip.
 export const formatAgentUserLabel = row => {
-  const name = row.user_email || `User ${row.user_id}`;
+  const name =
+    row.user_display_name || row.user_email || `User ${row.user_id ?? ''}`.trim() || 'Unknown user';
   return row.user_deleted ? `${name} (Deleted user)` : name;
 };
 

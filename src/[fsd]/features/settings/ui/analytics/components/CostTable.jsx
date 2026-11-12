@@ -5,7 +5,7 @@ import { Box, TableSortLabel, Typography } from '@mui/material';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
-import DeletedChip from './DeletedChip';
+import UserLabel from './UserLabel';
 import {
   analyticsColumnSx,
   analyticsHeaderCellSx,
@@ -111,24 +111,21 @@ const CostTable = memo(props => {
               key={`${row.name}-${index}`}
               sx={[styles.tableRow, rowMinWidth]}
             >
-              <Typography
-                component="div"
-                sx={[styles.tableCellValue, styles.nameCell]}
-                noWrap
-              >
-                {row.name}
-                {row.userDeleted && (
-                  <Box
-                    component="span"
-                    sx={styles.deletedChipGap}
-                  >
-                    <DeletedChip
-                      testId="analytics-cost-user-deleted-chip"
-                      label="Deleted user"
-                    />
-                  </Box>
-                )}
-              </Typography>
+              {row.userDeleted ? (
+                <Box sx={[styles.tableCellValue, styles.nameCell]}>
+                  <UserLabel
+                    user={{ user_email: row.name, user_deleted: true }}
+                    testId="analytics-cost-user-deleted-chip"
+                  />
+                </Box>
+              ) : (
+                <Typography
+                  sx={[styles.tableCellValue, styles.nameCell]}
+                  noWrap
+                >
+                  {row.name}
+                </Typography>
+              )}
               {extraColumns.map(col => (
                 <Box
                   key={col.key}
@@ -215,7 +212,6 @@ const costTableStyles = () => ({
   }),
   extraCell: { display: 'flex', alignItems: 'center' },
   nameCell: analyticsColumnSx(NAME_FLEX),
-  deletedChipGap: { marginLeft: '0.5rem' },
   costCell: analyticsColumnSx(COST_FLEX),
   shareCell: analyticsColumnSx(SHARE_FLEX),
 });

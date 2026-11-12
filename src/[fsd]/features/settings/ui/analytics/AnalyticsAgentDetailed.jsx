@@ -597,12 +597,9 @@ const AnalyticAgentDetailed = memo(props => {
                   key={i}
                   sx={[styles.tableRow, USER_ROW_MIN_WIDTH]}
                 >
-                  <Typography
-                    sx={[styles.tableCellValue, analyticsColumnSx(USER_COLUMNS[0])]}
-                    noWrap
-                  >
+                  <Box sx={[styles.tableCellValue, analyticsColumnSx(USER_COLUMNS[0])]}>
                     <UserLabel user={u} />
-                  </Typography>
+                  </Box>
                   <Typography sx={[styles.tableCellValue, analyticsColumnSx(USER_COLUMNS[1])]}>
                     {AnalyticCommonHelpers.fmtNum(u.events)}
                   </Typography>

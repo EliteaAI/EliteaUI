@@ -130,6 +130,45 @@ describe('AnalyticsCosts', () => {
     cleanup();
   });
 
+  it('marks a deleted user in the cost by user table and keeps the chip next to the stored email', () => {
+    useAnalyticsCostsQuery.mockReturnValue({
+      data: {
+        ...MOCK_DATA,
+        by_user: [
+          {
+            user_id: 9,
+            user_email: 'gone@example.com',
+            user_deleted: true,
+            total_cost: 3,
+            total_tokens: 1000,
+          },
+          {
+            user_id: 42,
+            user_email: 'alice@example.com',
+            user_deleted: false,
+            total_cost: 8,
+            total_tokens: 4000,
+          },
+        ],
+      },
+      isFetching: false,
+      isError: false,
+    });
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        dateFrom="2026-01-01"
+        dateTo="2026-01-31"
+      />,
+      { wrapper: Wrapper },
+    );
+    const chips = screen.getAllByTestId('analytics-cost-user-deleted-chip');
+    expect(chips).toHaveLength(1);
+    expect(chips[0]).toHaveTextContent('Deleted user');
+    expect(screen.getByText('gone@example.com').parentElement).toContainElement(chips[0]);
+    expect(screen.getByText('alice@example.com')).toBeInTheDocument();
+  });
+
   it('renders loading state with CircularProgress', () => {
     useAnalyticsCostsQuery.mockReturnValue({ data: undefined, isFetching: true, isError: false });
     render(

@@ -7,7 +7,7 @@ import { Box, CircularProgress, IconButton, Typography, useTheme } from '@mui/ma
 import { useAnalyticsUserDetailQuery } from '@/[fsd]/features/settings/api/analyticsApi';
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { ChartTooltip, DeletedChip, KPICard } from '@/[fsd]/features/settings/ui/analytics';
+import { ChartTooltip, KPICard, UserLabel } from '@/[fsd]/features/settings/ui/analytics';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
@@ -63,17 +63,15 @@ const AnalyticsUserDetailed = memo(props => {
         </IconButton>
         <Typography
           variant="labelMedium"
+          component="div"
           sx={styles.chartTitle}
           data-testid="analytics-user-detail-title"
         >
-          {data.user_email || `User ${data.user_id}`}
-        </Typography>
-        {data.user_deleted && (
-          <DeletedChip
+          <UserLabel
+            user={data}
             testId="analytics-user-detail-deleted-chip"
-            label="Deleted user"
           />
-        )}
+        </Typography>
       </Box>
 
       <Box sx={styles.kpiRow}>

@@ -44,6 +44,15 @@ describe('UserLabel', () => {
     expect(screen.getByTestId('analytics-user-deleted-chip')).toHaveTextContent('Deleted user');
   });
 
+  it('keeps the chip outside the name, so only the name is ellipsized', () => {
+    renderLabel({ user_id: 9, user_email: 'a-very-long-address@example.com', user_deleted: true });
+    const name = screen.getByText('a-very-long-address@example.com');
+    const chip = screen.getByTestId('analytics-user-deleted-chip');
+    expect(name).toHaveClass('user-label-name');
+    expect(name).not.toContainElement(chip);
+    expect(name.parentElement).toContainElement(chip);
+  });
+
   it('falls back to the id without a chip when the email is simply unknown', () => {
     renderLabel({ user_id: 12, user_email: null });
     expect(screen.getByText('User 12')).toBeInTheDocument();

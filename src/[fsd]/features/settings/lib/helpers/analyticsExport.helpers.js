@@ -408,15 +408,7 @@ const buildTokensSheet = (data, meta, options = {}) => {
   sections.push({
     title: 'Token Usage by User',
     columns: tokenCols('User'),
-    rows: buildTokenRows(
-      by_user,
-      user =>
-        user.user_display_name ||
-        (user.user_deleted || user.user_email ? formatAgentUserLabel(user) : '') ||
-        `User ${user.user_id ?? ''}`.trim() ||
-        'Unknown user',
-      totalProjectTokens,
-    ),
+    rows: buildTokenRows(by_user, formatAgentUserLabel, totalProjectTokens),
   });
 
   sections.push({
