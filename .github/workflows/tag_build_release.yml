@@ -19,6 +19,9 @@ on:
         default: self-hosted
         required: true
 
+permissions:
+  contents: write
+
 # Serialize runs per ref so hotfix version bumps don't race each other
 concurrency:
   group: tag-build-release-${{ github.ref }}
