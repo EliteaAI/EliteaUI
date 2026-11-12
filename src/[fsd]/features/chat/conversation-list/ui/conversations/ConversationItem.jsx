@@ -15,26 +15,21 @@ import { useConversationRunStatus } from '@/[fsd]/features/chat/lib/hooks';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Input } from '@/[fsd]/shared/ui';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
-import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
-import ListViewIcon from '@/assets/list-view-icon.svg?react';
 import ShareIcon from '@/assets/share-icon.svg?react';
 import {
   ConversationNameRegExp,
   ConversationNameWarningMessage,
   MAX_CONVERSATION_LENGTH,
   PERMISSIONS,
-  PUBLIC_PROJECT_ID,
 } from '@/common/constants';
 import DotMenu from '@/components/DotMenu';
 import ArrowRightIcon from '@/components/Icons/ArrowRightIcon.jsx';
 import CancelIcon from '@/components/Icons/CancelIcon';
-import CloseEyeIcon from '@/components/Icons/CloseEyeIcon';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 import ExportIcon from '@/components/Icons/ExportIcon';
 import MoveTo from '@/components/Icons/MoveTo';
-import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
 import PinIcon from '@/components/Icons/PinIcon';
 import PlayIcon from '@/components/Icons/PlayIcon';
 import UsersIcon from '@/components/Icons/UsersIcon';
@@ -61,9 +56,6 @@ const ConversationItem = memo(props => {
     isDragDisabled = false,
     isNextItemHovered = false,
     onItemHover,
-    onShareExternal,
-    onManageLinks,
-    onRestrictAccess,
     onShare,
   } = props;
   const {
@@ -86,7 +78,7 @@ const ConversationItem = memo(props => {
   // The open chat shows its own run; the row only speaks for chats that are not on screen
   const showRunIndicator = !isPlayback && !isNew && (isRunning || (!!unread && !isActive));
 
-  const { id: userId, personal_project_id } = useSelector(state => state.user);
+  const { id: userId } = useSelector(state => state.user);
 
   const [isHovering, setIsHovering] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -165,14 +157,6 @@ const ConversationItem = memo(props => {
     setIsEditing(true);
   }, []);
 
-  const handleMakePublic = useCallback(() => {
-    if (is_private) onEdit({ ...conversation, is_private: false });
-  }, [conversation, is_private, onEdit]);
-
-  const handleRestrictAccess = useCallback(() => {
-    onRestrictAccess?.(conversation);
-  }, [conversation, onRestrictAccess]);
-
   const handlePlayback = useCallback(() => {
     onPlayback(conversation);
   }, [conversation, onPlayback]);
@@ -187,22 +171,14 @@ const ConversationItem = memo(props => {
 
   const copyChatLink = useCopyChatLink();
 
-  // Only the owner can change access, and the Public project has no access to change
+  // Only the owner manages access and links; anyone else gets the chat link
   const handleShare = useCallback(() => {
-    if (userId == author_id && projectId != PUBLIC_PROJECT_ID && onShare) onShare(conversation);
+    if (userId == author_id && onShare) onShare(conversation);
     else copyChatLink(conversation, SHARE_MESSAGES.saved);
-  }, [author_id, conversation, copyChatLink, onShare, projectId, userId]);
-
-  const handleShareExternal = useCallback(() => {
-    onShareExternal?.(conversation);
-  }, [conversation, onShareExternal]);
-
-  const handleManageLinks = useCallback(() => {
-    onManageLinks?.(conversation);
-  }, [conversation, onManageLinks]);
+  }, [author_id, conversation, copyChatLink, onShare, userId]);
 
   const menuItems = useMemo(() => {
-    const items = !isPlayback
+    return !isPlayback
       ? [
           {
             key: 'chat-conversation-menu-rename',
@@ -253,73 +229,15 @@ const ConversationItem = memo(props => {
             onClick: handleExport,
           },
           {
-            key: 'chat-conversation-menu-make-public',
-            label: 'Make public',
-            icon: <OpenEyeIcon sx={{ fontSize: '1rem' }} />,
-            alertTitle: 'Make this chat public?',
-            confirmButtonTitle: 'Make public',
-            confirmText: (
-              <Typography variant="bodyMedium">
-                All project members have access to public chats and can collaborate in them.
-              </Typography>
-            ),
-            confirmButtonSX: {
-              background: `${theme.palette.primary.main} !important`,
-              color: `${theme.palette.components.button.text.primary} !important`,
-            },
-            onConfirm: handleMakePublic,
-            display: projectId == PUBLIC_PROJECT_ID || projectId == personal_project_id ? 'none' : undefined,
-            disabled: isActive && isEditingCanvas,
-          },
-          {
-            key: 'chat-conversation-menu-restrict-access',
-            label: 'Restrict access',
-            icon: <CloseEyeIcon sx={{ fontSize: '1rem' }} />,
-            onClick: handleRestrictAccess,
-            display:
-              // Loose equality intentional: userId/author_id may arrive as string or number
-              projectId == PUBLIC_PROJECT_ID || projectId == personal_project_id || userId != author_id
-                ? 'none'
-                : undefined,
-            disabled: isActive && isEditingCanvas,
-          },
-          {
             key: 'chat-conversation-menu-share',
             label: 'Share',
-            icon: (
-              <Box sx={{ svg: { path: { fill: ({ palette }) => palette.secondary.main } } }}>
-                <CopyLinkIcon />
-              </Box>
-            ),
-            onClick: handleShare,
-            display: projectId == personal_project_id ? 'none' : undefined,
-          },
-          {
-            key: 'chat-conversation-menu-share-external',
-            label: 'Share externally',
             icon: (
               <Box sx={{ svg: { path: { fill: ({ palette }) => palette.secondary.main } } }}>
                 <ShareIcon />
               </Box>
             ),
-            onClick: handleShareExternal,
-            // Loose equality intentional: userId/author_id may arrive as string or number
-            display: userId != author_id ? 'none' : undefined,
+            onClick: handleShare,
           },
-          ...(conversation.has_shared_links
-            ? [
-                {
-                  key: 'chat-conversation-menu-manage-links',
-                  label: 'Manage links',
-                  icon: (
-                    <Box sx={{ svg: { path: { fill: ({ palette }) => palette.secondary.main } } }}>
-                      <ListViewIcon />
-                    </Box>
-                  ),
-                  onClick: handleManageLinks,
-                },
-              ]
-            : []),
           {
             key: 'chat-conversation-menu-pin',
             label: isPinned ? 'Unpin' : 'Pin on top',
@@ -338,7 +256,7 @@ const ConversationItem = memo(props => {
             disabled: userId != author_id || (isActive && isEditingCanvas),
             onConfirm: handleDelete,
           },
-        ].filter(item => item.display !== 'none')
+        ]
       : [
           {
             label: 'Delete',
@@ -355,7 +273,6 @@ const ConversationItem = memo(props => {
             onClick: handleEdit,
           },
         ];
-    return is_private ? items : items.filter(item => item.label !== 'Make public');
   }, [
     isPlayback,
     userId,
@@ -369,20 +286,10 @@ const ConversationItem = memo(props => {
     isPinned,
     checkPermission,
     moveToFoldersMenuItems,
-    theme.palette.primary.main,
-    theme.palette.components.button.text.primary,
-    handleMakePublic,
-    projectId,
-    personal_project_id,
     handleShare,
-    handleShareExternal,
-    handleManageLinks,
-    handleRestrictAccess,
     handlePlayback,
-    conversation.has_shared_links,
     conversation.folder_id,
     handlePin,
-    is_private,
     name,
   ]);
 
