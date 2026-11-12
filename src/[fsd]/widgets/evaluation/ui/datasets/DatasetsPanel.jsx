@@ -8,12 +8,14 @@ import PlusIcon from '@/components/Icons/PlusIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { EVAL_PERMISSIONS } from '../../lib/constants';
+import AgentDefaultDatasetSelect from './AgentDefaultDatasetSelect';
 import DatasetList from './DatasetList';
 
 const DatasetsPanel = memo(props => {
   const {
     datasets = [],
     selectedDatasetId,
+    projectId,
     applicationId = null,
     onSelect,
     onCreate,
@@ -60,6 +62,12 @@ const DatasetsPanel = memo(props => {
         onSelect={onSelect}
         onRename={onRename}
         onDelete={onDelete}
+      />
+
+      <AgentDefaultDatasetSelect
+        projectId={projectId}
+        applicationId={applicationId}
+        datasets={datasets}
       />
     </Box>
   );

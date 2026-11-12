@@ -1,3 +1,4 @@
+export { default as AgentDefaultDatasetSelect } from './AgentDefaultDatasetSelect';
 export { default as CasesPanel } from './CasesPanel';
 export { default as DatasetItem } from './DatasetItem';
 export { default as DatasetList } from './DatasetList';

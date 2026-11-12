@@ -12,6 +12,7 @@ const TAG_EVAL_SUITE = 'EVAL_SUITE';
 const TAG_EVAL_BINDING = 'EVAL_BINDING';
 const TAG_EVAL_DATASET = 'EVAL_DATASET';
 const TAG_EVAL_DATASET_CASE = 'EVAL_DATASET_CASE';
+const TAG_EVAL_AGENT_DEFAULT_DATASET = 'EVAL_AGENT_DEFAULT_DATASET';
 export const TAG_EVAL_RUN = 'EVAL_RUN';
 const TAG_EVAL_RESULT = 'EVAL_RESULT';
 const TAG_EVAL_HUMAN_SCORE = 'EVAL_HUMAN_SCORE';
@@ -24,6 +25,7 @@ export const evaluationApi = eliteaApi
       TAG_EVAL_BINDING,
       TAG_EVAL_DATASET,
       TAG_EVAL_DATASET_CASE,
+      TAG_EVAL_AGENT_DEFAULT_DATASET,
       TAG_EVAL_RUN,
       TAG_EVAL_RESULT,
       TAG_EVAL_HUMAN_SCORE,
@@ -223,14 +225,14 @@ export const evaluationApi = eliteaApi
           method: 'PUT',
           body,
         }),
-        invalidatesTags: [TAG_EVAL_DATASET],
+        invalidatesTags: [TAG_EVAL_DATASET, TAG_EVAL_AGENT_DEFAULT_DATASET],
       }),
       deleteEvalDataset: build.mutation({
         query: ({ projectId, datasetId }) => ({
           url: `/elitea_core/eval_dataset/prompt_lib/${projectId}/${datasetId}`,
           method: 'DELETE',
         }),
-        invalidatesTags: [TAG_EVAL_DATASET],
+        invalidatesTags: [TAG_EVAL_DATASET, TAG_EVAL_AGENT_DEFAULT_DATASET],
       }),
       // The flag lives on the dataset, so unsharing or deleting one refreshes this too
       projectDefaultEvalDataset: build.query({
@@ -247,6 +249,23 @@ export const evaluationApi = eliteaApi
           body: { dataset_id: datasetId ?? null },
         }),
         invalidatesTags: [TAG_EVAL_DATASET],
+      }),
+      // Deleting or unsharing the dataset clears it on the server, so those mutations refresh it too.
+      // Saving it touches only the agent, so the dataset list and cases are left alone.
+      agentDefaultEvalDataset: build.query({
+        query: ({ projectId, agentId }) => ({
+          url: `/elitea_core/eval_default_dataset/prompt_lib/${projectId}/${agentId}`,
+          method: 'GET',
+        }),
+        providesTags: [TAG_EVAL_AGENT_DEFAULT_DATASET],
+      }),
+      setAgentDefaultEvalDataset: build.mutation({
+        query: ({ projectId, agentId, datasetId }) => ({
+          url: `/elitea_core/eval_default_dataset/prompt_lib/${projectId}/${agentId}`,
+          method: 'PUT',
+          body: { dataset_id: datasetId ?? null },
+        }),
+        invalidatesTags: [TAG_EVAL_AGENT_DEFAULT_DATASET],
       }),
 
       // ---- Dataset cases ----
@@ -530,6 +549,8 @@ export const {
   useDeleteEvalDatasetMutation,
   useProjectDefaultEvalDatasetQuery,
   useSetProjectDefaultEvalDatasetMutation,
+  useAgentDefaultEvalDatasetQuery,
+  useSetAgentDefaultEvalDatasetMutation,
   useAddEvalDatasetCaseMutation,
   useUpdateEvalDatasetCaseMutation,
   useDeleteEvalDatasetCaseMutation,
