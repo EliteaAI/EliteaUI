@@ -24,6 +24,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 env:
   DEFAULT_TAG: 'latest'
 
