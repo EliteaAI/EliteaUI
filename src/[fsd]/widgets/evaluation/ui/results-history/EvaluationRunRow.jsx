@@ -5,6 +5,7 @@ import { Box, Tooltip, Typography } from '@mui/material';
 import { RUN_FULL_TIMESTAMP_FORMAT, formatRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 
+import { EVAL_RUN_TRIGGER } from '../../lib/constants';
 import {
   formatScoreDelta,
   getRunHistoryGuardrails,
@@ -197,6 +198,20 @@ const EvaluationRunRow = memo(props => {
             </Box>
           </Tooltip>
         )}
+        {run.trigger_type === EVAL_RUN_TRIGGER.scheduled && (
+          <Tooltip
+            title="Started by the scheduled evaluation"
+            placement="top"
+          >
+            <Box
+              component="span"
+              sx={styles.scheduled}
+              data-testid={`evaluation-run-scheduled-${run.id}`}
+            >
+              Scheduled
+            </Box>
+          </Tooltip>
+        )}
         {timeoutNote && (
           <Tooltip
             title={`${timeoutNote.label}. ${timeoutNote.coverage}.`}
@@ -233,6 +248,16 @@ const EvaluationRunRow = memo(props => {
 EvaluationRunRow.displayName = 'EvaluationRunRow';
 
 /** @type {MuiSx} */
+// The small tag shape shared by the run-row badges; each badge sets its own colours.
+const tagChip = {
+  padding: '0.125rem 0.5rem',
+  borderRadius: '0.625rem',
+  fontSize: '0.75rem',
+  lineHeight: '1rem',
+  whiteSpace: 'nowrap',
+  cursor: 'default',
+};
+
 const evaluationRunRowStyles = (isSelected, gridTemplateColumns, delta) => ({
   row: ({ palette }) => ({
     display: 'grid',
@@ -323,14 +348,14 @@ const evaluationRunRowStyles = (isSelected, gridTemplateColumns, delta) => ({
     },
   }),
   overBudget: ({ palette }) => ({
-    padding: '0.125rem 0.5rem',
-    borderRadius: '0.625rem',
-    fontSize: '0.75rem',
-    lineHeight: '1rem',
-    whiteSpace: 'nowrap',
+    ...tagChip,
     color: palette.text.error,
     backgroundColor: palette.alert.error?.background,
-    cursor: 'default',
+  }),
+  scheduled: ({ palette }) => ({
+    ...tagChip,
+    color: palette.text.secondary,
+    backgroundColor: palette.background.surface.interactive.default,
   }),
   actions: {
     display: 'flex',

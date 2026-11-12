@@ -78,6 +78,7 @@ export const useEvalSuiteActions = ({ projectId, agentId, tab, editingSuiteId })
             description: formData.description,
             judge_model: formData.judge_model,
             ...(formData.meta ? { meta: formData.meta } : {}),
+            ...(formData.trigger_config ? { trigger_config: formData.trigger_config } : {}),
           },
         }).unwrap();
         setBlockNav(false);

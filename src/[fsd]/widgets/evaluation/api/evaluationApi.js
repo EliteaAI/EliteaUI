@@ -232,6 +232,22 @@ export const evaluationApi = eliteaApi
         }),
         invalidatesTags: [TAG_EVAL_DATASET],
       }),
+      // The flag lives on the dataset, so unsharing or deleting one refreshes this too
+      projectDefaultEvalDataset: build.query({
+        query: ({ projectId }) => ({
+          url: `/elitea_core/eval_project_default_dataset/prompt_lib/${projectId}`,
+          method: 'GET',
+        }),
+        providesTags: [TAG_EVAL_DATASET],
+      }),
+      setProjectDefaultEvalDataset: build.mutation({
+        query: ({ projectId, datasetId }) => ({
+          url: `/elitea_core/eval_project_default_dataset/prompt_lib/${projectId}`,
+          method: 'PUT',
+          body: { dataset_id: datasetId ?? null },
+        }),
+        invalidatesTags: [TAG_EVAL_DATASET],
+      }),
 
       // ---- Dataset cases ----
       addEvalDatasetCase: build.mutation({
@@ -512,6 +528,8 @@ export const {
   useCreateEvalDatasetMutation,
   useUpdateEvalDatasetMutation,
   useDeleteEvalDatasetMutation,
+  useProjectDefaultEvalDatasetQuery,
+  useSetProjectDefaultEvalDatasetMutation,
   useAddEvalDatasetCaseMutation,
   useUpdateEvalDatasetCaseMutation,
   useDeleteEvalDatasetCaseMutation,

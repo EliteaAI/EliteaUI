@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildAutoEvaluationTriggerConfig,
   buildSuiteMenuItems,
+  isGeneratedSuite,
+  readAutoEvaluation,
   resolveActiveSuiteId,
   sortSuitesByDate,
   withSuiteSearchParam,
@@ -82,5 +85,33 @@ describe('resolveActiveSuiteId', () => {
     expect(resolveActiveSuiteId(new URLSearchParams(''))).toBeNull();
     expect(resolveActiveSuiteId(new URLSearchParams('suiteId=abc'))).toBeNull();
     expect(resolveActiveSuiteId(undefined)).toBeNull();
+  });
+});
+
+describe('scheduled evaluation flag', () => {
+  it('reads the flag only when it is set to true', () => {
+    expect(readAutoEvaluation({ auto_evaluation: true })).toBe(true);
+    expect(readAutoEvaluation({ auto_evaluation: 'true' })).toBe(false);
+    expect(readAutoEvaluation({})).toBe(false);
+    expect(readAutoEvaluation(null)).toBe(false);
+  });
+
+  it('sets the flag and keeps the other trigger settings', () => {
+    expect(buildAutoEvaluationTriggerConfig({ schedule: 'nightly' }, true)).toEqual({
+      schedule: 'nightly',
+      auto_evaluation: true,
+    });
+  });
+
+  it('removes the flag rather than storing false', () => {
+    expect(buildAutoEvaluationTriggerConfig({ schedule: 'nightly', auto_evaluation: true }, false)).toEqual({
+      schedule: 'nightly',
+    });
+    expect(buildAutoEvaluationTriggerConfig(null, false)).toEqual({});
+  });
+
+  it('recognises a suite the scheduled evaluation generated', () => {
+    expect(isGeneratedSuite({ generated: true })).toBe(true);
+    expect(isGeneratedSuite({ auto_evaluation: true })).toBe(false);
   });
 });
