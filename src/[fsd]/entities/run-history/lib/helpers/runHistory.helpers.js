@@ -163,6 +163,8 @@ const EXECUTION_TYPE_LABELS = new Map([
 // A missing or unknown type (older runs) renders "-" and the row stays selectable. Older test runs were stored
 // as schedule_manual, so the run record's trigger still tells a test apart; a webhook test is its sample-body run
 const toEventLabel = row => {
+  // Early webhook runs were stored as scheduled; their run record still says webhook
+  if (row.schedule_run?.trigger === 'webhook') return EXECUTION_TYPE_LABELS.get('webhook');
   if (row.schedule_run?.trigger !== 'test') return EXECUTION_TYPE_LABELS.get(row.execution_type) ?? '-';
   return row.execution_type === 'webhook' ? 'Webhook (sample)' : 'Test';
 };
@@ -173,7 +175,7 @@ export const toExecutionTypeRow = row => ({ ...row, event_label: toEventLabel(ro
 export const SCHEDULE_RUN_COLUMNS = [
   {
     id: 'schedule',
-    label: 'Schedule',
+    label: 'Schedule/Webhook',
     width: '7.5rem',
     render: row => row.schedule_run?.schedule_name ?? '-',
   },

@@ -10,7 +10,7 @@ const FILTERS = [
   { key: 'trigger', label: 'Trigger Type' },
   { key: 'status', label: 'Status' },
   { key: 'version', label: 'Version' },
-  { key: 'schedule', label: 'Schedule' },
+  { key: 'schedule', label: 'Schedule/Webhook' },
 ];
 
 const RunHistoryFilters = memo(props => {

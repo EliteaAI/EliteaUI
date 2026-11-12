@@ -200,6 +200,11 @@ describe('toExecutionTypeRow', () => {
     ).toBe('Test');
   });
 
+  it('labels an early webhook run stored as scheduled "Webhook" from its run record', () => {
+    const row = { execution_type: 'scheduled', schedule_run: { trigger: 'webhook' } };
+    expect(toExecutionTypeRow(row).event_label).toBe('Webhook');
+  });
+
   it('labels a scheduled run "Scheduled"', () => {
     expect(toExecutionTypeRow({ execution_type: 'scheduled' }).event_label).toBe('Scheduled');
   });
@@ -221,7 +226,7 @@ describe('schedule runs in Agent and Pipeline Run History', () => {
   it('the Schedule and Status cells read the run record, or "-" without one', () => {
     const [schedule, status] = SCHEDULE_RUN_COLUMNS;
     const run = { schedule_run: { schedule_name: 'Daily digest', status: 'waiting_for_approval' } };
-    expect([schedule.label, status.label]).toEqual(['Schedule', 'Status']);
+    expect([schedule.label, status.label]).toEqual(['Schedule/Webhook', 'Status']);
     expect([schedule.render(run), status.render(run)]).toEqual(['Daily digest', 'Awaiting approval']);
     expect([schedule.render({ schedule_run: null }), status.render({})]).toEqual(['-', '-']);
   });

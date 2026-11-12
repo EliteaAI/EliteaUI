@@ -32,7 +32,10 @@ const stopPropagation = event => event.stopPropagation();
 
 // A running schedule has no finished run time to show, only the status
 const lastRunText = row => {
-  if (!row.last_run) return isWebhookRow(row) ? 'No deliveries yet' : 'Never run';
+  // A delivery shows date and time in the Run History format; a run shows the day only
+  if (isWebhookRow(row))
+    return row.last_delivery_at ? formatRunTimestamp(row.last_delivery_at) : 'No deliveries yet';
+  if (!row.last_run) return 'Never run';
   return row.last_run_status === 'running' ? '' : formatCardDate(row.last_run);
 };
 
@@ -60,8 +63,8 @@ const EntityScheduleCard = memo(props => {
   const nextRun = row.enabled ? (row.next_run && formatCardDate(row.next_run)) || '-' : 'Not scheduled';
   // The list API sends only the user's own rows to a non-admin
   const isYou = row.owner?.id != null && row.owner.id === currentUserId;
-  const showChip = Boolean(row.last_run && row.last_run_status);
   const isWebhook = isWebhookRow(row);
+  const showChip = Boolean(row.last_run && row.last_run_status);
   // Ticks each minute on webhook cards only, so the rotation note goes when the window ends
   const now = useNow(isWebhook);
   const testId = `${entityType}-${toKindNoun(row.trigger_kind)}-card`;

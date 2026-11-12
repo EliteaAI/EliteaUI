@@ -42,7 +42,7 @@ const KINDS = {
     title: 'Webhooks',
     noun: 'webhook',
     add: 'Webhook',
-    link: 'Open all in Webhooks',
+    link: 'Manage Webhooks',
     id: WEBHOOKS_SECTION_ID,
   },
 };
