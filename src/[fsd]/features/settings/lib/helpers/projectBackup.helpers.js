@@ -71,8 +71,8 @@ const listMissingPaths = paths => {
 export const getSkillFilesSummaryText = summary => {
   const files = summary?.skill_files;
   if (!files?.total) return '';
-  if (files.unchecked) return `Skill files: ${files.total} not checked (storage unavailable)`;
-  const text = `Skill files: ${files.total} total, ${files.present} present, ${files.uploaded} uploaded, ${files.missing} missing`;
+  if (files.unchecked) return `Skill attachments: ${files.total} not checked (storage unavailable)`;
+  const text = `Skill attachments: ${files.total} total, ${files.present} present, ${files.uploaded} uploaded, ${files.missing} missing`;
   return files.missing_paths?.length ? `${text} (${listMissingPaths(files.missing_paths)})` : text;
 };
 
@@ -81,8 +81,8 @@ export const getRestoreWarningText = summary => {
   const failedAttachments = summary.attachments?.failed;
   const missingSkillFiles = summary.skill_files?.missing;
   const parts = [
-    failedAttachments ? `${failedAttachments} attachment file(s)` : '',
-    missingSkillFiles ? `${missingSkillFiles} skill file(s)` : '',
+    failedAttachments ? `${failedAttachments} chat attachment(s)` : '',
+    missingSkillFiles ? `${missingSkillFiles} skill attachment(s)` : '',
   ].filter(Boolean);
   return parts.length ? `Restore completed. ${parts.join(' and ')} could not be restored.` : '';
 };

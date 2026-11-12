@@ -173,7 +173,7 @@ describe('getSkillFilesSummaryText', () => {
       getSkillFilesSummaryText({
         skill_files: { total: 22, present: 2, uploaded: 20, missing: 0, missing_paths: [], unchecked: false },
       }),
-    ).toBe('Skill files: 22 total, 2 present, 20 uploaded, 0 missing');
+    ).toBe('Skill attachments: 22 total, 2 present, 20 uploaded, 0 missing');
   });
 
   it('names the paths of the missing files', () => {
@@ -181,7 +181,7 @@ describe('getSkillFilesSummaryText', () => {
       getSkillFilesSummaryText({
         skill_files: { total: 3, present: 1, uploaded: 0, missing: 2, missing_paths: ['a.md', 'b/c.py'] },
       }),
-    ).toBe('Skill files: 3 total, 1 present, 0 uploaded, 2 missing (a.md, b/c.py)');
+    ).toBe('Skill attachments: 3 total, 1 present, 0 uploaded, 2 missing (a.md, b/c.py)');
   });
 
   it('names at most five missing paths and says when there are more', () => {
@@ -190,7 +190,9 @@ describe('getSkillFilesSummaryText', () => {
       getSkillFilesSummaryText({
         skill_files: { total: 7, present: 0, uploaded: 0, missing: 7, missing_paths: paths },
       }),
-    ).toBe('Skill files: 7 total, 0 present, 0 uploaded, 7 missing (a.md, b.md, c.md, d.md, e.md and more)');
+    ).toBe(
+      'Skill attachments: 7 total, 0 present, 0 uploaded, 7 missing (a.md, b.md, c.md, d.md, e.md and more)',
+    );
   });
 
   it('names exactly five missing paths without "and more"', () => {
@@ -199,12 +201,12 @@ describe('getSkillFilesSummaryText', () => {
       getSkillFilesSummaryText({
         skill_files: { total: 5, present: 0, uploaded: 0, missing: 5, missing_paths: paths },
       }),
-    ).toBe('Skill files: 5 total, 0 present, 0 uploaded, 5 missing (a.md, b.md, c.md, d.md, e.md)');
+    ).toBe('Skill attachments: 5 total, 0 present, 0 uploaded, 5 missing (a.md, b.md, c.md, d.md, e.md)');
   });
 
   it('says when storage could not be checked', () => {
     expect(getSkillFilesSummaryText({ skill_files: { total: 4, unchecked: true } })).toBe(
-      'Skill files: 4 not checked (storage unavailable)',
+      'Skill attachments: 4 not checked (storage unavailable)',
     );
   });
 });
@@ -220,16 +222,16 @@ describe('getRestoreWarningText', () => {
 
   it('names failed attachments or missing skill files', () => {
     expect(getRestoreWarningText({ attachments: { failed: 3 } })).toBe(
-      'Restore completed. 3 attachment file(s) could not be restored.',
+      'Restore completed. 3 chat attachment(s) could not be restored.',
     );
     expect(getRestoreWarningText({ skill_files: { missing: 2 } })).toBe(
-      'Restore completed. 2 skill file(s) could not be restored.',
+      'Restore completed. 2 skill attachment(s) could not be restored.',
     );
   });
 
   it('folds both into one warning', () => {
     expect(getRestoreWarningText({ attachments: { failed: 3 }, skill_files: { missing: 2 } })).toBe(
-      'Restore completed. 3 attachment file(s) and 2 skill file(s) could not be restored.',
+      'Restore completed. 3 chat attachment(s) and 2 skill attachment(s) could not be restored.',
     );
   });
 

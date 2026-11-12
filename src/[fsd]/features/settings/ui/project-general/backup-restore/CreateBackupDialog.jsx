@@ -20,13 +20,13 @@ const {
 } = ProjectBackupConstants;
 
 const NO_CHATS_TOOLTIP = 'This project has no chats';
-const NO_SKILL_FILES_TOOLTIP = 'This project has no skill files';
+const NO_SKILL_FILES_TOOLTIP = "No files are attached to this project's skills";
 
 const CreateBackupDialog = memo(props => {
   const { open, onClose, onBackup, isDownloading, projectId, projectName } = props;
 
   const [chats, setChats] = useState(CHATS_OPTION.none);
-  const [skillFiles, setSkillFiles] = useState(SKILL_FILES_OPTION.all);
+  const [skillFiles, setSkillFiles] = useState(SKILL_FILES_OPTION.none);
 
   const {
     data: summary,
@@ -40,7 +40,9 @@ const CreateBackupDialog = memo(props => {
   // Without the summary the chat count is unknown, so the chat options stay available
   const hasChats = isSummaryError || !!summary?.chats_count;
   const chatOptionsDisabled = isDownloading || isSummaryLoading || !hasChats;
-  const hasSkillFiles = !!summary?.skill_files_count;
+  // Without the summary the skill attachment count is unknown, so including them stays available
+  const hasSkillFiles = isSummaryError || !!summary?.skill_files_count;
+  const skillFileOptionsDisabled = isDownloading || isSummaryLoading || !hasSkillFiles;
   const skillFilesSize = skillFiles === SKILL_FILES_OPTION.all ? summary?.skill_files_size || 0 : 0;
   const attachmentsSize = chats === CHATS_OPTION.withAttachments ? summary?.attachments_size || 0 : 0;
   const estimatedSize = attachmentsSize + skillFilesSize;
@@ -69,33 +71,33 @@ const CreateBackupDialog = memo(props => {
     [chatOptionsDisabled, hasChats, isSummaryLoading],
   );
 
-  // Without the summary the skill file count is unknown, so leaving them out stays available
   const skillFileItems = useMemo(
     () =>
       Object.values(SKILL_FILES_OPTION).map(value => {
+        const isIncludeOption = value !== SKILL_FILES_OPTION.none;
         const label = SKILL_FILES_BACKUP_OPTION_LABELS[value];
-        const noFiles = value === SKILL_FILES_OPTION.none && !!summary && !hasSkillFiles;
         return {
           value,
-          disabled: noFiles || (value === SKILL_FILES_OPTION.none && isSummaryLoading),
-          label: noFiles ? (
-            <Tooltip
-              title={NO_SKILL_FILES_TOOLTIP}
-              placement="top"
-            >
-              <Box component="span">{label}</Box>
-            </Tooltip>
-          ) : (
-            label
-          ),
+          disabled: isIncludeOption && skillFileOptionsDisabled,
+          label:
+            isIncludeOption && !isSummaryLoading && !hasSkillFiles ? (
+              <Tooltip
+                title={NO_SKILL_FILES_TOOLTIP}
+                placement="top"
+              >
+                <Box component="span">{label}</Box>
+              </Tooltip>
+            ) : (
+              label
+            ),
         };
       }),
-    [hasSkillFiles, isSummaryLoading, summary],
+    [skillFileOptionsDisabled, hasSkillFiles, isSummaryLoading],
   );
 
   const resetOptions = useCallback(() => {
     setChats(CHATS_OPTION.none);
-    setSkillFiles(SKILL_FILES_OPTION.all);
+    setSkillFiles(SKILL_FILES_OPTION.none);
   }, []);
 
   const handleClose = useCallback(() => {
@@ -180,7 +182,7 @@ const CreateBackupDialog = memo(props => {
           variant="labelMedium"
           color="text.secondary"
         >
-          Skills
+          Skill attachments
         </Typography>
         <Checkbox.RadioButtonGroup
           value={skillFiles}
@@ -198,8 +200,8 @@ const CreateBackupDialog = memo(props => {
             data-testid="project-backup-skill-files-summary"
           >
             {hasSkillFiles
-              ? `${formatCount(summary.skill_files_count, 'skill file')} · ~${formatSize(summary.skill_files_size)}`
-              : 'No skill files'}
+              ? `${formatCount(summary.skill_files_count, 'attached file')} · ~${formatSize(summary.skill_files_size)}`
+              : 'No files attached to skills'}
           </Typography>
         )}
       </Box>
@@ -209,8 +211,8 @@ const CreateBackupDialog = memo(props => {
           severity="warning"
           data-testid="project-backup-no-skill-files-warning"
         >
-          Skill files will not be in this backup. Restored into another project, its skills list their files,
-          but the files cannot be opened.
+          Skill attachments will not be in this backup. Restored into another project, its skills list their
+          attached files, but the files cannot be opened.
         </BackupAlert>
       )}
 
