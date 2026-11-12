@@ -86,6 +86,7 @@ const mocks = vi.hoisted(() => {
 vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => true }) }));
 vi.mock('@/[fsd]/entities/schedule', async importOriginal => ({
   ...(await importOriginal()),
+  useIsScheduleAdmin: () => true,
   useGetScheduleQuery: () => mocks.scheduleQuery,
   useUpdateScheduleMutation: () => mocks.update,
   useRunScheduleMutation: () => mocks.run,

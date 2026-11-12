@@ -20,6 +20,10 @@ const mocks = vi.hoisted(() => ({ userId: 5, isAdmin: true }));
 vi.mock('react-redux', () => ({
   useSelector: select => select({ user: { id: mocks.userId } }),
 }));
+vi.mock('@/[fsd]/entities/schedule', async importOriginal => ({
+  ...(await importOriginal()),
+  useIsScheduleAdmin: () => mocks.isAdmin,
+}));
 vi.mock('@/hooks/useCheckPermission', () => ({
   default: () => ({
     checkPermission: permission =>

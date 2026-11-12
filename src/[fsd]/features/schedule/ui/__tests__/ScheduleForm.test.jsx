@@ -59,6 +59,7 @@ vi.mock('@/hooks/useCheckPermission', () => ({
 }));
 vi.mock('@/[fsd]/entities/schedule', async () => ({
   ...(await vi.importActual('@/[fsd]/entities/schedule/lib/helpers')),
+  useIsScheduleAdmin: () => isAdmin,
   useGetScheduleSettingsQuery: () => ({
     data: runAllowed === undefined ? undefined : { allow_run_without_asking: runAllowed },
     isError: listFailed,

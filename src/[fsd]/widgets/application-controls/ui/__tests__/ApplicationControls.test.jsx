@@ -15,6 +15,7 @@ const { state, runHistoryArgs } = vi.hoisted(() => ({
     versionCount: 0,
     isPrivate: true,
     canUpdate: true,
+    isScheduleAdmin: false,
   },
   runHistoryArgs: { current: null },
 }));
@@ -40,6 +41,7 @@ vi.mock('@/[fsd]/entities/compare-versions', () => ({
 }));
 vi.mock('@/[fsd]/entities/schedule', () => ({
   buildScheduleFormLink: vi.fn(),
+  useIsScheduleAdmin: () => state.isScheduleAdmin,
   useOpenScheduleNested: () => vi.fn(),
 }));
 vi.mock('@/pages/Pipelines/useIsPipelineYamlCodeDirty', () => ({ default: () => false }));

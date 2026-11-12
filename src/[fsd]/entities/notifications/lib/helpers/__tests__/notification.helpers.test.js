@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { NotificationType } from '@/common/constants';

@@ -2,20 +2,21 @@ import { memo, useCallback } from 'react';
 
 import { Box, FormControlLabel, Typography } from '@mui/material';
 
-import { useGetScheduleSettingsQuery, useUpdateScheduleSettingsMutation } from '@/[fsd]/entities/schedule';
+import {
+  useGetScheduleSettingsQuery,
+  useIsScheduleAdmin,
+  useUpdateScheduleSettingsMutation,
+} from '@/[fsd]/entities/schedule';
 import { WebhookConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Checkbox } from '@/[fsd]/shared/ui';
-import { PERMISSIONS } from '@/common/constants';
-import useCheckPermission from '@/hooks/useCheckPermission';
 
 const RunWithoutAskingSetting = memo(() => {
   const styles = runWithoutAskingSettingStyles();
 
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
-  const { checkPermission } = useCheckPermission();
-  const isAdmin = checkPermission(PERMISSIONS.schedules.admin);
+  const canChange = useIsScheduleAdmin();
   const { data, isError } = useGetScheduleSettingsQuery({ projectId }, { skip: !projectId });
   const [updateSettings, { isLoading: isSaving }] = useUpdateScheduleSettingsMutation();
 
@@ -46,7 +47,7 @@ const RunWithoutAskingSetting = memo(() => {
           <Checkbox.BaseCheckbox
             checked={data?.allow_run_without_asking ?? false}
             onChange={handleChange}
-            disabled={!isAdmin || isError || !data || isSaving}
+            disabled={!canChange || isError || !data || isSaving}
             slotProps={{ input: { 'aria-describedby': 'schedule-run-without-asking-help' } }}
             data-testid="schedule-allow-run-without-asking-checkbox"
           />
@@ -59,7 +60,7 @@ const RunWithoutAskingSetting = memo(() => {
       >
         {isError
           ? 'Could not load the setting'
-          : `If checked, ELITEA will run sensitive actions of schedules and webhooks without asking the owner to approve them. ${WebhookConstants.RUN_WITHOUT_ASKING_SECRET_WARNING} Only a project administrator can change this setting.`}
+          : `If checked, ELITEA will run sensitive actions of schedules and webhooks without asking the owner to approve them. ${WebhookConstants.RUN_WITHOUT_ASKING_SECRET_WARNING}${canChange ? '' : ' Only a project administrator can change this setting.'}`}
       </Typography>
     </Box>
   );

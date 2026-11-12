@@ -4,7 +4,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Chip } from '@mui/material';
 
-import { TRIGGER_KIND, useGetScheduleListQuery } from '@/[fsd]/entities/schedule';
+import { TRIGGER_KIND, useGetScheduleListQuery, useIsScheduleAdmin } from '@/[fsd]/entities/schedule';
 import { getPollingInterval } from '@/[fsd]/features/schedule';
 import { ScheduleImportExportActions } from '@/[fsd]/features/schedule-import-export';
 import { DrawerPage, DrawerPageBody, DrawerPageHeader } from '@/[fsd]/features/settings';
@@ -46,7 +46,7 @@ const SchedulesPage = memo(props => {
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
   const { checkPermission } = useCheckPermission();
-  const isAdmin = checkPermission(PERMISSIONS.schedules.admin);
+  const isAdmin = useIsScheduleAdmin();
   const canCreate = checkPermission(PERMISSIONS.schedules.create);
   const navigate = useNavigate();
   const [filters, setFilters] = useState(NO_FILTERS);

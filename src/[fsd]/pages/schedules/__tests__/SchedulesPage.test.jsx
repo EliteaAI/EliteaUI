@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   useSelectedProjectId: vi.fn(),
   toastError: vi.fn(),
   checkPermission: vi.fn(),
+  scheduleAdmin: null,
   navigate: vi.fn(),
   searchParams: new URLSearchParams(),
   setSearchParams: vi.fn(),
@@ -27,6 +28,8 @@ vi.mock('@/[fsd]/entities/schedule', () => ({
   TRIGGER_KIND: { cron: 'cron', webhook: 'webhook' },
   TOOLKIT_INDEX_TYPE: 'toolkit_index',
   useGetScheduleListQuery: mocks.useGetScheduleListQuery,
+  useIsScheduleAdmin: () =>
+    mocks.scheduleAdmin ?? mocks.checkPermission('models.applications.schedules.admin'),
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: mocks.useSelectedProjectId,
@@ -117,6 +120,7 @@ describe('SchedulesPage', () => {
   beforeEach(() => {
     mocks.useSelectedProjectId.mockReturnValue(5);
     mocks.checkPermission.mockReturnValue(false);
+    mocks.scheduleAdmin = null;
     mocks.useGetScheduleListQuery.mockReturnValue({
       currentData: { total: 45, rows: [{ id: 1, name: 'Nightly' }] },
       isError: false,
@@ -275,6 +279,14 @@ describe('SchedulesPage', () => {
 
   it('an admin sends the picked owner ids', () => {
     mocks.checkPermission.mockReturnValue(true);
+    render(<SchedulesPage />);
+    expect(screen.getByTestId('filters')).toHaveAttribute('data-admin', 'true');
+    fireEvent.click(screen.getByText('owners'));
+    expect(lastArgs()).toMatchObject({ ownerIds: [3, 4], page: 0 });
+  });
+
+  it('the owner of a personal project without the admin permission sends the picked owner ids', () => {
+    mocks.scheduleAdmin = true;
     render(<SchedulesPage />);
     expect(screen.getByTestId('filters')).toHaveAttribute('data-admin', 'true');
     fireEvent.click(screen.getByText('owners'));

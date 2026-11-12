@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   exportSchedules: vi.fn(),
   exportState: { isFetching: false },
   canExport: true,
+  ownPersonalProject: false,
   download: vi.fn(),
   state: { isLoading: false },
   toastError: vi.fn(),
@@ -33,6 +34,9 @@ vi.mock('@/[fsd]/entities/schedule/api/scheduleApi.js', () => ({
   useResumeScheduleMutation: options => mutationHook(mocks.resume)(options),
   useDeleteScheduleMutation: options => mutationHook(mocks.remove)(options),
   useLazyExportSchedulesQuery: () => [mocks.exportSchedules, mocks.exportState],
+}));
+vi.mock('@/[fsd]/entities/schedule/lib/hooks/useIsScheduleAdmin.hooks', () => ({
+  useIsOwnPersonalProject: () => mocks.ownPersonalProject,
 }));
 vi.mock('@/hooks/useCheckPermission', () => ({
   default: () => ({ checkPermission: () => mocks.canExport }),
@@ -59,6 +63,7 @@ describe('useScheduleRowActions', () => {
     mocks.state.isLoading = false;
     mocks.exportState.isFetching = false;
     mocks.canExport = true;
+    mocks.ownPersonalProject = false;
     mocks.cacheKeys.length = 0;
   });
 
@@ -144,6 +149,12 @@ describe('useScheduleRowActions', () => {
   it('gives no onExport without the export permission', () => {
     mocks.canExport = false;
     expect(setup().current.onExport).toBeUndefined();
+  });
+
+  it('gives onExport to the owner of a personal project without the export permission', () => {
+    mocks.canExport = false;
+    mocks.ownPersonalProject = true;
+    expect(setup().current.onExport).toBeTypeOf('function');
   });
 
   it('reports busy while the export runs', () => {

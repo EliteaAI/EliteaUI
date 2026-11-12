@@ -15,12 +15,18 @@ const api = vi.hoisted(() => ({
   save: vi.fn(),
   saving: false,
   isAdmin: true,
+  personalProjectId: undefined,
   checked: [],
   toastError: vi.fn(),
 }));
-vi.mock('@/[fsd]/entities/schedule', () => ({
+vi.mock('@/[fsd]/entities/schedule', async () => ({
+  useIsScheduleAdmin: (await vi.importActual('@/[fsd]/entities/schedule/lib/hooks/useIsScheduleAdmin.hooks'))
+    .useIsScheduleAdmin,
   useGetScheduleSettingsQuery: () => api.query,
   useUpdateScheduleSettingsMutation: () => [api.save, { isLoading: api.saving }],
+}));
+vi.mock('react-redux', () => ({
+  useSelector: selector => selector({ user: { personal_project_id: api.personalProjectId } }),
 }));
 vi.mock('@/hooks/useCheckPermission', () => ({
   default: () => ({
@@ -49,6 +55,7 @@ beforeEach(() => {
   api.query = { data: { allow_run_without_asking: false }, isError: false };
   api.saving = false;
   api.isAdmin = true;
+  api.personalProjectId = undefined;
   api.checked = [];
   api.save.mockReturnValue({ unwrap: () => Promise.resolve() });
 });
@@ -62,7 +69,7 @@ describe('Run without approval setting', () => {
     expect(
       screen.getByText(/sensitive actions of schedules and webhooks without asking the owner/i),
     ).toBeInTheDocument();
-    // #7456: the admin sees that the setting also covers webhook secrets
+    // The admin sees that the setting also covers webhook secrets
     expect(screen.getByText(/Treat it like a password/)).toBeInTheDocument();
   });
 
@@ -91,6 +98,33 @@ describe('Run without approval setting', () => {
     renderSetting();
     expect(box()).toBeDisabled();
     expect(box()).toBeChecked();
+  });
+
+  it('lets the owner of a personal project without the admin role turn it on', async () => {
+    api.isAdmin = false;
+    api.personalProjectId = 2;
+    renderSetting();
+    expect(box()).toBeEnabled();
+    expect(
+      screen.queryByText(/Only a project administrator can change this setting/),
+    ).not.toBeInTheDocument();
+    await userEvent.click(box());
+    expect(api.save).toHaveBeenCalledWith({ projectId: 2, allowRunWithoutAsking: true });
+  });
+
+  it('keeps it disabled with the admin-only hint for a non-admin in a team project', () => {
+    api.isAdmin = false;
+    api.personalProjectId = 99;
+    renderSetting();
+    expect(box()).toBeDisabled();
+    expect(screen.getByText(/Only a project administrator can change this setting/)).toBeInTheDocument();
+  });
+
+  it('shows no admin-only hint to a project admin', () => {
+    renderSetting();
+    expect(
+      screen.queryByText(/Only a project administrator can change this setting/),
+    ).not.toBeInTheDocument();
   });
 
   it('shows an error toast when the save fails', async () => {

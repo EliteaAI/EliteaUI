@@ -16,12 +16,14 @@ const mocks = vi.hoisted(() => ({
   exportSchedules: vi.fn(),
   toastError: vi.fn(),
   isFetching: false,
+  ownPersonalProject: false,
 }));
 
 vi.mock('@/hooks/useCheckPermission', () => ({
   default: () => ({ checkPermission: mocks.checkPermission }),
 }));
 vi.mock('@/[fsd]/entities/schedule', () => ({
+  useIsOwnPersonalProject: () => mocks.ownPersonalProject,
   useLazyExportSchedulesQuery: () => [mocks.exportSchedules, { isFetching: mocks.isFetching }],
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
@@ -56,6 +58,7 @@ const renderActions = () =>
 describe('ScheduleImportExportActions', () => {
   beforeEach(() => {
     mocks.isFetching = false;
+    mocks.ownPersonalProject = false;
     allow();
   });
   afterEach(() => {
@@ -68,6 +71,19 @@ describe('ScheduleImportExportActions', () => {
     renderActions();
     expect(screen.getByTestId('schedules-export-button')).toBeInTheDocument();
     expect(screen.getByTestId('schedules-import-button')).toBeInTheDocument();
+  });
+
+  it('shows both buttons to the owner of a personal project without the permissions', () => {
+    mocks.ownPersonalProject = true;
+    renderActions();
+    expect(screen.getByTestId('schedules-export-button')).toBeInTheDocument();
+    expect(screen.getByTestId('schedules-import-button')).toBeInTheDocument();
+  });
+
+  it('shows no button to a non-admin in a team project', () => {
+    renderActions();
+    expect(screen.queryByTestId('schedules-export-button')).toBeNull();
+    expect(screen.queryByTestId('schedules-import-button')).toBeNull();
   });
 
   it('hides the button whose permission is missing', () => {

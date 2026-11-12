@@ -20,11 +20,13 @@ const api = vi.hoisted(() => ({
   query: null,
   save: vi.fn(),
   isAdmin: true,
+  ownPersonal: false,
   saving: false,
   toastError: vi.fn(),
   toastSuccess: vi.fn(),
 }));
 vi.mock('@/[fsd]/entities/schedule', () => ({
+  useIsScheduleAdmin: () => api.isAdmin || api.ownPersonal,
   useGetScheduleSettingsQuery: () => api.query,
   useUpdateScheduleSettingsMutation: () => [api.save, { isLoading: api.saving }],
 }));
@@ -53,6 +55,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   api.query = { data: { ...SETTINGS }, isError: false };
   api.isAdmin = true;
+  api.ownPersonal = false;
   api.saving = false;
   api.save.mockReturnValue({ unwrap: () => Promise.resolve() });
 });
@@ -124,6 +127,13 @@ describe('Running runs per webhook setting', () => {
     api.isAdmin = false;
     renderSetting();
     expect(input()).toBeDisabled();
+  });
+
+  it('is editable for the owner of a personal project without the admin permission', () => {
+    api.isAdmin = false;
+    api.ownPersonal = true;
+    renderSetting();
+    expect(input()).toBeEnabled();
   });
 
   // #7400 review: InputBase blurs 10 ms after each change unless told not to, which saved on the first keystroke

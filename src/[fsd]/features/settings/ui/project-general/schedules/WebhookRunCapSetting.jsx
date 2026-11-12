@@ -2,11 +2,13 @@ import { memo, useCallback, useEffect, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { useGetScheduleSettingsQuery, useUpdateScheduleSettingsMutation } from '@/[fsd]/entities/schedule';
+import {
+  useGetScheduleSettingsQuery,
+  useIsScheduleAdmin,
+  useUpdateScheduleSettingsMutation,
+} from '@/[fsd]/entities/schedule';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Input } from '@/[fsd]/shared/ui';
-import { PERMISSIONS } from '@/common/constants';
-import useCheckPermission from '@/hooks/useCheckPermission';
 
 const toDraft = value => (value == null ? '' : String(value));
 
@@ -15,8 +17,7 @@ const WebhookRunCapSetting = memo(() => {
 
   const projectId = useSelectedProjectId();
   const { toastError, toastSuccess } = useToast();
-  const { checkPermission } = useCheckPermission();
-  const isAdmin = checkPermission(PERMISSIONS.schedules.admin);
+  const isAdmin = useIsScheduleAdmin();
   const { data, isError } = useGetScheduleSettingsQuery({ projectId }, { skip: !projectId });
   const [updateSettings, { isLoading: isSaving }] = useUpdateScheduleSettingsMutation();
   const [draft, setDraft] = useState('');

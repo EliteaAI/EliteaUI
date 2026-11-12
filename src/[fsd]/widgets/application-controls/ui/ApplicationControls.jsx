@@ -6,7 +6,7 @@ import { useLocation, useParams } from 'react-router-dom';
 import { Box } from '@mui/material';
 
 import { COMPARE_ENTITY_TYPES, CompareVersionsModal } from '@/[fsd]/entities/compare-versions';
-import { buildScheduleFormLink, useOpenScheduleNested } from '@/[fsd]/entities/schedule';
+import { buildScheduleFormLink, useIsScheduleAdmin, useOpenScheduleNested } from '@/[fsd]/entities/schedule';
 import {
   LATEST_VERSION_NAME,
   VersionDelete,
@@ -52,6 +52,7 @@ const ApplicationControls = memo(props => {
 
   const instructionsInputRef = useInstructionsInputRefContext();
   const { checkPermission } = useCheckPermission();
+  const isScheduleAdmin = useIsScheduleAdmin();
   const { isPrivate } = useProjectType();
   const isFromPipeline = useIsFromPipelineDetail();
   const formik = useFormikContext();
@@ -355,7 +356,7 @@ const ApplicationControls = memo(props => {
           entityId={id}
           isEditorDirty={isEditorDirty}
           canListSchedules={checkPermission(PERMISSIONS.schedules.list)}
-          isScheduleAdmin={checkPermission(PERMISSIONS.schedules.admin)}
+          isScheduleAdmin={isScheduleAdmin}
           onOpenSchedule={handleOpenSchedule}
           leftVersionId={formik?.values?.version_details?.id}
           versions={formik?.values?.versions ?? []}

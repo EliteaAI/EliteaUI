@@ -1,7 +1,7 @@
 import { memo, useCallback, useState } from 'react';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { useLazyExportSchedulesQuery } from '@/[fsd]/entities/schedule';
+import { useIsOwnPersonalProject, useLazyExportSchedulesQuery } from '@/[fsd]/entities/schedule';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -13,8 +13,10 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 
 import ImportSchedulesDialog from './ImportSchedulesDialog';
 
-const ScheduleImportExportActions = memo(({ projectId }) => {
+const ScheduleImportExportActions = memo(props => {
+  const { projectId } = props;
   const { checkPermission } = useCheckPermission();
+  const isOwnPersonalProject = useIsOwnPersonalProject();
   const { toastError } = useToast();
   const [exportSchedules, { isFetching }] = useLazyExportSchedulesQuery();
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -27,8 +29,9 @@ const ScheduleImportExportActions = memo(({ projectId }) => {
   const openImport = useCallback(() => setIsImportOpen(true), []);
   const closeImport = useCallback(() => setIsImportOpen(false), []);
 
-  const canExport = checkPermission(PERMISSIONS.schedules.export);
-  const canImport = checkPermission(PERMISSIONS.schedules.import);
+  // The owner of a personal project administers its schedules, so export and import stay open to them
+  const canExport = checkPermission(PERMISSIONS.schedules.export) || isOwnPersonalProject;
+  const canImport = checkPermission(PERMISSIONS.schedules.import) || isOwnPersonalProject;
 
   return (
     <>

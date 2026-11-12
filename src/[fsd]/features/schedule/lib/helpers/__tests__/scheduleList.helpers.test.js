@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 
 import { RUN_AS_ADMIN_HINT, runAsAdminHint, runDeniedHint } from '../scheduleList.helpers';

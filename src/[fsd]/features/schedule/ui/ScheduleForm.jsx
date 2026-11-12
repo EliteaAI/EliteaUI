@@ -5,7 +5,7 @@ import { useFormik } from 'formik';
 import { Box, Grid } from '@mui/material';
 
 import { GenerateEntityButton } from '@/[fsd]/entities/generate-entity-with-ai';
-import { isWebhookRow, toKindNoun } from '@/[fsd]/entities/schedule';
+import { isWebhookRow, toKindNoun, useIsScheduleAdmin } from '@/[fsd]/entities/schedule';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { WebhookHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -15,7 +15,6 @@ import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { useToolkitsDetailsQuery } from '@/api/toolkits';
 import { PERMISSIONS } from '@/common/constants';
 import StyledTabs from '@/components/StyledTabs';
-import useCheckPermission from '@/hooks/useCheckPermission';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import { StyledGridContainer } from '@/pages/Common/Components/StyledComponents';
 
@@ -89,9 +88,8 @@ const ScheduleForm = memo(props => {
 
   const styles = scheduleFormStyles();
   const projectId = useSelectedProjectId();
-  const { checkPermission } = useCheckPermission();
-  // Only a project admin can change the setting, so only an admin gets the link to it
-  const canChangeProjectSettings = checkPermission(PERMISSIONS.schedules.admin);
+  // Only who can change the setting gets the link to it
+  const canChangeProjectSettings = useIsScheduleAdmin();
   const [lockFailed, setLockFailed] = useState(false);
 
   const formik = useFormik({

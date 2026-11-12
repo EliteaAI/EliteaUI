@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import {
   isWebhookRow,
   useDeleteScheduleMutation,
+  useIsOwnPersonalProject,
   useLazyExportSchedulesQuery,
   usePauseScheduleMutation,
   useResumeScheduleMutation,
@@ -25,6 +26,7 @@ export const useScheduleRowActions = row => {
   const [deleteSchedule, deleteState] = useDeleteScheduleMutation({ fixedCacheKey });
   const [exportSchedules, exportState] = useLazyExportSchedulesQuery();
   const { checkPermission } = useCheckPermission();
+  const isOwnPersonalProject = useIsOwnPersonalProject();
 
   const perform = useCallback(
     async (call, successText) => {
@@ -72,7 +74,10 @@ export const useScheduleRowActions = row => {
     onResume,
     onDelete,
     // The export file holds schedules only; webhooks are never exported
-    onExport: checkPermission(PERMISSIONS.schedules.export) && !isWebhookRow(row) ? onExport : undefined,
+    onExport:
+      (checkPermission(PERMISSIONS.schedules.export) || isOwnPersonalProject) && !isWebhookRow(row)
+        ? onExport
+        : undefined,
     isBusy:
       runState.isLoading ||
       pauseState.isLoading ||

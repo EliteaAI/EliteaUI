@@ -35,6 +35,7 @@ vi.mock('@/hooks/useCheckPermission', () => ({
 }));
 vi.mock('@/[fsd]/entities/schedule', async () => ({
   ...(await vi.importActual('@/[fsd]/entities/schedule/lib/helpers')),
+  useIsScheduleAdmin: () => true,
   useGetScheduleSettingsQuery: () => ({ data: { allow_run_without_asking: true }, isError: false }),
   useCheckScheduleRiskMutation: () => [checkRisk],
   useCheckScheduleConnectionsMutation: () => [checkConnections],
