@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  argumentHintMeta,
+  argumentHintText,
   isUserInvocable,
+  skillVersionMeta,
   userInvocableMeta,
-  withSkillVersionInvocation,
+  withSkillVersionMeta,
 } from '@/[fsd]/features/skill/lib/helpers/skillInvocation.helpers';
 
 const modelOnly = { meta: { frontmatter: { 'user-invocable': false } } };
 const plain = { meta: { frontmatter: { license: 'MIT' } } };
+const hinted = { meta: { frontmatter: { 'argument-hint': ['city like Paris', 'Rome'] } } };
 
 describe('userInvocableMeta', () => {
   it('marks a version whose frontmatter turns user invocation off', () => {
@@ -22,17 +26,69 @@ describe('userInvocableMeta', () => {
   );
 });
 
-describe('withSkillVersionInvocation', () => {
-  it('sets the flag when switching to a model-only version', () => {
-    expect(withSkillVersionInvocation({ name: 'style', mcp: false }, modelOnly)).toEqual({
+describe('argumentHintText', () => {
+  it.each([
+    ['[a] [b]', '[a] [b]'],
+    ['  [name]  ', '[name]'],
+    [
+      ['container name like pylon_indexer', 'pylon_main', 'pylon_auth'],
+      '[container name like pylon_indexer, pylon_main, pylon_auth]',
+    ],
+    [
+      [{ optional: 'service names like "pylon_indexer pylon_main" or "all"' }],
+      '[optional: service names like "pylon_indexer pylon_main" or "all"]',
+    ],
+    [['x', { default: 'y' }], '[x, default: y]'],
+    [{ optional: 'z' }, 'optional: z'],
+    [42, '42'],
+  ])('renders the stored shape %j as one line', (value, expected) => {
+    expect(argumentHintText(value)).toBe(expected);
+  });
+
+  it.each([
+    ['', undefined],
+    [null, undefined],
+    [undefined, undefined],
+    [[], undefined],
+    [{}, undefined],
+  ])('renders nothing for the empty shape %j', (value, expected) => {
+    expect(argumentHintText(value)).toBe(expected);
+  });
+});
+
+describe('argumentHintMeta', () => {
+  it('carries the one-line hint of a hinted version', () => {
+    expect(argumentHintMeta(hinted)).toEqual({ argument_hint: '[city like Paris, Rome]' });
+  });
+
+  it.each([plain, {}, undefined])('adds nothing for a version without a hint %#', versionDetails => {
+    expect(argumentHintMeta(versionDetails)).toEqual({});
+  });
+});
+
+describe('skillVersionMeta', () => {
+  it('combines the flag and the hint of the version', () => {
+    const both = { meta: { frontmatter: { 'user-invocable': false, 'argument-hint': '[v]' } } };
+    expect(skillVersionMeta(both)).toEqual({ user_invocable: false, argument_hint: '[v]' });
+    expect(skillVersionMeta(plain)).toEqual({});
+  });
+});
+
+describe('withSkillVersionMeta', () => {
+  it('sets the flag and the hint when switching to a version that has them', () => {
+    const both = { meta: { frontmatter: { 'user-invocable': false, 'argument-hint': '[v]' } } };
+    expect(withSkillVersionMeta({ name: 'style', mcp: false }, both)).toEqual({
       name: 'style',
       mcp: false,
       user_invocable: false,
+      argument_hint: '[v]',
     });
   });
 
-  it('drops the flag when switching to a version without it', () => {
-    expect(withSkillVersionInvocation({ name: 'style', user_invocable: false }, plain)).toEqual({
+  it('drops the flag and the hint when switching to a version without them', () => {
+    expect(
+      withSkillVersionMeta({ name: 'style', user_invocable: false, argument_hint: '[v]' }, plain),
+    ).toEqual({
       name: 'style',
     });
   });
