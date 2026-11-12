@@ -28,7 +28,7 @@ import RecommendationList from '@/[fsd]/features/chat/ui/recommendations/Recomme
 import SearchResultList from '@/[fsd]/features/chat/ui/recommendations/SearchResultList';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useGetChatTemplatesQuery } from '@/[fsd]/features/settings/api';
-import { skillVersionMeta } from '@/[fsd]/features/skill/lib/helpers';
+import { skillComposerPlaceholder, skillVersionMeta } from '@/[fsd]/features/skill/lib/helpers';
 import { MentionSkillList } from '@/[fsd]/features/skill/ui';
 import {
   AutoRoutingConstants,
@@ -1201,7 +1201,7 @@ const NewConversationView = forwardRef(
             />
             <NewChatInput
               fromTheChat
-              placeholder="Type your message..."
+              placeholder={skillComposerPlaceholder(activeParticipant, 'Type your message...')}
               ref={chatInput}
               onSend={onSend}
               isLoading={isSending || isFetchingParticipant || isUploadingAttachments}

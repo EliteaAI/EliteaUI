@@ -1,3 +1,6 @@
+import { ChatParticipantType } from '@/common/constants';
+
+const SKILL_PARTICIPANT = ChatParticipantType.Skills;
 const USER_INVOCABLE_KEY = 'user-invocable';
 const USER_INVOCABLE_META = 'user_invocable';
 const ARGUMENT_HINT_KEY = 'argument-hint';
@@ -41,3 +44,9 @@ export const withSkillVersionMeta = (meta, versionDetails) => ({
 });
 
 export const isUserInvocable = item => item?.[USER_INVOCABLE_META] !== false;
+
+export const skillComposerPlaceholder = (activeParticipant, fallback) => {
+  if (activeParticipant?.entity_name !== SKILL_PARTICIPANT) return fallback;
+  const { name, [ARGUMENT_HINT_META]: hint } = activeParticipant.meta || {};
+  return name && hint ? `~${name} ${hint}` : fallback;
+};

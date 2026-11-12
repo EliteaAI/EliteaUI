@@ -4,6 +4,7 @@ import {
   argumentHintMeta,
   argumentHintText,
   isUserInvocable,
+  skillComposerPlaceholder,
   skillVersionMeta,
   userInvocableMeta,
   withSkillVersionMeta,
@@ -99,5 +100,21 @@ describe('isUserInvocable', () => {
     expect(isUserInvocable({ user_invocable: false })).toBe(false);
     expect(isUserInvocable({})).toBe(true);
     expect(isUserInvocable(undefined)).toBe(true);
+  });
+});
+
+describe('skillComposerPlaceholder', () => {
+  it('shows how to invoke the answering skill, with its hint, in place of the default prompt', () => {
+    const skill = { entity_name: 'skill', meta: { name: 'greet', argument_hint: '[name]' } };
+    expect(skillComposerPlaceholder(skill, 'Type your message...')).toBe('~greet [name]');
+  });
+
+  it.each([
+    [{ entity_name: 'skill', meta: { name: 'plain' } }],
+    [{ entity_name: 'skill', meta: { argument_hint: '[name]' } }],
+    [{ entity_name: 'application', meta: { argument_hint: '[name]' } }],
+    [undefined],
+  ])('keeps the default prompt for %j', activeParticipant => {
+    expect(skillComposerPlaceholder(activeParticipant, 'Type your message...')).toBe('Type your message...');
   });
 });

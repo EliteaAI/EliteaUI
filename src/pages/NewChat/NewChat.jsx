@@ -49,6 +49,7 @@ import { ChatBox } from '@/[fsd]/features/chat/ui';
 import { AddNewUserModal } from '@/[fsd]/features/chat/ui/chat-modal';
 import { ChatEditorPanel } from '@/[fsd]/features/chat/ui/editors';
 import { FIRST_ELITEA_TOUR_ID, useProposePendingTour } from '@/[fsd]/features/interactive-tours';
+import { skillComposerPlaceholder } from '@/[fsd]/features/skill/lib/helpers';
 import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useGetWindowWidth, useIsSmallWindow, useToast } from '@/[fsd]/shared/lib/hooks';
 import { eliteaApi } from '@/api/eliteaApi';
@@ -1453,7 +1454,7 @@ const NewChat = props => {
                 onClosePipelineEditor={handleClosePipelineEditor}
                 isEditorDirty={editorIsDirty}
                 onShowVersionChangeAlert={handleShowVersionChangeAlert}
-                inputPlaceholder="Type your message..."
+                inputPlaceholder={skillComposerPlaceholder(activeParticipant, 'Type your message...')}
                 uploadAttachments={uploadAttachments}
                 isUploadingAttachments={isUploadingAttachments}
                 uploadProgress={uploadProgress}

@@ -3,6 +3,7 @@ export {
   argumentHintMeta,
   argumentHintText,
   isUserInvocable,
+  skillComposerPlaceholder,
   skillVersionMeta,
   userInvocableMeta,
   withSkillVersionMeta,
