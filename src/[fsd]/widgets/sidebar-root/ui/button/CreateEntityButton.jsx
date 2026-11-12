@@ -88,13 +88,17 @@ const CreateEntityButton = memo(props => {
     return isSimple || !isKnownRoute;
   }, [pathname]);
 
+  const isOwnLLMsRestricted = useMemo(
+    () => ALLOW_PROJECT_OWN_LLMS === false && projectId != PUBLIC_PROJECT_ID,
+    [projectId],
+  );
+
   const shouldDisableOwnLLMs = useMemo(
     () =>
       !isSimpleCreateRoute &&
       selectedOption === CreateEntityConstants.OptionsMap.AIProvider &&
-      ALLOW_PROJECT_OWN_LLMS === false &&
-      projectId != PUBLIC_PROJECT_ID,
-    [isSimpleCreateRoute, selectedOption, projectId],
+      isOwnLLMsRestricted,
+    [isSimpleCreateRoute, selectedOption, isOwnLLMsRestricted],
   );
 
   const currentLabel = useMemo(() => {
@@ -255,11 +259,14 @@ const CreateEntityButton = memo(props => {
 
   const getHasPermissionForDropdownItem = useCallback(
     option => {
+      // IntegrationGuard redirects away from AI Provider creation under the same condition
+      if (option === CreateEntityConstants.OptionsMap.AIProvider && isOwnLLMsRestricted) return false;
+
       const permissions = CreateEntityConstants.CreationPermissions[option];
       if (!permissions || !permissions.length) return true;
       return permissions.some(permission => checkPermission(permission));
     },
-    [checkPermission],
+    [checkPermission, isOwnLLMsRestricted],
   );
 
   const handleDropdownItemClick = useCallback(
