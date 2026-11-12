@@ -80,7 +80,7 @@ export const TOOLTIP_TEXTS = {
   overview: {
     TEAM: 'Shows active project members out of all project members. Active members performed at least one tracked action during the selected date range. Runs from Webhook, Scheduled, Schedule run now, and Index runs are not counted as member activity.',
     AI_ACTIVE:
-      'Number of members who used AI features during the selected date range, including LLM calls, tool runs, or Agent and Pipeline runs. Automated runs (Webhook, Scheduled, Schedule run now, Index runs) do not make a member AI active.',
+      'Number of members who used AI features during the selected date range, including model calls, tool runs, or Agent and Pipeline runs. Automated runs (Webhook, Scheduled, Schedule run now, Index runs) do not make a member AI active.',
     LLM_CALLS: `Total ${MODEL_REQUESTS} during the selected date range.`,
     TOOL_RUNS:
       'Total tool executions during the selected date range. This includes tools, sub-agents, and sub-pipelines invoked by Agents or Pipelines.',
@@ -93,7 +93,7 @@ export const TOOLTIP_TEXTS = {
     TOKENS: `Total input and output tokens used by ${MODEL_REQUESTS} during the selected date range.`,
     COST: `Estimated USD cost of ${MODEL_REQUESTS} during the selected date range. Costs are calculated from the platform's local model-price table and may differ from provider invoices.`,
     LEADERBOARD:
-      'Ranks users by combined LLM calls, tool runs, and Agent & Pipeline runs during the selected date range. Only manually started activity (Chat, API, or MCP) is ranked. Webhook, Scheduled, Schedule run now, and Index runs are not ranked.',
+      'Ranks users by their number of LLM and embedding model calls plus tool runs during the selected date range, including failed calls. Agent & Pipeline runs are shown for context but are not added to the score. Users with the same score are ordered by user ID. Only manually started activity (Chat, API, or MCP) is ranked. Webhook, Scheduled, Schedule run now, and Index runs are not ranked.',
     LEADERBOARD_SKILL_RUNS:
       'Model and tool calls made by skill runs count toward the score; the Skill figure shows how many skill runs they came from.',
     AUTOMATED_ACTIVITY:
@@ -103,9 +103,9 @@ export const TOOLTIP_TEXTS = {
     MODEL_USAGE_PRIVATE:
       "Shows LLM usage by model, including calls/runs and each model's share of total LLM usage.",
     DAILY_ACTIVITY:
-      'Shows daily AI usage for the selected period, including LLM Calls, Tool Runs, and Agent & Pipeline Runs. For Team Projects, it also shows the number of distinct active users per day, excluding automated runs.',
+      'Shows daily AI usage for the selected period, including Model Calls, Tool Runs, and Agent & Pipeline Runs. For Team Projects, it also shows the number of distinct active users per day, excluding automated runs.',
     DAILY_ACTIVITY_PRIVATE:
-      'Shows daily AI usage for the selected period, including LLM Calls, Tool Runs, and Agent & Pipeline Runs.',
+      'Shows daily AI usage for the selected period, including Model Calls, Tool Runs, and Agent & Pipeline Runs.',
     DAILY_ACTIVITY_SKILL_RUNS: 'Skill Runs shows skills run on their own or as a chat participant.',
   },
   costs: {
@@ -268,7 +268,7 @@ export const TOOLTIP_TEXTS = {
     INPUT_TOKEN_COST: "Estimated cost of tokens sent to AI models by this user's requests.",
     OUTPUT_TOKEN_COST: "Estimated cost of tokens generated in response to this user's requests.",
     DAILY_ACTIVITY:
-      "Shows this user's daily activity by type, including LLM calls, tool calls, Agent & Pipeline runs, chat messages, and errors.",
+      "Shows this user's daily activity by type, including model calls, tool calls, Agent & Pipeline runs, chat messages, and errors.",
     TOOLS_SECTION:
       'Number of distinct tools used by this user during the selected date range, including nested sub-agents and sub-pipelines.',
     AGENTS_SECTION:
@@ -304,9 +304,9 @@ export const GUIDE_SECTIONS = [
         source: 'Derived from TEAM and AI ACTIVE metrics.',
       },
       {
-        name: 'LLM CALLS',
+        name: 'MODEL CALLS',
         description:
-          'Total number of Large Language Model invocations. Every time the system sends a prompt to an AI model (Claude, GPT, Gemini, etc.) and gets a response, it counts as one LLM call. Embedding model requests are counted as LLM calls too.',
+          'Total number of AI model requests. Every time the system sends a request to a model (Claude, GPT, Gemini, etc.) and gets a response, it counts as one model call. Embedding model requests are counted as model calls too.',
         calculation: 'Count of events where event_type = "llm".',
         source: 'Captured when the SDK calls ChatAnthropic, ChatOpenAI, ChatBedrock, etc.',
       },
@@ -344,7 +344,7 @@ export const GUIDE_SECTIONS = [
       {
         name: 'Daily Activity',
         description:
-          'Shows daily AI usage for the selected period, including LLM Calls, Tool Runs, and Agent & Pipeline Runs. For Team Projects, it also shows the number of distinct active users per day. Active Users is not shown for Private Projects.',
+          'Shows daily AI usage for the selected period, including Model Calls, Tool Runs, and Agent & Pipeline Runs. For Team Projects, it also shows the number of distinct active users per day. Active Users is not shown for Private Projects.',
       },
       {
         name: 'Model Usage Breakdown',
@@ -354,7 +354,7 @@ export const GUIDE_SECTIONS = [
       {
         name: 'Automated Activity',
         description:
-          'Shows runs that were started automatically rather than by a person: Webhook, Scheduled, Schedule run now, and Index runs. Each source lists its runs, LLM calls, tool runs, and estimated cost. These runs are part of the project totals and cost, and are still billed to the user who configured them, but they are excluded from TEAM, AI ACTIVE, active users, Top 5 AI Adopters, and the Users and Activity tabs.',
+          'Shows runs that were started automatically rather than by a person: Webhook, Scheduled, Schedule run now, and Index runs. Each source lists its runs, model calls, tool runs, and estimated cost. These runs are part of the project totals and cost, and are still billed to the user who configured them, but they are excluded from TEAM, AI ACTIVE, active users, Top 5 AI Adopters, and the Users and Activity tabs.',
         calculation:
           'Rows are grouped by trigger source and entity type (Agent or Pipeline). The Entity type column shows a dash when a run has no entity type. Runs recorded before trigger sources existed show as Manual (legacy).',
       },
@@ -610,12 +610,12 @@ export const GUIDE_SECTIONS = [
       {
         name: 'User Activity',
         description:
-          'Lists users who were active during the selected date range. For each user, the table shows Active Days, LLM Calls, Tool Calls, Agent/Pipeline Runs, Chat Messages, Errors, Total Tokens, Input Tokens, Output Tokens, Total Cost, Input Token Cost, and Output Token Cost.',
+          'Lists users who were active during the selected date range. For each user, the table shows Active Days, Model Calls, Tool Calls, Agent/Pipeline Runs, Chat Messages, Errors, Total Tokens, Input Tokens, Output Tokens, Total Cost, Input Token Cost, and Output Token Cost.',
       },
       {
         name: 'User Detail View',
         description:
-          'Selecting a user opens a detail view showing Active Days, LLM Calls, Tool Calls, Agent & Pipeline Runs, Chat Messages, Errors, token usage, estimated total cost, input-token cost, and output-token cost.',
+          'Selecting a user opens a detail view showing Active Days, Model Calls, Tool Calls, Agent & Pipeline Runs, Chat Messages, Errors, token usage, estimated total cost, input-token cost, and output-token cost.',
       },
     ],
   },

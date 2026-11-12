@@ -28,7 +28,8 @@ vi.mock('recharts', () => ({
   Tooltip: () => null,
 }));
 
-vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
+vi.mock('@/[fsd]/features/settings/ui/analytics', async () => ({
+  UserLabel: (await vi.importActual('../components/UserLabel')).default,
   ChartTooltip: () => null,
   KPICard: ({ label, value, subtitle }) => (
     <div data-testid={`kpi-${label}`}>
@@ -81,6 +82,25 @@ describe('AnalyticsUserDetailed', () => {
   });
 
   afterEach(() => cleanup());
+
+  it('shows the stored email and a Deleted user chip in the header of a deleted account', () => {
+    useAnalyticsUserDetailQuery.mockReturnValue({
+      data: { ...MOCK, user_id: 9, user_email: 'gone@example.com', user_deleted: true },
+      isFetching: false,
+    });
+    render(
+      <AnalyticsUserDetailed
+        projectId={1}
+        userId={9}
+        dateFrom="2026-01-01"
+        dateTo="2026-01-31"
+        onBack={() => {}}
+      />,
+      { wrapper: Wrapper },
+    );
+    expect(screen.getByTestId('analytics-user-detail-title')).toHaveTextContent('gone@example.com');
+    expect(screen.getByTestId('analytics-user-detail-deleted-chip')).toHaveTextContent('Deleted user');
+  });
 
   it('renders the token and cost KPI cards', () => {
     render(

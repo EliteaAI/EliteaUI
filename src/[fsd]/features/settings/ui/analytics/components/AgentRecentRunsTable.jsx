@@ -14,6 +14,7 @@ import {
 import { useClientSort } from '@/[fsd]/shared/lib/hooks';
 
 import AnalyticsBreakdownTable from './AnalyticsBreakdownTable';
+import UserLabel from './UserLabel';
 
 const DEFAULT_SORT_BY = 'started_at';
 const DEFAULT_ROWS_PER_PAGE = 20;
@@ -76,7 +77,7 @@ const AgentRecentRunsTable = memo(props => {
         sortKey: 'user',
         label: 'User',
         flex: 1.5,
-        render: AgentAnalyticsHelpers.formatAgentUserLabel,
+        render: run => <UserLabel user={run} />,
       },
       {
         key: 'version_name',

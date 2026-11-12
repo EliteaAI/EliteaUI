@@ -83,6 +83,7 @@ vi.mock('@/[fsd]/features/settings/lib/helpers', async () => ({
   AnalyticCommonHelpers: {
     getPresetRange: () => ({ from: new Date('2026-10-01'), to: new Date('2026-10-02') }),
     isValidDate: d => d instanceof Date,
+    isCompleteDateRange: (from, to) => from instanceof Date && to instanceof Date && from <= to,
     toValidISOString: d => d?.toISOString(),
   },
   AnalyticsExportHelpers: {},

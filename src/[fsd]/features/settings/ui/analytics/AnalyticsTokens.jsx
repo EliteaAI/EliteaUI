@@ -45,11 +45,7 @@ const AnalyticsTokens = memo(props => {
       (data?.by_user || []).map(user => {
         const tokens = tokenStats(user);
         return {
-          name:
-            user.user_display_name ||
-            user.user_email ||
-            `User ${user.user_id ?? ''}`.trim() ||
-            'Unknown user',
+          name: AnalyticCommonHelpers.formatUserName(user),
           ...tokens,
           share: toPercentage(tokens.total, totalProjectTokens),
         };

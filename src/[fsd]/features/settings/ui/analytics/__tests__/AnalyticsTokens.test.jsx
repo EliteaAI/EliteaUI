@@ -42,6 +42,9 @@ vi.mock('recharts', () => ({
 vi.mock('@/[fsd]/features/settings/lib/helpers', async () => ({
   AnalyticCommonHelpers: {
     fmtCost: v => `$${v ?? 0}`,
+    formatUserName: (
+      await vi.importActual('@/[fsd]/features/settings/lib/helpers/analyticsCommon.helpers.js')
+    ).formatUserName,
     fmtNum: v => String(v ?? 0),
     axisTick: stroke => ({ fill: stroke, fontSize: 11 }),
     barChartCursor: () => ({}),

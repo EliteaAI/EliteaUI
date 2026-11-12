@@ -69,7 +69,7 @@ const ModelUsageTable = memo(props => {
           variant="bodySmall"
           sx={styles.chartSubtitle}
         >
-          LLM calls/runs per model
+          Model calls/runs per model
         </Typography>
         <InfoTooltip
           infoTooltip={{

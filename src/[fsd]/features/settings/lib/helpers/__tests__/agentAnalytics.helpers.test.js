@@ -6,6 +6,7 @@ import {
   buildAgentRunAnalyticsUrl,
   formatAgentModelLabel,
   formatAgentRunModels,
+  formatAgentUserLabel,
 } from '../agentAnalytics.helpers';
 
 const OWN_AGENT = { agentId: 42, kind: 'agent', projectId: 2 };
@@ -75,5 +76,38 @@ describe('agent analytics labels', () => {
       ]),
     ).toBe('GPT-4o, Claude Sonnet');
     expect(formatAgentRunModels([])).toBe('—');
+  });
+});
+
+describe('formatAgentUserLabel (plain-text user name for exports)', () => {
+  it('uses the email of a live user', () => {
+    expect(formatAgentUserLabel({ user_id: 1, user_email: 'alice@example.com' })).toBe('alice@example.com');
+  });
+
+  it('keeps the stored email of a deleted account and marks it as a deleted user', () => {
+    expect(formatAgentUserLabel({ user_id: 9, user_email: 'gone@example.com', user_deleted: true })).toBe(
+      'gone@example.com (Deleted user)',
+    );
+  });
+
+  it('names a deleted account by its id when no email was stored', () => {
+    expect(formatAgentUserLabel({ user_id: 9, user_email: null, user_deleted: true })).toBe(
+      'User 9 (Deleted user)',
+    );
+  });
+
+  it('prefers a display name and still marks a deleted account', () => {
+    expect(
+      formatAgentUserLabel({
+        user_id: 9,
+        user_display_name: 'Gone Person',
+        user_email: 'g@x.y',
+        user_deleted: true,
+      }),
+    ).toBe('Gone Person (Deleted user)');
+  });
+
+  it('falls back to the id, unmarked, when the email is only unknown', () => {
+    expect(formatAgentUserLabel({ user_id: 12, user_email: null })).toBe('User 12');
   });
 });

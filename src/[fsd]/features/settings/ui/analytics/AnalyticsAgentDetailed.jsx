@@ -28,6 +28,7 @@ import {
   ChartTooltip,
   DeletedChip,
   KPICard,
+  UserLabel,
 } from '@/[fsd]/features/settings/ui/analytics';
 import {
   analyticsColumnSx,
@@ -76,7 +77,7 @@ const MODEL_COLUMNS = [
     render: AgentAnalyticsHelpers.formatAgentModelLabel,
   },
   USAGE_COLUMNS[0],
-  { key: 'calls', label: 'LLM Calls', render: row => fmtNum(row.calls) },
+  { key: 'calls', label: 'Model Calls', render: row => fmtNum(row.calls) },
   ...USAGE_COLUMNS.slice(1),
 ];
 
@@ -596,12 +597,9 @@ const AnalyticAgentDetailed = memo(props => {
                   key={i}
                   sx={[styles.tableRow, USER_ROW_MIN_WIDTH]}
                 >
-                  <Typography
-                    sx={[styles.tableCellValue, analyticsColumnSx(USER_COLUMNS[0])]}
-                    noWrap
-                  >
-                    {u.user_email || `User ${u.user_id}`}
-                  </Typography>
+                  <Box sx={[styles.tableCellValue, analyticsColumnSx(USER_COLUMNS[0])]}>
+                    <UserLabel user={u} />
+                  </Box>
                   <Typography sx={[styles.tableCellValue, analyticsColumnSx(USER_COLUMNS[1])]}>
                     {AnalyticCommonHelpers.fmtNum(u.events)}
                   </Typography>

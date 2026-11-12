@@ -35,6 +35,7 @@ import {
   ChartTooltip,
   DeletedChip,
   KPICard,
+  UserLabel,
 } from '@/[fsd]/features/settings/ui/analytics';
 import EntityKindChip from '@/[fsd]/features/settings/ui/analytics/components/EntityKindChip';
 import { analyticsTableStyles } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
@@ -69,7 +70,7 @@ const VERSION_COLUMNS = usageTable({
 const USER_COLUMNS = usageTable({
   key: 'user_email',
   label: 'User',
-  render: r => r.user_email || `User ${r.user_id}`,
+  render: r => <UserLabel user={r} />,
 });
 
 const TRIGGER_COLUMNS = usageTable({
@@ -168,7 +169,7 @@ const AnalyticsSkillDetailed = memo(props => {
         );
       },
     },
-    { key: 'user_email', label: 'User', flex: 1.5, render: run => run.user_email || `User ${run.user_id}` },
+    { key: 'user_email', label: 'User', flex: 1.5, render: run => <UserLabel user={run} /> },
     {
       key: 'version_name',
       label: 'Version',

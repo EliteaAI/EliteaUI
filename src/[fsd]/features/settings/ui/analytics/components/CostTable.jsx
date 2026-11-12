@@ -37,6 +37,7 @@ const CostTable = memo(props => {
     sortBy,
     sortOrder,
     onSort,
+    renderName,
   } = props;
 
   const styles = costTableStyles();
@@ -110,12 +111,16 @@ const CostTable = memo(props => {
               key={`${row.name}-${index}`}
               sx={[styles.tableRow, rowMinWidth]}
             >
-              <Typography
-                sx={[styles.tableCellValue, styles.nameCell]}
-                noWrap
-              >
-                {row.name}
-              </Typography>
+              {renderName ? (
+                <Box sx={[styles.tableCellValue, styles.nameCell]}>{renderName(row)}</Box>
+              ) : (
+                <Typography
+                  sx={[styles.tableCellValue, styles.nameCell]}
+                  noWrap
+                >
+                  {row.name}
+                </Typography>
+              )}
               {extraColumns.map(col => (
                 <Box
                   key={col.key}

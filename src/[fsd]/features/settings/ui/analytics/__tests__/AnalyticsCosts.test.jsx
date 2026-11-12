@@ -50,6 +50,9 @@ vi.mock('recharts', () => ({
 vi.mock('@/[fsd]/features/settings/lib/helpers', async () => ({
   AnalyticCommonHelpers: {
     fmtCost: v => `$${v ?? 0}`,
+    formatUserName: (
+      await vi.importActual('@/[fsd]/features/settings/lib/helpers/analyticsCommon.helpers.js')
+    ).formatUserName,
     fmtNum: v => String(v ?? 0),
     axisTick: stroke => ({ fill: stroke, fontSize: 11 }),
     barChartCursor: () => ({}),
@@ -68,7 +71,8 @@ vi.mock('@/[fsd]/shared/ui/tooltip', () => ({
   ),
 }));
 
-vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
+vi.mock('@/[fsd]/features/settings/ui/analytics', async () => ({
+  UserLabel: (await vi.importActual('@/[fsd]/features/settings/ui/analytics/components/UserLabel')).default,
   ChartTooltip: () => null,
   KPICard: ({ label, value, subtitle }) => (
     <div data-testid={`kpi-${label}`}>
@@ -128,6 +132,45 @@ describe('AnalyticsCosts', () => {
 
   afterEach(() => {
     cleanup();
+  });
+
+  it('marks a deleted user in the cost by user table and keeps the chip next to the stored email', () => {
+    useAnalyticsCostsQuery.mockReturnValue({
+      data: {
+        ...MOCK_DATA,
+        by_user: [
+          {
+            user_id: 9,
+            user_email: 'gone@example.com',
+            user_deleted: true,
+            total_cost: 3,
+            total_tokens: 1000,
+          },
+          {
+            user_id: 42,
+            user_email: 'alice@example.com',
+            user_deleted: false,
+            total_cost: 8,
+            total_tokens: 4000,
+          },
+        ],
+      },
+      isFetching: false,
+      isError: false,
+    });
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        dateFrom="2026-01-01"
+        dateTo="2026-01-31"
+      />,
+      { wrapper: Wrapper },
+    );
+    const chips = screen.getAllByTestId('analytics-cost-user-deleted-chip');
+    expect(chips).toHaveLength(1);
+    expect(chips[0]).toHaveTextContent('Deleted user');
+    expect(screen.getByText('gone@example.com').parentElement).toContainElement(chips[0]);
+    expect(screen.getByText('alice@example.com')).toBeInTheDocument();
   });
 
   it('renders loading state with CircularProgress', () => {

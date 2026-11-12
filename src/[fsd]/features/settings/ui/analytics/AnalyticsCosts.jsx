@@ -6,7 +6,7 @@ import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
 
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers, SkillAnalyticsHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { ChartTooltip, KPICard } from '@/[fsd]/features/settings/ui/analytics';
+import { ChartTooltip, KPICard, UserLabel } from '@/[fsd]/features/settings/ui/analytics';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { useClientSort, useSortedRows } from '@/[fsd]/shared/lib/hooks';
 import { useAnalyticsCostsQuery } from '@/api';
@@ -37,6 +37,13 @@ const TYPE_COLUMN = {
   flex: 1,
   render: row => <EntityKindChip kind={row.kind} />,
 };
+
+const renderUserName = row => (
+  <UserLabel
+    user={{ user_email: row.name, user_deleted: row.userDeleted }}
+    testId="analytics-cost-user-deleted-chip"
+  />
+);
 
 const EVALUATION_COLUMNS = [
   TYPE_COLUMN,
@@ -84,7 +91,11 @@ const AnalyticsCosts = memo(props => {
   );
 
   const userTableData = useMemo(
-    () => toCostRows(data?.by_user, u => ({ name: u.user_email })),
+    () =>
+      toCostRows(data?.by_user, u => ({
+        name: AnalyticCommonHelpers.formatUserName(u),
+        userDeleted: Boolean(u.user_deleted),
+      })),
     [data?.by_user],
   );
 
@@ -294,6 +305,7 @@ const AnalyticsCosts = memo(props => {
         title="Cost by User"
         nameHeader="USER"
         rows={sortedUserRows}
+        renderName={renderUserName}
         emptyState={`No user cost data is available for ${scopeText}.`}
         sortBy={userSort.sortBy}
         sortOrder={userSort.sortOrder}
