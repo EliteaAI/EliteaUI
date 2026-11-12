@@ -6,18 +6,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, ClickAwayListener, Paper, Popper, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { useIsOwnLLMsRestricted } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { CreateEntityConstants } from '@/[fsd]/widgets/sidebar-root/lib/constants';
 import { useDisablePersonalSpace } from '@/[fsd]/widgets/sidebar-root/lib/hooks';
 import PlusIcon from '@/assets/plus-icon.svg?react';
-import {
-  ALLOW_PROJECT_OWN_LLMS,
-  PERMISSIONS,
-  PUBLIC_PROJECT_ID,
-  SearchParams,
-  ViewMode,
-} from '@/common/constants';
+import { PERMISSIONS, SearchParams, ViewMode } from '@/common/constants';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
 import CheckIcon from '@/components/Icons/CheckIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
@@ -75,7 +69,6 @@ const CreateEntityButton = memo(props => {
     ],
   );
   const { shouldDisablePersonalSpace } = useDisablePersonalSpace();
-  const projectId = useSelectedProjectId();
 
   const isSimpleCreateRoute = useMemo(() => {
     const lowerPathname = pathname.toLowerCase();
@@ -88,10 +81,7 @@ const CreateEntityButton = memo(props => {
     return isSimple || !isKnownRoute;
   }, [pathname]);
 
-  const isOwnLLMsRestricted = useMemo(
-    () => ALLOW_PROJECT_OWN_LLMS === false && projectId != PUBLIC_PROJECT_ID,
-    [projectId],
-  );
+  const isOwnLLMsRestricted = useIsOwnLLMsRestricted();
 
   const shouldDisableOwnLLMs = useMemo(
     () =>
