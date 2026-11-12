@@ -391,6 +391,12 @@ describe('EntityScheduleCard', () => {
       // A run time alone (a sample run) is not a delivery
       renderCard({ ...WEBHOOK, last_delivery_at: null, last_delivery_outcome: null });
       expect(webhookCard()).toHaveTextContent('No deliveries yet');
+      expect(within(webhookCard()).queryByTestId('schedule-run-status')).not.toBeInTheDocument();
+    });
+
+    it('shows the run status chip next to a delivery', () => {
+      renderCard(WEBHOOK);
+      expect(within(webhookCard()).getByTestId('schedule-run-status')).toBeInTheDocument();
     });
 
     it('names the end of the rotation window while the old secret is still accepted', () => {

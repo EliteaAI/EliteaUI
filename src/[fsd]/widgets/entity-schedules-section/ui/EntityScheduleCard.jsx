@@ -64,7 +64,8 @@ const EntityScheduleCard = memo(props => {
   // The list API sends only the user's own rows to a non-admin
   const isYou = row.owner?.id != null && row.owner.id === currentUserId;
   const isWebhook = isWebhookRow(row);
-  const showChip = Boolean(row.last_run && row.last_run_status);
+  // A webhook shows the chip only with a delivery, so a sample run alone sits beside "No deliveries yet" without one
+  const showChip = Boolean(row.last_run && row.last_run_status && (!isWebhook || row.last_delivery_at));
   // Ticks each minute on webhook cards only, so the rotation note goes when the window ends
   const now = useNow(isWebhook);
   const testId = `${entityType}-${toKindNoun(row.trigger_kind)}-card`;
