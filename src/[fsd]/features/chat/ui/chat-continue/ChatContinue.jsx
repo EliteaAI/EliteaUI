@@ -6,6 +6,7 @@ import {
   buildToolkitAuthorizationMessage,
   getToolkitAuthorizationContext,
 } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers';
+import { useChatStoredLogin } from '@/[fsd]/features/credentials/lib/hooks';
 import {
   McpAuthHelpers,
   McpAuthModal,
@@ -56,6 +57,11 @@ const ChatContinue = memo(props => {
     authRequiredAction?.toolOutputs?.server_url || authRequiredAction?.toolMeta?.server_url || '';
   const tokenStorageKey = serverUrl;
   const { isLoggedIn: hasTargetToken } = useMcpTokenChange({ serverUrl });
+  const { saveLogin: saveLoginOnCredential } = useChatStoredLogin({
+    toolkitType: authRequiredAction?.toolMeta?.toolkit_type,
+    resourceMetadata: authRequiredAction?.toolMeta?.resource_metadata,
+    tokenKey: authRequiredAction?.toolOutputs?.server_url,
+  });
 
   useEffect(() => {
     if (!authRequiredAction || disabled || showAuthModal || !mcpAuthMetadata) return;
@@ -122,16 +128,18 @@ const ChatContinue = memo(props => {
   }, []);
 
   const handleCloseModal = useCallback(
-    success => {
+    async success => {
       setShowAuthModal(false);
       if (success) {
         toastSuccess('Successful authentication!');
+        // Saved before resuming, so a scheduled run of this agent can use the same login
+        await saveLoginOnCredential();
         // After successful auth, call onAuthSuccess (not onContinue)
         // onContinue adds server to ignore list, onAuthSuccess does not
         onAuthSuccess?.(authRequiredAction);
       }
     },
-    [toastSuccess, onAuthSuccess, authRequiredAction],
+    [toastSuccess, saveLoginOnCredential, onAuthSuccess, authRequiredAction],
   );
 
   const handleCancelModal = useCallback(() => {

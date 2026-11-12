@@ -10,3 +10,4 @@ export { useGetCurrentConfigurationAsSchemas } from './useGetCurrentConfiguratio
 export { useStoredOAuthLogin } from './useStoredOAuthLogin.hooks.js';
 export { useCredentialPageStoredLogin } from './useCredentialPageStoredLogin.hooks.js';
 export * from './useOAuthAppSubsections.hooks';
+export { useChatStoredLogin } from './useChatStoredLogin.hooks.js';
