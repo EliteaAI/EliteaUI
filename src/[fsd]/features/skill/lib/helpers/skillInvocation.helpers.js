@@ -11,20 +11,21 @@ export const userInvocableMeta = versionDetails =>
   versionDetails?.meta?.frontmatter?.[USER_INVOCABLE_KEY] === false ? { [USER_INVOCABLE_META]: false } : {};
 
 const hintAsText = value => {
-  if (Array.isArray(value)) return `[${value.map(hintAsText).join(', ')}]`;
-  if (value && typeof value === 'object')
+  if (value === null || value === undefined) return '';
+  if (Array.isArray(value)) {
+    const items = value.map(hintAsText).filter(Boolean);
+    return items.length ? `[${items.join(', ')}]` : '';
+  }
+  if (typeof value === 'object')
     return Object.entries(value)
-      .map(([key, item]) => `${key}: ${hintAsText(item)}`)
+      .map(([key, item]) => [key, hintAsText(item)])
+      .filter(([, item]) => item)
+      .map(([key, item]) => `${key}: ${item}`)
       .join(', ');
   return String(value).trim();
 };
 
 export const argumentHintText = value => {
-  if (value === null || value === undefined) return undefined;
-  if (
-    Array.isArray(value) ? value.length === 0 : typeof value === 'object' && Object.keys(value).length === 0
-  )
-    return undefined;
   return hintAsText(value) || undefined;
 };
 

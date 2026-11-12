@@ -42,6 +42,9 @@ describe('argumentHintText', () => {
     [['x', { default: 'y' }], '[x, default: y]'],
     [{ optional: 'z' }, 'optional: z'],
     [42, '42'],
+    [['x', null], '[x]'],
+    [['x', undefined, '', []], '[x]'],
+    [{ a: null, b: 'y' }, 'b: y'],
   ])('renders the stored shape %j as one line', (value, expected) => {
     expect(argumentHintText(value)).toBe(expected);
   });
@@ -52,6 +55,9 @@ describe('argumentHintText', () => {
     [undefined, undefined],
     [[], undefined],
     [{}, undefined],
+    [[null], undefined],
+    [[[]], undefined],
+    [{ a: null }, undefined],
   ])('renders nothing for the empty shape %j', (value, expected) => {
     expect(argumentHintText(value)).toBe(expected);
   });
