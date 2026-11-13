@@ -10,6 +10,7 @@ import { useChatStoredLogin } from '../useChatStoredLogin.hooks';
 // credential the card names, with the same admin rule for team credentials as the toolkit page.
 const mocks = vi.hoisted(() => ({
   isAdmin: true,
+  selectedProjectId: 596,
   items: [],
   getRefreshToken: vi.fn(),
   getConfigurations: vi.fn(),
@@ -36,6 +37,7 @@ vi.mock('@/[fsd]/features/mcp/lib/helpers', () => ({
   McpAuthHelpers: { getRefreshToken: mocks.getRefreshToken },
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useSelectedProjectId: () => mocks.selectedProjectId,
   useToast: () => ({
     toastSuccess: mocks.toastSuccess,
     toastError: mocks.toastError,
@@ -57,12 +59,17 @@ const CREDENTIAL = {
   },
 };
 
-const render = ({ toolkitType = 'dataverse', projectId = TEAM_PROJECT, uuid = 'uuid-1' } = {}) =>
+const render = ({
+  toolkitType = 'dataverse',
+  projectId = TEAM_PROJECT,
+  uuid = 'uuid-1',
+  tokenKey = TOKEN_KEY,
+} = {}) =>
   renderHook(() =>
     useChatStoredLogin({
       toolkitType,
       resourceMetadata: { configuration_uuid: uuid, configuration_project_id: projectId },
-      tokenKey: TOKEN_KEY,
+      tokenKey,
     }),
   ).result;
 
@@ -70,6 +77,7 @@ describe('useChatStoredLogin', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.isAdmin = true;
+    mocks.selectedProjectId = TEAM_PROJECT;
     mocks.items = [{ id: 9, uuid: 'other', data: {} }, CREDENTIAL];
     mocks.getRefreshToken.mockReturnValue('rt-from-chat');
     mocks.getConfigurations.mockImplementation(() => ({
@@ -109,6 +117,36 @@ describe('useChatStoredLogin', () => {
 
     expect(mocks.updateConfiguration).not.toHaveBeenCalled();
     expect(mocks.toastInfo).toHaveBeenCalledWith(expect.stringMatching(/project admin/));
+  });
+
+  it('leaves the admin rule to the server for a credential of another project than the selected one', async () => {
+    mocks.isAdmin = false;
+    mocks.selectedProjectId = 3;
+    const result = render();
+    await act(() => result.current.saveLogin());
+
+    expect(mocks.toastInfo).not.toHaveBeenCalled();
+    expect(mocks.updateConfiguration).toHaveBeenCalledWith(
+      expect.objectContaining({ projectId: TEAM_PROJECT }),
+    );
+  });
+
+  it('is not enabled without the key the sign-in stored the token under', async () => {
+    const result = render({ tokenKey: null });
+    await act(() => result.current.saveLogin());
+
+    expect(result.current.isEnabled).toBe(false);
+    expect(mocks.updateConfiguration).not.toHaveBeenCalled();
+  });
+
+  it('does not throw when something unexpected fails before the request', async () => {
+    mocks.getRefreshToken.mockImplementation(() => {
+      throw new Error('storage unavailable');
+    });
+    const result = render();
+    await expect(act(() => result.current.saveLogin())).resolves.not.toThrow();
+
+    expect(mocks.toastError).toHaveBeenCalled();
   });
 
   it('does nothing for toolkits whose login the chat does not save', async () => {

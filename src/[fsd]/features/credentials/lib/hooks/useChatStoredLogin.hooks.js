@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { StoredLoginHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useLazyGetConfigurationsByTypeQuery, useUpdateConfigurationMutation } from '@/api/configurations';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
@@ -17,6 +17,7 @@ export const useChatStoredLogin = ({ toolkitType, resourceMetadata, tokenKey }) 
   const { personal_project_id } = useSelector(state => state.user);
   const { toastSuccess, toastError, toastInfo } = useToast();
   const { checkPermission } = useCheckPermission();
+  const selectedProjectId = useSelectedProjectId();
   const [getConfigurations] = useLazyGetConfigurationsByTypeQuery();
   const [updateConfiguration] = useUpdateConfigurationMutation();
 
@@ -24,23 +25,27 @@ export const useChatStoredLogin = ({ toolkitType, resourceMetadata, tokenKey }) 
   const configurationUuid = resourceMetadata?.configuration_uuid;
   const credProjectId = resourceMetadata?.configuration_project_id;
 
-  // Never throws: the chat run resumes on the browser token whatever happens here
+  const isEnabled = Boolean(config && configurationUuid && credProjectId && tokenKey);
+
+  // Never throws and reports every outcome with a toast: the chat run resumes whatever happens here
   const saveLogin = useCallback(async () => {
-    if (!config || !configurationUuid || !credProjectId || !tokenKey) return;
-    // Everyone runs on a team credential's login, so only admins may set it (the server enforces it)
-    const isPrivate = credProjectId === personal_project_id;
-    if (!isPrivate && !checkPermission(PERMISSIONS.users.edit)) {
-      toastInfo(
-        'Signed in for this chat. Ask a project admin to log in on the credential for scheduled runs.',
-      );
-      return;
-    }
-    const refreshToken = McpAuthHelpers.getRefreshToken(tokenKey);
-    if (!refreshToken) {
-      toastError('Microsoft did not return a refresh token, so scheduled runs cannot use this login.');
-      return;
-    }
+    if (!isEnabled) return;
     try {
+      // Everyone runs on a team credential's login, so only admins may set it. The permissions known here
+      // are those of the selected project; for a credential of another project the server decides.
+      const isPrivate = credProjectId === personal_project_id;
+      const canPrecheck = !isPrivate && String(credProjectId) === String(selectedProjectId);
+      if (canPrecheck && !checkPermission(PERMISSIONS.users.edit)) {
+        toastInfo(
+          'Signed in for this chat. Ask a project admin to log in on the credential for scheduled runs.',
+        );
+        return;
+      }
+      const refreshToken = McpAuthHelpers.getRefreshToken(tokenKey);
+      if (!refreshToken) {
+        toastError('Microsoft did not return a refresh token, so scheduled runs cannot use this login.');
+        return;
+      }
       const response = await getConfigurations({
         projectId: credProjectId,
         type: config.configurationType,
@@ -58,11 +63,13 @@ export const useChatStoredLogin = ({ toolkitType, resourceMetadata, tokenKey }) 
       toastError(error?.data?.error || 'Could not save the login to the credential.');
     }
   }, [
+    isEnabled,
     config,
     configurationUuid,
     credProjectId,
     tokenKey,
     personal_project_id,
+    selectedProjectId,
     checkPermission,
     getConfigurations,
     updateConfiguration,
@@ -71,5 +78,5 @@ export const useChatStoredLogin = ({ toolkitType, resourceMetadata, tokenKey }) 
     toastInfo,
   ]);
 
-  return { isEnabled: Boolean(config && configurationUuid && credProjectId), saveLogin };
+  return { isEnabled, saveLogin };
 };
