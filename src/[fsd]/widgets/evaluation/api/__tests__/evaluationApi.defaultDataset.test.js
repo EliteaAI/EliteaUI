@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 //
-// An agent's default eval dataset: a GET and a PUT on the agent's URL that sends dataset_id, with null
-// clearing it rather than an omitted key the backend would read the same way by accident.
+// The default eval datasets of a project and of an agent: a GET and a PUT that sends dataset_id, with
+// null clearing it rather than an omitted key the backend would read the same way by accident.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { configureStore } from '@reduxjs/toolkit';
@@ -40,13 +40,13 @@ const buildStore = () =>
 
 // fetchBaseQuery reads the URL/method/params it was asked to fetch from the Request it builds
 // out of our arg — stubbing global fetch lets us capture that request without a real network call.
-const captureFetch = () => {
+const captureFetch = body => {
   const calls = [];
   vi.stubGlobal(
     'fetch',
     vi.fn(async request => {
       calls.push(request);
-      return new Response(JSON.stringify({ dataset_id: 9 }), {
+      return new Response(JSON.stringify(body), {
         status: 200,
         headers: { 'content-type': 'application/json' },
       });
@@ -55,13 +55,57 @@ const captureFetch = () => {
   return calls;
 };
 
+describe('evaluationApi — project default dataset', () => {
+  let store;
+  let calls;
+
+  beforeEach(() => {
+    store = buildStore();
+    calls = captureFetch({ dataset_id: 9, name: 'Shared set' });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('reads the default of the project with GET', async () => {
+    const result = await store.dispatch(
+      evaluationApi.endpoints.projectDefaultEvalDataset.initiate({ projectId: 2 }),
+    );
+
+    expect(calls).toHaveLength(1);
+    expect(new URL(calls[0].url).pathname).toBe(
+      '/api/v2/elitea_core/eval_project_default_dataset/prompt_lib/2',
+    );
+    expect(calls[0].method).toBe('GET');
+    expect(result.data).toEqual({ dataset_id: 9, name: 'Shared set' });
+  });
+
+  it('sets the default with PUT', async () => {
+    await store.dispatch(
+      evaluationApi.endpoints.setProjectDefaultEvalDataset.initiate({ projectId: 2, datasetId: 9 }),
+    );
+
+    expect(calls[0].method).toBe('PUT');
+    expect(await calls[0].json()).toEqual({ dataset_id: 9 });
+  });
+
+  it('clears the default with an explicit null', async () => {
+    await store.dispatch(
+      evaluationApi.endpoints.setProjectDefaultEvalDataset.initiate({ projectId: 2, datasetId: undefined }),
+    );
+
+    expect(await calls[0].json()).toEqual({ dataset_id: null });
+  });
+});
+
 describe('evaluationApi — agent default dataset', () => {
   let store;
   let calls;
 
   beforeEach(() => {
     store = buildStore();
-    calls = captureFetch();
+    calls = captureFetch({ dataset_id: 9 });
   });
 
   afterEach(() => {

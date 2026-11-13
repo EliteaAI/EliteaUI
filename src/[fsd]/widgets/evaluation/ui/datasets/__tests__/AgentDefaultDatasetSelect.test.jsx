@@ -28,14 +28,7 @@ vi.mock('../../../api', () => ({
   }),
   useSetAgentDefaultEvalDatasetMutation: () => [api.setDefault, { isLoading: false }],
 }));
-vi.mock('../../../lib/hooks', async () => {
-  const { default: Routes } = await vi.importActual('@/routes');
-  return {
-    useEvalRoutes: () => ({
-      evaluate: api.isPipeline ? Routes.PipelineEvaluate : Routes.ApplicationsEvaluate,
-    }),
-  };
-});
+vi.mock('../../../lib/hooks', () => ({ useEvalRoutes: () => ({ isPipeline: api.isPipeline }) }));
 vi.mock('@/hooks/useCheckPermission', () => ({
   default: () => ({ checkPermission: permission => api.permissions.has(permission) }),
 }));

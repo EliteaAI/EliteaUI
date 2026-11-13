@@ -14,7 +14,6 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 import InfoIcon from '@/components/Icons/InfoIcon';
 import SendIcon from '@/components/Icons/SendIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import RouteDefinitions from '@/routes';
 
 import { EVAL_PERMISSIONS } from '../../lib/constants';
 import {
@@ -58,7 +57,7 @@ const STORE_TOOL_OUTPUTS_TOOLTIP =
   'Keep what each tool returned in the stored trajectory. Secrets are masked either way; turn this off when tool outputs may hold sensitive data. Tool names and inputs are always kept.';
 
 const AUTO_EVALUATION_TOOLTIP =
-  'The scheduled evaluation runs this suite for the agent instead of choosing a dataset itself. If the agent has a default dataset, a suite on that dataset is used first. When several suites are flagged, the oldest one is used.';
+  'The scheduled evaluation runs this suite for the agent. An agent default dataset takes precedence over flagged suites. When several suites are flagged, the oldest one is used.';
 
 const AUTO_EVALUATION_NO_DATASET_TOOLTIP =
   'Attach a dataset to this suite first; the scheduled evaluation skips suites without one.';
@@ -159,7 +158,7 @@ const SuiteDetailPanel = memo(props => {
 
   const autoEvaluationChanged = autoEvaluation !== readAutoEvaluation(suite?.trigger_config);
   // The scheduled evaluation covers agents only, and never picks its own generated suites.
-  const isPipelineSuite = useEvalRoutes().evaluate === RouteDefinitions.PipelineEvaluate;
+  const { isPipeline: isPipelineSuite } = useEvalRoutes();
   const showAutoEvaluation = !isPipelineSuite && !isGeneratedSuite(suite?.trigger_config);
   const canFlagAutoEvaluation = suite?.dataset_id != null;
 
@@ -383,7 +382,7 @@ const SuiteDetailPanel = memo(props => {
                     onChange={handleNameChange}
                     required
                     disabled={!canUpdateSuite}
-                    inputProps={{ maxLength: MAX_NAME_LENGTH }}
+                    inputProps={{ maxLength: MAX_NAME_LENGTH, 'data-testid': 'suite-name' }}
                   />
                   <Input.InputBase
                     autoComplete="off"

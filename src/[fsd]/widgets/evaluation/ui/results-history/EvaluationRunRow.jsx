@@ -247,7 +247,6 @@ const EvaluationRunRow = memo(props => {
 
 EvaluationRunRow.displayName = 'EvaluationRunRow';
 
-/** @type {MuiSx} */
 // The small tag shape shared by the run-row badges; each badge sets its own colours.
 const tagChip = {
   padding: '0.125rem 0.5rem',
@@ -258,6 +257,7 @@ const tagChip = {
   cursor: 'default',
 };
 
+/** @type {MuiSx} */
 const evaluationRunRowStyles = (isSelected, gridTemplateColumns, delta) => ({
   row: ({ palette }) => ({
     display: 'grid',

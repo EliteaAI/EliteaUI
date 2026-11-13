@@ -3,8 +3,7 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { useCanManageProjectSettings } from '@/[fsd]/features/settings/lib/hooks';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
-import { Select } from '@/[fsd]/shared/ui';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import {
   useEvalDatasetsQuery,
@@ -12,10 +11,10 @@ import {
   useSetProjectDefaultEvalDatasetMutation,
 } from '@/[fsd]/widgets/evaluation/api';
 import { EVAL_PERMISSIONS } from '@/[fsd]/widgets/evaluation/lib/constants';
+import { DefaultDatasetSelect } from '@/[fsd]/widgets/evaluation/ui/datasets';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
-const NONE = '__none__';
 const DEFAULT_DATASET_TOOLTIP =
   'The scheduled evaluation runs this dataset on agents that have no dataset of their own. Without it, those agents get the platform health check. Only **shared** datasets can be picked, because an agent can only read its own datasets and shared ones.';
 
@@ -23,47 +22,29 @@ const EvaluationSettings = memo(() => {
   const styles = evaluationSettingsStyles();
   const projectId = useSelectedProjectId();
   const { checkPermission } = useCheckPermission();
-  const { toastError, toastSuccess } = useToast();
   const { canManageSettings, isLoading: isLoadingAdmin } = useCanManageProjectSettings();
 
   const { data: datasets } = useEvalDatasetsQuery({ projectId }, { skip: !projectId });
-  const { data: current, isError: isCurrentError } = useProjectDefaultEvalDatasetQuery(
-    { projectId },
-    { skip: !projectId },
-  );
+  const {
+    data: current,
+    isError: isCurrentError,
+    isFetching: isCurrentFetching,
+  } = useProjectDefaultEvalDatasetQuery({ projectId }, { skip: !projectId });
   const [setDefault, { isLoading: isSaving }] = useSetProjectDefaultEvalDatasetMutation();
 
-  const datasetId = current?.dataset_id ?? null;
+  const shared = useMemo(() => (datasets || []).filter(dataset => dataset.is_shared), [datasets]);
 
-  const options = useMemo(() => {
-    const shared = (datasets || [])
-      .filter(dataset => dataset.is_shared)
-      .map(dataset => ({ value: String(dataset.id), label: dataset.name }));
-    if (datasetId != null && !shared.some(option => option.value === String(datasetId))) {
-      shared.push({ value: String(datasetId), label: current?.name || `Dataset ${datasetId}` });
-    }
-    return [{ value: NONE, label: 'None (platform health check)' }, ...shared];
-  }, [datasets, datasetId, current?.name]);
-
-  const onChange = useCallback(
-    async event => {
-      const picked = event.target.value;
-      try {
-        await setDefault({ projectId, datasetId: picked === NONE ? null : +picked }).unwrap();
-        toastSuccess('Saved');
-      } catch (error) {
-        toastError(error?.data?.error || 'Unable to update the default evaluation dataset');
-      }
-    },
-    [projectId, setDefault, toastError, toastSuccess],
+  const onSave = useCallback(
+    datasetId => setDefault({ projectId, datasetId }).unwrap(),
+    [projectId, setDefault],
   );
 
   const disabled =
     !checkPermission(PERMISSIONS.projectContext.edit) ||
     !checkPermission(EVAL_PERMISSIONS.datasetRead) ||
     !canManageSettings ||
-    // A failed read must not pass for a stored "None" the user could overwrite.
-    isCurrentError ||
+    // Until the stored value is read, "None" is a placeholder, not something to overwrite.
+    isCurrentFetching ||
     isSaving;
 
   return (
@@ -87,15 +68,6 @@ const EvaluationSettings = memo(() => {
         >
           Used by the scheduled evaluation for agents without a dataset of their own.
         </Typography>
-        {isCurrentError && (
-          <Typography
-            variant="bodySmall"
-            color="text.error"
-            data-testid="evaluation-default-dataset-error"
-          >
-            Unable to load the default dataset.
-          </Typography>
-        )}
         {!isLoadingAdmin && !canManageSettings && (
           <Typography
             variant="bodySmall"
@@ -107,12 +79,15 @@ const EvaluationSettings = memo(() => {
         )}
       </Box>
       <Box sx={styles.select}>
-        <Select.SingleSelect
-          data-testid="evaluation-default-dataset"
-          options={options}
-          value={datasetId != null ? String(datasetId) : NONE}
-          onChange={onChange}
+        <DefaultDatasetSelect
+          testId="evaluation-default-dataset"
+          datasets={shared}
+          datasetId={current?.dataset_id ?? null}
+          currentName={current?.name}
+          noneLabel="None (platform health check)"
+          isError={isCurrentError}
           disabled={disabled}
+          onSave={onSave}
         />
       </Box>
     </Box>

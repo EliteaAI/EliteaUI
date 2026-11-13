@@ -18,12 +18,17 @@ const api = vi.hoisted(() => ({
   canManageSettings: true,
   adminLoading: false,
   currentError: false,
+  currentFetching: false,
   toastError: vi.fn(),
   toastSuccess: vi.fn(),
 }));
 vi.mock('@/[fsd]/widgets/evaluation/api', () => ({
   useEvalDatasetsQuery: () => ({ data: api.datasets }),
-  useProjectDefaultEvalDatasetQuery: () => ({ data: api.current, isError: api.currentError }),
+  useProjectDefaultEvalDatasetQuery: () => ({
+    data: api.current,
+    isError: api.currentError,
+    isFetching: api.currentFetching,
+  }),
   useSetProjectDefaultEvalDatasetMutation: () => [api.setDefault, { isLoading: false }],
 }));
 vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));
@@ -59,6 +64,7 @@ beforeEach(() => {
   api.canManageSettings = true;
   api.adminLoading = false;
   api.currentError = false;
+  api.currentFetching = false;
   api.setDefault.mockReturnValue({ unwrap: () => Promise.resolve() });
 });
 afterEach(cleanup);
@@ -107,6 +113,13 @@ describe('project default evaluation dataset', () => {
     api.adminLoading = true;
     renderSettings();
     expect(screen.queryByTestId('evaluation-default-dataset-admin-hint')).not.toBeInTheDocument();
+  });
+
+  it('stays locked until the stored default is read', () => {
+    api.current = undefined;
+    api.currentFetching = true;
+    renderSettings();
+    expect(datasetSelect()).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('locks the picker when the stored default cannot be read', () => {

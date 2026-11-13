@@ -4,19 +4,18 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material';
 
 import lightPalette from '@/lightPalette';
-import RouteDefinitions from '@/routes';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
 import SuiteDetailPanel from '../SuiteDetailPanel';
 
-const routeState = vi.hoisted(() => ({ evaluate: '/agents/evaluate' }));
+const routeState = vi.hoisted(() => ({ isPipeline: false }));
 
 vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
   useToast: () => ({ toastInfo: vi.fn(), toastError: vi.fn() }),
 }));
 vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => true }) }));
-vi.mock('../../../lib/hooks', () => ({ useEvalRoutes: () => ({ evaluate: routeState.evaluate }) }));
+vi.mock('../../../lib/hooks', () => ({ useEvalRoutes: () => ({ isPipeline: routeState.isPipeline }) }));
 // Every section is rendered open, so the run-limits checkbox is reachable.
 vi.mock('@/[fsd]/shared/ui/accordion', () => ({
   BasicAccordion: ({ items }) => items.map(item => <div key={item.title}>{item.content}</div>),
@@ -51,7 +50,7 @@ const autoEvaluationCheckbox = () =>
 describe('SuiteDetailPanel auto-evaluation flag', () => {
   afterEach(() => {
     cleanup();
-    routeState.evaluate = '/agents/evaluate';
+    routeState.isPipeline = false;
   });
 
   it('saves the flag into trigger_config and keeps its other keys', () => {
@@ -68,7 +67,7 @@ describe('SuiteDetailPanel auto-evaluation flag', () => {
   it('leaves trigger_config out of the save when the flag did not change', () => {
     const onSave = renderPanel({ ...baseSuite, trigger_config: { auto_evaluation: true } });
 
-    fireEvent.change(screen.getAllByRole('textbox')[0], { target: { value: 'Refunds v2' } });
+    fireEvent.change(screen.getByTestId('suite-name'), { target: { value: 'Refunds v2' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(onSave.mock.calls[0][0]).not.toHaveProperty('trigger_config');
@@ -93,12 +92,12 @@ describe('SuiteDetailPanel auto-evaluation flag', () => {
   });
 
   it('is not offered on pipeline suites or generated suites', () => {
-    routeState.evaluate = RouteDefinitions.PipelineEvaluate;
+    routeState.isPipeline = true;
     renderPanel({ ...baseSuite, trigger_config: null });
     expect(screen.queryByTestId('suite-auto-evaluation')).not.toBeInTheDocument();
     cleanup();
 
-    routeState.evaluate = '/agents/evaluate';
+    routeState.isPipeline = false;
     renderPanel({ ...baseSuite, trigger_config: { generated: true, auto_evaluation: true } });
     expect(screen.queryByTestId('suite-auto-evaluation')).not.toBeInTheDocument();
   });
