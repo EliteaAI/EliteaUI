@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Alert, Box, CircularProgress, Typography } from '@mui/material';
 
+import { AiDraftErrorHelpers } from '@/[fsd]/shared/lib/helpers';
 import { Input, Modal } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
@@ -173,8 +174,7 @@ const EditEntityModal = memo(props => {
   const isBusy = isSaving || isSavingAsVersion;
   const isSaveDisabled = isBusy || !isDraftValid || saveDisabled;
 
-  const generateErrorMessage =
-    generateError?.data?.error || generateError?.data?.detail || 'Failed to generate. Please try again.';
+  const generateErrorMessage = AiDraftErrorHelpers.getAiDraftErrorMessage(generateError);
 
   const renderContent = () => {
     if (phase === PHASES.LOADING) {

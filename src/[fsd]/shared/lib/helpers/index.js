@@ -49,3 +49,4 @@ export * from './contextStrategy.helpers';
 export * from './stringField.helpers';
 export * as AutocompleteHelpers from './autocomplete.helpers.js';
 export * as MessageCopyHelpers from './messageCopy.helpers.js';
+export * as AiDraftErrorHelpers from './aiDraftError.helpers.js';
