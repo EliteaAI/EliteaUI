@@ -100,3 +100,19 @@ describe('EvaluationRunRow score delta', () => {
     expect(delta).toHaveAttribute('aria-label', expect.stringContaining('vs Run #3'));
   });
 });
+
+describe('EvaluationRunRow scheduled badge', () => {
+  afterEach(cleanup);
+
+  it('marks a run the scheduled evaluation started', () => {
+    renderRow({ status: 'finished', trigger_type: 'scheduled', meta: {} });
+
+    expect(screen.getByTestId('evaluation-run-scheduled-7')).toHaveTextContent('Scheduled');
+  });
+
+  it('does not mark a run a person started', () => {
+    renderRow({ status: 'finished', trigger_type: 'offline_batch', meta: {} });
+
+    expect(screen.queryByTestId('evaluation-run-scheduled-7')).not.toBeInTheDocument();
+  });
+});
