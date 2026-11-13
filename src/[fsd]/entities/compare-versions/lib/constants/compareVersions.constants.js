@@ -4,6 +4,15 @@ export const AGENT_COMPARE_STEPS = [
   { key: 'tools-skills', label: 'Tools & Skills' },
 ];
 
+// Comparing with a public version: its attached skills are not compared, so the last step is only about tools
+export const PUBLIC_AGENT_COMPARE_STEPS = [
+  { key: 'instructions', label: 'Instructions' },
+  { key: 'user-interaction', label: 'User Interaction' },
+  { key: 'tools-skills', label: 'Tools' },
+  // Shown only when either agent has sub-agents: the agents and pipelines attached as tools, and theirs in turn
+  { key: 'sub-agents', label: 'Sub-agents' },
+];
+
 export const SKILL_COMPARE_STEPS = [
   { key: 'instructions', label: 'Instructions' },
   { key: 'run-settings', label: 'Run settings' },
@@ -20,6 +29,13 @@ export const COMPARE_ENTITY_TYPES = {
   agent: 'agent',
   pipeline: 'pipeline',
   skill: 'skill',
+};
+
+// "versions" compares two versions of this agent. "public" compares a version of this agent with a published version
+// of the public agent it was forked from: the public side is read only.
+export const COMPARE_MODES = {
+  versions: 'versions',
+  public: 'public',
 };
 
 export const COMPARE_STEPS_BY_ENTITY = {
@@ -52,4 +68,28 @@ export const COMPARE_MESSAGES = {
   schedulesFailed: 'Failed to load schedules.',
   legacySchedule: 'Legacy schedule (cron)',
   legacyScheduleNote: 'Not editable. Create a new schedule in the Schedules section.',
+  publicTitle: 'Compare with public version',
+  publicYourVersion: 'Your version',
+  publicVersion: 'Public version',
+  publicVersionSuffix: 'public',
+  publicLoading: 'Loading the public versions...',
+  publicNoVersions: 'The public agent has no published version.',
+  publicLoadFailed: 'Failed to load the public versions. Please try again.',
+  publicSkillsNote: 'Attached skills are not compared.',
+  nestedIntro:
+    'Sub-agents are compared by name. The public copies of sub-agents are not listed in the catalog, so they are loaded here.',
+  nestedNone: 'Neither version has sub-agents.',
+  nestedUnavailable: 'Could not be loaded.',
+  nestedNotPresent: 'Not present on this side.',
+  nestedInstructions: 'Instructions',
+  nestedWelcome: 'Welcome message',
+  nestedStarters: 'Chat starters',
+  nestedTools: 'Tools',
+  nestedNoTools: 'No tools attached.',
+  nestedStatus: {
+    same: 'No differences',
+    changed: 'Changed',
+    'only-left': 'Only in your version',
+    'only-right': 'Only in the public version',
+  },
 };

@@ -5,7 +5,7 @@ import { useLocation, useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { COMPARE_ENTITY_TYPES, CompareVersionsModal } from '@/[fsd]/entities/compare-versions';
+import { COMPARE_ENTITY_TYPES, COMPARE_MODES, CompareVersionsModal } from '@/[fsd]/entities/compare-versions';
 import { buildScheduleFormLink, useOpenScheduleNested } from '@/[fsd]/entities/schedule';
 import {
   LATEST_VERSION_NAME,
@@ -14,7 +14,7 @@ import {
   useSetDefaultVersion,
   useUnpublishVersionMenu,
 } from '@/[fsd]/entities/version';
-import { useCompareAgentVersions } from '@/[fsd]/features/agent/lib/hooks';
+import { useCompareAgentVersions, useComparePublicAgentVersions } from '@/[fsd]/features/agent/lib/hooks';
 import { PinEntityConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import { useInstructionsInputRefContext } from '@/[fsd]/shared/lib/context';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
@@ -61,6 +61,7 @@ const ApplicationControls = memo(props => {
   const versionDeleteRef = useRef(null);
   const projectId = useSelectedProjectId();
   const [compareVersionsOpen, setCompareVersionsOpen] = useState(false);
+  const [comparePublicOpen, setComparePublicOpen] = useState(false);
 
   const { values: { id } = {} } = formik;
   const compareEntityType = isFromPipeline ? COMPARE_ENTITY_TYPES.pipeline : COMPARE_ENTITY_TYPES.agent;
@@ -88,6 +89,23 @@ const ApplicationControls = memo(props => {
     resetSavingState,
     flushLeftSaves,
   } = useCompareAgentVersions({ projectId, applicationId: id, entityType: compareEntityType });
+
+  // "Compare to public version": only for an agent forked from a public agent. Read only: nothing is saved.
+  const {
+    publicApplicationId,
+    publicVersions,
+    isLoadingPublicVersions,
+    publicLoadError,
+    loadVersions: loadPublicComparison,
+  } = useComparePublicAgentVersions({
+    projectId,
+    applicationId: id,
+    versionMeta: formik?.values?.version_details?.meta,
+    versions: formik?.values?.versions ?? [],
+    open: comparePublicOpen,
+  });
+  const canComparePublic =
+    !isFromPipeline && viewMode !== ViewMode.Public && Boolean(id) && Boolean(publicApplicationId);
 
   const handleCompareVersionsClose = useCallback(() => {
     // A pipeline rebuilds its YAML and flow from the patched cache; the agent instructions field keeps its own value
@@ -230,6 +248,16 @@ const ApplicationControls = memo(props => {
             },
           ]
         : []),
+      ...(canComparePublic
+        ? [
+            {
+              key: 'compare-to-public-version',
+              label: 'Compare to public version',
+              icon: <DifferenceIcon sx={{ fontSize: '1rem' }} />,
+              onClick: () => setComparePublicOpen(true),
+            },
+          ]
+        : []),
       ...(forkEntityMenuItem ? [forkEntityMenuItem] : []),
       ...(publishApplicationMenuItem && !isFromPipeline ? [publishApplicationMenuItem] : []),
       ...(unpublishVersionMenuItem && !isFromPipeline ? [unpublishVersionMenuItem] : []),
@@ -301,6 +329,7 @@ const ApplicationControls = memo(props => {
     formik?.values?.version_details,
     exportApplicationMenuItem,
     checkPermission,
+    canComparePublic,
     forkEntityMenuItem,
     publishApplicationMenuItem,
     unpublishVersionMenuItem,
@@ -347,6 +376,21 @@ const ApplicationControls = memo(props => {
       {publishDialog}
       {unpublishDialog}
       {setDefaultVersionDialog}
+      {comparePublicOpen && (
+        <CompareVersionsModal
+          open={comparePublicOpen}
+          onClose={() => setComparePublicOpen(false)}
+          entityType={COMPARE_ENTITY_TYPES.agent}
+          mode={COMPARE_MODES.public}
+          entityId={id}
+          leftVersionId={formik?.values?.version_details?.id}
+          versions={formik?.values?.versions ?? []}
+          publicVersions={publicVersions}
+          isLoadingPublicVersions={isLoadingPublicVersions}
+          publicLoadError={publicLoadError}
+          onLoadVersions={loadPublicComparison}
+        />
+      )}
       {compareVersionsOpen && (
         <CompareVersionsModal
           open={compareVersionsOpen}

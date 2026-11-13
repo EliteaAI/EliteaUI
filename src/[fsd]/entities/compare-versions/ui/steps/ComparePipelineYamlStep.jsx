@@ -174,6 +174,8 @@ const ComparePipelineYamlStep = memo(props => {
       <Box sx={styles.footerCell}>
         <Typography
           role={invalidMessage ? 'alert' : undefined}
+          variant="bodySmall"
+          color="text.error"
           sx={styles.error}
           data-testid={`compare-yaml-error-${side}`}
         >
@@ -217,6 +219,8 @@ const ComparePipelineYamlStep = memo(props => {
       )}
       {!isTooLarge && isIdentical && (
         <Typography
+          variant="bodySmall"
+          color="text.secondary"
           sx={styles.noDiffNote}
           data-testid="compare-yaml-no-differences"
         >
@@ -310,12 +314,10 @@ const comparePipelineYamlStepStyles = () => ({
   banner: {
     margin: '0.75rem 2rem 0',
   },
-  noDiffNote: ({ palette }) => ({
+  noDiffNote: {
     padding: '0.75rem 2rem 0',
-    fontSize: '0.75rem',
-    color: palette.text.secondary,
     fontStyle: 'italic',
-  }),
+  },
   editors: {
     display: 'flex',
     flexDirection: 'column',
@@ -347,11 +349,9 @@ const comparePipelineYamlStepStyles = () => ({
     gap: '1rem',
     minWidth: 0,
   },
-  error: ({ palette }) => ({
-    fontSize: '0.75rem',
-    color: palette.text.error,
+  error: {
     minHeight: '1rem',
-  }),
+  },
 });
 
 export default ComparePipelineYamlStep;
