@@ -8,6 +8,7 @@ import { isMcpToolkitType, isRemoteMcpToolkitType } from '@/[fsd]/shared/lib/hel
 import { useIsMcpVisible, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { ChatParticipantType } from '@/common/constants';
 
+import { UsersAccessCard } from '../users-access';
 import UsersParticipantDropdown from '../users-participant-dropdown';
 import ParticipantSection from './ParticipantSection';
 import ParticipantsAccordion from './ParticipantsAccordion';
@@ -24,6 +25,8 @@ const ENTITY_SECTIONS = [
 const ExpandedPerticapantsList = memo(props => {
   const {
     participants,
+    conversation,
+    onAccessSaved,
     componentWidth,
     onSelectParticipant,
     onDeleteParticipant,
@@ -46,6 +49,7 @@ const ExpandedPerticapantsList = memo(props => {
   const [isUsersSectionHovered, setIsUsersSectionHovered] = useState(false);
 
   const isPrivateProject = selectedProjectId == user.personal_project_id;
+  const isSavedConversation = !!conversation?.id && !conversation?.isNew && !conversation?.isPlayback;
 
   const users = useMemo(
     () =>
@@ -87,7 +91,15 @@ const ExpandedPerticapantsList = memo(props => {
 
   return (
     <>
-      {!isPrivateProject && !!usersToDisplay?.length && (
+      {!isPrivateProject && isSavedConversation && (
+        <UsersAccessCard
+          conversation={conversation}
+          onSelectParticipant={onSelectParticipant}
+          onAccessSaved={onAccessSaved}
+        />
+      )}
+
+      {!isPrivateProject && !isSavedConversation && !!usersToDisplay?.length && (
         <ParticipantsAccordion title="Users">
           <Box
             sx={styles.usersSection}
