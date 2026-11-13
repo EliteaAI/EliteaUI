@@ -1,104 +1,19 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { TextDiffHighlight } from '@/[fsd]/entities/edit-entity-with-ai';
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
 
 import { COMPARE_MESSAGES } from '../../lib/constants/compareVersions.constants';
-import { NESTED_STATUS, matchDependencies } from '../../lib/helpers/compareVersions.helpers';
+import { NESTED_STATUS } from '../../lib/helpers/compareVersions.helpers';
+import CompareNestedField from './CompareNestedField';
+import CompareNestedTools from './CompareNestedTools';
 
 const MAX_INDENT_LEVELS = 3;
 
 const joinLines = list => (Array.isArray(list) ? list.filter(Boolean).join('\n') : '');
-
-// One field of a sub-agent on both sides, as two read-only texts with the differences marked
-const NestedField = memo(props => {
-  const { label, leftText, rightText } = props;
-  const styles = compareNestedAgentRowStyles;
-
-  return (
-    <Box sx={styles.field}>
-      <Typography variant="labelSmall">{label}</Typography>
-      <Box sx={styles.columns}>
-        <Box sx={styles.card}>
-          <TextDiffHighlight
-            original={rightText}
-            modified={leftText}
-            mode="modified"
-          />
-        </Box>
-        <Box sx={styles.card}>
-          <TextDiffHighlight
-            original={leftText}
-            modified={rightText}
-            mode="modified"
-          />
-        </Box>
-      </Box>
-    </Box>
-  );
-});
-
-NestedField.displayName = 'NestedField';
-
-const NestedTools = memo(props => {
-  const { leftTools, rightTools } = props;
-  const styles = compareNestedAgentRowStyles;
-  const rows = useMemo(() => matchDependencies(leftTools ?? [], rightTools ?? []), [leftTools, rightTools]);
-
-  return (
-    <Box sx={styles.field}>
-      <Typography variant="labelSmall">{COMPARE_MESSAGES.nestedTools}</Typography>
-      {rows.length === 0 ? (
-        <Typography
-          sx={styles.muted}
-          variant="bodySmall2"
-          color="text.primary"
-        >
-          {COMPARE_MESSAGES.nestedNoTools}
-        </Typography>
-      ) : (
-        rows.map(row => (
-          <Box
-            key={row.key}
-            sx={styles.columns}
-          >
-            {[row.left, row.right].map((tool, index) => (
-              <Box
-                key={index}
-                sx={[
-                  styles.toolCell,
-                  !tool && styles.toolCellEmpty,
-                  tool && !(row.left && row.right) && styles.toolCellUnique,
-                ]}
-              >
-                {tool && (
-                  <>
-                    <Typography
-                      variant="bodyMedium"
-                      color="text.primary"
-                    >
-                      {tool.name}
-                    </Typography>
-                    <Typography
-                      variant="bodySmall"
-                      color="text.secondary"
-                    >
-                      {tool.type ?? tool.entityType}
-                    </Typography>
-                  </>
-                )}
-              </Box>
-            ))}
-          </Box>
-        ))
-      )}
-    </Box>
-  );
-});
-
-NestedTools.displayName = 'NestedTools';
 
 // A sub-agent of the compared versions, with what differs in it and the sub-agents below it
 const CompareNestedAgentRow = memo(props => {
@@ -156,22 +71,22 @@ const CompareNestedAgentRow = memo(props => {
             </Typography>
           </Box>
         )}
-        <NestedField
+        <CompareNestedField
           label={COMPARE_MESSAGES.nestedInstructions}
           leftText={leftData.instructions ?? ''}
           rightText={rightData.instructions ?? ''}
         />
-        <NestedField
+        <CompareNestedField
           label={COMPARE_MESSAGES.nestedWelcome}
           leftText={leftData.welcome_message ?? ''}
           rightText={rightData.welcome_message ?? ''}
         />
-        <NestedField
+        <CompareNestedField
           label={COMPARE_MESSAGES.nestedStarters}
           leftText={joinLines(leftData.conversation_starters)}
           rightText={joinLines(rightData.conversation_starters)}
         />
-        <NestedTools
+        <CompareNestedTools
           leftTools={leftData.tools}
           rightTools={rightData.tools}
         />
@@ -184,9 +99,8 @@ const CompareNestedAgentRow = memo(props => {
       sx={[styles.root, { marginLeft: `${indent}rem` }]}
       data-testid={`compare-nested-agent-${row.key}`}
     >
-      <Box
-        component="button"
-        type="button"
+      <Button.BaseBtn
+        variant={BUTTON_VARIANTS.secondary}
         aria-expanded={expanded}
         onClick={handleToggle}
         sx={styles.header}
@@ -217,7 +131,7 @@ const CompareNestedAgentRow = memo(props => {
         >
           {statusLabel}
         </Typography>
-      </Box>
+      </Button.BaseBtn>
       {expanded && <Box sx={styles.body}>{renderBody()}</Box>}
       {row.children.map(child => (
         <CompareNestedAgentRow
@@ -241,16 +155,18 @@ const compareNestedAgentRowStyles = {
     flexDirection: 'column',
     gap: '0.5rem',
   },
+  // A full-width row: the button keeps its theme states, only its layout is overridden
   header: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'flex-start',
     gap: '0.75rem',
     width: '100%',
+    height: 'auto',
     padding: '0.5rem 1rem',
     textAlign: 'left',
-    cursor: 'pointer',
+    textTransform: 'none',
     color: palette.text.secondary,
-    backgroundColor: palette.background.surface.interactive.default,
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
     '&:hover': { borderColor: palette.border.hover },
@@ -271,42 +187,14 @@ const compareNestedAgentRowStyles = {
     gap: '1rem',
     padding: '0.5rem 0 0.5rem 1rem',
   },
-  field: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-  },
   columns: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
     gap: '1rem',
   },
-  card: ({ palette }) => ({
-    padding: '0.5rem 1rem',
-    minHeight: '2.5rem',
-    maxHeight: '12rem',
-    overflowY: 'auto',
-    borderRadius: '0.5rem',
-    backgroundColor: palette.background.surface.interactive.default,
-    border: `0.0625rem solid ${palette.border.lines}`,
-  }),
   muted: {
     fontStyle: 'italic',
   },
-  toolCell: ({ palette }) => ({
-    display: 'flex',
-    flexDirection: 'column',
-    minHeight: '2.5rem',
-    padding: '0.5rem 1rem',
-    borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.border.lines}`,
-  }),
-  toolCellEmpty: ({ palette }) => ({
-    border: `0.0625rem dashed ${palette.border.lines}`,
-  }),
-  toolCellUnique: ({ palette }) => ({
-    backgroundColor: palette.diff.added,
-  }),
 };
 
 export default CompareNestedAgentRow;

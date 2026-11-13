@@ -26,7 +26,10 @@ vi.mock('@/common/constants', () => ({
 }));
 vi.mock('@/[fsd]/entities/compare-versions', async () => {
   const helpers = await import('@/[fsd]/entities/compare-versions/lib/helpers/compareVersions.helpers');
+  const constants = await import('@/[fsd]/entities/compare-versions/lib/constants/compareVersions.constants');
   return {
+    COMPARE_MESSAGES: constants.COMPARE_MESSAGES,
+    resolveLinkedPublicVersionName: helpers.resolveLinkedPublicVersionName,
     extractAgentCompareDataForPublic: helpers.extractAgentCompareDataForPublic,
     extractPublicAgentCompareData: helpers.extractPublicAgentCompareData,
     findPublicParentApplicationId: helpers.findPublicParentApplicationId,
@@ -76,6 +79,12 @@ const PUBLIC_V2 = {
   },
 };
 
+// What the public endpoint answers for a copy of a sub-agent: the version it serves, and every version it holds
+const publicCopy = (served, others = []) => ({
+  version_details: { tools: [], ...served },
+  versions: [served, ...others].map(({ id, name }) => ({ id, name, status: 'embedded' })),
+});
+
 const setup = (overrides = {}) =>
   renderHook(() =>
     useComparePublicAgentVersions({
@@ -104,7 +113,7 @@ describe('useComparePublicAgentVersions', () => {
           ? versionName === 'v2'
             ? PUBLIC_V2
             : { version_details: { ...PUBLIC_V2.version_details, id: 501, name: 'v1' } }
-          : { version_details: { id: 901, name: 'base_subagent', instructions: 'public child', tools: [] } },
+          : publicCopy({ id: 901, name: 'base_subagent', instructions: 'public child' }),
       ),
     );
   });
@@ -143,11 +152,11 @@ describe('useComparePublicAgentVersions', () => {
       expect(setup().result.current.publicVersions.map(version => version.id)).toEqual([501, 502]);
     });
 
-    it('pass on the loading state, and a readable error', () => {
+    it('pass on the loading state, and the message of the compare dialog for an error', () => {
       mocks.publicQuery = { data: undefined, error: { status: 500 }, isFetching: true };
       const { result } = setup();
       expect(result.current.isLoadingPublicVersions).toBe(true);
-      expect(result.current.publicLoadError).toBe('The public versions could not be loaded.');
+      expect(result.current.publicLoadError).toBe('Failed to load the public versions. Please try again.');
     });
 
     it('are empty when the public agent returns none', () => {
@@ -223,6 +232,74 @@ describe('useComparePublicAgentVersions', () => {
       expect(nestedRows[0]).toMatchObject({ key: 'agent:Helper', status: 'changed' });
       expect(nestedRows[0].left.data.instructions).toBe('local child');
       expect(nestedRows[0].right.data.instructions).toBe('public child');
+    });
+
+    describe('which version of a public sub-agent copy', () => {
+      // The copy has two versions; the public version links to the older one, the endpoint serves the newer one
+      const answerFor = ({ servedId = 902, linkedVersions }) =>
+        mocks.fetchPublic.mockImplementation(({ applicationId, versionName }) => {
+          if (applicationId === 12) return unwrapping(versionName === 'v2' ? PUBLIC_V2 : {});
+          if (versionName === 'base_subagent') {
+            return unwrapping(publicCopy({ id: 901, name: 'base_subagent', instructions: 'linked version' }));
+          }
+          return unwrapping(
+            publicCopy({ id: servedId, name: 'v2', instructions: 'newest version' }, linkedVersions),
+          );
+        });
+
+      const withLink = versionId => {
+        PUBLIC_V2.version_details.tools = [subAgent('Helper', 40, versionId)];
+      };
+
+      afterEach(() => {
+        PUBLIC_V2.version_details.tools = [subAgent('Helper', 40)];
+      });
+
+      it('reads the version the public version links to, not the default one', async () => {
+        withLink(901);
+        answerFor({ linkedVersions: [{ id: 901, name: 'base_subagent' }] });
+        const { result } = setup();
+        const { nestedRows } = await result.current.loadVersions(20, 502);
+        expect(mocks.fetchPublic).toHaveBeenCalledWith({ applicationId: 40 }, true);
+        expect(mocks.fetchPublic).toHaveBeenCalledWith(
+          { applicationId: 40, versionName: 'base_subagent' },
+          true,
+        );
+        expect(nestedRows[0].right.data.instructions).toBe('linked version');
+      });
+
+      it('asks only once when the endpoint already served the linked version', async () => {
+        withLink(902);
+        answerFor({ linkedVersions: [{ id: 901, name: 'base_subagent' }] });
+        const { result } = setup();
+        const { nestedRows } = await result.current.loadVersions(20, 502);
+        const asked = mocks.fetchPublic.mock.calls.filter(([args]) => args.applicationId === 40);
+        expect(asked).toHaveLength(1);
+        expect(nestedRows[0].right.data.instructions).toBe('newest version');
+      });
+
+      it('falls back to the served version when the link names none the copy holds', async () => {
+        withLink(555);
+        answerFor({ linkedVersions: [{ id: 901, name: 'base_subagent' }] });
+        const { result } = setup();
+        const { nestedRows } = await result.current.loadVersions(20, 502);
+        const asked = mocks.fetchPublic.mock.calls.filter(([args]) => args.applicationId === 40);
+        expect(asked).toHaveLength(1);
+        expect(nestedRows[0].right.data.instructions).toBe('newest version');
+        expect(nestedRows[0].right.unavailable).toBe(false);
+      });
+
+      it('shows the sub-agent as unavailable when the linked version cannot be read', async () => {
+        withLink(901);
+        mocks.fetchPublic.mockImplementation(({ applicationId, versionName }) => {
+          if (applicationId === 12) return unwrapping(versionName === 'v2' ? PUBLIC_V2 : {});
+          if (versionName === 'base_subagent') return unwrapping(new Error('gone'));
+          return unwrapping(publicCopy({ id: 902, name: 'v2' }, [{ id: 901, name: 'base_subagent' }]));
+        });
+        const { result } = setup();
+        const { nestedRows } = await result.current.loadVersions(20, 502);
+        expect(nestedRows[0].right.unavailable).toBe(true);
+      });
     });
 
     it('go further down when a sub-agent has sub-agents of its own', async () => {

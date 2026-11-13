@@ -1,11 +1,13 @@
 import { useCallback, useMemo } from 'react';
 
 import {
+  COMPARE_MESSAGES,
   extractAgentCompareDataForPublic,
   extractPublicAgentCompareData,
   findPublicParentApplicationId,
   loadNestedAgents,
   matchNestedAgents,
+  resolveLinkedPublicVersionName,
 } from '@/[fsd]/entities/compare-versions';
 import {
   useLazyGetApplicationVersionDetailQuery,
@@ -92,12 +94,25 @@ export const useComparePublicAgentVersions = ({ projectId, applicationId, versio
         return { data: extractAgentCompareDataForPublic(detail), tools: detail.tools };
       };
 
-      // A sub-agent of the public version is a copy in the public project: it is read there, by its application
+      // A sub-agent of the public version is a copy in the public project: it is read there, by its application.
+      // The endpoint answers with the copy's newest version unless it is asked for one by name, so the version the
+      // public version links to is found in that first answer and read when it is another one.
       const fetchPublicChild = async tool => {
-        const response = await fetchPublicApplication(
-          { applicationId: tool.settings.application_id },
+        const copyApplicationId = tool.settings.application_id;
+        let response = await fetchPublicApplication(
+          { applicationId: copyApplicationId },
           PREFER_CACHED_RESULT,
         ).unwrap();
+        const linkedVersionName = resolveLinkedPublicVersionName(
+          response,
+          tool.settings.application_version_id,
+        );
+        if (linkedVersionName) {
+          response = await fetchPublicApplication(
+            { applicationId: copyApplicationId, versionName: linkedVersionName },
+            PREFER_CACHED_RESULT,
+          ).unwrap();
+        }
         const detail = getPublicVersionDetail(response);
         return { data: extractPublicAgentCompareData(detail), tools: detail.tools };
       };
@@ -130,7 +145,7 @@ export const useComparePublicAgentVersions = ({ projectId, applicationId, versio
     publicApplicationId,
     publicVersions,
     isLoadingPublicVersions,
-    publicLoadError: publicError ? 'The public versions could not be loaded.' : '',
+    publicLoadError: publicError ? COMPARE_MESSAGES.publicLoadFailed : '',
     loadVersions,
   };
 };

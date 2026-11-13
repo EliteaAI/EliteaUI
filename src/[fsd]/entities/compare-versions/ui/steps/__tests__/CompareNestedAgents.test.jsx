@@ -16,6 +16,22 @@ vi.mock('@/[fsd]/entities/edit-entity-with-ai', () => ({
   ),
 }));
 vi.mock('@/components/Icons/ArrowDownIcon', () => ({ default: () => null }));
+vi.mock('@/[fsd]/shared/ui', () => ({
+  Button: {
+    BaseBtn: props => (
+      <button
+        type="button"
+        data-base-button="true"
+        data-variant={props.variant}
+        aria-expanded={props['aria-expanded']}
+        onClick={props.onClick}
+        data-testid={props['data-testid']}
+      >
+        {props.children}
+      </button>
+    ),
+  },
+}));
 vi.mock('@/[fsd]/entities/version', () => ({ buildVersionOption: vi.fn(), formatVersionMeta: () => 'meta' }));
 
 const { default: CompareNestedAgentsStep } = await import('../CompareNestedAgentsStep');
@@ -166,5 +182,26 @@ describe('CompareNestedAgentsStep', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
     fireEvent.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('uses the shared button for the toggle, not a bare button element', () => {
+    renderStep([entry('A')], [entry('A')]);
+    const toggle = screen.getByTestId('compare-nested-toggle-agent:A');
+    expect(toggle).toHaveAttribute('data-base-button', 'true');
+    expect(toggle).toHaveAttribute('data-variant', 'secondary');
+  });
+
+  it('opens a sub-agent with the instructions, the welcome message, the starters and the tools of both sides', () => {
+    renderStep(
+      [entry('A', { data: data({ welcome_message: 'hi', conversation_starters: ['one', 'two'] }) })],
+      [entry('A', { data: data({ welcome_message: 'hello', conversation_starters: ['one'] }) })],
+    );
+    fireEvent.click(screen.getByTestId('compare-nested-toggle-agent:A'));
+    const texts = screen.getAllByTestId('diff').map(node => node.textContent);
+    expect(texts).toEqual(
+      expect.arrayContaining(['same|same', 'hello|hi', 'hi|hello', 'one|one\ntwo', 'one\ntwo|one']),
+    );
+    expect(screen.getByText('Tools')).toBeInTheDocument();
+    expect(screen.getByText('No tools attached.')).toBeInTheDocument();
   });
 });

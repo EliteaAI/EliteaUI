@@ -62,7 +62,7 @@ export const extractPipelineCompareData = versionDetail => {
  */
 export const buildPublicCompareKey = tool =>
   tool.type === 'application'
-    ? `${tool.agent_type === 'pipeline' ? 'pipeline' : 'agent'}:${tool.name}`
+    ? `${resolveToolEntityType(tool)}:${tool.name}`
     : `toolkit:${tool.type}:${tool.name}`;
 
 /** A version of this agent, shaped to be compared with a public version. Skills are left out on both sides. */
@@ -76,8 +76,8 @@ const toPublicCompareTool = tool => ({
   type: tool.type,
   description: tool.description,
   agent_type: tool.agent_type,
-  entityType:
-    tool.type === 'application' ? (tool.agent_type === 'pipeline' ? 'pipeline' : 'agent') : 'toolkit',
+  // A toolkit definition kept in the version meta carries no entity type of its own, so it is a plain toolkit
+  entityType: resolveToolEntityType(tool),
   // A sub-agent of a public version is a copy in the public project: no id of this project, so it cannot be opened
   settings: {},
   matchKey: buildPublicCompareKey(tool),
@@ -172,7 +172,7 @@ export const loadNestedAgents = async ({ tools, fetchChild, depth = 1, path = []
       const entry = {
         key: buildPublicCompareKey(tool),
         name: tool.name,
-        entityType: tool.agent_type === 'pipeline' ? 'pipeline' : 'agent',
+        entityType: resolveToolEntityType(tool),
         data: null,
         unavailable: true,
         children: [],
@@ -203,6 +203,24 @@ export const countChangedNestedAgents = rows =>
       total + (row.ownStatus === NESTED_STATUS.same ? 0 : 1) + countChangedNestedAgents(row.children),
     0,
   );
+
+/**
+ * The name of the version of a public sub-agent copy that a public version links to, or null when the endpoint's
+ * default answer is already that version, or the link names no version the response knows about.
+ *
+ * The public endpoint serves a version by its name and answers with its newest one when asked without a name, so the
+ * linked version has to be found in the version list of that first answer.
+ *
+ * @param {object} response the answer of the public application endpoint
+ * @param {number|string|undefined} linkedVersionId `settings.application_version_id` of the linking tool
+ */
+export const resolveLinkedPublicVersionName = (response, linkedVersionId) => {
+  if (linkedVersionId === undefined || linkedVersionId === null || linkedVersionId === '') return null;
+  const linked = (response?.versions ?? []).find(version => String(version.id) === String(linkedVersionId));
+  if (!linked?.name) return null;
+  const served = response?.version_details;
+  return String(served?.id) === String(linked.id) ? null : linked.name;
+};
 
 /** The tools of a version that are sub-agents or pipelines, with the ids needed to load them. */
 export const getNestedAgentTools = tools =>

@@ -13,6 +13,7 @@ import {
   loadNestedAgents,
   matchDependencies,
   matchNestedAgents,
+  resolveLinkedPublicVersionName,
 } from '@/[fsd]/entities/compare-versions/lib/helpers/compareVersions.helpers';
 
 vi.mock('@/[fsd]/entities/version', () => ({ buildVersionOption: vi.fn(), formatVersionMeta: vi.fn() }));
@@ -404,5 +405,76 @@ describe('loadNestedAgents', () => {
     };
     await loadNestedAgents({ tools: [subAgentTool('A', 5), subAgentTool('B', 6)], fetchChild });
     expect(order.slice(0, 2)).toEqual(['start:A', 'start:B']);
+  });
+});
+
+describe('resolveLinkedPublicVersionName', () => {
+  const response = (servedId, versions) => ({ version_details: { id: servedId }, versions });
+  const COPY_VERSIONS = [
+    { id: 11, name: 'base_subagent' },
+    { id: 12, name: 'v2' },
+  ];
+
+  it('names the linked version when the endpoint served another one', () => {
+    expect(resolveLinkedPublicVersionName(response(12, COPY_VERSIONS), 11)).toBe('base_subagent');
+  });
+
+  it('needs no other request when the served version is the linked one', () => {
+    expect(resolveLinkedPublicVersionName(response(11, COPY_VERSIONS), 11)).toBeNull();
+  });
+
+  it('compares ids as text, as the version id is a number in one place and a string in another', () => {
+    expect(resolveLinkedPublicVersionName(response('12', COPY_VERSIONS), 11)).toBe('base_subagent');
+    expect(resolveLinkedPublicVersionName(response(11, COPY_VERSIONS), '11')).toBeNull();
+  });
+
+  it('keeps the served version when the link names no version the endpoint knows', () => {
+    expect(resolveLinkedPublicVersionName(response(12, COPY_VERSIONS), 999)).toBeNull();
+  });
+
+  it('keeps the served version when the link carries no version at all', () => {
+    expect(resolveLinkedPublicVersionName(response(12, COPY_VERSIONS), undefined)).toBeNull();
+    expect(resolveLinkedPublicVersionName(response(12, COPY_VERSIONS), null)).toBeNull();
+    expect(resolveLinkedPublicVersionName(response(12, COPY_VERSIONS), '')).toBeNull();
+  });
+
+  it('keeps the served version when the linked one has no name to ask for', () => {
+    expect(resolveLinkedPublicVersionName(response(12, [{ id: 11 }, { id: 12, name: 'v2' }]), 11)).toBeNull();
+  });
+
+  it('copes with an answer that has no version list', () => {
+    expect(resolveLinkedPublicVersionName({ version_details: { id: 1 } }, 11)).toBeNull();
+    expect(resolveLinkedPublicVersionName(undefined, 11)).toBeNull();
+  });
+});
+
+describe('entity type of a tool, shared by the keys and the loader', () => {
+  it('reads a pipeline link as a pipeline and any other agent link as an agent', () => {
+    expect(buildPublicCompareKey(subAgentTool('Flow', 5, 50, { agent_type: 'pipeline' }))).toBe(
+      'pipeline:Flow',
+    );
+    expect(buildPublicCompareKey(subAgentTool('Helper', 5, 50, { agent_type: 'react' }))).toBe(
+      'agent:Helper',
+    );
+    expect(buildPublicCompareKey({ type: 'application', name: 'No type' })).toBe('agent:No type');
+  });
+
+  it('gives a public toolkit definition the toolkit entity type', () => {
+    const [tool] = extractPublicAgentCompareData({
+      meta: { fork_toolkits: [{ type: 'jira', name: 'Jira' }] },
+    }).tools;
+    expect(tool.entityType).toBe('toolkit');
+  });
+
+  it('gives a public sub-agent the entity type of its link, and the loader the same one', async () => {
+    const [pipeline] = extractPublicAgentCompareData({
+      tools: [subAgentTool('Flow', 5, 50, { agent_type: 'pipeline' })],
+    }).tools;
+    expect(pipeline.entityType).toBe('pipeline');
+    const [loaded] = await loadNestedAgents({
+      tools: [subAgentTool('Flow', 5, 50, { agent_type: 'pipeline' })],
+      fetchChild: async () => ({ data: {}, tools: [] }),
+    });
+    expect(loaded.entityType).toBe('pipeline');
   });
 });
