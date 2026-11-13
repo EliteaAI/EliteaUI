@@ -54,6 +54,7 @@ vi.mock('@/[fsd]/widgets/skill-editor', async () => {
 });
 vi.mock('@/api/eliteaApi', () => ({ eliteaApi: { endpoints: {} } }));
 vi.mock('@/common/constants', () => ({
+  ChatParticipantType: { Skills: 'skills' },
   PERMISSIONS: { skills: { update: 'skills.update' } },
   SkillsTabs: ['all'],
   ViewMode: { Owner: 'owner' },

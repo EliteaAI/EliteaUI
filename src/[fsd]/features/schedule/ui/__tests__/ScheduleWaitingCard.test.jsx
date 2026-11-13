@@ -46,6 +46,9 @@ vi.mock('@/[fsd]/features/mcp', () => ({
   McpAuthModal: () => null,
   McpAuthHelpers: { reuseAuthFamilyToken: () => false },
 }));
+vi.mock('@/[fsd]/features/credentials/lib/hooks', () => ({
+  useChatStoredLogin: () => ({ isEnabled: false, saveLogin: vi.fn() }),
+}));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: () => 5,
   useToast: () => ({ toastSuccess: vi.fn() }),
