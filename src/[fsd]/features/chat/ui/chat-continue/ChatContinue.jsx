@@ -6,6 +6,7 @@ import {
   buildToolkitAuthorizationMessage,
   getToolkitAuthorizationContext,
 } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers';
+import { useChatStoredLogin } from '@/[fsd]/features/credentials/lib/hooks';
 import {
   McpAuthHelpers,
   McpAuthModal,
@@ -56,6 +57,13 @@ const ChatContinue = memo(props => {
     authRequiredAction?.toolOutputs?.server_url || authRequiredAction?.toolMeta?.server_url || '';
   const tokenStorageKey = serverUrl;
   const { isLoggedIn: hasTargetToken } = useMcpTokenChange({ serverUrl });
+  // The key the sign-in window stores the token under; the login save reads it back from the same place
+  const modalTokenStorageKey = authRequiredAction?.toolOutputs?.server_url;
+  const { isEnabled: savesLoginOnCredential, saveLogin: saveLoginOnCredential } = useChatStoredLogin({
+    toolkitType: authRequiredAction?.toolMeta?.toolkit_type,
+    resourceMetadata: authRequiredAction?.toolMeta?.resource_metadata,
+    tokenKey: modalTokenStorageKey,
+  });
 
   useEffect(() => {
     if (!authRequiredAction || disabled || showAuthModal || !mcpAuthMetadata) return;
@@ -125,13 +133,19 @@ const ChatContinue = memo(props => {
     success => {
       setShowAuthModal(false);
       if (success) {
-        toastSuccess('Successful authentication!');
+        // The login save reports its own outcome, so the generic toast would be a second one
+        if (savesLoginOnCredential) {
+          // Not awaited: the resumed run uses the browser token, and the save reads its token synchronously
+          saveLoginOnCredential();
+        } else {
+          toastSuccess('Successful authentication!');
+        }
         // After successful auth, call onAuthSuccess (not onContinue)
         // onContinue adds server to ignore list, onAuthSuccess does not
         onAuthSuccess?.(authRequiredAction);
       }
     },
-    [toastSuccess, onAuthSuccess, authRequiredAction],
+    [toastSuccess, savesLoginOnCredential, saveLoginOnCredential, onAuthSuccess, authRequiredAction],
   );
 
   const handleCancelModal = useCallback(() => {
@@ -176,7 +190,7 @@ const ChatContinue = memo(props => {
           <McpAuthModal
             open={showAuthModal}
             serverUrl={authRequiredAction.toolMeta?.server_url}
-            tokenStorageKey={authRequiredAction.toolOutputs?.server_url}
+            tokenStorageKey={modalTokenStorageKey}
             mcpAuthMetadata={mcpAuthMetadata}
             projectId={projectId}
             toolkitId={mcpAuthMetadata?.toolkitId}

@@ -39,6 +39,12 @@ const STORED_LOGIN_TOOLKITS = {
 
 export const getStoredLoginConfig = toolkitType => STORED_LOGIN_TOOLKITS[toolkitType] ?? null;
 
+// A chat sign-in is saved only where the run reads the login by credential uuid and tenant authority
+const CHAT_SAVED_LOGIN_TOOLKITS = new Set(['dataverse']);
+
+export const getChatStoredLoginConfig = toolkitType =>
+  CHAT_SAVED_LOGIN_TOOLKITS.has(toolkitType) ? getStoredLoginConfig(toolkitType) : null;
+
 // Validation reports a rejected saved login as a connection error whose message asks the user to log in.
 const LOGIN_REQUIRED_PATTERN = /sign in|log in|authori[sz]ation|oauth flow/i;
 
