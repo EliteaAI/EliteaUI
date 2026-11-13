@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { act, renderHook } from '@testing-library/react';
 
 import { useShareChat } from '../useShareChat.hooks';
@@ -11,6 +12,7 @@ const deleteParticipant = vi.hoisted(() => vi.fn());
 const createShareLink = vi.hoisted(() => vi.fn());
 const details = vi.hoisted(() => ({ current: null }));
 const summaryQuery = vi.hoisted(() => vi.fn());
+const selectedProjectId = vi.hoisted(() => ({ current: 406 }));
 
 const unwrapped = value => ({ unwrap: () => Promise.resolve(value) });
 
@@ -33,7 +35,7 @@ vi.mock('@/[fsd]/features/chat/conversation-list/api/sharedLinksApi', () => ({
 }));
 
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
-  useSelectedProjectId: () => 406,
+  useSelectedProjectId: () => selectedProjectId.current,
   useUserList: () => ({
     data: {
       rows: [
@@ -61,11 +63,23 @@ const renderShare = () => renderHook(() => useShareChat({ conversation: { id: 50
 describe('useShareChat', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    selectedProjectId.current = 406;
     conversationEdit.mockReturnValue(unwrapped({}));
     addParticipant.mockReturnValue(unwrapped([{ id: 30 }]));
     deleteParticipant.mockReturnValue(unwrapped({}));
     createShareLink.mockReturnValue(unwrapped({ token: 't' }));
     summaryQuery.mockReturnValue({ data: { attachments_count: 5 }, isSuccess: true });
+  });
+
+  it.each([
+    ['a team project', 'owner', 406],
+    ['the personal project', 'linksOnly', 28],
+    ['the Public project', 'linksOnly', PUBLIC_PROJECT_ID],
+  ])('in %s opens in the %s mode', (_, mode, projectId) => {
+    selectedProjectId.current = projectId;
+    details.current = { author_id: 1, is_private: true, participants: [] };
+
+    expect(renderShare().current.mode).toBe(mode);
   });
 
   it('asks for the file count only while the Externally content is shown', () => {

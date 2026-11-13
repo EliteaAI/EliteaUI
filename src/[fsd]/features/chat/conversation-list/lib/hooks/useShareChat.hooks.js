@@ -26,7 +26,7 @@ import {
   toMemberItem,
 } from '@/[fsd]/features/chat/conversation-list/lib/helpers/shareChat.helpers';
 import { useSelectedProjectId, useUserList } from '@/[fsd]/shared/lib/hooks';
-import { ChatParticipantType } from '@/common/constants';
+import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 
 const MEMBERS_PAGE_SIZE = 20;
 const NO_LINKS = [];
@@ -35,7 +35,8 @@ export const useShareChat = ({ conversation, query = '', isExternallyShown = fal
   const projectId = useSelectedProjectId();
   const user = useSelector(state => state.user);
   const conversationId = conversation?.id;
-  const isPersonal = projectId == user?.personal_project_id;
+  // The personal and the Public project have no team to share with, only external links
+  const isLinksOnly = projectId == user?.personal_project_id || projectId == PUBLIC_PROJECT_ID;
 
   // A cached entry can predate the last access change, so Save waits for one fetched after opening
   const openedAt = useRef(Date.now());
@@ -54,7 +55,7 @@ export const useShareChat = ({ conversation, query = '', isExternallyShown = fal
     sortOrder: 'asc',
     query,
     pageSize: MEMBERS_PAGE_SIZE,
-    forceSkip: isPersonal,
+    forceSkip: isLinksOnly,
   });
   // The whole-team count must not shrink while the search filters the list
   const [membersTotal, setMembersTotal] = useState(0);
@@ -72,7 +73,7 @@ export const useShareChat = ({ conversation, query = '', isExternallyShown = fal
   // Only the Externally content shows the file count
   const { data: summary, isSuccess: isFilesLoaded } = useConversationExportSummaryQuery(
     { projectId, conversationId },
-    { skip: !conversationId || !(isPersonal || isExternallyShown) },
+    { skip: !conversationId || !(isLinksOnly || isExternallyShown) },
   );
 
   const [conversationEdit] = useConversationEditMutation();
@@ -177,7 +178,7 @@ export const useShareChat = ({ conversation, query = '', isExternallyShown = fal
   );
 
   return {
-    mode: isPersonal ? SHARE_MODES.personal : SHARE_MODES.owner,
+    mode: isLinksOnly ? SHARE_MODES.linksOnly : SHARE_MODES.owner,
     projectId,
     chatName: details?.name ?? conversation?.name,
     isReady: isDetailsFresh,
