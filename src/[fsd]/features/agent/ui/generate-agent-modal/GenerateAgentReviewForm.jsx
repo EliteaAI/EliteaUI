@@ -311,6 +311,7 @@ const GenerateAgentReviewForm = memo(props => {
         selectedIds={selectedSkillIds}
         onToggle={onToggleSkill}
         entityType="skill"
+        maxItems={Infinity}
       />
     </Box>
   );

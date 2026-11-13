@@ -4,14 +4,14 @@ import { Box, Typography } from '@mui/material';
 
 import SuggestionItem from './SuggestionItem';
 
-const MAX_SUGGESTIONS = 5;
+const DEFAULT_MAX_SUGGESTIONS = 5;
 
 const ResourceSuggestions = memo(props => {
-  const { title, items, selectedIds, onToggle, entityType } = props;
+  const { title, items, selectedIds, onToggle, entityType, maxItems = DEFAULT_MAX_SUGGESTIONS } = props;
 
   if (!items?.length) return null;
 
-  const cappedItems = items.slice(0, MAX_SUGGESTIONS);
+  const cappedItems = items.slice(0, maxItems);
 
   return (
     <Box
