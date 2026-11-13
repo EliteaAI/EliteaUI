@@ -21,15 +21,38 @@ const CompareVersionSelector = memo(props => {
   return (
     <Box sx={compareVersionSelectorStyles.container}>
       <Box sx={compareVersionSelectorStyles.row}>
-        <Typography sx={compareVersionSelectorStyles.label}>Base version</Typography>
+        <Typography
+          variant="labelMedium"
+          color="text.primary"
+        >
+          Base version
+        </Typography>
         <Box sx={compareVersionSelectorStyles.readOnlyVersion}>
-          <Typography sx={compareVersionSelectorStyles.versionName}>{leftVersion?.name}</Typography>
-          {leftMeta && <Typography sx={compareVersionSelectorStyles.versionMeta}>{leftMeta}</Typography>}
+          <Typography
+            variant="bodyMedium"
+            color="text.secondary"
+          >
+            {leftVersion?.name}
+          </Typography>
+          {leftMeta && (
+            <Typography
+              variant="bodySmall"
+              color="text.secondary"
+              sx={compareVersionSelectorStyles.versionMeta}
+            >
+              {leftMeta}
+            </Typography>
+          )}
         </Box>
       </Box>
 
       <Box sx={compareVersionSelectorStyles.row}>
-        <Typography sx={compareVersionSelectorStyles.label}>Compare with</Typography>
+        <Typography
+          variant="labelMedium"
+          color="text.primary"
+        >
+          Compare with
+        </Typography>
         <SingleSelect
           value={rightVersionId ?? ''}
           options={versionOptions}
@@ -63,24 +86,13 @@ const compareVersionSelectorStyles = {
     flexDirection: 'column',
     gap: '0.5rem',
   },
-  label: {
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    color: 'text.primary',
-  },
   readOnlyVersion: ({ palette }) => ({
     padding: '0.5rem 1rem',
     borderRadius: '0.5rem',
     border: `0.0625rem solid ${palette.border.lines}`,
     backgroundColor: palette.background.surface.interactive.default,
   }),
-  versionName: {
-    fontSize: '0.875rem',
-    color: 'text.secondary',
-  },
   versionMeta: {
-    fontSize: '0.75rem',
-    color: 'text.secondary',
     marginTop: '0.125rem',
   },
   selectInput: {

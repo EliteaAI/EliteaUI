@@ -10,7 +10,15 @@ import CompareVersionHeader from '../CompareVersionHeader';
 
 // Agents list tools and skills; pipelines pass their own empty text (they have no skills)
 const CompareToolsSkillsStep = memo(props => {
-  const { leftVersion, rightVersion, leftData, rightData, emptyText = COMPARE_MESSAGES.noAgentTools } = props;
+  const {
+    leftVersion,
+    rightVersion,
+    leftData,
+    rightData,
+    emptyText = COMPARE_MESSAGES.noAgentTools,
+    // Shown under the right column, e.g. what the comparison leaves out
+    rightNote,
+  } = props;
 
   const matchedRows = useMemo(
     () => matchDependencies(leftData.tools ?? [], rightData.tools ?? []),
@@ -29,7 +37,11 @@ const CompareToolsSkillsStep = memo(props => {
       currentContent={
         <Box sx={compareToolsSkillsStepStyles.column}>
           {noDiff && (
-            <Typography sx={compareToolsSkillsStepStyles.noDiffNote}>
+            <Typography
+              variant="bodySmall"
+              color="text.primary"
+              sx={compareToolsSkillsStepStyles.noDiffNote}
+            >
               No differences in this section.
             </Typography>
           )}
@@ -49,6 +61,8 @@ const CompareToolsSkillsStep = memo(props => {
                 />
                 {row.left.isAvailable === false && (
                   <Typography
+                    variant="bodySmall"
+                    color="text.warning"
                     sx={compareToolsSkillsStepStyles.notAvailable}
                     data-testid={`compare-tool-not-available-left-${row.key}`}
                   >
@@ -64,14 +78,24 @@ const CompareToolsSkillsStep = memo(props => {
             ),
           )}
           {matchedRows.length === 0 && (
-            <Typography sx={compareToolsSkillsStepStyles.emptyText}>{emptyText}</Typography>
+            <Typography
+              variant="bodySmall"
+              color="text.primary"
+              sx={compareToolsSkillsStepStyles.emptyText}
+            >
+              {emptyText}
+            </Typography>
           )}
         </Box>
       }
       suggestedContent={
         <Box sx={compareToolsSkillsStepStyles.column}>
           {noDiff && (
-            <Typography sx={compareToolsSkillsStepStyles.noDiffNote}>
+            <Typography
+              variant="bodySmall"
+              color="text.primary"
+              sx={compareToolsSkillsStepStyles.noDiffNote}
+            >
               No differences in this section.
             </Typography>
           )}
@@ -91,6 +115,8 @@ const CompareToolsSkillsStep = memo(props => {
                 />
                 {row.right.isAvailable === false && (
                   <Typography
+                    variant="bodySmall"
+                    color="text.warning"
                     sx={compareToolsSkillsStepStyles.notAvailable}
                     data-testid={`compare-tool-not-available-right-${row.key}`}
                   >
@@ -106,7 +132,23 @@ const CompareToolsSkillsStep = memo(props => {
             ),
           )}
           {matchedRows.length === 0 && (
-            <Typography sx={compareToolsSkillsStepStyles.emptyText}>{emptyText}</Typography>
+            <Typography
+              variant="bodySmall"
+              color="text.primary"
+              sx={compareToolsSkillsStepStyles.emptyText}
+            >
+              {emptyText}
+            </Typography>
+          )}
+          {rightNote && (
+            <Typography
+              variant="bodySmall"
+              color="text.primary"
+              sx={compareToolsSkillsStepStyles.emptyText}
+              data-testid="compare-tools-right-note"
+            >
+              {rightNote}
+            </Typography>
           )}
         </Box>
       }
@@ -138,19 +180,13 @@ const compareToolsSkillsStepStyles = {
     borderRadius: '0.5rem',
     border: `0.0625rem dashed ${palette.border.lines}`,
   }),
-  notAvailable: ({ palette }) => ({
+  notAvailable: {
     padding: '0.25rem 0.75rem 0',
-    fontSize: '0.75rem',
-    color: palette.text.warning,
-  }),
+  },
   emptyText: {
-    fontSize: '0.75rem',
-    color: 'text.primary',
     fontStyle: 'italic',
   },
   noDiffNote: {
-    fontSize: '0.75rem',
-    color: 'text.primary',
     fontStyle: 'italic',
     marginBottom: '0.5rem',
   },
