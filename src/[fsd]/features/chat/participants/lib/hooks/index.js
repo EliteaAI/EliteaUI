@@ -12,3 +12,4 @@ export * from './useParticipantToolAvailability.hooks';
 export * from './useParticipantValidation.hooks';
 export * from './useSyncChatConfigParticipant.hooks';
 export * from './useParticipantWelcomeMessage.hooks';
+export * from './useChatUsersAccess.hooks';

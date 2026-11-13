@@ -15,6 +15,8 @@ const Participants = memo(props => {
   const {
     disabledEdit,
     participants,
+    conversation,
+    onAccessSaved,
     collapsed,
     onCollapsed,
     activeParticipantId,
@@ -94,6 +96,8 @@ const Participants = memo(props => {
           ) : (
             <ExpandedPerticapantsList
               participants={participants}
+              conversation={conversation}
+              onAccessSaved={onAccessSaved}
               componentWidth={componentWidth}
               onSelectParticipant={onSelectParticipant}
               onDeleteParticipant={onDeleteParticipant}
