@@ -8,6 +8,7 @@ import {
   PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN,
   PROJECT_CONTEXT_MAX_LEN,
 } from '@/[fsd]/features/settings/lib/constants/projectContext.constants';
+import { AiDraftErrorHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Input, Modal, Text } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -221,9 +222,7 @@ const AIEditProjectContextModal = memo(props => {
             sx={styles.errorAlert}
             data-testid="ai-edit-project-context-error-alert"
           >
-            {generateError?.data?.error ||
-              generateError?.data?.detail ||
-              'Failed to generate. Please try again.'}
+            {AiDraftErrorHelpers.getAiDraftErrorMessage(generateError)}
           </Alert>
         )}
       </Box>
