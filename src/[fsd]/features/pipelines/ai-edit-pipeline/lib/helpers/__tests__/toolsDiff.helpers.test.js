@@ -9,6 +9,7 @@ import {
   normaliseCurrentTools,
   normaliseSuggestedTools,
   toolKey,
+  withoutAttachedSkills,
 } from '../toolsDiff.helpers';
 
 describe('normaliseCurrentTool', () => {
@@ -205,5 +206,19 @@ describe('computeSummaryTools', () => {
 
   it('returns an empty list when nothing is attached or selected', () => {
     expect(computeSummaryTools([], {}, emptySelections)).toEqual([]);
+  });
+});
+
+describe('withoutAttachedSkills', () => {
+  it('drops own skills the version already has and keeps catalog skills and new ones', () => {
+    const draft = { pipeline_yaml: 'x', suggested_skills: [{ id: 5 }, { id: 6 }, { id: 5, project_id: 1 }] };
+    expect(withoutAttachedSkills(draft, new Set([5]))).toEqual({
+      pipeline_yaml: 'x',
+      suggested_skills: [{ id: 6 }, { id: 5, project_id: 1 }],
+    });
+  });
+
+  it('handles a draft without skills', () => {
+    expect(withoutAttachedSkills({}, new Set([5])).suggested_skills).toEqual([]);
   });
 });

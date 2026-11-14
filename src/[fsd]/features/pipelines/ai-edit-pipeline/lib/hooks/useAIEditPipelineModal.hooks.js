@@ -13,6 +13,7 @@ import {
   buildApplicationAttachment,
   buildToolkitAttachment,
 } from '@/[fsd]/features/pipelines/tool-picker/lib/helpers/attachmentTool.helpers';
+import { useGetApplicationSkillsQuery } from '@/[fsd]/features/skill';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useLazyApplicationDetailsQuery, useLazyToolkitsDetailsQuery } from '@/api';
 import useSaveNewVersion from '@/hooks/application/useSaveNewVersion';
@@ -20,7 +21,12 @@ import { calculateNodesAndEdges } from '@/pages/Pipelines/useSavePipeline';
 import { actions } from '@/slices/pipeline';
 import { actions as editorActions } from '@/slices/pipelineEditor';
 
-import { computeInitialSelections, getRemoveId, normaliseCurrentTool } from '../helpers';
+import {
+  computeInitialSelections,
+  getRemoveId,
+  normaliseCurrentTool,
+  withoutAttachedSkills,
+} from '../helpers';
 import { useAttachSkills } from './useAttachSkills.hooks';
 
 // The backend dumps the draft with PyYAML, which indents lists differently from the editor; dumping it with the
@@ -51,6 +57,11 @@ export const useAIEditPipelineModal = ({ isCreateMode, onClose }) => {
   const [fetchApplicationDetails] = useLazyApplicationDetailsQuery();
   const [fetchToolkitDetails] = useLazyToolkitsDetailsQuery();
   const attachSkills = useAttachSkills();
+  const versionId = formik.values?.version_details?.id;
+  const { data: versionSkills } = useGetApplicationSkillsQuery(
+    { projectId, appVersionId: versionId },
+    { skip: isCreateMode || !projectId || !versionId },
+  );
 
   const [showVersionModal, setShowVersionModal] = useState(false);
   const [versionName, setVersionName] = useState('');
@@ -103,7 +114,9 @@ export const useAIEditPipelineModal = ({ isCreateMode, onClose }) => {
   );
 
   const handleDraftGenerated = useCallback(
-    draftData => {
+    generatedDraft => {
+      const attachedSkillIds = new Set((versionSkills?.skills || []).map(s => s.skill_id));
+      const draftData = withoutAttachedSkills(generatedDraft, attachedSkillIds);
       const selections = computeInitialSelections(draftData, formik.values?.version_details?.tools);
       setAddToolkitIds(selections.addToolkitIds);
       setAddMcpIds(selections.addMcpIds);
@@ -113,7 +126,7 @@ export const useAIEditPipelineModal = ({ isCreateMode, onClose }) => {
       setRemoveToolRecordIds(selections.removeToolRecordIds);
       return { ...draftData, pipeline_yaml: toEditorYaml(draftData.pipeline_yaml) };
     },
-    [formik.values?.version_details?.tools],
+    [formik.values?.version_details?.tools, versionSkills?.skills],
   );
 
   // Builds the form attachment for every ticked suggestion. Suggestions carry only ids and names, so the full

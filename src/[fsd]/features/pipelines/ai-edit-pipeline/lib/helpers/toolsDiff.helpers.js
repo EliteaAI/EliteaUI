@@ -53,6 +53,13 @@ export const computeSummaryTools = (currentTools, draftData, selections) => {
   return [...kept, ...added];
 };
 
+export const withoutAttachedSkills = (draftData, attachedSkillIds) => ({
+  ...draftData,
+  suggested_skills: (draftData?.suggested_skills || []).filter(
+    skill => skill.project_id || !attachedSkillIds.has(skill.id),
+  ),
+});
+
 /**
  * Compute the initial add-selection sets when a draft is first generated.
  * Pre-selects suggestions that are not already associated; removes are empty by default.
@@ -88,9 +95,6 @@ export const computeInitialSelections = (draftData, currentTools) => {
     addPipelineIds: new Set(
       (draftData?.suggested_pipelines || []).filter(p => !currentPipelineAppIds.has(p.id)).map(p => p.id),
     ),
-    // Skills are tracked separately — select any suggested skill not already attached.
-    // (current skills come from formik as a separate skills list, but we don't have that here;
-    // pre-select all suggested skills and let the user deselect.)
     addSkillIds: new Set((draftData?.suggested_skills || []).map(s => s.id)),
     removeToolRecordIds: new Set(),
   };
