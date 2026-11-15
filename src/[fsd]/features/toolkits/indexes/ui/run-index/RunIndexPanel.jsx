@@ -35,7 +35,7 @@ import {
   indexSearchBlockedReason,
   shouldDropIndexStateOverride,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
-import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
+import { useCanWriteIndexes, useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { IndexActivityPanel, RunIndexBanner } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
@@ -150,6 +150,7 @@ const RunIndexPanel = memo(props => {
   const isIndexing = chatIsIndexing || effectiveState === IndexStatuses.progress;
   // Runs observed here aren't in the slice until a fetch happens — arm the poll from
   // local belief. (Second subscription on this route is deliberate; see the hook.)
+  const canWriteIndexes = useCanWriteIndexes();
   const { startedTimeStamp, fulfilledTimeStamp } = useIndexesListPolling({
     toolkitId,
     projectId,
@@ -521,6 +522,7 @@ const RunIndexPanel = memo(props => {
             isStoppingIndexing={isStoppingIndexing}
             canStopIndexing={canStopIndexing}
             onStop={onCancelIndexing}
+            canWrite={canWriteIndexes}
             reindexDisabled={reindexDisabled || (isConfigDirty && !configIsValid)}
             reindexTooltip={reindexBlockedReason}
             onReindex={handleReindex}

@@ -151,4 +151,17 @@ describe('IndexDetailsFooterBand', () => {
     expect(save()).toBeDisabled();
     expect(reindex()).toBeDisabled();
   });
+
+  it('offers no write action to someone who may only read indexes', () => {
+    renderFooter({ isRunActive: false, isDirty: true, canWrite: false });
+
+    expect(screen.queryByTestId('index-details-footer-reindex')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('index-details-footer-save')).not.toBeInTheDocument();
+  });
+
+  it('still offers Stop on a live run whatever the write rights', () => {
+    renderFooter({ isRunActive: true, canWrite: false });
+
+    expect(stop()).toBeInTheDocument();
+  });
 });

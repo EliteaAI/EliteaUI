@@ -297,7 +297,7 @@ export const useToolkitChat = props => {
         traceNewIndex(index?.id ?? null, {
           collection: pendingRun.collection,
           state: IndexStatuses.fail,
-          ...(refused && { refusal }),
+          ...(refused ? { refusal } : { failureReason: convertJsonToString(message.content) }),
         });
 
       const errorChatMessage = refused

@@ -25,10 +25,11 @@ vi.hoisted(() => {
   };
 });
 
-const { panelLifecycle, panelRenders, served } = vi.hoisted(() => ({
+const { panelLifecycle, panelRenders, served, listQuery } = vi.hoisted(() => ({
   panelLifecycle: { mounted: [], unmounted: [] },
   panelRenders: [],
   served: { indexesList: null, toolkit: null },
+  listQuery: { current: { isError: false, error: null } },
 }));
 
 vi.mock('@/[fsd]/features/toolkits/indexes/model', async importOriginal => ({
@@ -37,10 +38,11 @@ vi.mock('@/[fsd]/features/toolkits/indexes/model', async importOriginal => ({
 }));
 
 vi.mock('@/[fsd]/features/toolkits/indexes/lib/hooks', () => ({
-  useIndexesListPolling: () => ({ refetch: vi.fn() }),
+  useIndexesListPolling: () => ({ refetch: vi.fn(), ...listQuery.current }),
 }));
 
 vi.mock('@/[fsd]/features/toolkits/indexes/ui', () => ({
+  RunIndexBanner: props => <div data-testid="list-unavailable">{props.banner.message}</div>,
   RunIndexPanel: props => {
     const [mountedIndexName] = useState(`${props.toolkitId}/${props.indexName}`);
 
@@ -140,6 +142,7 @@ beforeEach(() => {
   panelRenders.length = 0;
   served.indexesList = indexesListOf('399', CONF_SERVER_INDEXES);
   served.toolkit = CONF_SERVER;
+  listQuery.current = { isError: false, error: null };
 });
 
 afterEach(() => cleanup());
@@ -220,5 +223,31 @@ describe('RunIndex', () => {
 
     expect(rendersOf('399/fresh')).toEqual(expect.arrayContaining([5]));
     expect(rendersOf('399/fresh')).not.toContain(1);
+  });
+
+  it('says the index details are unavailable when the list keeps failing, instead of spinning', () => {
+    served.indexesList = { data: [], toolkitId: '399', isLoading: false, isFetching: false, hasData: false };
+    listQuery.current = {
+      isError: true,
+      error: { status: 400, data: { error: 'Toolkit credentials unusable' } },
+    };
+    renderPage();
+
+    expect(screen.getByTestId('list-unavailable')).toHaveTextContent('Toolkit credentials unusable');
+    expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument();
+    expect(panelLifecycle.mounted).toEqual([]);
+  });
+
+  it('keeps a shown index open through one failed list read', () => {
+    renderPage();
+    expect(panelLifecycle.mounted).toEqual(['399/all9']);
+
+    listQuery.current = { isError: true, error: { status: 500 } };
+    serve({
+      indexesList: { data: [], toolkitId: '399', isLoading: false, isFetching: false, hasData: false },
+    });
+
+    expect(screen.queryByTestId('list-unavailable')).not.toBeInTheDocument();
+    expect(panelLifecycle.unmounted).toEqual([]);
   });
 });

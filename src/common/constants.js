@@ -687,7 +687,7 @@ export const PERMISSIONS = {
     edit: 'configuration.litellm.edit',
   },
   index: {
-    schedule: 'models.applications.index_meta.edit',
+    edit: 'models.applications.index_meta.edit',
     delete: 'models.applications.index_meta.delete',
     taskDelete: 'models.applications.task.delete',
   },

@@ -1,12 +1,14 @@
 import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Formik } from 'formik';
+import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Box, CircularProgress } from '@mui/material';
 
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
+import { useCanWriteIndexes } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
@@ -28,6 +30,18 @@ const CreateIndex = memo(() => {
   const goToToolkitsList = useCallback(() => {
     navigate(NavigationHelpers.buildRoute(RouteDefinitions.ToolkitsWithTab, { tab: tab ?? 'all' }));
   }, [navigate, tab]);
+
+  const canWriteIndexes = useCanWriteIndexes();
+  const permissionsLoaded = useSelector(state => state.user.permissions !== undefined);
+  const isReadOnly = permissionsLoaded && !canWriteIndexes;
+
+  useEffect(() => {
+    if (!isReadOnly) return;
+    toastError('You have read-only access to this index');
+    navigate(NavigationHelpers.buildRoute(RouteDefinitions.ToolkitDetail, { tab: tab ?? 'all', toolkitId }), {
+      replace: true,
+    });
+  }, [isReadOnly, navigate, tab, toastError, toolkitId]);
 
   const {
     data: publicToolkitData = emptyToolDetail,
@@ -57,7 +71,7 @@ const CreateIndex = memo(() => {
     if (shouldShowNotFoundPage) goToToolkitsList();
   }, [shouldShowNotFoundPage, goToToolkitsList]);
 
-  if (shouldShowNotFoundPage) return null;
+  if (shouldShowNotFoundPage || isReadOnly) return null;
 
   return (
     <Box sx={styles.wrapper}>

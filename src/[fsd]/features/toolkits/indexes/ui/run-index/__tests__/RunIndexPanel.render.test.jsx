@@ -41,6 +41,7 @@ const traceNewIndex = vi.hoisted(() => ({ current: null }));
 const chatIsRunning = vi.hoisted(() => ({ current: false }));
 const chatIsWaitingForTaskStart = vi.hoisted(() => ({ current: false }));
 const polling = vi.hoisted(() => ({ current: { startedTimeStamp: 0, fulfilledTimeStamp: 0 } }));
+const canWriteIndexes = vi.hoisted(() => ({ current: true }));
 const formik = vi.hoisted(() => ({ current: { values: {} } }));
 
 const stub = (testid, keys) =>
@@ -59,6 +60,7 @@ const footerStub = vi.fn(props => (
     data-props={JSON.stringify({
       isRunActive: props.isRunActive ?? null,
       reindexDisabled: props.reindexDisabled ?? null,
+      canWrite: props.canWrite ?? null,
       reindexTooltip: props.reindexTooltip ?? null,
     })}
     onClick={props.onReindex}
@@ -100,6 +102,7 @@ vi.mock('@/[fsd]/features/toolkits/indexes/api', () => ({
   useSaveIndexConfigurationMutation: () => [vi.fn(), { isLoading: false }],
 }));
 vi.mock('@/[fsd]/features/toolkits/indexes/lib/hooks', () => ({
+  useCanWriteIndexes: () => canWriteIndexes.current,
   useIndexesListPolling: () => polling.current,
 }));
 vi.mock('@/[fsd]/features/toolkits/lib/helpers', () => ({
@@ -229,6 +232,22 @@ afterEach(() => {
   polling.current = { startedTimeStamp: 0, fulfilledTimeStamp: 0 };
   deleteInFlight.current = false;
   formik.current = { values: {} };
+  canWriteIndexes.current = true;
+});
+
+describe('RunIndexPanel — the index write rights', () => {
+  it('offers the write actions to someone who may write indexes', () => {
+    renderPanel({ metadata: { collection: 'docs', state: 'completed', history: [] } });
+
+    expect(propsOf('footer').canWrite).toBe(true);
+  });
+
+  it('withholds the write actions from someone who may only read indexes', () => {
+    canWriteIndexes.current = false;
+    renderPanel({ metadata: { collection: 'docs', state: 'completed', history: [] } });
+
+    expect(propsOf('footer').canWrite).toBe(false);
+  });
 });
 
 describe('RunIndexPanel — the liveness flags reach the right consumers', () => {
