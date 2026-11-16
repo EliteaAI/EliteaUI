@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { useFormikContext } from 'formik';
 
 import { useSetRefetchDetails } from '@/[fsd]/entities/application-tab-bar/lib/hooks';
+import { AgentNestingHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useLazyApplicationDetailsQuery, useUpdateApplicationRelationMutation } from '@/api/applications';
 import FlowIcon from '@/assets/flow-icon.svg?react';
@@ -89,11 +90,6 @@ export const mapAssociationError = (rawError, entityName, opts = {}) => {
   return message;
 };
 
-export const wouldExceedAgentNestingDepth = (candidateSubtreeTiers, maxTiers, hostTier = 1) =>
-  typeof candidateSubtreeTiers === 'number' &&
-  typeof maxTiers === 'number' &&
-  hostTier + candidateSubtreeTiers > maxTiers;
-
 /**
  * Custom hook to handle association of agents and pipelines as "toolkits"
  */
@@ -145,7 +141,11 @@ export const useAgentPipelineAssociation = (applicationId, versionId) => {
       // Only enforce when the backend supplied both fields; otherwise defer entirely to the
       // backend (older payloads without the fields must not be spuriously blocked or allowed).
       const hostTier = 1; // the agent being edited is the top-level/root of its own chain
-      const wouldExceed = wouldExceedAgentNestingDepth(candidateSubtreeTiers, maxTiers, hostTier);
+      const wouldExceed = AgentNestingHelpers.wouldExceedAgentNestingDepth(
+        candidateSubtreeTiers,
+        maxTiers,
+        hostTier,
+      );
       if (wouldExceed) {
         // Route the pre-attach guard through the shared mapper so it carries the same friendly
         // phrasing as the backend rejection — this guard fires before the request is sent.

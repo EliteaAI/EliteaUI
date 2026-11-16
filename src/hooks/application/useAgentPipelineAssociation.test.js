@@ -9,7 +9,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
-import { mapAssociationError, wouldExceedAgentNestingDepth } from './useAgentPipelineAssociation';
+import { mapAssociationError } from './useAgentPipelineAssociation';
 
 // Mock transitive deps that pull in browser APIs or SVG loaders before importing the module
 vi.mock('@/common/utils', () => ({
@@ -173,17 +173,5 @@ describe('mapAssociationError', () => {
     const rawError = 'some unrelated backend failure';
     const result = mapAssociationError(rawError, 'AgentA', { action: 'status' });
     expect(result).toBe(rawError);
-  });
-});
-
-describe('wouldExceedAgentNestingDepth', () => {
-  it('accepts A -> B -> C and rejects a fourth agent tier', () => {
-    expect(wouldExceedAgentNestingDepth(2, 3)).toBe(false);
-    expect(wouldExceedAgentNestingDepth(3, 3)).toBe(true);
-  });
-
-  it('defers to the backend when depth metadata is absent', () => {
-    expect(wouldExceedAgentNestingDepth(undefined, 3)).toBe(false);
-    expect(wouldExceedAgentNestingDepth(3, undefined)).toBe(false);
   });
 });

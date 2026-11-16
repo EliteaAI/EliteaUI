@@ -1,3 +1,5 @@
+import { AgentNestingHelpers } from '@/[fsd]/shared/lib/helpers';
+
 import { getAttachmentRefName, isApplicationTool } from './pipelineToolUsage.helpers';
 
 export const DUPLICATE_NAME_REASON = name =>
@@ -74,9 +76,11 @@ export const DUPLICATE_APPLICATION_NAME_REASON = name =>
   `The pipeline already uses another agent or pipeline named "${name}". Nodes bind them by name, so rename one of them to use it.`;
 
 /**
- * Picker items for agents or pipelines; the pipeline being edited and swarm agents are left out.
+ * Picker items for agents or pipelines; the pipeline being edited is left out and swarm agents are disabled.
  * @param {object[]} params.attachedTools attached `application` tools of this kind
  * @param {object[]} params.allAttachedTools every attached `application` tool, agents and pipelines alike
+ * @param {number} [params.hostTier] tiers the edited entity consumes; the pipeline picker passes
+ *   PIPELINE_HOST_TIER, as a pipeline uses none
  */
 export const buildApplicationPickerItems = ({
   rows = [],
@@ -85,12 +89,15 @@ export const buildApplicationPickerItems = ({
   usedNames = new Set(),
   query = '',
   excludeId,
+  hostTier,
 }) => {
   const attachedIdByName = new Map(
     allAttachedTools.filter(isApplicationTool).map(tool => [tool.name, tool.settings?.application_id]),
   );
   const getDisabledReason = row => {
     if (row.has_interrupt) return INTERRUPT_REASON(row.name);
+    const agentReason = AgentNestingHelpers.getAgentDisabledReason(row, hostTier);
+    if (agentReason) return agentReason;
     const attachedId = attachedIdByName.get(row.name);
     return attachedId !== undefined && attachedId !== row.id
       ? DUPLICATE_APPLICATION_NAME_REASON(row.name)
@@ -115,7 +122,7 @@ export const buildApplicationPickerItems = ({
   const pinnedIds = new Set(pinned.map(item => item.id));
 
   const listed = rows
-    .filter(row => row.id !== excludeId && !row.has_swarm && !pinnedIds.has(row.id))
+    .filter(row => row.id !== excludeId && !pinnedIds.has(row.id))
     .map(row => ({
       key: `application:${row.id}`,
       id: row.id,
