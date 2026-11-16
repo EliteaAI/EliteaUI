@@ -7,7 +7,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 
 import getDesignTokens from '../src/MainTheme';
-import { ToastProvider } from '../src/components/ToastProvider';
+import { ToastProvider } from '../src/[fsd]/shared/ui/toast';
 import StorybookStore from './storybookStore';
 
 /** @type { import('@storybook/react-vite').Preview } */
