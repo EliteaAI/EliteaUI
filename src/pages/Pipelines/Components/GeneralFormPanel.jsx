@@ -50,11 +50,12 @@ const GeneralFormPanel = ({
   useEffect(() => {
     const handleEvent = () => {
       setCollapsed(false);
+      onCollapsed?.(false);
     };
 
     window.addEventListener(EXPAND_GENERAL_PANEL_EVENT, handleEvent);
     return () => window.removeEventListener(EXPAND_GENERAL_PANEL_EVENT, handleEvent);
-  }, [setCollapsed]);
+  }, [onCollapsed, setCollapsed]);
 
   return (
     <>
