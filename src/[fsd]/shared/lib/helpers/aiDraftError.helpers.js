@@ -26,9 +26,14 @@ const STATUS_TEXT = {
 };
 
 // Proxy error pages carry a support id; without it a 504 report is unactionable, and today the
-// id is only visible in the browser's network tab.
-const rayIdOf = body =>
-  typeof body === 'string' ? (body.match(/Ray ID:\s*([0-9a-f]{8,})/i)?.[1] ?? null) : null;
+// id is only visible in the browser's network tab. Cloudflare wraps the id in its own markup
+// ("Ray ID: <strong>abc...</strong>", sometimes with &nbsp;), so tags and entities are stripped
+// before matching -- reading the raw HTML drops the id and leaves a bare "HTTP 504".
+const rayIdOf = body => {
+  if (typeof body !== 'string') return null;
+  const text = body.replace(/<[^>]*>/g, ' ').replace(/&nbsp;|&#160;|&#xa0;/gi, ' ');
+  return text.match(/Ray ID:\s*([0-9a-f]{8,})/i)?.[1] ?? null;
+};
 
 const bodyMessageOf = body => {
   if (!body || typeof body !== 'object') return null;
