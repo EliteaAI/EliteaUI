@@ -25,6 +25,7 @@ import {
   computeInitialSelections,
   getRemoveId,
   normaliseCurrentTool,
+  skillSelectionKey,
   withoutAttachedSkills,
 } from '../helpers';
 import { useAttachSkills } from './useAttachSkills.hooks';
@@ -215,7 +216,7 @@ export const useAIEditPipelineModal = ({ isCreateMode, onClose }) => {
       );
       await formik.setFieldValue('version_details.tools', [...kept, ...added]);
 
-      const skills = (draftData.suggested_skills || []).filter(s => addSkillIds.has(s.id));
+      const skills = (draftData.suggested_skills || []).filter(s => addSkillIds.has(skillSelectionKey(s)));
       if (isCreateMode) {
         // A skill relation needs a version, which only exists after the first Save of a new pipeline
         await formik.setFieldValue('pending_skills', skills);

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { GenerateEntityModal } from '@/[fsd]/entities/generate-entity-with-ai';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
-import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
+import { conversationStartersHelpers, suggestionKey } from '@/[fsd]/features/agent/lib/helpers';
 import { useRefetchConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks';
 import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd]/features/skill';
 import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
@@ -264,13 +264,19 @@ const GenerateAgentModal = memo(props => {
       const entityId = result.id;
       const versionId = result.version_details?.id;
 
-      const selectedToolkits = (draftData.suggested_toolkits || []).filter(t => selectedToolkitIds.has(t.id));
-      const selectedMcps = (draftData.suggested_mcp || []).filter(m => selectedMcpIds.has(m.id));
-      const selectedAgents = (draftData.suggested_agents || []).filter(a => selectedAgentIds.has(a.id));
-      const selectedPipelines = (draftData.suggested_pipelines || []).filter(p =>
-        selectedPipelineIds.has(p.id),
+      const selectedToolkits = (draftData.suggested_toolkits || []).filter(t =>
+        selectedToolkitIds.has(suggestionKey(t)),
       );
-      const selectedSkills = (draftData.suggested_skills || []).filter(s => selectedSkillIds.has(s.id));
+      const selectedMcps = (draftData.suggested_mcp || []).filter(m => selectedMcpIds.has(suggestionKey(m)));
+      const selectedAgents = (draftData.suggested_agents || []).filter(a =>
+        selectedAgentIds.has(suggestionKey(a)),
+      );
+      const selectedPipelines = (draftData.suggested_pipelines || []).filter(p =>
+        selectedPipelineIds.has(suggestionKey(p)),
+      );
+      const selectedSkills = (draftData.suggested_skills || []).filter(s =>
+        selectedSkillIds.has(suggestionKey(s)),
+      );
 
       await associateToolkits(versionId, entityId, [...selectedToolkits, ...selectedMcps]);
       await associateApplications(versionId, entityId, [...selectedAgents, ...selectedPipelines]);

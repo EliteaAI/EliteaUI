@@ -2,6 +2,8 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { suggestionKey } from '@/[fsd]/features/agent/lib/helpers';
+
 import SuggestionItem from './SuggestionItem';
 
 const DEFAULT_MAX_SUGGESTIONS = 5;
@@ -27,9 +29,9 @@ const ResourceSuggestions = memo(props => {
       <Box sx={styles.list}>
         {cappedItems.map(item => (
           <SuggestionItem
-            key={item.id}
+            key={suggestionKey(item)}
             item={item}
-            checked={selectedIds.has(item.id)}
+            checked={selectedIds.has(suggestionKey(item))}
             onToggle={onToggle}
             entityType={entityType}
           />

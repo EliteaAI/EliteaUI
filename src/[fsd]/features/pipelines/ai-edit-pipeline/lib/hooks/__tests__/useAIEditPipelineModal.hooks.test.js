@@ -244,7 +244,7 @@ describe('useAIEditPipelineModal', () => {
       expect(result.current.addMcpIds.has(20)).toBe(true);
       expect(result.current.addAgentIds.has(30)).toBe(true);
       expect(result.current.addPipelineIds.has(40)).toBe(true);
-      expect(result.current.addSkillIds.has(50)).toBe(true);
+      expect(result.current.addSkillIds.has(':50')).toBe(true);
     });
 
     it('does not pre-select suggestions already in current tools', () => {
@@ -444,7 +444,7 @@ describe('useAIEditPipelineModal', () => {
 
     it('attaches ticked skills to the current version in edit mode', async () => {
       const { result } = render(false);
-      act(() => result.current.handleToggleAddSkill(50));
+      act(() => result.current.handleToggleAddSkill(':50'));
       await act(async () => {
         await result.current.handleSave({
           ...emptySuggestions,
@@ -455,9 +455,22 @@ describe('useAIEditPipelineModal', () => {
       expect(mockAttachSkills).toHaveBeenCalledWith([{ id: 50 }], 10);
     });
 
+    it('attaches only the ticked one of two same-id skills from different projects', async () => {
+      const { result } = render(false);
+      act(() => result.current.handleToggleAddSkill('1:50'));
+      await act(async () => {
+        await result.current.handleSave({
+          ...emptySuggestions,
+          pipeline_yaml: '',
+          suggested_skills: [{ id: 50 }, { id: 50, project_id: 1 }],
+        });
+      });
+      expect(mockAttachSkills).toHaveBeenCalledWith([{ id: 50, project_id: 1 }], 10);
+    });
+
     it('keeps ticked skills pending in create mode, until the pipeline exists', async () => {
       const { result } = render(true);
-      act(() => result.current.handleToggleAddSkill(50));
+      act(() => result.current.handleToggleAddSkill(':50'));
       await act(async () => {
         await result.current.handleSave({
           ...emptySuggestions,

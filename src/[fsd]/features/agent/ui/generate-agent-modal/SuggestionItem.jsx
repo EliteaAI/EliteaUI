@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react';
 
 import { Box, Typography, useTheme } from '@mui/material';
 
+import { suggestionKey } from '@/[fsd]/features/agent/lib/helpers';
 import BaseCheckbox from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
 import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { getToolIconByType } from '@/common/toolkitUtils';
@@ -25,13 +26,13 @@ const SuggestionItem = memo(props => {
     <Box
       data-testid={`generate-agent-resource-item-${entityType}-${item.id}`}
       sx={styles.item}
-      onClick={() => onToggle(item.id)}
+      onClick={() => onToggle(suggestionKey(item))}
     >
       <BaseCheckbox
         data-testid={`generate-agent-resource-checkbox-${entityType}-${item.id}`}
         size="small"
         checked={checked}
-        onChange={() => onToggle(item.id)}
+        onChange={() => onToggle(suggestionKey(item))}
         onClick={e => e.stopPropagation()}
         sx={styles.checkbox}
       />
