@@ -106,6 +106,24 @@ describe('buildApplicationPickerItems', () => {
     expect(items[0].disabledReason).toMatch(/limited to 3 tiers/);
   });
 
+  it('judges nesting against the host: a pipeline host takes a three-tier agent, an agent host does not', () => {
+    const rows = [
+      { id: 1, name: 'Orchestrator', agent_subtree_tiers: 3, max_agent_nesting_tiers: 3 },
+      { id: 2, name: 'Too deep', agent_subtree_tiers: 4, max_agent_nesting_tiers: 3 },
+    ];
+    const disabled = hostTier =>
+      buildApplicationPickerItems({ rows, hostTier }).map(item => [item.name, Boolean(item.disabledReason)]);
+
+    expect(disabled(0)).toEqual([
+      ['Orchestrator', false],
+      ['Too deep', true],
+    ]);
+    expect(disabled(undefined)).toEqual([
+      ['Orchestrator', true],
+      ['Too deep', true],
+    ]);
+  });
+
   it('disables pipelines with interrupts', () => {
     const [item] = buildApplicationPickerItems({ rows: [{ id: 9, name: 'Flow', has_interrupt: true }] });
     expect(item.disabledReason).toMatch(/interruptions/);

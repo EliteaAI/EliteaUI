@@ -79,6 +79,8 @@ export const DUPLICATE_APPLICATION_NAME_REASON = name =>
  * Picker items for agents or pipelines; the pipeline being edited is left out and swarm agents are disabled.
  * @param {object[]} params.attachedTools attached `application` tools of this kind
  * @param {object[]} params.allAttachedTools every attached `application` tool, agents and pipelines alike
+ * @param {number} [params.hostTier] tiers the edited entity consumes; the pipeline picker passes
+ *   PIPELINE_HOST_TIER, as a pipeline uses none
  */
 export const buildApplicationPickerItems = ({
   rows = [],
@@ -87,13 +89,14 @@ export const buildApplicationPickerItems = ({
   usedNames = new Set(),
   query = '',
   excludeId,
+  hostTier,
 }) => {
   const attachedIdByName = new Map(
     allAttachedTools.filter(isApplicationTool).map(tool => [tool.name, tool.settings?.application_id]),
   );
   const getDisabledReason = row => {
     if (row.has_interrupt) return INTERRUPT_REASON(row.name);
-    const agentReason = AgentNestingHelpers.getAgentDisabledReason(row);
+    const agentReason = AgentNestingHelpers.getAgentDisabledReason(row, hostTier);
     if (agentReason) return agentReason;
     const attachedId = attachedIdByName.get(row.name);
     return attachedId !== undefined && attachedId !== row.id
