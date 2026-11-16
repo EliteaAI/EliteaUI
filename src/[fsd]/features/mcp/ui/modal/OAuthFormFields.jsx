@@ -5,6 +5,8 @@ import { FormControlLabel, Typography } from '@mui/material';
 import { Checkbox, Input } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 
+import LockedScopeList from './LockedScopeList';
+
 const OAuthFormFields = memo(props => {
   const {
     clientId,
@@ -50,36 +52,36 @@ const OAuthFormFields = memo(props => {
           required={isSecretRequired}
         />
       )}
-      <Input.StyledInputEnhancer
-        autoComplete="off"
-        label={
-          <Typography
-            variant="bodyMedium"
-            color="text.primary"
-            sx={styles.labelWithIcon}
-          >
-            {scopeLocked ? 'Scope' : 'Scope (optional)'}
-            {scopeLocked && (
-              <InfoTooltip
-                infoTooltip="Set by your administrator for the default app."
-                sx={styles.infoIconWrapper}
-              />
-            )}
-            {!scopeLocked && availableScopes.length > 0 && (
-              <InfoTooltip
-                infoTooltip={`MCP server supports: ${availableScopes.join(', ')}.`}
-                sx={styles.infoIconWrapper}
-              />
-            )}
-          </Typography>
-        }
-        onChange={onScopeChange}
-        value={scope}
-        placeholder="Enter OAuth scopes (space-separated)"
-        enableAutoBlur={false}
-        disabled={scopeLocked}
-        data-testid="oauth-scope-input"
-      />
+      {scopeLocked ? (
+        <LockedScopeList
+          scope={scope}
+          tooltip="Set by your administrator or required by this credential."
+        />
+      ) : (
+        <Input.StyledInputEnhancer
+          autoComplete="off"
+          label={
+            <Typography
+              variant="bodyMedium"
+              color="text.primary"
+              sx={styles.labelWithIcon}
+            >
+              Scope (optional)
+              {availableScopes.length > 0 && (
+                <InfoTooltip
+                  infoTooltip={`MCP server supports: ${availableScopes.join(', ')}.`}
+                  sx={styles.infoIconWrapper}
+                />
+              )}
+            </Typography>
+          }
+          onChange={onScopeChange}
+          value={scope}
+          placeholder="Enter OAuth scopes (space-separated)"
+          enableAutoBlur={false}
+          data-testid="oauth-scope-input"
+        />
+      )}
       {showSaveCredentials && (
         <FormControlLabel
           control={

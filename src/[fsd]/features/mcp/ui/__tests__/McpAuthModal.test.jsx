@@ -8,7 +8,7 @@ import asMetadata6689 from '@/[fsd]/features/mcp/lib/helpers/__fixtures__/asMeta
 import { startMcpAuthFlow } from '@/[fsd]/features/mcp/lib/helpers/mcpAuthFlow.helpers';
 import McpAuthModal from '@/[fsd]/features/mcp/ui/modal/McpAuthModal';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 vi.hoisted(() => {
   const store = new Map();
@@ -183,6 +183,44 @@ describe('McpAuthModal client secret requirement (#6689)', () => {
   );
 });
 
+describe('McpAuthModal shows every scope of an admin app sign-in (#7449)', () => {
+  afterEach(() => cleanup());
+
+  it('lists each locked scope instead of a truncated disabled input', () => {
+    const scopes = [
+      'offline_access',
+      'User.ReadBasic.All',
+      'Chat.Read',
+      'Team.ReadBasic.All',
+      'Channel.ReadBasic.All',
+      'ChatMessage.Send',
+      'Chat.Create',
+      'ChannelMessage.Send',
+    ];
+    renderModal(findServerMetadata('Entra v2 tenant'), {
+      mcp_client_id: 'admin-client-id',
+      oauth_app_id: 'app-uuid',
+      credential_type: 'teams',
+      scopes,
+    });
+
+    const scopeList = screen.getByTestId('oauth-scope-list');
+    scopes.forEach(scope => expect(within(scopeList).getByText(scope)).toBeInTheDocument());
+    expect(screen.queryByTestId('oauth-scope-input')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Authorize' })).toBeEnabled();
+  });
+
+  it('keeps an editable scope input for a Custom app sign-in', () => {
+    renderModal(findServerMetadata('Entra v2 tenant'), {
+      mcp_client_id: 'own-client-id',
+      scopes: ['Mail.Read'],
+    });
+
+    expect(screen.queryByTestId('oauth-scope-list')).not.toBeInTheDocument();
+    expect(screen.getByDisplayValue('Mail.Read')).toBeEnabled();
+  });
+});
+
 describe('McpAuthModal for a Default app (admin OAuth app) sign-in (#7474)', () => {
   afterEach(() => cleanup());
 
@@ -258,8 +296,10 @@ describe('McpAuthModal for a Microsoft credential with its own Entra app (#7496)
     ).toBeInTheDocument();
     expect(screen.queryByText(/MCP/)).not.toBeInTheDocument();
     expect(screen.queryByText('Scope (optional)')).not.toBeInTheDocument();
-    const scopeInput = screen.getByDisplayValue(DATAVERSE_SCOPES.join(' '));
-    expect(scopeInput).toBeDisabled();
+    // Fixed scopes are listed, not put in a disabled input (#7449)
+    const scopeList = screen.getByTestId('oauth-scope-list');
+    DATAVERSE_SCOPES.forEach(scope => expect(within(scopeList).getByText(scope)).toBeInTheDocument());
+    expect(screen.queryByTestId('oauth-scope-input')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Authorize' })).toBeEnabled();
   });
 
