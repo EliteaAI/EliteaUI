@@ -38,6 +38,7 @@ vi.mock('@/[fsd]/entities/compare-versions', async () => {
     COMPARE_ENTITY_TYPES: constants.COMPARE_ENTITY_TYPES,
     extractAgentCompareData: helpers.extractAgentCompareData,
     extractAgentCompareDataForPublic: helpers.extractAgentCompareDataForPublic,
+    buildLocalNestedFetcher: helpers.buildLocalNestedFetcher,
     loadNestedAgents: helpers.loadNestedAgents,
     matchNestedAgents: helpers.matchNestedAgents,
     extractPipelineCompareData: helpers.extractPipelineCompareData,
@@ -292,6 +293,16 @@ describe('useCompareAgentVersions for agents with sub-agents', () => {
     expect(loaded.nestedRows[0].status).toBe('changed');
     expect(loaded.nestedRows[0].left.data.instructions).toBe('old');
     expect(loaded.nestedRows[0].right.data.instructions).toBe('new');
+  });
+
+  it('asks for the cached result of a sub-agent, so Compare does not refetch the tree', async () => {
+    const { result } = renderHook(() => useCompareAgentVersions({ projectId: 3, applicationId: 4 }));
+    await act(async () => {
+      await result.current.loadVersions(1, 2);
+    });
+    const childCalls = mocks.fetchVersion.mock.calls.filter(([args]) => args.applicationId === 50);
+    expect(childCalls).toHaveLength(2);
+    childCalls.forEach(([, preferCached]) => expect(preferCached).toBe(true));
   });
 
   it('keeps the comparison when a sub-agent cannot be read', async () => {

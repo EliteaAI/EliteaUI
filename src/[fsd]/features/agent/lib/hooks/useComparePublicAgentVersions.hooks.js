@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 
 import {
   COMPARE_MESSAGES,
+  buildLocalNestedFetcher,
   extractAgentCompareDataForPublic,
   extractPublicAgentCompareData,
   findPublicParentApplicationId,
@@ -82,17 +83,7 @@ export const useComparePublicAgentVersions = ({ projectId, applicationId, versio
       ]);
       const rightDetail = getPublicVersionDetail(publicResponse);
 
-      const fetchLocalChild = async tool => {
-        const detail = await fetchLocalVersion(
-          {
-            projectId,
-            applicationId: tool.settings.application_id,
-            versionId: tool.settings.application_version_id,
-          },
-          PREFER_CACHED_RESULT,
-        ).unwrap();
-        return { data: extractAgentCompareDataForPublic(detail), tools: detail.tools };
-      };
+      const fetchLocalChild = buildLocalNestedFetcher(fetchLocalVersion, projectId);
 
       // A sub-agent of the public version is a copy in the public project: it is read there, by its application.
       // The endpoint answers with the copy's newest version unless it is asked for one by name, so the version the

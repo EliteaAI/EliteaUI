@@ -29,6 +29,7 @@ vi.mock('@/[fsd]/entities/compare-versions', async () => {
   const constants = await import('@/[fsd]/entities/compare-versions/lib/constants/compareVersions.constants');
   return {
     COMPARE_MESSAGES: constants.COMPARE_MESSAGES,
+    buildLocalNestedFetcher: helpers.buildLocalNestedFetcher,
     resolveLinkedPublicVersionName: helpers.resolveLinkedPublicVersionName,
     extractAgentCompareDataForPublic: helpers.extractAgentCompareDataForPublic,
     extractPublicAgentCompareData: helpers.extractPublicAgentCompareData,

@@ -4,8 +4,8 @@ import { useDispatch } from 'react-redux';
 
 import {
   COMPARE_ENTITY_TYPES,
+  buildLocalNestedFetcher,
   extractAgentCompareData,
-  extractAgentCompareDataForPublic,
   extractPipelineCompareData,
   loadNestedAgents,
   matchNestedAgents,
@@ -84,16 +84,8 @@ export const useCompareAgentVersions = ({
       ]);
       versionDetailsRef.current = { left: leftDetail, right: rightDetail };
 
-      // A sub-agent is read at the version the compared version links to; one that cannot be read is kept as
-      // unavailable by the loader, so the rest still compares
-      const fetchChild = async tool => {
-        const detail = await fetchAgentVersion({
-          projectId,
-          applicationId: tool.settings.application_id,
-          versionId: tool.settings.application_version_id,
-        }).unwrap();
-        return { data: extractAgentCompareDataForPublic(detail), tools: detail.tools };
-      };
+      // A sub-agent that cannot be read is kept as unavailable by the loader, so the rest still compares
+      const fetchChild = buildLocalNestedFetcher(fetchAgentVersion, projectId);
       const [leftNested, rightNested] = await Promise.all([
         loadNestedAgents({ tools: leftDetail.tools, fetchChild }),
         loadNestedAgents({ tools: rightDetail.tools, fetchChild }),
