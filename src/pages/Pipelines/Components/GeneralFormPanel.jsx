@@ -2,13 +2,15 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { IconButton } from '@mui/material';
 
-import { EXPAND_GENERAL_PANEL_EVENT } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
+import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { useIsSmallWindow, useViewMode } from '@/[fsd]/shared/lib/hooks';
 import DoubleLeftIcon from '@/components/Icons/DoubleLeftIcon';
 import DoubleRightIcon from '@/components/Icons/DoubleRightIcon';
 import PipelineConfigurationForm from '@/pages/Applications/Components/Applications/PipelineConfigurationForm.jsx';
 import { ContentContainer } from '@/pages/Common/index.js';
 import { useTheme } from '@emotion/react';
+
+const { EXPAND_GENERAL_PANEL_EVENT } = FlowEditorConstants;
 
 const GeneralFormPanel = ({
   applicationId,
