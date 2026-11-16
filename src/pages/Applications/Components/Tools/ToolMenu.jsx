@@ -7,6 +7,7 @@ import { Box } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useTrackEvent } from '@/GA';
+import { PickerItemsHelpers } from '@/[fsd]/features/pipelines/tool-picker/lib/helpers';
 import { AnalyticConstants, DropdownConstants } from '@/[fsd]/shared/lib/constants';
 import {
   useDebounceValue,
@@ -382,6 +383,7 @@ const ToolMenu = memo(props => {
         agents_type: 'classic',
         sort_by: 'created_at',
         sort_order: 'desc',
+        include_nesting_tiers: true, // so rows too deep to add are disabled with the reason
         query: debouncedAgentSearch, // Server-side filtering based on search
       },
     },
@@ -410,6 +412,7 @@ const ToolMenu = memo(props => {
         agents_type: 'pipeline',
         sort_by: 'created_at',
         sort_order: 'desc',
+        include_nesting_tiers: true,
         query: debouncedPipelineSearch, // Server-side filtering based on search
       },
     },
@@ -433,12 +436,15 @@ const ToolMenu = memo(props => {
 
     return agentsData.rows
       .filter(agent => agent.id !== applicationId)
-      .filter(agent => !agent.has_swarm)
       .map(agent => ({
         key: `agent-${agent.id}`,
         label: agent.name,
         description: agent.description,
         data: agent, // Store the full agent data
+        // Swarm agents stay listed but can't be added
+        disabledReason: agent.has_swarm
+          ? PickerItemsHelpers.SWARM_REASON(agent.name)
+          : PickerItemsHelpers.getNestingDisabledReason(agent),
         icon: (
           <EntityIcon
             sx={styles.entityIcon}
@@ -478,6 +484,8 @@ const ToolMenu = memo(props => {
         description: pipeline.description,
         data: pipeline, // Store the full pipeline data
         has_interrupt: pipeline.has_interrupt,
+        // An interrupted pipeline keeps the dropdown's own interruption tooltip
+        disabledReason: pipeline.has_interrupt ? '' : PickerItemsHelpers.getNestingDisabledReason(pipeline),
         icon: (
           <EntityIcon
             sx={styles.entityIcon}

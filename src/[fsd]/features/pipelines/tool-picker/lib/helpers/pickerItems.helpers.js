@@ -6,6 +6,26 @@ export const DUPLICATE_NAME_REASON = name =>
 export const INTERRUPT_REASON = name =>
   `The ${name} pipeline can't be used as it contains interruptions in subgraphs, which are not allowed.`;
 
+export const SWARM_REASON = name =>
+  `The ${name} agent has Swarm Mode enabled and can't be added as a tool. Swarm agents are only supported in direct chat.`;
+
+export const NESTING_REASON = (name, maxTiers) =>
+  `The default version of ${name} nests agents too deeply: agent nesting is limited to ${maxTiers} tiers ` +
+  '(orchestrator → sub-orchestrator → leaf). Make a shallower version its default to add it.';
+
+/**
+ * Whether adding this list row would pass the nesting limit. Same rule as the add guard in
+ * useAgentPipelineAssociation (the edited entity is tier 1): rows without the backend's tier
+ * fields are never blocked here, the backend check on add stays authoritative.
+ * @returns {string} the reason, or '' when it fits
+ */
+export const getNestingDisabledReason = row => {
+  const { agent_subtree_tiers: subtreeTiers, max_agent_nesting_tiers: maxTiers } = row;
+  const exceeds =
+    typeof subtreeTiers === 'number' && typeof maxTiers === 'number' && 1 + subtreeTiers > maxTiers;
+  return exceeds ? NESTING_REASON(row.name, maxTiers) : '';
+};
+
 const matchesQuery = (item, query) => {
   const text = (query || '').trim().toLowerCase();
   if (!text) return true;
@@ -74,7 +94,7 @@ export const DUPLICATE_APPLICATION_NAME_REASON = name =>
   `The pipeline already uses another agent or pipeline named "${name}". Nodes bind them by name, so rename one of them to use it.`;
 
 /**
- * Picker items for agents or pipelines; the pipeline being edited and swarm agents are left out.
+ * Picker items for agents or pipelines; the pipeline being edited is left out and swarm agents are disabled.
  * @param {object[]} params.attachedTools attached `application` tools of this kind
  * @param {object[]} params.allAttachedTools every attached `application` tool, agents and pipelines alike
  */
@@ -91,6 +111,9 @@ export const buildApplicationPickerItems = ({
   );
   const getDisabledReason = row => {
     if (row.has_interrupt) return INTERRUPT_REASON(row.name);
+    if (row.has_swarm) return SWARM_REASON(row.name);
+    const nestingReason = getNestingDisabledReason(row);
+    if (nestingReason) return nestingReason;
     const attachedId = attachedIdByName.get(row.name);
     return attachedId !== undefined && attachedId !== row.id
       ? DUPLICATE_APPLICATION_NAME_REASON(row.name)
@@ -115,7 +138,7 @@ export const buildApplicationPickerItems = ({
   const pinnedIds = new Set(pinned.map(item => item.id));
 
   const listed = rows
-    .filter(row => row.id !== excludeId && !row.has_swarm && !pinnedIds.has(row.id))
+    .filter(row => row.id !== excludeId && !pinnedIds.has(row.id))
     .map(row => ({
       key: `application:${row.id}`,
       id: row.id,

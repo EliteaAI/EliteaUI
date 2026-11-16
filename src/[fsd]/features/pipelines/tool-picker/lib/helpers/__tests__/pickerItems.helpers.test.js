@@ -59,11 +59,10 @@ describe('buildApplicationPickerItems', () => {
     settings: { application_id: 7, application_version_id: 70 },
   };
 
-  it('pins agents the nodes use and leaves out this pipeline and swarm agents', () => {
+  it('pins agents the nodes use and leaves out this pipeline', () => {
     const items = buildApplicationPickerItems({
       rows: [
         { id: 5, name: 'This pipeline' },
-        { id: 6, name: 'Swarm', has_swarm: true },
         { id: 7, name: 'Reviewer' },
         { id: 8, name: 'Writer' },
       ],
@@ -75,6 +74,36 @@ describe('buildApplicationPickerItems', () => {
       ['Reviewer', true, true],
       ['Writer', false, false],
     ]);
+  });
+
+  it('keeps swarm agents in the list, disabled with the reason', () => {
+    const items = buildApplicationPickerItems({
+      rows: [
+        { id: 6, name: 'Swarm', has_swarm: true },
+        { id: 8, name: 'Writer' },
+      ],
+    });
+    expect(items.map(item => [item.name, Boolean(item.disabledReason)])).toEqual([
+      ['Swarm', true],
+      ['Writer', false],
+    ]);
+    expect(items[0].disabledReason).toMatch(/Swarm Mode/);
+  });
+
+  it('disables agents whose default version nests too deeply, with the reason', () => {
+    const items = buildApplicationPickerItems({
+      rows: [
+        { id: 1, name: 'Deep', agent_subtree_tiers: 3, max_agent_nesting_tiers: 3 },
+        { id: 2, name: 'Fits', agent_subtree_tiers: 2, max_agent_nesting_tiers: 3 },
+        { id: 3, name: 'Unknown' },
+      ],
+    });
+    expect(items.map(item => [item.name, Boolean(item.disabledReason)])).toEqual([
+      ['Deep', true],
+      ['Fits', false],
+      ['Unknown', false],
+    ]);
+    expect(items[0].disabledReason).toMatch(/limited to 3 tiers/);
   });
 
   it('disables pipelines with interrupts', () => {

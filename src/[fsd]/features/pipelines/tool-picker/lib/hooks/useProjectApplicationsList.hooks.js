@@ -10,7 +10,14 @@ export const useProjectApplicationsList = ({ agentsType, query = '', skip = fals
       projectId,
       page,
       pageSize: PICKER_PAGE_SIZE,
-      params: { agents_type: agentsType, sort_by: 'created_at', sort_order: 'desc', query },
+      params: {
+        agents_type: agentsType,
+        sort_by: 'created_at',
+        sort_order: 'desc',
+        query,
+        // so rows too deep to add can be disabled with the reason
+        include_nesting_tiers: true,
+      },
     }),
     pageSize: PICKER_PAGE_SIZE,
     query,
