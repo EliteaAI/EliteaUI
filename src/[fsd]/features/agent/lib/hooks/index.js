@@ -10,3 +10,4 @@ export {
   useRefetchConversationStartersLimit,
 } from './useConversationStartersLimit.hooks';
 export { useConversationStartersAddGate } from './useConversationStartersAddGate.hooks';
+export { useAttachSuggestedSkills } from './useAttachSuggestedSkills.hooks';

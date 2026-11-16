@@ -4,9 +4,11 @@ import { useNavigate } from 'react-router-dom';
 
 import { GenerateEntityModal } from '@/[fsd]/entities/generate-entity-with-ai';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
-import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
-import { useRefetchConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks';
-import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd]/features/skill';
+import { conversationStartersHelpers, suggestionKey } from '@/[fsd]/features/agent/lib/helpers';
+import {
+  useAttachSuggestedSkills,
+  useRefetchConversationStartersLimit,
+} from '@/[fsd]/features/agent/lib/hooks';
 import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { defaultModelForSurface, generateLLMSettings } from '@/[fsd]/shared/lib/utils';
@@ -39,9 +41,8 @@ const GenerateAgentModal = memo(props => {
   const refetchStartersLimit = useRefetchConversationStartersLimit();
   const [associateToolkit] = useToolkitAssociateMutation();
   const [updateApplicationRelation] = useUpdateApplicationRelationMutation();
-  const [updateSkillRelation] = useUpdateSkillRelationMutation();
   const [fetchApplicationDetails] = useLazyApplicationDetailsQuery();
-  const [fetchSkillDetails] = useLazySkillDetailsQuery();
+  const attachSkills = useAttachSuggestedSkills();
 
   const [generateDraft, { error: generateError, reset: resetGenerate }] = useGenerateAgentDraftMutation();
 
@@ -180,30 +181,6 @@ const GenerateAgentModal = memo(props => {
     [fetchApplicationDetails, updateApplicationRelation, projectId, toastWarning],
   );
 
-  const associateSkills = useCallback(
-    async (versionId, skills) => {
-      if (!versionId || !skills.length) return;
-      await Promise.allSettled(
-        skills.map(async skill => {
-          const skillProjectId = skill.project_id ?? projectId;
-          const { data: skillDetails } = await fetchSkillDetails({
-            projectId: skillProjectId,
-            skillId: skill.id,
-          });
-          if (!skillDetails?.version_details?.id) return;
-          return updateSkillRelation({
-            projectId: skillProjectId,
-            skillId: skill.id,
-            entity_version_id: versionId,
-            skill_version_id: skillDetails.version_details.id,
-            has_relation: true,
-          }).unwrap();
-        }),
-      );
-    },
-    [fetchSkillDetails, updateSkillRelation, projectId],
-  );
-
   const redirectToAgent = useCallback(
     (entityId, name) => {
       const pathname = `${RouteDefinitions.Applications}/${PrivateApplicationTabs[0]}/${entityId}`;
@@ -264,17 +241,23 @@ const GenerateAgentModal = memo(props => {
       const entityId = result.id;
       const versionId = result.version_details?.id;
 
-      const selectedToolkits = (draftData.suggested_toolkits || []).filter(t => selectedToolkitIds.has(t.id));
-      const selectedMcps = (draftData.suggested_mcp || []).filter(m => selectedMcpIds.has(m.id));
-      const selectedAgents = (draftData.suggested_agents || []).filter(a => selectedAgentIds.has(a.id));
-      const selectedPipelines = (draftData.suggested_pipelines || []).filter(p =>
-        selectedPipelineIds.has(p.id),
+      const selectedToolkits = (draftData.suggested_toolkits || []).filter(t =>
+        selectedToolkitIds.has(suggestionKey(t)),
       );
-      const selectedSkills = (draftData.suggested_skills || []).filter(s => selectedSkillIds.has(s.id));
+      const selectedMcps = (draftData.suggested_mcp || []).filter(m => selectedMcpIds.has(suggestionKey(m)));
+      const selectedAgents = (draftData.suggested_agents || []).filter(a =>
+        selectedAgentIds.has(suggestionKey(a)),
+      );
+      const selectedPipelines = (draftData.suggested_pipelines || []).filter(p =>
+        selectedPipelineIds.has(suggestionKey(p)),
+      );
+      const selectedSkills = (draftData.suggested_skills || []).filter(s =>
+        selectedSkillIds.has(suggestionKey(s)),
+      );
 
       await associateToolkits(versionId, entityId, [...selectedToolkits, ...selectedMcps]);
       await associateApplications(versionId, entityId, [...selectedAgents, ...selectedPipelines]);
-      await associateSkills(versionId, selectedSkills);
+      await attachSkills(selectedSkills, versionId);
 
       if (onAgentCreated) onAgentCreated(result);
       else redirectToAgent(entityId, result.name);
@@ -289,7 +272,7 @@ const GenerateAgentModal = memo(props => {
       refetchStartersLimit,
       associateToolkits,
       associateApplications,
-      associateSkills,
+      attachSkills,
       redirectToAgent,
       onAgentCreated,
       projectId,

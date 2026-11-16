@@ -6,7 +6,14 @@ import { matchDependencies } from '@/[fsd]/entities/compare-versions';
 import { EditEntityComparisonLayout, ToolItemCard } from '@/[fsd]/entities/edit-entity-with-ai';
 import BaseCheckbox from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
 
-import { getAddId, getRemoveId, normaliseCurrentTools, normaliseSuggestedTools } from '../lib/helpers';
+import {
+  getAddId,
+  getRemoveId,
+  normaliseCurrentTools,
+  normaliseSuggestedTools,
+  skillSelectionKey,
+  toolKey,
+} from '../lib/helpers';
 
 const PipelineToolsDiffStep = memo(props => {
   const {
@@ -31,7 +38,10 @@ const PipelineToolsDiffStep = memo(props => {
   const leftTools = useMemo(() => normaliseCurrentTools(currentTools), [currentTools]);
   const rightTools = useMemo(() => normaliseSuggestedTools(draftData), [draftData]);
 
-  const matchedRows = useMemo(() => matchDependencies(leftTools, rightTools), [leftTools, rightTools]);
+  const matchedRows = useMemo(
+    () => matchDependencies(leftTools, rightTools, toolKey),
+    [leftTools, rightTools],
+  );
 
   const noDiff = useMemo(
     () => matchedRows.length > 0 && matchedRows.every(row => row.left && row.right),
@@ -43,7 +53,7 @@ const PipelineToolsDiffStep = memo(props => {
     if (item.entityType === 'agent') return addAgentIds.has(item.id);
     if (item.entityType === 'pipeline') return addPipelineIds.has(item.id);
     if (item.entityType === 'mcp') return addMcpIds.has(item.id);
-    if (item.entityType === 'skill') return (addSkillIds ?? new Set()).has(item.id);
+    if (item.entityType === 'skill') return (addSkillIds ?? new Set()).has(skillSelectionKey(item));
     return addToolkitIds.has(item.id);
   };
 
@@ -52,7 +62,7 @@ const PipelineToolsDiffStep = memo(props => {
     if (item.entityType === 'agent') return onToggleAddAgent(getAddId(item));
     if (item.entityType === 'pipeline') return onToggleAddPipeline(getAddId(item));
     if (item.entityType === 'mcp') return onToggleAddMcp(getAddId(item));
-    if (item.entityType === 'skill') return onToggleAddSkill?.(getAddId(item));
+    if (item.entityType === 'skill') return onToggleAddSkill?.(skillSelectionKey(item));
     return onToggleAddToolkit(getAddId(item));
   };
 

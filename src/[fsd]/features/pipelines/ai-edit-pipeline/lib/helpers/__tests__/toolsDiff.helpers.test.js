@@ -8,7 +8,9 @@ import {
   normaliseCurrentTool,
   normaliseCurrentTools,
   normaliseSuggestedTools,
+  skillSelectionKey,
   toolKey,
+  withoutAttachedSkills,
 } from '../toolsDiff.helpers';
 
 describe('normaliseCurrentTool', () => {
@@ -129,8 +131,13 @@ describe('computeInitialSelections', () => {
 
   it('pre-selects all suggested skills', () => {
     const sel = computeInitialSelections(draftData, currentTools);
-    expect(sel.addSkillIds.has(50)).toBe(true);
-    expect(sel.addSkillIds.has(51)).toBe(true);
+    expect(sel.addSkillIds.has(':50')).toBe(true);
+    expect(sel.addSkillIds.has(':51')).toBe(true);
+  });
+
+  it('keeps an own skill and a catalog skill with the same id apart', () => {
+    const sel = computeInitialSelections({ suggested_skills: [{ id: 7 }, { id: 7, project_id: 1 }] }, []);
+    expect([...sel.addSkillIds]).toEqual([':7', '1:7']);
   });
 
   it('initialises removeToolRecordIds as empty', () => {
@@ -205,5 +212,37 @@ describe('computeSummaryTools', () => {
 
   it('returns an empty list when nothing is attached or selected', () => {
     expect(computeSummaryTools([], {}, emptySelections)).toEqual([]);
+  });
+});
+
+describe('withoutAttachedSkills', () => {
+  it('drops own skills the version already has and keeps catalog skills and new ones', () => {
+    const draft = { pipeline_yaml: 'x', suggested_skills: [{ id: 5 }, { id: 6 }, { id: 5, project_id: 1 }] };
+    expect(withoutAttachedSkills(draft, new Set([5]))).toEqual({
+      pipeline_yaml: 'x',
+      suggested_skills: [{ id: 6 }, { id: 5, project_id: 1 }],
+    });
+  });
+
+  it('handles a draft without skills', () => {
+    expect(withoutAttachedSkills({}, new Set([5])).suggested_skills).toEqual([]);
+  });
+});
+
+describe('same-id skills from two projects', () => {
+  const draft = {
+    suggested_skills: [
+      { id: 7, name: 'own' },
+      { id: 7, name: 'catalog', project_id: 1 },
+    ],
+  };
+
+  it('gives each its own row key', () => {
+    expect(normaliseSuggestedTools(draft).map(toolKey)).toEqual(['skill::7', 'skill:1:7']);
+  });
+
+  it('adds only the ticked one to the summary', () => {
+    const selections = { addSkillIds: new Set([skillSelectionKey({ id: 7, project_id: 1 })]) };
+    expect(computeSummaryTools([], draft, selections).map(t => t.name)).toEqual(['catalog']);
   });
 });

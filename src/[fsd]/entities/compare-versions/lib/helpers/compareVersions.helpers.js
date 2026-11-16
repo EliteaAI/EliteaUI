@@ -295,8 +295,9 @@ export const buildPipelineRunSettingsRows = runSettings => [
 export const getChangedRowKeys = (leftRows, rightRows) =>
   new Set(leftRows.filter((row, index) => row.value !== rightRows[index]?.value).map(row => row.key));
 
-export const matchDependencies = (leftTools, rightTools) => {
-  const key = d => d.matchKey ?? `${d.entityType}:${d.id}`;
+const dependencyKey = d => d.matchKey ?? `${d.entityType}:${d.id}`;
+
+export const matchDependencies = (leftTools, rightTools, key = dependencyKey) => {
   const allKeys = [...new Set([...leftTools.map(key), ...rightTools.map(key)])];
   return allKeys.map(k => ({
     key: k,

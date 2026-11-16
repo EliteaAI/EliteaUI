@@ -24,7 +24,10 @@ export const normaliseSuggestedTools = draftData => [
   ...(draftData?.suggested_skills || []).map(s => ({ ...s, entityType: 'skill' })),
 ];
 
-export const toolKey = t => `${t.entityType}:${t.id}`;
+export const skillSelectionKey = skill => `${skill.project_id ?? ''}:${skill.id}`;
+
+export const toolKey = t =>
+  t.entityType === 'skill' ? `skill:${skillSelectionKey(t)}` : `${t.entityType}:${t.id}`;
 
 export const getAddId = item => item.id;
 
@@ -35,7 +38,7 @@ const isSuggestionSelected = (item, selections) => {
   if (item.entityType === 'agent') return addAgentIds?.has(item.id);
   if (item.entityType === 'pipeline') return addPipelineIds?.has(item.id);
   if (item.entityType === 'mcp') return addMcpIds?.has(item.id);
-  if (item.entityType === 'skill') return addSkillIds?.has(item.id);
+  if (item.entityType === 'skill') return addSkillIds?.has(skillSelectionKey(item));
   return addToolkitIds?.has(item.id);
 };
 
@@ -52,6 +55,13 @@ export const computeSummaryTools = (currentTools, draftData, selections) => {
 
   return [...kept, ...added];
 };
+
+export const withoutAttachedSkills = (draftData, attachedSkillIds) => ({
+  ...draftData,
+  suggested_skills: (draftData?.suggested_skills || []).filter(
+    skill => skill.project_id || !attachedSkillIds.has(skill.id),
+  ),
+});
 
 /**
  * Compute the initial add-selection sets when a draft is first generated.
@@ -88,10 +98,7 @@ export const computeInitialSelections = (draftData, currentTools) => {
     addPipelineIds: new Set(
       (draftData?.suggested_pipelines || []).filter(p => !currentPipelineAppIds.has(p.id)).map(p => p.id),
     ),
-    // Skills are tracked separately — select any suggested skill not already attached.
-    // (current skills come from formik as a separate skills list, but we don't have that here;
-    // pre-select all suggested skills and let the user deselect.)
-    addSkillIds: new Set((draftData?.suggested_skills || []).map(s => s.id)),
+    addSkillIds: new Set((draftData?.suggested_skills || []).map(skillSelectionKey)),
     removeToolRecordIds: new Set(),
   };
 };

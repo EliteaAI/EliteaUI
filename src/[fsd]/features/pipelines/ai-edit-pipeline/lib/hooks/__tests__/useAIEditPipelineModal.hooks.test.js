@@ -7,6 +7,7 @@ import {
   buildApplicationAttachment,
   buildToolkitAttachment,
 } from '@/[fsd]/features/pipelines/tool-picker/lib/helpers/attachmentTool.helpers';
+import { useGetApplicationSkillsQuery } from '@/[fsd]/features/skill';
 import { useLazyApplicationDetailsQuery, useLazyToolkitsDetailsQuery } from '@/api';
 import { calculateNodesAndEdges } from '@/pages/Pipelines/useSavePipeline';
 import { act, renderHook } from '@testing-library/react';
@@ -55,6 +56,7 @@ vi.mock('@/[fsd]/features/pipelines/tool-picker/lib/helpers/attachmentTool.helpe
 }));
 
 vi.mock('../useAttachSkills.hooks', () => ({ useAttachSkills: vi.fn() }));
+vi.mock('@/[fsd]/features/skill', () => ({ useGetApplicationSkillsQuery: vi.fn() }));
 
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: vi.fn(() => 1),
@@ -121,6 +123,7 @@ beforeEach(() => {
   vi.mocked(useLazyApplicationDetailsQuery).mockReturnValue([vi.fn()]);
   vi.mocked(useLazyToolkitsDetailsQuery).mockReturnValue([vi.fn()]);
   vi.mocked(useAttachSkills).mockReturnValue(mockAttachSkills);
+  vi.mocked(useGetApplicationSkillsQuery).mockReturnValue({ data: undefined });
   useFormikContext.mockReturnValue({
     values: makeFormikValues(),
     setFieldValue: mockSetFieldValue,
@@ -241,7 +244,7 @@ describe('useAIEditPipelineModal', () => {
       expect(result.current.addMcpIds.has(20)).toBe(true);
       expect(result.current.addAgentIds.has(30)).toBe(true);
       expect(result.current.addPipelineIds.has(40)).toBe(true);
-      expect(result.current.addSkillIds.has(50)).toBe(true);
+      expect(result.current.addSkillIds.has(':50')).toBe(true);
     });
 
     it('does not pre-select suggestions already in current tools', () => {
@@ -279,7 +282,11 @@ describe('useAIEditPipelineModal', () => {
       act(() => {
         returned = result.current.handleDraftGenerated(draftData);
       });
-      expect(returned).toEqual({ name: 'n', pipeline_yaml: 'editor:{"nodes":[{"id":"a"}]}' });
+      expect(returned).toEqual({
+        name: 'n',
+        pipeline_yaml: 'editor:{"nodes":[{"id":"a"}]}',
+        suggested_skills: [],
+      });
     });
 
     it('keeps the draft YAML as it is when it does not parse to an object', async () => {
@@ -413,9 +420,31 @@ describe('useAIEditPipelineModal', () => {
       expect(toolsWritten()[0].name).toBe('kept');
     });
 
+    it('drops skills the version already has from an edit draft, keeping a same-id catalog skill', () => {
+      vi.mocked(useGetApplicationSkillsQuery).mockReturnValue({ data: { skills: [{ skill_id: 50 }] } });
+      const { result } = render(false);
+      let shown;
+      act(() => {
+        shown = result.current.handleDraftGenerated({
+          ...emptySuggestions,
+          suggested_skills: [{ id: 50 }, { id: 51 }, { id: 50, project_id: 1 }],
+        });
+      });
+      expect(shown.suggested_skills).toEqual([{ id: 51 }, { id: 50, project_id: 1 }]);
+      expect(useGetApplicationSkillsQuery).toHaveBeenCalledWith(
+        { projectId: 1, appVersionId: 10 },
+        { skip: false },
+      );
+    });
+
+    it('does not load version skills in create mode', () => {
+      render(true);
+      expect(useGetApplicationSkillsQuery).toHaveBeenCalledWith(expect.anything(), { skip: true });
+    });
+
     it('attaches ticked skills to the current version in edit mode', async () => {
       const { result } = render(false);
-      act(() => result.current.handleToggleAddSkill(50));
+      act(() => result.current.handleToggleAddSkill(':50'));
       await act(async () => {
         await result.current.handleSave({
           ...emptySuggestions,
@@ -426,9 +455,22 @@ describe('useAIEditPipelineModal', () => {
       expect(mockAttachSkills).toHaveBeenCalledWith([{ id: 50 }], 10);
     });
 
+    it('attaches only the ticked one of two same-id skills from different projects', async () => {
+      const { result } = render(false);
+      act(() => result.current.handleToggleAddSkill('1:50'));
+      await act(async () => {
+        await result.current.handleSave({
+          ...emptySuggestions,
+          pipeline_yaml: '',
+          suggested_skills: [{ id: 50 }, { id: 50, project_id: 1 }],
+        });
+      });
+      expect(mockAttachSkills).toHaveBeenCalledWith([{ id: 50, project_id: 1 }], 10);
+    });
+
     it('keeps ticked skills pending in create mode, until the pipeline exists', async () => {
       const { result } = render(true);
-      act(() => result.current.handleToggleAddSkill(50));
+      act(() => result.current.handleToggleAddSkill(':50'));
       await act(async () => {
         await result.current.handleSave({
           ...emptySuggestions,
