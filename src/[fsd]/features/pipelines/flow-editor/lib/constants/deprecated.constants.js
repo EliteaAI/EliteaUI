@@ -39,6 +39,11 @@ export const DeprecatedTips = {
   },
 };
 
+// Hiding or deprecating a node here only changes the node picker. The AI Builder, its pipeline
+// reference and the pipeline validator read their own list, so update it in the same change:
+//   elitea-sdk: elitea_sdk/runtime/pipeline/node_registry.yaml (set the node's `status`)
+//   then copy that file to elitea_core: utils/pipeline_authoring/node_registry.yaml
+// Otherwise the AI keeps building pipelines with the node you hid. See EliteaAI/elitea_issues#6388.
 export const DeprecatedNodes = [
   FlowEditorConstants.PipelineNodeTypes.Function,
   FlowEditorConstants.PipelineNodeTypes.Condition,
