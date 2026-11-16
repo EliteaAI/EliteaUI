@@ -3,7 +3,12 @@ import { eliteaApi } from '@/api/eliteaApi.js';
 import { PAGE_SIZE, PUBLIC_PROJECT_ID } from '@/common/constants';
 import { removeDuplicateObjects } from '@/common/utils.jsx';
 
-const { TAG_TYPE_PUBLIC_SKILLS, TAG_TYPE_PUBLIC_SKILL_DETAILS } = RtkTagsConstants;
+const {
+  TAG_TYPE_PUBLIC_SKILLS,
+  TAG_TYPE_PUBLIC_SKILL_DETAILS,
+  TAG_TYPE_SKILLS,
+  TAG_TYPE_APPLICATION_SKILLS,
+} = RtkTagsConstants;
 const TAG_TYPE_AGENTS_WITH_SKILL = 'TAG_TYPE_AGENTS_WITH_SKILL';
 
 const apiSlicePath = '/elitea_core';
@@ -128,7 +133,14 @@ const skillHubApi = eliteaApi
         }),
         invalidatesTags: (result, error, arg) => {
           if (error) return [];
-          return [{ type: TAG_TYPE_AGENTS_WITH_SKILL, id: arg?.publicSkillId }];
+          const attachedVersionIds = (result?.results || [])
+            .filter(row => row.ok)
+            .map(row => row.agent_version_id);
+          return [
+            { type: TAG_TYPE_AGENTS_WITH_SKILL, id: arg?.publicSkillId },
+            ...(attachedVersionIds.length ? [TAG_TYPE_SKILLS] : []),
+            ...attachedVersionIds.map(id => ({ type: TAG_TYPE_APPLICATION_SKILLS, id })),
+          ];
         },
       }),
     }),

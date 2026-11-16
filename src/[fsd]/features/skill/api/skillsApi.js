@@ -5,11 +5,14 @@ import { eliteaApi } from '@/api/eliteaApi.js';
 import { PAGE_SIZE } from '@/common/constants';
 import { convertToJson, removeDuplicateObjects } from '@/common/utils.jsx';
 
-const { TAG_TYPE_PUBLIC_SKILLS, TAG_TYPE_PUBLIC_SKILL_DETAILS } = RtkTagsConstants;
-const TAG_TYPE_SKILLS = 'TAG_TYPE_SKILLS';
+const {
+  TAG_TYPE_PUBLIC_SKILLS,
+  TAG_TYPE_PUBLIC_SKILL_DETAILS,
+  TAG_TYPE_SKILLS,
+  TAG_TYPE_APPLICATION_SKILLS,
+} = RtkTagsConstants;
 const TAG_TYPE_SKILL_DETAILS = 'TAG_TYPE_SKILL_DETAILS';
 const TAG_TYPE_TOTAL_SKILLS = 'TAG_TYPE_TOTAL_SKILLS';
-const TAG_TYPE_APPLICATION_SKILLS = 'TAG_TYPE_APPLICATION_SKILLS';
 const TAG_TYPE_SKILL_ICONS = 'TAG_TYPE_SKILL_ICONS';
 
 const SKILL_ENTITY_TYPE_AGENT = 'agent';

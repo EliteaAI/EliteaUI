@@ -5,8 +5,10 @@ import { useNavigate } from 'react-router-dom';
 import { GenerateEntityModal } from '@/[fsd]/entities/generate-entity-with-ai';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { conversationStartersHelpers, suggestionKey } from '@/[fsd]/features/agent/lib/helpers';
-import { useRefetchConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks';
-import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd]/features/skill';
+import {
+  useAttachSuggestedSkills,
+  useRefetchConversationStartersLimit,
+} from '@/[fsd]/features/agent/lib/hooks';
 import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { defaultModelForSurface, generateLLMSettings } from '@/[fsd]/shared/lib/utils';
@@ -39,9 +41,8 @@ const GenerateAgentModal = memo(props => {
   const refetchStartersLimit = useRefetchConversationStartersLimit();
   const [associateToolkit] = useToolkitAssociateMutation();
   const [updateApplicationRelation] = useUpdateApplicationRelationMutation();
-  const [updateSkillRelation] = useUpdateSkillRelationMutation();
   const [fetchApplicationDetails] = useLazyApplicationDetailsQuery();
-  const [fetchSkillDetails] = useLazySkillDetailsQuery();
+  const attachSkills = useAttachSuggestedSkills();
 
   const [generateDraft, { error: generateError, reset: resetGenerate }] = useGenerateAgentDraftMutation();
 
@@ -180,30 +181,6 @@ const GenerateAgentModal = memo(props => {
     [fetchApplicationDetails, updateApplicationRelation, projectId, toastWarning],
   );
 
-  const associateSkills = useCallback(
-    async (versionId, skills) => {
-      if (!versionId || !skills.length) return;
-      await Promise.allSettled(
-        skills.map(async skill => {
-          const skillProjectId = skill.project_id ?? projectId;
-          const { data: skillDetails } = await fetchSkillDetails({
-            projectId: skillProjectId,
-            skillId: skill.id,
-          });
-          if (!skillDetails?.version_details?.id) return;
-          return updateSkillRelation({
-            projectId: skillProjectId,
-            skillId: skill.id,
-            entity_version_id: versionId,
-            skill_version_id: skillDetails.version_details.id,
-            has_relation: true,
-          }).unwrap();
-        }),
-      );
-    },
-    [fetchSkillDetails, updateSkillRelation, projectId],
-  );
-
   const redirectToAgent = useCallback(
     (entityId, name) => {
       const pathname = `${RouteDefinitions.Applications}/${PrivateApplicationTabs[0]}/${entityId}`;
@@ -280,7 +257,7 @@ const GenerateAgentModal = memo(props => {
 
       await associateToolkits(versionId, entityId, [...selectedToolkits, ...selectedMcps]);
       await associateApplications(versionId, entityId, [...selectedAgents, ...selectedPipelines]);
-      await associateSkills(versionId, selectedSkills);
+      await attachSkills(selectedSkills, versionId);
 
       if (onAgentCreated) onAgentCreated(result);
       else redirectToAgent(entityId, result.name);
@@ -295,7 +272,7 @@ const GenerateAgentModal = memo(props => {
       refetchStartersLimit,
       associateToolkits,
       associateApplications,
-      associateSkills,
+      attachSkills,
       redirectToAgent,
       onAgentCreated,
       projectId,

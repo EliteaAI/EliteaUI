@@ -12,6 +12,7 @@ import {
 import { useGenerateAgentDraftMutation } from '@/[fsd]/features/agent/api';
 import { EDIT_STEP_KEYS } from '@/[fsd]/features/agent/lib/constants';
 import { AgentAIEditionStepsHelpers } from '@/[fsd]/features/agent/lib/helpers';
+import { useAttachSuggestedSkills } from '@/[fsd]/features/agent/lib/hooks';
 import {
   useGetApplicationSkillsQuery,
   useLazySkillDetailsQuery,
@@ -59,6 +60,7 @@ const AIEditAgentModal = memo(props => {
   const [updateSkillRelation] = useUpdateSkillRelationMutation();
   const [fetchApplicationDetails] = useLazyApplicationDetailsQuery();
   const [fetchSkillDetails] = useLazySkillDetailsQuery();
+  const attachSkills = useAttachSuggestedSkills();
 
   const [steps, setSteps] = useState([]);
   const [fieldApplyFlags, setFieldApplyFlags] = useState(DEFAULT_FIELD_FLAGS);
@@ -329,26 +331,7 @@ const AIEditAgentModal = memo(props => {
         );
       }
 
-      if (skillsToAdd.length > 0) {
-        await Promise.allSettled(
-          skillsToAdd.map(async skill => {
-            const { data: skillDetails } = await fetchSkillDetails({
-              projectId,
-              skillId: skill.id,
-            });
-
-            if (!skillDetails?.version_details?.id) return;
-
-            return updateSkillRelation({
-              projectId,
-              skillId: skill.id,
-              entity_version_id: versionId,
-              skill_version_id: skillDetails.version_details.id,
-              has_relation: true,
-            }).unwrap();
-          }),
-        );
-      }
+      if (skillsToAdd.length > 0) await attachSkills(skillsToAdd, versionId);
 
       if (skillsToRemove.length > 0) {
         await Promise.allSettled(
@@ -380,6 +363,7 @@ const AIEditAgentModal = memo(props => {
       updateSkillRelation,
       fetchApplicationDetails,
       fetchSkillDetails,
+      attachSkills,
       projectId,
       toastWarning,
     ],
