@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo } from 'react';
 
-import { Box, FormControlLabel, FormHelperText, Typography } from '@mui/material';
+import { Box, Chip, FormControlLabel, FormHelperText, Typography } from '@mui/material';
 
 import { ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { Checkbox } from '@/[fsd]/shared/ui';
@@ -8,6 +8,7 @@ import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 
 // Renders an array field whose schema lists its options (ui_component: 'checkbox_list').
 // At least one box stays ticked: the last ticked box can't be unticked.
+// An option flagged admin_consent in the schema is marked: only an Entra admin can grant it.
 const CheckboxListInput = memo(props => {
   const {
     k,
@@ -89,6 +90,16 @@ const CheckboxListInput = memo(props => {
                       testId={`toolkit-field-${k}-option-${option.value}-info`}
                     />
                   )}
+                  {option.admin_consent && (
+                    <Chip
+                      label="Admin consent"
+                      size="small"
+                      variant="outlined"
+                      color="warning"
+                      sx={styles.adminConsent}
+                      data-testid={`toolkit-field-${k}-option-${option.value}-admin-consent`}
+                    />
+                  )}
                 </Typography>
               }
             />
@@ -132,6 +143,10 @@ const checkboxListInputStyles = () => ({
   infoIcon: {
     display: 'inline-flex',
     marginLeft: '0.25rem',
+  },
+  adminConsent: {
+    marginLeft: '0.375rem',
+    height: '1.25rem',
   },
 });
 

@@ -53,6 +53,12 @@ const getSafeProvidedSettings = metadata => {
   // asks for a Client Secret and the proxy can't resolve the admin's client (#7474).
   if (providedSettings.oauth_app_id) safeSettings.oauth_app_id = providedSettings.oauth_app_id;
   if (providedSettings.credential_type) safeSettings.credential_type = providedSettings.credential_type;
+  // Scopes the credential schema marks as needing Entra admin consent: the sign-in window explains a refusal (#7542)
+  if (Array.isArray(providedSettings.admin_consent_scopes)) {
+    safeSettings.admin_consent_scopes = providedSettings.admin_consent_scopes.filter(
+      scope => typeof scope === 'string',
+    );
+  }
   return Object.keys(safeSettings).length ? safeSettings : null;
 };
 

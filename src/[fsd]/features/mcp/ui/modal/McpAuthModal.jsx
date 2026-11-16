@@ -13,6 +13,7 @@ import {
 
 import { McpAuthFlowConstants } from '@/[fsd]/features/mcp/lib/constants';
 import {
+  McpAdminConsentHelpers,
   McpAuthFlowHelpers,
   McpAuthHelpers,
   McpAuthWindowHelpers,
@@ -101,6 +102,11 @@ const McpAuthModal = memo(props => {
   const client_id = providedSettings?.mcp_client_id || formClientId;
   const client_secret = providedSettings?.mcp_client_secret || formClientSecret;
   const scopes = providedSettings?.scopes || formScopes;
+  // Requested scopes the credential schema marks as needing Entra admin consent (#7542)
+  const adminConsentScopes = useMemo(
+    () => McpAdminConsentHelpers.getAdminConsentScopes(providedSettings),
+    [providedSettings],
+  );
 
   const [clientId, setClientId] = useState('');
   const [clientSecret, setClientSecret] = useState('');
@@ -320,7 +326,11 @@ const McpAuthModal = memo(props => {
         }
       };
     } catch (error) {
-      setAuthError(error.message || 'Authorization failed');
+      setAuthError(
+        McpAdminConsentHelpers.adminConsentErrorMessage(error.message, adminConsentScopes) ||
+          error.message ||
+          'Authorization failed',
+      );
       McpAuthWindowHelpers.closeUnusedAuthPopup(authWindowRef.current);
       authWindowRef.current = null;
     } finally {
@@ -345,6 +355,7 @@ const McpAuthModal = memo(props => {
     saveCredentials,
     effectiveOAuthAppId,
     effectiveCredentialType,
+    adminConsentScopes,
   ]);
 
   const onClientIdChange = useCallback(e => {
@@ -461,6 +472,16 @@ const McpAuthModal = memo(props => {
             {MCP_OAUTH_ERRORS.AUTH_SERVER_METADATA_UNAVAILABLE}
           </Typography>
         )}
+        {adminConsentScopes.length > 0 && !authError && (
+          <Typography
+            component={'div'}
+            variant="bodySmall"
+            sx={styles.adminConsentNotice}
+            data-testid="mcp-auth-admin-consent-notice"
+          >
+            {McpAdminConsentHelpers.adminConsentNotice(adminConsentScopes)}
+          </Typography>
+        )}
         {authError && (
           <Typography
             component={'div'}
@@ -558,6 +579,10 @@ const getModalStyles = () => ({
   }),
   errorText: ({ palette }) => ({
     color: palette.status.rejected,
+    marginTop: '1rem',
+  }),
+  adminConsentNotice: ({ palette }) => ({
+    color: palette.status.warningText,
     marginTop: '1rem',
   }),
   successText: ({ palette }) => ({

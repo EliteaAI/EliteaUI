@@ -182,6 +182,29 @@ describe('toolkit authorization helpers', () => {
     });
   });
 
+  it('keeps the admin-consent scopes so the sign-in window can explain a refusal (#7542)', () => {
+    const action = buildMcpAuthorizationToolAction({
+      metadata: {
+        tool_run_id: 'call-teams-1',
+        tool_name: 'search_teams_messages',
+        toolkit_name: 'Teams',
+        toolkit_type: 'teams',
+        server_url: 'https://graph.microsoft.com',
+        authorization_servers: ['https://login.microsoftonline.com/organizations'],
+        resource_metadata: {
+          provided_settings: {
+            mcp_client_id: 'admin-client-id',
+            scopes: ['offline_access', 'ChannelMessage.Read.All'],
+            admin_consent_scopes: ['ChannelMessage.Read.All', 42],
+          },
+        },
+      },
+      createdAt: '2026-11-16T12:00:00Z',
+    });
+
+    expect(action.toolMeta.provided_settings.admin_consent_scopes).toEqual(['ChannelMessage.Read.All']);
+  });
+
   it('keeps direct cards flat and groups delegated authorization by full origin path', () => {
     const direct = buildMcpAuthorizationToolAction({
       metadata: {

@@ -128,3 +128,21 @@ describe('CheckboxListInput', () => {
     expect(container.querySelector('p')).toBeNull();
   });
 });
+
+describe('CheckboxListInput admin consent marker (#7542)', () => {
+  afterEach(() => cleanup());
+
+  it('marks only the options the schema flags as admin consent', () => {
+    renderInput({
+      options: [...OPTIONS, { value: 'Mail.Read.All', label: 'Mail.Read.All', admin_consent: true }],
+      value: ['Mail.Read'],
+    });
+
+    expect(screen.getByTestId('toolkit-field-scopes-option-Mail.Read.All-admin-consent')).toHaveTextContent(
+      'Admin consent',
+    );
+    expect(
+      screen.queryByTestId('toolkit-field-scopes-option-Mail.Read-admin-consent'),
+    ).not.toBeInTheDocument();
+  });
+});

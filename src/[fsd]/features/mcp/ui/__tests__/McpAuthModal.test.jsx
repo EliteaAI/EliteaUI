@@ -439,3 +439,53 @@ describe('McpAuthModal passes the protected resource to the OAuth flow (#6688)',
     expect(startMcpAuthFlow.mock.calls[0][0].resourceMetadata.resource).toBe('https://mcp.example.com/mcp');
   });
 });
+
+describe('McpAuthModal explains admin-consent scopes (#7542)', () => {
+  const consentSettings = {
+    mcp_client_id: 'admin-client-id',
+    oauth_app_id: 'app-uuid',
+    credential_type: 'teams',
+    scopes: ['offline_access', 'Chat.Read', 'ChannelMessage.Read.All'],
+    admin_consent_scopes: ['ChannelMessage.Read.All'],
+  };
+
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+  });
+
+  it('notes before sign-in which scopes need admin consent', () => {
+    renderModal(findServerMetadata('Entra v2 tenant'), consentSettings);
+
+    expect(screen.getByTestId('mcp-auth-admin-consent-notice')).toHaveTextContent(
+      'ChannelMessage.Read.All needs admin consent in your Entra tenant.',
+    );
+  });
+
+  it('shows no notice when no requested scope needs admin consent', () => {
+    renderModal(findServerMetadata('Entra v2 tenant'), { ...consentSettings, admin_consent_scopes: [] });
+
+    expect(screen.queryByTestId('mcp-auth-admin-consent-notice')).not.toBeInTheDocument();
+  });
+
+  it('turns a consent refusal into the admin-consent message', async () => {
+    vi.spyOn(window, 'open').mockReturnValue({
+      closed: false,
+      close: vi.fn(),
+      location: { href: 'about:blank' },
+    });
+    startMcpAuthFlow.mockRejectedValue(new Error('AADSTS65001: The user or administrator has not consented'));
+    renderModal(findServerMetadata('Entra v2 tenant'), consentSettings);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Authorize' }));
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          'ChannelMessage.Read.All needs admin consent in your Entra tenant. Ask your Entra admin to grant it, or untick it in the credential.',
+        ),
+      ).toBeInTheDocument(),
+    );
+    expect(screen.queryByTestId('mcp-auth-admin-consent-notice')).not.toBeInTheDocument();
+  });
+});
