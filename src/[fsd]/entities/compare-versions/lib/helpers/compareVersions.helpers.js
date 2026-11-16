@@ -2,6 +2,8 @@ import { buildVersionOption, formatVersionMeta } from '@/[fsd]/entities/version'
 
 export { formatVersionMeta };
 
+const PREFER_CACHED_RESULT = true;
+
 const resolveToolEntityType = tool => {
   if (tool.type !== 'application') return tool.entity_type ?? 'toolkit';
   if (tool.agent_type === 'pipeline') return 'pipeline';
@@ -220,6 +222,25 @@ export const resolveLinkedPublicVersionName = (response, linkedVersionId) => {
   if (!linked?.name) return null;
   const served = response?.version_details;
   return String(served?.id) === String(linked.id) ? null : linked.name;
+};
+
+/**
+ * The `fetchChild` of `loadNestedAgents` for the sub-agents of this project: each one is read at the version the
+ * linking tool names. A sub-agent is only read, so a result already in the cache is used instead of asking again.
+ *
+ * @param {Function} fetchVersion the lazy `getApplicationVersionDetail` trigger
+ * @param {number|string} projectId the project the sub-agents live in
+ */
+export const buildLocalNestedFetcher = (fetchVersion, projectId) => async tool => {
+  const detail = await fetchVersion(
+    {
+      projectId,
+      applicationId: tool.settings.application_id,
+      versionId: tool.settings.application_version_id,
+    },
+    PREFER_CACHED_RESULT,
+  ).unwrap();
+  return { data: extractAgentCompareDataForPublic(detail), tools: detail.tools };
 };
 
 /** The tools of a version that are sub-agents or pipelines, with the ids needed to load them. */

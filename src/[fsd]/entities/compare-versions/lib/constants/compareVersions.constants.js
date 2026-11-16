@@ -2,6 +2,8 @@ export const AGENT_COMPARE_STEPS = [
   { key: 'instructions', label: 'Instructions' },
   { key: 'user-interaction', label: 'User Interaction' },
   { key: 'tools-skills', label: 'Tools & Skills' },
+  // Shown only when either version has sub-agents: the agents and pipelines attached as tools, and theirs in turn
+  { key: 'sub-agents', label: 'Sub-agents' },
 ];
 
 // Comparing with a public version: its attached skills are not compared, so the last step is only about tools
@@ -78,6 +80,7 @@ export const COMPARE_MESSAGES = {
   publicSkillsNote: 'Attached skills are not compared.',
   nestedIntro:
     'Sub-agents are compared by name. The public copies of sub-agents are not listed in the catalog, so they are loaded here.',
+  nestedIntroVersions: 'Sub-agents are compared by name, each at the version the compared versions link to.',
   nestedNone: 'Neither version has sub-agents.',
   nestedUnavailable: 'Could not be loaded.',
   nestedNotPresent: 'Not present on this side.',
@@ -91,5 +94,12 @@ export const COMPARE_MESSAGES = {
     changed: 'Changed',
     'only-left': 'Only in your version',
     'only-right': 'Only in the public version',
+  },
+  // Comparing two versions of the same agent
+  nestedStatusVersions: {
+    same: 'No differences',
+    changed: 'Changed',
+    'only-left': 'Only in the open version',
+    'only-right': 'Only in the compared version',
   },
 };

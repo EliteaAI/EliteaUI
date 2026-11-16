@@ -37,6 +37,10 @@ vi.mock('@/[fsd]/entities/compare-versions', async () => {
   return {
     COMPARE_ENTITY_TYPES: constants.COMPARE_ENTITY_TYPES,
     extractAgentCompareData: helpers.extractAgentCompareData,
+    extractAgentCompareDataForPublic: helpers.extractAgentCompareDataForPublic,
+    buildLocalNestedFetcher: helpers.buildLocalNestedFetcher,
+    loadNestedAgents: helpers.loadNestedAgents,
+    matchNestedAgents: helpers.matchNestedAgents,
     extractPipelineCompareData: helpers.extractPipelineCompareData,
   };
 });
@@ -248,5 +252,79 @@ describe('useCompareAgentVersions for pipelines', () => {
       'applicationDetails',
       'getApplicationVersionDetail',
     ]);
+  });
+});
+
+describe('useCompareAgentVersions for agents with sub-agents', () => {
+  const child = (versionId, instructions) => ({
+    id: versionId,
+    name: `child-v${versionId}`,
+    instructions,
+    welcome_message: '',
+    conversation_starters: [],
+    tools: [],
+  });
+  const link = versionId => ({
+    type: 'application',
+    name: 'Helper',
+    agent_type: 'classic',
+    settings: { application_id: 50, application_version_id: versionId },
+  });
+  const AGENT_LEFT = { ...LEFT, id: 1, tools: [link(11)] };
+  const AGENT_RIGHT = { ...LEFT, id: 2, tools: [link(12)] };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.fetchSkills.mockImplementation(() => unwrapping({ skills: [] }));
+    mocks.fetchVersion.mockImplementation(({ applicationId, versionId }) => {
+      if (applicationId === 50) return unwrapping(child(versionId, versionId === 11 ? 'old' : 'new'));
+      return unwrapping(versionId === 1 ? AGENT_LEFT : AGENT_RIGHT);
+    });
+  });
+  afterEach(() => cleanup());
+
+  it('loads the sub-agent each version links to and pairs them by name', async () => {
+    const { result } = renderHook(() => useCompareAgentVersions({ projectId: 3, applicationId: 4 }));
+    let loaded;
+    await act(async () => {
+      loaded = await result.current.loadVersions(1, 2);
+    });
+    expect(loaded.nestedRows).toHaveLength(1);
+    expect(loaded.nestedRows[0].status).toBe('changed');
+    expect(loaded.nestedRows[0].left.data.instructions).toBe('old');
+    expect(loaded.nestedRows[0].right.data.instructions).toBe('new');
+  });
+
+  it('asks for the cached result of a sub-agent, so Compare does not refetch the tree', async () => {
+    const { result } = renderHook(() => useCompareAgentVersions({ projectId: 3, applicationId: 4 }));
+    await act(async () => {
+      await result.current.loadVersions(1, 2);
+    });
+    const childCalls = mocks.fetchVersion.mock.calls.filter(([args]) => args.applicationId === 50);
+    expect(childCalls).toHaveLength(2);
+    childCalls.forEach(([, preferCached]) => expect(preferCached).toBe(true));
+  });
+
+  it('keeps the comparison when a sub-agent cannot be read', async () => {
+    mocks.fetchVersion.mockImplementation(({ applicationId, versionId }) => {
+      if (applicationId === 50) return unwrapping(new Error('gone'));
+      return unwrapping(versionId === 1 ? AGENT_LEFT : AGENT_RIGHT);
+    });
+    const { result } = renderHook(() => useCompareAgentVersions({ projectId: 3, applicationId: 4 }));
+    let loaded;
+    await act(async () => {
+      loaded = await result.current.loadVersions(1, 2);
+    });
+    expect(loaded.nestedRows[0].left.unavailable).toBe(true);
+    expect(loaded.nestedRows[0].status).toBe('changed');
+  });
+
+  it('does not load sub-agents for a pipeline', async () => {
+    const { result } = renderPipelineHook();
+    let loaded;
+    await act(async () => {
+      loaded = await result.current.loadVersions(1, 2);
+    });
+    expect(loaded.nestedRows).toBeUndefined();
   });
 });

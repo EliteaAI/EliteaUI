@@ -56,13 +56,14 @@ const entry = (name, overrides = {}) => ({
   ...overrides,
 });
 
-const renderStep = (left, right) =>
+const renderStep = (left, right, mode) =>
   render(
     <ThemeProvider theme={theme}>
       <CompareNestedAgentsStep
         leftVersion={{ name: 'mine' }}
         rightVersion={{ name: 'public' }}
         nestedRows={matchNestedAgents(left, right)}
+        mode={mode}
       />
     </ThemeProvider>,
   );
@@ -101,6 +102,17 @@ describe('CompareNestedAgentsStep', () => {
     expect(screen.getByTestId('compare-nested-status-agent:Added')).toHaveTextContent(
       'Only in the public version',
     );
+  });
+
+  it('words the labels for two versions of the same agent, not for a public version', () => {
+    renderStep([entry('Mine')], [entry('Added')], 'versions');
+    expect(screen.getByTestId('compare-nested-status-agent:Mine')).toHaveTextContent(
+      'Only in the open version',
+    );
+    expect(screen.getByTestId('compare-nested-status-agent:Added')).toHaveTextContent(
+      'Only in the compared version',
+    );
+    expect(screen.queryByText(/public version/)).not.toBeInTheDocument();
   });
 
   it('keeps a sub-agent closed until it is opened', () => {

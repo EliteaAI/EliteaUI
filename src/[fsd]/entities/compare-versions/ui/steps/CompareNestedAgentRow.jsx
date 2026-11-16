@@ -6,7 +6,7 @@ import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
 
-import { COMPARE_MESSAGES } from '../../lib/constants/compareVersions.constants';
+import { COMPARE_MESSAGES, COMPARE_MODES } from '../../lib/constants/compareVersions.constants';
 import { NESTED_STATUS } from '../../lib/helpers/compareVersions.helpers';
 import CompareNestedField from './CompareNestedField';
 import CompareNestedTools from './CompareNestedTools';
@@ -17,7 +17,7 @@ const joinLines = list => (Array.isArray(list) ? list.filter(Boolean).join('\n')
 
 // A sub-agent of the compared versions, with what differs in it and the sub-agents below it
 const CompareNestedAgentRow = memo(props => {
-  const { row, depth = 0 } = props;
+  const { row, depth = 0, mode = COMPARE_MODES.public } = props;
   const [expanded, setExpanded] = useState(false);
   const styles = compareNestedAgentRowStyles;
 
@@ -26,7 +26,9 @@ const CompareNestedAgentRow = memo(props => {
   const leftData = row.left?.data ?? {};
   const rightData = row.right?.data ?? {};
   const isUnavailable = Boolean(row.left?.unavailable || row.right?.unavailable);
-  const statusLabel = COMPARE_MESSAGES.nestedStatus[row.status] ?? row.status;
+  const statusLabels =
+    mode === COMPARE_MODES.versions ? COMPARE_MESSAGES.nestedStatusVersions : COMPARE_MESSAGES.nestedStatus;
+  const statusLabel = statusLabels[row.status] ?? row.status;
   const isDifferent = row.status !== NESTED_STATUS.same;
   const indent = Math.min(depth, MAX_INDENT_LEVELS) * 1.25;
 
@@ -138,6 +140,7 @@ const CompareNestedAgentRow = memo(props => {
           key={child.key}
           row={child}
           depth={depth + 1}
+          mode={mode}
         />
       ))}
     </Box>
