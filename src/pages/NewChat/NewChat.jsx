@@ -178,7 +178,8 @@ const NewChat = props => {
     [sideBarCollapsed, windowWidth],
   );
 
-  const rightPanelWidth = 276;
+  // The 248px Participants panel of the design plus the column's 24px and 16px paddings
+  const rightPanelWidth = 288;
 
   const { clearLocalActiveParticipant, getLocalActiveParticipant, setLocalActiveParticipant } =
     useLocalActiveParticipant();
@@ -1287,6 +1288,7 @@ const NewChat = props => {
         collapsed: collapsedParticipants,
         rightPanelWidth,
         activeConversation,
+        onAccessSaved: handleRestrictAccessSuccess,
         editingToolkit,
         onParticipantsCollapsed,
         activeParticipant,
@@ -1304,6 +1306,7 @@ const NewChat = props => {
       activeConversation,
       collapsedParticipants,
       editingToolkit,
+      handleRestrictAccessSuccess,
       rightPanelWidth,
       selectedManager,
       newConversationSelectedManager,
