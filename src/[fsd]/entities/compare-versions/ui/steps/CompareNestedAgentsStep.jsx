@@ -2,14 +2,14 @@ import { memo, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { COMPARE_MESSAGES } from '../../lib/constants/compareVersions.constants';
+import { COMPARE_MESSAGES, COMPARE_MODES } from '../../lib/constants/compareVersions.constants';
 import { countChangedNestedAgents } from '../../lib/helpers/compareVersions.helpers';
 import CompareVersionHeader from '../CompareVersionHeader';
 import CompareNestedAgentRow from './CompareNestedAgentRow';
 
 // The sub-agents of the two compared versions and theirs in turn, each with what differs in it
 const CompareNestedAgentsStep = memo(props => {
-  const { leftVersion, rightVersion, nestedRows = [] } = props;
+  const { leftVersion, rightVersion, nestedRows = [], mode = COMPARE_MODES.public } = props;
   const styles = compareNestedAgentsStepStyles;
 
   const changedCount = useMemo(() => countChangedNestedAgents(nestedRows), [nestedRows]);
@@ -25,7 +25,9 @@ const CompareNestedAgentsStep = memo(props => {
           variant="bodySmall"
           color="text.secondary"
         >
-          {COMPARE_MESSAGES.nestedIntro}
+          {mode === COMPARE_MODES.versions
+            ? COMPARE_MESSAGES.nestedIntroVersions
+            : COMPARE_MESSAGES.nestedIntro}
         </Typography>
         {nestedRows.length === 0 ? (
           <Typography
@@ -51,6 +53,7 @@ const CompareNestedAgentsStep = memo(props => {
               <CompareNestedAgentRow
                 key={row.key}
                 row={row}
+                mode={mode}
               />
             ))}
           </>

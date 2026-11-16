@@ -5,7 +5,10 @@ import { useDispatch } from 'react-redux';
 import {
   COMPARE_ENTITY_TYPES,
   extractAgentCompareData,
+  extractAgentCompareDataForPublic,
   extractPipelineCompareData,
+  loadNestedAgents,
+  matchNestedAgents,
 } from '@/[fsd]/entities/compare-versions';
 import { rebuildPipelineSettingsFromYaml } from '@/[fsd]/features/pipelines/lib/helpers/pipelineCanvasSync.helpers';
 import { useLazyGetApplicationSkillsQuery } from '@/[fsd]/features/skill/api';
@@ -80,7 +83,24 @@ export const useCompareAgentVersions = ({
         fetchApplicationSkills({ projectId, appVersionId: rightId }).unwrap(),
       ]);
       versionDetailsRef.current = { left: leftDetail, right: rightDetail };
+
+      // A sub-agent is read at the version the compared version links to; one that cannot be read is kept as
+      // unavailable by the loader, so the rest still compares
+      const fetchChild = async tool => {
+        const detail = await fetchAgentVersion({
+          projectId,
+          applicationId: tool.settings.application_id,
+          versionId: tool.settings.application_version_id,
+        }).unwrap();
+        return { data: extractAgentCompareDataForPublic(detail), tools: detail.tools };
+      };
+      const [leftNested, rightNested] = await Promise.all([
+        loadNestedAgents({ tools: leftDetail.tools, fetchChild }),
+        loadNestedAgents({ tools: rightDetail.tools, fetchChild }),
+      ]);
+
       return {
+        nestedRows: matchNestedAgents(leftNested, rightNested),
         leftData: extractAgentCompareData({ ...leftDetail, skills: leftSkillsResult?.skills ?? [] }),
         rightData: extractAgentCompareData({ ...rightDetail, skills: rightSkillsResult?.skills ?? [] }),
         leftVersionMeta: pickMeta(leftDetail),

@@ -354,6 +354,31 @@ describe('CompareVersionsModal comparing with a public version', () => {
     expect(screen.getByTestId('stub-user-interaction')).toHaveAttribute('data-read-only', 'true');
   });
 
+  it('adds a Sub-agents step to the two version comparison of an agent, only when there are sub-agents', async () => {
+    renderModal({
+      entityType: 'agent',
+      onLoadVersions: vi.fn().mockResolvedValue({ ...loaded, nestedRows: [{ key: 'agent:Helper' }] }),
+    });
+    await openWizard();
+    expect(stepLabels()).toEqual([
+      'Step 1: Instructions',
+      'Step 2: User Interaction',
+      'Step 3: Tools & Skills',
+      'Step 4: Sub-agents',
+    ]);
+    fireEvent.click(screen.getByTestId('compare-step-sub-agents'));
+    expect(screen.getByTestId('stub-sub-agents')).toHaveAttribute('data-nested-rows', '1');
+    cleanup();
+
+    renderModal({ entityType: 'agent' });
+    await openWizard();
+    expect(stepLabels()).toEqual([
+      'Step 1: Instructions',
+      'Step 2: User Interaction',
+      'Step 3: Tools & Skills',
+    ]);
+  });
+
   it('keeps the two version comparison editable', async () => {
     renderModal({ entityType: 'agent' });
     await openWizard();

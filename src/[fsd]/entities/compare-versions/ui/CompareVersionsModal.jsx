@@ -83,13 +83,15 @@ const CompareVersionsModal = memo(props => {
   const [discardTarget, setDiscardTarget] = useState(null);
   // The schedule Open schedule asks for while the discard confirm is shown: { scheduleId, versionId }
   const [pendingSchedule, setPendingSchedule] = useState(null);
-  // Public mode: the sub-agents of both versions, and theirs in turn, paired and ready to show
+  // The sub-agents of both versions, and theirs in turn, paired and ready to show (agents only)
   const [nestedRows, setNestedRows] = useState([]);
 
   const steps = useMemo(() => {
-    if (!isPublic) return COMPARE_STEPS_BY_ENTITY[entityType] ?? SKILL_COMPARE_STEPS;
+    const baseSteps = isPublic
+      ? PUBLIC_AGENT_COMPARE_STEPS
+      : (COMPARE_STEPS_BY_ENTITY[entityType] ?? SKILL_COMPARE_STEPS);
     // The sub-agents step is only worth a click when either version has sub-agents
-    return PUBLIC_AGENT_COMPARE_STEPS.filter(step => step.key !== 'sub-agents' || nestedRows.length > 0);
+    return baseSteps.filter(step => step.key !== 'sub-agents' || nestedRows.length > 0);
   }, [isPublic, entityType, nestedRows.length]);
   const isPipeline = entityType === COMPARE_ENTITY_TYPES.pipeline;
   const isLastStep = activeStepIndex === steps.length - 1;
@@ -314,6 +316,7 @@ const CompareVersionsModal = memo(props => {
             leftVersion={leftVersion}
             rightVersion={rightVersion}
             nestedRows={nestedRows}
+            mode={mode}
           />
         );
       case 'run-settings':
