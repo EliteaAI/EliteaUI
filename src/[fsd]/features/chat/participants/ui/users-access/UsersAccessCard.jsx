@@ -110,18 +110,24 @@ const usersAccessCardStyles = () => ({
   card: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
-    gap: '0.75rem',
     width: '100%',
     height: '2.5rem',
     padding: '0.375rem 0.75rem',
     borderRadius: '0.5rem',
     backgroundColor: palette.background.surface.interactive.default,
     '&:hover': { backgroundColor: palette.background.interactiveItem.hover },
-    // The button takes room only on hover, so a long label is not cut at rest
-    '&:hover .users-access-share, &:focus-within .users-access-share': { display: 'flex' },
+    // Collapsed at rest, not removed, so a long label is not cut and Tab still reaches Share in Only You
+    '&:hover .users-access-share, &:focus-within .users-access-share': {
+      width: 'auto',
+      marginLeft: '0.75rem',
+      overflow: 'visible',
+    },
   }),
   shareSlot: ({ palette }) => ({
-    display: 'none',
+    display: 'flex',
+    flexShrink: 0,
+    width: 0,
+    overflow: 'hidden',
     '& svg': { width: '1rem', height: '1rem' },
     '& svg path': { fill: palette.icon.default },
   }),

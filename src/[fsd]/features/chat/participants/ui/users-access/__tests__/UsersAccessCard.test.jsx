@@ -197,4 +197,15 @@ describe('UsersAccessCard', () => {
 
     expect(screen.queryByTestId('chat-users-mention-dropdown')).not.toBeInTheDocument();
   });
+
+  it('keeps Share reachable from the keyboard in Only You', () => {
+    access.current = { ...access.current, kind: 'onlyYou', label: 'Only You', users: [user(10, 1, 'Me')] };
+    renderCard();
+    const share = screen.getByTestId('chat-users-access-share');
+
+    // Collapsed at rest, never display: none, so Tab stops on it and focus-within opens it
+    expect(share).toBeVisible();
+    share.focus();
+    expect(share).toHaveFocus();
+  });
 });
