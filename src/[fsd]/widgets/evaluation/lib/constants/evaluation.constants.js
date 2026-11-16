@@ -163,6 +163,8 @@ export const EVAL_RUN_STATUS = {
 export const EVAL_RUN_TRIGGER = {
   offline_batch: 'offline_batch',
   on_demand: 'on_demand',
+  // Started by the environment-wide scheduled evaluation, not by a person.
+  scheduled: 'scheduled',
 };
 
 // Per-result status (§17.5). Distinct from EVAL_RUN_STATUS: an individual

@@ -5,6 +5,7 @@ import { Box } from '@mui/material';
 import { useCanDeleteProjectData } from '@/[fsd]/features/settings/lib/hooks';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import DefaultModulesSettings from '@/[fsd]/features/settings/ui/project-general/DefaultModulesSettings';
+import EvaluationSettings from '@/[fsd]/features/settings/ui/project-general/EvaluationSettings';
 import WebSearchSettings from '@/[fsd]/features/settings/ui/project-general/WebSearchSettings';
 import { ProjectBackupRestore } from '@/[fsd]/features/settings/ui/project-general/backup-restore';
 import { ProjectDataDelete } from '@/[fsd]/features/settings/ui/project-general/delete-project-data';
@@ -13,6 +14,7 @@ import { ProjectAIConfigurations } from '@/[fsd]/features/settings/ui/project-ge
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectName } from '@/[fsd]/shared/lib/hooks';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
+import { EVAL_PERMISSIONS } from '@/[fsd]/widgets/evaluation/lib/constants';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
@@ -26,6 +28,7 @@ const ProjectGeneralContent = memo(() => {
   const { checkPermission } = useCheckPermission();
   const canViewProjectContext = checkPermission(PERMISSIONS.projectContext.view);
   const canListSchedules = checkPermission(PERMISSIONS.schedules.list);
+  const canReadEvalDatasets = checkPermission(EVAL_PERMISSIONS.datasetRead);
   const isBackupRestoreAvailable =
     checkPermission(PERMISSIONS.projectBackup.download) || checkPermission(PERMISSIONS.projectBackup.restore);
   const canDeleteProjectData = useCanDeleteProjectData();
@@ -129,6 +132,19 @@ const ProjectGeneralContent = memo(() => {
                       <WebhookRunCapSetting />
                     </Box>
                   ),
+                },
+              ]}
+            />
+          )}
+          {canReadEvalDatasets && (
+            <BasicAccordion
+              data-testid="evaluation-section"
+              showMode={AccordionConstants.AccordionShowMode.LeftMode}
+              accordionSX={styles.accordionStyles}
+              items={[
+                {
+                  title: 'Evaluation',
+                  content: <EvaluationSettings />,
                 },
               ]}
             />

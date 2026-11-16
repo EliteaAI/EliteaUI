@@ -23,11 +23,15 @@ import {
   MIN_CASE_TIME_LIMIT_SECONDS,
   RUN_LIMIT_ON_BREACH,
   areRunLimitsEqual,
+  buildAutoEvaluationTriggerConfig,
   buildRunLimitsMeta,
   getCostOnlyBudgetHint,
+  isGeneratedSuite,
+  readAutoEvaluation,
   readRunLimits,
   validateRunLimits,
 } from '../../lib/helpers';
+import { useEvalRoutes } from '../../lib/hooks';
 import SuiteRunEstimate from './SuiteRunEstimate';
 import DatasetSection from './dataset/DatasetSection';
 import DatasetSectionHeader from './dataset/DatasetSectionHeader';
@@ -51,6 +55,12 @@ const RUN_LIMITS_HINT =
 
 const STORE_TOOL_OUTPUTS_TOOLTIP =
   'Keep what each tool returned in the stored trajectory. Secrets are masked either way; turn this off when tool outputs may hold sensitive data. Tool names and inputs are always kept.';
+
+const AUTO_EVALUATION_TOOLTIP =
+  'The scheduled evaluation runs this suite for the agent. An agent default dataset takes precedence over flagged suites. When several suites are flagged, the oldest one is used.';
+
+const AUTO_EVALUATION_NO_DATASET_TOOLTIP =
+  'Attach a dataset to this suite first; the scheduled evaluation skips suites without one.';
 
 const ON_BREACH_OPTIONS = [
   { value: RUN_LIMIT_ON_BREACH.stop, label: 'Stop the run' },
@@ -106,6 +116,7 @@ const SuiteDetailPanel = memo(props => {
   const [description, setDescription] = useState('');
   const [judgeModel, setJudgeModel] = useState(null);
   const [runLimits, setRunLimits] = useState(() => readRunLimits());
+  const [autoEvaluation, setAutoEvaluation] = useState(false);
   const [showDiscardModal, setShowDiscardModal] = useState(false);
 
   useEffect(() => {
@@ -114,6 +125,7 @@ const SuiteDetailPanel = memo(props => {
       setDescription(suite.description ?? '');
       setJudgeModel(suite.judge_model ?? null);
       setRunLimits(readRunLimits(suite.meta));
+      setAutoEvaluation(readAutoEvaluation(suite.trigger_config));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [suite?.id]);
@@ -139,6 +151,16 @@ const SuiteDetailPanel = memo(props => {
     const { checked } = event.target;
     setRunLimits(prev => ({ ...prev, storeToolOutputs: checked }));
   }, []);
+
+  const handleAutoEvaluationChange = useCallback(event => {
+    setAutoEvaluation(event.target.checked);
+  }, []);
+
+  const autoEvaluationChanged = autoEvaluation !== readAutoEvaluation(suite?.trigger_config);
+  // The scheduled evaluation covers agents only, and never picks its own generated suites.
+  const { isPipeline: isPipelineSuite } = useEvalRoutes();
+  const showAutoEvaluation = !isPipelineSuite && !isGeneratedSuite(suite?.trigger_config);
+  const canFlagAutoEvaluation = suite?.dataset_id != null;
 
   const savedRunLimits = useMemo(() => readRunLimits(suite?.meta), [suite?.meta]);
   const runLimitsChanged = !areRunLimitsEqual(runLimits, savedRunLimits);
@@ -201,8 +223,23 @@ const SuiteDetailPanel = memo(props => {
       judge_model: judgeModel,
       // The update API replaces meta as a whole, so it is only sent when the limits changed.
       ...(runLimitsChanged ? { meta: buildRunLimitsMeta(suite?.meta, runLimits) } : {}),
+      // trigger_config is replaced as a whole too.
+      ...(autoEvaluationChanged
+        ? { trigger_config: buildAutoEvaluationTriggerConfig(suite?.trigger_config, autoEvaluation) }
+        : {}),
     });
-  }, [onSave, name, description, judgeModel, runLimitsChanged, suite?.meta, runLimits]);
+  }, [
+    onSave,
+    name,
+    description,
+    judgeModel,
+    runLimitsChanged,
+    suite?.meta,
+    runLimits,
+    autoEvaluationChanged,
+    suite?.trigger_config,
+    autoEvaluation,
+  ]);
 
   const handleDiscardClick = useCallback(() => {
     setShowDiscardModal(true);
@@ -214,6 +251,7 @@ const SuiteDetailPanel = memo(props => {
       setDescription(suite.description ?? '');
       setJudgeModel(suite.judge_model ?? null);
       setRunLimits(readRunLimits(suite.meta));
+      setAutoEvaluation(readAutoEvaluation(suite.trigger_config));
     }
     setShowDiscardModal(false);
     onDiscard?.();
@@ -225,9 +263,10 @@ const SuiteDetailPanel = memo(props => {
       name !== (suite.name ?? '') ||
       description !== (suite.description ?? '') ||
       JSON.stringify(judgeModel) !== JSON.stringify(suite.judge_model ?? null) ||
-      runLimitsChanged
+      runLimitsChanged ||
+      autoEvaluationChanged
     );
-  }, [suite, name, description, judgeModel, runLimitsChanged]);
+  }, [suite, name, description, judgeModel, runLimitsChanged, autoEvaluationChanged]);
 
   useEffect(() => {
     onDirtyChange?.(isDirty);
@@ -343,7 +382,7 @@ const SuiteDetailPanel = memo(props => {
                     onChange={handleNameChange}
                     required
                     disabled={!canUpdateSuite}
-                    inputProps={{ maxLength: MAX_NAME_LENGTH }}
+                    inputProps={{ maxLength: MAX_NAME_LENGTH, 'data-testid': 'suite-name' }}
                   />
                   <Input.InputBase
                     autoComplete="off"
@@ -540,6 +579,34 @@ const SuiteDetailPanel = memo(props => {
                       </Box>
                     </Tooltip>
                   </Box>
+                  {showAutoEvaluation && (
+                    <Box
+                      sx={styles.storeToolOutputs}
+                      data-testid="suite-auto-evaluation"
+                    >
+                      <Checkbox.BaseCheckbox
+                        checked={autoEvaluation}
+                        onChange={handleAutoEvaluationChange}
+                        disabled={!canUpdateSuite || (!canFlagAutoEvaluation && !autoEvaluation)}
+                        data-testid="suite-auto-evaluation-checkbox"
+                      />
+                      <Typography variant="bodyMedium">Include in auto-evaluation</Typography>
+                      <Tooltip
+                        title={
+                          canFlagAutoEvaluation ? AUTO_EVALUATION_TOOLTIP : AUTO_EVALUATION_NO_DATASET_TOOLTIP
+                        }
+                        placement="top"
+                        arrow
+                      >
+                        <Box
+                          component="span"
+                          sx={styles.infoIconWrapper}
+                        >
+                          <InfoIcon sx={styles.infoIcon} />
+                        </Box>
+                      </Tooltip>
+                    </Box>
+                  )}
                   <Typography
                     variant="bodySmall"
                     sx={styles.runLimitsHint}

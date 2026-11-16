@@ -1,7 +1,9 @@
+export { default as AgentDefaultDatasetSelect } from './AgentDefaultDatasetSelect';
 export { default as CasesPanel } from './CasesPanel';
 export { default as DatasetItem } from './DatasetItem';
 export { default as DatasetList } from './DatasetList';
 export { default as DatasetModal } from './DatasetModal';
 export { default as DatasetsPanel } from './DatasetsPanel';
+export { default as DefaultDatasetSelect } from './DefaultDatasetSelect';
 
 export * from './case-modals';

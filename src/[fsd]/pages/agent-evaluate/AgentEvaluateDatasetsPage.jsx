@@ -284,6 +284,7 @@ const AgentEvaluateDatasetsPage = memo(() => {
         <DatasetsPanel
           datasets={datasets}
           selectedDatasetId={selectedDatasetId}
+          projectId={projectId}
           applicationId={applicationId}
           onSelect={handleSelectDataset}
           onCreate={handleCreateDataset}
