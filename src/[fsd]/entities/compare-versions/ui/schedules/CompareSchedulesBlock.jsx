@@ -100,6 +100,8 @@ const CompareSchedulesBlock = memo(props => {
         )}
         {!hasRows && (
           <Typography
+            variant="bodySmall"
+            color="text.primary"
             sx={styles.emptyText}
             data-testid={`compare-schedules-empty-${side}`}
           >
@@ -155,9 +157,16 @@ const CompareSchedulesBlock = memo(props => {
       data-testid="compare-schedules-block"
     >
       <Box sx={styles.header}>
-        <Typography sx={styles.title}>Schedules</Typography>
+        <Typography
+          variant="labelMedium"
+          color="text.secondary"
+        >
+          Schedules
+        </Typography>
         {!isAdmin && (
           <Typography
+            variant="bodySmall"
+            color="text.primary"
             sx={styles.note}
             data-testid="compare-schedules-only-yours"
           >
@@ -229,17 +238,9 @@ const compareSchedulesBlockStyles = () => ({
     gap: '1rem',
     padding: '0 2rem',
   },
-  title: ({ palette }) => ({
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    lineHeight: '1.5rem',
-    color: palette.text.secondary,
-  }),
-  note: ({ palette }) => ({
-    fontSize: '0.75rem',
-    color: palette.text.primary,
+  note: {
     fontStyle: 'italic',
-  }),
+  },
   error: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
@@ -261,11 +262,9 @@ const compareSchedulesBlockStyles = () => ({
     gap: '0.75rem',
     padding: '0 2rem',
   },
-  emptyText: ({ palette }) => ({
-    fontSize: '0.75rem',
-    color: palette.text.primary,
+  emptyText: {
     fontStyle: 'italic',
-  }),
+  },
   emptySlot: ({ palette }) => ({
     minHeight: '12rem',
     borderRadius: '0.5rem',

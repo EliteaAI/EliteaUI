@@ -56,7 +56,7 @@ const ShareChatModal = memo(props => {
     isExternallyShown: tab === SHARE_TABS.externally,
   });
   const { mode, savedAccess, links, membersTotal, createLink, revokeLink, saveAccess, refetchLinks } = share;
-  const currentTab = tab ?? (mode === SHARE_MODES.personal ? SHARE_TABS.externally : SHARE_TABS.team);
+  const currentTab = tab ?? (mode === SHARE_MODES.linksOnly ? SHARE_TABS.externally : SHARE_TABS.team);
   const [access, setAccess] = useState(savedAccess);
   const [isSaving, setIsSaving] = useState(false);
   const [isFormRequested, setIsFormRequested] = useState(false);
@@ -87,7 +87,7 @@ const ShareChatModal = memo(props => {
     setAccess(savedAccess);
   }
 
-  const showsExternally = mode === SHARE_MODES.personal || currentTab === SHARE_TABS.externally;
+  const showsExternally = mode === SHARE_MODES.linksOnly || currentTab === SHARE_TABS.externally;
   const {
     messages,
     total: messagesTotal,

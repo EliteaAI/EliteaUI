@@ -5,7 +5,7 @@ export const SHARE_TABS = {
 
 export const SHARE_MODES = {
   owner: 'owner',
-  personal: 'personal',
+  linksOnly: 'linksOnly',
 };
 
 export const WHOLE_TEAM_ID = 'whole-team';

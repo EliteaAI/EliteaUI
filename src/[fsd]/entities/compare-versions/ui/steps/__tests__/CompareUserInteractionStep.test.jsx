@@ -14,7 +14,14 @@ vi.mock('@/[fsd]/entities/edit-entity-with-ai', () => ({
       <div data-testid="right">{props.suggestedContent}</div>
     </div>
   ),
-  TextDiffHighlight: props => <div data-testid="diff-field">{props.modified}</div>,
+  TextDiffHighlight: props => (
+    <div
+      data-testid="diff-field"
+      data-editable={String(Boolean(props.editable))}
+    >
+      {props.modified}
+    </div>
+  ),
 }));
 vi.mock('@/[fsd]/shared/ui/button', () => ({ CopyIconButton: () => null }));
 vi.mock('@/[fsd]/entities/version', () => ({ buildVersionOption: vi.fn(), formatVersionMeta: vi.fn() }));
@@ -73,5 +80,36 @@ describe('CompareUserInteractionStep', () => {
       expect(screen.getByTestId(side)).not.toHaveTextContent('Chat Starters');
     });
     expect(screen.queryByRole('button', { name: /Save starters/ })).not.toBeInTheDocument();
+  });
+
+  describe('when comparing with a public version', () => {
+    const left = { welcome_message: 'mine', conversation_starters: ['a'] };
+    const right = { welcome_message: 'theirs', conversation_starters: ['b'] };
+
+    it('shows both sides and lets neither be edited', () => {
+      renderStep(left, right, { readOnly: true });
+      const fields = screen.getAllByTestId('diff-field');
+      expect(fields.length).toBeGreaterThan(0);
+      fields.forEach(field => expect(field).toHaveAttribute('data-editable', 'false'));
+    });
+
+    it('offers no save button on either side', () => {
+      renderStep(left, right, { readOnly: true });
+      expect(screen.queryByRole('button', { name: /^Save/ })).not.toBeInTheDocument();
+    });
+
+    it('still shows the text to copy from either side', () => {
+      renderStep(left, right, { readOnly: true });
+      expect(screen.getByTestId('left')).toHaveTextContent('mine');
+      expect(screen.getByTestId('right')).toHaveTextContent('theirs');
+    });
+
+    it('keeps both sides editable, with their save buttons, otherwise', () => {
+      renderStep(left, right);
+      screen
+        .getAllByTestId('diff-field')
+        .forEach(field => expect(field).toHaveAttribute('data-editable', 'true'));
+      expect(screen.getAllByRole('button', { name: /^Save/ }).length).toBeGreaterThan(0);
+    });
   });
 });

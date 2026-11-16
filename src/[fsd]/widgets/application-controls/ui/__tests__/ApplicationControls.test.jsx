@@ -5,7 +5,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import darkPalette from '@/darkPalette';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 const { state, runHistoryArgs } = vi.hoisted(() => ({
   state: {
@@ -15,6 +15,8 @@ const { state, runHistoryArgs } = vi.hoisted(() => ({
     versionCount: 0,
     isPrivate: true,
     canUpdate: true,
+    publicApplicationId: null,
+    publicArgs: { current: null },
   },
   runHistoryArgs: { current: null },
 }));
@@ -36,7 +38,9 @@ vi.mock('react-router-dom', () => ({
 }));
 vi.mock('@/[fsd]/entities/compare-versions', () => ({
   COMPARE_ENTITY_TYPES: { agent: 'agent', pipeline: 'pipeline' },
-  CompareVersionsModal: () => null,
+  COMPARE_MODES: { versions: 'versions', public: 'public' },
+  CompareVersionsModal: props =>
+    props.mode === 'public' ? <div data-testid="compare-public-modal" /> : null,
 }));
 vi.mock('@/[fsd]/entities/schedule', () => ({
   buildScheduleFormLink: vi.fn(),
@@ -50,7 +54,19 @@ vi.mock('@/[fsd]/entities/version', () => ({
   useSetDefaultVersion: () => ({ handleSetDefaultVersion: vi.fn() }),
   useUnpublishVersionMenu: () => ({}),
 }));
-vi.mock('@/[fsd]/features/agent/lib/hooks', () => ({ useCompareAgentVersions: () => ({}) }));
+vi.mock('@/[fsd]/features/agent/lib/hooks', () => ({
+  useCompareAgentVersions: () => ({}),
+  useComparePublicAgentVersions: args => {
+    state.publicArgs.current = args;
+    return {
+      publicApplicationId: state.publicApplicationId,
+      publicVersions: [],
+      isLoadingPublicVersions: false,
+      publicLoadError: '',
+      loadVersions: vi.fn(),
+    };
+  },
+}));
 vi.mock('@/[fsd]/shared/lib/constants', () => ({
   PinEntityConstants: { PinEntityType: { Application: 'application' } },
   TourTargetConstants: { AGENT_TOUR_TARGET_IDS: { actionsMenu: 'agent-actions-menu' } },
@@ -213,5 +229,63 @@ describe('ApplicationControls Compare versions', () => {
     const keys = menuKeys();
     expect(keys).toContain('compare-versions');
     expect(keys.indexOf('compare-versions')).toBeGreaterThan(keys.indexOf('export'));
+  });
+});
+
+describe('ApplicationControls Compare to public version', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    state.isFromPipeline = false;
+    state.viewMode = 'owner';
+    state.id = 7;
+    state.versionCount = 1;
+    state.isPrivate = true;
+    state.publicApplicationId = 12;
+    state.publicArgs.current = null;
+  });
+  afterEach(() => {
+    state.publicApplicationId = null;
+    cleanup();
+  });
+
+  it('is offered for an agent forked from a public agent, in the version section', () => {
+    renderControls();
+    const keys = menuKeys();
+    expect(keys).toContain('compare-to-public-version');
+    expect(keys.indexOf('compare-to-public-version')).toBeLessThan(keys.indexOf('agent'));
+    expect(screen.getByText('Compare to public version')).toBeInTheDocument();
+  });
+
+  it('is offered even when the agent has a single version', () => {
+    state.versionCount = 1;
+    renderControls();
+    expect(menuKeys()).not.toContain('compare-versions');
+    expect(menuKeys()).toContain('compare-to-public-version');
+  });
+
+  it.each([
+    ['an agent that is not forked from a public agent', () => (state.publicApplicationId = null)],
+    ['a pipeline', () => (state.isFromPipeline = true)],
+    ['the public view', () => (state.viewMode = 'public')],
+    ['an agent that is not saved yet', () => (state.id = undefined)],
+  ])('is not offered for %s', (_, arrange) => {
+    arrange();
+    renderControls();
+    expect(menuKeys()).not.toContain('compare-to-public-version');
+  });
+
+  it('loads the public versions only while the dialog is open', () => {
+    renderControls();
+    expect(state.publicArgs.current.open).toBe(false);
+    expect(screen.queryByTestId('compare-public-modal')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Compare to public version'));
+    expect(state.publicArgs.current.open).toBe(true);
+    expect(screen.getByTestId('compare-public-modal')).toBeInTheDocument();
+  });
+
+  it('tells the hook which agent and which version it is looking at', () => {
+    renderControls();
+    expect(state.publicArgs.current).toMatchObject({ projectId: 2, applicationId: 7 });
   });
 });

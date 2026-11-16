@@ -5,17 +5,3 @@ export const EXPIRY_OPTIONS = [
   { value: '30d', label: '30 days' },
   { value: 'never', label: 'Never expires' },
 ];
-
-export const SCOPE_OPTIONS = [
-  { value: 'all', label: 'Entire chat (messages + attachments)' },
-  { value: 'messages', label: 'Messages only' },
-  { value: 'attachments', label: 'Attachments only' },
-  { value: 'partial', label: 'Select specific messages…' },
-];
-
-export const SCOPE_LABELS = {
-  all: 'Full chat',
-  messages: 'Messages only',
-  attachments: 'Attachments only',
-  partial: 'Selected messages',
-};

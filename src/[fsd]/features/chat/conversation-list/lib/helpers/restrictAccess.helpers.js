@@ -1,19 +1,5 @@
 import { ChatParticipantType } from '@/common/constants';
 
-export const mapUserParticipantToSelectItem = p => ({
-  id: p.entity_meta?.id,
-  name: p.meta?.user_name || p.entity_meta?.name || `User ${p.entity_meta?.id}`,
-  _participantRowId: p.id,
-});
-
-export const mapAiParticipantToSelectItem = p => ({
-  id: p.entity_meta?.id,
-  name: p.entity_meta?.name || p.meta?.name || '',
-  project_id: p.entity_meta?.project_id,
-  entity_name: p.entity_settings?.agent_type === 'pipeline' ? ChatParticipantType.Pipelines : p.entity_name,
-  _participantRowId: p.id,
-});
-
 export const diffUserParticipants = ({ existingUserParticipants, selectedUsers, initialUserEntityIds }) => {
   const selectedUserIds = new Set(selectedUsers.map(u => u.id));
   const usersToRemove = existingUserParticipants.filter(
@@ -21,46 +7,6 @@ export const diffUserParticipants = ({ existingUserParticipants, selectedUsers, 
   );
   const usersToAdd = selectedUsers.filter(u => u.id != null && !initialUserEntityIds.has(u.id));
   return { usersToRemove, usersToAdd };
-};
-
-const isPresent = value => value !== undefined && value !== null;
-
-const buildAiParticipantKey = (item, projectId) =>
-  `${item.entity_name ?? ChatParticipantType.Applications}:${item.project_id ?? projectId}:${item.id}`;
-
-export const diffAiParticipants = ({ existingAiParticipants, selectedAiParticipants, projectId }) => {
-  const selectedKeys = new Set(selectedAiParticipants.map(item => buildAiParticipantKey(item, projectId)));
-  const existingKeys = new Set(
-    existingAiParticipants.map(p => buildAiParticipantKey(mapAiParticipantToSelectItem(p), projectId)),
-  );
-  const aiToRemove = existingAiParticipants.filter(
-    p =>
-      isPresent(p.entity_meta?.id) &&
-      !selectedKeys.has(buildAiParticipantKey(mapAiParticipantToSelectItem(p), projectId)),
-  );
-  const aiToAdd = selectedAiParticipants.filter(
-    item => isPresent(item.id) && !existingKeys.has(buildAiParticipantKey(item, projectId)),
-  );
-  return { aiToRemove, aiToAdd };
-};
-
-export const hasParticipantChanges = ({
-  isAlreadyPrivate,
-  initialSelectedUsers,
-  selectedUsers,
-  initialSelectedAiParticipants,
-  selectedAiParticipants,
-}) => {
-  const initialUserIds = new Set(initialSelectedUsers.map(u => u.id));
-  const currentUserIds = new Set(selectedUsers.map(u => u.id));
-  const usersChanged =
-    currentUserIds.size !== initialUserIds.size || [...currentUserIds].some(id => !initialUserIds.has(id));
-  const toAiKeys = items => new Set(items.filter(p => p.id).map(p => buildAiParticipantKey(p)));
-  const initialAiKeys = toAiKeys(initialSelectedAiParticipants);
-  const currentAiKeys = toAiKeys(selectedAiParticipants);
-  const aiChanged =
-    currentAiKeys.size !== initialAiKeys.size || [...currentAiKeys].some(key => !initialAiKeys.has(key));
-  return !isAlreadyPrivate || usersChanged || aiChanged;
 };
 
 // Re-applies the confirmed restrict-access result on top of a participant list. A details refetch fired

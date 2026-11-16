@@ -3,4 +3,3 @@ export { default as ConversationItem } from './ConversationItem';
 export { default as DraggableConversationItem } from './DraggableConversationItem';
 export { default as ConversationRunIndicator } from './ConversationRunIndicator';
 export { default as PinnedConversations } from './PinnedConversations';
-export { default as AiParticipantSearchSelect } from './AiParticipantSearchSelect';

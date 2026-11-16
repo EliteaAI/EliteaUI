@@ -5,7 +5,7 @@ export {
   DEFAULT_EXPANDED_GROUP,
 } from './conversationList.constants';
 
-export { EXPIRY_OPTIONS, SCOPE_OPTIONS, SCOPE_LABELS } from './shareLink.constants';
+export { EXPIRY_OPTIONS } from './shareLink.constants';
 export {
   ENCRYPTED_FILE_SUFFIX,
   IMPORT_ACCEPTED_EXTENSIONS,

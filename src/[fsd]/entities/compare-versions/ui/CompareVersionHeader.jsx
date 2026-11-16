@@ -36,7 +36,6 @@ const compareVersionHeaderStyles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.125rem',
-    lineHeight: '1',
   },
 };
 

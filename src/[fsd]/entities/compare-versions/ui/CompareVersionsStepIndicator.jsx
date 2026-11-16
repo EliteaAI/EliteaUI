@@ -10,7 +10,8 @@ const CompareVersionsStepIndicator = memo(props => {
   return (
     <Box sx={compareVersionsStepIndicatorStyles.container}>
       <Typography
-        sx={compareVersionsStepIndicatorStyles.title}
+        variant="headingMedium"
+        color="text.secondary"
       >{`${activeStepIndex + 1}. ${activeStep?.label}`}</Typography>
       <Box sx={compareVersionsStepIndicatorStyles.progressBar}>
         {steps.map((step, index) => (
@@ -50,12 +51,6 @@ const compareVersionsStepIndicatorStyles = {
     background: palette.background.default.primary,
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
   }),
-  title: {
-    fontSize: '1rem',
-    fontWeight: 600,
-    lineHeight: '1.5rem',
-    color: 'text.secondary',
-  },
   progressBar: {
     display: 'flex',
     gap: '0.5rem',
