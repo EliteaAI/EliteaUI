@@ -263,30 +263,31 @@ describe('TriggerTypeSelector', () => {
     expect(screen.getByTestId('option-webhook').dataset.disabled).toBe('true');
   });
 
-  it('shows a hint that names the Schedules section', () => {
+  it('shows a hint that names the Schedules', () => {
     render(<TriggerTypeSelector />);
 
-    expect(screen.getByText(/to run this pipeline on a timer, use the/i)).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Schedules section' })).toBeTruthy();
+    expect(screen.getByText(/Run this pipeline automatically: use/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Schedules' })).toBeTruthy();
   });
 
-  it('scrolls to the Schedules section when the link is activated', () => {
+  it('scrolls to the Schedules section when the link is activated', async () => {
     const section = document.createElement('div');
     section.id = 'entity-schedules-section';
     section.scrollIntoView = vi.fn();
     document.body.appendChild(section);
 
     render(<TriggerTypeSelector />);
-    fireEvent.click(screen.getByRole('button', { name: 'Schedules section' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Schedules' }));
 
-    expect(section.scrollIntoView).toHaveBeenCalledTimes(1);
+    // the scroll is deferred so the general panel can expand first
+    await waitFor(() => expect(section.scrollIntoView).toHaveBeenCalledTimes(1));
     section.remove();
   });
 
   it('keeps the hint and does nothing when the Schedules section is missing', () => {
     render(<TriggerTypeSelector />);
 
-    expect(() => fireEvent.click(screen.getByRole('button', { name: 'Schedules section' }))).not.toThrow();
-    expect(screen.getByText(/to run this pipeline on a timer/i)).toBeTruthy();
+    expect(() => fireEvent.click(screen.getByRole('button', { name: 'Schedules' }))).not.toThrow();
+    expect(screen.getByText(/for timed runs/i)).toBeTruthy();
   });
 });

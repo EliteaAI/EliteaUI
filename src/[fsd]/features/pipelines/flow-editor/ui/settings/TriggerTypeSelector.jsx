@@ -11,6 +11,7 @@ import {
   FlowEditorConstants,
   NodeFieldInfoConstants,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { EXPAND_GENERAL_PANEL_EVENT } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
 import { LegacyScheduleNotice, LegacyWebhookNotice } from '@/[fsd]/features/schedule';
 import { useDelegatedOauthToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ModalConstants, ScheduleSectionConstants, WebhookConstants } from '@/[fsd]/shared/lib/constants';
@@ -33,6 +34,16 @@ const INTERACTIVE_NODE_TYPES = [PipelineNodeTypes.Hitl, PipelineNodeTypes.Printe
 const TRIGGER_OPTIONS = [{ label: 'Chat Message', value: TRIGGER_TYPES.chat_message }];
 // Offered only while the version still stores a legacy webhook; new webhooks live in the Webhooks section (#7402)
 const LEGACY_WEBHOOK_OPTION = { label: 'Webhook', value: TRIGGER_TYPES.webhook };
+
+const showElement = elementId => {
+  const event = new CustomEvent(EXPAND_GENERAL_PANEL_EVENT, {
+    detail: {},
+  });
+  window.dispatchEvent(event);
+  setTimeout(() => {
+    document.getElementById(elementId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 0);
+};
 
 const TriggerTypeSelector = memo(props => {
   const { disabled } = props;
@@ -262,11 +273,11 @@ const TriggerTypeSelector = memo(props => {
   const isLoading = isFetching || isUpdating;
 
   const scrollToSchedules = useCallback(() => {
-    document.getElementById(SCHEDULES_SECTION_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    showElement(SCHEDULES_SECTION_ID);
   }, []);
 
   const scrollToWebhooks = useCallback(() => {
-    document.getElementById(WEBHOOKS_SECTION_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    showElement(WEBHOOKS_SECTION_ID);
   }, []);
 
   const triggerTooltip = useMemo(() => {
@@ -329,7 +340,7 @@ const TriggerTypeSelector = memo(props => {
         containerSx={styles.hint}
       >
         <Typography variant="bodySmall">
-          To run this pipeline on a timer, use the{' '}
+          Run this pipeline automatically: use{' '}
           <Link
             component="button"
             className="nopan nodrag"
@@ -337,9 +348,19 @@ const TriggerTypeSelector = memo(props => {
             variant="bodySmall"
             onClick={scrollToSchedules}
           >
-            Schedules section
+            Schedules
           </Link>
-          .
+          {' for timed runs or '}
+          <Link
+            component="button"
+            className="nopan nodrag"
+            type="button"
+            variant="bodySmall"
+            onClick={scrollToWebhooks}
+          >
+            Webhooks
+          </Link>
+          {' for external triggers.'}
         </Typography>
       </BannerMessage>
 

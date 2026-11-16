@@ -12,6 +12,8 @@ import EntityScheduleCard from '../EntityScheduleCard';
 // the schedule card in the Schedules section of a toolkit index
 
 vi.hoisted(() => vi.stubEnv('VITE_SERVER_URL', 'http://localhost/api/v2/'));
+// The cron summary reads the viewer's zone internally, which the mock below cannot reach, so pin the process zone too
+vi.hoisted(() => vi.stubEnv('TZ', 'Europe/Kyiv'));
 
 vi.mock('@/[fsd]/features/schedule/lib/hooks/useScheduleRowActions.hooks', () => ({
   useScheduleRowActions: () => ({

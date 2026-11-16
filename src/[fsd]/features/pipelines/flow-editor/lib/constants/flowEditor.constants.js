@@ -10,6 +10,7 @@ export const STATE_INPUT = 'input';
 export const STATE_TOOL_OUTCOMES = 'tool_outcomes';
 export const STATE_LAST_TOOL_OUTCOME = 'last_tool_outcome';
 export const RUN_STATE_NODE = 'run_state';
+export const EXPAND_GENERAL_PANEL_EVENT = 'expand_general_panel_event';
 
 export const StateVariableTypes = {
   String: 'str',
