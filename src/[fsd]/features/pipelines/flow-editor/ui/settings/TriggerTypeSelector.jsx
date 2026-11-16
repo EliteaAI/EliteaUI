@@ -11,7 +11,6 @@ import {
   FlowEditorConstants,
   NodeFieldInfoConstants,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { EXPAND_GENERAL_PANEL_EVENT } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
 import { LegacyScheduleNotice, LegacyWebhookNotice } from '@/[fsd]/features/schedule';
 import { useDelegatedOauthToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ModalConstants, ScheduleSectionConstants, WebhookConstants } from '@/[fsd]/shared/lib/constants';
@@ -24,7 +23,7 @@ import { useGetPipelineTriggerQuery, useUpdatePipelineTriggerMutation } from '@/
 
 import PipelineWebhookModal from './PipelineWebhookModal';
 
-const { PipelineNodeTypes } = FlowEditorConstants;
+const { PipelineNodeTypes, EXPAND_GENERAL_PANEL_EVENT } = FlowEditorConstants;
 const { GITLAB_AUTH_METHODS, TRIGGER_TYPES, WEBHOOK_TYPES } = WebhookConstants;
 const { SCHEDULES_SECTION_ID, WEBHOOKS_SECTION_ID } = ScheduleSectionConstants;
 
