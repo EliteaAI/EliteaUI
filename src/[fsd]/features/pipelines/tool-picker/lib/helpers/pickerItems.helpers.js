@@ -1,3 +1,5 @@
+import { AgentNestingHelpers } from '@/[fsd]/shared/lib/helpers';
+
 import { getAttachmentRefName, isApplicationTool } from './pipelineToolUsage.helpers';
 
 export const DUPLICATE_NAME_REASON = name =>
@@ -5,26 +7,6 @@ export const DUPLICATE_NAME_REASON = name =>
 
 export const INTERRUPT_REASON = name =>
   `The ${name} pipeline can't be used as it contains interruptions in subgraphs, which are not allowed.`;
-
-export const SWARM_REASON = name =>
-  `The ${name} agent has Swarm Mode enabled and can't be added as a tool. Swarm agents are only supported in direct chat.`;
-
-export const NESTING_REASON = (name, maxTiers) =>
-  `The default version of ${name} nests agents too deeply: agent nesting is limited to ${maxTiers} tiers ` +
-  '(orchestrator → sub-orchestrator → leaf). Make a shallower version its default to add it.';
-
-/**
- * Whether adding this list row would pass the nesting limit. Same rule as the add guard in
- * useAgentPipelineAssociation (the edited entity is tier 1): rows without the backend's tier
- * fields are never blocked here, the backend check on add stays authoritative.
- * @returns {string} the reason, or '' when it fits
- */
-export const getNestingDisabledReason = row => {
-  const { agent_subtree_tiers: subtreeTiers, max_agent_nesting_tiers: maxTiers } = row;
-  const exceeds =
-    typeof subtreeTiers === 'number' && typeof maxTiers === 'number' && 1 + subtreeTiers > maxTiers;
-  return exceeds ? NESTING_REASON(row.name, maxTiers) : '';
-};
 
 const matchesQuery = (item, query) => {
   const text = (query || '').trim().toLowerCase();
@@ -111,9 +93,8 @@ export const buildApplicationPickerItems = ({
   );
   const getDisabledReason = row => {
     if (row.has_interrupt) return INTERRUPT_REASON(row.name);
-    if (row.has_swarm) return SWARM_REASON(row.name);
-    const nestingReason = getNestingDisabledReason(row);
-    if (nestingReason) return nestingReason;
+    const agentReason = AgentNestingHelpers.getAgentDisabledReason(row);
+    if (agentReason) return agentReason;
     const attachedId = attachedIdByName.get(row.name);
     return attachedId !== undefined && attachedId !== row.id
       ? DUPLICATE_APPLICATION_NAME_REASON(row.name)
