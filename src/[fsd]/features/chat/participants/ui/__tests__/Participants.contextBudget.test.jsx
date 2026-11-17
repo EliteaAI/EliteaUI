@@ -9,6 +9,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useGetComponentWidth: () => ({ componentRef: vi.fn(), componentWidth: 300 }),
+  useCheckViewScrollHorizontally: () => ({ isScrollable: false, viewRef: vi.fn() }),
   useIsSmallWindow: () => ({ isSmallWindow: false }),
   useModal: () => ({ isOpen: false, handleOpen: vi.fn(), handleClose: vi.fn() }),
   useSelectedProjectId: () => 1,
@@ -37,7 +38,8 @@ vi.mock('@/hooks/useCheckPermission', () => ({
 }));
 vi.mock('@/[fsd]/shared/ui', async () => {
   const { default: BaseBtn } = await import('@/[fsd]/shared/ui/button/BaseBtn');
-  return { Button: { BaseBtn } };
+  const { default: EllipsisTypography } = await import('@/[fsd]/shared/ui/text/EllipsisTypography');
+  return { Button: { BaseBtn }, Text: { EllipsisTypography } };
 });
 vi.mock('@/[fsd]/widgets/context-budget/lib/hooks/useContextUtilization.hooks', () => ({
   useContextUtilization: () => ({ percentage: 12, isHigh: false }),
@@ -137,6 +139,49 @@ describe('Participants context budget', () => {
       <ThemeProvider theme={theme}>
         <Participants
           collapsed={false}
+          conversationId={1}
+          participants={[]}
+        />
+      </ThemeProvider>,
+    );
+    expect(screen.getByRole('button', { name: 'Collapse context management' })).toBeInTheDocument();
+  });
+
+  it('resets the budget to expanded after toggling the participants panel', () => {
+    const onCollapsed = vi.fn();
+    const { rerender } = render(
+      <ThemeProvider theme={theme}>
+        <Participants
+          collapsed={false}
+          onCollapsed={onCollapsed}
+          conversationId={1}
+          participants={[]}
+        />
+      </ThemeProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse context management' }));
+    fireEvent.click(screen.getByTestId('chat-participants-panel-toggle-button'));
+    expect(onCollapsed).toHaveBeenCalledTimes(1);
+    rerender(
+      <ThemeProvider theme={theme}>
+        <Participants
+          collapsed
+          onCollapsed={onCollapsed}
+          conversationId={1}
+          participants={[]}
+        />
+      </ThemeProvider>,
+    );
+    expect(screen.getByRole('button', { name: 'Context management 12%' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('chat-participants-panel-toggle-button'));
+    expect(onCollapsed).toHaveBeenCalledTimes(2);
+    rerender(
+      <ThemeProvider theme={theme}>
+        <Participants
+          collapsed={false}
+          onCollapsed={onCollapsed}
           conversationId={1}
           participants={[]}
         />

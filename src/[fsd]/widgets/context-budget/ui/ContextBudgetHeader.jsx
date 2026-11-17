@@ -22,10 +22,9 @@ const ContextBudgetHeader = memo(props => {
     <Box sx={styles.header}>
       <Box sx={styles.headerLeft}>
         <Text.EllipsisTypography
-          data-testid="secret-name-cell"
+          data-testid="context-budget-title"
           variant="headingSmall"
           sx={styles.title}
-          color="text.secondary"
         >
           Context management
         </Text.EllipsisTypography>
@@ -47,15 +46,12 @@ const ContextBudgetHeader = memo(props => {
       >
         <Box component="span">
           <Button.BaseBtn
-            variant="elitea"
-            color="tertiary"
+            variant="tertiary"
             onClick={onEdit}
             disabled={!canEdit}
             data-testid="context-budget-edit-button"
-            sx={styles.iconButton}
-          >
-            <EditIcon />
-          </Button.BaseBtn>
+            startIcon={<EditIcon />}
+          />
         </Box>
       </Tooltip>
       {onCollapse && (
@@ -65,15 +61,12 @@ const ContextBudgetHeader = memo(props => {
         >
           <Button.BaseBtn
             ref={toggleFocusRef}
-            variant="elitea"
-            color="tertiary"
+            variant="tertiary"
+            startIcon={<CollapseIcon />}
             onClick={onClick}
-            sx={styles.iconButton}
             data-testid="context-budget-collapse-button"
             aria-label="Collapse context management"
-          >
-            <CollapseIcon />
-          </Button.BaseBtn>
+          />
         </Tooltip>
       )}
     </Box>
@@ -110,13 +103,6 @@ const contextBudgetHeaderStyles = () => ({
   }),
   infoIconWrapper: {
     display: 'flex',
-  },
-  iconButton: {
-    marginLeft: '0',
-    minWidth: '1rem',
-    width: '1rem',
-    height: '1.75rem',
-    padding: '0',
   },
 });
 

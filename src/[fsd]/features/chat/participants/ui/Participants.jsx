@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
@@ -60,9 +60,13 @@ const Participants = memo(props => {
     }
   }, []);
 
-  useEffect(() => {
-    setIsContextBudgetCollapsed(false);
-  }, [showCollapsedParticipants]);
+  const handleParticipantsCollapsed = useCallback(
+    event => {
+      setIsContextBudgetCollapsed(false);
+      onCollapsed?.(event);
+    },
+    [onCollapsed],
+  );
 
   const showContextBudgetRing = showCollapsedParticipants || isContextBudgetCollapsed;
 
@@ -86,7 +90,7 @@ const Participants = memo(props => {
               sx={styles.collapseButton}
               variant="elitea"
               color="tertiary"
-              onClick={onCollapsed}
+              onClick={handleParticipantsCollapsed}
               data-testid="chat-participants-panel-toggle-button"
               data-expanded={collapsed ? 'false' : 'true'}
             >
