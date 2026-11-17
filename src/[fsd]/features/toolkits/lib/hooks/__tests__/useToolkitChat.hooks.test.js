@@ -385,6 +385,29 @@ describe('useToolkitChat validation errors', () => {
     });
   });
 
+  it.each([
+    ['carries a plain-text rejection as the reason to show', 'Index docs is already being indexed', true],
+    ['shows no structured payload as a reason', [{ loc: ['tool_params'], msg: 'field required' }], false],
+  ])('%s', async (_name, content, carriesReason) => {
+    createToolkitConversationWithParticipant.mockResolvedValueOnce({ id: 9, uuid: 'conv-9' });
+    const traceNewIndex = vi.fn();
+    const { result } = renderChat({
+      traceNewIndex,
+      index: { id: 5, metadata: { collection: 'docs', index_configuration: { index_name: 'docs' } } },
+      modes: [],
+    });
+
+    act(() => result.current.handleIndexData());
+    await waitFor(() => expect(socketEmit).toHaveBeenCalled());
+    act(() => validationErrorHandlerRef.current({ type: 'error', stream_id: 'conv-9', content }));
+
+    expect(traceNewIndex).toHaveBeenLastCalledWith(5, {
+      collection: 'docs',
+      state: 'failed',
+      ...(carriesReason && { failureReason: content }),
+    });
+  });
+
   it('ignores rejections once the task has started', async () => {
     const { result } = await startRun();
 

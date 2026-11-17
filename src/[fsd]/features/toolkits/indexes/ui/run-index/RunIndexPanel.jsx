@@ -148,9 +148,9 @@ const RunIndexPanel = memo(props => {
   // The panel's own notion of "running", which is the row's state OR an active chat run;
   // `chatIsIndexing` keeps the hook's narrower flag distinguishable from it.
   const isIndexing = chatIsIndexing || effectiveState === IndexStatuses.progress;
+  const canWriteIndexes = useCanWriteIndexes();
   // Runs observed here aren't in the slice until a fetch happens — arm the poll from
   // local belief. (Second subscription on this route is deliberate; see the hook.)
-  const canWriteIndexes = useCanWriteIndexes();
   const { startedTimeStamp, fulfilledTimeStamp } = useIndexesListPolling({
     toolkitId,
     projectId,

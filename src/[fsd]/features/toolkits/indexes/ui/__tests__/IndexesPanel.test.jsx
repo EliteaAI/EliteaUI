@@ -40,16 +40,21 @@ afterEach(() => {
   canWriteIndexes.current = true;
 });
 
-const anyColor = new Proxy(
+const colorForAnyPalettePath = new Proxy(
   {},
-  { get: (_target, key) => (key === Symbol.toPrimitive || key === 'toString' ? () => '#123456' : anyColor) },
+  {
+    get: (_target, key) =>
+      key === Symbol.toPrimitive || key === 'toString' ? () => '#123456' : colorForAnyPalettePath,
+  },
 );
-const theme = createTheme();
-theme.palette = new Proxy(theme.palette, { get: (target, key) => (key in target ? target[key] : anyColor) });
+const themeWhereEveryPaletteTokenResolves = createTheme();
+themeWhereEveryPaletteTokenResolves.palette = new Proxy(themeWhereEveryPaletteTokenResolves.palette, {
+  get: (target, key) => (key in target ? target[key] : colorForAnyPalettePath),
+});
 
 const renderPanel = indexingBlocker =>
   render(
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={themeWhereEveryPaletteTokenResolves}>
       <IndexesPanel
         toolkitId={1}
         indexingBlocker={indexingBlocker}
