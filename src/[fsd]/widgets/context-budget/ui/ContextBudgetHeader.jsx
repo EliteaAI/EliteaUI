@@ -1,27 +1,32 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 
-import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Tooltip } from '@mui/material';
 
+import { Button, Text } from '@/[fsd]/shared/ui';
 import { CONTEXT_WINDOW_COPY, TOOLTIP_CONFIG } from '@/[fsd]/widgets/context-budget/lib/constants';
-import EditIcon from '@/components/Icons/EditIcon';
+import CollapseIcon from '@/assets/collapse-icon.svg?react';
+import EditIcon from '@/assets/edit.svg?react';
 import InfoIcon from '@/components/Icons/InfoIcon';
 
 /**
  * Header section with title, info icon, and edit button
  */
 const ContextBudgetHeader = memo(props => {
-  const { onEdit, canEdit = true } = props;
+  const { onEdit, canEdit = true, onCollapse, toggleFocusRef } = props;
   const styles = contextBudgetHeaderStyles();
+  const onClick = useCallback(() => {
+    onCollapse?.(true);
+  }, [onCollapse]);
 
   return (
     <Box sx={styles.header}>
       <Box sx={styles.headerLeft}>
-        <Typography
+        <Text.EllipsisTypography
+          data-testid="context-budget-title"
           variant="headingSmall"
-          sx={styles.title}
         >
           Context management
-        </Typography>
+        </Text.EllipsisTypography>
         <Tooltip
           title="Chat totals are provider-reported tokens for every model call in this chat. The safety margin is excluded from the available window. The next request is estimated separately for automatic compaction."
           placement={TOOLTIP_CONFIG.INFO.placement}
@@ -39,17 +44,30 @@ const ContextBudgetHeader = memo(props => {
         placement={TOOLTIP_CONFIG.INFO.placement}
       >
         <Box component="span">
-          <IconButton
-            variant="elitea"
-            color="tertiary"
+          <Button.BaseBtn
+            variant="tertiary"
             onClick={onEdit}
             disabled={!canEdit}
             data-testid="context-budget-edit-button"
-          >
-            <EditIcon sx={{ fontSize: '1rem' }} />
-          </IconButton>
+            startIcon={<EditIcon />}
+          />
         </Box>
       </Tooltip>
+      {onCollapse && (
+        <Tooltip
+          title="Collapse context management"
+          placement={TOOLTIP_CONFIG.INFO.placement}
+        >
+          <Button.BaseBtn
+            ref={toggleFocusRef}
+            variant="tertiary"
+            startIcon={<CollapseIcon />}
+            onClick={onClick}
+            data-testid="context-budget-collapse-button"
+            aria-label="Collapse context management"
+          />
+        </Tooltip>
+      )}
     </Box>
   );
 });
@@ -76,12 +94,6 @@ const contextBudgetHeaderStyles = () => ({
     flex: '1',
     minWidth: 0,
   },
-  title: ({ palette }) => ({
-    color: palette.text.secondary,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  }),
   infoIconWrapper: {
     display: 'flex',
   },
