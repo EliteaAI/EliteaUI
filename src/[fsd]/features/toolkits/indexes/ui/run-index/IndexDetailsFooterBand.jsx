@@ -15,6 +15,7 @@ const IndexDetailsFooterBand = memo(props => {
     isRunActive,
     isStoppingIndexing,
     canStopIndexing = true,
+    canWrite = true,
     onStop,
     reindexDisabled = false,
     reindexTooltip,
@@ -41,7 +42,7 @@ const IndexDetailsFooterBand = memo(props => {
         >
           {stopLabel}
         </IndexDetailsFooterAction>
-      ) : (
+      ) : canWrite ? (
         <>
           {isDirty && (
             <IndexDetailsFooterAction
@@ -65,7 +66,7 @@ const IndexDetailsFooterBand = memo(props => {
             {isDirty ? 'Save & Reindex' : 'Reindex'}
           </IndexDetailsFooterAction>
         </>
-      )}
+      ) : null}
     </Box>
   );
 });

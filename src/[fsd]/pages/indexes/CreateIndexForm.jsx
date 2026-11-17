@@ -8,11 +8,12 @@ import { Box, CircularProgress } from '@mui/material';
 import { useMcpAuthModal } from '@/[fsd]/features/mcp';
 import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
 import { ToolkitChatHelpers, ToolkitChatModesEnum, useToolkitChat } from '@/[fsd]/features/toolkits';
-import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants';
+import { IndexStatuses, IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import { adjustIndexDataSchema } from '@/[fsd]/features/toolkits/indexes/lib/helpers';
 import { useIndexNameValidation } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema';
@@ -29,7 +30,9 @@ const CreateIndexForm = memo(props => {
 
   const configInitialized = useRef(false);
   const navigatedRef = useRef(false);
-  const pendingCollectionRef = useRef(null);
+  const pendingStartRef = useRef({});
+  const startTimeoutRef = useRef(null);
+  const { toastError } = useToast();
   const [toolInputVariables, setToolInputVariables] = useState({});
   const [nameFormatError, setNameFormatError] = useState(null);
 
@@ -108,36 +111,51 @@ const CreateIndexForm = memo(props => {
   const traceNewIndex = useCallback(
     (_id, meta) => {
       if (navigatedRef.current) return;
-      if (meta?.collection) pendingCollectionRef.current = meta.collection;
 
-      const collection = pendingCollectionRef.current;
-      if (meta?.conversation_id && meta?.conversation_uuid && collection) {
-        navigatedRef.current = true;
-        const target = RouteDefinitions.ToolkitIndex.replace(':tab', tab ?? 'all')
-          .replace(':toolkitId', String(toolkitId))
-          .replace(':indexName', encodeURIComponent(collection));
-        navigate(target, {
-          replace: true,
-          state: {
-            creating: true,
-            collection,
-            conversation_id: meta.conversation_id,
-            conversation_uuid: meta.conversation_uuid,
-          },
-        });
+      if (meta?.state === IndexStatuses.fail) {
+        pendingStartRef.current = {};
+        clearTimeout(startTimeoutRef.current);
+        toastError(meta.refusal?.message || meta.failureReason || "Indexing didn't start — try again");
+        return;
       }
+
+      pendingStartRef.current = {
+        ...pendingStartRef.current,
+        ...(meta?.collection && { collection: meta.collection }),
+        ...(meta?.conversation_id && { conversation_id: meta.conversation_id }),
+        ...(meta?.conversation_uuid && { conversation_uuid: meta.conversation_uuid }),
+        ...(meta?.task_id && { task_id: meta.task_id }),
+      };
+
+      const { collection, conversation_id, conversation_uuid, task_id } = pendingStartRef.current;
+      if (!collection || !conversation_id || !conversation_uuid || !task_id) return;
+
+      navigatedRef.current = true;
+      clearTimeout(startTimeoutRef.current);
+      const target = RouteDefinitions.ToolkitIndex.replace(':tab', tab ?? 'all')
+        .replace(':toolkitId', String(toolkitId))
+        .replace(':indexName', encodeURIComponent(collection));
+      navigate(target, {
+        replace: true,
+        state: { creating: true, collection, conversation_id, conversation_uuid, task_id },
+      });
     },
-    [navigate, tab, toolkitId],
+    [navigate, tab, toastError, toolkitId],
   );
 
   const refetchIndexesList = useCallback(() => Promise.resolve(), []);
 
   const mcpAuthRequiredRef = useRef(null);
   const onMcpAuthRequiredStable = useCallback(message => {
+    clearTimeout(startTimeoutRef.current);
     mcpAuthRequiredRef.current?.(message);
   }, []);
 
-  const { handleIndexData, isRunning, retryLastRun } = useToolkitChat({
+  const {
+    handleIndexData: startIndexData,
+    isRunning,
+    retryLastRun,
+  } = useToolkitChat({
     index: null,
     isValidForm,
     refetchIndexesList,
@@ -149,6 +167,16 @@ const CreateIndexForm = memo(props => {
     modes: [ToolkitChatModesEnum.createIndex],
     onMcpAuthRequired: onMcpAuthRequiredStable,
   });
+
+  const handleIndexData = useCallback(() => {
+    clearTimeout(startTimeoutRef.current);
+    startTimeoutRef.current = setTimeout(() => {
+      if (!navigatedRef.current) toastError("Indexing didn't start — refresh the page and try again");
+    }, 45_000);
+    startIndexData();
+  }, [startIndexData, toastError]);
+
+  useEffect(() => () => clearTimeout(startTimeoutRef.current), []);
 
   const { handleMcpAuthRequired, getModalProps } = useMcpAuthModal({
     values,
@@ -225,7 +253,7 @@ const CreateIndexForm = memo(props => {
           onClick={handleIndexData}
           disabled={!isValidForm || isRunning}
         >
-          Index
+          {isRunning ? 'Starting…' : 'Index'}
         </Button.BaseBtn>
         <Button.BaseBtn
           variant={Button.BUTTON_VARIANTS.secondary}

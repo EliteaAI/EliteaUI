@@ -7,12 +7,13 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
-import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants';
+import { BannerSeverity, IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model';
-import { RunIndexPanel } from '@/[fsd]/features/toolkits/indexes/ui';
+import { RunIndexBanner, RunIndexPanel } from '@/[fsd]/features/toolkits/indexes/ui';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { Button } from '@/[fsd]/shared/ui';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
@@ -43,7 +44,11 @@ const RunIndex = memo(() => {
     refetch: refetchToolkit,
   } = useToolkitsDetailsQuery({ projectId, toolkitId }, { skip: !projectId || !toolkitId });
 
-  const { refetch: refetchIndexesList } = useIndexesListPolling({
+  const {
+    refetch: refetchIndexesList,
+    isError: isIndexesListError,
+    error: indexesListError,
+  } = useIndexesListPolling({
     toolkitId,
     projectId,
     skip: !projectId || !toolkitId,
@@ -82,10 +87,11 @@ const RunIndex = memo(() => {
         state: IndexStatuses.progress,
         conversation_id: initialConversation.id,
         conversation_uuid: initialConversation.uuid,
+        task_id: location.state?.task_id ?? null,
         created_on: Date.now() / 1000,
       },
     };
-  }, [isCreating, initialConversation, indexName]);
+  }, [isCreating, initialConversation, indexName, location.state?.task_id]);
 
   const [awaitingCreation, setAwaitingCreation] = useState(isCreating);
 
@@ -137,7 +143,12 @@ const RunIndex = memo(() => {
 
   if (shouldShowNotFoundPage) return null;
 
-  const effectiveIndex = currentIndex ?? inflightIndex;
+  const hasShownStoredIndex =
+    stableIndexRef.current?.identity === indexIdentity && stableIndexRef.current.index.id !== null;
+  const isListUnavailable = isIndexesListError && !currentIndex && !awaitingCreation && !hasShownStoredIndex;
+  if (isListUnavailable) stableIndexRef.current = null;
+
+  const effectiveIndex = currentIndex ?? (isListUnavailable ? null : inflightIndex);
 
   if (effectiveIndex) stableIndexRef.current = { identity: indexIdentity, index: effectiveIndex };
 
@@ -190,7 +201,24 @@ const RunIndex = memo(() => {
         title={<Breadcrumbs />}
       />
       <Box sx={styles.content}>
-        {isLoading || showCreatingPlaceholder ? (
+        {isListUnavailable ? (
+          <Box sx={styles.unavailable}>
+            <RunIndexBanner
+              banner={{
+                severity: BannerSeverity.error,
+                label: 'Index details are unavailable',
+                message: buildErrorMessage(indexesListError),
+              }}
+              showBottomBorder={false}
+            />
+            <Button.BaseBtn
+              variant={Button.BUTTON_VARIANTS.secondary}
+              onClick={handleRefetch}
+            >
+              Reload
+            </Button.BaseBtn>
+          </Box>
+        ) : isLoading || showCreatingPlaceholder ? (
           <Box sx={styles.loading}>
             <CircularProgress size={24} />
             {showCreatingPlaceholder && (
@@ -241,6 +269,13 @@ const runIndexStyles = () => ({
     justifyContent: 'center',
     alignItems: 'center',
     padding: '2rem 0',
+  },
+  unavailable: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: '0.75rem',
+    padding: '1rem 1.5rem',
   },
 });
 

@@ -298,6 +298,7 @@ export const useToolkitChat = props => {
           collection: pendingRun.collection,
           state: IndexStatuses.fail,
           ...(refused && { refusal }),
+          ...(typeof message.content === 'string' && { failureReason: message.content }),
         });
 
       const errorChatMessage = refused

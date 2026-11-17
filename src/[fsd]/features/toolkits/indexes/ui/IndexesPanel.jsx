@@ -5,7 +5,11 @@ import { Box, Skeleton, Typography } from '@mui/material';
 import { TOOLKIT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { IndexingBlockerBanners, IndexingBlockers } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import { shouldFetchIndexes } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexingBlocker.helpers';
-import { useIndexNavigation, useToolkitIndexes } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
+import {
+  useCanWriteIndexes,
+  useIndexNavigation,
+  useToolkitIndexes,
+} from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { ToolkitLayoutConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import InfoIcon from '@/assets/info.svg?react';
 
@@ -21,12 +25,14 @@ const IndexesPanel = memo(props => {
 
   const { count, label, isLoading } = useToolkitIndexes(toolkitId);
   const { goToCreateIndex } = useIndexNavigation(toolkitId);
+  const canWriteIndexes = useCanWriteIndexes();
 
   const styles = indexesPanelStyles();
 
   const isListFetched = shouldFetchIndexes(indexingBlocker);
   const isCountPending = indexingBlocker === IndexingBlockers.loading || (isListFetched && isLoading);
   const banner = IndexingBlockerBanners[indexingBlocker];
+  const canIndex = !indexingBlocker && canWriteIndexes;
 
   const renderCount = () => {
     if (isCountPending) {
@@ -70,7 +76,7 @@ const IndexesPanel = memo(props => {
           </Typography>
           {renderCount()}
         </Box>
-        {!indexingBlocker && !isLoading && count > 0 && <AddIndexButton onClick={goToCreateIndex} />}
+        {canIndex && !isLoading && count > 0 && <AddIndexButton onClick={goToCreateIndex} />}
       </Box>
       <Box sx={styles.body}>
         {indexingBlocker === IndexingBlockers.loading ? (
@@ -88,7 +94,7 @@ const IndexesPanel = memo(props => {
             {isListFetched && (
               <IndexesContainer
                 toolkitId={toolkitId}
-                canIndex={!indexingBlocker}
+                canIndex={canIndex}
               />
             )}
           </>
