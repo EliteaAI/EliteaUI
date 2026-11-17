@@ -1,12 +1,12 @@
 import { memo, useCallback, useEffect } from 'react';
 
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 import { Box, Popover, Skeleton, Typography } from '@mui/material';
 
 import { NotificationListItem } from '@/[fsd]/entities/notifications/ui';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import {
   TAG_NOTIFICATIONS,
@@ -27,34 +27,34 @@ const NotificationList = memo(props => {
   const { toastError } = useToast();
   const [bulkMarkSeenNotifications] = useNotificationBulkMarkSeenMutation();
   const styles = notificationListStyles();
-  const projectId = useSelectedProjectId();
+  const { personal_project_id: personalProjectId } = useSelector(state => state.user);
 
   const { data, isFetching, isError, error, refetch } = useNotificationListQuery(
     {
-      projectId,
+      projectId: personalProjectId,
       page: 0,
       pageSize: POPOVER_PAGE_SIZE,
       params: {
         only_new: true,
       },
     },
-    { refetchOnFocus: !!projectId, skip: !projectId },
+    { refetchOnFocus: !!personalProjectId, skip: !personalProjectId },
   );
 
   const notifications = data?.rows ?? [];
 
   const onMarkAllAsRead = useCallback(async () => {
-    if (!projectId) return;
+    if (!personalProjectId) return;
     try {
       await bulkMarkSeenNotifications({
-        projectId,
+        projectId: personalProjectId,
         ids: 'all',
         isSeen: true,
       }).unwrap();
     } catch (err) {
       toastError(buildErrorMessage(err));
     }
-  }, [projectId, bulkMarkSeenNotifications, toastError]);
+  }, [personalProjectId, bulkMarkSeenNotifications, toastError]);
 
   const onViewAll = useCallback(() => {
     dispatch(notificationsApi.util.invalidateTags([TAG_NOTIFICATIONS]));
