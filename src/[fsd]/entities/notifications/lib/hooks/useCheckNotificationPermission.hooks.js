@@ -6,6 +6,7 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 export const useCheckNotificationPermission = () => {
   const { checkPermission } = useCheckPermission();
   const canUpdate = useMemo(() => checkPermission(PERMISSIONS.notification.update), [checkPermission]);
+  const canDelete = useMemo(() => checkPermission(PERMISSIONS.notification.delete), [checkPermission]);
 
-  return { canUpdate };
+  return { canUpdate, canDelete };
 };

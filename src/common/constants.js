@@ -693,6 +693,7 @@ export const PERMISSIONS = {
   },
   notification: {
     update: 'models.notifications.notification.update',
+    delete: 'models.notifications.notification.delete',
   },
 };
 

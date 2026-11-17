@@ -73,7 +73,7 @@ const NotificationTable = memo(props => {
     handleSelectRow,
     selectRows,
   } = useRowSelection({ rows, idField: 'id' });
-  const { canUpdate } = useCheckNotificationPermission();
+  const { canUpdate, canDelete } = useCheckNotificationPermission();
 
   const removeIdsFromSelection = useCallback(
     ids => {
@@ -231,7 +231,7 @@ const NotificationTable = memo(props => {
         toolbar={
           <NotificationTableToolbar
             rowSelectionModel={currentPageSelectedIds}
-            onDeleteSelected={canUpdate ? handleDeleteSelected : null}
+            onDeleteSelected={canDelete ? handleDeleteSelected : null}
             onMarkToggle={canUpdate ? handleMarkToggle : null}
             markAsRead={shouldMarkAsRead}
             search={search}
