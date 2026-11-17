@@ -13,6 +13,7 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
+import { useCheckNotificationPermission } from '@/[fsd]/entities/notifications/lib';
 import { getIcon } from '@/[fsd]/entities/notifications/lib/helpers';
 import { NotificationListItem } from '@/[fsd]/entities/notifications/ui';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
@@ -72,6 +73,7 @@ const NotificationTable = memo(props => {
     handleSelectRow,
     selectRows,
   } = useRowSelection({ rows, idField: 'id' });
+  const { canUpdate } = useCheckNotificationPermission();
 
   const removeIdsFromSelection = useCallback(
     ids => {
@@ -219,7 +221,7 @@ const NotificationTable = memo(props => {
       }
       return value;
     },
-    [styles],
+    [styles.dateCell, styles.listItemContent, styles.listItemOverride, styles.notificationCell],
   );
 
   return (
@@ -229,8 +231,8 @@ const NotificationTable = memo(props => {
         toolbar={
           <NotificationTableToolbar
             rowSelectionModel={currentPageSelectedIds}
-            onDeleteSelected={handleDeleteSelected}
-            onMarkToggle={handleMarkToggle}
+            onDeleteSelected={canUpdate ? handleDeleteSelected : null}
+            onMarkToggle={canUpdate ? handleMarkToggle : null}
             markAsRead={shouldMarkAsRead}
             search={search}
             onSearchChange={onSearchChange}

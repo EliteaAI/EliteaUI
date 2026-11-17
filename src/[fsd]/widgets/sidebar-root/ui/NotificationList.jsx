@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { Box, Popover, Skeleton, Typography } from '@mui/material';
 
+import { useCheckNotificationPermission } from '@/[fsd]/entities/notifications/lib';
 import { NotificationListItem } from '@/[fsd]/entities/notifications/ui';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -28,6 +29,7 @@ const NotificationList = memo(props => {
   const [bulkMarkSeenNotifications] = useNotificationBulkMarkSeenMutation();
   const styles = notificationListStyles();
   const projectId = useSelectedProjectId();
+  const { canUpdate } = useCheckNotificationPermission();
 
   const { data, isFetching, isError, error, refetch } = useNotificationListQuery(
     {
@@ -123,6 +125,7 @@ const NotificationList = memo(props => {
               key={notification.id}
               notification={notification}
               onCloseNotificationList={onCloseNotificationList}
+              showMarkToggle={canUpdate}
             />
           ))}
           {isFetching && !notifications.length && (
@@ -144,7 +147,7 @@ const NotificationList = memo(props => {
             </Box>
           )}
         </Box>
-        {notifications.length > 0 && (
+        {notifications.length > 0 && canUpdate && (
           <BaseBtn
             variant={BUTTON_VARIANTS.auxiliary}
             onClick={onMarkAllAsRead}

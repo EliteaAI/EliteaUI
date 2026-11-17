@@ -691,6 +691,9 @@ export const PERMISSIONS = {
     delete: 'models.applications.index_meta.delete',
     taskDelete: 'models.applications.task.delete',
   },
+  notification: {
+    update: 'models.notifications.notification.update',
+  },
 };
 
 export const PERMISSION_GROUPS = {
