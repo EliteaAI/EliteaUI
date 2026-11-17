@@ -63,7 +63,11 @@ export const renameNodeInYaml = (prev, name, newName) => {
         newNode.transition = newName;
       }
     } else {
-      newNode.condition = node.condition?.replaceAll(name, newName);
+      const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      newNode.condition = node.condition?.replace(
+        new RegExp(`(?<![\\w])${escapeRegExp(name)}(?![\\w])`, 'g'),
+        newName,
+      );
       newNode.routes = node.routes?.map(item => (item === name ? newName : item));
       newNode.default_output = node.default_output === name ? newName : node.default_output;
     }
