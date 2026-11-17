@@ -24,7 +24,6 @@ const ContextBudgetHeader = memo(props => {
         <Text.EllipsisTypography
           data-testid="context-budget-title"
           variant="headingSmall"
-          sx={styles.title}
         >
           Context management
         </Text.EllipsisTypography>
@@ -95,12 +94,6 @@ const contextBudgetHeaderStyles = () => ({
     flex: '1',
     minWidth: 0,
   },
-  title: ({ palette }) => ({
-    color: palette.text.secondary,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  }),
   infoIconWrapper: {
     display: 'flex',
   },
