@@ -42,9 +42,10 @@ export const useChatUsersAccess = ({ conversation, projectId }) => {
     if (isPublic) kind = USERS_ACCESS_KIND.team;
     else if (users.length > 1) kind = USERS_ACCESS_KIND.people;
 
+    const count = kind === USERS_ACCESS_KIND.team ? (membersData?.total ?? 0) : users.length;
     const labels = {
-      [USERS_ACCESS_KIND.team]: `Whole Team (${membersData?.total ?? 0})`,
-      [USERS_ACCESS_KIND.people]: `${users.length} users`,
+      [USERS_ACCESS_KIND.team]: `Whole Team (${count})`,
+      [USERS_ACCESS_KIND.people]: `${count} users`,
       [USERS_ACCESS_KIND.onlyYou]: 'Only You',
     };
     // Counted as on the Externally tab: an expired link no longer opens the chat
@@ -53,6 +54,7 @@ export const useChatUsersAccess = ({ conversation, projectId }) => {
     return {
       kind,
       label: labels[kind],
+      count,
       isOwner,
       ownerId: conversation?.author_id,
       users,

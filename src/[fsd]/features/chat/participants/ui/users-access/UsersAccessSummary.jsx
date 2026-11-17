@@ -15,11 +15,11 @@ const getLinksTooltip = (active, expired) => {
 };
 
 const UsersAccessSummary = memo(props => {
-  const { kind, label, linksCount = 0, expiredLinksCount = 0, onLabelClick } = props;
+  const { kind, label, linksCount = 0, expiredLinksCount = 0, muted = false, onLabelClick } = props;
 
   const isOnlyYou = kind === USERS_ACCESS_KIND.onlyYou;
   const isLink = !isOnlyYou && !!onLabelClick;
-  const styles = usersAccessSummaryStyles(isLink);
+  const styles = usersAccessSummaryStyles(isLink, muted);
 
   return (
     <Box
@@ -72,7 +72,8 @@ const UsersAccessSummary = memo(props => {
 UsersAccessSummary.displayName = 'UsersAccessSummary';
 
 /** @type {MuiSx} */
-const usersAccessSummaryStyles = isLink => ({
+// Muted: the grey heading of the collapsed panel's list, not a value
+const usersAccessSummaryStyles = (isLink, muted) => ({
   root: {
     display: 'flex',
     alignItems: 'center',
@@ -95,7 +96,7 @@ const usersAccessSummaryStyles = isLink => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
-    color: palette.text.secondary,
+    color: muted ? palette.text.primary : palette.text.secondary,
     ...(isLink && {
       cursor: 'pointer',
       textDecoration: 'underline',
@@ -118,7 +119,7 @@ const usersAccessSummaryStyles = isLink => ({
     '& svg path': { fill: palette.icon.default },
   }),
   count: ({ palette }) => ({
-    color: palette.text.secondary,
+    color: muted ? palette.text.primary : palette.text.secondary,
   }),
 });
 

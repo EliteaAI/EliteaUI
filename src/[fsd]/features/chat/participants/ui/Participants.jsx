@@ -106,6 +106,8 @@ const Participants = memo(props => {
           {showCollapsedParticipants ? (
             <CollapsedPerticapantsList
               participants={participants}
+              conversation={conversation}
+              onAccessSaved={onAccessSaved}
               onSelectParticipant={onSelectParticipant}
               onDeleteParticipant={onDeleteParticipant}
               disabledAdd={disabledAdd}

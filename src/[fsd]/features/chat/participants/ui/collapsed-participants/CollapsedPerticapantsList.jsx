@@ -21,6 +21,7 @@ import { ChatParticipantType } from '@/common/constants';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import InfoIcon from '@/components/Icons/InfoIcon';
 
+import { UsersAccessCollapsed } from '../users-access';
 import UsersParticipantDropdown from '../users-participant-dropdown';
 import CollapsedParticipantsDropdown from './CollapsedParticipantsDropdown';
 
@@ -69,6 +70,8 @@ const ENTITY_SECTIONS = [
 const CollapsedPerticapantsList = memo(props => {
   const {
     participants = [],
+    conversation,
+    onAccessSaved,
     onSelectParticipant,
     onDeleteParticipant,
     disabledAdd,
@@ -92,6 +95,7 @@ const CollapsedPerticapantsList = memo(props => {
   const user = useSelector(state => state.user);
   const isPrivateProject = selectedProjectId == user.personal_project_id;
   const showUsersSection = !isPrivateProject;
+  const isSavedConversation = !!conversation?.id && !conversation?.isNew && !conversation?.isPlayback;
 
   const groupedByType = useMemo(
     () =>
@@ -148,11 +152,21 @@ const CollapsedPerticapantsList = memo(props => {
 
   return (
     <>
-      {showUsersSection && usersGroup && (
+      {showUsersSection && isSavedConversation && (
+        <UsersAccessCollapsed
+          conversation={conversation}
+          onSelectParticipant={onSelectParticipant}
+          onAccessSaved={onAccessSaved}
+          buttonSx={styles.collapsedTriggerButton()}
+          iconSx={styles.collapsedIcon}
+        />
+      )}
+
+      {showUsersSection && !isSavedConversation && usersGroup && (
         <StyledTooltip
           disableInteractive
           title={`${USERS_SECTION.label} in this chat`}
-          placement="right"
+          placement="left"
           open={collapsedTooltipType === USERS_SECTION.type && !isUsersMenuOpen}
           onOpen={() => onTriggerTooltipOpen(USERS_SECTION.type)}
           onClose={onTriggerTooltipClose}
@@ -215,7 +229,7 @@ const CollapsedPerticapantsList = memo(props => {
                   ? 'Its sub-agent chain is at the nesting limit (3 tiers) — select it to run.'
                   : `${entity.label} in this chat`
             }
-            placement="right"
+            placement="left"
             disableInteractive
             disableHoverListener={false}
             disableFocusListener={false}
@@ -306,7 +320,7 @@ const collapsedPerticapantsListStyles = () => ({
       position: 'relative',
       marginRight: '0.25rem',
 
-      '&::after': {
+      '&::after': count != null && {
         content: `"${count}"`,
         position: 'absolute',
         top: '-0.5625rem',
