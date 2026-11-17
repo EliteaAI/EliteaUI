@@ -30,27 +30,48 @@ export const getNodeNameError = ({ newName, currentName, nodes = [], toolNames =
 export const renameNodeInYaml = (prev, name, newName) => {
   const newNodes = [...(prev?.nodes || [])].map(node => {
     const newNode = node.id === name ? { ...node, id: newName } : { ...node };
-    if (node.condition && node.type !== PipelineNodeTypes.Router) {
-      newNode.condition = {
-        ...node.condition,
-        condition_definition: node.condition.condition_definition?.replaceAll(name, newName),
-        conditional_outputs: node.condition.conditional_outputs?.map(item =>
-          item === name ? newName : item,
-        ),
-        default_output: node.condition.default_output === name ? newName : node.condition.default_output,
-      };
-    } else if (node.decision) {
-      newNode.decision = {
-        ...node.decision,
-        nodes: node.decision.nodes?.map(item => (item === name ? newName : item)),
-        default_output: node.decision.default_output === name ? newName : node.decision.default_output,
-      };
-    } else if (node.type === PipelineNodeTypes.Decision) {
-      newNode.nodes = node.nodes?.map(item => (item === name ? newName : item));
+    if (node.type !== PipelineNodeTypes.Router) {
+      if (node.condition) {
+        newNode.condition = {
+          ...node.condition,
+          condition_definition: node.condition.condition_definition?.replaceAll(name, newName),
+          conditional_outputs: node.condition.conditional_outputs?.map(item =>
+            item === name ? newName : item,
+          ),
+          default_output: node.condition.default_output === name ? newName : node.condition.default_output,
+        };
+      } else if (node.decision) {
+        newNode.decision = {
+          ...node.decision,
+          nodes: node.decision.nodes?.map(item => (item === name ? newName : item)),
+          default_output: node.decision.default_output === name ? newName : node.decision.default_output,
+        };
+      } else if (node.type === PipelineNodeTypes.Decision) {
+        newNode.nodes = node.nodes?.map(item => (item === name ? newName : item));
+        newNode.default_output = node.default_output === name ? newName : node.default_output;
+      } else if (node.type === PipelineNodeTypes.Hitl) {
+        // routes belongs to the Redux state (frozen by Immer), so build a new object instead of assigning into it
+        if (node.routes) {
+          newNode.routes = {
+            ...node.routes,
+            approve: node.routes.approve === name ? newName : node.routes.approve,
+            edit: node.routes.edit === name ? newName : node.routes.edit,
+            reject: node.routes.reject === name ? newName : node.routes.reject,
+          };
+        }
+      } else if (node.transition === name) {
+        newNode.transition = newName;
+      }
+    } else {
+      const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      newNode.condition = node.condition?.replace(
+        new RegExp(`(?<![\\w])${escapeRegExp(name)}(?![\\w])`, 'g'),
+        newName,
+      );
+      newNode.routes = node.routes?.map(item => (item === name ? newName : item));
       newNode.default_output = node.default_output === name ? newName : node.default_output;
-    } else if (node.transition === name) {
-      newNode.transition = newName;
     }
+
     return newNode;
   });
   return {
