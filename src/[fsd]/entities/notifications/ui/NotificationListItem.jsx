@@ -1,11 +1,12 @@
 import { memo, useCallback } from 'react';
 
 import { formatDistanceToNow } from 'date-fns';
+import { useSelector } from 'react-redux';
 
 import { Box, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useNotificationBulkMarkSeenMutation } from '@/api/notifications';
 import MarkReadIcon from '@/assets/icons/mark-read-icon.svg?react';
@@ -43,7 +44,7 @@ const NotificationListItem = memo(props => {
   const { textVariant } = NOTIFICATION_CONTEXT_STYLES[context] ?? NOTIFICATION_CONTEXT_STYLES.list;
   const styles = notificationListItemStyles(clampLines, context === 'list');
 
-  const projectId = useSelectedProjectId();
+  const { personal_project_id: projectId } = useSelector(state => state.user);
   const [bulkMarkSeenNotifications] = useNotificationBulkMarkSeenMutation();
   const { toastError } = useToast();
 

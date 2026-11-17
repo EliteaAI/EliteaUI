@@ -56,7 +56,7 @@ const NotificationTableToolbar = memo(props => {
               aria-label={markToggleLabel}
               data-testid="notification-mark-toggle-button"
               onClick={onMarkToggle}
-              disabled={!onMarkToggle || isSelectionEmpty}
+              disabled={isSelectionEmpty}
             />
           </Box>
         </Tooltip>
@@ -67,7 +67,7 @@ const NotificationTableToolbar = memo(props => {
           title="Delete selected notifications"
           isLoading={false}
           buttonClassName="action"
-          disabled={!onDeleteSelected || isSelectionEmpty}
+          disabled={isSelectionEmpty}
           shouldRequestInputName={false}
         />
       </Box>

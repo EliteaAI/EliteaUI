@@ -1,11 +1,10 @@
 import { memo, useCallback, useEffect } from 'react';
 
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 import { Box, Popover, Skeleton, Typography } from '@mui/material';
 
-import { useCheckNotificationPermission } from '@/[fsd]/entities/notifications/lib';
 import { NotificationListItem } from '@/[fsd]/entities/notifications/ui';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -28,35 +27,35 @@ const NotificationList = memo(props => {
   const { toastError } = useToast();
   const [bulkMarkSeenNotifications] = useNotificationBulkMarkSeenMutation();
   const styles = notificationListStyles();
-  const projectId = useSelectedProjectId();
-  const { canUpdate } = useCheckNotificationPermission();
+  const selectedProjectId = useSelectedProjectId();
+  const { personal_project_id: personalProjectId } = useSelector(state => state.user);
 
   const { data, isFetching, isError, error, refetch } = useNotificationListQuery(
     {
-      projectId,
+      projectId: selectedProjectId,
       page: 0,
       pageSize: POPOVER_PAGE_SIZE,
       params: {
         only_new: true,
       },
     },
-    { refetchOnFocus: !!projectId, skip: !projectId },
+    { refetchOnFocus: !!selectedProjectId, skip: !selectedProjectId },
   );
 
   const notifications = data?.rows ?? [];
 
   const onMarkAllAsRead = useCallback(async () => {
-    if (!projectId) return;
+    if (!personalProjectId) return;
     try {
       await bulkMarkSeenNotifications({
-        projectId,
+        projectId: personalProjectId,
         ids: 'all',
         isSeen: true,
       }).unwrap();
     } catch (err) {
       toastError(buildErrorMessage(err));
     }
-  }, [projectId, bulkMarkSeenNotifications, toastError]);
+  }, [personalProjectId, bulkMarkSeenNotifications, toastError]);
 
   const onViewAll = useCallback(() => {
     dispatch(notificationsApi.util.invalidateTags([TAG_NOTIFICATIONS]));
@@ -125,7 +124,7 @@ const NotificationList = memo(props => {
               key={notification.id}
               notification={notification}
               onCloseNotificationList={onCloseNotificationList}
-              showMarkToggle={canUpdate}
+              showMarkToggle
             />
           ))}
           {isFetching && !notifications.length && (
@@ -147,7 +146,7 @@ const NotificationList = memo(props => {
             </Box>
           )}
         </Box>
-        {notifications.length > 0 && canUpdate && (
+        {notifications.length > 0 && (
           <BaseBtn
             variant={BUTTON_VARIANTS.auxiliary}
             onClick={onMarkAllAsRead}
