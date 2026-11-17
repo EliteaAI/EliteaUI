@@ -41,6 +41,7 @@ const renderItem = context =>
       <NotificationListItem
         notification={notification}
         context={context}
+        showMarkToggle
       />
     </ThemeProvider>,
   );
