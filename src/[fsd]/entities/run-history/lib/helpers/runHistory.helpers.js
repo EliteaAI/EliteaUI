@@ -21,6 +21,18 @@ const FIXED_TRACKS = {
   duration: 'minmax(7.5rem, 1fr)',
 };
 
+// The schedule columns keep the measured 48 rem; any further column adds exactly its own width
+const SCHEDULE_LIST_WIDTH_REM = 48;
+const SCHEDULE_COLUMNS_REM = 14.5;
+
+export const resolveRunHistoryListWidth = (extraColumns = []) =>
+  extraColumns.length
+    ? `${extraColumns.reduce(
+        (sum, column) => sum + parseFloat(column.width),
+        SCHEDULE_LIST_WIDTH_REM - SCHEDULE_COLUMNS_REM,
+      )}rem`
+    : '32rem';
+
 export const resolveRunHistoryColumns = (noVersions, hasEvent, extraColumns = []) => {
   if (extraColumns.length) {
     const { date, event, version, duration } = FIXED_TRACKS;

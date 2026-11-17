@@ -13,3 +13,4 @@ export * as UsageConstants from './usage.constants.js';
 export * as AnalyticsChatsConstants from './analyticsChats.constants.js';
 export * as ProjectDataDeleteConstants from './projectDataDelete.constants.js';
 export * as TokenScopeConstants from './tokenScope.constants.js';
+export * as ComplexityConstants from './complexity.constants.js';

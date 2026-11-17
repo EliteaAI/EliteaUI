@@ -27,6 +27,8 @@ const RunHistorySortableHeader = memo(props => {
           <Typography
             variant="labelMedium"
             color="text.secondary"
+            // A cut label shows in full on hover
+            title={headerItem.title ?? (typeof headerItem.label === 'string' ? headerItem.label : undefined)}
           >
             {headerItem.label}
           </Typography>

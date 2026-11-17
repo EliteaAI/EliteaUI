@@ -38,6 +38,10 @@ vi.mock('@/[fsd]/entities/run-history', async () => ({
 }));
 
 vi.mock('@/[fsd]/features/chat', () => ({ ChatMessageList: () => null }));
+vi.mock('@/[fsd]/features/settings/ui/complexity', () => ({
+  ComplexityAgentBlock: () => null,
+  useRunComplexityColumn: () => null,
+}));
 vi.mock('@/[fsd]/features/schedule', () => ({
   ScheduleRunStatusChip: ({ status }) => <span data-testid="status-chip">{status}</span>,
 }));

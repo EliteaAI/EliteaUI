@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -14,6 +14,7 @@ import {
 import { ChatMessageList } from '@/[fsd]/features/chat';
 import { ScheduleRunStatusChip } from '@/[fsd]/features/schedule';
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
+import { ComplexityAgentBlock, useRunComplexityColumn } from '@/[fsd]/features/settings/ui/complexity';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
 import { NavigationConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
@@ -62,8 +63,10 @@ const RunHistoryPage = memo(props => {
   });
   const schedules = useMemo(() => [...cronSchedules, ...webhooks], [cronSchedules, webhooks]);
   const filters = useRunHistoryFilters({ schedules, versions });
-  const extraColumns = useMemo(() => {
-    if (!scheduleEntityType) return undefined;
+  const [loadedRows, setLoadedRows] = useState([]);
+  const complexityColumn = useRunComplexityColumn({ entityId: agentId, rows: loadedRows });
+  const scheduleColumns = useMemo(() => {
+    if (!scheduleEntityType) return [];
     const kindById = new Map(schedules.map(schedule => [schedule.id, schedule.trigger_kind]));
     const [scheduleColumn, ...rest] = SCHEDULE_RUN_COLUMNS;
     const renderSchedule = row => {
@@ -112,6 +115,10 @@ const RunHistoryPage = memo(props => {
       ...rest.map(column => (column.id === 'status' ? { ...column, render: renderStatus } : column)),
     ];
   }, [scheduleEntityType, schedules, agentId, tab]);
+  const extraColumns = useMemo(() => {
+    const columns = complexityColumn ? [...scheduleColumns, complexityColumn] : scheduleColumns;
+    return columns.length ? columns : undefined;
+  }, [scheduleColumns, complexityColumn]);
 
   const handleRestoreConversation = useCallback(
     id => {
@@ -155,6 +162,10 @@ const RunHistoryPage = memo(props => {
         showBorder
         title={<Breadcrumbs />}
       />
+      <ComplexityAgentBlock
+        entityId={agentId}
+        versions={versions}
+      />
       <Box sx={styles.content}>
         <RunHistoryFilters
           values={filters.values}
@@ -177,6 +188,7 @@ const RunHistoryPage = memo(props => {
           eventColumnLabel={eventColumnLabel}
           decorateRow={decorateRow}
           extraColumns={extraColumns}
+          onRowsChange={setLoadedRows}
           queryParams={filters.queryParams}
           shareOpensHistoryTab
         />

@@ -461,10 +461,26 @@ describe('RunHistoryContainer height', () => {
 describe('RunHistoryContainer list column width', () => {
   it('widens the list column to 48 rem with the schedule columns, so the panel starts after it', () => {
     renderContainer('', {
-      extraColumns: [{ id: 'schedule', label: 'Schedule', width: '9rem', render: () => '-' }],
+      extraColumns: [
+        { id: 'schedule', label: 'Schedule', width: '7.5rem', render: () => '-' },
+        { id: 'status', label: 'Status', width: '7rem', render: () => '-' },
+      ],
     });
 
     expect(screen.getByTestId('run-history-list-column')).toHaveStyle({ maxWidth: '48rem' });
+  });
+
+  // EL-7556: the Complexity column cut Duration off at the fixed 48 rem
+  it('grows by each further extra column, so Duration keeps its track', () => {
+    renderContainer('', {
+      extraColumns: [
+        { id: 'schedule', label: 'Schedule', width: '7.5rem', render: () => '-' },
+        { id: 'status', label: 'Status', width: '7rem', render: () => '-' },
+        { id: 'complexity', label: 'CU', width: '5.5rem', render: () => '-' },
+      ],
+    });
+
+    expect(screen.getByTestId('run-history-list-column')).toHaveStyle({ maxWidth: '53.5rem' });
   });
 
   it('keeps the 32 rem column for the other histories', () => {
