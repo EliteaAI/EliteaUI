@@ -25,6 +25,17 @@ vi.mock('@/common/constants', async importOriginal => ({
 vi.mock('../../../lib/hooks/useChatUsersAccess.hooks', () => ({ useChatUsersAccess: () => access.current }));
 vi.mock('../../../lib/hooks', () => vi.importActual('../../../lib/hooks/useUsersAccessActions.hooks'));
 vi.mock('@/[fsd]/features/chat/conversation-list/lib/hooks', () => ({ useCopyChatLink: () => copyChatLink }));
+vi.mock('@/ComponentsLib/ListInfiniteMoreLoader', () => ({
+  default: props => (
+    <button
+      type="button"
+      data-testid="mention-load-more"
+      data-fetched={props.listCurrentSize}
+      data-total={props.totalAvailableCount}
+      onClick={props.onLoadMore}
+    />
+  ),
+}));
 vi.mock('@/[fsd]/features/chat/conversation-list/ui/share', () => ({
   ShareChatModal: () => <div data-testid="share-chat-modal" />,
 }));
@@ -208,5 +219,51 @@ describe('UsersAccessCard', () => {
     expect(share).toBeVisible();
     share.focus();
     expect(share).toHaveFocus();
+  });
+
+  describe('a whole-team chat', () => {
+    const teamUsers = Array.from({ length: 12 }, (_, index) => user(100 + index, index + 1, `P${index + 1}`));
+    const search = (patch = {}) => ({
+      query: '',
+      onQueryChange: vi.fn(),
+      fetched: 12,
+      queryTotal: 24,
+      isFetching: false,
+      onLoadMore: vi.fn(),
+      ...patch,
+    });
+
+    it('sends the search to the server instead of filtering the loaded page', () => {
+      access.current = { ...access.current, users: teamUsers, count: 24, search: search({ query: 'zz' }) };
+      renderCard();
+      fireEvent.click(screen.getByTestId('chat-users-access-label'));
+
+      // The server answered «zz» with this page, so nothing is filtered out again
+      expect(screen.getAllByTestId('chat-users-mention-name')).toHaveLength(11);
+      fireEvent.change(screen.getByTestId('chat-users-mention-search'), {
+        target: { value: 'ann' },
+      });
+      expect(access.current.search.onQueryChange).toHaveBeenCalledWith('ann');
+    });
+
+    it('loads the next page at the end of the list', () => {
+      access.current = { ...access.current, users: teamUsers, count: 24, search: search() };
+      renderCard();
+      fireEvent.click(screen.getByTestId('chat-users-access-label'));
+
+      const loader = screen.getByTestId('mention-load-more');
+      expect(loader).toHaveAttribute('data-fetched', '12');
+      expect(loader).toHaveAttribute('data-total', '24');
+      fireEvent.click(loader);
+      expect(access.current.search.onLoadMore).toHaveBeenCalled();
+    });
+
+    it('shows the search by the team size even when the first page is short', () => {
+      access.current = { ...access.current, users: teamUsers.slice(0, 3), count: 24, search: search() };
+      renderCard();
+      fireEvent.click(screen.getByTestId('chat-users-access-label'));
+
+      expect(screen.getByTestId('chat-users-mention-search')).toBeInTheDocument();
+    });
   });
 });

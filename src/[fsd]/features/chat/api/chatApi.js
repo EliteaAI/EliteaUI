@@ -558,6 +558,12 @@ export const apiSlice = eliteaApi
         }),
         invalidatesTags: (result, error) => (error ? [] : [TAG_TYPE_TOTAL_CONVERSATIONS]),
       }),
+      // Everyone in a whole-team chat mentions the whole project: without a limit the server lists every member
+      projectMemberIds: build.query({
+        query: ({ projectId }) => ({ url: `/admin/users/default/${projectId}` }),
+        transformResponse: response => (response?.rows ?? []).map(user => user.id),
+        keepUnusedDataFor: 60,
+      }),
       conversationImportCancel: build.mutation({
         query: ({ projectId, importId }) => ({
           url: getConversationImportPath(projectId, importId),
@@ -568,6 +574,7 @@ export const apiSlice = eliteaApi
   });
 
 export const {
+  useLazyProjectMemberIdsQuery,
   useUpdateMessageMetaMutation,
   useConversationCreateMutation,
   useConversationEditMutation,

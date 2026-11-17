@@ -4,6 +4,7 @@ import {
   areDetailsOfParticipant,
   findChatParticipantOfEntity,
   getDefaultActiveParticipant,
+  getEveryoneUserIds,
   getSkillUnavailableReason,
   isSameChatEntity,
   isSavedConversation,
@@ -259,5 +260,22 @@ describe('isSavedConversation', () => {
     expect(isSavedConversation({ id: 5, isPlayback: true })).toBe(false);
     expect(isSavedConversation({})).toBe(false);
     expect(isSavedConversation(undefined)).toBe(false);
+  });
+});
+
+describe('getEveryoneUserIds', () => {
+  const person = (id, userId) => ({ id, entity_name: 'user', entity_meta: { id: userId } });
+  const agent = { id: 9, entity_name: 'application', entity_meta: { id: 70 } };
+
+  it('mentions every project member of a whole-team chat but the sender', () => {
+    expect(
+      getEveryoneUserIds({ everyoneUserIds: [1, 2, 3, 4], participants: [person(10, 1)], userId: 1 }),
+    ).toEqual([2, 3, 4]);
+  });
+
+  it('mentions the people of a restricted chat by their user ids, not participant ids', () => {
+    expect(
+      getEveryoneUserIds({ participants: [person(10, 1), person(11, 2), person(12, 3), agent], userId: 1 }),
+    ).toEqual([2, 3]);
   });
 });

@@ -150,3 +150,19 @@ describe('Skill participant payload', () => {
     expect(payload.attachments_info).toEqual([{ filepath: '/bucket/a.png' }]);
   });
 });
+
+describe('Mentions of people in a chat message', () => {
+  it('sends the mentioned project user ids in mentioned_user_ids (EliteaAI/elitea_core#726)', () => {
+    const payload = generateMessagePayload({
+      question: 'Hi',
+      isSendingToUser: true,
+      mentionedUserIds: [7, 9],
+    });
+    expect(payload.mentioned_user_ids).toEqual([7, 9]);
+    expect(payload.user_ids).toBeUndefined();
+  });
+  it('sends no mention field to an agent', () => {
+    const payload = generateMessagePayload({ question: 'Hi', mentionedUserIds: [7] });
+    expect(payload.mentioned_user_ids).toBeUndefined();
+  });
+});

@@ -3,6 +3,7 @@ export {
   useConversationEditMutation,
   useConversationDetailsQuery,
   useLazyConversationDetailsQuery,
+  useLazyProjectMemberIdsQuery,
   useConversationExportSummaryQuery,
   useLazyMessageTracesQuery,
   useLazyMessageTraceQuery,

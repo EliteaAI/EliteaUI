@@ -160,3 +160,18 @@ export const shouldDeselectParticipant = (hasMisconfigurationErrors, signInOnly,
 // A chat on the server: a new draft or a playback has no access to show
 export const isSavedConversation = conversation =>
   !!conversation?.id && !conversation?.isNew && !conversation?.isPlayback;
+
+/**
+ * The project user ids an «@Everyone» message mentions, the sender left out.
+ *
+ * A whole-team chat passes every project member (`everyoneUserIds`), most of whom never opened the chat;
+ * a restricted chat, or a whole-team chat whose member list failed to load, falls back to its people.
+ */
+export const getEveryoneUserIds = ({ everyoneUserIds, participants = [], userId }) => {
+  const ids =
+    everyoneUserIds ??
+    participants
+      .filter(item => item.entity_name === ChatParticipantType.Users)
+      .map(item => item.entity_meta?.id);
+  return [...new Set(ids.filter(id => id != null && id != userId))];
+};
