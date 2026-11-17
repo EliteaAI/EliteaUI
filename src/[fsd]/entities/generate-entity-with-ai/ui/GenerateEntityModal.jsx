@@ -2,6 +2,7 @@ import { memo, useCallback, useRef, useState } from 'react';
 
 import { Alert, Box, CircularProgress, TextField, Typography } from '@mui/material';
 
+import { AiDraftErrorHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -158,9 +159,7 @@ const GenerateEntityModal = memo(props => {
             sx={styles.errorAlert}
             data-testid={errorAlertTestId}
           >
-            {generateError?.data?.error ||
-              generateError?.data?.detail ||
-              'Failed to generate. Please try again.'}
+            {AiDraftErrorHelpers.getAiDraftErrorMessage(generateError)}
           </Alert>
         )}
       </Box>
