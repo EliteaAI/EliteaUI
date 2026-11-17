@@ -1,3 +1,5 @@
+import prototypeOverlay from './prototypeOverlay.js';
+
 /** @type { import('@storybook/react-vite').StorybookConfig } */
 const config = {
   stories: ['../src/**/*.stories.@(js|jsx|ts|tsx)'],
@@ -38,6 +40,8 @@ const config = {
       define: {
         global: 'globalThis',
       },
+      // Design prototypes kept under src/[fsd]/stories/ stand in for the product files they change (see the plugin)
+      plugins: [prototypeOverlay()],
     });
   },
 };
