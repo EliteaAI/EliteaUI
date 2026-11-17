@@ -3,8 +3,7 @@ import { memo } from 'react';
 import { Box } from '@mui/material';
 
 import { ComplexityConstants } from '@/[fsd]/features/settings/lib/constants';
-
-import { dimensionColor } from './ComplexityBreakdownBar';
+import { ComplexityHelpers } from '@/[fsd]/features/settings/lib/helpers';
 
 const { DIMENSIONS } = ComplexityConstants;
 
@@ -49,7 +48,7 @@ const complexityBreakdownLegendStyles = () => ({
       width: '0.5rem',
       height: '0.5rem',
       borderRadius: '0.125rem',
-      backgroundColor: dimensionColor(palette, index),
+      backgroundColor: ComplexityHelpers.dimensionColor(palette, index),
     }),
 });
 

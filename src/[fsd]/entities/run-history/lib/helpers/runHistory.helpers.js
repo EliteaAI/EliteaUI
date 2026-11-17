@@ -23,14 +23,11 @@ const FIXED_TRACKS = {
 
 // The schedule columns keep the measured 48 rem; any further column adds exactly its own width
 const SCHEDULE_LIST_WIDTH_REM = 48;
-const SCHEDULE_COLUMNS_REM = 14.5;
+const sumColumnWidthsRem = columns => columns.reduce((sum, column) => sum + parseFloat(column.width), 0);
 
 export const resolveRunHistoryListWidth = (extraColumns = []) =>
   extraColumns.length
-    ? `${extraColumns.reduce(
-        (sum, column) => sum + parseFloat(column.width),
-        SCHEDULE_LIST_WIDTH_REM - SCHEDULE_COLUMNS_REM,
-      )}rem`
+    ? `${SCHEDULE_LIST_WIDTH_REM - sumColumnWidthsRem(SCHEDULE_RUN_COLUMNS) + sumColumnWidthsRem(extraColumns)}rem`
     : '32rem';
 
 export const resolveRunHistoryColumns = (noVersions, hasEvent, extraColumns = []) => {

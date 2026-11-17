@@ -56,3 +56,7 @@ export const runScoreState = (scoredRun, lastActivityMs, pendingWindowMs, now = 
     return RUN_SCORE_STATE.pending;
   return RUN_SCORE_STATE.notScored;
 };
+
+// Context, reasoning, tools: shared by the breakdown bar and its legend
+export const dimensionColor = (palette, index) =>
+  [palette.status.draft, palette.status.onModeration, palette.status.published][index];

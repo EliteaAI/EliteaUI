@@ -74,6 +74,16 @@ describe('ComplexityAgentBlock (EL-7556)', () => {
     expect(useAnalyticsComplexityDetailQuery).toHaveBeenCalledWith(expect.anything(), { skip: true });
   });
 
+  // #1570 review: a failed read must not claim there are no scored runs
+  it('hides the block when the request fails', () => {
+    fixture.platformSettings = { complexity_enabled: true };
+    useAnalyticsComplexityDetailQuery.mockReturnValue({ data: undefined, isFetching: false, isError: true });
+    render(<ComplexityAgentBlock entityId={7} />, { wrapper: Wrapper });
+
+    expect(screen.queryByTestId('complexity-agent-block')).toBeNull();
+    expect(screen.queryByText(/No scored runs/)).toBeNull();
+  });
+
   it('shows the all-version label and one row per version with its name', () => {
     fixture.platformSettings = { complexity_enabled: true };
     render(

@@ -30,7 +30,7 @@ const ComplexityAgentBlock = memo(props => {
 
   const [periodDays, setPeriodDays] = useState(DEFAULT_PERIOD_DAYS);
   const range = useMemo(() => ComplexityHelpers.periodRange(periodDays), [periodDays]);
-  const { data, isFetching } = useAnalyticsComplexityDetailQuery(
+  const { data, isFetching, isError } = useAnalyticsComplexityDetailQuery(
     { projectId, entityId, ...range, limit: 1 },
     { skip: !enabled || !projectId || !entityId },
   );
@@ -79,7 +79,8 @@ const ComplexityAgentBlock = memo(props => {
     [data?.versions],
   );
 
-  if (!enabled) return null;
+  // A failed read (e.g. no analytics access) hides the block rather than claiming there are no runs
+  if (!enabled || isError) return null;
 
   const summary = data?.summary;
   const meta = data?.meta;

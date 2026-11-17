@@ -7,9 +7,6 @@ import { ComplexityHelpers } from '@/[fsd]/features/settings/lib/helpers';
 
 const { DIMENSIONS } = ComplexityConstants;
 
-export const dimensionColor = (palette, index) =>
-  [palette.status.draft, palette.status.onModeration, palette.status.published][index];
-
 const ComplexityBreakdownBar = memo(props => {
   const { breakdown, testId = 'complexity-breakdown' } = props;
 
@@ -68,7 +65,7 @@ const complexityBreakdownBarStyles = () => ({
     index =>
     ({ palette }) => ({
       height: '100%',
-      backgroundColor: dimensionColor(palette, index),
+      backgroundColor: ComplexityHelpers.dimensionColor(palette, index),
     }),
 });
 

@@ -1,9 +1,11 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
+import { useDispatch } from 'react-redux';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
 import { parseRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
-import { useAnalyticsComplexityDetailQuery } from '@/[fsd]/features/settings/api/analyticsApi';
+import { analyticsApi } from '@/[fsd]/features/settings/api/analyticsApi';
 import { ComplexityConstants } from '@/[fsd]/features/settings/lib/constants';
 import { ComplexityHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -13,7 +15,8 @@ import ComplexityLabelChip from '../components/ComplexityLabelChip';
 
 const { NOT_SCORED_TOOLTIP, PENDING_SCORE_TOOLTIP, PENDING_WINDOW_MS } = ComplexityConstants;
 const { RUN_SCORE_STATE } = ComplexityHelpers;
-const MAX_IDS = 100;
+// One request per Run History page; the API returns at most one row per id, so nothing is cut off
+const CHUNK_SIZE = 20;
 // Run History has no date filter, so labels cover the retention window of scored runs
 const LOOKBACK_DAYS = 400;
 
@@ -23,32 +26,51 @@ const unscoredSx = ({ palette }) => ({
   fontStyle: 'italic',
 });
 
-// One conversation can hold several scored runs; its label follows the most complex one
-const toLabelByConversation = runs => {
-  const byConversation = new Map();
-  (runs ?? []).forEach(run => {
-    const current = byConversation.get(run.conversation_id);
-    if (!current || run.cu_total > current.cu_total) byConversation.set(run.conversation_id, run);
-  });
-  return byConversation;
+const chunkIds = ids => {
+  const chunks = [];
+  for (let i = 0; i < ids.length; i += CHUNK_SIZE) chunks.push(ids.slice(i, i + CHUNK_SIZE));
+  return chunks;
 };
 
 export const useRunComplexityColumn = ({ entityId, rows }) => {
   const projectId = useSelectedProjectId();
+  const dispatch = useDispatch();
   const { data: platformSettings } = useGetPlatformSettingsQuery();
   const enabled = Boolean(platformSettings?.complexity_enabled);
 
-  const conversationIds = useMemo(
-    () => [...new Set((rows ?? []).map(row => row.uuid).filter(Boolean))].slice(0, MAX_IDS),
+  const chunks = useMemo(
+    () => chunkIds([...new Set((rows ?? []).map(row => row.uuid).filter(Boolean))]),
     [rows],
   );
   const range = useMemo(() => ComplexityHelpers.periodRange(LOOKBACK_DAYS), []);
+  const [byConversation, setByConversation] = useState(() => new Map());
 
-  const { data } = useAnalyticsComplexityDetailQuery(
-    { projectId, entityId, conversationIds, ...range, limit: 100 },
-    { skip: !enabled || !projectId || !entityId || !conversationIds.length },
-  );
-  const byConversation = useMemo(() => toLabelByConversation(data?.runs), [data?.runs]);
+  // Chunks already loaded come from the RTK cache, so Load more only requests the new page's ids
+  useEffect(() => {
+    if (!enabled || !projectId || !entityId || !chunks.length) return undefined;
+    const subscriptions = chunks.map(conversationIds =>
+      dispatch(
+        analyticsApi.endpoints.analyticsComplexityDetail.initiate({
+          projectId,
+          entityId,
+          conversationIds,
+          ...range,
+          limit: conversationIds.length,
+        }),
+      ),
+    );
+    let cancelled = false;
+    Promise.all(subscriptions.map(subscription => subscription.unwrap().catch(() => null))).then(results => {
+      if (cancelled) return;
+      const next = new Map();
+      results.forEach(result => (result?.runs ?? []).forEach(run => next.set(run.conversation_id, run)));
+      setByConversation(next);
+    });
+    return () => {
+      cancelled = true;
+      subscriptions.forEach(subscription => subscription.unsubscribe());
+    };
+  }, [enabled, projectId, entityId, chunks, range, dispatch]);
 
   return useMemo(() => {
     if (!enabled) return null;
