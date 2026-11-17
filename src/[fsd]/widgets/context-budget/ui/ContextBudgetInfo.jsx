@@ -32,6 +32,9 @@ const ContextBudgetInfo = memo(props => {
     setActiveConversation,
     conversationInstructions,
     persona,
+    onCollapse,
+    expandable,
+    toggleFocusRef,
   } = props;
   const selectedProjectId = useSelectedProjectId();
   const { isOpen, handleOpen, handleClose } = useModal();
@@ -145,6 +148,9 @@ const ContextBudgetInfo = memo(props => {
         setActiveConversation={setActiveConversation}
         conversationInstructions={conversationInstructions}
         persona={persona}
+        expandable={expandable}
+        onCollapse={onCollapse}
+        toggleFocusRef={toggleFocusRef}
       />
     );
   }
@@ -179,6 +185,8 @@ const ContextBudgetInfo = memo(props => {
       setActiveConversation={setActiveConversation}
       conversationInstructions={conversationInstructions}
       persona={persona}
+      onCollapse={onCollapse}
+      toggleFocusRef={toggleFocusRef}
     />
   );
 });

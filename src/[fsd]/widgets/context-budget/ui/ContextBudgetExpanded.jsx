@@ -29,6 +29,8 @@ const ContextBudgetExpanded = memo(props => {
     setActiveConversation,
     conversationInstructions,
     persona,
+    onCollapse,
+    toggleFocusRef,
   } = props;
 
   const { isOpen, handleOpen, handleClose } = useModal();
@@ -50,6 +52,8 @@ const ContextBudgetExpanded = memo(props => {
       <ContextBudgetHeader
         onEdit={handleOpen}
         canEdit={canEdit}
+        onCollapse={onCollapse}
+        toggleFocusRef={toggleFocusRef}
       />
 
       <Box sx={styles.selectorRow}>

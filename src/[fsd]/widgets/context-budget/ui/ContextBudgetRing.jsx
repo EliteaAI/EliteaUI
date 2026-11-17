@@ -12,7 +12,7 @@ const RING_SIZE = 30;
  * Collapsed participants panel: a circular budget indicator that opens the full budget card in a popover.
  */
 const ContextBudgetRing = memo(props => {
-  const { stats, utilizationColor, ...popoverProps } = props;
+  const { stats, utilizationColor, expandable, onCollapse, toggleFocusRef, ...popoverProps } = props;
 
   const anchorRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -21,7 +21,20 @@ const ContextBudgetRing = memo(props => {
   const percentage = stats.utilizationPercentage;
   const windowLabel = stats.windowMode === 'full' ? 'Full' : 'Balanced';
 
-  const toggle = useCallback(() => setOpen(prev => !prev), []);
+  const setAnchorRef = useCallback(
+    node => {
+      anchorRef.current = node;
+      toggleFocusRef?.(node);
+    },
+    [toggleFocusRef],
+  );
+  const toggle = useCallback(() => {
+    if (!expandable) {
+      setOpen(prev => !prev);
+    } else {
+      onCollapse?.(false);
+    }
+  }, [expandable, onCollapse]);
   const close = useCallback(() => setOpen(false), []);
 
   const handleKeyDown = useCallback(
@@ -39,16 +52,20 @@ const ContextBudgetRing = memo(props => {
   return (
     <>
       <Tooltip
-        title={open ? '' : `Context ${percentage}% · ${windowLabel}`}
+        title={
+          open
+            ? ''
+            : `${expandable ? 'Expand context management · ' : ''}Context ${percentage}% · ${windowLabel}`
+        }
         placement="left"
       >
         <Box
-          ref={anchorRef}
+          ref={setAnchorRef}
           role="button"
           tabIndex={0}
-          aria-label={`Context management ${percentage}%`}
-          aria-expanded={open}
-          aria-haspopup="dialog"
+          aria-label={`${expandable ? 'Expand context management' : 'Context management'} ${percentage}%`}
+          aria-expanded={expandable ? false : open}
+          aria-haspopup={expandable ? undefined : 'dialog'}
           onClick={toggle}
           onKeyDown={handleKeyDown}
           sx={styles.ring}
