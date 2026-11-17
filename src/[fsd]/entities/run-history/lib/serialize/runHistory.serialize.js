@@ -3,6 +3,7 @@ const serializeRunHistory = conversation => {
 
   return {
     id: conversation.id,
+    uuid: conversation.uuid ?? null,
     created_at: conversation.run_started_at ?? conversation.created_at,
     updated_at: conversation.updated_at,
     name: conversation.name,

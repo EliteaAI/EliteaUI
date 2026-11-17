@@ -10,6 +10,7 @@ import {
   hasRunAnalytics,
   parseRunTimestamp,
   resolveRunHistoryColumns,
+  resolveRunHistoryListWidth,
   toExecutionTypeRow,
   toRunISOString,
 } from '../runHistory.helpers';
@@ -23,6 +24,17 @@ describe('resolveRunHistoryColumns', () => {
   it('gives the event the wide track and narrows the trailing duration', () => {
     expect(resolveRunHistoryColumns(true, true)).toBe('1.5fr 1.5fr 1fr');
     expect(resolveRunHistoryColumns(false, true)).toBe('1.5fr 1.5fr 1.5fr 1fr');
+  });
+});
+
+describe('resolveRunHistoryListWidth', () => {
+  it('keeps 32 rem without extra columns and 48 rem with the schedule columns', () => {
+    expect(resolveRunHistoryListWidth()).toBe('32rem');
+    expect(resolveRunHistoryListWidth(SCHEDULE_RUN_COLUMNS)).toBe('48rem');
+  });
+
+  it('adds the width of every further column', () => {
+    expect(resolveRunHistoryListWidth([...SCHEDULE_RUN_COLUMNS, { width: '7rem' }])).toBe('55rem');
   });
 });
 

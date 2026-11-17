@@ -15,7 +15,9 @@ vi.mock('@/api', () => {
   return { eliteaApi };
 });
 
-vi.mock('@/[fsd]/shared/lib/helpers', () => ({ getFilenameFromContentDisposition: (header, fallback) => fallback }));
+vi.mock('@/[fsd]/shared/lib/helpers', () => ({
+  getFilenameFromContentDisposition: (header, fallback) => fallback,
+}));
 vi.mock('@/[fsd]/features/settings/lib/helpers', () => ({
   ProjectBackupHelpers: { getRestoreInvalidatedTags: () => [] },
 }));

@@ -69,7 +69,7 @@ const AnalyticsBreakdownTable = memo(props => {
       <Box sx={styles.tableWrapper}>
         <Box sx={[styles.tableHeader, tableStyles.headerGutter, rowMinWidth]}>
           {columns.map(column =>
-            onSort ? (
+            onSort && column.sortable !== false ? (
               <Box
                 key={column.key}
                 sx={[styles.tableCell, analyticsHeaderCellSx, analyticsColumnSx(column)]}

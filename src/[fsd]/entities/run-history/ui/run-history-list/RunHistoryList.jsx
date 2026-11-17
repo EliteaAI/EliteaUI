@@ -7,6 +7,7 @@ import {
   compareRunDuration,
   compareRunTimestamp,
   resolveRunHistoryColumns,
+  resolveRunHistoryListWidth,
 } from '@/[fsd]/entities/run-history/lib/helpers';
 import { useRunHistorySorting } from '@/[fsd]/entities/run-history/lib/hooks';
 import { RunHistoryListItem, RunHistorySortableHeader } from '@/[fsd]/entities/run-history/ui';
@@ -48,7 +49,7 @@ const RunHistoryList = memo(props => {
   const { isSmallWindow } = useIsSmallWindow();
   const { windowWidth } = useGetWindowWidth();
 
-  const styles = runHistoryListStyles(isSmallWindow, extraColumns.length > 0);
+  const styles = runHistoryListStyles(isSmallWindow, resolveRunHistoryListWidth(extraColumns));
 
   const { sortConfig, handleSortItems, getSortedData } = useRunHistorySorting(SORT_TYPES.DATE);
 
@@ -78,7 +79,12 @@ const RunHistoryList = memo(props => {
       { label: 'Date', type: SORT_TYPES.DATE },
       ...(hasEvent ? [{ label: eventColumnLabel, type: SORT_TYPES.EVENT }] : []),
       // The extra columns do not sort
-      ...extraColumns.map(column => ({ label: column.label, type: column.id, sortable: false })),
+      ...extraColumns.map(column => ({
+        label: column.label,
+        title: column.title,
+        type: column.id,
+        sortable: false,
+      })),
       ...(noVersions ? [] : [{ label: 'Version', type: SORT_TYPES.VERSION }]),
       { label: 'Duration', type: SORT_TYPES.DURATION },
     ],
@@ -151,9 +157,9 @@ const RunHistoryList = memo(props => {
 RunHistoryList.displayName = 'RunHistoryList';
 
 /** @type {MuiSx} */
-// Agent and Pipeline Run History with the Schedule and Status columns take 48 rem; the others keep 32 rem
-const runHistoryListStyles = (isSmallWindow, wide) => {
-  const wrapperWidth = isSmallWindow ? '100%' : wide ? '48rem' : '32rem';
+// The list grows with its extra columns (48 rem with Schedule and Status); without them it keeps 32 rem
+const runHistoryListStyles = (isSmallWindow, listWidth) => {
+  const wrapperWidth = isSmallWindow ? '100%' : listWidth;
 
   return {
     wrapper: {

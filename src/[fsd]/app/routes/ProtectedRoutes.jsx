@@ -36,6 +36,9 @@ const AnalyticsContainer = ChunkHelpers.lazyWithRetry(
 const UsageContainer = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/features/settings/ui/usage/UsageContainer'),
 );
+const ComplexityContainer = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/features/settings/ui/complexity/ComplexityContainer'),
+);
 const AppDetail = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/AppDetail'));
 const Apps = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/Apps'));
 const McpAuthPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/mcp'));
@@ -637,6 +640,10 @@ const ProtectedRoutes = memo(() => {
             <Route
               path="usage"
               element={<UsageContainer />}
+            />
+            <Route
+              path="complexity"
+              element={<ComplexityContainer />}
             />
             <Route
               path="profile"

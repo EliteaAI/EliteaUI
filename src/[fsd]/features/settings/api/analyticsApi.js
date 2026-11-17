@@ -207,6 +207,62 @@ export const analyticsApi = eliteaApi
         providesTags: [TAG_TYPE_ANALYTICS],
         keepUnusedDataFor: CACHE_LIFETIME,
       }),
+      analyticsComplexity: build.query({
+        query: ({
+          projectId,
+          dateFrom,
+          dateTo,
+          limit = 20,
+          offset = 0,
+          sortBy = 'cu_median',
+          sortOrder = 'desc',
+        }) => {
+          const params = new URLSearchParams();
+          if (dateFrom) params.set('date_from', dateFrom);
+          if (dateTo) params.set('date_to', dateTo);
+          params.set('limit', String(limit));
+          params.set('offset', String(offset));
+          params.set('sort_by', sortBy);
+          params.set('sort_order', sortOrder);
+          return {
+            url: `/usage/analytics_complexity/prompt_lib/${projectId}?${params.toString()}`,
+            method: 'GET',
+          };
+        },
+        providesTags: [TAG_TYPE_ANALYTICS],
+        keepUnusedDataFor: CACHE_LIFETIME,
+      }),
+      analyticsComplexityDetail: build.query({
+        query: ({
+          projectId,
+          entityId,
+          entityType = 'application',
+          entityProjectId,
+          versionId,
+          conversationIds,
+          dateFrom,
+          dateTo,
+          limit = 20,
+          offset = 0,
+        }) => {
+          const params = new URLSearchParams();
+          params.set('entity_id', String(entityId));
+          params.set('entity_type', entityType);
+          if (entityProjectId) params.set('entity_project_id', String(entityProjectId));
+          if (versionId) params.set('version_id', String(versionId));
+          if (conversationIds?.length) params.set('conversation_ids', conversationIds.join(','));
+          if (dateFrom) params.set('date_from', dateFrom);
+          if (dateTo) params.set('date_to', dateTo);
+          params.set('limit', String(limit));
+          params.set('offset', String(offset));
+          return {
+            url: `/usage/analytics_complexity_detail/prompt_lib/${projectId}?${params.toString()}`,
+            method: 'GET',
+          };
+        },
+        providesTags: [TAG_TYPE_ANALYTICS],
+        keepUnusedDataFor: CACHE_LIFETIME,
+      }),
       analyticsChatsSummary: build.query({
         query: ({ projectId, dateFrom, dateTo, includeDaily = false }) => {
           const params = new URLSearchParams();
@@ -429,4 +485,6 @@ export const {
   useAnalyticsChatActivityQuery,
   useAnalyticsChatDetailQuery,
   useAnalyticsChatRunsQuery,
+  useAnalyticsComplexityQuery,
+  useAnalyticsComplexityDetailQuery,
 } = analyticsApi;
