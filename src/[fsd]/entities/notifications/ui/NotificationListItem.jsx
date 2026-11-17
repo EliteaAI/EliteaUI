@@ -37,7 +37,6 @@ const NotificationListItem = memo(props => {
     onNotificationSeenChange,
     onCloseNotificationList,
     context = 'list',
-    showMarkToggle = false,
   } = props;
   const theme = useTheme();
   const { event_type } = notification;
@@ -94,7 +93,7 @@ const NotificationListItem = memo(props => {
           </Typography>
         )}
       </Box>
-      {context === 'list' && showMarkToggle && (
+      {context === 'list' && (
         <Tooltip
           title={markToggleLabel}
           enterDelay={1200}

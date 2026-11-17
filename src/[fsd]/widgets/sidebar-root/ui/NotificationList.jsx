@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Popover, Skeleton, Typography } from '@mui/material';
 
 import { NotificationListItem } from '@/[fsd]/entities/notifications/ui';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import {
   TAG_NOTIFICATIONS,
@@ -27,19 +27,18 @@ const NotificationList = memo(props => {
   const { toastError } = useToast();
   const [bulkMarkSeenNotifications] = useNotificationBulkMarkSeenMutation();
   const styles = notificationListStyles();
-  const selectedProjectId = useSelectedProjectId();
   const { personal_project_id: personalProjectId } = useSelector(state => state.user);
 
   const { data, isFetching, isError, error, refetch } = useNotificationListQuery(
     {
-      projectId: selectedProjectId,
+      projectId: personalProjectId,
       page: 0,
       pageSize: POPOVER_PAGE_SIZE,
       params: {
         only_new: true,
       },
     },
-    { refetchOnFocus: !!selectedProjectId, skip: !selectedProjectId },
+    { refetchOnFocus: !!personalProjectId, skip: !personalProjectId },
   );
 
   const notifications = data?.rows ?? [];
@@ -124,7 +123,6 @@ const NotificationList = memo(props => {
               key={notification.id}
               notification={notification}
               onCloseNotificationList={onCloseNotificationList}
-              showMarkToggle
             />
           ))}
           {isFetching && !notifications.length && (
