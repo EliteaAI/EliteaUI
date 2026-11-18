@@ -10,7 +10,7 @@ import { buildForkedEntityHref } from '@/common/utils.jsx';
 import { LabelLinkWithToolTip } from '@/components/Fork/LabelLinkWithToolTip.jsx';
 
 const SkillInformation = memo(props => {
-  const { id, versionId, meta } = props;
+  const { id, versionId, meta, defaultExpanded = true } = props;
   const styles = skillInformationStyles();
 
   const isForked = Boolean(meta?.parent_project_id && meta?.parent_entity_id);
@@ -67,6 +67,7 @@ const SkillInformation = memo(props => {
       data-testid="skill-information-section"
       accordionSX={({ palette }) => ({ background: `${palette.background.default.tertiary} !important` })}
       showMode={AccordionConstants.AccordionShowMode.LeftMode}
+      defaultExpanded={defaultExpanded}
       items={items}
     />
   );

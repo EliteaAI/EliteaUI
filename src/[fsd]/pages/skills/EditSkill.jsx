@@ -17,7 +17,11 @@ import {
 } from '@/[fsd]/features/skill';
 import { SKILL_RUN_FOCUS_TARGET, SKILL_RUN_SEARCH_PARAMS } from '@/[fsd]/features/skill/lib/constants';
 import { readRunConversationId, withDefaultSkillModel } from '@/[fsd]/features/skill/lib/helpers';
-import { useSkillModels, useSkillValidationSchema } from '@/[fsd]/features/skill/lib/hooks';
+import {
+  useOpenRunVersion,
+  useSkillModels,
+  useSkillValidationSchema,
+} from '@/[fsd]/features/skill/lib/hooks';
 import {
   useRestoredConversation,
   useRunHistoryNavigation,
@@ -155,25 +159,7 @@ const EditSkill = memo(() => {
     { skip: !projectId || !skillId },
   );
 
-  const onOpenRunVersion = useCallback(
-    async (pinnedVersionId, conversationId) => {
-      const freshPinnedVersionRequest = dispatch(
-        eliteaApi.endpoints.skillDetails.initiate({ projectId, skillId, versionId: String(pinnedVersionId) }),
-      );
-      const { error: pinnedVersionError } = await freshPinnedVersionRequest;
-      freshPinnedVersionRequest.unsubscribe();
-      if (pinnedVersionError && isNotFoundError(pinnedVersionError)) {
-        toastError('The version this run used no longer exists; starting a new run');
-        onRunConversationChange(null);
-        return;
-      }
-      const search = new URLSearchParams({ [SKILL_RUN_SEARCH_PARAMS.run]: String(conversationId) });
-      navigate(`${RouteDefinitions.Skills}/${tab}/${skillId}/${pinnedVersionId}?${search.toString()}`, {
-        replace: true,
-      });
-    },
-    [dispatch, navigate, onRunConversationChange, projectId, skillId, tab, toastError],
-  );
+  const onOpenRunVersion = useOpenRunVersion({ projectId, skillId, tab, onRunConversationChange });
 
   const { checkPermission } = useCheckPermission();
   const hasEditPermission = useMemo(() => checkPermission(PERMISSIONS.skills.update), [checkPermission]);
@@ -349,6 +335,7 @@ const EditSkill = memo(() => {
                   <SkillEditorWorkspace
                     skillId={data?.id}
                     versionId={data?.version_details?.id}
+                    versionStatus={data?.version_details?.status}
                     meta={data?.version_details?.meta}
                     disabled={!hasEditPermission}
                     instructionsKey={`${skillId}:${currentVersionId}:${
