@@ -215,7 +215,7 @@ const resourcesPageStyles = () => ({
   }),
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(23.75rem, 31.25rem))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(23.75rem, 29rem))',
     gap: '1rem',
     justifyContent: 'center',
   },

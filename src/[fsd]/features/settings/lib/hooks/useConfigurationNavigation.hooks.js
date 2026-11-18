@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { SearchParams, ViewMode } from '@/common/constants';
 import RouteDefinitions from '@/routes';
 
 export const useConfigurationNavigation = () => {
@@ -37,5 +38,29 @@ export const useConfigurationNavigation = () => {
     [locationState, navigate],
   );
 
-  return { navigateToConfiguration };
+  const navigateToCreateConfiguration = useCallback(() => {
+    const search = `${SearchParams.ViewMode}=${ViewMode.Owner}&from=ai-providers`;
+    const aiProvidersPath = RouteDefinitions.SettingsWithTab.replace(':tab', 'ai-providers');
+
+    navigate(
+      { pathname: RouteDefinitions.CreateConfiguration, search },
+      {
+        state: {
+          routeStack: [
+            {
+              breadCrumb: 'AI Providers',
+              pagePath: `${aiProvidersPath}?${SearchParams.ViewMode}=${ViewMode.Owner}`,
+            },
+            {
+              breadCrumb: 'New AI Provider',
+              viewMode: ViewMode.Owner,
+              pagePath: `${RouteDefinitions.CreateConfiguration}?${search}`,
+            },
+          ],
+        },
+      },
+    );
+  }, [navigate]);
+
+  return { navigateToConfiguration, navigateToCreateConfiguration };
 };
