@@ -36,15 +36,16 @@ export const useRunHistoryFilters = ({ schedules, versions }) => {
   const trigger = readParam(searchParams, FILTER_PARAMS.trigger, value =>
     TRIGGER_OPTIONS.some(option => option.value === value),
   );
+  const triggerParam = TRIGGER_OPTIONS.find(option => option.value === trigger)?.param;
 
   const queryParams = useMemo(() => {
     const params = {};
     if (scheduleId) params[FILTER_PARAMS.schedule] = Number(scheduleId);
     if (versionId) params[FILTER_PARAMS.version] = Number(versionId);
     if (status) params[FILTER_PARAMS.status] = status;
-    if (trigger) params[FILTER_PARAMS.trigger] = trigger;
+    if (trigger) params[triggerParam] = trigger;
     return Object.keys(params).length ? params : NO_QUERY_PARAMS;
-  }, [scheduleId, versionId, status, trigger]);
+  }, [scheduleId, versionId, status, trigger, triggerParam]);
 
   const scheduleOptions = useMemo(
     () => [

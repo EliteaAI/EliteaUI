@@ -311,7 +311,35 @@ describe('RunHistoryPage schedule filter and links', () => {
     expect(containerProps.current.queryParams).toEqual({});
   });
 
-  it('offers the four trigger types and ignores an unknown value in the link', () => {
+  it.each([
+    ['chat', 'Chat'],
+    ['api', 'API'],
+    ['mcp', 'MCP'],
+  ])('sends execution_type=%s for the %s option, not a run trigger', (value, label) => {
+    renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
+
+    fireEvent.change(screen.getByLabelText('Trigger Type'), { target: { value } });
+
+    expect(containerProps.current.queryParams).toEqual({ execution_type: value });
+    expect(screen.getByLabelText('Trigger Type')).toHaveValue(value);
+    expect(screen.getByRole('option', { name: label })).toBeInTheDocument();
+  });
+
+  it('reads trigger=chat from the link and Clear filters resets it', () => {
+    renderAt('/agents/all/127/history?trigger=chat&status=failed', { scheduleEntityType: 'agent' });
+    expect(containerProps.current.queryParams).toEqual({ execution_type: 'chat', status: 'failed' });
+
+    fireEvent.click(screen.getByTestId('run-history-filters-clear'));
+    expect(containerProps.current.queryParams).toEqual({});
+  });
+
+  it('a link with execution_type alone sends no filter', () => {
+    renderAt('/agents/all/127/history?execution_type=chat', { scheduleEntityType: 'agent' });
+
+    expect(containerProps.current.queryParams).toEqual({});
+  });
+
+  it('offers every trigger type and ignores an unknown value in the link', () => {
     renderAt('/agents/all/127/history?trigger=bogus&status=bogus', { scheduleEntityType: 'agent' });
 
     expect(containerProps.current.queryParams).toEqual({});
@@ -322,6 +350,9 @@ describe('RunHistoryPage schedule filter and links', () => {
       'Manual',
       'Webhook',
       'Test',
+      'Chat',
+      'API',
+      'MCP',
     ]);
   });
 
