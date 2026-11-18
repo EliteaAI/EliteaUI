@@ -52,7 +52,7 @@ const renderModal = filePaths =>
     <ThemeProvider theme={theme}>
       <SkillImportModal
         open
-        skill={{ ...SKILL, filePaths }}
+        skills={[{ ...SKILL, filePaths }]}
       />
     </ThemeProvider>,
   );

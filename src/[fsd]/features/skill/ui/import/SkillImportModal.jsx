@@ -19,7 +19,7 @@ import ProjectSelect from '@/components/ProjectSelect';
 const { ProjectSelectShowMode } = ProjectSelectConstants;
 
 const SkillImportModal = memo(props => {
-  const { open, skill, isImporting, onClose, onConfirm } = props;
+  const { open, skills, isImporting, onClose, onConfirm } = props;
   const styles = skillImportModalStyles();
 
   const projectId = useSelectedProjectId();
@@ -65,7 +65,7 @@ const SkillImportModal = memo(props => {
     };
   }, [getUserPermissions, projectId, targetProjectId, user.permissions]);
 
-  if (!skill) return null;
+  if (!skills.length) return null;
 
   return (
     <Modal.BaseModal
@@ -92,48 +92,55 @@ const SkillImportModal = memo(props => {
 
           <Divider sx={styles.divider} />
 
-          <Typography sx={styles.sectionLabel}>MAIN ENTITY</Typography>
+          <Typography sx={styles.sectionLabel}>
+            {skills.length > 1 ? `SKILLS (${skills.length})` : 'MAIN ENTITY'}
+          </Typography>
 
-          <IWModalEntityCardWrapper
-            icon={<SkillIcon />}
-            title={skill.name}
-            subtitle={`Type: Skill | Version: ${LATEST_VERSION_NAME}`}
-            titleTestId="skill-import-preview-name"
-            subtitleTestId="skill-import-preview-type-version"
-          >
-            {setFullscreenData => (
-              <>
-                <IWModalEntityTextField
-                  title="Description"
-                  description={skill.description}
-                  lineClamp={3}
-                  setFullscreenData={setFullscreenData}
-                  height="4rem"
-                  testId="skill-import-preview-description"
-                />
-                <IWModalEntityTextField
-                  title="Instructions"
-                  description={skill.instructions}
-                  lineClamp={8}
-                  setFullscreenData={setFullscreenData}
-                  height="9rem"
-                  type="markdown"
-                  testId="skill-import-preview-instructions"
-                />
-                {skill.filePaths?.length > 0 && (
-                  <IWModalEntityTextField
-                    title={`Files (${skill.filePaths.length})`}
-                    description={skill.filePaths.join('\n')}
-                    lineClamp={8}
-                    setFullscreenData={setFullscreenData}
-                    height="9rem"
-                    type="markdown"
-                    testId="skill-import-preview-files"
-                  />
+          <Box sx={styles.skillList}>
+            {skills.map((skill, index) => (
+              <IWModalEntityCardWrapper
+                key={skill.name + index}
+                icon={<SkillIcon />}
+                title={skill.name}
+                subtitle={`Type: Skill | Version: ${LATEST_VERSION_NAME}`}
+                titleTestId="skill-import-preview-name"
+                subtitleTestId="skill-import-preview-type-version"
+              >
+                {setFullscreenData => (
+                  <>
+                    <IWModalEntityTextField
+                      title="Description"
+                      description={skill.description}
+                      lineClamp={3}
+                      setFullscreenData={setFullscreenData}
+                      height="4rem"
+                      testId="skill-import-preview-description"
+                    />
+                    <IWModalEntityTextField
+                      title="Instructions"
+                      description={skill.instructions}
+                      lineClamp={8}
+                      setFullscreenData={setFullscreenData}
+                      height="9rem"
+                      type="markdown"
+                      testId="skill-import-preview-instructions"
+                    />
+                    {skill.filePaths?.length > 0 && (
+                      <IWModalEntityTextField
+                        title={`Files (${skill.filePaths.length})`}
+                        description={skill.filePaths.join('\n')}
+                        lineClamp={8}
+                        setFullscreenData={setFullscreenData}
+                        height="9rem"
+                        type="markdown"
+                        testId="skill-import-preview-files"
+                      />
+                    )}
+                  </>
                 )}
-              </>
-            )}
-          </IWModalEntityCardWrapper>
+              </IWModalEntityCardWrapper>
+            ))}
+          </Box>
         </Box>
       }
       actions={
@@ -191,6 +198,11 @@ const skillImportModalStyles = () => ({
     borderColor: palette.border.lines,
     marginX: '-1.5rem',
   }),
+  skillList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+  },
   sectionLabel: ({ palette }) => ({
     fontWeight: 500,
     fontSize: '0.75rem',
