@@ -8,6 +8,7 @@ import CheckedIcon from '@/assets/checked-icon.svg?react';
 import RejectIcon from '@/assets/reject.svg?react';
 
 import BlockWithCommentControl from './BlockWithCommentControl';
+import BuilderChangesetControl from './BuilderChangesetControl';
 import ClarifyingQuestionControl from './ClarifyingQuestionControl';
 import CredentialFormControl from './CredentialFormControl';
 import EditControl from './EditControl';
@@ -24,6 +25,7 @@ const ChatHitlActions = memo(props => {
     guardrail_type === 'sensitive_tool' || guardrail_type === 'parallel_sensitive_tools';
   const isClarifyingQuestion = guardrail_type === 'clarifying_question';
   const isCredentialForm = guardrail_type === 'credential_form';
+  const isBuilderChangeset = guardrail_type === 'builder_changeset';
   const styles = getStyles();
 
   const handleClarifyingSubmit = useCallback(
@@ -70,6 +72,18 @@ const ChatHitlActions = memo(props => {
         onHitlResume={onHitlResume}
         disabled={disabled}
         testId="credential-form"
+      />
+    );
+  }
+
+  if (isBuilderChangeset) {
+    return (
+      <BuilderChangesetControl
+        hitlInterrupt={hitlInterrupt}
+        onHitlResume={onHitlResume}
+        disabled={disabled}
+        toolCallId={toolCallId}
+        interruptId={interruptId}
       />
     );
   }
