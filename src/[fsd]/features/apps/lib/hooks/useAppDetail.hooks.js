@@ -64,6 +64,7 @@ export const useAppDetail = () => {
   }, [appData]);
 
   return {
+    appId,
     appData,
     appName,
     isFetching,

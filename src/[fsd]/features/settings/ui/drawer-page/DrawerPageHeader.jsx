@@ -8,6 +8,7 @@ import PlusIcon from '@/components/Icons/PlusIcon';
 
 const DrawerPageHeader = memo(props => {
   const {
+    'data-testid': testId,
     showBorder,
     sx,
     showBackButton,
@@ -37,8 +38,11 @@ const DrawerPageHeader = memo(props => {
   const handleSearchClear = useCallback(() => onChangeSearch(''), [onChangeSearch]);
 
   return (
-    <Box sx={[styles.container(showBorder), sx]}>
-      <Box sx={styles.titleContainer}>
+    <Box
+      data-testid={testId}
+      sx={[styles.container(showBorder), sx]}
+    >
+      <Box sx={[styles.titleContainer, slotProps?.titleContainer?.sx]}>
         {showBackButton && (
           <IconButton
             variant="elitea"
