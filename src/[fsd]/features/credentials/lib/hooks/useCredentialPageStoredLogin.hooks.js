@@ -41,24 +41,27 @@ export const useCredentialPageStoredLogin = ({ credential, tokenKey }) => {
     [credential, updateConfiguration],
   );
 
-  // With unsaved edits the sign-in used the typed client, so the token may belong to another app
+  // With unsaved edits the sign-in used the typed client, so the token may belong to another app.
+  // Resolves to undefined when nothing applies, true when saved and false when the save failed.
   const saveLogin = useCallback(
     async ({ isFormDirty = false } = {}) => {
-      if (!enabled || !canManageLogin) return;
+      if (!enabled || !canManageLogin) return undefined;
       if (isFormDirty) {
         toastError('Save the credential first, then log in again: the login must match the saved settings.');
-        return;
+        return false;
       }
       const refreshToken = McpAuthHelpers.getRefreshToken(tokenKey);
       if (!refreshToken) {
         toastError('Microsoft did not return a refresh token, so scheduled runs cannot use this login.');
-        return;
+        return false;
       }
       try {
         await putData(refreshToken);
         toastSuccess('Connected! The login is saved for scheduled runs.');
+        return true;
       } catch (error) {
         toastError(error?.data?.error || 'Could not save the login to the credential.');
+        return false;
       }
     },
     [enabled, canManageLogin, tokenKey, putData, toastError, toastSuccess],

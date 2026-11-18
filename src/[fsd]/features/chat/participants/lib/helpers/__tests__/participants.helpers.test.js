@@ -6,6 +6,7 @@ import {
   getDefaultActiveParticipant,
   getSkillUnavailableReason,
   isSameChatEntity,
+  isSavedConversation,
   isSkippedContainerParticipant,
   resolveChatSkillParticipant,
   shouldDeselectParticipant,
@@ -248,5 +249,15 @@ describe('chat gating of a participant that only needs a sign-in (#7585)', () =>
     expect(shouldDeselectParticipant(false, false, true)).toBe(true);
     expect(shouldDeselectParticipant(true, true, true)).toBe(true);
     expect(shouldDeselectParticipant(false, false, false)).toBe(false);
+  });
+});
+
+describe('isSavedConversation', () => {
+  it('is true only for a chat saved on the server', () => {
+    expect(isSavedConversation({ id: 5 })).toBe(true);
+    expect(isSavedConversation({ id: 5, isNew: true })).toBe(false);
+    expect(isSavedConversation({ id: 5, isPlayback: true })).toBe(false);
+    expect(isSavedConversation({})).toBe(false);
+    expect(isSavedConversation(undefined)).toBe(false);
   });
 });

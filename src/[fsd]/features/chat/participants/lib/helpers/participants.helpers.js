@@ -156,3 +156,7 @@ export const validationBlocksChat = (toolkitEntries = [], agentMessages = []) =>
 /** True when an active participant has to be deselected: it is misconfigured beyond a sign-in, or its published agent is gone. */
 export const shouldDeselectParticipant = (hasMisconfigurationErrors, signInOnly, isPublishedAgentGone) =>
   Boolean((hasMisconfigurationErrors && !signInOnly) || isPublishedAgentGone);
+
+// A chat on the server: a new draft or a playback has no access to show
+export const isSavedConversation = conversation =>
+  !!conversation?.id && !conversation?.isNew && !conversation?.isPlayback;
