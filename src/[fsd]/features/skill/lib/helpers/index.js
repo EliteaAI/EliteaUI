@@ -9,7 +9,7 @@ export {
   withSkillVersionMeta,
 } from './skillInvocation.helpers';
 export { normalizeTagsForSave } from './tags.helpers';
-export { isSkillZip, readSkillZip } from './skillPackage.helpers';
+export { isSkillPackage, readSkillZip } from './skillPackage.helpers';
 export {
   instructionsTooLongMessage,
   isInstructionsOverLimit,
