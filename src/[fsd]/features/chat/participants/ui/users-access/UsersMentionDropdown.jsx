@@ -15,21 +15,36 @@ import {
 import { DropdownConstants } from '@/[fsd]/shared/lib/constants';
 import { Input } from '@/[fsd]/shared/ui';
 import AtIcon from '@/assets/at-icon.svg?react';
+import ShareIcon from '@/assets/share-icon.svg?react';
 import UsersIcon from '@/components/Icons/UsersIcon';
 import UserAvatar from '@/components/UserAvatar';
 
 import { MENTION_EVERYONE, MENTION_EVERYONE_MIN_USERS, MENTION_SEARCH_MIN_USERS } from '../../lib/constants';
+import UsersAccessSummary from './UsersAccessSummary';
 
 const EVERYONE_LABEL = 'Everyone';
 
 const getUserName = participant => participant.meta?.user_name || '';
 
 const UsersMentionDropdown = memo(props => {
-  const { open, anchorEl, users = [], currentUserId, ownerId, onMention, onClose } = props;
+  const {
+    open,
+    anchorEl,
+    placement = 'bottom-start',
+    users = [],
+    currentUserId,
+    ownerId,
+    access,
+    showShare = false,
+    onMention,
+    onShare,
+    onClose,
+  } = props;
 
   const [query, setQuery] = useState('');
-  // As wide as the card it opens under
-  const styles = usersMentionDropdownStyles(anchorEl?.offsetWidth);
+  const isLeft = placement.startsWith('left');
+  // As wide as the card it opens under; beside an icon it keeps its own width
+  const styles = usersMentionDropdownStyles(isLeft ? null : anchorEl?.offsetWidth);
 
   const isOwner = useCallback(item => ownerId != null && item.entity_meta?.id == ownerId, [ownerId]);
   // The owner comes first, then everyone else by name
@@ -78,14 +93,23 @@ const UsersMentionDropdown = memo(props => {
     [onMention],
   );
 
+  const handleShare = useCallback(() => {
+    setQuery('');
+    onShare?.();
+  }, [onShare]);
+
   return (
     <Popper
       open={open}
       anchorEl={anchorEl}
-      placement="bottom-start"
+      placement={placement}
       strategy="fixed"
       transition
-      modifiers={[{ name: 'offset', options: { offset: [0, 8] } }]}
+      modifiers={[
+        { name: 'offset', options: { offset: isLeft ? [0, 16] : [0, 8] } },
+        { name: 'flip', enabled: !isLeft },
+        { name: 'preventOverflow', options: { boundary: 'viewport', altBoundary: true, tether: true } },
+      ]}
       sx={styles.popper}
     >
       {({ TransitionProps }) => (
@@ -105,6 +129,17 @@ const UsersMentionDropdown = memo(props => {
                       placeholder="Search user ..."
                       sx={styles.searchBar}
                       data-testid="chat-users-mention-search"
+                    />
+                  </Box>
+                )}
+                {!!access && (
+                  <Box sx={styles.accessRow}>
+                    <UsersAccessSummary
+                      kind={access.kind}
+                      label={access.label}
+                      linksCount={access.linksCount}
+                      expiredLinksCount={access.expiredLinksCount}
+                      muted
                     />
                   </Box>
                 )}
@@ -205,7 +240,7 @@ const UsersMentionDropdown = memo(props => {
                       </Box>
                     </MenuItem>
                   ))}
-                  {!filtered.length && !showEveryone && !showMe && (
+                  {!filtered.length && !showEveryone && !showMe && (!showShare || !!others.length) && (
                     <Typography
                       variant="bodyMedium"
                       sx={styles.empty}
@@ -213,6 +248,23 @@ const UsersMentionDropdown = memo(props => {
                     >
                       {others.length ? 'No matches found' : 'No one else is in this chat yet'}
                     </Typography>
+                  )}
+                  {showShare && (
+                    <MenuItem
+                      sx={styles.shareItem(!!others.length)}
+                      onClick={handleShare}
+                      data-testid="chat-users-mention-share"
+                    >
+                      <Box sx={styles.shareIcon}>
+                        <ShareIcon />
+                      </Box>
+                      <Typography
+                        variant="bodyMedium"
+                        sx={styles.name}
+                      >
+                        Share
+                      </Typography>
+                    </MenuItem>
                   )}
                 </MenuList>
               </Box>
@@ -319,6 +371,34 @@ const usersMentionDropdownStyles = width => ({
     display: 'flex',
     color: palette.icon.default,
     '& svg': { width: '1rem', height: '1rem' },
+  }),
+  accessRow: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    height: DropdownConstants.DIMENSIONS.ITEM_HEIGHT,
+    padding: '0.5rem 0.75rem 0.5rem 1rem',
+    boxSizing: 'border-box',
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
+  }),
+  shareItem:
+    withList =>
+    ({ palette }) => ({
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.75rem',
+      height: DropdownConstants.DIMENSIONS.ITEM_HEIGHT,
+      padding: '0.5rem 1rem',
+      // Pinned to the bottom so a long list scrolls under it
+      position: 'sticky',
+      bottom: 0,
+      backgroundColor: palette.background.default.secondary,
+      ...(withList && { borderTop: `0.0625rem solid ${palette.border.lines}`, marginTop: '0.25rem' }),
+      '&:hover, &.Mui-focusVisible': { backgroundColor: palette.background.interactiveItem.hover },
+    }),
+  shareIcon: ({ palette }) => ({
+    display: 'flex',
+    '& svg': { width: '1rem', height: '1rem' },
+    '& svg path': { fill: palette.icon.default },
   }),
   empty: ({ palette }) => ({
     padding: '0.5rem 1rem',

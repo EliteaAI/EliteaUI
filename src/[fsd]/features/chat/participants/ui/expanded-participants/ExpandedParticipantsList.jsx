@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { Box, Typography } from '@mui/material';
 
+import { isSavedConversation } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { isMcpToolkitType, isRemoteMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
 import { useIsMcpVisible, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { ChatParticipantType } from '@/common/constants';
@@ -49,7 +50,7 @@ const ExpandedPerticapantsList = memo(props => {
   const [isUsersSectionHovered, setIsUsersSectionHovered] = useState(false);
 
   const isPrivateProject = selectedProjectId == user.personal_project_id;
-  const isSavedConversation = !!conversation?.id && !conversation?.isNew && !conversation?.isPlayback;
+  const isSaved = isSavedConversation(conversation);
 
   const users = useMemo(
     () =>
@@ -91,7 +92,7 @@ const ExpandedPerticapantsList = memo(props => {
 
   return (
     <>
-      {!isPrivateProject && isSavedConversation && (
+      {!isPrivateProject && isSaved && (
         <UsersAccessCard
           conversation={conversation}
           onSelectParticipant={onSelectParticipant}
@@ -99,7 +100,7 @@ const ExpandedPerticapantsList = memo(props => {
         />
       )}
 
-      {!isPrivateProject && !isSavedConversation && !!usersToDisplay?.length && (
+      {!isPrivateProject && !isSaved && !!usersToDisplay?.length && (
         <ParticipantsAccordion title="Users">
           <Box
             sx={styles.usersSection}

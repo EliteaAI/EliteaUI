@@ -13,3 +13,4 @@ export * from './useParticipantValidation.hooks';
 export * from './useSyncChatConfigParticipant.hooks';
 export * from './useParticipantWelcomeMessage.hooks';
 export * from './useChatUsersAccess.hooks';
+export * from './useUsersAccessActions.hooks';

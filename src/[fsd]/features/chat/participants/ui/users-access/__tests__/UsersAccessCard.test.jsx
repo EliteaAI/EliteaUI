@@ -22,7 +22,8 @@ vi.mock('@/common/constants', async importOriginal => ({
   ...(await importOriginal()),
   PUBLIC_PROJECT_ID: 1,
 }));
-vi.mock('../../../lib/hooks', () => ({ useChatUsersAccess: () => access.current }));
+vi.mock('../../../lib/hooks/useChatUsersAccess.hooks', () => ({ useChatUsersAccess: () => access.current }));
+vi.mock('../../../lib/hooks', () => vi.importActual('../../../lib/hooks/useUsersAccessActions.hooks'));
 vi.mock('@/[fsd]/features/chat/conversation-list/lib/hooks', () => ({ useCopyChatLink: () => copyChatLink }));
 vi.mock('@/[fsd]/features/chat/conversation-list/ui/share', () => ({
   ShareChatModal: () => <div data-testid="share-chat-modal" />,

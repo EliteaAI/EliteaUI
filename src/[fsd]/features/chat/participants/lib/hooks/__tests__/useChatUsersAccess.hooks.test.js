@@ -43,6 +43,7 @@ describe('useChatUsersAccess', () => {
 
     expect(access.kind).toBe(USERS_ACCESS_KIND.team);
     expect(access.label).toBe('Whole Team (24)');
+    expect(access.count).toBe(24);
     expect(userList).toHaveBeenCalledWith(expect.objectContaining({ forceSkip: false }));
   });
 
@@ -56,6 +57,7 @@ describe('useChatUsersAccess', () => {
 
     expect(access.kind).toBe(USERS_ACCESS_KIND.people);
     expect(access.label).toBe('3 users');
+    expect(access.count).toBe(3);
     expect(access.users).toHaveLength(3);
     expect(userList).toHaveBeenCalledWith(expect.objectContaining({ forceSkip: true }));
   });
