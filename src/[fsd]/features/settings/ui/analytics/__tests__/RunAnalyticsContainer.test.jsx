@@ -28,7 +28,10 @@ const {
 vi.mock('@/[fsd]/features/settings/api/analyticsApi', () => ({
   useAnalyticsRunDetailQuery,
   useAnalyticsCostsQuery,
+  useAnalyticsComplexityDetailQuery: () => ({ data: undefined }),
 }));
+
+vi.mock('@/api/platformSettings', () => ({ useGetPlatformSettingsQuery: () => ({ data: {} }) }));
 
 vi.mock('@/[fsd]/entities/run-history/api', () => ({
   RunHistoryApi: { useGetRunHistoryDetailsQuery },

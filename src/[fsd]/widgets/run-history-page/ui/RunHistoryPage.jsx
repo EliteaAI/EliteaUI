@@ -14,7 +14,7 @@ import {
 import { ChatMessageList } from '@/[fsd]/features/chat';
 import { ScheduleRunStatusChip } from '@/[fsd]/features/schedule';
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
-import { ComplexityAgentBlock, useRunComplexityColumn } from '@/[fsd]/features/settings/ui/complexity';
+import { useRunComplexityColumn } from '@/[fsd]/features/settings/ui/complexity';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
 import { NavigationConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
@@ -161,10 +161,6 @@ const RunHistoryPage = memo(props => {
       <DrawerPageHeader
         showBorder
         title={<Breadcrumbs />}
-      />
-      <ComplexityAgentBlock
-        entityId={agentId}
-        versions={versions}
       />
       <Box sx={styles.content}>
         <RunHistoryFilters

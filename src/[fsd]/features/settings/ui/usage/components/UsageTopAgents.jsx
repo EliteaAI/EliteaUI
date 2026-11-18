@@ -5,15 +5,12 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Box, Link, Typography, useTheme } from '@mui/material';
 
 import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import EntityTypeBadge from '@/[fsd]/features/settings/ui/analytics/components/EntityTypeBadge';
 
 import UsageSortHeader from './UsageSortHeader';
 import { usageColumnSx, usageRowMinWidthSx, usageTableWrapperSx } from './usageTable.styles';
 
 const MAX_ROWS = 5;
-
-const BADGE_COLORS = {
-  pipeline: { bg: '#2a1a3a', text: '#b98cff' },
-};
 
 const ROW_MIN_WIDTH = usageRowMinWidthSx([3, 1, 1.2, 1.2, 0.9]);
 
@@ -184,11 +181,6 @@ const UsageTopAgents = memo(props => {
 
         {visibleAgents.map(agent => {
           const delta = agent._delta;
-          const isAgent = (agent.type || '').toLowerCase() !== 'pipeline';
-          const badge = isAgent
-            ? { bg: '#1a3a3a', text: palette.text.success || '#4fd1a5' }
-            : BADGE_COLORS.pipeline;
-          const badgeText = isAgent ? 'AG' : 'PL';
           const share = totalSpend > 0 ? ((agent.spend || 0) / totalSpend) * 100 : 0;
 
           const deltaColor =
@@ -206,7 +198,7 @@ const UsageTopAgents = memo(props => {
               sx={[styles.row, ROW_MIN_WIDTH]}
             >
               <Box sx={[usageColumnSx(3), styles.nameCell]}>
-                <Box sx={styles.badge(badge)}>{badgeText}</Box>
+                <EntityTypeBadge kind={agent.type} />
                 <Typography sx={styles.name}>{agent.name || agent.id}</Typography>
               </Box>
               <Typography sx={[styles.value, styles.right, usageColumnSx(1)]}>{agent.runs ?? '—'}</Typography>
@@ -307,15 +299,6 @@ const usageTopAgentsStyles = () => ({
     gap: '0.375rem',
     minWidth: 0,
   },
-  badge: ({ bg, text }) => ({
-    fontSize: '0.5625rem',
-    fontWeight: 700,
-    padding: '0.0625rem 0.25rem',
-    borderRadius: '0.1875rem',
-    backgroundColor: bg,
-    color: text,
-    flexShrink: 0,
-  }),
   name: ({ palette }) => ({
     fontSize: '0.8125rem',
     color: palette.text.secondary,

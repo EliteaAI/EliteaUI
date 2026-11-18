@@ -11,6 +11,7 @@ import {
   toRunISOString,
 } from '@/[fsd]/entities/run-history/lib/helpers';
 import {
+  useAnalyticsComplexityDetailQuery,
   useAnalyticsCostsQuery,
   useAnalyticsRunDetailQuery,
 } from '@/[fsd]/features/settings/api/analyticsApi';
@@ -21,6 +22,7 @@ import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { useApplicationDetailsQuery } from '@/api/applications';
+import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import { SearchParams } from '@/common/constants';
 
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
@@ -153,6 +155,46 @@ const RunAnalyticsContainer = memo(props => {
   );
   const exportRunId = usageRunId || runId;
 
+  // Complexity is scored per root agent run; skills and evaluation runs have no score
+  const { data: platformSettings } = useGetPlatformSettingsQuery();
+  const complexityRunId = usageRunId || runDetails?.uuid;
+  const showsComplexity =
+    Boolean(platformSettings?.complexity_enabled) && !isEntityScoped && Boolean(agentId);
+  const complexityArgs = { projectId, entityId: agentId, runId: complexityRunId, limit: 1 };
+  const {
+    data: complexityData,
+    isFetching: isComplexityFetching,
+    isError: isComplexityError,
+    refetch: refetchComplexity,
+  } = useAnalyticsComplexityDetailQuery(complexityArgs, {
+    skip: !showsComplexity || !projectId || !complexityRunId,
+  });
+  const complexity = useMemo(() => {
+    if (!showsComplexity) return undefined;
+    return {
+      run: complexityData?.runs?.[0],
+      meta: complexityData?.meta,
+      loading: isComplexityFetching,
+      error: isComplexityError,
+      // refetch throws on a query that never started (skipped), so only the live one is re-read
+      fetchLatest:
+        complexityRunId && projectId
+          ? async () => {
+              const result = await refetchComplexity();
+              return { run: result?.data?.runs?.[0], meta: result?.data?.meta };
+            }
+          : undefined,
+    };
+  }, [
+    showsComplexity,
+    complexityRunId,
+    projectId,
+    complexityData,
+    isComplexityFetching,
+    isComplexityError,
+    refetchComplexity,
+  ]);
+
   const exportMeta = useMemo(
     () => ({
       entityName: entityDetails?.name ?? '',
@@ -181,6 +223,7 @@ const RunAnalyticsContainer = memo(props => {
       isRunLoading={isRunLoading}
       showToolsTab={showToolsTab}
       failedCalls={failedCalls}
+      complexity={complexity}
     />
   );
 });

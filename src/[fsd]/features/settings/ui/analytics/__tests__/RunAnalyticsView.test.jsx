@@ -5,7 +5,7 @@ import '@testing-library/jest-dom/vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import RunAnalyticsView from '../RunAnalyticsView';
-import { AnalyticsTestWrapper, installGlobalStubs } from './_testHelpers';
+import { AnalyticsRouterTestWrapper as AnalyticsTestWrapper, installGlobalStubs } from './_testHelpers';
 
 installGlobalStubs();
 

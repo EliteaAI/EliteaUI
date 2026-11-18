@@ -39,6 +39,9 @@ const UsageContainer = ChunkHelpers.lazyWithRetry(
 const ComplexityContainer = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/features/settings/ui/complexity/ComplexityContainer'),
 );
+const ComplexityDetailContainer = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/features/settings/ui/complexity/ComplexityDetailContainer'),
+);
 const AppDetail = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/AppDetail'));
 const Apps = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/Apps'));
 const McpAuthPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/mcp'));
@@ -644,6 +647,10 @@ const ProtectedRoutes = memo(() => {
             <Route
               path="complexity"
               element={<ComplexityContainer />}
+            />
+            <Route
+              path="complexity/:entityProjectId/:entityId"
+              element={<ComplexityDetailContainer />}
             />
             <Route
               path="profile"
