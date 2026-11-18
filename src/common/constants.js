@@ -1103,6 +1103,7 @@ export const NotificationType = {
   RewardNewLevel: 'reward_new_level',
   ContributorRequestForPublishApprove: 'contributor_request_for_publish_approve',
   UserWasAddedToSomeProjectAsTeammate: 'user_was_added_to_some_project_as_teammate',
+  UserWasRemovedFromProject: 'user_was_removed_from_project',
   ChatUserAdded: 'chat_user_added',
   ChatUserMentioned: 'chat_user_mentioned',
   PrivateProjectCreated: 'private_project_created',
