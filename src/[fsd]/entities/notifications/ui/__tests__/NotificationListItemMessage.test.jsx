@@ -45,6 +45,7 @@ describe('schedule notice link', () => {
     const link = screen.getByRole('link', { name: 'Nightly sync' });
     expect(link.getAttribute('href')).toMatch(/\/7\/settings\/schedules\/12\?history_run_id=99$/);
     expect(link).toHaveAttribute('target', '_blank');
+    expect(link.parentElement).not.toHaveStyle({ overflowWrap: 'anywhere' });
   });
 
   it('links an admin edit to the schedule without a run', () => {
@@ -104,6 +105,7 @@ describe('project membership notice text', () => {
       expect.stringMatching(/\/7\/chat$/),
     );
     expect(container.textContent).toBe(`You have been added to ${projectName} project.`);
+    expect(container.firstElementChild).toHaveStyle({ overflowWrap: 'anywhere' });
   });
 
   it('renders a removed project name as plain text with no link', () => {

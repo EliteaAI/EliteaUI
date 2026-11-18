@@ -5,6 +5,10 @@ import RouteDefinitions, { getBasename } from '@/routes';
 
 const DEFAULT_TOOLKITS_TAB = ToolkitsTabs[0];
 
+export const isProjectMembershipNotification = eventType =>
+  eventType === NotificationType.UserWasAddedToSomeProjectAsTeammate ||
+  eventType === NotificationType.UserWasRemovedFromProject;
+
 const RUN_EVENT_TYPES = new Set([
   NotificationType.ScheduleRunFailed,
   NotificationType.ScheduleRunSucceeded,

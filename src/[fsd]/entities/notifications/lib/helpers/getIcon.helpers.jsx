@@ -1,3 +1,5 @@
+import PersonRemoveOutlinedIcon from '@mui/icons-material/PersonRemoveOutlined';
+
 import { NotificationType } from '@/common/constants';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import CommentIcon from '@/components/Icons/CommentIcon';
@@ -39,7 +41,7 @@ export const getIcon = (type, theme, notification) => {
       return <SuccessIcon fill={theme.palette.icon.tips} />;
 
     case NotificationType.UserWasRemovedFromProject:
-      return <ErrorIcon fill={theme.palette.status.rejected} />;
+      return <PersonRemoveOutlinedIcon sx={{ color: theme.palette.status.rejected }} />;
 
     case NotificationType.PromptModeratorReject:
     case NotificationType.ModeratorUnpublish:

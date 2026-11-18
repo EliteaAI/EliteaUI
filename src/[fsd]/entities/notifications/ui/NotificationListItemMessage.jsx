@@ -2,7 +2,11 @@ import { Fragment, memo, useMemo } from 'react';
 
 import { Link, Typography } from '@mui/material';
 
-import { parseMessage, resolveHref } from '@/[fsd]/entities/notifications/lib/helpers';
+import {
+  isProjectMembershipNotification,
+  parseMessage,
+  resolveHref,
+} from '@/[fsd]/entities/notifications/lib/helpers';
 import { NotificationType } from '@/common/constants';
 
 import LegacyNotificationMessage from './LegacyNotificationMessage.jsx';
@@ -14,7 +18,6 @@ const NotificationListItemMessage = memo(props => {
   const segments = useMemo(() => parseMessage(message), [message]);
   const resolvedHref = resolveHref(notification.event_type, notification.meta, notification.project_id);
   const isAddedToProject = notification.event_type === NotificationType.UserWasAddedToSomeProjectAsTeammate;
-  const isRemovedFromProject = notification.event_type === NotificationType.UserWasRemovedFromProject;
   const isLegacyMembership = Array.isArray(notification.meta?.users);
   const projectName = notification.meta?.project_name;
   const styles = notificationListItemMessageStyles(notification.is_seen);
@@ -22,18 +25,16 @@ const NotificationListItemMessage = memo(props => {
   if (
     message &&
     !isLegacyMembership &&
-    (isAddedToProject || isRemovedFromProject) &&
+    isProjectMembershipNotification(notification.event_type) &&
     typeof projectName === 'string'
   ) {
-    const isLinked = isAddedToProject && resolvedHref;
-
     return (
       <Typography
         variant={textVariant}
-        sx={[{ color: textColor }, styles.message]}
+        sx={[{ color: textColor }, styles.membershipMessage]}
       >
         {isAddedToProject ? 'You have been added to ' : 'You have been removed from '}
-        {isLinked ? (
+        {resolvedHref ? (
           <Link
             variant={textVariant}
             sx={styles.link}
@@ -55,7 +56,7 @@ const NotificationListItemMessage = memo(props => {
     return (
       <Typography
         variant={textVariant}
-        sx={[{ color: textColor }, styles.message]}
+        sx={{ color: textColor }}
       >
         {segments.map((segment, index) =>
           segment.isLink && resolvedHref ? (
@@ -95,10 +96,8 @@ const notificationListItemMessageStyles = isSeen => ({
     textDecoration: 'underline',
     cursor: 'pointer',
     color: isSeen ? palette.text.visitedLink : palette.text.link,
-    overflowWrap: 'anywhere',
-    whiteSpace: 'normal',
   }),
-  message: {
+  membershipMessage: {
     maxWidth: '100%',
     overflowWrap: 'anywhere',
     whiteSpace: 'normal',
