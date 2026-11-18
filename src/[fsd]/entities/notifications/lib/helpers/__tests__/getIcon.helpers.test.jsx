@@ -41,3 +41,10 @@ describe('getIcon for schedule notifications', () => {
     }
   });
 });
+
+describe('getIcon for project membership notifications', () => {
+  it('reuses the success icon for additions and shows the person-removed icon for removals', () => {
+    expect(getIcon(NotificationType.UserWasAddedToSomeProjectAsTeammate, theme).type).toBe(SuccessIcon);
+    expect(getIcon(NotificationType.UserWasRemovedFromProject, theme).type).toBe(ErrorIcon);
+  });
+});

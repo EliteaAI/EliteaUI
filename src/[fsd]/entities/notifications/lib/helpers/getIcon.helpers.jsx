@@ -38,6 +38,9 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.UserWasAddedToSomeProjectAsTeammate:
       return <SuccessIcon fill={theme.palette.icon.tips} />;
 
+    case NotificationType.UserWasRemovedFromProject:
+      return <ErrorIcon fill={theme.palette.status.rejected} />;
+
     case NotificationType.PromptModeratorReject:
     case NotificationType.ModeratorUnpublish:
     case NotificationType.AgentUnpublished:

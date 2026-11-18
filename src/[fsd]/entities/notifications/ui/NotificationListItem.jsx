@@ -11,6 +11,7 @@ import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useNotificationBulkMarkSeenMutation } from '@/api/notifications';
 import MarkReadIcon from '@/assets/icons/mark-read-icon.svg?react';
 import MarkUnreadIcon from '@/assets/icons/mark-unread-icon.svg?react';
+import { NotificationType } from '@/common/constants';
 import { convertTime } from '@/common/convertChatConversationMessages';
 import { buildErrorMessage } from '@/common/utils';
 
@@ -41,7 +42,11 @@ const NotificationListItem = memo(props => {
   const theme = useTheme();
   const { event_type } = notification;
   const { textVariant } = NOTIFICATION_CONTEXT_STYLES[context] ?? NOTIFICATION_CONTEXT_STYLES.list;
-  const styles = notificationListItemStyles(clampLines, context === 'list');
+  const isMembershipNotification = [
+    NotificationType.UserWasAddedToSomeProjectAsTeammate,
+    NotificationType.UserWasRemovedFromProject,
+  ].includes(event_type);
+  const styles = notificationListItemStyles(isMembershipNotification ? 0 : clampLines, context === 'list');
 
   const { personal_project_id: projectId } = useSelector(state => state.user);
   const [bulkMarkSeenNotifications] = useNotificationBulkMarkSeenMutation();
@@ -160,9 +165,11 @@ const notificationListItemStyles = (clampLines, isContextList) => ({
     flexDirection: 'column',
     gap: '0.25rem',
     overflow: 'hidden',
+    minWidth: 0,
   },
   message: {
     overflow: 'hidden',
+    minWidth: 0,
     ...(clampLines
       ? {
           '& > *': {

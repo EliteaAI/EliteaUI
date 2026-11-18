@@ -35,6 +35,9 @@ export const resolveHref = (eventType, meta, projectId) => {
       return messageId ? `${url}&${SearchParams.MessageId}=${messageId}` : url;
     }
 
+    case NotificationType.UserWasAddedToSomeProjectAsTeammate:
+      return `${base}/${projectId}${RouteDefinitions.Chat}`;
+
     // The index page is addressed by its own route, not by the toolkit page plus an `index_name`
     // query: that query only survives through a back-compat redirect, and the `:tab` it travels
     // with is a toolkits LIST tab, so anything but a real one leaves the breadcrumb parent dead.
