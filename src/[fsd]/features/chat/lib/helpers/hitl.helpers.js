@@ -84,6 +84,14 @@ export const normalizeHitlInterrupt = (raw = {}, overlay = {}) => {
     interrupt.purpose = raw.purpose || overlay.purpose || '';
     interrupt.credential_form_result = raw.credential_form_result || overlay.credential_form_result || null;
   }
+  // (#7383) the Builder Changes card shows what it applies: summary, diff or the operation arguments
+  if (interrupt.guardrail_type === 'builder_changeset') {
+    interrupt.changeset_id = raw.changeset_id || overlay.changeset_id || '';
+    interrupt.builder_project_id = raw.builder_project_id ?? overlay.builder_project_id ?? null;
+    interrupt.summary = raw.summary || overlay.summary || '';
+    interrupt.diff = raw.diff ?? overlay.diff ?? [];
+    interrupt.arguments = raw.arguments ?? overlay.arguments ?? null;
+  }
   return interrupt;
 };
 
