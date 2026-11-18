@@ -2,12 +2,7 @@ import { memo, useCallback, useMemo, useRef } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
-import {
-  useDeleteConfirmationDisabled,
-  useProjectType,
-  useSelectedProjectId,
-  useToast,
-} from '@/[fsd]/shared/lib/hooks';
+import { useProjectType, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Controls } from '@/[fsd]/shared/ui';
 import { useToolkitDeleteMutation } from '@/api/toolkits';
 import { PERMISSIONS } from '@/common/constants';
@@ -24,7 +19,6 @@ const AppDetailActions = memo(props => {
   const { toastError, toastSuccess } = useToast();
   const navigate = useNavigate();
   const [deleteToolkit, { isLoading }] = useToolkitDeleteMutation();
-  const skipDeleteConfirmation = useDeleteConfirmationDisabled();
   const deletionInProgress = useRef(false);
 
   const canDelete = isPrivate || checkPermission(PERMISSIONS.toolkits.delete);
@@ -57,10 +51,10 @@ const AppDetailActions = memo(props => {
         disabled: isLoading || !projectId || !appId,
         entityName: displayName,
         shouldRequestInputName: true,
-        ...(skipDeleteConfirmation ? { onClick: onDelete } : { onConfirm: onDelete }),
+        onConfirm: onDelete,
       },
     ],
-    [appId, displayName, isLoading, projectId, onDelete, skipDeleteConfirmation],
+    [appId, displayName, isLoading, projectId, onDelete],
   );
 
   if (!appId || !canDelete) return null;

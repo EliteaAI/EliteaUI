@@ -5,6 +5,7 @@ import ListItemText from '@mui/material/ListItemText';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks';
 import { AppLink, Modal } from '@/[fsd]/shared/ui';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import DotsMenuIcon from '@/components/Icons/DotsMenuIcon';
@@ -21,6 +22,7 @@ const BasicMenuItem = ({
   isSelected,
   showCheckIcon,
   setActiveDialog,
+  skipConfirmation,
   testId,
   to,
 }) => {
@@ -139,6 +141,7 @@ const BasicMenuItem = ({
                 textContent={subMenuItem.textContent}
                 setActiveDialog={setActiveDialog}
                 dialogKey={subMenuItem.key || subMenuItem.label}
+                skipConfirmation={skipConfirmation}
               />
             ) : (
               <BasicMenuItem
@@ -176,12 +179,18 @@ const ActionWithDialog = ({
   modalSx,
   setActiveDialog,
   dialogKey,
+  skipConfirmation,
   addSeparator,
   testId,
 }) => {
   const openDialog = useCallback(
     event => {
       event.stopPropagation();
+      if (skipConfirmation && entityName && shouldRequestInputName) {
+        onConfirm?.();
+        closeMenu();
+        return;
+      }
       setActiveDialog({
         key: dialogKey,
         props: {
@@ -217,6 +226,7 @@ const ActionWithDialog = ({
       inlineExtraContent,
       textContent,
       modalSx,
+      skipConfirmation,
     ],
   );
 
@@ -258,6 +268,7 @@ const DotMenu = memo(props => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [activeDialog, setActiveDialog] = useState(null);
   const open = useMemo(() => Boolean(anchorEl), [anchorEl]);
+  const skipConfirmation = useDeleteConfirmationDisabled();
 
   const onClickMenu = useCallback(
     event => {
@@ -413,6 +424,7 @@ const DotMenu = memo(props => {
                     modalSx={item.modalSx}
                     setActiveDialog={setActiveDialog}
                     dialogKey={item.key || item.label}
+                    skipConfirmation={skipConfirmation}
                   />
                 </TooltipWrapper>
               ) : (
@@ -425,6 +437,7 @@ const DotMenu = memo(props => {
                     onClick={withClose(item.onClick)}
                     onCloseSubMenu={handleClose}
                     setActiveDialog={setActiveDialog}
+                    skipConfirmation={skipConfirmation}
                   />
                 </TooltipWrapper>
               );
@@ -472,6 +485,7 @@ const DotMenu = memo(props => {
                         modalSx={item.modalSx}
                         setActiveDialog={setActiveDialog}
                         dialogKey={item.key || item.label}
+                        skipConfirmation={skipConfirmation}
                       />
                     </TooltipWrapper>
                   ) : (
