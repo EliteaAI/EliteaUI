@@ -21,10 +21,11 @@ const ParticipantStatusRunner = memo(props => {
 
   const shared = { participant, originalDetails, entity_meta, type, isToolkitParticipant };
 
-  const { hasMisconfigurationErrors, governedRefusal } = useParticipantValidation({
-    ...shared,
-    isPublishedParticipant,
-  });
+  const { hasMisconfigurationErrors, governedRefusal, connectionNotice, signInOnly } =
+    useParticipantValidation({
+      ...shared,
+      isPublishedParticipant,
+    });
   const { hasRemoteMcpLoggedIn, mcpIsDisconnected, remoteMcpLoggedOut } = useParticipantMcpStatus({
     ...shared,
     updateDetails,
@@ -76,6 +77,8 @@ const ParticipantStatusRunner = memo(props => {
       shouldDisableThisItem,
       hasMisconfigurationErrors,
       governedRefusal,
+      connectionNotice,
+      signInOnly,
       someToolsAreUnavailable,
       blockedToolkitNames,
       isPublishedAgentGone,
@@ -100,6 +103,8 @@ const ParticipantStatusRunner = memo(props => {
     shouldDisableThisItem,
     hasMisconfigurationErrors,
     governedRefusal,
+    connectionNotice,
+    signInOnly,
     someToolsAreUnavailable,
     blockedToolkitNames,
     isPublishedAgentGone,

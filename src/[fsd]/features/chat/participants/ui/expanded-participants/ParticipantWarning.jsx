@@ -8,6 +8,8 @@ import { SharepointLogInLink } from '@/[fsd]/features/sharepoint';
 import { Chip } from '@/[fsd]/shared/ui';
 import { ChatParticipantType } from '@/common/constants';
 
+const asSentence = message => (/[.!?]$/.test(message) ? message : `${message}.`);
+
 const ParticipantWarning = memo(props => {
   const {
     isPublishedAgentGone,
@@ -16,6 +18,7 @@ const ParticipantWarning = memo(props => {
     isSkillVersionUnavailable,
     hasMisconfigurationErrors,
     governedRefusal,
+    connectionNotice,
     shouldDisableThisItem,
     mcpIsDisconnected,
     someToolsAreUnavailable,
@@ -78,7 +81,7 @@ const ParticipantWarning = memo(props => {
 
     return (
       <>
-        {'Misconfiguration errors found. '}
+        {connectionNotice ? `${asSentence(connectionNotice.message)} ` : 'Misconfiguration errors found. '}
         <Typography
           component="button"
           variant="bodySmall"

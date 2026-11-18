@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import { parseValidationRefusal } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
+import { ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ChatParticipantType } from '@/common/constants';
 import useValidateApplicationVersion, {
   useToolsValidationInfo,
@@ -53,8 +54,15 @@ export const useParticipantValidation = ({
     [toolkitValidationInfoList, totalValidationInfo],
   );
 
+  const connectionNotice = useMemo(
+    () => ToolkitFormHelpers.connectionNoticeOf(toolkitValidationInfoList || [], totalValidationInfo || []),
+    [toolkitValidationInfoList, totalValidationInfo],
+  );
+
   return {
     hasMisconfigurationErrors: totalValidationInfo?.length > 0 || toolkitValidationInfoList?.length > 0,
     governedRefusal,
+    connectionNotice,
+    signInOnly: connectionNotice?.requiresAuthorization === true,
   };
 };

@@ -51,3 +51,55 @@ describe('ParticipantWarning governed refusal (#7281)', () => {
     expect(screen.queryByTestId('participant-refusal-code-chip')).not.toBeInTheDocument();
   });
 });
+
+describe('ParticipantWarning connection notice (#7585)', () => {
+  afterEach(() => cleanup());
+
+  const SIGN_IN = 'Dataverse child: Sign in to Dataverse to connect this credential.';
+
+  it('names the sign-in instead of a misconfiguration and keeps the way to the participant', () => {
+    const handleEditClick = vi.fn();
+    renderWarning({
+      connectionNotice: { message: SIGN_IN, requiresAuthorization: true },
+      isToolkitParticipant: false,
+      participant: { entity_name: ChatParticipantType.Applications, entity_settings: {} },
+      handleEditClick,
+    });
+
+    expect(screen.getByText(SIGN_IN, { exact: false })).toBeInTheDocument();
+    expect(screen.queryByText(/credential\.\./)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Misconfiguration errors found/)).not.toBeInTheDocument();
+    screen.getByRole('button', { name: 'Check the agent' }).click();
+    expect(handleEditClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('lets a governed refusal win over a connection notice', () => {
+    renderWarning({
+      governedRefusal: { message: TEXT, code: 'DENIED_ASSERTION_UNAVAILABLE' },
+      connectionNotice: { message: SIGN_IN, requiresAuthorization: true },
+    });
+
+    expect(screen.getByText(TEXT)).toBeInTheDocument();
+    expect(screen.queryByText(SIGN_IN, { exact: false })).not.toBeInTheDocument();
+  });
+});
+
+describe('ParticipantWarning connection notice punctuation (#7585)', () => {
+  afterEach(() => cleanup());
+
+  it('ends a connection error without punctuation as a sentence before the button', () => {
+    renderWarning({
+      connectionNotice: {
+        message: 'Authentication failed: Invalid credentials',
+        requiresAuthorization: false,
+      },
+      isToolkitParticipant: false,
+      participant: { entity_name: ChatParticipantType.Applications, entity_settings: {} },
+    });
+
+    expect(
+      screen.getByText('Authentication failed: Invalid credentials.', { exact: false }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/credentials\.\./)).not.toBeInTheDocument();
+  });
+});

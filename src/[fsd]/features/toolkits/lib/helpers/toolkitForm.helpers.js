@@ -50,12 +50,60 @@ const handleConnectionErrors = parsed => {
   };
 };
 
-const parseErrorBody = body => {
+const parseJson = text => {
   try {
-    return JSON.parse(pythonToJson(body));
+    return JSON.parse(text);
   } catch {
-    return null;
+    return undefined;
   }
+};
+
+const parseErrorBody = body => {
+  const parsed = parseJson(body);
+  return parsed === undefined ? (parseJson(pythonToJson(body)) ?? null) : parsed;
+};
+
+const connectionErrorsOfMessage = msg => {
+  if (typeof msg !== 'string') return null;
+  const body = msg.startsWith(VALUE_ERROR_PREFIX) ? msg.slice(VALUE_ERROR_PREFIX.length) : msg;
+  const errors = parseErrorBody(body)?.__connection_errors__;
+  return Array.isArray(errors) && errors.length > 0 ? errors : null;
+};
+
+const connectionErrorsOfToolkitEntry = entry =>
+  entry?.type === 'connection_error' && !entry.code
+    ? [{ message: entry.msg, requires_authorization: entry.requires_authorization }]
+    : null;
+
+/**
+ * The notice a chat participant shows when every validation error it has is a connection error, else null.
+ * `requiresAuthorization` holds only when each of those connection errors just needs the user to sign in.
+ */
+export const connectionNoticeOf = (toolkitEntries = [], agentMessages = []) => {
+  const groups = [
+    ...toolkitEntries.map(connectionErrorsOfToolkitEntry),
+    ...agentMessages.map(connectionErrorsOfMessage),
+  ];
+  if (groups.length === 0 || groups.some(errors => !errors)) return null;
+
+  const errors = groups.flat();
+  const requiresAuthorization = errors.every(error => error.requires_authorization === true);
+  const shown = requiresAuthorization
+    ? errors[0]
+    : errors.find(error => error.requires_authorization !== true);
+  return { message: shown.message || 'Connection error', requiresAuthorization };
+};
+
+/**
+ * The text an agent or pipeline tool card shows for its sub-agent's validation message: the connection error when that is
+ * all the sub-agent has, else what `mapError` recognises, else a generic misconfiguration.
+ */
+export const applicationToolValidationMessage = (rawMsg, mapError, entityType) => {
+  const connectionNotice = connectionNoticeOf([], [rawMsg]);
+  if (connectionNotice) return connectionNotice.message;
+
+  const mapped = rawMsg ? mapError(rawMsg) : '';
+  return mapped && mapped !== rawMsg ? mapped : `Misconfiguration error found. Check the ${entityType}.`;
 };
 
 export const parseValidationError = curr => {
