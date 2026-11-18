@@ -77,3 +77,6 @@ export const RUN_UNAVAILABLE = 'Complexity data is unavailable for this run.';
 export const RUN_ANALYTICS_TAB = 'complexity';
 
 export const EXPORT_PAGE_SIZE = 100;
+
+export const SEARCH_TRUNCATED_NOTE =
+  'Too many agents and pipelines match this search, so some may be missing. Narrow the search to see them all.';

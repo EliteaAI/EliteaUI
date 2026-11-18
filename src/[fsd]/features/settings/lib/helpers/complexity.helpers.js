@@ -102,12 +102,13 @@ const breakdownColumn = (header, key) => ({
   transform: (_, row) => numberOrBlank(row.breakdown?.[key]),
 });
 
-export const buildExportSheet = ({ rows, meta, projectName, range, search }) => ({
+export const buildExportSheet = ({ rows, meta, projectName, range, search, searchTruncated }) => ({
   sheetName: 'Complexity',
   metadata: [
     ['Project', projectName],
     ['Period', `${range.dateFrom} – ${lastCoveredDay(range.dateTo)} (UTC)`],
     ...(search ? [['Search', search]] : []),
+    ...(searchTruncated ? [['Warning', 'Search matched too many names; some agents may be missing.']] : []),
     ['Scores as of', formatAsOf(meta?.as_of) ?? 'Not scored yet'],
     ['Labels recalibrated', formatAsOf(meta?.thresholds_computed_at) ?? '—'],
     ['Median CU', 'Approximate, from daily summaries. Blank cells mean the value is unavailable.'],

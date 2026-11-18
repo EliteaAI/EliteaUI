@@ -43,6 +43,7 @@ const {
   LIST_SEARCH_PARAMS,
   PERIOD_OPTIONS,
   ROWS_PER_PAGE_OPTIONS,
+  SEARCH_TRUNCATED_NOTE,
   STALE_NOTE,
 } = ComplexityConstants;
 
@@ -85,7 +86,13 @@ const ComplexityContainer = memo(() => {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(false);
   const mounted = useRef(true);
-  useEffect(() => () => (mounted.current = false), []);
+  // Set on setup too: StrictMode runs setup, cleanup, setup in development
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   // Back/forward changes the URL search; re-sync the box instead of letting the old text overwrite it
   useEffect(() => setSearchText(search), [search]);
@@ -155,14 +162,21 @@ const ComplexityContainer = memo(() => {
     try {
       const rows = await fetchAllRows(store.dispatch, queryArgs);
       await exportToExcel(ComplexityHelpers.exportFileName(projectName, range), [
-        ComplexityHelpers.buildExportSheet({ rows, meta, projectName, range, search }),
+        ComplexityHelpers.buildExportSheet({
+          rows,
+          meta,
+          projectName,
+          range,
+          search,
+          searchTruncated: Boolean(data?.search_truncated),
+        }),
       ]);
     } catch {
       if (mounted.current) setExportError(true);
     } finally {
       if (mounted.current) setExporting(false);
     }
-  }, [store, queryArgs, projectName, range, meta, search]);
+  }, [store, queryArgs, projectName, range, meta, search, data?.search_truncated]);
 
   const openEntity = useCallback(
     row => {
@@ -334,6 +348,14 @@ const ComplexityContainer = memo(() => {
           </Alert>
         )}
         {isError && <Alert severity="error">Failed to load complexity scores.</Alert>}
+        {data?.search_truncated && (
+          <Alert
+            severity="warning"
+            data-testid="complexity-search-truncated"
+          >
+            {SEARCH_TRUNCATED_NOTE}
+          </Alert>
+        )}
 
         <AnalyticsBreakdownTable
           title="Agents & Pipelines"

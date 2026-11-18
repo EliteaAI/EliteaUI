@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { StrictMode } from 'react';
+
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -103,15 +105,17 @@ const mockData = data =>
     refetch: vi.fn().mockResolvedValue({ data }),
   });
 
-const renderAt = (url = '/settings/complexity') =>
-  render(
+const renderAt = (url = '/settings/complexity', { strict = false } = {}) => {
+  const tree = (
     <MemoryRouter initialEntries={[url]}>
       <AnalyticsTestWrapper>
         <ComplexityContainer />
         <RouterHistoryProbe />
       </AnalyticsTestWrapper>
-    </MemoryRouter>,
+    </MemoryRouter>
   );
+  return render(strict ? <StrictMode>{tree}</StrictMode> : tree);
+};
 
 const lastArgs = () => useAnalyticsComplexityQuery.mock.lastCall[0];
 const location = () => screen.getByTestId('history-location');
@@ -241,5 +245,34 @@ describe('ComplexityContainer (#7581)', () => {
 
     expect(initiate).toHaveBeenCalledTimes(52);
     expect(exportToExcel.mock.lastCall[1][0].rows).toHaveLength(5101);
+  });
+
+  // #1576 review: StrictMode's setup/cleanup/setup must not leave the export button spinning
+  it('re-enables the export button after a download under StrictMode', async () => {
+    mockData({ meta: META, total: 1, rows: [ROW] });
+    initiate.mockImplementation(() => ({
+      unwrap: () => Promise.resolve({ total: 1, rows: [ROW] }),
+      unsubscribe: () => {},
+    }));
+    renderAt('/settings/complexity', { strict: true });
+
+    await act(async () => fireEvent.click(screen.getByTestId('complexity-export-button')));
+
+    expect(exportToExcel).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('complexity-export-button')).not.toBeDisabled();
+  });
+
+  it('warns on the page and in the export when the name search was truncated', async () => {
+    mockData({ meta: META, total: 1, rows: [ROW], search_truncated: true });
+    initiate.mockImplementation(() => ({
+      unwrap: () => Promise.resolve({ total: 1, rows: [ROW] }),
+      unsubscribe: () => {},
+    }));
+    renderAt('/settings/complexity?search=a');
+
+    expect(screen.getByTestId('complexity-search-truncated')).toBeInTheDocument();
+    await act(async () => fireEvent.click(screen.getByTestId('complexity-export-button')));
+    const labels = exportToExcel.mock.lastCall[1][0].metadata.map(([label]) => label);
+    expect(labels).toContain('Warning');
   });
 });
