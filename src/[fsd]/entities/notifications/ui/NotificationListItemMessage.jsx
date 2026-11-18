@@ -15,10 +15,16 @@ const NotificationListItemMessage = memo(props => {
   const resolvedHref = resolveHref(notification.event_type, notification.meta, notification.project_id);
   const isAddedToProject = notification.event_type === NotificationType.UserWasAddedToSomeProjectAsTeammate;
   const isRemovedFromProject = notification.event_type === NotificationType.UserWasRemovedFromProject;
+  const isLegacyMembership = Array.isArray(notification.meta?.users);
   const projectName = notification.meta?.project_name;
   const styles = notificationListItemMessageStyles(notification.is_seen);
 
-  if (message && (isAddedToProject || isRemovedFromProject) && typeof projectName === 'string') {
+  if (
+    message &&
+    !isLegacyMembership &&
+    (isAddedToProject || isRemovedFromProject) &&
+    typeof projectName === 'string'
+  ) {
     const isLinked = isAddedToProject && resolvedHref;
 
     return (

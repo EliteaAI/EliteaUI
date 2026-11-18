@@ -77,6 +77,19 @@ describe('schedule notice text', () => {
 describe('project membership notice text', () => {
   afterEach(cleanup);
 
+  it('preserves the stored text of a legacy add notice with named users', () => {
+    renderMessage(
+      build(NotificationType.UserWasAddedToSomeProjectAsTeammate, {
+        users: ['Alex'],
+        project_name: 'P',
+        message: 'Alex is added into P.',
+      }),
+    );
+
+    expect(screen.getByText('Alex is added into P.')).toBeInTheDocument();
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  });
+
   it('renders the full bracketed project name as the added-notice link', () => {
     const projectName = `${'A'.repeat(120)} [Research]`;
     const { container } = renderMessage(
