@@ -135,7 +135,6 @@ const CreateSkillForm = memo(props => {
     (description.length > SPEC_MAX_DESCRIPTION_LENGTH
       ? `Longer than ${SPEC_MAX_DESCRIPTION_LENGTH} characters: Claude and other Agent Skills tools will reject the exported skill.`
       : undefined);
-  const license = formik.values?.version_details?.meta?.frontmatter?.license;
 
   const instructions = formik.values?.version_details?.instructions || '';
   const instructionsCharactersLeft = maxInstructionsLength - instructions.length;
@@ -256,19 +255,6 @@ const CreateSkillForm = memo(props => {
                     />
                   )}
                 </Box>
-
-                {license && (
-                  <Input.StyledInputEnhancer
-                    autoComplete="off"
-                    id="license"
-                    label="License"
-                    data-testid="skill-license"
-                    value={license}
-                    inputProps={{ readOnly: true, 'data-testid': 'skill-license-input-field' }}
-                    multiline
-                    maxRows={5}
-                  />
-                )}
 
                 <TagEditor
                   id="tags"

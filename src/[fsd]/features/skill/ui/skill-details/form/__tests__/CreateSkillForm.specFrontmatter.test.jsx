@@ -72,19 +72,11 @@ const renderForm = ({ description = 'Sorts issues', meta = {} } = {}) =>
 describe('CreateSkillForm Agent Skills spec fields', () => {
   afterEach(() => cleanup());
 
-  it('shows the licence kept from the frontmatter', () => {
+  it('keeps the licence only in the frontmatter, not as a form field', () => {
     renderForm({ meta: { frontmatter: { license: 'Proprietary. LICENSE.txt has complete terms' } } });
 
-    expect(screen.getByTestId('skill-license')).toHaveAttribute(
-      'data-value',
-      'Proprietary. LICENSE.txt has complete terms',
-    );
-  });
-
-  it('shows no licence line when the skill has none', () => {
-    renderForm({ meta: { frontmatter: { 'allowed-tools': 'Read' } } });
-
     expect(screen.queryByTestId('skill-license')).not.toBeInTheDocument();
+    expect(screen.queryByText('Proprietary. LICENSE.txt has complete terms')).not.toBeInTheDocument();
   });
 
   it('warns when the description is longer than the spec allows', () => {
