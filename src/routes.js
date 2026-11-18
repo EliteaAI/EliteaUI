@@ -107,6 +107,8 @@ const RouteDefinitions = {
   Settings: '/settings',
   SettingsWithTab: '/settings/:tab',
   SettingsProjectGeneral: '/settings/project-general',
+  SettingsComplexity: '/settings/complexity',
+  SettingsComplexityDetail: '/settings/complexity/:entityProjectId/:entityId',
   CreateConfiguration: '/settings/create-ai-provider',
   CreateConfigurationWithType: '/settings/create-ai-provider/:credentialType',
   CreatePersonalToken: '/settings/create-personal-token',

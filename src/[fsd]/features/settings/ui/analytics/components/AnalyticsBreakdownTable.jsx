@@ -30,6 +30,8 @@ const AnalyticsBreakdownTable = memo(props => {
     onSort,
     loading = false,
     footer,
+    fullHeight = false,
+    titleAction,
   } = props;
 
   const tableStyles = analyticsBreakdownTableStyles();
@@ -55,6 +57,7 @@ const AnalyticsBreakdownTable = memo(props => {
             }}
           />
         )}
+        {titleAction && <Box sx={tableStyles.titleAction}>{titleAction}</Box>}
       </Box>
       {subtitle && (
         <Box sx={styles.subtitleRow}>
@@ -94,7 +97,7 @@ const AnalyticsBreakdownTable = memo(props => {
             ),
           )}
         </Box>
-        <Box sx={[tableStyles.scrollList, rowMinWidth]}>
+        <Box sx={[tableStyles.scrollList, fullHeight && tableStyles.fullHeightList, rowMinWidth]}>
           {loading && (
             <Box
               sx={tableStyles.loadingState}
@@ -141,10 +144,13 @@ AnalyticsBreakdownTable.displayName = 'AnalyticsBreakdownTable';
 /** @type {MuiSx} */
 const analyticsBreakdownTableStyles = () => ({
   titleRow: { display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.25rem' },
+  titleAction: { marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' },
   // Both header and list reserve the same scrollbar gutter, so a vertical scrollbar in the list
   // does not narrow the body columns relative to the header (non-overlay scrollbars)
   headerGutter: { overflowY: 'hidden', scrollbarGutter: 'stable' },
   scrollList: { maxHeight: '18.75rem', overflowY: 'auto', overflowX: 'hidden', scrollbarGutter: 'stable' },
+  // A paginated table shows its whole page and lets the page itself scroll
+  fullHeightList: { maxHeight: 'none' },
   emptyText: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,
     padding: '0.5rem 0.75rem',

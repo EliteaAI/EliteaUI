@@ -13,15 +13,6 @@ export const formatPercentile = value => (value == null ? '—' : `P${value}`);
 
 export const formatAsOf = iso => (iso ? format(new Date(iso), 'MMM d, yyyy HH:mm') : null);
 
-// Runs are scored hourly; only the label cut points are recalibrated nightly
-export const freshnessNote = meta => {
-  const asOf = formatAsOf(meta?.as_of);
-  if (!asOf) return 'No runs scored yet. Runs are scored about 30–90 minutes after they finish.';
-  const recalibrated = formatAsOf(meta?.thresholds_computed_at);
-  const labels = recalibrated ? `labels recalibrated daily (${recalibrated})` : 'labels recalibrated daily';
-  return `Scores as of ${asOf} · updated hourly · ${labels}.`;
-};
-
 export const breakdownShares = breakdown => {
   const parts = ['context', 'reasoning', 'tools'].map(key => Math.max(0, Number(breakdown?.[key]) || 0));
   const total = parts.reduce((sum, value) => sum + value, 0);
@@ -60,3 +51,117 @@ export const runScoreState = (scoredRun, lastActivityMs, pendingWindowMs, now = 
 // Context, reasoning, tools: shared by the breakdown bar and its legend
 export const dimensionColor = (palette, index) =>
   [palette.status.draft, palette.status.onModeration, palette.status.published][index];
+
+export const dataFreshnessNote = meta => {
+  const asOf = formatAsOf(meta?.as_of);
+  const recalibrated = formatAsOf(meta?.thresholds_computed_at);
+  const scores = asOf ? `Scores as of ${asOf}.` : 'No runs scored yet.';
+  const labels = recalibrated ? `; last recalibration: ${recalibrated}` : '';
+  return `Data freshness: ${scores} Scores update hourly. Complexity labels are recalibrated daily${labels}.`;
+};
+
+const nonNegativeInt = (value, fallback) => {
+  const parsed = parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+};
+
+// Unknown or tampered URL values fall back to defaults rather than querying with them
+export const readListState = (searchParams, { keys, periods, defaultPeriod, defaultSort, rowsOptions }) => {
+  const period = searchParams.get(keys.period);
+  const rows = nonNegativeInt(searchParams.get(keys.rowsPerPage), rowsOptions[1]);
+  const sortOrder = searchParams.get(keys.sortOrder);
+  return {
+    periodDays: periods.some(option => option.value === period) ? period : defaultPeriod,
+    search: searchParams.get(keys.search) ?? '',
+    sortBy: searchParams.get(keys.sortBy) || defaultSort.sortBy,
+    sortOrder: sortOrder === 'asc' || sortOrder === 'desc' ? sortOrder : defaultSort.sortOrder,
+    page: nonNegativeInt(searchParams.get(keys.page), 0),
+    rowsPerPage: rowsOptions.includes(rows) ? rows : rowsOptions[1],
+  };
+};
+
+const safeName = value =>
+  String(value ?? '')
+    .replace(/[\\/:*?"<>|]/g, '')
+    .trim()
+    .replace(/\s+/g, '_') || 'Project';
+
+// dateTo is exclusive, so exports name the last day actually covered
+export const lastCoveredDay = dateTo =>
+  new Date(new Date(`${dateTo}T00:00:00Z`).getTime() - 24 * 3600 * 1000).toISOString().slice(0, 10);
+
+export const exportFileName = (projectName, { dateFrom, dateTo }) =>
+  `complexity_${safeName(projectName)}_${dateFrom}_${lastCoveredDay(dateTo)}.xlsx`;
+
+const numberOrBlank = value => (value == null || value === '' ? '' : Number(value));
+
+const breakdownColumn = (header, key) => ({
+  header,
+  key,
+  numFmt: '0.00',
+  transform: (_, row) => numberOrBlank(row.breakdown?.[key]),
+});
+
+export const buildExportSheet = ({ rows, meta, projectName, range, search, searchTruncated }) => ({
+  sheetName: 'Complexity',
+  metadata: [
+    ['Project', projectName],
+    ['Period', `${range.dateFrom} – ${lastCoveredDay(range.dateTo)} (UTC)`],
+    ...(search ? [['Search', search]] : []),
+    ...(searchTruncated ? [['Warning', 'Search matched too many names; some agents may be missing.']] : []),
+    ['Scores as of', formatAsOf(meta?.as_of) ?? 'Not scored yet'],
+    ['Labels recalibrated', formatAsOf(meta?.thresholds_computed_at) ?? '—'],
+    ['Median CU', 'Approximate, from daily summaries. Blank cells mean the value is unavailable.'],
+    ['Exported At', formatAsOf(new Date().toISOString())],
+  ],
+  columns: [
+    { header: 'Name', key: 'entity_name' },
+    { header: 'Type', key: 'entity_kind', transform: kind => (kind === 'pipeline' ? 'Pipeline' : 'Agent') },
+    { header: 'Runs', key: 'runs', numFmt: '#,##0', transform: numberOrBlank },
+    { header: 'Median CU (approx.)', key: 'cu_median', numFmt: '0.00', transform: numberOrBlank },
+    { header: 'Max CU', key: 'cu_max', numFmt: '0.00', transform: numberOrBlank },
+    {
+      header: 'Complexity',
+      key: 'label',
+      transform: (label, row) => (row.label_pending ? 'Pending' : (label ?? '')),
+    },
+    { header: 'Percentile', key: 'percentile', numFmt: '0', transform: numberOrBlank },
+    breakdownColumn('Context CU', 'context'),
+    breakdownColumn('Reasoning CU', 'reasoning'),
+    breakdownColumn('Tools CU', 'tools'),
+  ],
+  rows,
+});
+
+export const buildRunSheet = (run, meta, scopeRows = []) => ({
+  sheetName: 'Complexity',
+  metadata: [...scopeRows, ['Scores as of', formatAsOf(meta?.as_of) ?? '—']],
+  columns: [
+    { header: 'Metric', key: 'metric' },
+    { header: 'Value', key: 'value' },
+  ],
+  rows: run
+    ? [
+        { metric: 'CU', value: numberOrBlank(run.cu_total) },
+        { metric: 'Context CU', value: numberOrBlank(run.breakdown?.context) },
+        { metric: 'Reasoning CU', value: numberOrBlank(run.breakdown?.reasoning) },
+        { metric: 'Tools CU', value: numberOrBlank(run.breakdown?.tools) },
+        { metric: 'Complexity', value: run.label ?? '' },
+        { metric: 'Percentile', value: numberOrBlank(run.percentile) },
+        { metric: 'LLM calls', value: numberOrBlank(run.llm_calls) },
+        { metric: 'Tool calls', value: numberOrBlank(run.tool_calls) },
+        { metric: 'Peak input tokens', value: numberOrBlank(run.peak_input_tokens) },
+      ]
+    : [{ metric: 'Complexity data is unavailable for this run.', value: '' }],
+});
+
+export const versionName = (versions, versionId) =>
+  versions?.find(version => version.id === versionId)?.name ?? (versionId ? `#${versionId}` : '—');
+
+export const readRunsPaging = (searchParams, { rowsKey, pageKey, rowsOptions }) => {
+  const rows = parseInt(searchParams.get(rowsKey), 10);
+  return {
+    rowsPerPage: rowsOptions.includes(rows) ? rows : rowsOptions[1],
+    page: Math.max(0, parseInt(searchParams.get(pageKey), 10) || 0),
+  };
+};

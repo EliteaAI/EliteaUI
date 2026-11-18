@@ -216,6 +216,7 @@ export const analyticsApi = eliteaApi
           offset = 0,
           sortBy = 'cu_median',
           sortOrder = 'desc',
+          search,
         }) => {
           const params = new URLSearchParams();
           if (dateFrom) params.set('date_from', dateFrom);
@@ -224,6 +225,7 @@ export const analyticsApi = eliteaApi
           params.set('offset', String(offset));
           params.set('sort_by', sortBy);
           params.set('sort_order', sortOrder);
+          if (search) params.set('search', search);
           return {
             url: `/usage/analytics_complexity/prompt_lib/${projectId}?${params.toString()}`,
             method: 'GET',
@@ -240,10 +242,13 @@ export const analyticsApi = eliteaApi
           entityProjectId,
           versionId,
           conversationIds,
+          runId,
           dateFrom,
           dateTo,
           limit = 20,
           offset = 0,
+          sortBy,
+          sortOrder,
         }) => {
           const params = new URLSearchParams();
           params.set('entity_id', String(entityId));
@@ -251,6 +256,9 @@ export const analyticsApi = eliteaApi
           if (entityProjectId) params.set('entity_project_id', String(entityProjectId));
           if (versionId) params.set('version_id', String(versionId));
           if (conversationIds?.length) params.set('conversation_ids', conversationIds.join(','));
+          if (runId) params.set('run_id', runId);
+          if (sortBy) params.set('sort_by', sortBy);
+          if (sortOrder) params.set('sort_order', sortOrder);
           if (dateFrom) params.set('date_from', dateFrom);
           if (dateTo) params.set('date_to', dateTo);
           params.set('limit', String(limit));
