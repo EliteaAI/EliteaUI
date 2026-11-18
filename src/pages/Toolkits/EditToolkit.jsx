@@ -354,7 +354,6 @@ const EditToolkit = memo(props => {
     );
   }
 
-  // Render the provider UI below the application actions.
   if (isApplicationToolkit && interfaceType === 'iframe' && interpolatedAppUrl && !showIframeFallback) {
     return (
       <Box sx={styles.iframeContainer}>

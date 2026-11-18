@@ -1,9 +1,14 @@
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useRef } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
-import { useProjectType, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
-import { Controls, Modal } from '@/[fsd]/shared/ui';
+import {
+  useDeleteConfirmationDisabled,
+  useProjectType,
+  useSelectedProjectId,
+  useToast,
+} from '@/[fsd]/shared/lib/hooks';
+import { Controls } from '@/[fsd]/shared/ui';
 import { useToolkitDeleteMutation } from '@/api/toolkits';
 import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
@@ -19,24 +24,15 @@ const AppDetailActions = memo(props => {
   const { toastError, toastSuccess } = useToast();
   const navigate = useNavigate();
   const [deleteToolkit, { isLoading }] = useToolkitDeleteMutation();
+  const skipDeleteConfirmation = useDeleteConfirmationDisabled();
   const deletionInProgress = useRef(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const canDelete = isPrivate || checkPermission(PERMISSIONS.toolkits.delete);
   const displayName = appName || 'Application';
 
-  const openDeleteModal = useCallback(() => {
-    setIsDeleteModalOpen(true);
-  }, []);
-
-  const closeDeleteModal = useCallback(() => {
-    setIsDeleteModalOpen(false);
-  }, []);
-
   const onDelete = useCallback(async () => {
     if (!projectId || !appId || !canDelete || deletionInProgress.current) return;
     deletionInProgress.current = true;
-    setIsDeleteModalOpen(false);
 
     try {
       await deleteToolkit({ projectId, toolkitId: appId }).unwrap();
@@ -58,29 +54,22 @@ const AppDetailActions = memo(props => {
         label: 'Delete application',
         icon: <DeleteIcon fontSize="inherit" />,
         alarm: true,
-        disabled: isLoading || !projectId || !appId || !canDelete,
-        onClick: openDeleteModal,
+        disabled: isLoading || !projectId || !appId,
+        entityName: displayName,
+        shouldRequestInputName: true,
+        ...(skipDeleteConfirmation ? { onClick: onDelete } : { onConfirm: onDelete }),
       },
     ],
-    [appId, canDelete, isLoading, openDeleteModal, projectId],
+    [appId, displayName, isLoading, projectId, onDelete, skipDeleteConfirmation],
   );
 
-  if (!appId) return null;
+  if (!appId || !canDelete) return null;
 
   return (
-    <>
-      <Controls.ControlsDropdown
-        id="app-detail-actions"
-        menuItems={menuItems}
-      />
-      <Modal.DeleteEntityModal
-        name={displayName}
-        open={isDeleteModalOpen}
-        onClose={closeDeleteModal}
-        onConfirm={onDelete}
-        shouldRequestInputName
-      />
-    </>
+    <Controls.ControlsDropdown
+      id="app-detail-actions"
+      menuItems={menuItems}
+    />
   );
 });
 
