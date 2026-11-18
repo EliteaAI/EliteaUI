@@ -136,8 +136,8 @@ const globalStyles = theme => ({
   '#root': {
     background: theme.palette.background.default.primary,
   },
+  // The sidebar's bot cell takes the clicks (and positions the container, see SidebarFooterRow)
   '.elitea-assistant-container': {
-    left: '1.25rem',
     pointerEvents: 'none',
 
     '> *': {

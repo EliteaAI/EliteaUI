@@ -6,15 +6,17 @@ import { Box } from '@mui/material';
 
 import { ModelConfigurationHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import {
+  useConfigurationNavigation,
   useModelConfiguration,
   useModelOptions,
   useMultiSectionConfigurations,
 } from '@/[fsd]/features/settings/lib/hooks';
 import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { useIsOwnLLMsRestricted, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { defaultModelRequest } from '@/[fsd]/shared/lib/utils';
 import { useListModelsQuery, useSetProjectDefaultModelMutation } from '@/api/configurations.js';
-import { PUBLIC_PROJECT_ID } from '@/common/constants';
+import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
+import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { DrawerPageHeader } from '../drawer-page';
 import ConfigurationsPanel from './ConfigurationsPanel';
@@ -28,6 +30,10 @@ const AIProvidersContent = memo(() => {
   const styles = getStyles();
   const { state: locationState } = useLocation();
   const expandSection = locationState?.expandSection ?? null;
+  const { checkPermission } = useCheckPermission();
+  const isOwnLLMsRestricted = useIsOwnLLMsRestricted();
+  const { navigateToCreateConfiguration } = useConfigurationNavigation();
+  const canCreateProvider = checkPermission(PERMISSIONS.configuration.update);
 
   // Fetch all model data
   const {
@@ -230,6 +236,16 @@ const AIProvidersContent = memo(() => {
         title="AI Providers"
         titleTestId="ai-providers-page-title"
         showBorder
+        showAddButton={canCreateProvider}
+        slotProps={{
+          addButton: {
+            onAdd: navigateToCreateConfiguration,
+            // IntegrationGuard sends the create page away when own LLMs are restricted
+            disabled: isOwnLLMsRestricted,
+            tooltip: 'Create new AI provider',
+            testId: 'ai-providers-add-button',
+          },
+        }}
       />
       <ConfigurationsPanel
         configurationsBySections={configurationsBySections}
