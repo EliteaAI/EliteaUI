@@ -11,12 +11,6 @@ const capitalize = word => word.charAt(0).toUpperCase() + word.slice(1);
 
 export const fileBaseName = path => path.slice(path.lastIndexOf('/') + 1);
 
-export const formatFileSize = bytes => {
-  if (bytes >= 1024 * 1024) return `${Math.round(bytes / (1024 * 1024))} MB`;
-  if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${bytes} B`;
-};
-
 const createFolder = (path, name) => ({ path, name, folders: [], files: [] });
 
 const sortFolder = folder => {

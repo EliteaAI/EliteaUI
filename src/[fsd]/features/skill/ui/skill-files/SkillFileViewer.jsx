@@ -4,9 +4,10 @@ import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
 
 import { useSkillVersionFileTextQuery } from '@/[fsd]/features/skill/api';
 import { SKILL_FILE_PREVIEW_MAX_BYTES } from '@/[fsd]/features/skill/lib/constants';
-import { fileBaseName, formatFileSize } from '@/[fsd]/features/skill/lib/helpers';
+import { fileBaseName } from '@/[fsd]/features/skill/lib/helpers';
 import { Button, Field } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { formatFileSize } from '@/common/attachmentValidationUtils';
 import { buildErrorMessage } from '@/common/utils';
 import DownloadIcon from '@/components/Icons/DownloadIcon';
 import FileCodeIcon from '@/components/Icons/FileCodeIcon';

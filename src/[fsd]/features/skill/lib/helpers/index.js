@@ -67,7 +67,6 @@ export {
   findMentionLines,
   findPathMentions,
   findSkillFile,
-  formatFileSize,
   isPathInFolder,
   pathsOverlap,
   resolveFileLink,
