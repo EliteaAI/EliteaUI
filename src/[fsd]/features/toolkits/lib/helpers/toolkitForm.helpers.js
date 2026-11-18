@@ -1,7 +1,7 @@
+import { ValidationErrorHelpers } from '@/[fsd]/shared/lib/helpers';
+
 // TODO: DELETE LegacyOpenApiMigration usage after migration period (Q1 2026)
 import { normalizeLegacyOpenApiToolkit } from './legacyOpenApiMigration.helpers.js';
-
-const VALUE_ERROR_PREFIX = 'Value error, ';
 
 /**
  * Seeds a toolkit form. `settings` and `type` are forced to be present so the first `setFieldValue`
@@ -18,13 +18,6 @@ export const buildToolkitFormInitialValues = toolkit => {
     type: normalized.type || '',
   };
 };
-
-const pythonToJson = str =>
-  str
-    .replace(/'/g, '"')
-    .replace(/\bTrue\b/g, 'true')
-    .replace(/\bFalse\b/g, 'false')
-    .replace(/\bNone\b/g, 'null');
 
 const ERROR_HANDLERS = {
   configuration_model_not_found: parsed => ({
@@ -50,21 +43,25 @@ const handleConnectionErrors = parsed => {
   };
 };
 
-const parseErrorBody = body => {
-  try {
-    return JSON.parse(pythonToJson(body));
-  } catch {
-    return null;
-  }
+/**
+ * The text an agent or pipeline tool card shows for its sub-agent's validation message: the connection error when that is
+ * all the sub-agent has, else what `mapError` recognises, else a generic misconfiguration.
+ */
+export const applicationToolValidationMessage = (rawMsg, mapError, entityType) => {
+  const connectionNotice = ValidationErrorHelpers.connectionNoticeOf([], [rawMsg]);
+  if (connectionNotice) return connectionNotice.message;
+
+  const mapped = rawMsg ? mapError(rawMsg) : '';
+  return mapped && mapped !== rawMsg ? mapped : `Misconfiguration error found. Check the ${entityType}.`;
 };
 
 export const parseValidationError = curr => {
   const msg = curr.msg || '';
   const fieldKey = curr.loc?.[1];
 
-  const body = msg.startsWith(VALUE_ERROR_PREFIX) ? msg.slice(VALUE_ERROR_PREFIX.length) : msg;
+  const body = ValidationErrorHelpers.valueErrorBody(msg);
 
-  const parsed = parseErrorBody(body);
+  const parsed = ValidationErrorHelpers.parseErrorBody(body);
   if (!parsed) return fieldKey !== undefined ? { fieldKey, message: msg } : null;
 
   const handler = ERROR_HANDLERS[parsed.error_type];

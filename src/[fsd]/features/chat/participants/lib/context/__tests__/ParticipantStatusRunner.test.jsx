@@ -6,8 +6,10 @@ import { cleanup, render } from '@testing-library/react';
 
 import ParticipantStatusRunner from '../ParticipantStatusRunner';
 
+const validation = vi.hoisted(() => ({ current: { hasMisconfigurationErrors: false } }));
+
 vi.mock('@/[fsd]/features/chat/participants/lib/hooks', () => ({
-  useParticipantValidation: () => ({ hasMisconfigurationErrors: false }),
+  useParticipantValidation: () => validation.current,
   useParticipantMcpStatus: () => ({}),
   useParticipantToolAvailability: () => ({ someToolsAreUnavailable: false, blockedToolkitNames: [] }),
   useParticipantSpOAuth: () => ({}),
@@ -71,5 +73,36 @@ describe('ParticipantStatusRunner skill states', () => {
     const status = statusOf(skill(2, { meta: { name: 'writer', is_available: false } }), {}, false);
 
     expect(status).toMatchObject({ hasError: true, isSkillVersionUnavailable: true, isSkillGone: false });
+  });
+});
+
+describe('ParticipantStatusRunner sign-in-only validation (#7585)', () => {
+  afterEach(() => {
+    validation.current = { hasMisconfigurationErrors: false };
+    cleanup();
+  });
+
+  it('publishes a sign-in-only participant as still warned but able to chat', () => {
+    const connectionNotice = {
+      message: 'Sign in to Dataverse to connect this credential.',
+      requiresAuthorization: true,
+    };
+    validation.current = { hasMisconfigurationErrors: true, connectionNotice, signInOnly: true };
+
+    const status = statusOf(
+      {
+        entity_name: ChatParticipantType.Applications,
+        entity_meta: { id: 222, project_id: 2 },
+        entity_settings: {},
+      },
+      { id: 222, versions: [{ id: 338 }] },
+    );
+
+    expect(status).toMatchObject({
+      hasError: true,
+      hasMisconfigurationErrors: true,
+      signInOnly: true,
+      connectionNotice,
+    });
   });
 });

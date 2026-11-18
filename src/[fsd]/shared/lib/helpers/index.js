@@ -38,6 +38,7 @@ export * as WebhookHelpers from './webhook.helpers.js';
 export * as AgentNestingHelpers from './agentNesting.helpers';
 export * as CronBuilderHelpers from './cronBuilder.helpers';
 export * as BreadcrumbHelpers from './breadcrumb.helpers';
+export * as ValidationErrorHelpers from './validationError.helpers.js';
 export * as RtkCacheHelpers from './rtkCache.helpers';
 export * as ThemeHelpers from './theme.helpers';
 export * as CustomThemeCacheHelpers from './customThemeCache.helpers';

@@ -6,6 +6,7 @@ import { useParticipantDetailsContext } from '@/[fsd]/features/chat/participants
 import {
   canParticipantBeActiveInChat,
   isSkippedContainerParticipant,
+  shouldDeselectParticipant,
 } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { useEliteaAssistantRef } from '@/[fsd]/widgets/support-assistant';
@@ -128,10 +129,23 @@ export const useParticipantItem = ({
   }, [status.hasMisconfigurationErrors]);
 
   useEffect(() => {
-    if ((status.hasMisconfigurationErrors || status.isPublishedAgentGone) && isActive) {
+    if (
+      isActive &&
+      shouldDeselectParticipant(
+        status.hasMisconfigurationErrors,
+        status.signInOnly,
+        status.isPublishedAgentGone,
+      )
+    ) {
       onClickItem(undefined);
     }
-  }, [isActive, onClickItem, status.hasMisconfigurationErrors, status.isPublishedAgentGone]);
+  }, [
+    isActive,
+    onClickItem,
+    status.hasMisconfigurationErrors,
+    status.signInOnly,
+    status.isPublishedAgentGone,
+  ]);
 
   useEffect(() => {
     if (originalDetails?.versions?.length > 0) {
