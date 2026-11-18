@@ -15,7 +15,7 @@ export const CONTEXT_WINDOW_MODES = {
 export const BALANCED_WINDOW_TOKENS = 272000;
 
 export const CONTEXT_WINDOW_COPY = {
-  LABEL: 'Context window',
+  LABEL: 'Context Window',
   BALANCED_DESCRIPTION: (balancedLabel = '272,000') => `Up to ${balancedLabel} tokens. Keeps costs down.`,
   FULL_DESCRIPTION: "The LLM's entire context window. Best for very long chats, but costs more.",
   HELPER:

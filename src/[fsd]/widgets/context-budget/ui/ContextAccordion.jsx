@@ -5,15 +5,15 @@ import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 
 const ContextAccordion = memo(props => {
   const { title, content, expanded, onChange } = props;
+  const styles = contextAccordionStyles();
 
   return (
     <BasicAccordion
       showMode={AccordionConstants.AccordionShowMode.LeftMode}
       expanded={expanded}
       onChange={onChange}
-      accordionSX={{
-        background: 'transparent !important',
-      }}
+      accordionSX={styles.accordion}
+      accordionDetailsSX={styles.details}
       items={[
         {
           title,
@@ -25,5 +25,15 @@ const ContextAccordion = memo(props => {
 });
 
 ContextAccordion.displayName = 'ContextAccordion';
+
+/** @type {MuiSx} */
+const contextAccordionStyles = () => ({
+  accordion: {
+    background: 'transparent !important',
+  },
+  details: {
+    paddingTop: '0.5rem',
+  },
+});
 
 export default ContextAccordion;
