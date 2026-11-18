@@ -1,208 +1,52 @@
-import { Fragment, memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
-import { Box, Divider, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Divider, IconButton, Tooltip } from '@mui/material';
 
 import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
-import { useIsMcpVisible, useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
+import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
 import { BrandLogo } from '@/[fsd]/shared/ui';
-import { SidebarConstants, SocketConstants } from '@/[fsd]/widgets/sidebar-root/lib/constants';
-import { useSocketIcon } from '@/[fsd]/widgets/sidebar-root/lib/hooks';
-import { Buttons, SidebarMenuItem, SidebarProjectSelect } from '@/[fsd]/widgets/sidebar-root/ui';
+import { SocketConstants } from '@/[fsd]/widgets/sidebar-root/lib/constants';
+import { useSidebarNavigation, useSocketIcon } from '@/[fsd]/widgets/sidebar-root/lib/hooks';
+import {
+  Buttons,
+  ExploreMenu,
+  SidebarChatsArea,
+  SidebarFooterRow,
+  SidebarMenuItem,
+  SidebarProjectSelect,
+} from '@/[fsd]/widgets/sidebar-root/ui';
 import { useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/support-assistant';
-import AppsIcon from '@/assets/applications-icon.svg?react';
 import ArtifactsIcon from '@/assets/artifacts-icon.svg?react';
-import FlowIcon from '@/assets/flow-icon.svg?react';
-import KeyIcon from '@/assets/key-icon.svg?react';
-import MCPIcon from '@/assets/mcp-icon.svg?react';
-import SkillsIcon from '@/assets/skill-icon.svg?react';
-import ToolIcon from '@/assets/tool-icon.svg?react';
 import {
   COLLAPSED_SIDE_BAR_WIDTH,
   NAV_BAR_HEIGHT_IN_PX,
-  PERMISSIONS,
   PERMISSION_GROUPS,
-  PUBLIC_PROJECT_ID,
   SIDE_BAR_WIDTH,
 } from '@/common/constants';
-import ApplicationsIcon from '@/components/Icons/ApplicationsIcon';
-import ChatIcon from '@/components/Icons/ChatIcon';
-import useNavBlocker from '@/hooks/useNavBlocker';
 import RouteDefinitions from '@/routes';
+
+const ARTIFACTS_LABEL = 'Artifacts';
 
 const SidebarBody = memo(props => {
   const { onKeyDown, onCollapsed, onToggleAssistant } = props;
   const { pathname } = useLocation();
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
+  const permissions = useSelector(state => state.user.permissions);
   const systemSenderName = useSystemSenderName();
-  const { publicPermissions = [], permissions = [] } = useSelector(state => state.user);
-  const navigate = useNavigate();
-  const { isBlockNav, isStreaming, setIsResetApiState, resetApiState } = useNavBlocker();
   const { isSocketIconVisible, socketStatus } = useSocketIcon();
-  const { personal_project_id } = useSelector(state => state.user);
-  const selectedProjectId = useSelector(state => state.settings.project?.id);
-  const isSelectedProjectPublic = selectedProjectId == PUBLIC_PROJECT_ID;
-  const isMcpVisible = useIsMcpVisible();
+  const { navigateToPage, getLinkTarget } = useSidebarNavigation();
 
   useGetSupportAssistantConfigQuery();
 
   const styles = sideBarBodyStyles(sideBarCollapsed, socketStatus);
 
-  const navigateToPage = useCallback(
-    (pagePath, breadCrumb) => event => {
-      // The item is a real link (so the browser can open it in a new tab); a plain click is handled here
-      event?.preventDefault?.();
-      if (!personal_project_id) {
-        navigate(RouteDefinitions.Onboarding);
-      } else {
-        if (pagePath !== pathname) {
-          if (isBlockNav || isStreaming) {
-            setIsResetApiState(true);
-          } else {
-            resetApiState();
-          }
-          navigate(pagePath, {
-            state: {
-              routeStack: [
-                {
-                  breadCrumb,
-                  pagePath,
-                },
-              ],
-            },
-          });
-        }
-      }
-    },
-    [isBlockNav, isStreaming, navigate, pathname, personal_project_id, resetApiState, setIsResetApiState],
+  const showArtifacts = useMemo(
+    () => PERMISSION_GROUPS.artifacts.some(permission => (permissions || []).includes(permission)),
+    [permissions],
   );
-
-  const permissionsSet = useMemo(() => new Set(permissions), [permissions]);
-  const publicPermissionsSet = useMemo(() => new Set(publicPermissions), [publicPermissions]);
-
-  const selectedItem = useMemo(() => {
-    if (pathname === RouteDefinitions.AgentHub || pathname === RouteDefinitions.EliteaCatalog) {
-      return '';
-    }
-    const matchedRoute = SidebarConstants.RouteToSideBarItemMap.find(({ route }) =>
-      pathname.startsWith(route),
-    );
-    return matchedRoute?.item;
-  }, [pathname]);
-
-  const sections = useMemo(() => {
-    const allSections = [
-      [
-        {
-          value: 'chat',
-          label: 'Chats',
-          icon: <ChatIcon fontSize="1rem" />,
-          url: RouteDefinitions.Chat,
-          breadCrumb: 'Chats',
-          tooltip: 'Chats',
-          tourId: SIDEBAR_TOUR_TARGET_IDS.navChat,
-        },
-        {
-          value: 'agents',
-          label: 'Agents',
-          icon: <ApplicationsIcon />,
-          url: RouteDefinitions.Applications,
-          breadCrumb: 'Agents',
-          tooltip: 'Agents',
-          tourId: SIDEBAR_TOUR_TARGET_IDS.navAgents,
-        },
-        {
-          value: 'pipelines',
-          label: 'Pipelines',
-          icon: <FlowIcon />,
-          url: RouteDefinitions.Pipelines,
-          breadCrumb: 'Pipelines',
-          tooltip: 'Pipelines',
-          tourId: SIDEBAR_TOUR_TARGET_IDS.navPipelines,
-        },
-      ],
-      [
-        {
-          value: 'skills',
-          label: 'Skills',
-          icon: <SkillsIcon />,
-          url: RouteDefinitions.Skills,
-          breadCrumb: 'Skills',
-          tooltip: 'Skills',
-          tourId: SIDEBAR_TOUR_TARGET_IDS.navSkills,
-        },
-        {
-          value: 'toolkits',
-          label: 'Toolkits & Indexes',
-          icon: <ToolIcon />,
-          url: RouteDefinitions.Toolkits,
-          breadCrumb: 'Toolkits & Indexes',
-          tooltip: 'Toolkits & Indexes',
-          tourId: SIDEBAR_TOUR_TARGET_IDS.navToolkits,
-        },
-        {
-          value: 'mcps',
-          label: 'MCPs',
-          icon: <MCPIcon />,
-          url: RouteDefinitions.MCPs,
-          breadCrumb: 'MCP',
-          tooltip: 'MCP',
-          tourId: SIDEBAR_TOUR_TARGET_IDS.navMcps,
-        },
-        {
-          value: 'credentials',
-          label: 'Credentials',
-          icon: <KeyIcon />,
-          url: RouteDefinitions.Credentials,
-          breadCrumb: 'Credentials',
-          tooltip: 'Credentials',
-          tourId: SIDEBAR_TOUR_TARGET_IDS.navCredentials,
-        },
-        {
-          value: 'applications',
-          label: 'Applications',
-          icon: <AppsIcon />,
-          url: RouteDefinitions.Apps,
-          breadCrumb: 'Applications',
-          tooltip: 'Applications',
-          tourId: SIDEBAR_TOUR_TARGET_IDS.navApplications,
-        },
-      ],
-      [
-        {
-          value: 'artifacts',
-          label: 'Artifacts',
-          icon: <ArtifactsIcon />,
-          url: RouteDefinitions.Artifacts,
-          breadCrumb: 'Artifacts',
-          tooltip: 'Artifacts',
-          tourId: SIDEBAR_TOUR_TARGET_IDS.navArtifacts,
-        },
-      ],
-    ];
-    const filteredSections = allSections.map(section => {
-      return section.filter(i => {
-        if (i.value === 'mcps' && !isMcpVisible) {
-          return false;
-        }
-        if (
-          i.value === 'skills' &&
-          isSelectedProjectPublic &&
-          !permissionsSet.has(PERMISSIONS.skills.publish)
-        ) {
-          return false;
-        }
-        const perms = i.publicPermission ? publicPermissionsSet : permissionsSet;
-        const realValue = i.value === 'mcps' ? 'toolkits' : i.value;
-        return PERMISSION_GROUPS[realValue] && PERMISSION_GROUPS[realValue].length
-          ? PERMISSION_GROUPS[realValue].some(p => perms.has(p))
-          : true;
-      });
-    });
-    return filteredSections.filter(section => section.length > 0);
-  }, [permissionsSet, publicPermissionsSet, isMcpVisible, isSelectedProjectPublic]);
 
   const onClickHomeButton = useCallback(() => {
     onCollapsed?.(!sideBarCollapsed);
@@ -213,106 +57,80 @@ const SidebarBody = memo(props => {
       role="presentation"
       onKeyDown={onKeyDown}
       sx={styles.container}
+      data-testid="sidebar-body"
     >
-      {/* Sticky Top Section */}
-      <Box sx={styles.stickyTop}>
-        <Box sx={styles.header}>
-          <IconButton
-            data-tour={SIDEBAR_TOUR_TARGET_IDS.logo}
-            data-testid="sidebar-toggle"
-            size="large"
-            color="inherit"
-            aria-label="open drawer"
-            onClick={onClickHomeButton}
-            sx={styles.homeButton}
-          >
-            <BrandLogo sx={styles.eliteaIcon} />
-            {isSocketIconVisible && (
-              <Tooltip
-                title={`${systemSenderName} is ${socketStatus}`}
-                placement="right"
-              >
-                <Box sx={styles.socketIconContainer} />
-              </Tooltip>
-            )}
-          </IconButton>
-          {!sideBarCollapsed && <Buttons.NotificationButton />}
-        </Box>
-
-        <Divider sx={styles.divider} />
-
-        <SidebarProjectSelect />
-
-        <Divider sx={styles.divider} />
-
-        <Box sx={styles.createSection}>
-          <Buttons.CreateEntityButton tourId={SIDEBAR_TOUR_TARGET_IDS.createButton} />
-        </Box>
-
-        <Divider sx={styles.divider} />
-      </Box>
-
-      {/* Scrollable Content Section */}
-      <Box sx={styles.scrollableContent}>
-        {sections.map((section, index) => (
-          <Fragment key={index}>
-            <Box sx={styles.section}>
-              {section.map(i => (
-                <SidebarMenuItem
-                  key={i.value}
-                  display={true}
-                  menuTitle={i.label}
-                  menuIcon={i.icon}
-                  selected={i.value === selectedItem}
-                  onClick={navigateToPage(i.url, i.breadCrumb)}
-                  to={personal_project_id ? i.url : RouteDefinitions.Onboarding}
-                  isPersonalSpace={false}
-                  disabled={i.disabled}
-                  tooltip={i.tooltip}
-                  showLabel={!sideBarCollapsed}
-                  tourId={i.tourId}
-                />
-              ))}
-            </Box>
-            <Divider sx={styles.sectionDivider} />
-          </Fragment>
-        ))}
-
-        <Box sx={styles.bottomSection}>
-          <Box sx={styles.section}>
-            <Buttons.SettingsButton navigateToPage={navigateToPage} />
-            <Divider sx={styles.catalogDivider} />
-            <Buttons.AgentHubButton />
-          </Box>
-        </Box>
-      </Box>
-
-      {onToggleAssistant ? (
-        <Box sx={styles.footerBlock}>
-          <Tooltip
-            title={sideBarCollapsed ? 'Support Assistant' : ''}
-            placement="left"
-          >
-            <Box
-              data-tour={SIDEBAR_TOUR_TARGET_IDS.supportAssistant}
-              sx={styles.assistantBlock}
-              onClick={onToggleAssistant}
+      <Box sx={styles.header}>
+        <IconButton
+          data-tour={SIDEBAR_TOUR_TARGET_IDS.logo}
+          data-testid="sidebar-toggle"
+          size="large"
+          color="inherit"
+          aria-label={sideBarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          onClick={onClickHomeButton}
+          sx={styles.homeButton}
+        >
+          <BrandLogo sx={styles.eliteaIcon} />
+          {isSocketIconVisible && (
+            <Tooltip
+              title={`${systemSenderName} is ${socketStatus}`}
+              placement="right"
             >
-              {sideBarCollapsed ? null : <Typography component="span">Support Bot</Typography>}
-            </Box>
-          </Tooltip>
-          {!sideBarCollapsed && <Buttons.ResourcesButton />}
-        </Box>
+              <Box sx={styles.socketIconContainer} />
+            </Tooltip>
+          )}
+        </IconButton>
+        {!sideBarCollapsed && <Buttons.NotificationButton />}
+      </Box>
+
+      <Divider sx={styles.divider} />
+
+      <SidebarProjectSelect />
+
+      <Divider sx={styles.divider} />
+
+      <Box sx={styles.createSection}>
+        <Buttons.NewChatButton />
+      </Box>
+
+      {sideBarCollapsed && <Divider sx={styles.divider} />}
+
+      <Box
+        component="nav"
+        aria-label="Main"
+        sx={styles.navSection}
+      >
+        {showArtifacts && (
+          <SidebarMenuItem
+            display
+            menuTitle={ARTIFACTS_LABEL}
+            menuIcon={<ArtifactsIcon />}
+            selected={pathname.startsWith(RouteDefinitions.Artifacts)}
+            onClick={navigateToPage(RouteDefinitions.Artifacts, ARTIFACTS_LABEL)}
+            to={getLinkTarget(RouteDefinitions.Artifacts)}
+            isPersonalSpace={false}
+            tooltip={ARTIFACTS_LABEL}
+            showLabel={!sideBarCollapsed}
+            tourId={SIDEBAR_TOUR_TARGET_IDS.navArtifacts}
+          />
+        )}
+        <ExploreMenu showLabel={!sideBarCollapsed} />
+      </Box>
+
+      {sideBarCollapsed ? (
+        <Box sx={styles.spacer} />
       ) : (
-        !sideBarCollapsed && (
-          <Box sx={styles.helpCenterFooter}>
-            <Buttons.ResourcesButton fullWidth />
-          </Box>
-        )
+        <>
+          <Divider sx={styles.divider} />
+          <SidebarChatsArea />
+        </>
       )}
+
+      <SidebarFooterRow onToggleAssistant={onToggleAssistant} />
     </Box>
   );
 });
+
+SidebarBody.displayName = 'SideBarBody';
 
 /** @type {MuiSx} */
 const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
@@ -320,29 +138,18 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
-    width: `${sideBarCollapsed ? COLLAPSED_SIDE_BAR_WIDTH : SIDE_BAR_WIDTH}px`,
+    width: `${(sideBarCollapsed ? COLLAPSED_SIDE_BAR_WIDTH : SIDE_BAR_WIDTH) / 16}rem`,
     background: palette.components.sidebar.background,
     overflow: 'hidden',
   }),
-  stickyTop: {
-    position: 'sticky',
-    top: 0,
-    zIndex: 1,
-    width: '100%',
-  },
-  scrollableContent: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    overflowY: 'auto',
-    overflowX: 'hidden',
-  },
   header: {
     display: 'flex',
     alignItems: 'center',
+    flexShrink: 0,
     minHeight: `${NAV_BAR_HEIGHT_IN_PX} !important`,
     padding: '0 1rem',
     width: '100%',
+    boxSizing: 'border-box',
     justifyContent: `${sideBarCollapsed ? 'center' : 'space-between'}`,
   },
   homeButton: {
@@ -362,34 +169,25 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
   divider: ({ palette }) => ({
     borderColor: palette.border.subtle,
   }),
-  catalogDivider: ({ palette }) => ({
-    borderColor: palette.border.subtle,
-    marginInline: '-1rem',
-  }),
   createSection: {
-    padding: '0.75rem 1rem',
+    padding: sideBarCollapsed ? '0.75rem 1rem' : '0.75rem 1rem 0.25rem',
     display: 'flex',
     flexDirection: 'column',
+    alignItems: 'center',
+    flexShrink: 0,
     boxSizing: 'border-box',
   },
-  section: {
-    paddingTop: '0.5rem',
-    paddingBottom: '0.5rem',
-    paddingInline: '1rem',
-    gap: '0.5rem',
+  navSection: {
+    padding: sideBarCollapsed ? '0.5rem 1rem' : '0.5rem 1rem 0.75rem',
+    gap: sideBarCollapsed ? '0.5rem' : '0.25rem',
     display: 'flex',
     flexDirection: 'column',
+    alignItems: sideBarCollapsed ? 'center' : 'stretch',
+    flexShrink: 0,
     boxSizing: 'border-box',
   },
-  sectionDivider: ({ palette }) => ({
-    borderColor: palette.border.subtle,
-    marginInline: '1rem',
-  }),
-  bottomSection: {
+  spacer: {
     flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'flex-end',
   },
   socketIconContainer: ({ palette }) => ({
     width: '0.5rem',
@@ -402,60 +200,6 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     right: '0rem',
     pointer: 'cursor',
   }),
-  helpCenterFooter: ({ palette }) => ({
-    position: 'relative',
-    flexShrink: 0,
-    padding: '0.5rem 1rem',
-
-    ':before': {
-      content: '""',
-      position: 'absolute',
-      left: 0,
-      top: 0,
-      width: '100%',
-      height: '0.0625rem',
-      backgroundColor: palette.border.subtle,
-    },
-  }),
-  footerBlock: ({ palette }) => ({
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'stretch',
-    height: '3.25rem',
-    flexShrink: 0,
-
-    ':before': {
-      content: '""',
-      position: 'absolute',
-      left: 0,
-      top: 0,
-      width: '100%',
-      height: '0.0625rem',
-      backgroundColor: palette.border.subtle,
-    },
-  }),
-  assistantBlock: ({ palette }) => ({
-    flex: 1,
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minWidth: 0,
-    borderRight: sideBarCollapsed ? 'none' : `0.0625rem solid ${palette.border.subtle}`,
-
-    span: {
-      fontSize: '.75rem',
-      color: palette.text.metrics,
-      fontWeight: 500,
-      marginLeft: '1.5rem',
-    },
-
-    ':hover': {
-      background: palette.components.sidebar.menuItem.hover,
-      cursor: 'pointer',
-    },
-  }),
 });
-
-SidebarBody.displayName = 'SideBarBody';
 
 export default SidebarBody;
