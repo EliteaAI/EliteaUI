@@ -5,6 +5,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
+import { AppDetailHeader } from '@/[fsd]/features/apps';
 import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexesToolsEnum, IndexingBlockers } from '@/[fsd]/features/toolkits/indexes/lib/constants';
@@ -353,15 +354,19 @@ const EditToolkit = memo(props => {
     );
   }
 
-  // Render full-screen iframe for iframe-type applications (drawer only, no header)
+  // Render the provider UI below the application actions.
   if (isApplicationToolkit && interfaceType === 'iframe' && interpolatedAppUrl && !showIframeFallback) {
     return (
       <Box sx={styles.iframeContainer}>
+        <AppDetailHeader
+          appId={realId}
+          appName={publicToolkitData?.name}
+        />
         <iframe
           key={iframeKey}
           ref={iframeRef}
           src={interpolatedAppUrl}
-          style={{ width: '100%', height: '100%', border: 'none' }}
+          style={styles.iframe}
           title={`${publicToolkitData?.name || 'Application'} Custom UI`}
           sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-storage-access-by-user-activation"
           onError={handleIframeError}
@@ -410,9 +415,19 @@ const editToolkitStyles = isMCP => ({
     height: '100%',
   },
   iframeContainer: {
+    display: 'flex',
+    flexDirection: 'column',
     width: '100%',
-    height: '100vh',
+    height: '100%',
+    minHeight: 0,
     overflow: 'hidden',
+  },
+  iframe: {
+    width: '100%',
+    flex: 1,
+    minHeight: 0,
+    border: 'none',
+    display: 'block',
   },
   leftTabbarSection: {
     flex: 1,

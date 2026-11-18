@@ -24,9 +24,9 @@ export const useBreadcrumbTrail = (options = {}) => {
   const trail = useMemo(() => BreadcrumbHelpers.resolveBreadcrumbTrail(pathname), [pathname]);
   const entityId = useMemo(() => BreadcrumbHelpers.getBreadcrumbEntityId(trail), [trail]);
 
-  const isToolkit = !!params.toolkitId || !!params.mcpId;
+  const isToolkit = !!params.toolkitId || !!params.mcpId || !!params.appId;
   const isSkill = !!params.skillId;
-  const isAgent = !isToolkit && !isSkill && (!!params.agentId || !!params.appId);
+  const isAgent = !isToolkit && !isSkill && !!params.agentId;
 
   const { data: toolkitDetails } = useToolkitsDetailsQuery(
     { projectId, toolkitId: entityId },
