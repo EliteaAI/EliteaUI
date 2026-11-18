@@ -31,13 +31,13 @@ vi.mock('@/[fsd]/entities/run-history/api', () => ({
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: () => 7,
   useIsSmallWindow: () => ({ isSmallWindow: false }),
+  useCopyChatMessage: () => vi.fn(),
 }));
 vi.mock('@/api', () => ({ useLazyMessageTracesQuery: () => [getTraces] }));
 vi.mock('@/common/convertChatConversationMessages', () => ({
   buildTraceListParams: () => ({}),
   convertConversationToChatHistory: () => [{ id: 'msg-1' }, { id: 'msg-paused' }],
 }));
-vi.mock('@/hooks/chat/useChatCopyToClipboard', () => ({ default: () => vi.fn() }));
 vi.mock('@/hooks/useIsSmallWindow', () => ({ default: () => ({ isSmallWindow: false }) }));
 vi.mock('@/components/Chat/StyledComponents', async () => ({
   ChatBodyContainer: ({ children }) => <div>{children}</div>,

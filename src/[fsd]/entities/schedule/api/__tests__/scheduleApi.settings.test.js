@@ -118,4 +118,46 @@ describe('project schedule settings API', () => {
 
     expect(fetchSpy.mock.calls).toHaveLength(callsBefore + 1);
   });
+
+  // #7400 review: an optimistic cap and its undo on a 400 re-ran the field's effect and replaced the refused value
+  it('never changes the cached cap while a cap save is in flight, nor after a refusal', async () => {
+    let reply;
+    fetchSpy.mockResolvedValueOnce(
+      jsonResponse({ allow_run_without_asking: false, webhook_max_concurrent_runs: 2 }),
+    );
+    const store = makeStore();
+    await store.dispatch(scheduleApi.endpoints.getScheduleSettings.initiate({ projectId: 5 }));
+    const snapshots = [];
+    const stop = store.subscribe(() => snapshots.push(cached(store)?.webhook_max_concurrent_runs));
+
+    fetchSpy.mockReturnValueOnce(new Promise(resolve => (reply = resolve)));
+    const pending = store.dispatch(
+      scheduleApi.endpoints.updateScheduleSettings.initiate({ projectId: 5, webhookMaxConcurrentRuns: 25 }),
+    );
+    expect(cached(store).webhook_max_concurrent_runs).toBe(2);
+    reply(jsonResponse({ code: 'invalid_input', error: 'at most 20' }, 400));
+    const result = await pending;
+    stop();
+
+    expect(result.error.status).toBe(400);
+    expect(snapshots.every(value => value === 2)).toBe(true);
+    expect((await requestAt(fetchSpy, 1)).body).toEqual({ webhook_max_concurrent_runs: 25 });
+  });
+
+  it('writes the cap to the cache once the server accepted it', async () => {
+    fetchSpy.mockResolvedValueOnce(
+      jsonResponse({ allow_run_without_asking: false, webhook_max_concurrent_runs: 2 }),
+    );
+    const store = makeStore();
+    await store.dispatch(scheduleApi.endpoints.getScheduleSettings.initiate({ projectId: 5 }));
+
+    fetchSpy.mockResolvedValueOnce(
+      jsonResponse({ allow_run_without_asking: false, webhook_max_concurrent_runs: 4 }),
+    );
+    await store.dispatch(
+      scheduleApi.endpoints.updateScheduleSettings.initiate({ projectId: 5, webhookMaxConcurrentRuns: 4 }),
+    );
+
+    expect(cached(store).webhook_max_concurrent_runs).toBe(4);
+  });
 });

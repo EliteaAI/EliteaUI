@@ -5,6 +5,7 @@ import {
   getChatParticipantUniqueId,
 } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useGetApplicationSkillsQuery } from '@/[fsd]/features/skill';
+import { isUserInvocable } from '@/[fsd]/features/skill/lib/helpers';
 import { MentionConstants } from '@/[fsd]/shared/lib/constants';
 import { parseMentionRanges } from '@/[fsd]/shared/lib/utils';
 import { ChatParticipantType } from '@/common/constants';
@@ -22,6 +23,7 @@ const toConversationSkillItems = (participants, activeParticipant) => {
       participant =>
         participant.entity_name === ChatParticipantType.Skills &&
         participant.meta?.is_available !== false &&
+        isUserInvocable(participant.meta) &&
         getChatParticipantUniqueId(participant) !== activeId,
     )
     .forEach(participant => {
@@ -29,6 +31,7 @@ const toConversationSkillItems = (participants, activeParticipant) => {
       if (name && !items.has(name))
         items.set(name, {
           name,
+          argument_hint: participant.meta?.argument_hint,
           skill_id: participant.entity_meta?.id,
           icon_meta: participant.entity_settings?.icon_meta || participant.meta?.icon_meta,
           isToolkit: false,
@@ -89,17 +92,22 @@ export const useChatSkillMention = ({
   const mentionableItems = useMemo(() => {
     const chatSkillItems = offersChatSkills ? toConversationSkillItems(participants, activeParticipant) : [];
     if (!isAgent) return chatSkillItems;
-    const attachedItems = (applicationSkills?.skills || [])
+    const attachedSkills = applicationSkills?.skills || [];
+    const attachedItems = attachedSkills
+      .filter(isUserInvocable)
       .map(skill => ({
         name: skill.name,
         description: skill.description,
+        argument_hint: skill.argument_hint,
         skill_id: skill.skill_id,
         icon_meta: skill.icon_meta,
         isToolkit: false,
         group: SkillMentionGroup.Attached,
       }))
       .sort(compareByName);
-    const attachedNames = new Set(attachedItems.map(item => item.name));
+    // An attached skill owns its name in the chat too (the server resolves `~name` in that order),
+    // so a same-named chat participant stays hidden even when the attached one is model-only.
+    const attachedNames = new Set(attachedSkills.map(skill => skill.name));
     return [...attachedItems, ...chatSkillItems.filter(item => !attachedNames.has(item.name))];
   }, [isAgent, offersChatSkills, applicationSkills?.skills, participants, activeParticipant]);
 

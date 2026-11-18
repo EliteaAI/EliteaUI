@@ -130,15 +130,16 @@ const UnifiedDropdown = memo(props => {
     [onScroll, items.length, isLoading],
   );
 
-  // Function to get tooltip message for interrupted items
-  const getInterruptTooltipMessage = useCallback(item => {
+  // Tooltip for a disabled item: its own reason, else the interruption message
+  const getDisabledTooltipMessage = useCallback(item => {
+    if (item.disabledReason) return item.disabledReason;
     const itemName = item.label || item.name || 'Pipeline';
     return `The ${itemName} pipeline can't be added as a toolkit as it contains interruptions in subgraphs, which are not allowed.`;
   }, []);
 
-  // Function to check if item should be disabled
+  // An item is disabled when it carries a reason or contains interruptions
   const isItemDisabled = useCallback(item => {
-    return Boolean(item.has_interrupt);
+    return Boolean(item.has_interrupt || item.disabledReason);
   }, []);
 
   // Enhanced item click handler
@@ -268,12 +269,12 @@ const UnifiedDropdown = memo(props => {
                     const labelContainer = needShowPublicLabel
                       ? styles.labelContainerWithPublic
                       : styles.labelContainer;
-                    // For items with has_interrupt flag, wrap in tooltip
+                    // Disabled items explain why in a tooltip
                     if (disabled) {
                       return (
                         <Tooltip
                           key={item.key || item.id || item.value || item.label}
-                          title={getInterruptTooltipMessage(item)}
+                          title={getDisabledTooltipMessage(item)}
                           placement="right"
                           arrow
                         >

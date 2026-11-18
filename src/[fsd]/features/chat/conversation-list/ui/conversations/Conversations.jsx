@@ -34,12 +34,10 @@ import useDragAndDrop from '@/hooks/chat/useDragAndDrop';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 
+import { ShareChatModal } from '../share';
 import ChatImportButton from './ChatImportButton';
 import ExportConversationModal from './ExportConversationModal';
 import ImportConversationModal from './ImportConversationModal';
-import ManageLinksDialog from './ManageLinksDialog';
-import RestrictAccessDialog from './RestrictAccessDialog';
-import ShareConversationDialog from './ShareConversationDialog';
 
 const Conversations = memo(props => {
   const {
@@ -107,9 +105,7 @@ const Conversations = memo(props => {
   const [loadingGroups, setLoadingGroups] = useState(new Set());
   const [loadingFolders, setLoadingFolders] = useState(new Set());
 
-  const [shareDialogConversation, setShareDialogConversation] = useState(null);
-  const [manageLinksConversation, setManageLinksConversation] = useState(null);
-  const [restrictAccessConversation, setRestrictAccessConversation] = useState(null);
+  const [shareChatConversation, setShareChatConversation] = useState(null);
   const [exportConversation, setExportConversation] = useState(null);
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -126,24 +122,8 @@ const Conversations = memo(props => {
     setIsImportModalOpen(false);
   }, []);
 
-  const handleOpenShareDialog = useCallback(conversation => {
-    setShareDialogConversation(conversation);
-  }, []);
-
-  const handleCloseShareDialog = useCallback(() => {
-    setShareDialogConversation(null);
-  }, []);
-
-  const handleOpenManageLinksDialog = useCallback(conversation => {
-    setManageLinksConversation(conversation);
-  }, []);
-
-  const handleCloseManageLinksDialog = useCallback(() => {
-    setManageLinksConversation(null);
-  }, []);
-
-  const handleCloseRestrictAccessDialog = useCallback(() => {
-    setRestrictAccessConversation(null);
+  const handleCloseShareChat = useCallback(() => {
+    setShareChatConversation(null);
   }, []);
 
   const savedStateBeforeSearchRef = useRef(null);
@@ -506,9 +486,7 @@ const Conversations = memo(props => {
         isDragDisabled={isEditingCanvas || conversation.isPlayback || conversation.isPinned}
         onItemHover={onItemHover}
         isNextItemHovered={isNextItemHovered}
-        onShareExternal={handleOpenShareDialog}
-        onManageLinks={handleOpenManageLinksDialog}
-        onRestrictAccess={setRestrictAccessConversation}
+        onShare={setShareChatConversation}
       />
     ),
     [
@@ -528,9 +506,7 @@ const Conversations = memo(props => {
       isEditingCanvas,
       onClickSelectConversation,
       enableDragAndDrop,
-      handleOpenShareDialog,
-      handleOpenManageLinksDialog,
-      setRestrictAccessConversation,
+      setShareChatConversation,
       setExportConversation,
     ],
   );
@@ -808,21 +784,11 @@ const Conversations = memo(props => {
           </Box>
         )}
       </Box>
-      <ShareConversationDialog
-        open={!!shareDialogConversation}
-        conversation={shareDialogConversation ?? {}}
-        onClose={handleCloseShareDialog}
-      />
-      <ManageLinksDialog
-        open={!!manageLinksConversation}
-        conversation={manageLinksConversation ?? {}}
-        onClose={handleCloseManageLinksDialog}
-      />
-      {restrictAccessConversation && (
-        <RestrictAccessDialog
-          conversation={restrictAccessConversation}
-          onClose={handleCloseRestrictAccessDialog}
-          onSuccess={onRestrictAccessSuccess}
+      {shareChatConversation && (
+        <ShareChatModal
+          conversation={shareChatConversation}
+          onClose={handleCloseShareChat}
+          onAccessSaved={onRestrictAccessSuccess}
         />
       )}
       {exportConversation && (

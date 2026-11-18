@@ -115,9 +115,10 @@ export const useScheduleRunConversation = run => {
 
 // The Test runs the caller started from the form. A Test run has no schedule row, so it is not in the runs
 // of a saved schedule; each row is marked `isDraftRun` and loads its detail from the test run route.
-export const useDraftTestRuns = (applicationId, skipRequest = false) => {
+// `applicationId` is the toolkit id when `indexName` names a toolkit index.
+export const useDraftTestRuns = (applicationId, skipRequest = false, indexName) => {
   const projectId = useSelectedProjectId();
-  const args = { projectId, applicationId, ...RUNS_PAGE };
+  const args = { projectId, applicationId, indexName, ...RUNS_PAGE };
   const skip = skipRequest || !projectId || applicationId == null;
   const { currentData, isError } = useGetDraftTestRunsQuery(args, { skip });
   const rows = useMemo(
@@ -132,9 +133,9 @@ export const useDraftTestRuns = (applicationId, skipRequest = false) => {
 };
 
 // One Test run with its log, polled every 2 seconds while it runs or waits
-const useDraftTestRun = (applicationId, runId) => {
+const useDraftTestRun = (applicationId, runId, indexName) => {
   const projectId = useSelectedProjectId();
-  const args = { projectId, applicationId, runId };
+  const args = { projectId, applicationId, indexName, runId };
   const skip = !projectId || runId == null || applicationId == null;
   const { currentData, isError, refetch } = useGetDraftTestRunQuery(args, { skip });
   const polling = !isError && isRunActive(currentData?.status);
@@ -144,9 +145,9 @@ const useDraftTestRun = (applicationId, runId) => {
 };
 
 // The detail of a row of the merged Runs list, from the saved schedule or from the test run route
-export const useRunDetail = (scheduleId, applicationId, row) => {
+export const useRunDetail = (scheduleId, applicationId, row, indexName) => {
   const saved = useScheduleRun(scheduleId, row?.isDraftRun ? undefined : row?.id);
-  const draft = useDraftTestRun(applicationId, row?.isDraftRun ? row.id : undefined);
+  const draft = useDraftTestRun(applicationId, row?.isDraftRun ? row.id : undefined, indexName);
 
   return row?.isDraftRun ? draft : saved;
 };

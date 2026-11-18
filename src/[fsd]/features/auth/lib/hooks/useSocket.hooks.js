@@ -26,7 +26,8 @@ export const useManualSocket = (event, responseHandler) => {
   }, [event, responseHandler, socket, reconnect]);
 
   const unsubscribe = useCallback(() => {
-    socket && socket.off(event, responseHandler);
+    // off(event) without a handler would remove every listener of the event, not just this hook's
+    socket && responseHandler && socket.off(event, responseHandler);
   }, [event, responseHandler, socket]);
 
   const emit = useCallback(

@@ -14,6 +14,7 @@ const fixture = vi.hoisted(() => ({
 }));
 
 vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
+  useOpenRunVersion: () => () => {},
   useSkillModels: () => fixture.models,
   useSkillValidationSchema: () => undefined,
 }));
@@ -54,6 +55,7 @@ vi.mock('@/[fsd]/widgets/skill-editor', async () => {
 });
 vi.mock('@/api/eliteaApi', () => ({ eliteaApi: { endpoints: {} } }));
 vi.mock('@/common/constants', () => ({
+  ChatParticipantType: { Skills: 'skills' },
   PERMISSIONS: { skills: { update: 'skills.update' } },
   SkillsTabs: ['all'],
   ViewMode: { Owner: 'owner' },

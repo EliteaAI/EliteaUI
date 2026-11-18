@@ -51,6 +51,13 @@ describe('resolveHref for budget notifications', () => {
   });
 });
 
+describe('resolveHref for project membership notifications', () => {
+  it('links only the added project to its Chats page', () => {
+    expect(resolveHref(NotificationType.UserWasAddedToSomeProjectAsTeammate, {}, 19)).toBe(`${BASE}/19/chat`);
+    expect(resolveHref(NotificationType.UserWasRemovedFromProject, {}, 19)).toBeNull();
+  });
+});
+
 describe('resolveHref for index notifications', () => {
   // `indexes` is not a toolkits list tab, so a link built with it only reaches the index page
   // through a back-compat redirect and leaves the breadcrumb parent pointing at a dead list.
@@ -202,6 +209,22 @@ describe('resolveHref for schedule notifications', () => {
   it('opens the list for an owner-changed notice', () => {
     expect(resolveHref(NotificationType.ScheduleOwnerChanged, { schedule_id: 12 }, 5)).toBe(
       `${BASE}/5/settings/schedules`,
+    );
+  });
+
+  // #7456: the meta's trigger_kind sends a webhook notice to the Webhooks page
+  it('opens the Webhooks page for a webhook row', () => {
+    const meta = { schedule_id: 19, conversation_id: 345, trigger_kind: 'webhook' };
+    expect(resolveHref(NotificationType.ScheduleRunFailed, meta, 5)).toBe(
+      `${BASE}/5/settings/webhooks/19?history_run_id=345`,
+    );
+    expect(resolveHref(NotificationType.ScheduleDisabled, meta, 5)).toBe(`${BASE}/5/settings/webhooks/19`);
+    expect(resolveHref(NotificationType.ScheduleOwnerChanged, meta, 5)).toBe(`${BASE}/5/settings/webhooks`);
+  });
+
+  it('keeps the Schedules page for trigger_kind cron', () => {
+    expect(resolveHref(NotificationType.ScheduleDisabled, { schedule_id: 12, trigger_kind: 'cron' }, 5)).toBe(
+      `${BASE}/5/settings/schedules/12`,
     );
   });
 

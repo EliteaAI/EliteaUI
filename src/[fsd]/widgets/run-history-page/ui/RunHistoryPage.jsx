@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -6,6 +6,7 @@ import { Box, Link } from '@mui/material';
 
 import { RunHistoryContainer, SCHEDULE_RUN_COLUMNS } from '@/[fsd]/entities/run-history';
 import {
+  TRIGGER_KIND,
   buildOwnerViewModeParams,
   buildScheduleFormLink,
   useAllEntitySchedules,
@@ -13,6 +14,7 @@ import {
 import { ChatMessageList } from '@/[fsd]/features/chat';
 import { ScheduleRunStatusChip } from '@/[fsd]/features/schedule';
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
+import { useRunComplexityColumn } from '@/[fsd]/features/settings/ui/complexity';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
 import { NavigationConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
@@ -47,21 +49,31 @@ const RunHistoryPage = memo(props => {
   const versions = data?.versions ?? [];
 
   // The caller's schedules of this agent or pipeline fill the filter and decide which names link
-  const { rows: schedules } = useAllEntitySchedules({
+  const { rows: cronSchedules } = useAllEntitySchedules({
     entityType: scheduleEntityType,
     entityId: agentId,
+    triggerKind: TRIGGER_KIND.cron,
     skip: !scheduleEntityType,
   });
+  const { rows: webhooks } = useAllEntitySchedules({
+    entityType: scheduleEntityType,
+    entityId: agentId,
+    triggerKind: TRIGGER_KIND.webhook,
+    skip: !scheduleEntityType,
+  });
+  const schedules = useMemo(() => [...cronSchedules, ...webhooks], [cronSchedules, webhooks]);
   const filters = useRunHistoryFilters({ schedules, versions });
-  const extraColumns = useMemo(() => {
-    if (!scheduleEntityType) return undefined;
-    const openable = new Set(schedules.map(schedule => schedule.id));
+  const [loadedRows, setLoadedRows] = useState([]);
+  const complexityColumn = useRunComplexityColumn({ entityId: agentId, rows: loadedRows });
+  const scheduleColumns = useMemo(() => {
+    if (!scheduleEntityType) return [];
+    const kindById = new Map(schedules.map(schedule => [schedule.id, schedule.trigger_kind]));
     const [scheduleColumn, ...rest] = SCHEDULE_RUN_COLUMNS;
     const renderSchedule = row => {
       const name = scheduleColumn.render(row);
       const scheduleId = row.schedule_run?.schedule_id;
       // A schedule the caller cannot open stays plain text, so no link leads to a dead page
-      if (!openable.has(scheduleId)) return name;
+      if (!kindById.has(scheduleId)) return name;
       return (
         // The theme link, so the name reads well in dark and light
         <Link
@@ -72,6 +84,7 @@ const RunHistoryPage = memo(props => {
               entityId: agentId,
               tab,
               scheduleId,
+              kind: kindById.get(scheduleId),
             }),
             // Without the owner view mode the editor falls back to the public mode and fails to load
             search: `?${buildOwnerViewModeParams()}`,
@@ -102,6 +115,10 @@ const RunHistoryPage = memo(props => {
       ...rest.map(column => (column.id === 'status' ? { ...column, render: renderStatus } : column)),
     ];
   }, [scheduleEntityType, schedules, agentId, tab]);
+  const extraColumns = useMemo(() => {
+    const columns = complexityColumn ? [...scheduleColumns, complexityColumn] : scheduleColumns;
+    return columns.length ? columns : undefined;
+  }, [scheduleColumns, complexityColumn]);
 
   const handleRestoreConversation = useCallback(
     id => {
@@ -167,6 +184,7 @@ const RunHistoryPage = memo(props => {
           eventColumnLabel={eventColumnLabel}
           decorateRow={decorateRow}
           extraColumns={extraColumns}
+          onRowsChange={setLoadedRows}
           queryParams={filters.queryParams}
           shareOpensHistoryTab
         />

@@ -137,3 +137,25 @@ describe('Auto output allowance and surface boundaries', () => {
     expect(resolveModelSurface(primary, fallback)).toBe(expected);
   });
 });
+
+describe('Auto context window from the eligible models (#7445)', () => {
+  const limits = { context_window: 128000, max_output_tokens: 8000, models: 2 };
+
+  it('carries the smallest eligible window only when limits are known', () => {
+    expect(autoModel(profile, limits).context_window).toBe(128000);
+    expect(autoModel(profile, limits)).not.toHaveProperty('max_output_tokens');
+    expect(autoModel(profile)).not.toHaveProperty('context_window');
+    expect(autoModel(profile, {})).not.toHaveProperty('context_window');
+  });
+
+  it('passes the project limits from the model list to the Auto picker entry and default', () => {
+    const availability = { enabled: true, profile_ref: profile, limits };
+    expect(modelsWithAuto([fixed], availability, 'chat')[0].context_window).toBe(128000);
+    const data = {
+      items: [{ ...fixed, default: true }],
+      auto_routing: availability,
+      default_selection: autoModel(profile).selection,
+    };
+    expect(defaultModelForSurface(data, 'chat').context_window).toBe(128000);
+  });
+});

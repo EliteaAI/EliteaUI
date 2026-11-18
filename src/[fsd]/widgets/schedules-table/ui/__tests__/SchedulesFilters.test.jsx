@@ -77,10 +77,33 @@ describe('SchedulesFilters', () => {
     expect(onChange).toHaveBeenCalledWith({ ...EMPTY, entityType: 'pipeline' });
   });
 
+  it('picking Toolkit Index emits the toolkit_index type', () => {
+    const onChange = renderBar();
+    pick('type', 'Toolkit Index');
+    expect(onChange).toHaveBeenCalledWith({ ...EMPTY, entityType: 'toolkit_index' });
+  });
+
+  it('the Type filter lists All, Agent, Pipeline and Toolkit Index', () => {
+    renderBar();
+    fireEvent.mouseDown(within(screen.getByTestId('schedules-filter-type')).getByRole('combobox'));
+    expect(screen.getAllByRole('option').map(option => option.textContent)).toEqual([
+      'All',
+      'Agent',
+      'Pipeline',
+      'Toolkit Index',
+    ]);
+  });
+
   it('picking a status emits status', () => {
     const onChange = renderBar();
     pick('status', 'Failed');
     expect(onChange).toHaveBeenCalledWith({ ...EMPTY, status: 'failed' });
+  });
+
+  it('picking Running emits the running status', () => {
+    const onChange = renderBar();
+    pick('status', 'Running');
+    expect(onChange).toHaveBeenCalledWith({ ...EMPTY, status: 'running' });
   });
 
   it('the approval wait option reads "Awaiting approval" and emits waiting_for_approval', () => {

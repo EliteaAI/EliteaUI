@@ -2,8 +2,15 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+// bottomContent (optional) scrolls with the columns, below them
 const EditEntityComparisonLayout = memo(props => {
-  const { currentLabel = 'CURRENT', suggestedLabel = 'SUGGESTED', currentContent, suggestedContent } = props;
+  const {
+    currentLabel = 'CURRENT',
+    suggestedLabel = 'SUGGESTED',
+    currentContent,
+    suggestedContent,
+    bottomContent,
+  } = props;
 
   return (
     <Box sx={styles.container}>
@@ -30,6 +37,7 @@ const EditEntityComparisonLayout = memo(props => {
           <Box sx={styles.column}>{currentContent}</Box>
           <Box sx={styles.column}>{suggestedContent}</Box>
         </Box>
+        {bottomContent}
       </Box>
     </Box>
   );

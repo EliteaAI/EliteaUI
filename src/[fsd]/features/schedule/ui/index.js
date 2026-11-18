@@ -1,5 +1,6 @@
 export { default as ScheduleForm } from './ScheduleForm';
 export { default as LegacyScheduleNotice } from './LegacyScheduleNotice';
+export { default as LegacyWebhookNotice } from './LegacyWebhookNotice';
 export { default as SaveWarningsDialog } from './SaveWarningsDialog';
 export { default as ScheduleRunsCard } from './ScheduleRunsCard';
 export { default as ScheduleRunStatusChip } from './ScheduleRunStatusChip';
@@ -8,3 +9,4 @@ export { default as ScheduleDraftRuns } from './ScheduleDraftRuns';
 export { default as WebhookSecretDialog } from './WebhookSecretDialog';
 export { default as RotateSecretDialog } from './RotateSecretDialog';
 export { default as WebhookSettingsSection } from './WebhookSettingsSection';
+export { default as WebhookSampleRunDialog } from './WebhookSampleRunDialog';

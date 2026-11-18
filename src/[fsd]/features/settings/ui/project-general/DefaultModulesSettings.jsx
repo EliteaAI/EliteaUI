@@ -28,6 +28,7 @@ const MODULE_ORDER = [
 const DefaultModulesSettings = memo(() => {
   const { checkPermission } = useCheckPermission();
   const canViewProjectContext = checkPermission(PERMISSIONS.projectContext.view);
+  // #6789: not admin-only on team projects, these toggles are stored per user and affect only their own defaults
   const canEditProjectContext = checkPermission(PERMISSIONS.projectContext.edit);
 
   const { values, setFieldValue } = useFormikContext();

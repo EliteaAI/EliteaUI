@@ -5,3 +5,4 @@ export * from './scheduleList.helpers';
 export * from './waitingRun.helpers';
 export * from './scheduleRunsCard.helpers';
 export * from './webhookRow.helpers';
+export * from './connections.helpers';

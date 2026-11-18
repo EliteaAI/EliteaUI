@@ -2,7 +2,7 @@ import { memo, useRef } from 'react';
 
 import { Alert, Box, CircularProgress } from '@mui/material';
 
-import { useAppDetail } from '@/[fsd]/features/apps';
+import { AppDetailHeader, useAppDetail } from '@/[fsd]/features/apps';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import EditToolkit from '@/pages/Toolkits/EditToolkit';
 
@@ -15,8 +15,7 @@ const AppDetail = memo(() => {
   const iframeRef = useRef(null);
   const styles = appDetailStyles();
 
-  const { appName, isFetching, isError, error, iframeUrl, iframeKey, hasCustomUI } = useAppDetail();
-
+  const { appId, appName, isFetching, isError, error, iframeUrl, iframeKey, hasCustomUI } = useAppDetail();
   if (isFetching)
     return (
       <Box sx={styles.loadingContainer}>
@@ -34,6 +33,10 @@ const AppDetail = memo(() => {
   if (hasCustomUI)
     return (
       <Box sx={styles.iframeContainer}>
+        <AppDetailHeader
+          appId={appId}
+          appName={appName}
+        />
         <iframe
           key={iframeKey}
           ref={iframeRef}
@@ -62,14 +65,17 @@ const appDetailStyles = () => ({
     p: '1.5rem',
   },
   iframeContainer: {
+    display: 'flex',
+    flexDirection: 'column',
     width: '100%',
-    height: '100vh',
+    height: '100%',
+    minHeight: 0,
     overflow: 'hidden',
-    position: 'relative',
   },
   iframe: {
     width: '100%',
-    height: '100%',
+    flex: 1,
+    minHeight: 0,
     border: 'none',
     display: 'block',
   },

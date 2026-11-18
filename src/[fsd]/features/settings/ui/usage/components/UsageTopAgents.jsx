@@ -5,14 +5,14 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Box, Link, Typography, useTheme } from '@mui/material';
 
 import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import EntityTypeBadge from '@/[fsd]/features/settings/ui/analytics/components/EntityTypeBadge';
 
 import UsageSortHeader from './UsageSortHeader';
+import { usageColumnSx, usageRowMinWidthSx, usageTableWrapperSx } from './usageTable.styles';
 
 const MAX_ROWS = 5;
 
-const BADGE_COLORS = {
-  pipeline: { bg: '#2a1a3a', text: '#b98cff' },
-};
+const ROW_MIN_WIDTH = usageRowMinWidthSx([3, 1, 1.2, 1.2, 0.9]);
 
 const UsageTopAgents = memo(props => {
   const {
@@ -102,7 +102,7 @@ const UsageTopAgents = memo(props => {
     [sortKey],
   );
 
-  const title = sortKey === 'runs' ? 'Top Run Agents/Pipelines' : 'Top Spend Agents/Pipelines';
+  const title = sortKey === 'runs' ? 'Top Run Agents/Pipelines' : 'Top Spent Agents/Pipelines';
 
   if (!topAgents.length && !topAgentsByRuns.length) return null;
 
@@ -132,9 +132,9 @@ const UsageTopAgents = memo(props => {
       </Box>
 
       <Box sx={styles.tableWrapper}>
-        <Box sx={styles.tableHeader}>
+        <Box sx={[styles.tableHeader, ROW_MIN_WIDTH]}>
           <Box
-            sx={[styles.cell, styles.sortableCell, { flex: 3 }]}
+            sx={[styles.cell, styles.sortableCell, usageColumnSx(3)]}
             onClick={() => handleSort('name')}
             role="button"
             tabIndex={0}
@@ -181,11 +181,6 @@ const UsageTopAgents = memo(props => {
 
         {visibleAgents.map(agent => {
           const delta = agent._delta;
-          const isAgent = (agent.type || '').toLowerCase() !== 'pipeline';
-          const badge = isAgent
-            ? { bg: '#1a3a3a', text: palette.text.success || '#4fd1a5' }
-            : BADGE_COLORS.pipeline;
-          const badgeText = isAgent ? 'AG' : 'PL';
           const share = totalSpend > 0 ? ((agent.spend || 0) / totalSpend) * 100 : 0;
 
           const deltaColor =
@@ -200,27 +195,28 @@ const UsageTopAgents = memo(props => {
           return (
             <Box
               key={agent._key}
-              sx={styles.row}
+              sx={[styles.row, ROW_MIN_WIDTH]}
             >
-              <Box sx={[{ flex: 3, minWidth: 0 }, styles.nameCell]}>
-                <Box sx={styles.badge(badge)}>{badgeText}</Box>
+              <Box sx={[usageColumnSx(3), styles.nameCell]}>
+                <EntityTypeBadge kind={agent.type} />
                 <Typography sx={styles.name}>{agent.name || agent.id}</Typography>
               </Box>
-              <Typography sx={[styles.value, styles.right, { flex: 1 }]}>{agent.runs ?? '—'}</Typography>
-              <Typography sx={[styles.value, styles.right, { flex: 1.2 }]}>
+              <Typography sx={[styles.value, styles.right, usageColumnSx(1)]}>{agent.runs ?? '—'}</Typography>
+              <Typography sx={[styles.value, styles.right, usageColumnSx(1.2)]}>
                 {canSeeAmounts ? UsageHelpers.formatMoney(agent.spend, currency) : `${share.toFixed(1)}%`}
               </Typography>
               <Typography
                 sx={[
                   styles.value,
                   styles.right,
-                  { flex: 1.2, color: palette.text.metrics || palette.text.disabled },
+                  usageColumnSx(1.2),
+                  { color: palette.text.metrics || palette.text.disabled },
                 ]}
               >
                 {canSeeAmounts && agent.runs ? UsageHelpers.formatMoney(agent._perRun, currency) : '—'}
               </Typography>
               <Typography
-                sx={[styles.value, styles.right, { flex: 0.9, color: deltaColor, fontWeight: 600 }]}
+                sx={[styles.value, styles.right, usageColumnSx(0.9), { color: deltaColor, fontWeight: 600 }]}
               >
                 {delta.direction === 'up' ? '▲ ' : delta.direction === 'down' ? '▼ ' : ''}
                 {delta.label}
@@ -265,10 +261,7 @@ const usageTopAgentsStyles = () => ({
     flexShrink: 0,
     '&:hover': { textDecoration: 'underline' },
   }),
-  tableWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
+  tableWrapper: usageTableWrapperSx,
   tableHeader: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'row',
@@ -306,15 +299,6 @@ const usageTopAgentsStyles = () => ({
     gap: '0.375rem',
     minWidth: 0,
   },
-  badge: ({ bg, text }) => ({
-    fontSize: '0.5625rem',
-    fontWeight: 700,
-    padding: '0.0625rem 0.25rem',
-    borderRadius: '0.1875rem',
-    backgroundColor: bg,
-    color: text,
-    flexShrink: 0,
-  }),
   name: ({ palette }) => ({
     fontSize: '0.8125rem',
     color: palette.text.secondary,

@@ -70,7 +70,11 @@ vi.mock('@/[fsd]/features/schedule', async importOriginal => {
             setFieldValue: vi.fn(),
             fieldError: name => mocks.fieldErrors[name] ?? '',
           })}
-          {props.sidePanel?.({ values: initialValues, onTestRun: 'test-run', testRunPending: false })}
+          {props.sidePanel?.({
+            values: mocks.sidePanelValues ?? initialValues,
+            onTestRun: 'test-run',
+            testRunPending: false,
+          })}
           <button onClick={() => props.onCancel(initialValues)}>Cancel</button>
           <button onClick={() => props.onDraftTestRun({ name: 'Draft' })}>Test run</button>
           <button onClick={async () => onSaved(await onSubmit(toCreateBody(initialValues)))}>Save</button>
@@ -88,6 +92,7 @@ describe('CreateSchedulePage', () => {
     mocks.fieldErrors = {};
     mocks.stopProps = null;
     mocks.draftRunsProps = null;
+    mocks.sidePanelValues = undefined;
     mocks.state = { returnTo: '/agents/3' };
   });
 
@@ -163,6 +168,23 @@ describe('CreateSchedulePage', () => {
       entityType: 'agent',
       applicationId: 12,
       onTestRun: 'test-run',
+    });
+  });
+
+  it('names no target for a toolkit whose index is not chosen yet, then the toolkit id and the index', () => {
+    mocks.sidePanelValues = { type: 'toolkit_index', toolkit_id: 3, index_name: '', application_id: '' };
+    const { rerender } = render(<CreateSchedulePage />);
+
+    expect(mocks.draftRunsProps.applicationId).toBeUndefined();
+    expect(mocks.draftRunsProps.indexName).toBeUndefined();
+
+    mocks.sidePanelValues = { ...mocks.sidePanelValues, index_name: 'docs' };
+    rerender(<CreateSchedulePage />);
+
+    expect(mocks.draftRunsProps).toMatchObject({
+      entityType: 'toolkit_index',
+      applicationId: 3,
+      indexName: 'docs',
     });
   });
 

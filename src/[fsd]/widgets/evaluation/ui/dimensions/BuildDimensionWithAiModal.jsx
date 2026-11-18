@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useRef } from 'react';
 
 import { Box, CircularProgress, Typography } from '@mui/material';
 
+import { AiDraftErrorHelpers } from '@/[fsd]/shared/lib/helpers';
 import { Banner, Input, Modal } from '@/[fsd]/shared/ui';
 
 import { BUILD_DIMENSION_STEPS } from '../../lib/constants';
@@ -99,11 +100,10 @@ const BuildDimensionWithAiModal = memo(props => {
         <Box data-testid="build-dimension-generate-error">
           <Banner.BannerMessage
             variant="error"
-            message={
-              generateError?.data?.error ||
-              generateError?.data?.detail ||
-              'Failed to generate dimension. Please try again.'
-            }
+            message={AiDraftErrorHelpers.getAiDraftErrorMessage(
+              generateError,
+              'Failed to generate dimension. Please try again.',
+            )}
           />
         </Box>
       )}

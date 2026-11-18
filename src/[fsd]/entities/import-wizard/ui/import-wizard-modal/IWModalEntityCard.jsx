@@ -19,7 +19,7 @@ const { parseYamlToMermaid } = ParseYamlToMermaidHelpers;
 const { INTERNAL_TOOLS_LIST } = InternalToolsConstants;
 
 const IWModalEntityCard = memo(props => {
-  const { entity, titleTestId, toggleTestId, instructionsTestId } = props;
+  const { entity, titleTestId, toggleTestId, instructionsTestId, selection } = props;
 
   const styles = iWModalEntityCardStyles();
 
@@ -42,6 +42,8 @@ const IWModalEntityCard = memo(props => {
     <IWModalEntityCardWrapper
       icon={isSkill ? <SkillIcon /> : isPipeline ? <FlowIcon /> : <AgentIcon />}
       title={entity.name}
+      errorMessages={entity.errorMessages}
+      selection={selection}
       subtitle={`Type: ${isSkill ? 'skill' : isPipeline ? 'pipeline' : 'agent'}`}
       titleTestId={titleTestId}
       toggleTestId={toggleTestId}

@@ -59,6 +59,44 @@ describe('useWaitingRunCredentialCheck', () => {
     );
   });
 
+  it('sends the run id so the server scans as the user the run acts as', async () => {
+    mocks.check.mockReturnValue(answer({ blocking: [] }));
+    setup({ runId: 41 });
+
+    await waitFor(() => expect(mocks.check).toHaveBeenCalledTimes(1));
+    expect(mocks.check).toHaveBeenCalledWith(expect.objectContaining({ schedule_id: 8, run_id: 41 }));
+  });
+
+  it('sends no run id when there is none', async () => {
+    mocks.check.mockReturnValue(answer({ blocking: [] }));
+    setup();
+
+    await waitFor(() => expect(mocks.check).toHaveBeenCalledTimes(1));
+    expect(mocks.check.mock.calls[0][0]).not.toHaveProperty('run_id');
+  });
+
+  it('sends no run id for a Test run, which has no schedule row', async () => {
+    mocks.check.mockReturnValue(answer({ blocking: [] }));
+    setup({ schedule: { ...SCHEDULE, id: undefined }, runId: 41 });
+
+    await waitFor(() => expect(mocks.check).toHaveBeenCalledTimes(1));
+    expect(mocks.check.mock.calls[0][0]).not.toHaveProperty('run_id');
+  });
+
+  it('checks again when the run changes', async () => {
+    mocks.check.mockReturnValue(answer({ blocking: [] }));
+    const { rerender } = renderHook(
+      ({ runId }) => useWaitingRunCredentialCheck({ schedule: SCHEDULE, toolkit: 'github', runId }),
+      { initialProps: { runId: 41 } },
+    );
+    await waitFor(() => expect(mocks.check).toHaveBeenCalledTimes(1));
+
+    rerender({ runId: 42 });
+
+    await waitFor(() => expect(mocks.check).toHaveBeenCalledTimes(2));
+    expect(mocks.check).toHaveBeenLastCalledWith(expect.objectContaining({ run_id: 42 }));
+  });
+
   it('reports missing and the toolkit name while the finding is still there', async () => {
     mocks.check.mockReturnValue(answer({ blocking: [FINDING] }));
     const { result } = setup({ toolkit: undefined });

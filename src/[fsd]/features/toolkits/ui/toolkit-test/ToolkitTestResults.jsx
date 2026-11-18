@@ -4,8 +4,8 @@ import { Box } from '@mui/material';
 
 import { ChatMessageList } from '@/[fsd]/features/chat';
 import { getMockToolkitIndexConversation } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
+import { useCopyChatMessage } from '@/[fsd]/shared/lib/hooks';
 import { WELCOME_MESSAGE_ID } from '@/common/constants';
-import useChatCopyToClipboard from '@/hooks/chat/useChatCopyToClipboard';
 
 const ToolkitTestResults = memo(props => {
   const { chatHistory } = props;
@@ -24,7 +24,7 @@ const ToolkitTestResults = memo(props => {
     [messages],
   );
 
-  const onCopyToClipboard = useChatCopyToClipboard(messages);
+  const onCopyToClipboard = useCopyChatMessage(messages);
 
   if (!messages.length) return null;
 

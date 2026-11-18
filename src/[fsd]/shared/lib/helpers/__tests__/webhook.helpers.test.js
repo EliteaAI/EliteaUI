@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { GITLAB_SIGNING_KEY_MIN_BYTES } from '../../constants/webhook.constants.js';
-import { getGitlabSigningTokenError } from '../webhook.helpers.js';
+import { getGitlabSigningTokenError, isSignedWebhook, markRecommended } from '../webhook.helpers.js';
 
 // GitLab shows the signing token exactly once, so the whole value is hand-copied. These checks
 // catch the two things that go wrong when copying by hand: grabbing the wrong field, and
@@ -58,5 +58,30 @@ describe('getGitlabSigningTokenError', () => {
   // The bound is a floor, not GitLab's exact size, so an unexpectedly long key must still pass.
   it('accepts a key longer than the minimum', () => {
     expect(getGitlabSigningTokenError(`whsec_${btoa('y'.repeat(64))}`)).toBeNull();
+  });
+});
+
+// #7456: the same signed rule as the API, which drives the replay warning
+describe('isSignedWebhook', () => {
+  it.each([
+    ['github', null, true],
+    ['gitlab', 'signing_token', true],
+    ['gitlab', 'secret_token', false],
+    ['custom', null, false],
+  ])('%s / %s -> %s', (type, method, signed) => {
+    expect(isSignedWebhook(type, method)).toBe(signed);
+  });
+});
+
+describe('markRecommended', () => {
+  it('suffixes only the recommended option', () => {
+    const options = [
+      { label: 'GitHub', value: 'github' },
+      { label: 'Custom', value: 'custom' },
+    ];
+    expect(markRecommended(options, 'github').map(option => option.label)).toEqual([
+      'GitHub (recommended)',
+      'Custom',
+    ]);
   });
 });

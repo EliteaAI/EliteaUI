@@ -126,6 +126,42 @@ describe('BuildScheduleWithAiModal', () => {
     expect(await screen.findByText('Cron was not valid')).toHaveAttribute('role', 'status');
   });
 
+  it('shows the warning of a field the draft left out, with the field label, in the review of an empty form', async () => {
+    answer({
+      draft: { name: 'Docs refresh', entity_type: 'toolkit_index', cron: '0 3 * * *', timezone: 'UTC' },
+      warnings: [{ field: 'index_name', reason: 'This index already has a schedule' }],
+    });
+    setup();
+    generate('refresh index docs of toolkit Docs every day');
+    const warning = await screen.findByText('This index already has a schedule');
+    expect(warning).toHaveAttribute('role', 'status');
+    expect(screen.getByText('Index')).toBeInTheDocument();
+  });
+
+  it('shows the warning of a field the draft left out in the changes of a filled form', async () => {
+    answer({
+      draft: { name: 'Docs refresh', entity_type: 'toolkit_index' },
+      warnings: [{ field: 'index_name', reason: 'This index already has a schedule' }],
+    });
+    const values = { ...VALUES, type: 'toolkit_index', toolkit_id: '', index_name: '', name: 'Old name' };
+    setup({ values, dirty: true });
+    generate('refresh index docs of toolkit Docs');
+    expect(await screen.findByText('This index already has a schedule')).toHaveAttribute('role', 'status');
+    expect(screen.getByText('Docs refresh')).toBeInTheDocument();
+  });
+
+  it('shows the warning of a field the draft left out when the draft changes no field', async () => {
+    const values = { ...VALUES, ...DRAFT, type: 'agent', run_mode: null };
+    answer({
+      draft: DRAFT,
+      warnings: [{ field: 'index_name', reason: 'This index already has a schedule' }],
+    });
+    setup({ values, dirty: true });
+    generate('same');
+    expect(await screen.findByText(/no changes/i)).toBeInTheDocument();
+    expect(screen.getByText('This index already has a schedule')).toBeInTheDocument();
+  });
+
   it('hides Type and Entity in the review of a locked entity', async () => {
     setup({}, { lockedEntity: { type: 'agent', id: 'A1' } });
     generate('x');

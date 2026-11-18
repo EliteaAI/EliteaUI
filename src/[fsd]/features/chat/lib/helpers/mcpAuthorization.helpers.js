@@ -42,9 +42,17 @@ const getSafeProvidedSettings = metadata => {
     safeSettings.mcp_client_id = providedSettings.mcp_client_id;
   }
   if (providedSettings.scopes) safeSettings.scopes = providedSettings.scopes;
-  if (providedSettings.mcp_client_secret || providedSettings.client_secret) {
+  if (
+    providedSettings.mcp_client_secret ||
+    providedSettings.client_secret ||
+    providedSettings.has_mcp_client_secret
+  ) {
     safeSettings.has_mcp_client_secret = true;
   }
+  // Default app (#7149): the admin app's reference, not a secret. Without it the sign-in window
+  // asks for a Client Secret and the proxy can't resolve the admin's client (#7474).
+  if (providedSettings.oauth_app_id) safeSettings.oauth_app_id = providedSettings.oauth_app_id;
+  if (providedSettings.credential_type) safeSettings.credential_type = providedSettings.credential_type;
   return Object.keys(safeSettings).length ? safeSettings : null;
 };
 

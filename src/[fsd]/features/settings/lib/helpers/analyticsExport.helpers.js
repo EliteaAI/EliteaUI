@@ -81,7 +81,7 @@ const buildOverviewSheet = (data, meta, isPersonalProject = false, includeSkills
       { metric: 'Total Project Users', value: kpis.total_project_users ?? 0 },
       { metric: 'AI Active Users', value: kpis.ai_active_users ?? 0 },
       { metric: 'Adoption Rate (%)', value: kpis.adoption_rate ?? 0 },
-      { metric: 'LLM Calls', value: kpis.llm_calls ?? 0 },
+      { metric: 'Model Calls', value: kpis.llm_calls ?? 0 },
       { metric: 'Tool Runs', value: kpis.tool_runs ?? 0 },
       { metric: 'Chat Messages', value: kpis.chat_msgs ?? 0 },
       { metric: 'Agent & Pipeline Runs', value: kpis.agent_runs ?? 0 },
@@ -96,7 +96,7 @@ const buildOverviewSheet = (data, meta, isPersonalProject = false, includeSkills
     ...(isPersonalProject
       ? []
       : [{ header: 'Active Users', key: 'active_users', numFmt: ExcelFormats.integer }]),
-    { header: 'LLM Calls', key: 'llm_calls', numFmt: ExcelFormats.integer },
+    { header: 'Model Calls', key: 'llm_calls', numFmt: ExcelFormats.integer },
     { header: 'Tool Runs', key: 'tool_runs', numFmt: ExcelFormats.integer },
     { header: 'Agent & Pipeline Runs', key: 'agent_runs', numFmt: ExcelFormats.integer },
     ...(includeSkills ? [skillRunsColumn] : []),
@@ -130,7 +130,7 @@ const buildOverviewSheet = (data, meta, isPersonalProject = false, includeSkills
   const userCols = [
     { header: 'User', key: 'user_email' },
     { header: 'AI Events', key: 'ai_events', numFmt: ExcelFormats.integer },
-    { header: 'LLM Calls', key: 'llm_calls', numFmt: ExcelFormats.integer },
+    { header: 'Model Calls', key: 'llm_calls', numFmt: ExcelFormats.integer },
     { header: 'Tool Runs', key: 'tool_runs', numFmt: ExcelFormats.integer },
     { header: 'Agent & Pipeline Runs', key: 'agent_runs', numFmt: ExcelFormats.integer },
     ...(includeSkills ? [skillRunsColumn] : []),
@@ -138,14 +138,17 @@ const buildOverviewSheet = (data, meta, isPersonalProject = false, includeSkills
   sections.push({
     title: 'Top AI Adopters',
     columns: userCols,
-    rows: top_ai_users.length > 0 ? top_ai_users : emptyRow(userCols, NO_DATA_MSG),
+    rows:
+      top_ai_users.length > 0
+        ? top_ai_users.map(u => ({ ...u, user_email: formatAgentUserLabel(u) }))
+        : emptyRow(userCols, NO_DATA_MSG),
   });
 
   const automatedCols = [
     { header: 'Trigger Source', key: 'trigger_source' },
     { header: 'Entity type', key: 'entity_kind' },
     { header: 'Runs', key: 'runs', numFmt: ExcelFormats.integer },
-    { header: 'LLM Calls', key: 'llm_calls', numFmt: ExcelFormats.integer },
+    { header: 'Model Calls', key: 'llm_calls', numFmt: ExcelFormats.integer },
     { header: 'Tool Runs', key: 'tool_runs', numFmt: ExcelFormats.integer },
     { header: 'Cost (USD)', key: 'llm_cost', numFmt: ExcelFormats.currency },
   ];
@@ -248,7 +251,7 @@ const buildCostsSheet = (data, meta, options = {}) => {
     columns: userCols,
     rows:
       by_user.length > 0
-        ? costShareRows(by_user, u => u.user_email, totalUserCost)
+        ? costShareRows(by_user, formatAgentUserLabel, totalUserCost)
         : emptyRow(userCols, emptyMsg),
   });
 
@@ -405,12 +408,7 @@ const buildTokensSheet = (data, meta, options = {}) => {
   sections.push({
     title: 'Token Usage by User',
     columns: tokenCols('User'),
-    rows: buildTokenRows(
-      by_user,
-      user =>
-        user.user_display_name || user.user_email || `User ${user.user_id ?? ''}`.trim() || 'Unknown user',
-      totalProjectTokens,
-    ),
+    rows: buildTokenRows(by_user, formatAgentUserLabel, totalProjectTokens),
   });
 
   sections.push({
@@ -649,12 +647,7 @@ export const buildSkillDetailSheet = (detail, meta) => {
         columns: modelCols,
         rows: by_model.length ? by_model : emptyRow(modelCols, NO_DATA_MSG),
       },
-      skillSection(
-        'By User',
-        { header: 'User', key: 'user_email' },
-        by_user,
-        r => r.user_email || `User ${r.user_id}`,
-      ),
+      skillSection('By User', { header: 'User', key: 'user_email' }, by_user, formatAgentUserLabel),
       skillSection('By Trigger Source', { header: 'Trigger', key: 'trigger_source' }, by_trigger_source, r =>
         formatTriggerLabel(r.trigger_source),
       ),
@@ -677,7 +670,7 @@ export const buildSkillDetailSheet = (detail, meta) => {
           ? recent_runs.map(r => ({
               ...r,
               started_at: fmtISODateTime(r.started_at),
-              user_email: r.user_email || `User ${r.user_id}`,
+              user_email: formatAgentUserLabel(r),
               version_name: formatVersionLabel(r.version_name),
               is_error: r.is_error ? 'Yes' : 'No',
             }))
@@ -770,7 +763,7 @@ export const buildAgentDetailSheet = (
   const modelCols = [
     { header: 'Model', key: 'display_name' },
     { header: 'Runs', key: 'runs', numFmt: ExcelFormats.integer },
-    { header: 'LLM Calls', key: 'calls', numFmt: ExcelFormats.integer },
+    { header: 'Model Calls', key: 'calls', numFmt: ExcelFormats.integer },
     ...AGENT_TOTAL_COLUMNS.slice(1),
   ];
   const triggerCols = [{ header: 'Trigger', key: 'trigger_source' }, ...AGENT_TOTAL_COLUMNS];
@@ -921,7 +914,7 @@ const buildUsersSheet = (data, meta, includeSkills = false) => {
   const userCols = [
     { header: 'User', key: 'user_email' },
     { header: 'Active Days', key: 'active_days', numFmt: ExcelFormats.integer },
-    { header: 'LLM Calls', key: 'llm_events', numFmt: ExcelFormats.integer },
+    { header: 'Model Calls', key: 'llm_events', numFmt: ExcelFormats.integer },
     { header: 'Tool Calls', key: 'tool_events', numFmt: ExcelFormats.integer },
     { header: 'Agent & Pipeline Runs', key: 'agent_events', numFmt: ExcelFormats.integer },
     ...(includeSkills ? [{ header: 'Skill Runs', key: 'skill_events', numFmt: ExcelFormats.integer }] : []),
@@ -948,7 +941,7 @@ const buildUsersSheet = (data, meta, includeSkills = false) => {
         columns: userCols,
         rows:
           rows.length > 0
-            ? rows.map(u => ({ ...u, user_email: u.user_email || `User ${u.user_id}` }))
+            ? rows.map(u => ({ ...u, user_email: formatAgentUserLabel(u) }))
             : emptyRow(userCols, NO_DATA_MSG),
       },
     ],
@@ -1211,7 +1204,7 @@ export const buildChatDetailSheet = (
     { metric: 'Output Tokens', value: kpis.output_tokens ?? 0 },
     { metric: 'Cache Read Tokens', value: kpis.cache_read_tokens ?? 0 },
     { metric: 'Cache Write Tokens', value: kpis.cache_creation_tokens ?? 0 },
-    { metric: 'LLM Calls', value: kpis.llm_calls ?? 0 },
+    { metric: 'Model Calls', value: kpis.llm_calls ?? 0 },
     { metric: 'Tool Calls', value: kpis.tool_calls ?? 0 },
     { metric: 'Avg Cost / Response (USD)', value: kpis.avg_cost_per_response ?? 0 },
     { metric: 'Avg Latency (ms)', value: kpis.avg_duration_ms ?? 0 },
@@ -1237,7 +1230,7 @@ export const buildChatDetailSheet = (
 
   const modelCols = [
     { header: 'Model', key: 'model_name' },
-    { header: 'LLM Calls', key: 'calls', numFmt: ExcelFormats.integer },
+    { header: 'Model Calls', key: 'calls', numFmt: ExcelFormats.integer },
     { header: 'Responses', key: 'responses', numFmt: ExcelFormats.integer },
     { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
     { header: 'Cost (USD)', key: 'llm_cost', numFmt: ExcelFormats.currency },
@@ -1269,6 +1262,7 @@ export const buildChatDetailSheet = (
   const runRows = runs.map(r => ({
     ...r,
     started_at: fmtISODateTime(r.started_at),
+    user_email: formatAgentUserLabel(r),
     participant: PARTICIPANT_TYPE_LABELS[r.participant_type] || r.participant_type || '-',
     models: Array.isArray(r.models)
       ? r.models
@@ -1312,7 +1306,10 @@ export const buildChatDetailSheet = (
           {
             title: 'Users',
             columns: userCols,
-            rows: by_user.length > 0 ? by_user : emptyRow(userCols, NO_DATA_MSG),
+            rows:
+              by_user.length > 0
+                ? by_user.map(u => ({ ...u, user_email: formatAgentUserLabel(u) }))
+                : emptyRow(userCols, NO_DATA_MSG),
           },
         ]),
     { title: 'Tools', columns: toolCols, rows: tools.length > 0 ? tools : emptyRow(toolCols, NO_DATA_MSG) },

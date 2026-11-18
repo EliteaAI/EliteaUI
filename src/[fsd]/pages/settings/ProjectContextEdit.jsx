@@ -3,6 +3,7 @@ import { memo, useCallback, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { DrawerPage } from '@/[fsd]/features/settings';
+import { useCanManageProjectSettings } from '@/[fsd]/features/settings/lib/hooks';
 import { ProjectContextEditor } from '@/[fsd]/features/settings/ui/project-context';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useProjectContextQuery } from '@/api/projectContext';
@@ -16,13 +17,14 @@ const ProjectContextEdit = memo(() => {
   const navigate = useNavigate();
   const { state: locationState } = useLocation();
 
-  const canEditProjectContext = checkPermission(PERMISSIONS.projectContext.edit);
+  const { canManageSettings, isLoading: isAccessLoading } = useCanManageProjectSettings();
+  const canEditProjectContext = checkPermission(PERMISSIONS.projectContext.edit) && canManageSettings;
 
   useEffect(() => {
-    if (!canEditProjectContext) {
+    if (!isAccessLoading && !canEditProjectContext) {
       navigate(RouteDefinitions.ProjectContext, { replace: true });
     }
-  }, [canEditProjectContext, navigate]);
+  }, [isAccessLoading, canEditProjectContext, navigate]);
 
   const { data: serverData } = useProjectContextQuery(projectId, {
     skip: !projectId || !checkPermission(PERMISSIONS.projectContext.view),

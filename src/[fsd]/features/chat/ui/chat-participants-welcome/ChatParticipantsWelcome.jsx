@@ -142,9 +142,11 @@ const chatParticipantsWelcomeStyles = () => ({
     zIndex: 2,
     display: 'flex',
     flexDirection: 'column',
-    margin: '0 0 0.5rem',
-    padding: '0.75rem 0 0.5rem',
-    backgroundColor: palette.background.default.primary,
+    // Bleeds over MessageList's horizontal padding so the background spans the full chat width.
+    margin: '0 -0.75rem 0.5rem',
+    padding: '0.75rem 0.75rem 0.5rem',
+    // Shorthand, not backgroundColor: in light mode this token is a gradient, which backgroundColor drops.
+    background: palette.background.default.primary,
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
   }),
   header: {

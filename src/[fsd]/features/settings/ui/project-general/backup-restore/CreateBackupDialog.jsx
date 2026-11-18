@@ -11,14 +11,22 @@ import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import BackupAlert from './BackupAlert';
 
 const { formatCount, formatSize } = ProjectBackupHelpers;
-const { CHATS_OPTION, CHAT_BACKUP_OPTION_LABELS, LARGE_BACKUP_BYTES } = ProjectBackupConstants;
+const {
+  CHATS_OPTION,
+  CHAT_BACKUP_OPTION_LABELS,
+  LARGE_BACKUP_BYTES,
+  SKILL_FILES_OPTION,
+  SKILL_FILES_BACKUP_OPTION_LABELS,
+} = ProjectBackupConstants;
 
 const NO_CHATS_TOOLTIP = 'This project has no chats';
+const NO_SKILL_FILES_TOOLTIP = "No files are attached to this project's skills";
 
 const CreateBackupDialog = memo(props => {
   const { open, onClose, onBackup, isDownloading, projectId, projectName } = props;
 
   const [chats, setChats] = useState(CHATS_OPTION.none);
+  const [skillFiles, setSkillFiles] = useState(SKILL_FILES_OPTION.none);
 
   const {
     data: summary,
@@ -32,7 +40,12 @@ const CreateBackupDialog = memo(props => {
   // Without the summary the chat count is unknown, so the chat options stay available
   const hasChats = isSummaryError || !!summary?.chats_count;
   const chatOptionsDisabled = isDownloading || isSummaryLoading || !hasChats;
-  const estimatedSize = chats === CHATS_OPTION.withAttachments ? summary?.attachments_size || 0 : 0;
+  // Without the summary the skill attachment count is unknown, so including them stays available
+  const hasSkillFiles = isSummaryError || !!summary?.skill_files_count;
+  const skillFileOptionsDisabled = isDownloading || isSummaryLoading || !hasSkillFiles;
+  const skillFilesSize = skillFiles === SKILL_FILES_OPTION.all ? summary?.skill_files_size || 0 : 0;
+  const attachmentsSize = chats === CHATS_OPTION.withAttachments ? summary?.attachments_size || 0 : 0;
+  const estimatedSize = attachmentsSize + skillFilesSize;
 
   const items = useMemo(
     () =>
@@ -58,19 +71,48 @@ const CreateBackupDialog = memo(props => {
     [chatOptionsDisabled, hasChats, isSummaryLoading],
   );
 
+  const skillFileItems = useMemo(
+    () =>
+      Object.values(SKILL_FILES_OPTION).map(value => {
+        const isIncludeOption = value !== SKILL_FILES_OPTION.none;
+        const label = SKILL_FILES_BACKUP_OPTION_LABELS[value];
+        return {
+          value,
+          disabled: isIncludeOption && skillFileOptionsDisabled,
+          label:
+            isIncludeOption && !isSummaryLoading && !hasSkillFiles ? (
+              <Tooltip
+                title={NO_SKILL_FILES_TOOLTIP}
+                placement="top"
+              >
+                <Box component="span">{label}</Box>
+              </Tooltip>
+            ) : (
+              label
+            ),
+        };
+      }),
+    [skillFileOptionsDisabled, hasSkillFiles, isSummaryLoading],
+  );
+
+  const resetOptions = useCallback(() => {
+    setChats(CHATS_OPTION.none);
+    setSkillFiles(SKILL_FILES_OPTION.none);
+  }, []);
+
   const handleClose = useCallback(() => {
     if (isDownloading) return;
-    setChats(CHATS_OPTION.none);
+    resetOptions();
     onClose?.();
-  }, [isDownloading, onClose]);
+  }, [isDownloading, onClose, resetOptions]);
 
   const handleBackup = useCallback(async () => {
-    const isDone = await onBackup({ chats, missingAttachments: summary?.missing_attachments });
+    const isDone = await onBackup({ chats, skillFiles, missingAttachments: summary?.missing_attachments });
     if (isDone) {
-      setChats(CHATS_OPTION.none);
+      resetOptions();
       onClose?.();
     }
-  }, [chats, onBackup, onClose, summary]);
+  }, [chats, skillFiles, onBackup, onClose, resetOptions, summary]);
 
   const styles = createBackupDialogStyles();
 
@@ -104,7 +146,7 @@ const CreateBackupDialog = memo(props => {
         other secrets are excluded.
       </Typography>
 
-      <Box sx={styles.chats}>
+      <Box sx={styles.section}>
         <Typography
           variant="labelMedium"
           color="text.secondary"
@@ -132,6 +174,45 @@ const CreateBackupDialog = memo(props => {
       {chats !== CHATS_OPTION.none && (
         <BackupAlert severity="info">
           Chats contain conversation history of all project members. Store the backup file securely.
+        </BackupAlert>
+      )}
+
+      <Box sx={styles.section}>
+        <Typography
+          variant="labelMedium"
+          color="text.secondary"
+        >
+          Skill attachments
+        </Typography>
+        <Checkbox.RadioButtonGroup
+          value={skillFiles}
+          onChange={setSkillFiles}
+          items={skillFileItems}
+          wrapRow
+          disabled={isDownloading}
+          testId="project-backup-skill-files-option"
+        />
+        {!!summary && (
+          <Typography
+            variant="bodySmall2"
+            color="text.secondary"
+            sx={styles.summary}
+            data-testid="project-backup-skill-files-summary"
+          >
+            {hasSkillFiles
+              ? `${formatCount(summary.skill_files_count, 'attached file')} · ~${formatSize(summary.skill_files_size)}`
+              : 'No files attached to skills'}
+          </Typography>
+        )}
+      </Box>
+
+      {skillFiles === SKILL_FILES_OPTION.none && hasSkillFiles && (
+        <BackupAlert
+          severity="warning"
+          data-testid="project-backup-no-skill-files-warning"
+        >
+          Skill attachments will not be in this backup. Restored into another project, its skills list their
+          attached files, but the files cannot be opened.
         </BackupAlert>
       )}
 
@@ -188,7 +269,7 @@ const createBackupDialogStyles = () => ({
     flexDirection: 'column',
     gap: '0.75rem',
   },
-  chats: {
+  section: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.25rem',

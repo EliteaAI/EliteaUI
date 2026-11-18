@@ -2,10 +2,9 @@ import { useCallback, useMemo } from 'react';
 
 import { useLocation, useMatch, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
+import { CardNavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import {
   ApplicationsTabs,
-  AppsTabs,
-  ContentType,
   PUBLIC_PROJECT_ID,
   SearchParams,
   UserPublicTabs,
@@ -65,7 +64,7 @@ export const useSetUrlSearchParams = () => {
   );
   return setUrlSearchParams;
 };
-export const useCardNavigate = props => {
+const useCardNavigationTarget = props => {
   const {
     viewMode,
     id,
@@ -82,109 +81,33 @@ export const useCardNavigate = props => {
   const authorId = useAuthorIdFromUrl();
   const { tab = customTab ?? 'latest' } = useParams();
   const { routeStack = [] } = useMemo(() => state || { routeStack: [] }, [state]);
-  const navigate = useNavigate();
-  const doNavigate = useCallback(() => {
-    const query = `${anchor}?${extraParam || ''}${SearchParams.ViewMode}=${viewMode}&${SearchParams.Name}=${encodeURIComponent(name)}${authorName ? `&${SearchParams.AuthorName}=${encodeURIComponent(authorName)}` : ''}${authorId ? `&${SearchParams.AuthorId}=${authorId}` : ''}`;
 
-    // Helper function to build URL with optional project ID prefix
-    const buildUrl = (route, pathSegment) =>
-      projectId ? `/${projectId}${route}/${pathSegment}/${id}` : `${route}/${pathSegment}/${id}`;
-
-    const urlMap = {
-      [ContentType.ApplicationAdmin]: buildUrl(RouteDefinitions.Applications, tab),
-      [ContentType.ApplicationAll]: buildUrl(RouteDefinitions.Applications, tab),
-      [ContentType.ApplicationApproval]: buildUrl(RouteDefinitions.Applications, tab),
-      [ContentType.ApplicationDraft]: buildUrl(RouteDefinitions.Applications, tab),
-      [ContentType.ApplicationModeration]: buildUrl(RouteDefinitions.Applications, tab),
-      [ContentType.ApplicationPublished]: buildUrl(RouteDefinitions.Applications, tab),
-      [ContentType.ApplicationRejected]: buildUrl(RouteDefinitions.Applications, tab),
-      [ContentType.PipelineAdmin]: buildUrl(RouteDefinitions.Pipelines, tab),
-      [ContentType.PipelineAll]: buildUrl(RouteDefinitions.Pipelines, tab),
-      [ContentType.PipelineApproval]: buildUrl(RouteDefinitions.Pipelines, tab),
-      [ContentType.PipelineDraft]: buildUrl(RouteDefinitions.Pipelines, tab),
-      [ContentType.PipelineModeration]: buildUrl(RouteDefinitions.Pipelines, tab),
-      [ContentType.PipelinePublished]: buildUrl(RouteDefinitions.Pipelines, tab),
-      [ContentType.PipelineRejected]: buildUrl(RouteDefinitions.Pipelines, tab),
-      [ContentType.ToolkitAdmin]: buildUrl(RouteDefinitions.Toolkits, tab),
-      [ContentType.ToolkitAll]: buildUrl(RouteDefinitions.Toolkits, tab),
-      [ContentType.AppAll]: buildUrl(RouteDefinitions.Apps, AppsTabs[1]),
-      [ContentType.MCPAll]: buildUrl(RouteDefinitions.MCPs, tab),
-      [ContentType.CredentialAll]: buildUrl(RouteDefinitions.Credentials, tab),
-      [ContentType.SkillAll]: buildUrl(RouteDefinitions.Skills, tab),
-      [ContentType.ApplicationTop]: buildUrl(RouteDefinitions.Applications, 'top'),
-      [ContentType.ApplicationLatest]: buildUrl(RouteDefinitions.Applications, 'latest'),
-      [ContentType.ApplicationMyLiked]: buildUrl(RouteDefinitions.Applications, 'my-liked'),
-      [ContentType.ApplicationTrending]: buildUrl(RouteDefinitions.Applications, 'trending'),
-      [ContentType.PipelineTop]: buildUrl(RouteDefinitions.Pipelines, 'top'),
-      [ContentType.PipelineLatest]: buildUrl(RouteDefinitions.Pipelines, 'latest'),
-      [ContentType.PipelineMyLiked]: buildUrl(RouteDefinitions.Pipelines, 'my-liked'),
-      [ContentType.PipelineTrending]: buildUrl(RouteDefinitions.Pipelines, 'trending'),
-      [ContentType.UserPublicApplications]: buildUrl(RouteDefinitions.UserPublic, 'agents'),
-      [ContentType.UserPublicPipelines]: buildUrl(RouteDefinitions.UserPublic, 'pipelines'),
-      [ContentType.UserPublicToolkits]: buildUrl(RouteDefinitions.UserPublic, 'toolkits'),
-      [ContentType.UserPublicMCPs]: buildUrl(RouteDefinitions.UserPublic, 'mcps'),
-    };
-    const searchMap = {
-      [ContentType.ApplicationAdmin]: query,
-      [ContentType.ApplicationAll]: query,
-      [ContentType.ApplicationApproval]: query,
-      [ContentType.ApplicationDraft]: query,
-      [ContentType.ApplicationModeration]: query,
-      [ContentType.ApplicationPublished]: query,
-      [ContentType.ApplicationRejected]: query,
-      [ContentType.PipelineAdmin]: query,
-      [ContentType.PipelineAll]: query,
-      [ContentType.PipelineApproval]: query,
-      [ContentType.PipelineDraft]: query,
-      [ContentType.PipelineModeration]: query,
-      [ContentType.PipelinePublished]: query,
-      [ContentType.PipelineRejected]: query,
-      [ContentType.ToolkitAdmin]: query,
-      [ContentType.ToolkitAll]: query,
-      [ContentType.AppAll]: query,
-      [ContentType.MCPAll]: query,
-      [ContentType.CredentialAll]: query,
-      [ContentType.SkillAll]: query,
-      [ContentType.MyLibraryApplications]: query,
-      [ContentType.ApplicationTop]: query,
-      [ContentType.ApplicationLatest]: query,
-      [ContentType.ApplicationMyLiked]: query,
-      [ContentType.PipelineTop]: query,
-      [ContentType.PipelineLatest]: query,
-      [ContentType.PipelineMyLiked]: query,
-      [ContentType.UserPublicApplications]: query,
-      [ContentType.UserPublicPipelines]: query,
-      [ContentType.UserPublicToolkits]: query,
-      [ContentType.UserPublicMCPs]: query,
-    };
+  return useMemo(() => {
+    const { pathname, search, pagePath } = CardNavigationHelpers.buildCardNavigation({
+      type,
+      id,
+      tab,
+      projectId,
+      viewMode,
+      name,
+      extraParam,
+      anchor,
+      authorName,
+      authorId,
+    });
     const newRouteStack = [...routeStack];
-    const pagePath = `${urlMap[type]}${searchMap[type]}`;
+    const routeInfo = { breadCrumb: name, viewMode, pagePath };
     if (replace) {
-      newRouteStack.splice(routeStack.length - 1, 1, {
-        breadCrumb: name,
-        viewMode,
-        pagePath,
-      });
+      newRouteStack.splice(routeStack.length - 1, 1, routeInfo);
     } else {
-      newRouteStack.push({
-        breadCrumb: name,
-        viewMode,
-        pagePath,
-      });
+      newRouteStack.push(routeInfo);
     }
 
-    navigate(
-      {
-        pathname: urlMap[type],
-        search: searchMap[type],
-      },
-      {
-        replace,
-        state: {
-          routeStack: newRouteStack,
-        },
-      },
-    );
+    return {
+      to: { pathname, search },
+      replace,
+      state: { routeStack: newRouteStack },
+    };
   }, [
     anchor,
     extraParam,
@@ -196,11 +119,29 @@ export const useCardNavigate = props => {
     routeStack,
     type,
     replace,
-    navigate,
     projectId,
     id,
   ]);
-  return doNavigate;
+};
+
+export const useCardNavigate = props => {
+  const navigate = useNavigate();
+  const { to, replace, state } = useCardNavigationTarget(props);
+
+  return useCallback(() => {
+    navigate(to, { replace, state });
+  }, [navigate, to, replace, state]);
+};
+
+/**
+ * Same destination as `useCardNavigate`, returned as props for a router `<Link>` so the browser gets a
+ * real `href` ("Open link in new tab", Ctrl/Cmd+Click, middle-click). A plain left click still navigates
+ * in-app and carries the breadcrumb `routeStack` in `state`.
+ */
+export const useCardLink = props => {
+  const { to, replace, state } = useCardNavigationTarget(props);
+
+  return useMemo(() => ({ to, replace, state }), [to, replace, state]);
 };
 
 const buildQueryParams = params => {

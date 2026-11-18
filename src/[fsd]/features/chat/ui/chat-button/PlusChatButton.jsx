@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
@@ -59,15 +59,6 @@ const SEARCHABLE_KEYS = [
   SUBMENU_KEYS.MCPS,
 ];
 
-const PAPER_STYLE_MAP = {
-  [SUBMENU_KEYS.INTERNAL_TOOLS]: 'internalToolsPaper',
-  [SUBMENU_KEYS.TOOLKITS]: 'toggleSubmenuPaper',
-  [SUBMENU_KEYS.MCPS]: 'toggleSubmenuPaper',
-  [SUBMENU_KEYS.AGENTS]: 'entitySubmenuPaper',
-  [SUBMENU_KEYS.PIPELINES]: 'entitySubmenuPaper',
-  [SUBMENU_KEYS.SKILLS]: 'entitySubmenuPaper',
-};
-
 const PlusChatButton = memo(props => {
   const {
     attachmentButtonRef,
@@ -93,7 +84,6 @@ const PlusChatButton = memo(props => {
   const isMcpVisible = useIsMcpVisible();
   const availableTools = useAvailableInternalTools({ activeToolNames: internal_tools });
   const buttonRef = useRef(null);
-  const hoverTimeoutRef = useRef(null);
   const subMenuRef = useRef(null);
   const mainPaperRef = useRef(null);
 
@@ -103,19 +93,17 @@ const PlusChatButton = memo(props => {
   const canInviteUsers = !isPrivateProject && !!onInviteUsers;
 
   const [isOpen, setIsOpen] = useState(false);
-  const [hoveredItem, setHoveredItem] = useState(null);
-  const [hoveredAnchorEl, setHoveredAnchorEl] = useState(null);
+  const [openItem, setOpenItem] = useState(null);
+  const [mainHeight, setMainHeight] = useState(0);
 
   const handleToggle = useCallback(() => {
     setIsOpen(prev => !prev);
-    setHoveredItem(null);
-    setHoveredAnchorEl(null);
+    setOpenItem(null);
   }, []);
 
   const handleClose = useCallback(() => {
     setIsOpen(false);
-    setHoveredItem(null);
-    setHoveredAnchorEl(null);
+    setOpenItem(null);
   }, []);
 
   const { agents, pipelines, skills, toolkits, mcps } = useApplicationSubmenu({
@@ -145,36 +133,38 @@ const PlusChatButton = memo(props => {
     [handleClose],
   );
 
-  const handleItemHover = useCallback(
-    (key, event) => {
-      clearTimeout(hoverTimeoutRef.current);
-      setHoveredItem(prev => {
-        if (prev && prev !== key && submenuMap[prev]?.resetSearch) {
-          submenuMap[prev].resetSearch();
-        }
-        return key;
+  const handleItemClick = useCallback(
+    key => {
+      setOpenItem(prev => {
+        if (prev && submenuMap[prev]?.resetSearch) submenuMap[prev].resetSearch();
+        return prev === key ? null : key;
       });
-      setHoveredAnchorEl(event.currentTarget);
     },
     [submenuMap],
   );
 
-  const handleItemLeave = useCallback(() => {
-    hoverTimeoutRef.current = setTimeout(() => {
-      setHoveredItem(null);
-      setHoveredAnchorEl(null);
-    }, 150);
-  }, []);
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const handleKeyDown = event => {
+      if (event.key === 'Escape') handleClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, handleClose]);
 
-  const handleSubMenuEnter = useCallback(() => {
-    clearTimeout(hoverTimeoutRef.current);
+  // Callback ref: the main paper mounts only when the Popper opens
+  const resizeObserverRef = useRef(null);
+  const setMainPaper = useCallback(node => {
+    mainPaperRef.current = node;
+    resizeObserverRef.current?.disconnect();
+    resizeObserverRef.current = null;
+    if (!node) return;
+    setMainHeight(node.offsetHeight);
+    if (typeof ResizeObserver === 'undefined') return;
+    resizeObserverRef.current = new ResizeObserver(() => setMainHeight(node.offsetHeight));
+    resizeObserverRef.current.observe(node);
   }, []);
-
-  const handleSubMenuLeave = useCallback(() => {
-    if (subMenuRef.current?.contains(document.activeElement)) return;
-    setHoveredItem(null);
-    setHoveredAnchorEl(null);
-  }, []);
+  useEffect(() => () => resizeObserverRef.current?.disconnect(), []);
 
   const handleCloseAndCall = useCallback(
     (callback, ...args) => {
@@ -279,10 +269,9 @@ const PlusChatButton = memo(props => {
   );
 
   const styles = plusChatButtonStyles(theme);
-  const paperStyleKey = PAPER_STYLE_MAP[hoveredItem] || 'subPaper';
 
   const renderSubmenuContent = useCallback(() => {
-    if (hoveredItem === SUBMENU_KEYS.INTERNAL_TOOLS && availableTools.length > 0) {
+    if (openItem === SUBMENU_KEYS.INTERNAL_TOOLS && availableTools.length > 0) {
       return availableTools.map(tool => {
         const isChecked = internal_tools.includes(tool.name);
         const handleRowClick = () => {
@@ -313,13 +302,7 @@ const PlusChatButton = memo(props => {
               switch: {
                 size: 'small',
                 onClick: e => e.stopPropagation(),
-                // MUI v7's <Switch> only forwards a testid placed on
-                // slotProps.input to the underlying <input> — the legacy
-                // `inputProps` prop is silently dropped once Switch.js's own
-                // explicit `slotProps.input` (merged via mergeSlotProps)
-                // shadows it, so `inputProps` alone never reaches the DOM
-                // (live-confirmed: `[data-testid^="modules-toggle-"]`
-                // resolved 0 elements with `inputProps`, ELITEA-2162).
+                // MUI v7 Switch drops `inputProps`, the testid must go via slotProps.input
                 slotProps: { input: { 'data-testid': `modules-toggle-${tool.name}` } },
               },
             }}
@@ -328,25 +311,27 @@ const PlusChatButton = memo(props => {
       });
     }
 
-    if (SEARCHABLE_KEYS.includes(hoveredItem)) {
-      if (hoveredItem === SUBMENU_KEYS.MCPS && !isMcpVisible) return null;
-      const data = submenuMap[hoveredItem];
-      const config = submenuConfigs[hoveredItem];
+    if (SEARCHABLE_KEYS.includes(openItem)) {
+      if (openItem === SUBMENU_KEYS.MCPS && !isMcpVisible) return null;
+      const data = submenuMap[openItem];
+      const config = submenuConfigs[openItem];
       if (!data || !config) return null;
       return (
         <PlusChatSubmenu
+          // Remount per row so the search box regains focus
+          key={openItem}
           items={data.items}
           searchValue={data.searchValue}
           onSearchChange={data.onSearchChange}
           onScroll={data.onScroll}
           isLoading={data.isLoading}
-          sectionKey={hoveredItem}
+          sectionKey={openItem}
           {...config}
         />
       );
     }
   }, [
-    hoveredItem,
+    openItem,
     isMcpVisible,
     availableTools,
     internal_tools,
@@ -393,7 +378,7 @@ const PlusChatButton = memo(props => {
       >
         <ClickAwayListener onClickAway={handleClickAway}>
           <Paper
-            ref={mainPaperRef}
+            ref={setMainPaper}
             elevation={8}
             sx={styles.paper}
           >
@@ -418,8 +403,10 @@ const PlusChatButton = memo(props => {
                     key={key}
                     sx={styles.menuItem}
                     data-testid={testId}
-                    onMouseEnter={e => handleItemHover(key, e)}
-                    onMouseLeave={handleItemLeave}
+                    selected={openItem === key}
+                    aria-haspopup="menu"
+                    aria-expanded={openItem === key}
+                    onClick={() => handleItemClick(key)}
                   >
                     <Box
                       component={Icon}
@@ -450,19 +437,22 @@ const PlusChatButton = memo(props => {
         </ClickAwayListener>
       </Popper>
 
-      {hoveredAnchorEl && hoveredItem && (
+      {isOpen && openItem && (
         <Popper
           open
           anchorEl={mainPaperRef.current}
-          placement="right-end"
+          placement="right-start"
           style={styles.subPopper}
         >
           <Paper
             ref={subMenuRef}
             elevation={8}
-            sx={styles[paperStyleKey]}
-            onMouseEnter={handleSubMenuEnter}
-            onMouseLeave={handleSubMenuLeave}
+            sx={[
+              styles.subPaper,
+              openItem === SUBMENU_KEYS.INTERNAL_TOOLS && styles.internalToolsPaper,
+              { height: mainHeight ? `${mainHeight}px` : 'auto' },
+            ]}
+            data-testid={`${openItem}-submenu`}
           >
             {renderSubmenuContent()}
           </Paper>
@@ -535,7 +525,7 @@ const plusChatButtonStyles = theme => ({
     height: '2.75rem',
     color: theme.palette.text.secondary,
     background: theme.palette.background.default.secondary,
-    '&:hover': {
+    '&:hover, &.Mui-selected, &.Mui-selected:hover': {
       background: theme.palette.background.surface.interactive.active,
     },
   },
@@ -561,45 +551,25 @@ const plusChatButtonStyles = theme => ({
     zIndex: 9999,
   },
   subPaper: {
-    minWidth: '12rem',
+    width: '18.75rem',
+    boxSizing: 'border-box',
     borderRadius: '.75rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
     background: theme.palette.background.default.secondary,
-    padding: '1rem',
-    ml: '.25rem',
-  },
-  entitySubmenuPaper: {
-    width: '14.25rem',
-    borderRadius: '.5rem',
-    border: `.0625rem solid ${theme.palette.border.lines}`,
-    background: theme.palette.background.default.secondary,
-    boxShadow: theme.palette.boxShadow.default,
     padding: 0,
-    ml: '.25rem',
     overflow: 'hidden',
-  },
-  toggleSubmenuPaper: {
-    width: '17rem',
-    borderRadius: '.5rem',
-    border: `.0625rem solid ${theme.palette.border.lines}`,
-    background: theme.palette.background.default.secondary,
-    boxShadow: theme.palette.boxShadow.default,
-    padding: 0,
-    ml: '.25rem',
-    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
   },
   internalToolsPaper: {
-    minWidth: '18.75rem',
-    borderRadius: '.75rem',
-    border: `.0625rem solid ${theme.palette.border.lines}`,
-    background: theme.palette.background.default.secondary,
     padding: '.5rem 0',
-    ml: '.25rem',
+    overflowY: 'auto',
   },
   toolFormControlLabel: {
     margin: 0,
-    width: '18.75rem',
+    width: '100%',
     height: '2.75rem',
+    flexShrink: 0,
     boxSizing: 'border-box',
     display: 'flex',
     padding: '.5rem 1rem',

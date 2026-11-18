@@ -28,7 +28,12 @@ import {
   KPICard,
   SkillsEmptyState,
 } from '@/[fsd]/features/settings/ui/analytics';
-import { analyticsTableStyles } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
+import {
+  analyticsColumnSx,
+  analyticsHeaderCellSx,
+  analyticsRowMinWidthSx,
+  analyticsTableStyles,
+} from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 import StyledSearchInput from '@/components/SearchInput';
@@ -114,6 +119,8 @@ const AnalyticsSkills = memo(props => {
     () => SKILL_COLUMNS.filter(column => !column.teamOnly || !isPersonalProject),
     [isPersonalProject],
   );
+
+  const rowMinWidth = useMemo(() => analyticsRowMinWidthSx(columns), [columns]);
 
   const { data, isFetching, isError } = useAnalyticsSkillsQuery(
     {
@@ -348,7 +355,7 @@ const AnalyticsSkills = memo(props => {
           </Box>
           <Box sx={analyticsTableStyles.tableWrapper}>
             <Box
-              sx={analyticsTableStyles.tableHeader}
+              sx={[analyticsTableStyles.tableHeader, rowMinWidth]}
               data-testid="analytics-skills-table-header"
             >
               {columns.map(column => (
@@ -356,7 +363,8 @@ const AnalyticsSkills = memo(props => {
                   key={column.key}
                   sx={[
                     analyticsTableStyles.tableCell,
-                    { flex: column.flex ?? 1 },
+                    analyticsHeaderCellSx,
+                    analyticsColumnSx(column),
                     column.tooltip && styles.headerWithTooltip,
                   ]}
                 >
@@ -399,7 +407,7 @@ const AnalyticsSkills = memo(props => {
               rows.map(skill => (
                 <Box
                   key={`${skill.skill_project_id}:${skill.skill_id}`}
-                  sx={styles.clickableRow}
+                  sx={[styles.clickableRow, rowMinWidth]}
                   onClick={() => selectSkill(skill)}
                   data-testid="analytics-skills-row"
                 >
@@ -408,7 +416,7 @@ const AnalyticsSkills = memo(props => {
                       key={column.key}
                       sx={[
                         analyticsTableStyles.tableCellValue,
-                        { flex: column.flex ?? 1 },
+                        analyticsColumnSx(column),
                         column.key === 'errors' && skill.errors > 0 && styles.errorValue,
                       ]}
                       data-testid={`analytics-skills-row-${column.key}`}

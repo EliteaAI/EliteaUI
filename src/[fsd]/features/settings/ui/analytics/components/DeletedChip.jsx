@@ -3,14 +3,14 @@ import { memo } from 'react';
 import { Chip } from '@mui/material';
 
 const DeletedChip = memo(props => {
-  const { testId } = props;
+  const { testId, label = 'Deleted' } = props;
 
   const styles = deletedChipStyles();
 
   return (
     <Chip
       size="small"
-      label="Deleted"
+      label={label}
       sx={styles.chip}
       data-testid={testId}
     />

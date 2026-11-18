@@ -1,85 +1,96 @@
 // @vitest-environment jsdom
 import { Provider } from 'react-redux';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { configureStore } from '@reduxjs/toolkit';
 import { renderHook } from '@testing-library/react';
 
-import '../../../api/indexesApi';
-import indexesReducer from '../../../model/indexes.slice';
-import { useIndexScheduleIndicator } from '../useIndexScheduleIndicator.hooks';
+const mocks = vi.hoisted(() => ({ options: vi.fn() }));
 
-const CURRENT_USER_ID = 5;
-const BROWSER_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
+vi.mock('@/[fsd]/entities/schedule', () => ({
+  useGetToolkitIndexOptionsQuery: (args, config) => mocks.options(args, config),
+}));
+vi.mock('@/[fsd]/shared/lib/hooks', async importOriginal => ({
+  ...(await importOriginal()),
+  useSelectedProjectId: () => 2,
+}));
 
-const fulfilled = (endpointName, originalArgs, payload) => ({
+const { useIndexScheduleIndicator } = await import('../useIndexScheduleIndicator.hooks');
+await import('../../../api/indexesApi');
+const { default: indexesReducer } = await import('../../../model/indexes.slice');
+
+const indexesLoaded = toolkitId => ({
   type: `${eliteaApi.reducerPath}/executeQuery/fulfilled`,
-  payload,
+  payload: [],
   meta: {
-    requestId: `${endpointName}-request`,
+    requestId: 'getIndexesList-request',
     requestStatus: 'fulfilled',
     fulfilledTimeStamp: Date.now(),
     baseQueryMeta: {},
-    arg: { type: 'query', endpointName, originalArgs, queryCacheKey: endpointName },
+    arg: {
+      type: 'query',
+      endpointName: 'getIndexesList',
+      originalArgs: { projectId: 2, toolkitId },
+      queryCacheKey: 'getIndexesList',
+    },
   },
 });
 
-const indexesLoaded = toolkitId => fulfilled('getIndexesList', { projectId: 2, toolkitId }, []);
-
-const schedulesLoaded = (toolkitId, indexesMeta) =>
-  fulfilled('getIndexSchedule', { projectId: 2, toolkitId }, { meta: { indexes_meta: indexesMeta } });
-
-const schedule = (over = {}) => ({ cron: '0 2 * * *', timezone: BROWSER_TIMEZONE, enabled: true, ...over });
+const summary = (...rows) => ({ data: rows });
 
 const renderIndicator = (indexName, ...actions) => {
-  const store = configureStore({
-    reducer: { indexes: indexesReducer, user: () => ({ id: CURRENT_USER_ID }) },
-  });
+  const store = configureStore({ reducer: { indexes: indexesReducer } });
   actions.forEach(action => store.dispatch(action));
   return renderHook(() => useIndexScheduleIndicator(indexName), {
     wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
   }).result.current;
 };
 
+afterEach(() => vi.clearAllMocks());
+
 describe('useIndexScheduleIndicator', () => {
-  it("shows the listed toolkit's schedule for the current user", () => {
-    const indicator = renderIndicator(
-      'docs',
-      indexesLoaded(7),
-      schedulesLoaded(7, { docs: { schedules: { [CURRENT_USER_ID]: schedule() } } }),
+  it('shows the clock for an index the summary marks as scheduled', () => {
+    mocks.options.mockReturnValue(
+      summary({ name: 'docs', scheduled: true }, { name: 'wiki', scheduled: false }),
     );
 
-    expect(indicator).toEqual({ enabled: true, tooltip: 'Scheduled: At 02:00' });
+    expect(renderIndicator('docs', indexesLoaded(7))).toEqual({ enabled: true, tooltip: 'Has a schedule' });
   });
 
-  it('matches the toolkit id across string and number forms', () => {
-    const indicator = renderIndicator(
-      'docs',
-      indexesLoaded('7'),
-      schedulesLoaded(7, { docs: { schedules: { [CURRENT_USER_ID]: schedule() } } }),
+  it('shows nothing for an index the summary marks as not scheduled', () => {
+    mocks.options.mockReturnValue(
+      summary({ name: 'docs', scheduled: true }, { name: 'wiki', scheduled: false }),
     );
 
-    expect(indicator).not.toBeNull();
+    expect(renderIndicator('wiki', indexesLoaded(7))).toBeNull();
   });
 
-  it("hides the previous toolkit's schedule under a shared index name until the new one loads", () => {
-    const indicator = renderIndicator(
-      'docs',
-      schedulesLoaded(7, { docs: { schedules: { [CURRENT_USER_ID]: schedule() } } }),
-      indexesLoaded(8),
-    );
+  it('shows nothing for an index the summary does not list', () => {
+    mocks.options.mockReturnValue(summary({ name: 'docs', scheduled: true }));
 
-    expect(indicator).toBeNull();
+    expect(renderIndicator('other', indexesLoaded(7))).toBeNull();
   });
 
-  it('shows nothing for an index without a schedule', () => {
-    const indicator = renderIndicator(
-      'other',
-      indexesLoaded(7),
-      schedulesLoaded(7, { docs: { schedules: { [CURRENT_USER_ID]: schedule() } } }),
-    );
+  it('shows nothing before the summary arrives', () => {
+    mocks.options.mockReturnValue({ data: undefined });
 
-    expect(indicator).toBeNull();
+    expect(renderIndicator('docs', indexesLoaded(7))).toBeNull();
+  });
+
+  it('asks the summary of the listed toolkit without a refetch on each mount', () => {
+    mocks.options.mockReturnValue(summary());
+
+    renderIndicator('docs', indexesLoaded(7));
+
+    expect(mocks.options).toHaveBeenCalledWith({ projectId: 2, toolkitId: 7 }, { skip: false });
+  });
+
+  it('skips the summary while no toolkit is listed', () => {
+    mocks.options.mockReturnValue({ data: undefined });
+
+    renderIndicator('docs');
+
+    expect(mocks.options).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ skip: true }));
   });
 });

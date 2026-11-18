@@ -1,10 +1,16 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 import { Box, CircularProgress, TableSortLabel, Typography } from '@mui/material';
 
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
-import { analyticsTableSortLabelSx, analyticsTableStyles as styles } from './analyticsTable.styles';
+import {
+  analyticsColumnSx,
+  analyticsHeaderCellSx,
+  analyticsRowMinWidthSx,
+  analyticsTableSortLabelSx,
+  analyticsTableStyles as styles,
+} from './analyticsTable.styles';
 
 const rowKey = (row, index) => row.key ?? index;
 
@@ -24,9 +30,12 @@ const AnalyticsBreakdownTable = memo(props => {
     onSort,
     loading = false,
     footer,
+    fullHeight = false,
+    titleAction,
   } = props;
 
   const tableStyles = analyticsBreakdownTableStyles();
+  const rowMinWidth = useMemo(() => analyticsRowMinWidthSx(columns), [columns]);
 
   return (
     <Box
@@ -48,6 +57,7 @@ const AnalyticsBreakdownTable = memo(props => {
             }}
           />
         )}
+        {titleAction && <Box sx={tableStyles.titleAction}>{titleAction}</Box>}
       </Box>
       {subtitle && (
         <Box sx={styles.subtitleRow}>
@@ -60,12 +70,12 @@ const AnalyticsBreakdownTable = memo(props => {
         </Box>
       )}
       <Box sx={styles.tableWrapper}>
-        <Box sx={styles.tableHeader}>
+        <Box sx={[styles.tableHeader, tableStyles.headerGutter, rowMinWidth]}>
           {columns.map(column =>
-            onSort ? (
+            onSort && column.sortable !== false ? (
               <Box
                 key={column.key}
-                sx={[styles.tableCell, { flex: column.flex ?? 1 }]}
+                sx={[styles.tableCell, analyticsHeaderCellSx, analyticsColumnSx(column)]}
               >
                 <TableSortLabel
                   active={sortBy === columnSortKey(column)}
@@ -80,14 +90,14 @@ const AnalyticsBreakdownTable = memo(props => {
             ) : (
               <Typography
                 key={column.key}
-                sx={[styles.tableCell, { flex: column.flex ?? 1 }]}
+                sx={[styles.tableCell, analyticsHeaderCellSx, analyticsColumnSx(column)]}
               >
                 {column.label}
               </Typography>
             ),
           )}
         </Box>
-        <Box sx={tableStyles.scrollList}>
+        <Box sx={[tableStyles.scrollList, fullHeight && tableStyles.fullHeightList, rowMinWidth]}>
           {loading && (
             <Box
               sx={tableStyles.loadingState}
@@ -106,7 +116,7 @@ const AnalyticsBreakdownTable = memo(props => {
                 {columns.map(column => (
                   <Box
                     key={column.key}
-                    sx={[styles.tableCellValue, { flex: column.flex ?? 1 }]}
+                    sx={[styles.tableCellValue, analyticsColumnSx(column)]}
                   >
                     {column.render ? column.render(row) : row[column.key]}
                   </Box>
@@ -134,7 +144,13 @@ AnalyticsBreakdownTable.displayName = 'AnalyticsBreakdownTable';
 /** @type {MuiSx} */
 const analyticsBreakdownTableStyles = () => ({
   titleRow: { display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.25rem' },
-  scrollList: { maxHeight: '18.75rem', overflowY: 'auto', overflowX: 'hidden' },
+  titleAction: { marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' },
+  // Both header and list reserve the same scrollbar gutter, so a vertical scrollbar in the list
+  // does not narrow the body columns relative to the header (non-overlay scrollbars)
+  headerGutter: { overflowY: 'hidden', scrollbarGutter: 'stable' },
+  scrollList: { maxHeight: '18.75rem', overflowY: 'auto', overflowX: 'hidden', scrollbarGutter: 'stable' },
+  // A paginated table shows its whole page and lets the page itself scroll
+  fullHeightList: { maxHeight: 'none' },
   emptyText: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,
     padding: '0.5rem 0.75rem',

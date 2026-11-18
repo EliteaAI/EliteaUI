@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 
 import { useManualSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { ChatHelpers } from '@/[fsd]/features/chat';
+import { useChatSocketReconnect } from '@/[fsd]/features/chat/lib/hooks';
 import { useIsFrom, useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   useConversationCreateMutation,
@@ -117,6 +118,8 @@ export const useApplicationChat = ({
   const [createConversation, { isLoading: isLoadingConversation }] = useConversationCreateMutation();
   const { emit: emitEnterRoom } = useManualSocket(sioEvents.chat_enter_room);
   const { emit: emitLeaveRoom } = useManualSocket(sioEvents.chat_leave_rooms);
+
+  useChatSocketReconnect({ activeConversation, projectId, setActiveConversation });
 
   // Create application participant from current application data
   const applicationParticipant = useMemo(() => {

@@ -863,3 +863,27 @@ describe('decideRunWithoutChat', () => {
     expect(fetchSpy.mock.calls).toHaveLength(callsBefore + 1);
   });
 });
+
+describe('toolkit index options cache', () => {
+  let fetchSpy;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => jsonResponse([]));
+  });
+
+  const optionRequests = () =>
+    requestedUrls(fetchSpy).filter(url => url.pathname === '/elitea_core/index_meta/prompt_lib/5/9');
+
+  it('requests the options again after a schedule is created', async () => {
+    const store = makeStore();
+    await store.dispatch(
+      scheduleApi.endpoints.getToolkitIndexOptions.initiate({ projectId: 5, toolkitId: 9 }),
+    );
+    expect(optionRequests()).toHaveLength(1);
+
+    await store.dispatch(scheduleApi.endpoints.createSchedule.initiate({ projectId: 5, name: 'daily' }));
+
+    await vi.waitFor(() => expect(optionRequests()).toHaveLength(2));
+  });
+});

@@ -15,6 +15,7 @@ import ConfigurationIcon from '@/assets/configuration-icon.svg?react';
 import EnvironmentIcon from '@/assets/environment-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
 import PersonalizationIcon from '@/assets/personalization-icon.svg?react';
+import PieChartIcon from '@/assets/pie-chart-icon.svg?react';
 import ReasonIcon from '@/assets/reason-icon.svg?react';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import BellIcon from '@/components/Icons/BellIcon';
@@ -41,6 +42,7 @@ const VALID_TAB_IDS = [
   'users',
   'analytics',
   'usage',
+  'complexity',
   'profile',
   'preferences',
   'ai-personality',
@@ -123,6 +125,11 @@ const SETTINGS_TABS_CONFIG = [
         label: 'Usage',
         icon: <CoinIcon />,
       },
+      {
+        id: 'complexity',
+        label: 'Complexity',
+        icon: <PieChartIcon />,
+      },
     ],
   },
   {
@@ -198,6 +205,7 @@ const Settings = memo(() => {
             if (item.id === 'project-context') return projectId !== PUBLIC_PROJECT_ID;
             if (item.id === 'analytics' && platformSettings?.analytics_enabled === false) return false;
             if (item.id === 'usage' && !platformSettings?.cost_budgets_enabled) return false;
+            if (item.id === 'complexity' && !platformSettings?.complexity_enabled) return false;
             // (#7269) only while credential governance is enforced: under off the settings are as before
             if (item.id === 'governance' && !platformSettings?.governance_enforced) return false;
             if (item.id === 'users' && !showUsersSection) return false;
@@ -210,6 +218,7 @@ const Settings = memo(() => {
       projectId,
       platformSettings?.analytics_enabled,
       platformSettings?.cost_budgets_enabled,
+      platformSettings?.complexity_enabled,
       platformSettings?.governance_enforced,
       showUsersSection,
     ],
@@ -270,6 +279,13 @@ const Settings = memo(() => {
   // Guard: redirect away from usage when cost tracking is off (wait for settings to load)
   useEffect(() => {
     if (tab === 'usage' && platformSettings && !platformSettings.cost_budgets_enabled) {
+      handleSettingsItemClick(DEFAULT_TAB);
+    }
+  }, [handleSettingsItemClick, platformSettings, tab]);
+
+  // Guard: redirect away from complexity when it is off (wait for settings to load)
+  useEffect(() => {
+    if (tab === 'complexity' && platformSettings && !platformSettings.complexity_enabled) {
       handleSettingsItemClick(DEFAULT_TAB);
     }
   }, [handleSettingsItemClick, platformSettings, tab]);

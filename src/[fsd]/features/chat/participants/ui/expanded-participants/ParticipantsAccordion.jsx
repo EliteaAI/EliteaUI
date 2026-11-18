@@ -99,8 +99,6 @@ const participantsAccordionStyles = () => ({
   headerWrapper: { display: 'flex', alignItems: 'center', flexGrow: 1, gap: '.375rem' },
   title: { textTransform: 'uppercase', fontSize: '.75rem' },
   content: {
-    paddingLeft: '.5rem',
-    paddingRight: '.5rem',
     paddingTop: '.25rem',
   },
 });

@@ -3,12 +3,12 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import Users from '../Users';
 
-// EL-5202: members of SCIM-managed projects follow the IdP group, so the page offers no invite or removal;
-// roles can still be edited.
+// EL-5202: projects linked to an Entra ID group keep every member action; only members synced from the group
+// can't be removed here (they are removed in the IdP), so bulk delete leaves them out.
 const server = vi.hoisted(() => ({ list: null }));
 
 vi.mock('@/api/admin', () => ({
@@ -35,20 +35,29 @@ vi.mock('@/[fsd]/features/settings', () => ({
     </div>
   ),
   EditUsersButton: () => <span data-testid="edit-button" />,
-  DeleteUserButton: () => <span data-testid="delete-button" />,
-  UsersTable: ({ canDeleteUsers }) => <span data-testid="table-can-delete">{String(canDeleteUsers)}</span>,
+  DeleteUserButton: ({ users }) => <span data-testid="delete-button">{users.map(u => u.id).join(',')}</span>,
+  UsersTable: ({ users, onSelectPage }) => (
+    <button
+      data-testid="select-all"
+      onClick={() => onSelectPage(true)}
+    >
+      {users.length}
+    </button>
+  ),
 }));
 
-const loaded = scimManaged => ({
+const loaded = {
   data: {
-    rows: [{ id: 1, name: 'Jane', email: 'jane@corp.test', roles: ['viewer'] }],
-    total: 1,
-    scim_managed: scimManaged,
+    rows: [
+      { id: 1, name: 'Jane', email: 'jane@corp.test', roles: ['viewer'], scim_synced: true },
+      { id: 2, name: 'Bob', email: 'bob@corp.test', roles: ['editor'], scim_synced: false },
+    ],
+    total: 2,
+    scim_managed: true,
   },
   isFetching: false,
   isError: false,
-});
-const loading = { data: undefined, isFetching: true, isError: false };
+};
 
 const renderPage = (path = '/settings/users') =>
   render(
@@ -57,45 +66,28 @@ const renderPage = (path = '/settings/users') =>
     </MemoryRouter>,
   );
 
-describe('Settings → Users of a SCIM-managed project', () => {
+describe('Settings → Users of a project linked to an Entra ID group', () => {
   afterEach(cleanup);
 
-  it('hides invite and delete but keeps role editing', () => {
-    server.list = loaded(true);
-    renderPage();
-
-    expect(screen.queryByTestId('invite-button')).toBeNull();
-    expect(screen.queryByTestId('delete-button')).toBeNull();
-    expect(screen.getByTestId('edit-button')).toBeInTheDocument();
-    expect(screen.getByTestId('table-can-delete')).toHaveTextContent('false');
-  });
-
-  it('keeps every action for a normal project', () => {
-    server.list = loaded(false);
+  it('keeps invite, edit and delete', () => {
+    server.list = loaded;
     renderPage();
 
     expect(screen.getByTestId('invite-button')).toBeInTheDocument();
-    expect(screen.getByTestId('delete-button')).toBeInTheDocument();
     expect(screen.getByTestId('edit-button')).toBeInTheDocument();
-    expect(screen.getByTestId('table-can-delete')).toHaveTextContent('true');
+    expect(screen.getByTestId('delete-button')).toBeInTheDocument();
   });
 
-  it('does not open the invite dialog from ?inviteUsers=1 before the list loads, nor for a SCIM project', () => {
-    server.list = loading;
-    const { rerender } = renderPage('/settings/users?inviteUsers=1');
-    expect(screen.queryByTestId('invite-dialog')).toBeNull();
+  it('leaves synced members out of bulk delete', () => {
+    server.list = loaded;
+    renderPage();
 
-    server.list = loaded(true);
-    rerender(
-      <MemoryRouter initialEntries={['/settings/users?inviteUsers=1']}>
-        <Users />
-      </MemoryRouter>,
-    );
-    expect(screen.queryByTestId('invite-dialog')).toBeNull();
+    fireEvent.click(screen.getByTestId('select-all'));
+    expect(screen.getByTestId('delete-button')).toHaveTextContent(/^2$/);
   });
 
-  it('opens the invite dialog from ?inviteUsers=1 for a normal project once loaded', () => {
-    server.list = loaded(false);
+  it('opens the invite dialog from ?inviteUsers=1', () => {
+    server.list = loaded;
     renderPage('/settings/users?inviteUsers=1');
 
     expect(screen.getByTestId('invite-dialog')).toBeInTheDocument();

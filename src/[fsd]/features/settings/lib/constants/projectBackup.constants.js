@@ -16,6 +16,16 @@ export const CHAT_BACKUP_OPTION_LABELS = {
   [CHATS_OPTION.withAttachments]: 'All chats with attachments',
 };
 
+export const SKILL_FILES_OPTION = {
+  none: 'none',
+  all: 'all',
+};
+
+export const SKILL_FILES_BACKUP_OPTION_LABELS = {
+  [SKILL_FILES_OPTION.none]: 'Do not include attachments',
+  [SKILL_FILES_OPTION.all]: 'Include attachments',
+};
+
 export const CHAT_RESTORE_OPTION_LABELS = {
   [CHATS_OPTION.none]: 'Do not restore chats',
   [CHATS_OPTION.withoutAttachments]: 'Restore all chats without attachments',
@@ -23,6 +33,23 @@ export const CHAT_RESTORE_OPTION_LABELS = {
 };
 
 export const LARGE_BACKUP_BYTES = 500 * 1024 * 1024;
+
+// Only the start of a picked file is sent to read what it carries: the
+// envelope header, its first frame and the backup header fit in it. A ZIP
+// carries info.json as its first entry, a plain SQL dump its header on top.
+// Keep in sync with INSPECT_BYTES in admin/utils/project_restore.py
+export const INSPECT_BYTES = 1024 * 1024 + 16 * 1024;
+
+export const RESTORE_JOB_POLL_MS = 2000;
+
+export const RESTORE_JOB_STATUS = {
+  queued: 'queued',
+  running: 'running',
+  done: 'done',
+  failed: 'failed',
+};
+
+export const RESTORE_JOB_STORAGE_KEY = 'elitea.projectRestoreJob';
 
 // Tags of the chat list and chat views (chat/api, chat/conversation-list/api): a restore with chats
 // changes everything they show, so all of them are refetched

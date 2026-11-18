@@ -118,6 +118,14 @@ const schedule = {
   expires_at: null,
 };
 
+const indexSchedule = {
+  ...schedule,
+  entity_type: 'toolkit_index',
+  application_id: null,
+  toolkit_id: 3,
+  index_name: 'docs',
+};
+
 const listLink = () => screen.getByRole('link', { name: 'Schedules' });
 const makeRunsView = () => ({
   runs: [{ id: 1 }],
@@ -161,7 +169,7 @@ describe('ScheduleDetailPage', () => {
     mocks.query = { currentData: schedule };
     render(<ScheduleDetailPage />);
 
-    expect(mocks.runsViewArgs).toEqual([9, 3]);
+    expect(mocks.runsViewArgs).toEqual([9, 3, undefined]);
     expect(mocks.cardProps).toMatchObject({
       schedule,
       entityType: 'agent',
@@ -322,6 +330,47 @@ describe('ScheduleDetailPage', () => {
     mocks.params = { tab: 'all', agentId: '3', scheduleId: '9' };
     mocks.query = { currentData: schedule };
     render(<ScheduleDetailPage entityType="pipeline" />);
+
+    expect(screen.getByText(/Schedule not found/)).toBeInTheDocument();
+    expect(mocks.formProps).toBeNull();
+  });
+
+  it('passes the toolkit id and the index name to the runs view of an index schedule', () => {
+    mocks.params = { toolkitId: '3', indexName: 'docs', scheduleId: '9' };
+    mocks.query = { currentData: indexSchedule };
+    render(<ScheduleDetailPage entityType="toolkit_index" />);
+
+    expect(mocks.runsViewArgs).toEqual([9, 3, 'docs']);
+    expect(mocks.cardProps).toMatchObject({
+      applicationId: 3,
+      indexName: 'docs',
+      entityType: 'toolkit_index',
+    });
+    expect(mocks.formProps.lockedEntity).toEqual({ type: 'toolkit_index', id: 3, indexName: 'docs' });
+  });
+
+  it('shows not found when the route index differs from the index of the schedule', () => {
+    mocks.params = { toolkitId: '3', indexName: 'other', scheduleId: '9' };
+    mocks.query = { currentData: indexSchedule };
+    render(<ScheduleDetailPage entityType="toolkit_index" />);
+
+    expect(screen.getByText(/Schedule not found/)).toBeInTheDocument();
+    expect(mocks.formProps).toBeNull();
+  });
+
+  it('shows not found when the route toolkit differs from the toolkit of the schedule', () => {
+    mocks.params = { toolkitId: '4', indexName: 'docs', scheduleId: '9' };
+    mocks.query = { currentData: indexSchedule };
+    render(<ScheduleDetailPage entityType="toolkit_index" />);
+
+    expect(screen.getByText(/Schedule not found/)).toBeInTheDocument();
+    expect(mocks.formProps).toBeNull();
+  });
+
+  it('shows not found for an agent schedule on a toolkit index route', () => {
+    mocks.params = { toolkitId: '3', indexName: 'docs', scheduleId: '9' };
+    mocks.query = { currentData: schedule };
+    render(<ScheduleDetailPage entityType="toolkit_index" />);
 
     expect(screen.getByText(/Schedule not found/)).toBeInTheDocument();
     expect(mocks.formProps).toBeNull();

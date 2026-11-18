@@ -687,7 +687,7 @@ export const PERMISSIONS = {
     edit: 'configuration.litellm.edit',
   },
   index: {
-    schedule: 'models.applications.index_meta.edit',
+    edit: 'models.applications.index_meta.edit',
     delete: 'models.applications.index_meta.delete',
     taskDelete: 'models.applications.task.delete',
   },
@@ -980,6 +980,8 @@ export const sioEvents = {
   chat_message_sync: 'chat_message_sync',
   chat_participant_update: 'chat_participant_update',
   chat_conversation_name_updated: 'chat_conversation_name_updated',
+  // Run state of a chat for the chat list, on the user's own room (EL-7385)
+  chat_run_status: 'chat_run_status',
   application_predict: 'application_predict',
   application_leave_rooms: 'application_leave_rooms',
   promptlib_predict: 'promptlib_predict',
@@ -1101,6 +1103,7 @@ export const NotificationType = {
   RewardNewLevel: 'reward_new_level',
   ContributorRequestForPublishApprove: 'contributor_request_for_publish_approve',
   UserWasAddedToSomeProjectAsTeammate: 'user_was_added_to_some_project_as_teammate',
+  UserWasRemovedFromProject: 'user_was_removed_from_project',
   ChatUserAdded: 'chat_user_added',
   ChatUserMentioned: 'chat_user_mentioned',
   PrivateProjectCreated: 'private_project_created',

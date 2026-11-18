@@ -2,6 +2,7 @@ import { memo, useCallback } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { RUN_MODE } from '@/[fsd]/entities/schedule/lib/constants';
 import { INPUT_VARIANTS } from '@/[fsd]/shared/ui/input';
 import StyledInputEnhancer from '@/[fsd]/shared/ui/input/StyledInputEnhancer';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
@@ -12,8 +13,8 @@ import FieldError from './FieldError';
 import ScheduleSegmentedToggle from './ScheduleSegmentedToggle';
 
 const RUN_MODE_ITEMS = [
-  { value: 'entry_point', label: 'Entrypoint' },
-  { value: 'prompt', label: 'Prompt' },
+  { value: RUN_MODE.ENTRY_POINT, label: 'Entrypoint' },
+  { value: RUN_MODE.PROMPT, label: 'Prompt' },
 ];
 
 const RUN_MODE_INFO =

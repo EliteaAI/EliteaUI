@@ -14,5 +14,6 @@ export const STATUS_VALUES = ['running', 'waiting_for_approval', 'success', 'fai
 export const TRIGGER_OPTIONS = [
   { label: 'Scheduled', value: 'cron' },
   { label: 'Manual', value: 'manual' },
+  { label: 'Webhook', value: 'webhook' },
   { label: 'Test', value: 'test' },
 ];

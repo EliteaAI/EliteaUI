@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildTraceListParams,
+  convertMessagesToChatHistory,
   convertToAIAnswer,
   convertToUserQuestion,
   traceRowToStep,
@@ -334,5 +335,42 @@ describe('history action duration stamps', () => {
     expect(deferred.approvalWaited).toBe(true);
     expect(deferred.hitlDeferred).toBeUndefined();
     expect(plain.approvalWaited).toBe(false);
+  });
+});
+
+// #7400: a schedule or webhook run writes its question and answer in one transaction, so both share one
+// created_at. The answer must stay last, or the history has no pending approval card for a paused run.
+describe('history order of messages with the same created_at', () => {
+  const at = '2026-11-10T10:15:24.615690';
+  const participants = [
+    { id: 1, entity_name: 'user', entity_meta: { id: 3 }, meta: {} },
+    { id: 1453, entity_name: 'application', entity_meta: { id: 15690 }, meta: {} },
+  ];
+  const question = {
+    id: 15258,
+    uuid: 'q',
+    author_participant_id: 1,
+    created_at: at,
+    meta: {},
+    message_items: [],
+  };
+  const answer = {
+    id: 15259,
+    uuid: 'a',
+    author_participant_id: 1453,
+    reply_to_id: 15258,
+    created_at: at,
+    is_streaming: false,
+    message_items: [],
+    meta: { hitl_interrupt: { type: 'hitl', guardrail_type: 'sensitive_tool', tool_name: 'create_file' } },
+  };
+
+  it.each([
+    ['question first', [question, answer]],
+    ['answer first', [answer, question]],
+  ])('keeps the insert order whatever the API order (%s)', (_label, groups) => {
+    const history = convertMessagesToChatHistory(groups, participants);
+    expect(history.map(message => message.role)).toEqual(['user', 'assistant']);
+    expect(history[1].hitlInterrupt?.guardrail_type).toBe('sensitive_tool');
   });
 });

@@ -109,6 +109,7 @@ export const useStoredOAuthLogin = ({
       client_id: credential?.data?.client_id,
       client_secret: credential?.data?.client_secret,
       scopes: credential?.data?.scopes,
+      credential_type: configurationType,
     },
   });
 

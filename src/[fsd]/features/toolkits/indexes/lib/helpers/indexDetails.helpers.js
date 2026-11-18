@@ -20,7 +20,6 @@ import {
   INDEX_SEARCH_TOOL_OPTIONS,
   INDEX_UNRESPONSIVE_BANNER_MESSAGE,
   INDEX_UNRESPONSIVE_TOOLTIP,
-  IndexScheduleIndicatorLabel,
   IndexStatuses,
   IndexesToolsEnum,
   REINDEX_FAILED_BANNER_MESSAGE,
@@ -29,11 +28,9 @@ import {
   REINDEX_IN_PROGRESS_BANNER_MESSAGE,
   REINDEX_IN_PROGRESS_BANNER_TITLE,
   RUNNABLE_INDEX_STATUSES,
-  TEAM_SCHEDULE_OWNER_ID,
   TERMINAL_INDEX_STATUSES,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { BudgetErrorConstants } from '@/[fsd]/shared/lib/constants';
-import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 
 const { BUDGET_ERROR_VARIANTS } = BudgetErrorConstants;
 
@@ -262,37 +259,6 @@ export const indexBuildBlockedReason = selectedTools => {
 };
 
 /**
- * An armed schedule must always stay switchable-off: the scheduler fires `index_data` every tick with no
- * toolset check of its own, so greying out the control while a cron is live would trap the user with a job
- * that keeps resetting the index. Every reason therefore has to sit behind the `scheduleEnabled` escape
- * hatch, which gates arming only.
- * @param {{state: string, hasSchedulePermission: boolean, projectName: string, scheduleEnabled: boolean,
- *   buildBlockedReason: string | null, hasRetainedData?: boolean}} scheduleState
- * @returns {string | null} the reason, or null when scheduling can be changed
- */
-export const indexScheduleBlockedReason = ({
-  state,
-  hasSchedulePermission,
-  projectName,
-  scheduleEnabled,
-  buildBlockedReason,
-  hasRetainedData = false,
-}) => {
-  // A failed reindex over retained data leaves a healthy searchable index behind it,
-  // so a scheduled retry has something valid to rebuild from.
-  const failedOverRetainedData = state === IndexStatuses.fail && hasRetainedData;
-  if (state === IndexStatuses.cancelled || (state === IndexStatuses.fail && !failedOverRetainedData))
-    return 'Scheduling is unavailable while the index is in a stopped/error state';
-  if (!hasSchedulePermission)
-    return `Insufficient permissions to perform this action on ${projectName} project`;
-  if (scheduleEnabled) return null;
-  if (buildBlockedReason) return buildBlockedReason;
-  if (!RUNNABLE_INDEX_STATUSES.includes(state) && state !== IndexStatuses.progress && !failedOverRetainedData)
-    return 'Index state is not valid';
-  return null;
-};
-
-/**
  * A run the backend has marked stale while it still claims to be in progress: the process died
  * without ever reporting a terminal state, so nothing else will ever update it.
  * @param {object} index - Index row as returned by the indexes list
@@ -517,27 +483,4 @@ export const applyReindexStub = (indexesList, reindexRunning) => {
       },
     };
   });
-};
-
-export const findVisibleIndexSchedule = (toolkitScheduler, indexName, userId) => {
-  const schedules = toolkitScheduler?.[indexName]?.schedules ?? {};
-  const ownerId = [userId, TEAM_SCHEDULE_OWNER_ID].find(candidateId => Boolean(schedules[candidateId]));
-
-  return ownerId === undefined ? null : { ownerId, schedule: schedules[ownerId] };
-};
-
-export const indexScheduleIndicator = schedule => {
-  if (!schedule?.cron) return null;
-
-  const enabled = Boolean(schedule.enabled);
-  const label = enabled
-    ? IndexScheduleIndicatorLabel.enabled
-    : schedule.expired
-      ? IndexScheduleIndicatorLabel.expired
-      : IndexScheduleIndicatorLabel.off;
-
-  return {
-    enabled,
-    tooltip: `${label}: ${ScheduleHelpers.getCronSummaryInBrowserTimezone(schedule.cron, schedule.timezone)}`,
-  };
 };

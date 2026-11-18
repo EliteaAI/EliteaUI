@@ -44,7 +44,7 @@ const openSkillsSubmenu = onCreateSkill => {
     </ThemeProvider>,
   );
   fireEvent.click(screen.getByTestId('plus-menu-button'));
-  fireEvent.mouseEnter(screen.getByTestId('skills-menuitem'));
+  fireEvent.click(screen.getByTestId('skills-menuitem'));
 };
 
 describe('PlusChatButton skills submenu', () => {
@@ -67,5 +67,14 @@ describe('PlusChatButton skills submenu', () => {
     openSkillsSubmenu(undefined);
 
     expect(screen.queryByTestId('skills-create-new-button')).toBeNull();
+  });
+
+  it('closes the menu on Escape while focus is outside it', () => {
+    openSkillsSubmenu(vi.fn());
+
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+
+    expect(screen.queryByTestId('skills-menuitem')).toBeNull();
+    expect(screen.queryByTestId('skills-submenu')).toBeNull();
   });
 });

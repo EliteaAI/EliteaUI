@@ -452,7 +452,13 @@ const darkPalette = {
       icon: { default: gray10, hover: white, active: white, disabled: gray20 },
     },
     participant: {
-      background: { default: white5, hover: white10, active: blue10, cover: semiTransparentBlack },
+      background: {
+        default: white5,
+        hover: white10,
+        active: blue10,
+        cover: semiTransparentBlack,
+        countBadge: gray30,
+      },
       text: { default: gray20 },
     },
     conversation: {

@@ -18,7 +18,7 @@ const startsGroup = (items, index) => index === 0 || items[index - 1].group !== 
  *
  * @param {Object} props
  * @param {string} props.phase - Mention phase ('idle' | 'items'); renders nothing when idle.
- * @param {Array<{name: string, description?: string}>} props.filteredItems - Pre-filtered attached-skill list.
+ * @param {Array<{name: string, description?: string, argument_hint?: string}>} props.filteredItems - Pre-filtered attached-skill list.
  * @param {Array<{name: string}>} [props.committedMentions] - Skills already mentioned (rendered as selected).
  * @param {number} props.highlightedIndex - Keyboard-highlighted row index (-1 = none).
  * @param {(item: Object) => void} props.onSelectItem - Called when a skill is chosen.
@@ -103,6 +103,7 @@ const MentionSkillList = memo(props => {
               )}
               <Mention.MentionToolItem
                 label={item.name}
+                hint={item.argument_hint}
                 description={item.description}
                 testId={`skill-mention-item-${item.name}`}
                 icon={

@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   draftLoaded: true,
   draftFailed: false,
   draftSkip: null,
+  draftIndexName: undefined,
   loaded: true,
   applicationDetails: vi.fn(),
 }));
@@ -22,8 +23,9 @@ vi.mock('../useScheduleRuns.hooks', () => ({
   useScheduleRuns: () => mocks.saved,
   useScheduleRunsLoaded: () => mocks.loaded,
   useScheduleRunsTotal: () => mocks.saved.length,
-  useDraftTestRuns: (applicationId, skip) => {
+  useDraftTestRuns: (applicationId, skip, indexName) => {
     mocks.draftSkip = skip;
+    mocks.draftIndexName = indexName;
     return { rows: mocks.draft, loaded: mocks.draftLoaded, failed: mocks.draftFailed, settled: true };
   },
 }));
@@ -64,6 +66,12 @@ const wrapperFor = entry =>
 const setup = (entry = '/', scheduleId = 9, applicationId = 3) =>
   renderHook(() => useScheduleRunsView(scheduleId, applicationId), { wrapper: wrapperFor(entry) });
 
+const setupIndex = (indexName, scheduleId = 9) =>
+  renderHook(({ name }) => useScheduleRunsView(scheduleId, 3, name), {
+    wrapper: wrapperFor('/'),
+    initialProps: { name: indexName },
+  });
+
 describe('useScheduleRunsView', () => {
   beforeEach(() => {
     mocks.applicationDetails.mockReturnValue({
@@ -83,6 +91,36 @@ describe('useScheduleRunsView', () => {
     const { result } = setup();
 
     expect(result.current.versionNames).toEqual({ 4: 'base' });
+  });
+
+  it('does not ask for the application of a toolkit index and passes the index name to the runs', () => {
+    setupIndex('docs');
+
+    expect(mocks.draftIndexName).toBe('docs');
+    expect(mocks.applicationDetails).toHaveBeenCalledWith(
+      { projectId: 5, applicationId: 3 },
+      expect.objectContaining({ skip: true }),
+    );
+  });
+
+  it('asks for the application when no index name is given', () => {
+    setup();
+
+    expect(mocks.applicationDetails).toHaveBeenCalledWith(
+      { projectId: 5, applicationId: 3 },
+      expect.objectContaining({ skip: false }),
+    );
+  });
+
+  it('starts a new baseline of Test runs when the index changes under the same toolkit', () => {
+    mocks.draft = [testRun(3, '2026-10-20T09:00:00Z')];
+    const { result, rerender } = setupIndex('docs');
+    expect(result.current.runs).toEqual([]);
+
+    mocks.draft = [testRun(4, '2026-10-22T09:00:00Z')];
+    rerender({ name: 'wiki' });
+
+    expect(result.current.runs).toEqual([]);
   });
 
   it('opens the run that waits for a decision when nothing is chosen', () => {

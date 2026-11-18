@@ -1,11 +1,12 @@
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { CompareVersionsModal } from '@/[fsd]/entities/compare-versions';
+import { COMPARE_ENTITY_TYPES, COMPARE_MODES, CompareVersionsModal } from '@/[fsd]/entities/compare-versions';
+import { buildScheduleFormLink, useOpenScheduleNested } from '@/[fsd]/entities/schedule';
 import {
   LATEST_VERSION_NAME,
   VersionDelete,
@@ -13,12 +14,14 @@ import {
   useSetDefaultVersion,
   useUnpublishVersionMenu,
 } from '@/[fsd]/entities/version';
-import { useCompareAgentVersions } from '@/[fsd]/features/agent/lib/hooks';
+import { useCompareAgentVersions, useComparePublicAgentVersions } from '@/[fsd]/features/agent/lib/hooks';
 import { PinEntityConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import { useInstructionsInputRefContext } from '@/[fsd]/shared/lib/context';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import {
+  useFormDirtyExcluding,
   useIsFromPipelineDetail,
+  useIsPipelineLayoutDirty,
   useProjectEntityLink,
   useProjectType,
   useRunHistoryNavigation,
@@ -38,6 +41,7 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 import { useDeleteApplicationMenu } from '@/pages/Applications/Components/Applications/DeleteApplicationButton';
 import { useExportApplicationMenu } from '@/pages/Applications/Components/Applications/ExportApplicationButton';
 import { AuthorsButton } from '@/pages/Common';
+import useIsPipelineYamlCodeDirty from '@/pages/Pipelines/useIsPipelineYamlCodeDirty';
 import RouteDefinitions from '@/routes';
 
 const { AGENT_TOUR_TARGET_IDS } = TourTargetConstants;
@@ -52,16 +56,24 @@ const ApplicationControls = memo(props => {
   const isFromPipeline = useIsFromPipelineDetail();
   const formik = useFormikContext();
   const viewMode = useViewMode();
-  const navigate = useNavigate();
   const location = useLocation();
   const { tab, agentId } = useParams();
   const versionDeleteRef = useRef(null);
   const projectId = useSelectedProjectId();
   const [compareVersionsOpen, setCompareVersionsOpen] = useState(false);
+  const [comparePublicOpen, setComparePublicOpen] = useState(false);
 
   const { values: { id } = {} } = formik;
+  const compareEntityType = isFromPipeline ? COMPARE_ENTITY_TYPES.pipeline : COMPARE_ENTITY_TYPES.agent;
 
-  const { goToRunHistory } = useRunHistoryNavigation({
+  // The same rule as the editor header Save button: Compare uses the saved versions
+  const isFormDirty = useFormDirtyExcluding();
+  const isYamlCodeDirty = useIsPipelineYamlCodeDirty();
+  const isLayoutDirty = useIsPipelineLayoutDirty();
+  // Pipelines only (#7324); the agent compare keeps its behavior
+  const isEditorDirty = isFromPipeline && (isFormDirty || isYamlCodeDirty || isLayoutDirty);
+
+  const { runHistoryPath } = useRunHistoryNavigation({
     entityId: id,
     historyRoute: isFromPipeline
       ? RouteDefinitions.PipelineRunHistory
@@ -76,15 +88,44 @@ const ApplicationControls = memo(props => {
     onSaveRight,
     resetSavingState,
     flushLeftSaves,
-  } = useCompareAgentVersions({ projectId, applicationId: id });
+  } = useCompareAgentVersions({ projectId, applicationId: id, entityType: compareEntityType });
+
+  // "Compare to public version": only for an agent forked from a public agent. Read only: nothing is saved.
+  const {
+    publicApplicationId,
+    publicVersions,
+    isLoadingPublicVersions,
+    publicLoadError,
+    loadVersions: loadPublicComparison,
+  } = useComparePublicAgentVersions({
+    projectId,
+    applicationId: id,
+    versionMeta: formik?.values?.version_details?.meta,
+    versions: formik?.values?.versions ?? [],
+    open: comparePublicOpen,
+  });
+  const canComparePublic =
+    !isFromPipeline && viewMode !== ViewMode.Public && Boolean(id) && Boolean(publicApplicationId);
 
   const handleCompareVersionsClose = useCallback(() => {
+    // A pipeline rebuilds its YAML and flow from the patched cache; the agent instructions field keeps its own value
     const savedFields = flushLeftSaves();
-    if (savedFields?.instructions !== undefined) {
+    if (!isFromPipeline && savedFields?.instructions !== undefined) {
       instructionsInputRef.current?.restoreValue(savedFields.instructions);
     }
     setCompareVersionsOpen(false);
-  }, [flushLeftSaves, instructionsInputRef]);
+  }, [flushLeftSaves, instructionsInputRef, isFromPipeline]);
+
+  // Opens the schedule as the editor's Schedules section does: owner view mode kept, back to this editor
+  const openScheduleNested = useOpenScheduleNested();
+  const handleOpenSchedule = useCallback(
+    (scheduleId, versionId) =>
+      openScheduleNested(
+        { pathname: buildScheduleFormLink({ entityType: compareEntityType, entityId: id, tab, scheduleId }) },
+        versionId,
+      ),
+    [compareEntityType, id, openScheduleNested, tab],
+  );
 
   const versionDetails = formik?.values?.version_details;
   const { projectEntityLink } = useProjectEntityLink({
@@ -196,8 +237,7 @@ const ApplicationControls = memo(props => {
           ]),
       { ...exportApplicationMenuItem, disabled: !checkPermission(PERMISSIONS.applications.export) },
       shareVersionMenuItem,
-      ...(!isFromPipeline &&
-      (formik?.values?.versions?.length ?? 0) >= 2 &&
+      ...((formik?.values?.versions?.length ?? 0) >= 2 &&
       (isPrivate || checkPermission(PERMISSIONS.applications.update))
         ? [
             {
@@ -205,6 +245,16 @@ const ApplicationControls = memo(props => {
               label: 'Compare versions',
               icon: <DifferenceIcon sx={{ fontSize: '1rem' }} />,
               onClick: () => setCompareVersionsOpen(true),
+            },
+          ]
+        : []),
+      ...(canComparePublic
+        ? [
+            {
+              key: 'compare-to-public-version',
+              label: 'Compare to public version',
+              icon: <DifferenceIcon sx={{ fontSize: '1rem' }} />,
+              onClick: () => setComparePublicOpen(true),
             },
           ]
         : []),
@@ -246,12 +296,12 @@ const ApplicationControls = memo(props => {
         label: 'Evaluate (Beta)',
         icon: <EvaluateIcon sx={{ fontSize: '1rem' }} />,
         addSeparator: false,
-        onClick: () => {
-          const route = isFromPipeline
-            ? RouteDefinitions.PipelineEvaluate
-            : RouteDefinitions.ApplicationsEvaluate;
-          const path = NavigationHelpers.buildRoute(route, { tab: tab ?? 'all', agentId });
-          navigate({ pathname: path, search: location.search });
+        to: {
+          pathname: NavigationHelpers.buildRoute(
+            isFromPipeline ? RouteDefinitions.PipelineEvaluate : RouteDefinitions.ApplicationsEvaluate,
+            { tab: tab ?? 'all', agentId },
+          ),
+          search: location.search,
         },
       },
       shareAgentMenuItem,
@@ -262,7 +312,7 @@ const ApplicationControls = memo(props => {
               key: 'run-history',
               label: 'Run History',
               icon: <RunHistoryIcon sx={{ fontSize: '1rem' }} />,
-              onClick: goToRunHistory,
+              to: runHistoryPath,
               slotProps: {
                 MenuItem: { 'data-testid': `${isFromPipeline ? 'pipeline' : 'agent'}-run-history-menu-item` },
               },
@@ -279,6 +329,7 @@ const ApplicationControls = memo(props => {
     formik?.values?.version_details,
     exportApplicationMenuItem,
     checkPermission,
+    canComparePublic,
     forkEntityMenuItem,
     publishApplicationMenuItem,
     unpublishVersionMenuItem,
@@ -295,12 +346,11 @@ const ApplicationControls = memo(props => {
     canDeleteApplication,
     formik?.values?.versions,
     isPrivate,
-    navigate,
     location.search,
     tab,
     agentId,
     id,
-    goToRunHistory,
+    runHistoryPath,
   ]);
 
   return (
@@ -326,11 +376,31 @@ const ApplicationControls = memo(props => {
       {publishDialog}
       {unpublishDialog}
       {setDefaultVersionDialog}
+      {comparePublicOpen && (
+        <CompareVersionsModal
+          open={comparePublicOpen}
+          onClose={() => setComparePublicOpen(false)}
+          entityType={COMPARE_ENTITY_TYPES.agent}
+          mode={COMPARE_MODES.public}
+          entityId={id}
+          leftVersionId={formik?.values?.version_details?.id}
+          versions={formik?.values?.versions ?? []}
+          publicVersions={publicVersions}
+          isLoadingPublicVersions={isLoadingPublicVersions}
+          publicLoadError={publicLoadError}
+          onLoadVersions={loadPublicComparison}
+        />
+      )}
       {compareVersionsOpen && (
         <CompareVersionsModal
           open={compareVersionsOpen}
           onClose={handleCompareVersionsClose}
-          entityType={isFromPipeline ? 'pipeline' : 'agent'}
+          entityType={compareEntityType}
+          entityId={id}
+          isEditorDirty={isEditorDirty}
+          canListSchedules={checkPermission(PERMISSIONS.schedules.list)}
+          isScheduleAdmin={checkPermission(PERMISSIONS.schedules.admin)}
+          onOpenSchedule={handleOpenSchedule}
           leftVersionId={formik?.values?.version_details?.id}
           versions={formik?.values?.versions ?? []}
           onLoadVersions={loadAgentVersions}

@@ -1,11 +1,12 @@
 import { memo, useCallback } from 'react';
 
 import { formatDistanceToNow } from 'date-fns';
+import { useSelector } from 'react-redux';
 
 import { Box, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useNotificationBulkMarkSeenMutation } from '@/api/notifications';
 import MarkReadIcon from '@/assets/icons/mark-read-icon.svg?react';
@@ -13,7 +14,7 @@ import MarkUnreadIcon from '@/assets/icons/mark-unread-icon.svg?react';
 import { convertTime } from '@/common/convertChatConversationMessages';
 import { buildErrorMessage } from '@/common/utils';
 
-import { getIcon } from '../lib/helpers';
+import { getIcon, isProjectMembershipNotification } from '../lib/helpers';
 import NotificationListItemMessage from './NotificationListItemMessage';
 
 const NOTIFICATION_CONTEXT_STYLES = {
@@ -40,9 +41,12 @@ const NotificationListItem = memo(props => {
   const theme = useTheme();
   const { event_type } = notification;
   const { textVariant } = NOTIFICATION_CONTEXT_STYLES[context] ?? NOTIFICATION_CONTEXT_STYLES.list;
-  const styles = notificationListItemStyles(clampLines, context === 'list');
+  const styles = notificationListItemStyles(
+    isProjectMembershipNotification(event_type) ? 0 : clampLines,
+    context === 'list',
+  );
 
-  const projectId = useSelectedProjectId();
+  const { personal_project_id: projectId } = useSelector(state => state.user);
   const [bulkMarkSeenNotifications] = useNotificationBulkMarkSeenMutation();
   const { toastError } = useToast();
 
@@ -159,9 +163,11 @@ const notificationListItemStyles = (clampLines, isContextList) => ({
     flexDirection: 'column',
     gap: '0.25rem',
     overflow: 'hidden',
+    minWidth: 0,
   },
   message: {
     overflow: 'hidden',
+    minWidth: 0,
     ...(clampLines
       ? {
           '& > *': {

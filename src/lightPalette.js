@@ -441,7 +441,13 @@ const lightPalette = {
       icon: { default: light10, hover: gray60, active: white, disabled: light20 },
     },
     participant: {
-      background: { default: dark5, hover: dark10, active: darkMagenta10, cover: semiTransparentBlack },
+      background: {
+        default: dark5,
+        hover: dark10,
+        active: darkMagenta10,
+        cover: semiTransparentBlack,
+        countBadge: light30,
+      },
       text: { default: light20 },
     },
     conversation: {

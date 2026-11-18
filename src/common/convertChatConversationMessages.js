@@ -449,8 +449,9 @@ export const convertMessagesToChatHistory = (
   playerInfo,
   traceStepsByGroupId = {},
 ) => {
+  // A run's question and answer can share one created_at; the id keeps the insert order (#7400)
   const sortedMessages = [...(message_groups || [])].sort((a, b) => {
-    return a.created_at.toLowerCase().localeCompare(b.created_at.toLowerCase());
+    return a.created_at.toLowerCase().localeCompare(b.created_at.toLowerCase()) || (a.id ?? 0) - (b.id ?? 0);
   });
   const users = participants.filter(participant => participant.entity_name === ChatParticipantType.Users);
   const userIds = users.map(user => user.id);

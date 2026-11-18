@@ -2,6 +2,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { useCanManageProjectSettings } from '@/[fsd]/features/settings/lib/hooks';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Select } from '@/[fsd]/shared/ui';
@@ -95,7 +96,8 @@ const WebSearchSettings = memo(() => {
     [current?.id, projectId, update, create, refreshSettings, refreshAvailability, toastError],
   );
 
-  const disabled = !checkPermission(PERMISSIONS.configuration.update) || saving;
+  const { canManageSettings } = useCanManageProjectSettings();
+  const disabled = !checkPermission(PERMISSIONS.configuration.update) || !canManageSettings || saving;
   const platformName = availability?.toolkit?.name;
 
   return (

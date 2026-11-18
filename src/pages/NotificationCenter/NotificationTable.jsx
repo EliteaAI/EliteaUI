@@ -72,7 +72,6 @@ const NotificationTable = memo(props => {
     handleSelectRow,
     selectRows,
   } = useRowSelection({ rows, idField: 'id' });
-
   const removeIdsFromSelection = useCallback(
     ids => {
       const idsSet = new Set(ids);
@@ -219,7 +218,7 @@ const NotificationTable = memo(props => {
       }
       return value;
     },
-    [styles],
+    [styles.dateCell, styles.listItemContent, styles.listItemOverride, styles.notificationCell],
   );
 
   return (

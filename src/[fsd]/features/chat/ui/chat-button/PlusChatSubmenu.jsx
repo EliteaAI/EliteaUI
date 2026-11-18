@@ -71,7 +71,7 @@ const PlusChatSubmenu = memo(props => {
   const styles = submenuStyles(theme);
 
   return (
-    <Box>
+    <Box sx={styles.root}>
       <Box sx={styles.searchContainer}>
         <Box sx={styles.searchInnerContainer}>
           <SearchIcon
@@ -113,7 +113,7 @@ const PlusChatSubmenu = memo(props => {
         </MenuItem>
       )}
 
-      {showCreateNew && items.length > 0 && (
+      {showCreateNew && (
         <Box sx={styles.dividerContainer}>
           <Box sx={styles.dividerLine} />
         </Box>
@@ -214,7 +214,14 @@ PlusChatSubmenu.displayName = 'PlusChatSubmenu';
 
 /** @type {MuiSx} */
 const submenuStyles = theme => ({
+  root: {
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100%',
+    minHeight: 0,
+  },
   searchContainer: {
+    flexShrink: 0,
     padding: `${SPACING.XS} ${SPACING.LG}`,
     borderBottom: `0.0625rem solid ${theme.palette.border.lines}`,
     height: HEIGHTS.buttonLarge,
@@ -235,7 +242,7 @@ const submenuStyles = theme => ({
     width: '100%',
     '& .MuiInputBase-input': {
       padding: 0,
-      color: theme.palette.text.primary,
+      color: theme.palette.text.secondary,
       '&::placeholder': {
         color: theme.palette.text.disabled,
         opacity: 1,
@@ -247,7 +254,8 @@ const submenuStyles = theme => ({
     zIndex: 10000,
   },
   scrollableContent: {
-    maxHeight: '20.3125rem',
+    flex: 1,
+    minHeight: 0,
     overflowY: 'auto',
     display: 'flex',
     flexDirection: 'column',
@@ -257,6 +265,7 @@ const submenuStyles = theme => ({
     height: '1rem',
   },
   createNewItem: {
+    flexShrink: 0,
     padding: `${SPACING.SM} ${SPACING.XL}`,
     height: HEIGHTS.buttonLarge,
     gap: '0.75rem',
@@ -266,6 +275,7 @@ const submenuStyles = theme => ({
     },
   },
   dividerContainer: {
+    flexShrink: 0,
     padding: '0 0 0.25rem',
     height: '0.3125rem',
   },
@@ -292,15 +302,16 @@ const submenuStyles = theme => ({
     flexDirection: 'row',
     alignItems: 'center',
     gap: '0.5rem',
-    width: '10.5rem',
+    flex: 1,
+    minWidth: 0,
   },
   labelContainerWithPublic: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     gap: '0.5rem',
-    width: '7rem',
-    maxWidth: '7rem',
+    flex: 1,
+    minWidth: 0,
   },
   toggleLabelContainer: {
     display: 'flex',
@@ -324,6 +335,7 @@ const submenuStyles = theme => ({
   listItem: {
     padding: `${SPACING.SM} ${SPACING.LG}`,
     height: HEIGHTS.buttonLarge,
+    flexShrink: 0,
     gap: '0.5rem',
     color: theme.palette.text.primary,
     '&:hover': {
@@ -333,6 +345,7 @@ const submenuStyles = theme => ({
   toggleItem: {
     padding: `${SPACING.SM} ${SPACING.LG}`,
     height: HEIGHTS.buttonLarge,
+    flexShrink: 0,
     gap: '0.5rem',
     color: theme.palette.text.primary,
     display: 'flex',

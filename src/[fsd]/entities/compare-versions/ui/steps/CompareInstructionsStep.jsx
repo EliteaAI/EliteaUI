@@ -6,6 +6,7 @@ import { EditEntityComparisonLayout, TextDiffHighlight } from '@/[fsd]/entities/
 import { CopyIconButton } from '@/[fsd]/shared/ui/button';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
+import CompareSaveButton from '../CompareSaveButton';
 import CompareVersionHeader from '../CompareVersionHeader';
 
 const CompareInstructionsStep = memo(props => {
@@ -23,6 +24,9 @@ const CompareInstructionsStep = memo(props => {
     savingLeftKeys,
     savingRightKeys,
     instructionsRequired = false,
+    leftSaveDisabledReason,
+    // Comparing with a public version: both sides are shown to be read and copied from, not edited or saved
+    readOnly = false,
   } = props;
 
   const leftValue = leftEdits.instructions ?? leftData.instructions ?? '';
@@ -39,14 +43,23 @@ const CompareInstructionsStep = memo(props => {
       currentContent={
         <Box sx={compareInstructionsStepStyles.fieldSection}>
           <Box sx={compareInstructionsStepStyles.fieldHeader}>
-            <Typography sx={compareInstructionsStepStyles.fieldLabel}>Instructions</Typography>
+            <Typography
+              variant="labelMedium"
+              color="text.primary"
+            >
+              Instructions
+            </Typography>
             <CopyIconButton
               value={leftValue}
               tooltip={`Copy Instructions from version ${leftVersion?.name}`}
             />
           </Box>
           {noDiff && (
-            <Typography sx={compareInstructionsStepStyles.noDiffNote}>
+            <Typography
+              variant="bodySmall"
+              color="text.secondary"
+              sx={compareInstructionsStepStyles.noDiffNote}
+            >
               No differences in this section.
             </Typography>
           )}
@@ -55,36 +68,42 @@ const CompareInstructionsStep = memo(props => {
               original={rightValue}
               modified={leftValue}
               mode="modified"
-              editable
+              editable={!readOnly}
               onChange={handleLeftChange}
             />
           </Box>
-          <BaseBtn
-            variant={BUTTON_VARIANTS.elitea}
-            size="small"
-            disabled={
-              leftEdits.instructions === undefined ||
-              (instructionsRequired && !leftValue?.trim()) ||
-              savingLeftKeys.instructions
-            }
-            onClick={() => onSaveLeft({ instructions: leftValue })}
-            sx={compareInstructionsStepStyles.saveBtn}
-          >
-            {savingLeftKeys.instructions ? 'Saving...' : `Save ${leftVersion?.name}`}
-          </BaseBtn>
+          {!readOnly && (
+            <CompareSaveButton
+              label={`Save ${leftVersion?.name}`}
+              isDirty={leftEdits.instructions !== undefined && !(instructionsRequired && !leftValue?.trim())}
+              isSaving={Boolean(savingLeftKeys.instructions)}
+              disabledReason={leftSaveDisabledReason}
+              onClick={() => onSaveLeft({ instructions: leftValue })}
+              sx={compareInstructionsStepStyles.saveBtn}
+            />
+          )}
         </Box>
       }
       suggestedContent={
         <Box sx={compareInstructionsStepStyles.fieldSection}>
           <Box sx={compareInstructionsStepStyles.fieldHeader}>
-            <Typography sx={compareInstructionsStepStyles.fieldLabel}>Instructions</Typography>
+            <Typography
+              variant="labelMedium"
+              color="text.primary"
+            >
+              Instructions
+            </Typography>
             <CopyIconButton
               value={rightValue}
               tooltip={`Copy Instructions from version ${rightVersion?.name}`}
             />
           </Box>
           {noDiff && (
-            <Typography sx={compareInstructionsStepStyles.noDiffNote}>
+            <Typography
+              variant="bodySmall"
+              color="text.secondary"
+              sx={compareInstructionsStepStyles.noDiffNote}
+            >
               No differences in this section.
             </Typography>
           )}
@@ -93,23 +112,25 @@ const CompareInstructionsStep = memo(props => {
               original={leftValue}
               modified={rightValue}
               mode="modified"
-              editable
+              editable={!readOnly}
               onChange={handleRightChange}
             />
           </Box>
-          <BaseBtn
-            variant={BUTTON_VARIANTS.elitea}
-            size="small"
-            disabled={
-              rightEdits.instructions === undefined ||
-              (instructionsRequired && !rightValue?.trim()) ||
-              savingRightKeys.instructions
-            }
-            onClick={() => onSaveRight({ instructions: rightValue })}
-            sx={compareInstructionsStepStyles.saveBtn}
-          >
-            {savingRightKeys.instructions ? 'Saving...' : `Save ${rightVersion?.name}`}
-          </BaseBtn>
+          {!readOnly && (
+            <BaseBtn
+              variant={BUTTON_VARIANTS.elitea}
+              size="small"
+              disabled={
+                rightEdits.instructions === undefined ||
+                (instructionsRequired && !rightValue?.trim()) ||
+                savingRightKeys.instructions
+              }
+              onClick={() => onSaveRight({ instructions: rightValue })}
+              sx={compareInstructionsStepStyles.saveBtn}
+            >
+              {savingRightKeys.instructions ? 'Saving...' : `Save ${rightVersion?.name}`}
+            </BaseBtn>
+          )}
         </Box>
       }
     />
@@ -133,15 +154,7 @@ const compareInstructionsStepStyles = {
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  fieldLabel: {
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    lineHeight: '1.5rem',
-    color: 'text.primary',
-  },
   noDiffNote: {
-    fontSize: '0.75rem',
-    color: 'text.secondary',
     fontStyle: 'italic',
   },
   editableCard: ({ palette }) => ({

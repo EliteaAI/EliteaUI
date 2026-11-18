@@ -58,6 +58,7 @@ const SkillControls = memo(props => {
     onSuccess,
     onOpenCompare,
     onShowHistory,
+    historyPath,
   } = props;
 
   const navigate = useNavigate();
@@ -228,11 +229,12 @@ const SkillControls = memo(props => {
         },
         shareSkillMenuItem,
         { ...pinMenuItem, key: 'pin-toggle-skill' },
-        onShowHistory && {
+        (onShowHistory || historyPath) && {
           key: 'run-history',
           label: 'Run History',
           icon: <RunHistoryIcon sx={{ fontSize: '1rem' }} />,
-          onClick: onShowHistory,
+          // A path makes the item a real link (open in a new tab); the callback is the fallback
+          ...(historyPath ? { to: historyPath } : { onClick: onShowHistory }),
           slotProps: { MenuItem: { 'data-testid': 'skill-run-history-menu-item' } },
         },
         canDeleteSkill && {
@@ -272,6 +274,7 @@ const SkillControls = memo(props => {
       checkPermission,
       onOpenCompare,
       onShowHistory,
+      historyPath,
     ],
   );
 

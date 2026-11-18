@@ -3,7 +3,8 @@ import { memo, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import IWModalEntityCardFullscreenText from '@/[fsd]/entities/import-wizard/ui/import-wizard-modal/IWModalEntityCardFullscreenText';
-import { Button, Modal } from '@/[fsd]/shared/ui';
+import IWModalEntityErrors from '@/[fsd]/entities/import-wizard/ui/import-wizard-modal/IWModalEntityErrors';
+import { Button, Checkbox, Modal } from '@/[fsd]/shared/ui';
 
 /**
  * Shared, presentational import "entity card" wrapper used by the import flows
@@ -20,6 +21,9 @@ import { Button, Modal } from '@/[fsd]/shared/ui';
  * @param {string}        props.title        Entity name.
  * @param {string}        [props.subtitle]   e.g. "Type: agent" / "Type: Skill | Version: base".
  * @param {boolean}       [props.defaultExpanded=false]
+ * @param {{checked: boolean, disabled?: boolean, onChange: (checked: boolean) => void, testId?: string}} [props.selection]
+ *   Renders a checkbox before the icon so the user can include/exclude the entity.
+ * @param {string[]}      [props.errorMessages]  Backend errors shown under the header, always visible.
  * @param {(setFullscreenData: Function) => React.ReactNode} props.children  Detail fields.
  * @param {(fullscreenData: object) => React.ReactNode} [props.renderFullscreenContent]
  * @param {string}        [props.titleTestId]    Stable test hook for the title node
@@ -40,6 +44,8 @@ const IWModalEntityCardWrapper = memo(props => {
     titleTestId,
     subtitleTestId,
     toggleTestId,
+    errorMessages,
+    selection,
   } = props;
 
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
@@ -51,6 +57,16 @@ const IWModalEntityCardWrapper = memo(props => {
     <>
       <Box sx={styles.entityCard}>
         <Box sx={styles.mainBlock}>
+          {selection && (
+            <Checkbox.BaseCheckbox
+              checked={selection.checked}
+              disabled={selection.disabled}
+              onChange={event => selection.onChange(event.target.checked)}
+              inputProps={{ 'aria-label': `Include ${title}` }}
+              data-testid={selection.testId}
+              sx={styles.selectionCheckbox}
+            />
+          )}
           <Box sx={styles.entityIcon}>{icon}</Box>
           <Box sx={styles.entityTitles}>
             <Typography
@@ -78,6 +94,8 @@ const IWModalEntityCardWrapper = memo(props => {
             {isExpanded ? 'Hide details' : 'Show details'}
           </Button.BaseBtn>
         </Box>
+
+        <IWModalEntityErrors errorMessages={errorMessages} />
 
         <Box sx={styles.detailsBlock}>
           <Box sx={styles.detailsInner}>
@@ -180,6 +198,10 @@ const iWModalEntityCardWrapperStyles = isExpanded => ({
     lineHeight: '1.25rem',
     color: palette.text.primary,
   }),
+  selectionCheckbox: {
+    padding: 0,
+    marginRight: '-0.5rem',
+  },
   actionBtn: {
     border: 'none !important',
     marginLeft: 'auto',

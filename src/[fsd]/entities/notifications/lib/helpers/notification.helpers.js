@@ -1,8 +1,13 @@
+import { getListRoute } from '@/[fsd]/entities/schedule';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { NotificationType, SearchParams, ToolkitsTabs } from '@/common/constants';
 import RouteDefinitions, { getBasename } from '@/routes';
 
 const DEFAULT_TOOLKITS_TAB = ToolkitsTabs[0];
+
+export const isProjectMembershipNotification = eventType =>
+  eventType === NotificationType.UserWasAddedToSomeProjectAsTeammate ||
+  eventType === NotificationType.UserWasRemovedFromProject;
 
 const RUN_EVENT_TYPES = new Set([
   NotificationType.ScheduleRunFailed,
@@ -33,6 +38,9 @@ export const resolveHref = (eventType, meta, projectId) => {
       const url = `${route}?${SearchParams.Conversation}=${convId}`;
       return messageId ? `${url}&${SearchParams.MessageId}=${messageId}` : url;
     }
+
+    case NotificationType.UserWasAddedToSomeProjectAsTeammate:
+      return `${base}/${projectId}${RouteDefinitions.Chat}`;
 
     // The index page is addressed by its own route, not by the toolkit page plus an `index_name`
     // query: that query only survives through a back-compat redirect, and the `:tab` it travels
@@ -105,7 +113,8 @@ export const resolveHref = (eventType, meta, projectId) => {
     case NotificationType.ScheduleOwnerChanged: {
       const scheduleId = meta?.schedule_id;
       if (!scheduleId) return null;
-      const list = `${base}/${projectId}${RouteDefinitions.Schedules}`;
+      // A webhook row lives on the Webhooks page; meta without trigger_kind is a cron row
+      const list = `${base}/${projectId}${getListRoute(meta?.trigger_kind)}`;
       if (eventType === NotificationType.ScheduleOwnerChanged) return list;
       const url = `${list}/${encodeURIComponent(scheduleId)}`;
       const runId = RUN_EVENT_TYPES.has(eventType) ? meta?.conversation_id : null;

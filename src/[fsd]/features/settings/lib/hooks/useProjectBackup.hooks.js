@@ -9,7 +9,7 @@ import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage, downloadBlobFile } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
-const { CHATS_OPTION } = ProjectBackupConstants;
+const { CHATS_OPTION, SKILL_FILES_OPTION } = ProjectBackupConstants;
 
 export const useProjectBackup = () => {
   const projectId = useSelectedProjectId();
@@ -29,12 +29,17 @@ export const useProjectBackup = () => {
   const canRestore = checkPermission(PERMISSIONS.projectBackup.restore) || isPersonalProject;
 
   const doDownload = useCallback(
-    async ({ chats, missingAttachments = 0 } = {}) => {
+    async ({ chats, skillFiles, missingAttachments = 0 } = {}) => {
       if (!projectId) return false;
 
       try {
         const includeChats = chats && chats !== CHATS_OPTION.none ? chats : undefined;
-        const { blob, filename } = await downloadBackup({ projectId, includeChats }).unwrap();
+        const includeSkillFiles = skillFiles === SKILL_FILES_OPTION.none ? skillFiles : undefined;
+        const { blob, filename } = await downloadBackup({
+          projectId,
+          includeChats,
+          includeSkillFiles,
+        }).unwrap();
         downloadBlobFile(blob, filename);
         // Files that could not be read are left out of the archive and listed in its manifest
         if (includeChats === CHATS_OPTION.withAttachments && missingAttachments) {

@@ -3,7 +3,7 @@ import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { SearchParams } from '@/common/constants';
 import RouteDefinitions from '@/routes';
 
-import { hasValue, pickEntityRoutePattern } from './analyticsCommon.helpers.js';
+import { formatUserName, hasValue, pickEntityRoutePattern } from './analyticsCommon.helpers.js';
 
 const NO_MODEL_VALUE = '—';
 
@@ -17,7 +17,11 @@ export const formatAgentModelLabel = model =>
 export const formatAgentRunModels = models =>
   models?.length ? models.map(formatAgentModelLabel).join(', ') : NO_MODEL_VALUE;
 
-export const formatAgentUserLabel = row => row.user_email || `User ${row.user_id}`;
+// Plain-text user label for exports: a deleted account is marked, since a table cell has no chip.
+export const formatAgentUserLabel = row => {
+  const name = formatUserName(row);
+  return row.user_deleted ? `${name} (Deleted user)` : name;
+};
 
 const isLocalRun = (run, projectId) => String(run.root_project_id) === String(projectId);
 

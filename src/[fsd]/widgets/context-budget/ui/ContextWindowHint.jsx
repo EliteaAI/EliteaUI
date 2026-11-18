@@ -10,7 +10,7 @@ import InfoIcon from '@/components/Icons/InfoIcon';
  * Explains that Balanced and Full give the same window, shown when both modes resolve to the same token count.
  */
 const ContextWindowHint = memo(props => {
-  const { balancedWindowTokens, fullWindowTokens } = props;
+  const { balancedWindowTokens, fullWindowTokens, windowSource } = props;
   const styles = contextWindowHintStyles();
 
   const isIdentical =
@@ -29,7 +29,9 @@ const ContextWindowHint = memo(props => {
         variant="labelSmall"
         color="text.info"
       >
-        {CONTEXT_WINDOW_COPY.IDENTICAL_HINT(formatWindowSize(balancedWindowTokens))}
+        {(windowSource === 'auto'
+          ? CONTEXT_WINDOW_COPY.AUTO_IDENTICAL_HINT
+          : CONTEXT_WINDOW_COPY.IDENTICAL_HINT)(formatWindowSize(balancedWindowTokens))}
       </Typography>
     </Box>
   );

@@ -7,6 +7,61 @@ import { mdToApplicationJson, parseMdFrontmatter } from '@/[fsd]/entities/import
 import { actions as importWizardActions } from '@/[fsd]/entities/import-wizard/model/importWizard.slice';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 
+const listSkillVersions = parsed => (parsed?.skills || []).flatMap(skill => skill.versions);
+
+const folderOf = memberName => memberName.slice(0, memberName.lastIndexOf('/') + 1);
+
+const isAppleDoubleMember = memberName =>
+  memberName.startsWith('__MACOSX/') || memberName.slice(memberName.lastIndexOf('/') + 1).startsWith('._');
+
+const isMarkdown = memberName => memberName.toLowerCase().endsWith('.md') && !isAppleDoubleMember(memberName);
+
+const declaredSkillFolders = (memberName, content) => {
+  try {
+    const { frontmatter } = parseMdFrontmatter(content);
+    return (frontmatter.skills || [])
+      .filter(block => block?.files_folder)
+      .map(block => `${folderOf(memberName)}${block.files_folder}/`);
+  } catch {
+    return [];
+  }
+};
+
+const resolveSkillFolders = (parsed, memberName) => {
+  for (const version of listSkillVersions(parsed)) {
+    if (version.files_folder) version.files_folder = `${folderOf(memberName)}${version.files_folder}`;
+  }
+  return parsed;
+};
+
+const embedSkillFileContents = (zip, version) =>
+  Promise.all(
+    version.files.map(async ({ path, sha256 }) => {
+      const memberName = `${version.files_folder}/${path}`;
+      const member = zip.file(memberName);
+
+      if (!member) throw new Error(`${memberName} is missing from the archive`);
+
+      return { path, sha256, content_base64: await member.async('base64') };
+    }),
+  );
+
+const loadSkillFiles = async (zip, parsedResults) => {
+  const versions = parsedResults.flatMap(listSkillVersions).filter(version => version.files_folder);
+
+  for (const version of versions) {
+    version.files = await embedSkillFileContents(zip, version);
+    delete version.files_folder;
+  }
+};
+
+const dropSkillFiles = parsed => {
+  for (const version of listSkillVersions(parsed)) {
+    delete version.files;
+    delete version.files_folder;
+  }
+};
+
 export const useImport = () => {
   const dispatch = useDispatch();
   const { toastError } = useToast();
@@ -35,6 +90,8 @@ export const useImport = () => {
 
         if (!requestBody) return null;
 
+        dropSkillFiles(requestBody);
+
         dispatch(
           importWizardActions.openImportWizard({
             isForking: false,
@@ -57,18 +114,23 @@ export const useImport = () => {
         const applications = [];
         const toolkits = [];
         const skills = [];
-        const parsePromises = [];
+        const markdownMembers = [];
 
         zip.forEach((relativePath, zipEntry) => {
-          if (zipEntry.dir) return;
-
-          const entryName = relativePath.toLowerCase();
-
-          if (entryName.endsWith('.md'))
-            parsePromises.push(zipEntry.async('string').then(content => parseMdFile(content, relativePath)));
+          if (!zipEntry.dir && isMarkdown(relativePath)) markdownMembers.push(relativePath);
         });
 
-        const parsedResults = await Promise.all(parsePromises);
+        const markdownContents = await Promise.all(
+          markdownMembers.map(async memberName => [memberName, await zip.file(memberName).async('string')]),
+        );
+        const skillFolders = markdownContents.flatMap(([memberName, content]) =>
+          declaredSkillFolders(memberName, content),
+        );
+        const parsedResults = markdownContents
+          .filter(([memberName]) => !skillFolders.some(folder => memberName.startsWith(folder)))
+          .map(([memberName, content]) => resolveSkillFolders(parseMdFile(content, memberName), memberName));
+
+        await loadSkillFiles(zip, parsedResults);
 
         // Merge all parsed results, grouping by application name
         const appsByName = new Map();

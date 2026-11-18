@@ -7,21 +7,26 @@ import PlayArrowOutlinedIcon from '@mui/icons-material/PlayArrowOutlined';
 import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
 import { Box, Link, Typography } from '@mui/material';
 
-import { buildScheduleHistoryLink, isWebhookRow } from '@/[fsd]/entities/schedule';
+import { TOOLKIT_INDEX_TYPE, buildScheduleHistoryLink, isWebhookRow } from '@/[fsd]/entities/schedule';
 import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
-import { isRunActive, ownerOnlyRunHint } from '../lib/helpers';
+import { isRunActive, runDeniedHint } from '../lib/helpers';
+import { useRunAsAdminHint } from '../lib/hooks/useRunAsAdminHint.hooks';
 import ScheduleRunCard from './ScheduleRunCard';
 import ScheduleRunsFilters, { ALL_RUNS } from './ScheduleRunsFilters';
+import WebhookSampleRunDialog from './WebhookSampleRunDialog';
 
 const RUN_NOW_NOTE = 'Runs the saved schedule and records it as Manual. Next run does not change.';
+const SAMPLE_RUN_NOTE = 'Runs the saved webhook with a body you paste, as a delivery would.';
+const INDEX_RUN_ACTIVE_HINT = 'A run of this index is active';
 const TEST_RUN_NOTE = 'Runs the form as it is now, without saving. Last run and Next run do not change.';
 
 /**
  * The "Runs (count)" card right of the schedule form. `view` is the result of `useScheduleRunsView`.
+ * For a toolkit index `applicationId` is the toolkit id and `indexName` names the index.
  * Run Now needs a saved schedule; Test Run is for a new, unsaved one and gives way to Run Now after Save. `schedule` is empty on the Create page.
  */
 const ScheduleRunsCard = memo(
@@ -30,6 +35,7 @@ const ScheduleRunsCard = memo(
       schedule,
       entityType,
       applicationId,
+      indexName,
       view,
       onRunNow,
       runNowPending = false,
@@ -43,9 +49,12 @@ const ScheduleRunsCard = memo(
     const { runs, total, versionNames, expandedRunId, onExpand } = view;
     const hasActiveRun = runs.some(run => isRunActive(run.status));
     const isWebhook = isWebhookRow(schedule);
+    // Test Run stays off while a run is active; for an index the card says why
+    const showIndexRunActive = entityType === TOOLKIT_INDEX_TYPE && !schedule?.id && hasActiveRun;
     const canRunNow = Boolean(schedule?.id) && Boolean(schedule?.allowed_actions?.includes('run'));
     const canTest = checkPermission(PERMISSIONS.schedules.run);
-    const runHint = schedule?.id ? ownerOnlyRunHint(schedule) : null;
+    const runHint = schedule?.id ? runDeniedHint(schedule) : null;
+    const runAsAdmin = useRunAsAdminHint(schedule);
     const { expectRun, cancelExpectRun, draftSettled = true } = view;
     const busy = hasActiveRun || runNowPending || testRunPending;
     const startRun = start => async () => {
@@ -60,6 +69,7 @@ const ScheduleRunsCard = memo(
     const newestId = runs[0]?.id;
     const [trigger, setTrigger] = useState(ALL_RUNS);
     const [status, setStatus] = useState(ALL_RUNS);
+    const [sampleOpen, setSampleOpen] = useState(false);
     const shownRuns = runs.filter(
       run =>
         (trigger === ALL_RUNS || run.trigger === trigger) && (status === ALL_RUNS || run.status === status),
@@ -95,11 +105,10 @@ const ScheduleRunsCard = memo(
             )}
           </Typography>
           <Box sx={styles.actions}>
-            {/* A webhook runs on a delivery; its sample-body run comes with #7399 */}
             {schedule?.id && !isWebhook && (
               <BaseBtn
                 data-testid="schedule-run-now"
-                title={RUN_NOW_NOTE}
+                title={runAsAdmin ? `${RUN_NOW_NOTE} ${runAsAdmin}` : RUN_NOW_NOTE}
                 variant={BUTTON_VARIANTS.secondary}
                 sx={styles.runNow}
                 startIcon={<PlayArrowOutlinedIcon />}
@@ -107,6 +116,19 @@ const ScheduleRunsCard = memo(
                 onClick={startRun(onRunNow)}
               >
                 Run Now
+              </BaseBtn>
+            )}
+            {schedule?.id && isWebhook && (
+              <BaseBtn
+                data-testid="webhook-run-sample"
+                title={SAMPLE_RUN_NOTE}
+                variant={BUTTON_VARIANTS.secondary}
+                sx={styles.runNow}
+                startIcon={<PlayArrowOutlinedIcon />}
+                disabled={busy || !canRunNow}
+                onClick={() => setSampleOpen(true)}
+              >
+                Run with sample
               </BaseBtn>
             )}
             {!schedule?.id && !isWebhook && (
@@ -132,6 +154,24 @@ const ScheduleRunsCard = memo(
             {runHint}
           </Typography>
         )}
+        {showIndexRunActive && (
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+            data-testid="schedule-test-run-active-hint"
+          >
+            {INDEX_RUN_ACTIVE_HINT}
+          </Typography>
+        )}
+        {runAsAdmin && schedule?.id && !isWebhook && (
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+            data-testid="schedule-run-as-admin-hint"
+          >
+            {runAsAdmin}
+          </Typography>
+        )}
         {(runNowError || testRunError) && (
           <BannerMessage
             variant="error"
@@ -143,6 +183,7 @@ const ScheduleRunsCard = memo(
             runs={runs}
             trigger={trigger}
             status={status}
+            isWebhook={isWebhook}
             onTriggerChange={setTrigger}
             onStatusChange={setStatus}
           />
@@ -161,6 +202,8 @@ const ScheduleRunsCard = memo(
                 id: schedule.id,
                 entity_type: entityType,
                 application_id: applicationId,
+                toolkit_id: applicationId,
+                index_name: indexName,
               })}
               variant="bodySmall"
             >
@@ -193,11 +236,27 @@ const ScheduleRunsCard = memo(
                 schedule={schedule}
                 entityType={entityType}
                 applicationId={applicationId}
+                indexName={indexName}
                 onToggle={onExpand}
-                onRunAgain={canRunNow && !busy ? startRun(onRunNow) : undefined}
+                // A webhook has no Run Now: its Run again opens the sample dialog
+                onRunAgain={
+                  canRunNow && !busy
+                    ? isWebhook
+                      ? () => setSampleOpen(true)
+                      : startRun(onRunNow)
+                    : undefined
+                }
               />
             ))}
           </Box>
+        )}
+        {sampleOpen && (
+          <WebhookSampleRunDialog
+            open
+            webhook={schedule}
+            onStarted={expectRun}
+            onClose={() => setSampleOpen(false)}
+          />
         )}
       </Box>
     );

@@ -2,12 +2,15 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { IconButton } from '@mui/material';
 
+import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { useIsSmallWindow, useViewMode } from '@/[fsd]/shared/lib/hooks';
 import DoubleLeftIcon from '@/components/Icons/DoubleLeftIcon';
 import DoubleRightIcon from '@/components/Icons/DoubleRightIcon';
 import PipelineConfigurationForm from '@/pages/Applications/Components/Applications/PipelineConfigurationForm.jsx';
 import { ContentContainer } from '@/pages/Common/index.js';
 import { useTheme } from '@emotion/react';
+
+const { EXPAND_GENERAL_PANEL_EVENT } = FlowEditorConstants;
 
 const GeneralFormPanel = ({
   applicationId,
@@ -45,6 +48,18 @@ const GeneralFormPanel = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSmallWindow]);
+
+  useEffect(() => {
+    const handleEvent = () => {
+      if (collapsed) {
+        setCollapsed(false);
+        onCollapsed?.(false);
+      }
+    };
+
+    window.addEventListener(EXPAND_GENERAL_PANEL_EVENT, handleEvent);
+    return () => window.removeEventListener(EXPAND_GENERAL_PANEL_EVENT, handleEvent);
+  }, [collapsed, onCollapsed, setCollapsed]);
 
   return (
     <>

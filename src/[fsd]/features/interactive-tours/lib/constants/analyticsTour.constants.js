@@ -42,7 +42,7 @@ Data is cached for up to 5 minutes.`,
 
 - **TEAM** — active members vs. all users ever seen in the project
 - **AI ACTIVE** — users with at least one LLM, tool, or agent event; includes an adoption rate
-- **LLM CALLS** — total AI model invocations
+- **MODEL CALLS** — total AI model requests, embedding models included
 - **TOOL RUNS** — total tool executions
 - **CHAT MSG** — total user messages sent in chat
 - **AGENT & PIPELINE RUNS** — total interactions with agents and pipelines

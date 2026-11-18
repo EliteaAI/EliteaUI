@@ -141,7 +141,7 @@ describe('useRejectedSendRecovery', () => {
     expect(input.focus).not.toHaveBeenCalled();
   });
 
-  it('does not put the text into another conversation the user switched to', () => {
+  it('stays silent about no response once the user left the chat, as its run keeps going there', () => {
     const input = createInput();
     const { toastError, rememberSend, activeConversationRef } = setup(input);
     rememberSend('q1', 'hello there', 'conv-a');
@@ -149,8 +149,7 @@ describe('useRejectedSendRecovery', () => {
 
     act(() => errorHandler({ code: 'send_no_response', message_id: 'q1', content: 'No response' }));
 
-    // the user still hears about it, because this instance did send the message
-    expect(toastError).toHaveBeenCalledWith('No response');
+    expect(toastError).not.toHaveBeenCalled();
     expect(input.setValue).not.toHaveBeenCalled();
     expect(input.focus).not.toHaveBeenCalled();
   });

@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Box, Link, Typography } from '@mui/material';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
-import { byNewestRunFirst } from '@/[fsd]/entities/run-history/lib/helpers';
+import { byNewestRunFirst, resolveRunHistoryListWidth } from '@/[fsd]/entities/run-history/lib/helpers';
 import { RunHistoryChat, RunHistoryList } from '@/[fsd]/entities/run-history/ui';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useIsSmallWindow, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
@@ -39,6 +39,8 @@ const RunHistoryContainer = memo(props => {
     shareOpensHistoryTab = false,
     queryParams = NO_QUERY_PARAMS,
     extraColumns,
+    // Reports the loaded rows, so a parent can fetch per-row data such as complexity labels
+    onRowsChange,
     // 'side': the detail is right of the list (full pages); 'stacked': below it, for a narrow parent
     layout = 'side',
   } = props;
@@ -164,6 +166,10 @@ const RunHistoryContainer = memo(props => {
     setMergedData(data);
   }, [data]);
 
+  useEffect(() => {
+    onRowsChange?.(allConversations);
+  }, [allConversations, onRowsChange]);
+
   const handleLoadMore = useCallback(() => {
     setPage(prev => prev + 1);
   }, []);
@@ -173,7 +179,11 @@ const RunHistoryContainer = memo(props => {
   }, []);
 
   const isStacked = layout === 'stacked';
-  const styles = runHistoryContainerStyles(isSmallWindow, isStacked, Boolean(extraColumns?.length));
+  const styles = runHistoryContainerStyles(
+    isSmallWindow,
+    isStacked,
+    resolveRunHistoryListWidth(extraColumns),
+  );
 
   const detail =
     selectedRow?.entry && DetailComponent ? (
@@ -276,7 +286,7 @@ const RunHistoryContainer = memo(props => {
 RunHistoryContainer.displayName = 'RunHistoryContainer';
 
 /** @type {MuiSx} */
-const runHistoryContainerStyles = (isSmallWindow, isStacked, wideList = false) => ({
+const runHistoryContainerStyles = (isSmallWindow, isStacked, listWidth = '32rem') => ({
   // Fills the caller's flex box, so the layout below can take exactly the height left for it
   root: {
     display: 'flex',
@@ -326,8 +336,8 @@ const runHistoryContainerStyles = (isSmallWindow, isStacked, wideList = false) =
   historyList: {
     flex: isStacked ? 'none' : 3,
     height: isStacked ? '20rem' : undefined,
-    // The column follows the list, 48 rem with the schedule columns, so the panel starts after it
-    maxWidth: isSmallWindow || isStacked ? '100%' : wideList ? '48rem' : '32rem',
+    // The column follows the list width, so the panel starts after it
+    maxWidth: isSmallWindow || isStacked ? '100%' : listWidth,
     position: 'relative',
     display: 'flex',
     flexDirection: 'column',

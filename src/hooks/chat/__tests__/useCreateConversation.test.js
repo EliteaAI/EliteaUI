@@ -9,13 +9,14 @@ const shared = vi.hoisted(() => ({
   createResult: {},
   editResult: {},
   editConversation: null,
+  changeUrlByConversation: null,
 }));
 
 vi.mock('react-redux', () => ({ useDispatch: () => vi.fn() }));
 vi.mock('@/GA', () => ({ useTrackEvent: () => vi.fn() }));
 vi.mock('@/[fsd]/features/chat/conversation-list/lib/helpers', () => ({ sortConversations: list => list }));
 vi.mock('@/[fsd]/features/chat/lib/hooks', () => ({
-  useConversationNavigation: () => ({ changeUrlByConversation: vi.fn() }),
+  useConversationNavigation: () => ({ changeUrlByConversation: shared.changeUrlByConversation }),
 }));
 vi.mock('@/[fsd]/shared/lib/constants', () => ({
   AnalyticConstants: { GA_EVENT_NAMES: {}, GA_EVENT_PARAMS: {} },
@@ -39,10 +40,10 @@ const applyUpdates = (mockFn, initial) =>
     initial,
   );
 
-const renderCreate = () => {
+const renderCreate = ({ activeConversation = {}, selectionCountRef } = {}) => {
   const props = {
-    activeConversation: {},
-    conversations: [],
+    activeConversation,
+    selectionCountRef,
     setActiveConversation: vi.fn(),
     setConversations: vi.fn(),
     setFolders: vi.fn(),
@@ -64,6 +65,7 @@ describe('useCreateConversation folder assignment', () => {
     vi.clearAllMocks();
     shared.createResult = { data: createdConversation };
     shared.editConversation = vi.fn(async () => shared.editResult);
+    shared.changeUrlByConversation = vi.fn();
   });
 
   it('does not assign a folder when none is requested', async () => {
@@ -106,5 +108,98 @@ describe('useCreateConversation folder assignment', () => {
     const folders = applyUpdates(props.setFolders, [{ id: 17, conversations: [] }]);
     expect(folders[0].conversations).toEqual([expect.objectContaining({ id: 42, folder_id: 17 })]);
     expect(props.toastError).not.toHaveBeenCalled();
+  });
+});
+
+describe('useCreateConversation when the user leaves while the chat is being created', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    shared.createResult = { data: createdConversation };
+    shared.editConversation = vi.fn(async () => ({ data: {} }));
+    shared.changeUrlByConversation = vi.fn();
+  });
+
+  const createWithCallback = async (create, folderId = null) => {
+    let captured;
+    await act(async () => {
+      await create(
+        { id: 'tmp', name: 'New chat', isNew: true },
+        (created, onComplete, isOnScreen) => {
+          captured = { created, onComplete, isOnScreen };
+        },
+        true,
+        folderId,
+      );
+    });
+    return captured;
+  };
+
+  it('opens the created chat when the user is still on it', async () => {
+    const { create, props } = renderCreate({ activeConversation: { id: 'tmp' } });
+    const { onComplete, isOnScreen } = await createWithCallback(create);
+
+    expect(isOnScreen()).toBe(true);
+    props.setActiveConversation.mockClear();
+    await act(async () => {
+      await onComplete([]);
+    });
+
+    expect(shared.changeUrlByConversation).toHaveBeenCalledWith(42, 'Good day');
+    expect(props.setActiveConversation).toHaveBeenCalled();
+  });
+
+  it('treats another chat being opened, but not loaded yet, as leaving', async () => {
+    const selectionCountRef = { current: 0 };
+    const { create, props } = renderCreate({ activeConversation: { id: 'tmp' }, selectionCountRef });
+    let captured;
+    await act(async () => {
+      await create(
+        { id: 'tmp', name: 'New chat', isNew: true },
+        (created, onComplete, isOnScreen) => {
+          captured = { onComplete, isOnScreen };
+        },
+        true,
+      );
+    });
+    expect(captured.isOnScreen()).toBe(true);
+
+    selectionCountRef.current += 1;
+
+    expect(captured.isOnScreen()).toBe(false);
+    props.setActiveConversation.mockClear();
+    await act(async () => {
+      await captured.onComplete([]);
+    });
+    expect(props.setActiveConversation).not.toHaveBeenCalled();
+    expect(shared.changeUrlByConversation).not.toHaveBeenCalled();
+  });
+
+  it('does not pull the user back after they switched to another chat', async () => {
+    const { create, props } = renderCreate({ activeConversation: { id: 7, uuid: 'other' } });
+    const { onComplete, isOnScreen } = await createWithCallback(create);
+
+    expect(isOnScreen()).toBe(false);
+    props.setActiveConversation.mockClear();
+    await act(async () => {
+      await onComplete([]);
+    });
+
+    expect(shared.changeUrlByConversation).not.toHaveBeenCalled();
+    expect(props.setActiveConversation).not.toHaveBeenCalled();
+    const list = applyUpdates(props.setConversations, [{ id: 'tmp', isNew: true }]);
+    expect(list).toEqual([expect.objectContaining({ id: 42 })]);
+  });
+
+  it('still files the created chat into its folder after the user left', async () => {
+    const { create, props } = renderCreate({ activeConversation: { id: 7, uuid: 'other' } });
+    const { onComplete } = await createWithCallback(create, 17);
+    await act(async () => {
+      await onComplete([]);
+    });
+
+    expect(shared.editConversation).toHaveBeenCalledWith({ projectId: 2, id: 42, folder_id: 17 });
+    const folders = applyUpdates(props.setFolders, [{ id: 17, conversations: [{ id: 'tmp', isNew: true }] }]);
+    expect(folders[0].conversations).toEqual([expect.objectContaining({ id: 42, folder_id: 17 })]);
+    expect(shared.changeUrlByConversation).not.toHaveBeenCalled();
   });
 });

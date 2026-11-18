@@ -17,7 +17,11 @@ const {
   useAnalyticsRunDetailQuery,
   useAnalyticsCostsQuery,
   viewProps,
+  complexityQuery,
+  platformSettings,
 } = vi.hoisted(() => ({
+  complexityQuery: vi.fn(() => ({ data: undefined })),
+  platformSettings: { current: {} },
   useGetRunHistoryDetailsQuery: vi.fn(),
   useApplicationDetailsQuery: vi.fn(),
   useAnalyticsRunDetailQuery: vi.fn(),
@@ -28,6 +32,11 @@ const {
 vi.mock('@/[fsd]/features/settings/api/analyticsApi', () => ({
   useAnalyticsRunDetailQuery,
   useAnalyticsCostsQuery,
+  useAnalyticsComplexityDetailQuery: (...args) => complexityQuery(...args),
+}));
+
+vi.mock('@/api/platformSettings', () => ({
+  useGetPlatformSettingsQuery: () => ({ data: platformSettings.current }),
 }));
 
 vi.mock('@/[fsd]/entities/run-history/api', () => ({
@@ -552,5 +561,17 @@ describe('RunAnalyticsContainer version names from the usage run (#7033)', () =>
     renderAt('/agents/all/130/history/analytics?history_run_id=555');
 
     expect(viewProps.current.infoLines).toEqual(['Run: 02 Sep 2026, 12:23 PM · Version: base']);
+  });
+
+  // #1576 review: a public agent's run is stored under its owning project
+  it('scopes the Complexity tab to the run and the owning project from the link', () => {
+    platformSettings.current = { complexity_enabled: true };
+    renderAt(`/agents/all/5/history/analytics?usage_run_id=${USAGE_RUN_ID}&entity_project_id=1`);
+
+    expect(complexityQuery).toHaveBeenLastCalledWith(
+      expect.objectContaining({ entityId: '5', entityProjectId: '1', runId: USAGE_RUN_ID }),
+      expect.objectContaining({ skip: false }),
+    );
+    platformSettings.current = {};
   });
 });

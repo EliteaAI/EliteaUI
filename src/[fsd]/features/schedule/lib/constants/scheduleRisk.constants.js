@@ -19,3 +19,17 @@ export const RISK_NAME_MISMATCH = 'risk_name_mismatch';
 
 // Findings that stop a save only under "Run without asking"; under "Pause and ask me" the run waits for the owner
 export const WAIT_FOR_OWNER_CODES = ['missing_credential', 'personal_signin_required'];
+
+// #7401 Connections check: the state of one toolkit row, and the 409 `code` of a webhook save it refuses
+export const CONNECTION_STATUS = {
+  OK: 'ok',
+  SIGN_IN: 'sign_in_required',
+  UNSUPPORTED: 'unsupported',
+};
+export const CONNECTIONS_NOT_READY = 'connections_not_ready';
+export const CONNECTIONS_CHECK_STATUS = {
+  IDLE: 'idle',
+  CHECKING: 'checking',
+  ANSWERED: 'answered',
+  FAILED: 'failed',
+};

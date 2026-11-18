@@ -3,12 +3,28 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 const CompareRunSettingsColumn = memo(props => {
-  const { rows, changedKeys, side } = props;
+  const { rows, changedKeys, side, title } = props;
   const styles = compareRunSettingsColumnStyles();
 
   return (
     <Box sx={styles.root}>
-      {!changedKeys.size && <Typography sx={styles.noDiffNote}>No differences in this section.</Typography>}
+      {title && (
+        <Typography
+          variant="labelMedium"
+          color="text.secondary"
+        >
+          {title}
+        </Typography>
+      )}
+      {!changedKeys.size && (
+        <Typography
+          variant="bodySmall"
+          color="text.secondary"
+          sx={styles.noDiffNote}
+        >
+          No differences in this section.
+        </Typography>
+      )}
       {rows.map(row => (
         <Box
           key={row.key}
@@ -45,8 +61,6 @@ const compareRunSettingsColumnStyles = () => ({
     padding: '1rem 2rem 1.25rem',
   },
   noDiffNote: {
-    fontSize: '0.75rem',
-    color: 'text.secondary',
     fontStyle: 'italic',
   },
   row: ({ palette }) => ({

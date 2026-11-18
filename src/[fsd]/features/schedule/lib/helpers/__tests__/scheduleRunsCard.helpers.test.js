@@ -12,6 +12,11 @@ const run = (id, extra = {}) => ({
 });
 
 describe('toTriggerLabel', () => {
+  it('labels a test on a webhook row as its sample-body run', () => {
+    expect(toTriggerLabel('test', true)).toBe('Webhook (sample)');
+    expect(toTriggerLabel('webhook', true)).toBe('Webhook');
+  });
+
   it('shows the stored trigger cron as Scheduled', () => {
     expect(['cron', 'manual', 'test', 'other'].map(trigger => toTriggerLabel(trigger))).toEqual([
       'Scheduled',

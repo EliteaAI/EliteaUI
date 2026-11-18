@@ -4,7 +4,11 @@ import { useNavigate } from 'react-router-dom';
 
 import { GenerateEntityModal } from '@/[fsd]/entities/generate-entity-with-ai';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
-import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd]/features/skill';
+import { conversationStartersHelpers, suggestionKey } from '@/[fsd]/features/agent/lib/helpers';
+import {
+  useAttachSuggestedSkills,
+  useRefetchConversationStartersLimit,
+} from '@/[fsd]/features/agent/lib/hooks';
 import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { defaultModelForSurface, generateLLMSettings } from '@/[fsd]/shared/lib/utils';
@@ -34,11 +38,11 @@ const GenerateAgentModal = memo(props => {
   const { toastWarning } = useToast();
 
   const [createApplication] = useApplicationCreateMutation();
+  const refetchStartersLimit = useRefetchConversationStartersLimit();
   const [associateToolkit] = useToolkitAssociateMutation();
   const [updateApplicationRelation] = useUpdateApplicationRelationMutation();
-  const [updateSkillRelation] = useUpdateSkillRelationMutation();
   const [fetchApplicationDetails] = useLazyApplicationDetailsQuery();
-  const [fetchSkillDetails] = useLazySkillDetailsQuery();
+  const attachSkills = useAttachSuggestedSkills();
 
   const [generateDraft, { error: generateError, reset: resetGenerate }] = useGenerateAgentDraftMutation();
 
@@ -142,14 +146,15 @@ const GenerateAgentModal = memo(props => {
       if (!versionId || !apps.length) return;
       const results = await Promise.allSettled(
         apps.map(async a => {
+          const appProjectId = a.project_id ?? projectId;
           const { data: appDetails } = await fetchApplicationDetails({
-            projectId,
+            projectId: appProjectId,
             applicationId: a.id,
           });
           if (!appDetails?.version_details?.id) return;
           try {
             return await updateApplicationRelation({
-              projectId,
+              projectId: appProjectId,
               selectedApplicationId: a.id,
               selectedVersionId: appDetails.version_details.id,
               application_id: entityId,
@@ -174,29 +179,6 @@ const GenerateAgentModal = memo(props => {
         });
     },
     [fetchApplicationDetails, updateApplicationRelation, projectId, toastWarning],
-  );
-
-  const associateSkills = useCallback(
-    async (versionId, skills) => {
-      if (!versionId || !skills.length) return;
-      await Promise.allSettled(
-        skills.map(async skill => {
-          const { data: skillDetails } = await fetchSkillDetails({
-            projectId,
-            skillId: skill.id,
-          });
-          if (!skillDetails?.version_details?.id) return;
-          return updateSkillRelation({
-            projectId,
-            skillId: skill.id,
-            entity_version_id: versionId,
-            skill_version_id: skillDetails.version_details.id,
-            has_relation: true,
-          }).unwrap();
-        }),
-      );
-    },
-    [fetchSkillDetails, updateSkillRelation, projectId],
   );
 
   const redirectToAgent = useCallback(
@@ -226,43 +208,56 @@ const GenerateAgentModal = memo(props => {
 
   const handleApprove = useCallback(
     async draftData => {
-      const result = await createApplication({
-        projectId,
-        name: (draftData.name || '').trim(),
-        description: draftData.description || '',
-        type: 'interface',
-        versions: [
-          {
-            name: LATEST_VERSION_NAME,
-            instructions: draftData.instructions || '',
-            variables: contextResolver(draftData.instructions).map(name => ({ name, value: '' })),
-            tools: [],
-            tags: [],
-            llm_settings: generateLLMSettings(defaultModel, {}, { includeModelInfo: true }),
-            conversation_starters: filterEmptyStrings(draftData.conversation_starters),
-            agent_type: 'openai',
-            welcome_message: draftData.welcome_message || '',
-            meta: {
-              step_limit: 25,
+      let result;
+      try {
+        result = await createApplication({
+          projectId,
+          name: (draftData.name || '').trim(),
+          description: draftData.description || '',
+          type: 'interface',
+          versions: [
+            {
+              name: LATEST_VERSION_NAME,
+              instructions: draftData.instructions || '',
+              variables: contextResolver(draftData.instructions).map(name => ({ name, value: '' })),
+              tools: [],
+              tags: [],
+              llm_settings: generateLLMSettings(defaultModel, {}, { includeModelInfo: true }),
+              conversation_starters: filterEmptyStrings(draftData.conversation_starters),
+              agent_type: 'openai',
+              welcome_message: draftData.welcome_message || '',
+              meta: {
+                step_limit: 25,
+              },
             },
-          },
-        ],
-      }).unwrap();
+          ],
+        }).unwrap();
+      } catch (error) {
+        // The limit may have changed since the modal opened; the review step picks up the new one
+        if (conversationStartersHelpers.isConversationStartersLimitError(error)) refetchStartersLimit();
+        throw error;
+      }
 
       const entityId = result.id;
       const versionId = result.version_details?.id;
 
-      const selectedToolkits = (draftData.suggested_toolkits || []).filter(t => selectedToolkitIds.has(t.id));
-      const selectedMcps = (draftData.suggested_mcp || []).filter(m => selectedMcpIds.has(m.id));
-      const selectedAgents = (draftData.suggested_agents || []).filter(a => selectedAgentIds.has(a.id));
-      const selectedPipelines = (draftData.suggested_pipelines || []).filter(p =>
-        selectedPipelineIds.has(p.id),
+      const selectedToolkits = (draftData.suggested_toolkits || []).filter(t =>
+        selectedToolkitIds.has(suggestionKey(t)),
       );
-      const selectedSkills = (draftData.suggested_skills || []).filter(s => selectedSkillIds.has(s.id));
+      const selectedMcps = (draftData.suggested_mcp || []).filter(m => selectedMcpIds.has(suggestionKey(m)));
+      const selectedAgents = (draftData.suggested_agents || []).filter(a =>
+        selectedAgentIds.has(suggestionKey(a)),
+      );
+      const selectedPipelines = (draftData.suggested_pipelines || []).filter(p =>
+        selectedPipelineIds.has(suggestionKey(p)),
+      );
+      const selectedSkills = (draftData.suggested_skills || []).filter(s =>
+        selectedSkillIds.has(suggestionKey(s)),
+      );
 
       await associateToolkits(versionId, entityId, [...selectedToolkits, ...selectedMcps]);
       await associateApplications(versionId, entityId, [...selectedAgents, ...selectedPipelines]);
-      await associateSkills(versionId, selectedSkills);
+      await attachSkills(selectedSkills, versionId);
 
       if (onAgentCreated) onAgentCreated(result);
       else redirectToAgent(entityId, result.name);
@@ -274,9 +269,10 @@ const GenerateAgentModal = memo(props => {
       selectedPipelineIds,
       selectedSkillIds,
       createApplication,
+      refetchStartersLimit,
       associateToolkits,
       associateApplications,
-      associateSkills,
+      attachSkills,
       redirectToAgent,
       onAgentCreated,
       projectId,

@@ -11,6 +11,11 @@ const SCHEDULE_SETTINGS_TAG = 'SCHEDULE_SETTINGS_TAG';
 // false is a real value (enabled=false); only unset, blank and empty list are left out
 const isSet = value => value !== undefined && value !== null && value !== '' && value?.length !== 0;
 
+// A toolkit index is named by its toolkit id and index name; an agent or pipeline by its application id.
+// `entityId` is the application id, or the toolkit id when an `indexName` comes with it.
+const toTargetParams = (entityId, indexName) =>
+  indexName ? { toolkit_id: entityId, index_name: indexName } : { application_id: entityId };
+
 const schedulesPath = projectId => `/elitea_core/schedules/prompt_lib/${projectId}`;
 const LIST_ID = 'LIST';
 const listTag = { type: SCHEDULES_TAG, id: LIST_ID };
@@ -66,6 +71,7 @@ export const scheduleApi = eliteaApi
           entityType,
           entityId,
           versionId,
+          indexName,
           status,
           enabled,
           search,
@@ -79,6 +85,7 @@ export const scheduleApi = eliteaApi
             entity_type: entityType,
             entity_id: entityId,
             version_id: versionId,
+            index_name: indexName,
             status,
             enabled,
             search,
@@ -132,6 +139,25 @@ export const scheduleApi = eliteaApi
         invalidatesTags: (_, error) => (error ? [] : [listTag]),
       }),
 
+      // The indexes of one toolkit with what the schedule picker needs: `scheduled` and `schedulable`.
+      // A row can name the index `name` or `index_name`.
+      getToolkitIndexOptions: build.query({
+        query: ({ projectId, toolkitId }) => ({
+          url: `/elitea_core/index_meta/prompt_lib/${projectId}/${toolkitId}`,
+          params: { summary: true },
+        }),
+        transformResponse: response =>
+          (Array.isArray(response) ? response : (response?.rows ?? [])).map(row => ({
+            name: row.name ?? row.index_name,
+            state: row.state,
+            updatedOn: row.updated_on,
+            scheduled: !!row.scheduled,
+            schedulable: row.schedulable !== false,
+          })),
+        // The `scheduled` flag changes with every schedule create, delete, pause and import
+        providesTags: [listTag],
+      }),
+
       // Dry run of the save risk scan; it writes nothing, so it invalidates nothing
       checkScheduleRisk: build.mutation({
         query: ({ projectId, ...body }) => ({
@@ -141,11 +167,24 @@ export const scheduleApi = eliteaApi
         }),
       }),
 
+      // #7401: can each toolkit run with no person signed in; a webhook is blocked by any row that is not ok
+      checkScheduleConnections: build.mutation({
+        query: ({ projectId, ...body }) => ({
+          url: `${schedulesPath(projectId)}/connections`,
+          method: 'POST',
+          body,
+        }),
+        // The owner's check of a saved trigger switches it off on a lost login: refresh what the page shows
+        invalidatesTags: (result, error, { schedule_id: scheduleId }) =>
+          !error && scheduleId && result?.lost_login ? scheduleTags(scheduleId) : [],
+      }),
+
       runSchedule: build.mutation({
-        query: ({ projectId, scheduleId, trigger = 'manual' }) => ({
+        // payload: the sample body of a webhook test run
+        query: ({ projectId, scheduleId, trigger = 'manual', payload }) => ({
           url: `${schedulePath(projectId, scheduleId)}/run`,
           method: 'POST',
-          body: { trigger },
+          body: payload === undefined ? { trigger } : { trigger, payload },
         }),
         invalidatesTags: (_, error, { scheduleId }) => (error ? [] : scheduleTags(scheduleId)),
       }),
@@ -160,20 +199,20 @@ export const scheduleApi = eliteaApi
         invalidatesTags: (_, error) => (error ? [] : [{ type: SCHEDULE_RUNS_TAG, id: DRAFT_RUNS_ID }]),
       }),
 
-      // The caller's Test runs of one application, newest first
+      // The caller's Test runs of one application or toolkit index, newest first
       getDraftTestRuns: build.query({
-        query: ({ projectId, applicationId, page = 0, pageSize = PAGE_SIZE }) => ({
+        query: ({ projectId, applicationId, indexName, page = 0, pageSize = PAGE_SIZE }) => ({
           url: `${schedulesPath(projectId)}/test_run`,
-          params: { application_id: applicationId, limit: pageSize, offset: page * pageSize },
+          params: { ...toTargetParams(applicationId, indexName), limit: pageSize, offset: page * pageSize },
         }),
         providesTags: [{ type: SCHEDULE_RUNS_TAG, id: DRAFT_RUNS_ID }],
       }),
 
       // One Test run with its log `events` and `summary`
       getDraftTestRun: build.query({
-        query: ({ projectId, applicationId, runId }) => ({
+        query: ({ projectId, applicationId, indexName, runId }) => ({
           url: `${schedulesPath(projectId)}/test_run/${runId}`,
-          params: { application_id: applicationId },
+          params: toTargetParams(applicationId, indexName),
         }),
         providesTags: [{ type: SCHEDULE_RUNS_TAG, id: DRAFT_RUNS_ID }],
       }),
@@ -286,21 +325,39 @@ export const scheduleApi = eliteaApi
       // Project admin only. Optimistic so the checkbox does not flicker back; the list refetch
       // gives the schedule form the new run_without_asking_allowed flag.
       updateScheduleSettings: build.mutation({
-        query: ({ projectId, allowRunWithoutAsking }) => ({
+        // Each control sends only its own key; the API keeps a key the body leaves out (#7400)
+        query: ({ projectId, allowRunWithoutAsking, webhookMaxConcurrentRuns }) => ({
           url: `${schedulesPath(projectId)}/settings`,
           method: 'PUT',
-          body: { allow_run_without_asking: allowRunWithoutAsking },
+          body: {
+            ...(allowRunWithoutAsking !== undefined && { allow_run_without_asking: allowRunWithoutAsking }),
+            ...(webhookMaxConcurrentRuns !== undefined && {
+              webhook_max_concurrent_runs: webhookMaxConcurrentRuns,
+            }),
+          },
         }),
-        async onQueryStarted({ projectId, allowRunWithoutAsking }, { dispatch, queryFulfilled }) {
+        async onQueryStarted(
+          { projectId, allowRunWithoutAsking, webhookMaxConcurrentRuns },
+          { dispatch, queryFulfilled },
+        ) {
           const patch = dispatch(
             scheduleApi.util.updateQueryData('getScheduleSettings', { projectId }, draft => {
-              draft.allow_run_without_asking = allowRunWithoutAsking;
+              if (allowRunWithoutAsking !== undefined) draft.allow_run_without_asking = allowRunWithoutAsking;
             }),
           );
           try {
             await queryFulfilled;
           } catch {
             patch.undo();
+            return;
+          }
+          // The cap is written only once accepted: an optimistic value and its undo would reset the field's draft
+          if (webhookMaxConcurrentRuns !== undefined) {
+            dispatch(
+              scheduleApi.util.updateQueryData('getScheduleSettings', { projectId }, draft => {
+                draft.webhook_max_concurrent_runs = webhookMaxConcurrentRuns;
+              }),
+            );
           }
         },
         invalidatesTags: (_, error) => (error ? [] : [listTag]),
@@ -314,7 +371,9 @@ export const {
   useGetScheduleRunQuery,
   useGetScheduleListQuery,
   useCreateScheduleMutation,
+  useCheckScheduleConnectionsMutation,
   useCheckScheduleRiskMutation,
+  useGetToolkitIndexOptionsQuery,
   useDecideRunWithoutChatMutation,
   useRunScheduleMutation,
   useStartDraftTestRunMutation,

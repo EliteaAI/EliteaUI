@@ -57,3 +57,32 @@ export const resolveActiveSuiteId = searchParams => {
 
   return Number.isNaN(parsed) ? null : parsed;
 };
+
+/**
+ * Whether the scheduled evaluation picks this suite for its agent, from the suite's trigger_config.
+ * @param {object | null} [triggerConfig] - Suite trigger_config
+ * @returns {boolean} True when the suite is flagged for the scheduled evaluation
+ */
+export const readAutoEvaluation = triggerConfig => triggerConfig?.auto_evaluation === true;
+
+/**
+ * Suite trigger_config with the scheduled-evaluation flag set or cleared. The update API replaces
+ * trigger_config as a whole, so the other keys are kept as they are.
+ * @param {object | null} [triggerConfig] - Current trigger_config
+ * @param {boolean} enabled - Whether the scheduled evaluation should use the suite
+ * @returns {object} trigger_config to send
+ */
+export const buildAutoEvaluationTriggerConfig = (triggerConfig, enabled) => {
+  const next = { ...(triggerConfig ?? {}) };
+  if (enabled) next.auto_evaluation = true;
+  else delete next.auto_evaluation;
+
+  return next;
+};
+
+/**
+ * Whether a suite was made by the scheduled evaluation itself; those are never picked as a team suite.
+ * @param {object | null} [triggerConfig] - Suite trigger_config
+ * @returns {boolean} True for a generated suite
+ */
+export const isGeneratedSuite = triggerConfig => triggerConfig?.generated === true;

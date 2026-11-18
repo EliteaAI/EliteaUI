@@ -1,4 +1,5 @@
 import * as AccessibilityAriaHelpers from './accessibility.helpers.js';
+import * as CardNavigationHelpers from './cardNavigation.helpers.js';
 import * as ChunkHelpers from './chunk.helpers.js';
 import * as CodeMirrorEditorHelpers from './codeMirrorEditor.helpers.js';
 import * as CodeMirrorLinterHelpers from './codeMirrorLinter.helpers.js';
@@ -16,6 +17,7 @@ export {
   FunctionHelpers,
   LinkHelpers,
   NavigationHelpers,
+  CardNavigationHelpers,
   AccessibilityAriaHelpers,
   ChunkHelpers,
   MermaidHelpers,
@@ -33,6 +35,7 @@ export { getFilenameFromContentDisposition } from './download.helpers';
 export * as ParseYamlToMermaidHelpers from './parseYamlToMermaid.helpers.js';
 export * as ScheduleHelpers from './schedule.helpers';
 export * as WebhookHelpers from './webhook.helpers.js';
+export * as AgentNestingHelpers from './agentNesting.helpers';
 export * as CronBuilderHelpers from './cronBuilder.helpers';
 export * as BreadcrumbHelpers from './breadcrumb.helpers';
 export * as RtkCacheHelpers from './rtkCache.helpers';
@@ -46,3 +49,5 @@ export * from './scrollbar.helpers';
 export * from './contextStrategy.helpers';
 export * from './stringField.helpers';
 export * as AutocompleteHelpers from './autocomplete.helpers.js';
+export * as MessageCopyHelpers from './messageCopy.helpers.js';
+export * as AiDraftErrorHelpers from './aiDraftError.helpers.js';

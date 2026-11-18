@@ -16,6 +16,7 @@ import { useIsVersionLocked } from '@/[fsd]/features/pipelines/tool-picker/lib/h
 import { usePickerMenu } from '@/[fsd]/features/pipelines/tool-picker/lib/hooks/usePickerMenu.hooks';
 import { useProjectApplicationsList } from '@/[fsd]/features/pipelines/tool-picker/lib/hooks/useProjectApplicationsList.hooks';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
+import { AgentNestingHelpers } from '@/[fsd]/shared/lib/helpers';
 import RouteDefinitions from '@/routes';
 
 import PickerEntityIcon from './PickerEntityIcon';
@@ -73,6 +74,8 @@ const ProjectAgentPicker = memo(props => {
         usedNames,
         query: search,
         excludeId: values?.id,
+        // the host is a pipeline, which consumes no agent tier
+        hostTier: AgentNestingHelpers.PIPELINE_HOST_TIER,
       }).map(item => ({ ...item, isPipeline: pipelineGroup })),
     [attachedTools, search, usedNames, values?.id],
   );

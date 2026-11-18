@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { ErrorTrace } from '@/[fsd]/features/chat/ui/error-trace';
-import { useDeleteIndexItemMutation, useGetIndexScheduleQuery } from '@/[fsd]/features/toolkits/indexes/api';
+import { useDeleteIndexItemMutation } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import {
   applyReindexStub,
@@ -38,15 +38,6 @@ const IndexesContainer = memo(props => {
   const styles = indexesContainerStyles();
 
   const { goToCreateIndex, goToIndex, openIndexInNewTab } = useIndexNavigation(toolkitId);
-
-  useGetIndexScheduleQuery(
-    { projectId, toolkitId },
-    {
-      refetchOnMountOrArgChange: true,
-      refetchOnFocus: true,
-      refetchOnReconnect: true,
-    },
-  );
 
   const [reindexTarget, setReindexTarget] = useState(null);
   const [reindexConfirmOpen, setReindexConfirmOpen] = useState(false);

@@ -5,7 +5,7 @@ import { Box } from '@mui/material';
 import { RESIZE_GRIP_IMAGE } from '../lib/constants/entityTestPanel.constants';
 
 const TestPanelResizeHandle = memo(props => {
-  const { onResizeStart, testId = 'test-panel-resize-handle' } = props;
+  const { onResizeStart, testId = 'test-panel-resize-handle', sx } = props;
 
   const styles = testPanelResizeHandleStyles();
 
@@ -14,7 +14,7 @@ const TestPanelResizeHandle = memo(props => {
       role="separator"
       aria-orientation="vertical"
       aria-label="Resize test panel"
-      sx={styles.root}
+      sx={[styles.root, sx]}
       onMouseDown={onResizeStart}
       data-testid={testId}
     />

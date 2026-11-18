@@ -12,9 +12,12 @@ export const OptionsMap = {
   Credentials: 'Credential', // Backward compatibility
   Bucket: 'Bucket',
   Model: 'Model', // For Information Settings page
-  'Personal Token': 'Personal Token', // For Settings -> Tokens page
+  PersonalToken: 'Personal Token', // For Settings -> Tokens page
   Secret: 'Secret', // For Settings -> Secrets page
   MCP: 'MCP', // For MCPs
+  AIProvider: 'AI Provider',
+  User: 'User',
+  Application: 'Application',
 };
 
 export const RouteToLabelMap = [
@@ -39,19 +42,19 @@ export const RouteToLabelMap = [
 ];
 
 export const DropdownItems = [
-  { label: 'Chat', route: RouteDefinitions.Chat, option: 'Conversation' },
-  { label: 'Agent', route: RouteDefinitions.Applications, option: 'Agent' },
-  { label: 'Skill', route: RouteDefinitions.Skills, option: 'Skill' },
-  { label: 'Pipeline', route: RouteDefinitions.Pipelines, option: 'Pipeline' },
-  { label: 'Credential', route: RouteDefinitions.Credentials, option: 'Credential' },
-  { label: 'Toolkit', route: RouteDefinitions.Toolkits, option: 'Toolkit' },
-  { label: 'Application', route: RouteDefinitions.AppsApplications, option: 'Application' },
-  { label: 'MCP', route: RouteDefinitions.MCPs, option: 'MCP' },
-  { label: 'Artifact Bucket', route: RouteDefinitions.Artifacts, option: 'Bucket' },
-  { label: 'AI Provider', route: 'settings/ai-providers', option: 'AI Provider' },
-  { label: 'Token', route: 'settings/tokens', option: 'Personal Token' },
-  { label: 'Secret', route: 'settings/secrets', option: 'Secret' },
-  { label: 'Invite User', route: 'settings/users', option: 'User' },
+  { label: 'Chat', route: RouteDefinitions.Chat, option: OptionsMap.Chat },
+  { label: 'Agent', route: RouteDefinitions.Applications, option: OptionsMap.Agent },
+  { label: 'Skill', route: RouteDefinitions.Skills, option: OptionsMap.Skill },
+  { label: 'Pipeline', route: RouteDefinitions.Pipelines, option: OptionsMap.Pipeline },
+  { label: 'Credential', route: RouteDefinitions.Credentials, option: OptionsMap.Credential },
+  { label: 'Toolkit', route: RouteDefinitions.Toolkits, option: OptionsMap.Toolkit },
+  { label: 'Application', route: RouteDefinitions.AppsApplications, option: OptionsMap.Application },
+  { label: 'MCP', route: RouteDefinitions.MCPs, option: OptionsMap.MCP },
+  { label: 'Artifact Bucket', route: RouteDefinitions.Artifacts, option: OptionsMap.Bucket },
+  { label: 'AI Provider', route: 'settings/ai-providers', option: OptionsMap.AIProvider },
+  { label: 'Token', route: 'settings/tokens', option: OptionsMap.PersonalToken },
+  { label: 'Secret', route: 'settings/secrets', option: OptionsMap.Secret },
+  { label: 'Invite User', route: 'settings/users', option: OptionsMap.User },
 ];
 
 export const SimpleCreateRoutes = [
@@ -67,52 +70,51 @@ export const SimpleCreateRoutes = [
 ];
 
 export const CreationPermissions = {
-  Chat: [PERMISSIONS.chat.folders.create, PERMISSIONS.chat.create],
-  Conversation: [PERMISSIONS.chat.folders.create, PERMISSIONS.chat.create],
-  Agent: [PERMISSIONS.applications.create],
-  Skill: [PERMISSIONS.applications.create],
-  Pipeline: [PERMISSIONS.applications.create],
-  Toolkit: [PERMISSIONS.toolkits.create],
-  App: [PERMISSIONS.toolkits.create],
-  Application: [PERMISSIONS.toolkits.create],
-  MCP: [PERMISSIONS.toolkits.create],
-  Credential: undefined, // No specific permission needed for credentials
-  Bucket: [PERMISSIONS.artifacts.buckets.create, PERMISSIONS.artifacts.create],
-  'AI Provider': [PERMISSIONS.configuration.update],
-  Model: undefined, // No specific permission needed for model credentials
-  'Personal Token': undefined, // Personal tokens creation allowed from settings
-  Secret: [PERMISSIONS.secrets.list], // Allow if user can access secrets page
-  User: [PERMISSIONS.users.create],
+  [OptionsMap.Chat]: [PERMISSIONS.chat.folders.create, PERMISSIONS.chat.create],
+  [OptionsMap.Agent]: [PERMISSIONS.applications.create],
+  [OptionsMap.Skill]: [PERMISSIONS.applications.create],
+  [OptionsMap.Pipeline]: [PERMISSIONS.applications.create],
+  [OptionsMap.Toolkit]: [PERMISSIONS.toolkits.create],
+  [OptionsMap.App]: [PERMISSIONS.toolkits.create],
+  [OptionsMap.Application]: [PERMISSIONS.toolkits.create],
+  [OptionsMap.MCP]: [PERMISSIONS.toolkits.create],
+  [OptionsMap.Credential]: undefined, // No specific permission needed for credentials
+  [OptionsMap.Bucket]: [PERMISSIONS.artifacts.buckets.create, PERMISSIONS.artifacts.create],
+  [OptionsMap.AIProvider]: [PERMISSIONS.configuration.update],
+  [OptionsMap.Model]: undefined, // No specific permission needed for model credentials
+  [OptionsMap.PersonalToken]: undefined, // Personal tokens creation allowed from settings
+  [OptionsMap.Secret]: [PERMISSIONS.secrets.list], // Allow if user can access secrets page
+  [OptionsMap.User]: [PERMISSIONS.users.create],
 };
 
 export const CommandPathMap = {
-  Conversation: RouteDefinitions.Chat,
-  Agent: RouteDefinitions.CreateApplication,
-  Skill: RouteDefinitions.CreateSkill,
-  Pipeline: RouteDefinitions.CreatePipeline,
-  Toolkit: RouteDefinitions.CreateToolkit,
-  App: RouteDefinitions.CreateApp,
-  Credential: RouteDefinitions.CreateCredentialFromMain,
-  Bucket: RouteDefinitions.CreateBucket,
-  'AI Provider': RouteDefinitions.CreateConfiguration, // Route to filtered credential creation
-  'Personal Token': RouteDefinitions.CreatePersonalToken,
+  [OptionsMap.Chat]: RouteDefinitions.Chat,
+  [OptionsMap.Agent]: RouteDefinitions.CreateApplication,
+  [OptionsMap.Skill]: RouteDefinitions.CreateSkill,
+  [OptionsMap.Pipeline]: RouteDefinitions.CreatePipeline,
+  [OptionsMap.Toolkit]: RouteDefinitions.CreateToolkit,
+  [OptionsMap.App]: RouteDefinitions.CreateApp,
+  [OptionsMap.Credential]: RouteDefinitions.CreateCredentialFromMain,
+  [OptionsMap.Bucket]: RouteDefinitions.CreateBucket,
+  [OptionsMap.AIProvider]: RouteDefinitions.CreateConfiguration, // Route to filtered credential creation
+  [OptionsMap.PersonalToken]: RouteDefinitions.CreatePersonalToken,
   // For Secret we stay on settings/secrets but add a query param to trigger row creation
-  Secret: undefined,
-  MCP: RouteDefinitions.CreateMCP,
+  [OptionsMap.Secret]: undefined,
+  [OptionsMap.MCP]: RouteDefinitions.CreateMCP,
 };
 
 export const BreadCrumbMap = {
-  Conversation: 'Chat',
-  Agent: 'New Agent',
-  Skill: 'New Skill',
-  Pipeline: 'New Pipeline',
-  Toolkit: 'New Toolkit',
-  App: 'New App',
-  Credential: 'New Credential',
-  Bucket: 'New Bucket',
-  'AI Provider': 'New AI Provider',
-  'Personal Token': 'New Personal Token',
-  Secret: 'New Secret',
+  [OptionsMap.Chat]: 'Chat',
+  [OptionsMap.Agent]: 'New Agent',
+  [OptionsMap.Skill]: 'New Skill',
+  [OptionsMap.Pipeline]: 'New Pipeline',
+  [OptionsMap.Toolkit]: 'New Toolkit',
+  [OptionsMap.App]: 'New App',
+  [OptionsMap.Credential]: 'New Credential',
+  [OptionsMap.Bucket]: 'New Bucket',
+  [OptionsMap.AIProvider]: 'New AI Provider',
+  [OptionsMap.PersonalToken]: 'New Personal Token',
+  [OptionsMap.Secret]: 'New Secret',
   [RouteDefinitions.CreateApplication]: 'Agents',
   [RouteDefinitions.CreateSkill]: 'Skills',
   [RouteDefinitions.CreatePipeline]: 'Pipelines',
@@ -138,12 +140,12 @@ export const PrevUrlPathMap = {
 };
 
 export const PathToOptionMap = [
-  { path: RouteDefinitions.CreateConfiguration, option: 'AI Provider' },
-  { path: 'settings/ai-providers', option: 'AI Provider' },
-  { path: RouteDefinitions.CreatePersonalToken, option: 'Personal Token' },
-  { path: 'settings/tokens', option: 'Personal Token' },
-  { path: 'settings/secrets', option: 'Secret' },
-  { path: 'settings/users', option: 'User' },
+  { path: RouteDefinitions.CreateConfiguration, option: OptionsMap.AIProvider },
+  { path: 'settings/ai-providers', option: OptionsMap.AIProvider },
+  { path: RouteDefinitions.CreatePersonalToken, option: OptionsMap.PersonalToken },
+  { path: 'settings/tokens', option: OptionsMap.PersonalToken },
+  { path: 'settings/secrets', option: OptionsMap.Secret },
+  { path: 'settings/users', option: OptionsMap.User },
   { path: 'chat', option: OptionsMap.Chat },
   { path: 'agent', option: OptionsMap.Agent },
   { path: 'skill', option: OptionsMap.Skill },

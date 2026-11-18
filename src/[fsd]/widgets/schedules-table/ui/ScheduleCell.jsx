@@ -6,8 +6,10 @@ import {
   ScheduleEnabledSwitch,
   ScheduleRunStatusChip,
   formatRunStarted,
+  isAtRunCap,
   isRotating,
   rotationText,
+  toDeliveryOutcomeLabel,
   toFullWebhookUrl,
   toRunStatusLabel,
   toWebhookTypeLabel,
@@ -21,6 +23,7 @@ import AuthorContainer from '@/components/AuthorContainer';
 import CalendarIcon from '@/components/Icons/CalendarIcon';
 
 import IconWithLabel from './IconWithLabel';
+import RunCapLine from './RunCapLine';
 
 // The API stores run statuses in lower case (failed, skipped, blocked, ...)
 const REASON_STATUSES = ['failed', 'skipped', 'blocked'];
@@ -79,8 +82,11 @@ const lastRunTooltip = (row, label, reason) => {
   return reason ? `${text}. ${reason}` : text;
 };
 
-const ScheduleCell = memo(({ column, value, row, tier, now }) => {
+const ScheduleCell = memo(props => {
+  const { column, value, row, tier, now } = props;
   const styles = cellStyles;
+  // A toolkit index has no version: its second line names the index
+  const entitySubLabel = row.entity_type === 'toolkit_index' ? row.index_name : row.version_name;
   const isCompact = tier === 'compact';
   switch (column.field) {
     case 'entity_name':
@@ -90,14 +96,14 @@ const ScheduleCell = memo(({ column, value, row, tier, now }) => {
             type={row.entity_type}
             label={row.entity_name}
           />
-          {row.version_name && (
+          {entitySubLabel && (
             <Tooltip.TypographyWithConditionalTooltip
-              title={row.version_name}
+              title={entitySubLabel}
               placement="top"
               variant="bodySmall"
               color="text.secondary"
             >
-              {row.version_name}
+              {entitySubLabel}
             </Tooltip.TypographyWithConditionalTooltip>
           )}
         </Box>
@@ -165,6 +171,35 @@ const ScheduleCell = memo(({ column, value, row, tier, now }) => {
           placement="top"
         >
           {renderRunDate(value, tier)}
+        </MuiTooltip>
+      );
+    }
+    case 'last_delivery_at': {
+      if (!row.last_delivery_at) return isAtRunCap(row) ? <RunCapLine row={row} /> : '-';
+      const outcome = toDeliveryOutcomeLabel(row.last_delivery_outcome);
+      return (
+        <MuiTooltip
+          title={[outcome, formatRunStarted(row.last_delivery_at)].filter(Boolean).join(' - ')}
+          placement="top"
+        >
+          <Box
+            component="span"
+            tabIndex={isCompact ? 0 : undefined}
+            sx={styles.lastRun}
+            data-testid="webhook-last-delivery"
+          >
+            {renderRunDate(row.last_delivery_at, tier)}
+            {!isCompact && outcome && (
+              <Typography
+                variant="bodySmall"
+                component="span"
+                sx={styles.statusLabel}
+              >
+                {outcome}
+              </Typography>
+            )}
+            {isAtRunCap(row) && <RunCapLine row={row} />}
+          </Box>
         </MuiTooltip>
       );
     }

@@ -348,14 +348,14 @@ describe('buildAnalyticsSheets — skill usage', () => {
       expect(headers(section(sheets, 'Overview', 'Daily Activity'))).toEqual([
         'Date',
         'Active Users',
-        'LLM Calls',
+        'Model Calls',
         'Tool Runs',
         'Agent & Pipeline Runs',
       ]);
       expect(headers(section(sheets, 'Overview', 'Top AI Adopters'))).toEqual([
         'User',
         'AI Events',
-        'LLM Calls',
+        'Model Calls',
         'Tool Runs',
         'Agent & Pipeline Runs',
       ]);
@@ -491,7 +491,7 @@ describe('buildAgentDetailSheet', () => {
     );
     expect(sectionOf(sheet, 'KPIs').rows).toContainEqual({ metric: 'Total Tokens', value: 1500 });
     const models = sectionOf(sheet, 'Models');
-    const llmCalls = models.columns.find(column => column.header === 'LLM Calls');
+    const llmCalls = models.columns.find(column => column.header === 'Model Calls');
     expect(models.rows[0][llmCalls.key]).toBe(5);
   });
 
@@ -1156,5 +1156,41 @@ describe('Chat Messages export section', () => {
     const top = agentsSheet.sections.find(s => s.title === 'Most Active Agents & Pipelines');
 
     expect(JSON.stringify(top.rows)).toContain('No data available for the selected date range.');
+  });
+});
+
+describe('Token Usage by User — deleted users (#6879)', () => {
+  const tokenUserNames = byUser => {
+    const [, tokens] = buildRunAnalyticsSheets({
+      costs: { ...COSTS, by_user: byUser },
+      tools: { rows: [] },
+      health: { health: [], daily_activity: [] },
+      meta: RUN_META,
+    });
+    const section = tokens.sections.find(item => item.title === 'Token Usage by User');
+    return section.rows.map(row => row.name);
+  };
+
+  it('marks a deleted user with the stored email', () => {
+    expect(tokenUserNames([{ user_id: 9, user_email: 'gone@example.com', user_deleted: true }])).toEqual([
+      'gone@example.com (Deleted user)',
+    ]);
+  });
+
+  it('marks a deleted user that has a display name', () => {
+    expect(
+      tokenUserNames([
+        { user_id: 9, user_display_name: 'Gone Person', user_email: 'g@x.y', user_deleted: true },
+      ]),
+    ).toEqual(['Gone Person (Deleted user)']);
+  });
+
+  it('leaves a live user unmarked and falls back to the id when there is no email', () => {
+    expect(
+      tokenUserNames([
+        { user_id: 1, user_email: 'a@b.c' },
+        { user_id: 12, user_email: null },
+      ]),
+    ).toEqual(['a@b.c', 'User 12']);
   });
 });

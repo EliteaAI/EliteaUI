@@ -33,8 +33,7 @@ Use **Import** in the CHATS header to restore a chat exported from this ELITEA s
 
 - **Edit** — Rename the chat
 - **Move to** — Move the chat into a folder; create a new folder inline if needed
-- **Make Public** — Share the chat with all project members; cannot be reversed
-- **Share** — Copy a direct link to the chat to your clipboard (team projects only)
+- **Share** — Open the Share Chat window to choose who in the project can open the chat and to create read-only links for people outside it; for a chat you do not own, copy its link
 - **Playback** — Replay the chat step by step without re-engaging models; use arrow keys or on-screen controls to navigate; designed for demos
 - **Export** — Download the chat as an encrypted JSON file, or as an encrypted ZIP archive that also includes its attached and generated files; it can be imported only into the same ELITEA setup
 - **Pin on top** — Pin the chat to the top of the list

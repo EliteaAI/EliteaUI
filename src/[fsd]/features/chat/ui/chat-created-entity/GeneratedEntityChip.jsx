@@ -5,6 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Box, Tooltip, Typography } from '@mui/material';
 
 import { getEntityIcon, getIconStyleProps } from '@/[fsd]/features/chat/lib/helpers';
+import { useCanManageProjectSettings } from '@/[fsd]/features/settings/lib/hooks';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import TypographyWithConditionalTooltip from '@/[fsd]/shared/ui/tooltip/TypographyWithConditionalTooltip';
@@ -62,7 +63,9 @@ const GeneratedEntityChip = memo(props => {
   const handleMouseEnter = useCallback(() => setIsHovering(true), []);
   const handleMouseLeave = useCallback(() => setIsHovering(false), []);
 
-  const canDelete = !!onDeleteEntity;
+  // Deleting the project context hits the admin-only settings endpoint (#6789)
+  const { canManageSettings } = useCanManageProjectSettings();
+  const canDelete = !!onDeleteEntity && (entityType !== 'project_context' || canManageSettings);
 
   const handleDeleteClick = useCallback(() => setIsConfirmOpen(true), []);
   const handleConfirmClose = useCallback(() => setIsConfirmOpen(false), []);

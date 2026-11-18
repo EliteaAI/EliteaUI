@@ -1,5 +1,7 @@
 import { forwardRef, memo, useId, useMemo } from 'react';
 
+import { useSelector } from 'react-redux';
+
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import { Box, Chip, Typography } from '@mui/material';
 
@@ -12,7 +14,19 @@ import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SearchParams, ViewMode } from '@/common/constants';
 import RouteDefinitions from '@/routes';
 
-import { WAITING_NEED, formatApprovalExpiry, getWaitingRunNeed } from '../lib/helpers';
+import {
+  WAITING_NEED,
+  describeNeed,
+  formatApprovalExpiry,
+  formatTool,
+  getActorTexts,
+  getCredentialOwnerId,
+  getPausedMoreCount,
+  getPausedTools,
+  getWaitingRunNeed,
+  isSignInUnanswerable,
+  isStartedByUser,
+} from '../lib/helpers';
 import { useActionButtonProps } from '../lib/hooks/useActionButtonProps.hooks';
 import { useNow } from '../lib/hooks/useNow.hooks';
 import { useRunDetail, useScheduleRunConversation } from '../lib/hooks/useScheduleRuns.hooks';
@@ -21,26 +35,19 @@ import {
   useWaitingRunCredentialCheck,
 } from '../lib/hooks/useWaitingRunCredentialCheck.hooks';
 import ScheduleRunApproval from './ScheduleRunApproval';
+import ScheduleWaitingTools from './ScheduleWaitingTools';
 
 const noop = () => {};
-const STEP2_NOTE = 'Reject ends the run as Failed: rejected by the owner.';
-const BLOCKED_REASON = 'Provide the credential first';
+const TOOL_CALL_LEAD = 'This run is paused before a sensitive tool call.';
+const STEP2_NOTE = 'Reject ends the run as Failed.';
+// The credential and the sign-in belong to the user the run acts as; only the decider presses Approve and Reject
+const ACTOR_LABEL = { owner: 'schedule owner', starter: 'user who started this run' };
 const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' };
 const ENTITY_LABELS = { agent: 'agent', pipeline: 'pipeline' };
 const STEP_STATUS = {
   missing: { label: 'Missing', tone: 'warning' },
   checking: { label: 'Checking', tone: 'info' },
   ready: { label: 'Done', tone: 'success' },
-};
-
-const describeNeed = ({ need, toolkit, credential }, pausedText) => {
-  const name = toolkit || 'the toolkit';
-  if (need === WAITING_NEED.SIGN_IN) return `Toolkit "${name}" needs you to sign in.`;
-  if (need === WAITING_NEED.CREDENTIAL)
-    return credential
-      ? `Toolkit "${name}" has no usable credential "${credential}".`
-      : `Toolkit "${name}" has no usable credential.`;
-  return pausedText || 'This run is paused and waits for your decision.';
 };
 
 /**
@@ -53,11 +60,16 @@ const ScheduleWaitingCard = memo(
   forwardRef((props, ref) => {
     const { schedule, run, entityType, applicationId, onShowTest } = props;
     const projectId = useSelectedProjectId();
+    const userId = useSelector(state => state.user.id);
     const styles = scheduleWaitingCardStyles();
     const now = useNow();
     const statusId = useId();
     const { run: detail } = useRunDetail(schedule?.id, applicationId, run);
-    const shownRun = detail ?? run;
+    // The detail comes from the API and lacks the `isDraftRun` mark of the list row
+    const shownRun = useMemo(
+      () => (detail ? { ...detail, ...(run.isDraftRun && { isDraftRun: true }) } : run),
+      [detail, run],
+    );
     // A Test run has no schedule row: the entity comes from the page and the version from the run
     const target = useMemo(
       () =>
@@ -74,7 +86,18 @@ const ScheduleWaitingCard = memo(
     const waiting = useMemo(() => getWaitingRunNeed(pausedEvent), [pausedEvent]);
     const isCredential = waiting.need === WAITING_NEED.CREDENTIAL;
     const isSignIn = waiting.need === WAITING_NEED.SIGN_IN;
+    // A call-time pause for one tool names it in its text; from two tools on, a fixed sentence and the list
+    const pausedTools = getPausedTools(pausedEvent);
+    const listedTools = pausedTools.length > 1 ? pausedTools : [];
+    // The lead sentence claims a tool-call pause, so it needs a tool or the server's pause text behind it
+    const knowsToolCall = pausedTools.length > 0 || Boolean(pausedEvent?.text);
+    const moreToolsCount = listedTools.length > 0 ? getPausedMoreCount(pausedEvent) : 0;
     const { authAction } = conversation;
+    // The credential check and the sign-in tokens come from the user the run acts as
+    const actorId = getCredentialOwnerId(shownRun, schedule);
+    const isOtherActor = actorId != null && actorId !== userId;
+    const actorLabel = ACTOR_LABEL[isStartedByUser(shownRun) ? 'starter' : 'owner'];
+    const noSignIn = isSignIn && isSignInUnanswerable(shownRun, schedule);
 
     const {
       state: credentialState,
@@ -83,12 +106,15 @@ const ScheduleWaitingCard = memo(
     } = useWaitingRunCredentialCheck({
       schedule: target,
       toolkit: waiting.toolkit,
+      runId: shownRun.id,
       enabled: isCredential,
     });
     const serverUrl = authAction?.toolOutputs?.server_url || authAction?.toolMeta?.server_url || '';
     const { isLoggedIn: signedIn } = useMcpTokenChange({ serverUrl });
+    // The token store is the viewer's, so it says nothing about the user the run acts as
+    const signInReady = signedIn && !isOtherActor && !noSignIn;
     const stepState = isSignIn
-      ? signedIn
+      ? signInReady
         ? CREDENTIAL_CHECK_STATE.READY
         : CREDENTIAL_CHECK_STATE.MISSING
       : credentialState;
@@ -113,13 +139,16 @@ const ScheduleWaitingCard = memo(
       now,
     );
 
+    // A single tool without a pause text is still named
+    const pausedText =
+      pausedEvent?.text ||
+      (pausedTools.length === 1 ? `Paused for approval: ${formatTool(pausedTools[0])}` : '');
     const description = describeNeed(
       { ...waiting, toolkit: waiting.toolkit || toolkitName },
-      pausedEvent?.text,
+      pausedText,
+      listedTools.length > 1,
     );
     const toolkitLabel = waiting.toolkit || toolkitName || 'the toolkit';
-    const authorizationText = `Authorization is required for toolkit "${toolkitLabel}". Provide the credential, then approve.`;
-    const signInText = `Authorization is required for toolkit "${toolkitLabel}". Authorize now, then approve.`;
     const credentialRows = [
       ['Toolkit', toolkitLabel],
       ['Credential', waiting.credential],
@@ -138,10 +167,21 @@ const ScheduleWaitingCard = memo(
       </Box>
     );
     const buttonProps = useActionButtonProps();
+    const credentialPending = isCredential && credentialState !== CREDENTIAL_CHECK_STATE.READY;
+    const { blockedReason, authorizationText, signInText } = getActorTexts({
+      toolkitLabel,
+      isOtherActor,
+      actorLabel,
+      noSignIn,
+      credentialPending,
+      isSignIn,
+    });
     const approval = (
       <ScheduleRunApproval
+        key={shownRun.id}
         compact
         plain={!isCredential && !isSignIn}
+        approveAllAllowed={Boolean(detail) && detail.can_approve_all !== false}
         schedule={schedule}
         run={shownRun}
         runId={shownRun.id}
@@ -150,9 +190,7 @@ const ScheduleWaitingCard = memo(
         pausedMessageId={conversation.pausedMessageId}
         authAction={authAction}
         pausedAt={pausedEvent?.at}
-        blockedReason={
-          isCredential && credentialState !== CREDENTIAL_CHECK_STATE.READY ? BLOCKED_REASON : undefined
-        }
+        blockedReason={blockedReason}
       />
     );
 
@@ -175,9 +213,13 @@ const ScheduleWaitingCard = memo(
               variant="bodySmall"
               sx={styles.noticeText}
             >
-              {`This run will not start until you approve it. ${description} ${STEP2_NOTE}`}
+              {`${knowsToolCall ? `${TOOL_CALL_LEAD} ` : ''}${description} ${STEP2_NOTE}`}
             </Typography>
           </Box>
+          <ScheduleWaitingTools
+            tools={listedTools}
+            moreCount={moreToolsCount}
+          />
           {expiry && (
             <Typography
               data-testid="schedule-waiting-expiry"
@@ -227,7 +269,16 @@ const ScheduleWaitingCard = memo(
               {expiry}
             </Typography>
           )}
-          {isSignIn && authAction && (
+          {isSignIn && (isOtherActor || noSignIn) && (
+            <ToolkitActionPanel
+              title={step1Title}
+              message={signInText}
+              role="status"
+              sx={styles.panel}
+              titleSx={styles.panelTitle}
+            />
+          )}
+          {isSignIn && !isOtherActor && !noSignIn && authAction && (
             <ChatContinue
               authRequiredAction={authAction}
               title={step1Title}

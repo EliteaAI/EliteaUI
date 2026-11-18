@@ -13,6 +13,7 @@ import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn
 import { formatFileSize } from '@/common/attachmentValidationUtils';
 
 import ImportAttachmentRow from './ImportAttachmentRow';
+import ImportParticipantRow from './ImportParticipantRow';
 
 const FILE_INPUT_ACCEPT = '.enc';
 
@@ -27,15 +28,18 @@ const ImportConversationModal = memo(props => {
     file,
     preview,
     selectedPaths,
+    skippedParticipantIds,
     uploadProgress,
     selectFile,
     toggleAttachment,
     toggleAll,
+    toggleParticipant,
     startImport,
     cancel,
   } = useImportConversation({ onImported });
 
   const attachments = useMemo(() => preview?.attachments || [], [preview]);
+  const participants = useMemo(() => preview?.participants || [], [preview]);
   const selectableCount = useMemo(() => getSelectableAttachments(attachments).length, [attachments]);
   const { selectedCount, totalCount, selectedSize } = useMemo(
     () => getAttachmentsSelectionSummary(attachments, selectedPaths),
@@ -143,6 +147,29 @@ const ImportConversationModal = memo(props => {
             ? 'The file was exported without its archive. Attachments will be shown as "not imported".'
             : 'This chat will be imported without attachments.'}
         </Typography>
+      )}
+      {participants.length > 0 && (
+        <Box
+          sx={styles.participants}
+          data-testid="import-chat-modal-participants"
+        >
+          <Typography
+            variant="bodySmall"
+            sx={styles.label}
+          >
+            Participants
+          </Typography>
+          {participants.map(participant => (
+            <ImportParticipantRow
+              key={participant.id}
+              participant={participant}
+              participants={participants}
+              checked={!skippedParticipantIds.includes(participant.id)}
+              disabled={step === IMPORT_STEPS.importing}
+              onToggle={toggleParticipant}
+            />
+          ))}
+        </Box>
       )}
       {preview.include_attachments && totalCount > 0 && (
         <Box sx={styles.attachments}>
@@ -319,6 +346,11 @@ const importConversationModalStyles = () => ({
   description: ({ palette }) => ({
     color: palette.text.secondary,
   }),
+  participants: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+  },
   attachments: {
     display: 'flex',
     flexDirection: 'column',

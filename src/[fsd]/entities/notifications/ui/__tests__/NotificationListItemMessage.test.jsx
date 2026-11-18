@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material';
 
+import { NotificationType } from '@/common/constants';
 import lightPalette from '@/lightPalette';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
@@ -44,6 +45,7 @@ describe('schedule notice link', () => {
     const link = screen.getByRole('link', { name: 'Nightly sync' });
     expect(link.getAttribute('href')).toMatch(/\/7\/settings\/schedules\/12\?history_run_id=99$/);
     expect(link).toHaveAttribute('target', '_blank');
+    expect(link.parentElement).not.toHaveStyle({ overflowWrap: 'anywhere' });
   });
 
   it('links an admin edit to the schedule without a run', () => {
@@ -70,5 +72,52 @@ describe('schedule notice text', () => {
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
     expect(screen.getByText(/Nightly sync/)).toBeInTheDocument();
     expect(screen.getByText(/failed/)).toBeInTheDocument();
+  });
+});
+
+describe('project membership notice text', () => {
+  afterEach(cleanup);
+
+  it('preserves the stored text of a legacy add notice with named users', () => {
+    renderMessage(
+      build(NotificationType.UserWasAddedToSomeProjectAsTeammate, {
+        users: ['Alex'],
+        project_name: 'P',
+        message: 'Alex is added into P.',
+      }),
+    );
+
+    expect(screen.getByText('Alex is added into P.')).toBeInTheDocument();
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  });
+
+  it('renders the full bracketed project name as the added-notice link', () => {
+    const projectName = `${'A'.repeat(120)} [Research]`;
+    const { container } = renderMessage(
+      build(NotificationType.UserWasAddedToSomeProjectAsTeammate, {
+        project_name: projectName,
+        message: `You have been added to ${projectName} project.`,
+      }),
+    );
+
+    expect(screen.getByRole('link', { name: projectName })).toHaveAttribute(
+      'href',
+      expect.stringMatching(/\/7\/chat$/),
+    );
+    expect(container.textContent).toBe(`You have been added to ${projectName} project.`);
+    expect(container.firstElementChild).toHaveStyle({ overflowWrap: 'anywhere' });
+  });
+
+  it('renders a removed project name as plain text with no link', () => {
+    const projectName = 'Research [Archive]';
+    const { container } = renderMessage(
+      build(NotificationType.UserWasRemovedFromProject, {
+        project_name: projectName,
+        message: `You have been removed from ${projectName} project.`,
+      }),
+    );
+
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    expect(container.textContent).toBe(`You have been removed from ${projectName} project.`);
   });
 });

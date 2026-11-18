@@ -110,6 +110,7 @@ const EntityTypeIcon = memo(props => {
         />
       );
     case 'index':
+    case 'toolkit_index':
       return (
         <Box
           component={IndexIcon}

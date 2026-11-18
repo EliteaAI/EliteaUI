@@ -9,9 +9,14 @@ import { TabBarItems } from '@/pages/Common/Components/StyledComponents';
 import { RISK_CHECK_STATUS } from '../lib/constants';
 
 const RISK_HINT_ID = 'schedule-risk-hint';
+const CONNECTIONS_HINT_ID = 'schedule-connections-hint';
 
 const ScheduleFormActions = memo(
-  ({ riskStatus, saveDisabled, riskBlocksSave, onSave, onCancel, headerActions }) => {
+  ({ riskStatus, saveDisabled, riskBlocksSave, connectionsHint = '', onSave, onCancel, headerActions }) => {
+    const riskBlocked = riskStatus === RISK_CHECK_STATUS.BLOCKED;
+    // One hint at a time, the risk one first: fixing the version can change its connections
+    const showConnectionsHint =
+      !!connectionsHint && !riskBlocked && riskStatus !== RISK_CHECK_STATUS.CHECKING;
     const styles = scheduleFormActionsStyles();
 
     return (
@@ -22,7 +27,20 @@ const ScheduleFormActions = memo(
             <Typography variant="labelMedium">Checking risks</Typography>
           </Box>
         )}
-        {riskStatus === RISK_CHECK_STATUS.BLOCKED && (
+        {showConnectionsHint && (
+          <Box
+            id={CONNECTIONS_HINT_ID}
+            sx={styles.riskStatus}
+          >
+            <Box
+              component={AttentionIcon}
+              aria-hidden
+              sx={styles.riskIcon}
+            />
+            <Typography variant="labelMedium">{connectionsHint}</Typography>
+          </Box>
+        )}
+        {riskBlocked && (
           <Box
             id={RISK_HINT_ID}
             sx={styles.riskStatus}
@@ -40,8 +58,10 @@ const ScheduleFormActions = memo(
           variant="elitea"
           color="primary"
           disabled={saveDisabled}
-          aria-disabled={riskBlocksSave || undefined}
-          aria-describedby={riskStatus === RISK_CHECK_STATUS.BLOCKED ? RISK_HINT_ID : undefined}
+          aria-disabled={riskBlocksSave || !!connectionsHint || undefined}
+          aria-describedby={
+            riskBlocked ? RISK_HINT_ID : showConnectionsHint ? CONNECTIONS_HINT_ID : undefined
+          }
           onClick={onSave}
         >
           Save

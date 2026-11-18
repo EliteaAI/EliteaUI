@@ -14,6 +14,7 @@ import {
   ChartTooltip,
   DeletedChip,
   KPICard,
+  UserLabel,
 } from '@/[fsd]/features/settings/ui/analytics';
 import { useClientSort, useSelectedProjectName, useSortedRows } from '@/[fsd]/shared/lib/hooks';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
@@ -38,7 +39,7 @@ const PARTICIPANT_COLUMNS = [
 
 const MODEL_COLUMNS = [
   { key: 'model_name', label: 'Model', flex: 2.5 },
-  { key: 'calls', label: 'LLM Calls', flex: 1 },
+  { key: 'calls', label: 'Model Calls', flex: 1 },
   { key: 'responses', label: 'Responses', flex: 1 },
   { key: 'total_tokens', label: 'Tokens', flex: 1 },
   { key: 'llm_cost', label: 'Cost', flex: 1 },
@@ -160,7 +161,7 @@ const AnalyticsChatDetailed = memo(props => {
       USER_COLUMNS.map(col => ({
         ...col,
         render: row => {
-          if (col.key === 'user_email') return row.user_email || `User ${row.user_id}`;
+          if (col.key === 'user_email') return <UserLabel user={row} />;
           if (col.key === 'responses') return AnalyticCommonHelpers.fmtNum(row.responses);
           if (col.key === 'total_tokens') return AnalyticCommonHelpers.fmtNum(row.total_tokens);
           if (col.key === 'llm_cost') return AnalyticCommonHelpers.fmtCost(row.llm_cost);
@@ -387,7 +388,7 @@ const AnalyticsChatDetailed = memo(props => {
           testId="analytics-chat-detail-kpi-cache-write-tokens"
         />
         <KPICard
-          label="LLM CALLS"
+          label="MODEL CALLS"
           value={AnalyticCommonHelpers.fmtNum(kpis.llm_calls)}
           testId="analytics-chat-detail-kpi-llm-calls"
         />

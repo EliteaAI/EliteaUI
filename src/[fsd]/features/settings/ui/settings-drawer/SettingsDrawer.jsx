@@ -2,6 +2,7 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { useLocation } from 'react-router-dom';
 
+import WebhookIcon from '@mui/icons-material/WebhookOutlined';
 import { Box, Divider, Typography } from '@mui/material';
 
 import { SettingsLayoutConstants } from '@/[fsd]/features/settings/lib/constants';
@@ -12,7 +13,6 @@ import CoinIcon from '@/assets/coin-icon.svg?react';
 import CompassIcon from '@/assets/compass.svg?react';
 import ConfigurationIcon from '@/assets/configuration-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
-import WebhookIcon from '@/assets/link-icon.svg?react';
 import ModelIcon from '@/assets/model-icon.svg?react';
 import EnvironmentIcon from '@/assets/new-environment-icon.svg?react';
 import PersonalizationIcon from '@/assets/personalization-icon.svg?react';
@@ -33,6 +33,7 @@ const ICON_COMPONENTS = {
   'project-general': BriefcaseIcon,
   'project-context': CompassIcon,
   schedules: ClockIcon,
+  // The Admin Features page uses the same webhook icon
   webhooks: WebhookIcon,
   secrets: Lock,
   users: UsersIcon,

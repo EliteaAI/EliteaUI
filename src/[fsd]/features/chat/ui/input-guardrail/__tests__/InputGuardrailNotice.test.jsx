@@ -43,6 +43,17 @@ describe('InputGuardrailNotice', () => {
     );
   });
 
+  it('names both categories for a mixed block', () => {
+    renderNotice({
+      action: 'block',
+      message_key: 'input_guardrail.blocked.credentials_and_personal_data',
+      message: 'server text',
+    });
+    expect(screen.getByTestId('input-guardrail-blocked')).toHaveTextContent(
+      'appears to contain a credential and personal data',
+    );
+  });
+
   it('sends an instructions block to the agent owner, not the user', () => {
     renderNotice({
       action: 'block',

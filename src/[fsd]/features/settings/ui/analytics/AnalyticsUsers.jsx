@@ -3,17 +3,23 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { Box, CircularProgress, TablePagination, TableSortLabel, Typography } from '@mui/material';
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { AnalyticsUserDetailed } from '@/[fsd]/features/settings/ui/analytics';
-import { analyticsTableSortLabelSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
+import { AnalyticsUserDetailed, UserLabel } from '@/[fsd]/features/settings/ui/analytics';
+import {
+  analyticsColumnSx,
+  analyticsHeaderCellSx,
+  analyticsRowMinWidthSx,
+  analyticsTableSortLabelSx,
+  analyticsTableWrapperSx,
+} from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { useAnalyticsUsersQuery } from '@/api';
 import StyledSearchInput from '@/components/SearchInput';
 
 const DEFAULT_USER_SORT = { sortBy: 'total_events', sortOrder: 'desc' };
 
 const USER_COLUMNS = [
-  { key: 'user_email', label: 'User', flex: 3, render: u => u.user_email || `User ${u.user_id}` },
+  { key: 'user_email', label: 'User', flex: 3, render: u => <UserLabel user={u} /> },
   { key: 'active_days', label: 'Active Days', render: u => u.active_days },
-  { key: 'llm_events', label: 'LLM Calls', render: u => AnalyticCommonHelpers.fmtNum(u.llm_events) },
+  { key: 'llm_events', label: 'Model Calls', render: u => AnalyticCommonHelpers.fmtNum(u.llm_events) },
   { key: 'tool_events', label: 'Tool Calls', render: u => AnalyticCommonHelpers.fmtNum(u.tool_events) },
   {
     key: 'agent_events',
@@ -83,6 +89,8 @@ const AnalyticsUsers = memo(props => {
     () => USER_COLUMNS.filter(column => !column.skillOnly || canViewSkills),
     [canViewSkills],
   );
+
+  const rowMinWidth = useMemo(() => analyticsRowMinWidthSx(columns), [columns]);
 
   const { data, isFetching } = useAnalyticsUsersQuery(
     {
@@ -172,13 +180,13 @@ const AnalyticsUsers = memo(props => {
         </Box>
         <Box sx={styles.tableWrapper}>
           <Box
-            sx={styles.tableHeader}
+            sx={[styles.tableHeader, rowMinWidth]}
             data-testid="analytics-users-table-header"
           >
             {columns.map(column => (
               <Box
                 key={column.key}
-                sx={[styles.tableCell, { flex: column.flex ?? 1 }]}
+                sx={[styles.tableCell, analyticsHeaderCellSx, analyticsColumnSx(column)]}
               >
                 {column.sortable === false ? (
                   column.label
@@ -208,7 +216,7 @@ const AnalyticsUsers = memo(props => {
             rows.map((u, i) => (
               <Box
                 key={i}
-                sx={styles.clickableRow}
+                sx={[styles.clickableRow, rowMinWidth]}
                 onClick={() => handleUserClick(u.user_id)}
                 data-testid="analytics-users-row"
               >
@@ -217,7 +225,7 @@ const AnalyticsUsers = memo(props => {
                     key={column.key}
                     sx={[
                       styles.tableCellValue,
-                      { flex: column.flex ?? 1 },
+                      analyticsColumnSx(column),
                       column.key === 'errors' && u.errors > 0 && styles.errorValue,
                     ]}
                     data-testid={column.key === 'errors' ? 'analytics-users-row-errors' : undefined}
@@ -278,7 +286,7 @@ const styles = {
     display: 'block',
   }),
   loadingState: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem' },
-  tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
+  tableWrapper: analyticsTableWrapperSx,
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',

@@ -17,6 +17,7 @@ const api = vi.hoisted(() => ({
   refresh: vi.fn(),
   refetch: vi.fn(),
   permitted: true,
+  canManageSettings: true,
   autoEnabled: true,
   readiness: undefined,
   items: [],
@@ -36,6 +37,9 @@ vi.mock('@/api/configurations', async importOriginal => ({
   }),
 }));
 vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));
+vi.mock('@/[fsd]/features/settings/lib/hooks/useCanManageProjectSettings.hooks', () => ({
+  useCanManageProjectSettings: () => ({ canManageSettings: api.canManageSettings, isLoading: false }),
+}));
 vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => api.permitted }) }));
 vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
   useToast: () => ({ toastError: api.toastError, toastInfo: vi.fn() }),
@@ -65,6 +69,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   api.current = undefined;
   api.permitted = true;
+  api.canManageSettings = true;
   api.autoEnabled = true;
   api.readiness = undefined;
   api.items = [];
@@ -131,6 +136,11 @@ describe('project Auto permission and configuration', () => {
   });
   it('disables configuration without update permission', () => {
     api.permitted = false;
+    renderSettings();
+    expect(screen.getByTestId('auto-routing-project-setting')).toBeDisabled();
+  });
+  it('disables configuration for a team-project editor who is not a project admin', () => {
+    api.canManageSettings = false;
     renderSettings();
     expect(screen.getByTestId('auto-routing-project-setting')).toBeDisabled();
   });
@@ -315,6 +325,71 @@ describe('project Auto permission and configuration', () => {
         expect(screen.queryByTestId('auto-routing-not-ready')).not.toBeInTheDocument();
         unmount();
       }
+    });
+  });
+
+  describe('Auto routing mode', () => {
+    const mode = name => screen.getByTestId(`auto-routing-mode-${name}`);
+    it('pre-selects tiered when the project has no mode and shows its line', () => {
+      renderSettings();
+      expect(screen.getByText('Auto routing mode')).toBeInTheDocument();
+      expect(mode('tiered')).toHaveAttribute('aria-pressed', 'true');
+      expect(mode('economical')).toHaveAttribute('aria-pressed', 'false');
+      expect(screen.getByTestId('auto-routing-mode-description')).toHaveTextContent(
+        'Cheapest at simple, measured mid tier at standard, frontier at deep.',
+      );
+    });
+    it('shows the saved mode and its line', () => {
+      api.current = { id: 12, elitea_title: 'auto_routing', data: { escalation_mode: 'premium_at_deep' } };
+      renderSettings();
+      expect(mode('premium_at_deep')).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByTestId('auto-routing-mode-description')).toHaveTextContent(
+        'Frontier model for deep tasks only.',
+      );
+    });
+    it('saves the chosen mode with the existing Auto settings', async () => {
+      const classifier = { name: 'gpt-luna', project_id: 2 };
+      api.current = { id: 12, elitea_title: 'auto_routing', data: { enabled: true, classifier } };
+      renderSettings();
+      await userEvent.click(mode('economical'));
+      await waitFor(() =>
+        expect(api.update).toHaveBeenCalledWith({
+          projectId: 2,
+          configId: 12,
+          body: expect.objectContaining({
+            data: { enabled: true, classifier, escalation_mode: 'economical' },
+          }),
+        }),
+      );
+    });
+    it('does not save when the selected mode is clicked again', async () => {
+      renderSettings();
+      await userEvent.click(mode('tiered'));
+      expect(api.create).not.toHaveBeenCalled();
+      expect(api.update).not.toHaveBeenCalled();
+    });
+    it('offers the four modes', () => {
+      renderSettings();
+      for (const name of ['economical', 'tiered', 'premium_at_deep', 'premium_from_standard'])
+        expect(mode(name)).toBeInTheDocument();
+    });
+    it('says that Economical includes floor-cleared models without a paired comparison', () => {
+      api.current = { id: 12, elitea_title: 'auto_routing', data: { escalation_mode: 'economical' } };
+      renderSettings();
+      expect(screen.getByTestId('auto-routing-mode-description')).toHaveTextContent(
+        'Cheapest admitted model at every demand; models that cleared the quality floor but have no paired comparison are included.',
+      );
+    });
+    it('is hidden when Auto is disabled', () => {
+      api.autoEnabled = false;
+      renderSettings();
+      expect(screen.queryByText('Auto routing mode')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('auto-routing-mode-tiered')).not.toBeInTheDocument();
+    });
+    it('is disabled without update permission', () => {
+      api.permitted = false;
+      renderSettings();
+      expect(mode('economical')).toBeDisabled();
     });
   });
 });

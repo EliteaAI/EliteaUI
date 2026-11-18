@@ -5,6 +5,7 @@ import { useFormikContext } from 'formik';
 import { Box, Typography } from '@mui/material';
 
 import { ConfigurationModal } from '@/[fsd]/features/agent/ui/agent-details/configurations/index.js';
+import LegacyWebhookNotice from '@/[fsd]/features/schedule/ui/LegacyWebhookNotice';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProject } from '@/[fsd]/shared/lib/hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
@@ -113,6 +114,7 @@ const ApplicationInformation = memo(props => {
                 </Typography>
               </Box>
             )}
+            {isPipeline && triggerData?.type === 'webhook' && <LegacyWebhookNotice />}
             {isForked && (
               <LabelLinkWithToolTip
                 label="Forked from:"

@@ -23,13 +23,8 @@ const useDeleteApplication = setBlockNav => {
   const onCloseToast = useCallback(() => {
     if (isError) {
       reset();
-    } else if (isSuccess && !isFromPipeline) {
-      setBlockNav(false);
-      setTimeout(() => {
-        navigate(-1);
-      }, 0);
     }
-  }, [isError, isFromPipeline, isSuccess, navigate, reset, setBlockNav]);
+  }, [isError, reset]);
 
   const toastProps = useMemo(() => ({ onCloseToast }), [onCloseToast]);
   const { toastSuccess, toastError } = useToast(toastProps);
@@ -45,13 +40,12 @@ const useDeleteApplication = setBlockNav => {
     } else if (isSuccess) {
       const entityType = !isFromPipeline ? 'agent' : 'pipeline';
       toastSuccess(`The ${name || entityType} ${entityType} has been successfully deleted.`);
-      if (isFromPipeline) {
-        // The deleted pipeline has no page to stay on; the toast close callback is not reliable for this
-        setBlockNav(false);
-        setTimeout(() => {
-          navigate(`${RouteDefinitions.Pipelines}/${tab || PrivateApplicationTabs[0]}`, { replace: true });
-        }, 0);
-      }
+      // The deleted entity has no page to stay on; history back may land on its sub-pages (e.g. Run History)
+      const listRoute = isFromPipeline ? RouteDefinitions.Pipelines : RouteDefinitions.Applications;
+      setBlockNav(false);
+      setTimeout(() => {
+        navigate(`${listRoute}/${tab || PrivateApplicationTabs[0]}`, { replace: true });
+      }, 0);
     }
   }, [
     error,

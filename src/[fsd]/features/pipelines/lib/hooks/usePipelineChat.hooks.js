@@ -5,6 +5,7 @@ import { useMatch } from 'react-router-dom';
 
 import { useManualSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { ChatHelpers } from '@/[fsd]/features/chat';
+import { useChatSocketReconnect } from '@/[fsd]/features/chat/lib/hooks';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   useConversationCreateMutation,
@@ -99,6 +100,8 @@ export const usePipelineChat = ({
   const [createConversation, { isLoading: isLoadingConversation }] = useConversationCreateMutation();
   const { emit: emitEnterRoom } = useManualSocket(sioEvents.chat_enter_room);
   const { emit: emitLeaveRoom } = useManualSocket(sioEvents.chat_leave_rooms);
+
+  useChatSocketReconnect({ activeConversation, projectId, setActiveConversation });
 
   // Create pipeline participant from current pipeline data
   const pipelineParticipant = useMemo(() => {

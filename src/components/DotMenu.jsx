@@ -6,7 +6,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks';
-import { Modal } from '@/[fsd]/shared/ui';
+import { AppLink, Modal } from '@/[fsd]/shared/ui';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import DotsMenuIcon from '@/components/Icons/DotsMenuIcon';
 
@@ -24,6 +24,7 @@ const BasicMenuItem = ({
   setActiveDialog,
   skipConfirmation,
   testId,
+  to,
 }) => {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState(null);
@@ -53,6 +54,8 @@ const BasicMenuItem = ({
   return (
     <>
       <MenuItem
+        // Navigation-only items get a real href so the browser can open them in a new tab
+        {...(to && !disabled && !subMenuItems?.length ? { component: AppLink, to } : {})}
         data-testid={testId ? `${testId}-menuitem` : undefined}
         onClick={subMenuItems?.length ? onClickMenu : onClick}
         disabled={disabled}
@@ -396,6 +399,7 @@ const DotMenu = memo(props => {
                 isSelected: item.isSelected,
                 showCheckIcon: item.showCheckIcon,
                 testId: item.key,
+                to: item.to,
               };
 
               return item.onConfirm || item.confirmText ? (
@@ -457,6 +461,7 @@ const DotMenu = memo(props => {
                     isSelected: item.isSelected,
                     showCheckIcon: item.showCheckIcon,
                     testId: item.key,
+                    to: item.to,
                   };
                   return item.onConfirm || item.confirmText ? (
                     <TooltipWrapper

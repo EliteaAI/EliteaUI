@@ -60,7 +60,9 @@ vi.mock('@/api/applications', () => ({
   useGetPipelineTriggerQuery: () => ({ data: mocks.triggerData, isLoading: false }),
   useUpdatePipelineTriggerMutation: () => [mocks.updateTrigger, { isLoading: false }],
   TAG_TYPE_GOVERNANCE_READINESS: 'GOVERNANCE_READINESS',
-  withReadiness: tags => tags,
+  withReadiness: tags => (result, error, arg) => [
+    ...(typeof tags === 'function' ? tags(result, error, arg) : tags),
+  ],
 }));
 vi.mock('@/assets/clock.svg?react', () => ({ default: () => null }));
 vi.mock('@/[fsd]/shared/config/store', () => ({ store: {} }));
@@ -110,12 +112,41 @@ describe('TriggerTypeSelector', () => {
     setForm(PLAIN_YAML);
   });
 
-  it('lists only Chat Message and Webhook when no schedule is stored', () => {
+  it('lists only Chat Message when no legacy trigger is stored (#7402)', () => {
     render(<TriggerTypeSelector />);
 
     expect(screen.getByTestId('option-chat_message')).toBeTruthy();
-    expect(screen.getByTestId('option-webhook')).toBeTruthy();
+    expect(screen.queryByTestId('option-webhook')).toBeNull();
     expect(screen.queryByTestId('option-schedule')).toBeNull();
+  });
+
+  it('keeps a stored legacy webhook selectable and shows the deprecation notice', () => {
+    mocks.triggerData = { type: 'webhook', webhook_type: 'github' };
+    render(<TriggerTypeSelector />);
+
+    expect(screen.getByTestId('select').dataset.value).toBe('webhook');
+    expect(screen.getByTestId('option-webhook').dataset.disabled).toBe('false');
+    expect(screen.getByTestId('legacy-webhook-notice').textContent).toMatch(/deprecated URL/);
+  });
+
+  it('shows no deprecation notice without a stored webhook', () => {
+    render(<TriggerTypeSelector />);
+
+    expect(screen.queryByTestId('legacy-webhook-notice')).toBeNull();
+  });
+
+  it('asks before switching a stored legacy webhook to Chat Message', async () => {
+    mocks.triggerData = { type: 'webhook', webhook_type: 'github' };
+    render(<TriggerTypeSelector />);
+
+    fireEvent.click(screen.getByTestId('option-chat_message'));
+    expect(mocks.updateTrigger).not.toHaveBeenCalled();
+    expect(screen.getByText(/cannot be set up here again/)).toBeTruthy();
+
+    fireEvent.click(screen.getByText('confirm'));
+    await waitFor(() =>
+      expect(mocks.updateTrigger).toHaveBeenCalledWith(expect.objectContaining({ type: 'chat_message' })),
+    );
   });
 
   it('shows a stored schedule as a disabled option in an enabled select', () => {
@@ -142,14 +173,10 @@ describe('TriggerTypeSelector', () => {
     expect(screen.queryByTestId('replace-dialog')).toBeNull();
   });
 
-  it('asks before replacing a stored schedule with Webhook', async () => {
+  it('does not offer Webhook in place of a stored schedule', () => {
     renderStoredSchedule();
 
-    confirmSwitchTo('webhook');
-
-    await waitFor(() =>
-      expect(mocks.updateTrigger).toHaveBeenCalledWith(expect.objectContaining({ type: 'webhook' })),
-    );
+    expect(screen.queryByTestId('option-webhook')).toBeNull();
   });
 
   it('shows a success toast after a confirmed switch from a stored schedule to Chat Message', async () => {
@@ -175,12 +202,6 @@ describe('TriggerTypeSelector', () => {
     await waitFor(() => expect(mocks.toastError).toHaveBeenCalledWith('Failed to update trigger'));
   });
 
-  it('shows an error toast when the switch from a stored schedule to Webhook fails', async () => {
-    failSwitchTo('webhook', { data: { error: 'Webhook denied' } });
-
-    await waitFor(() => expect(mocks.toastError).toHaveBeenCalledWith('Webhook denied'));
-  });
-
   it('keeps a stored schedule when the replace dialog is cancelled', () => {
     renderStoredSchedule();
 
@@ -188,15 +209,6 @@ describe('TriggerTypeSelector', () => {
     fireEvent.click(screen.getByText('cancel'));
 
     expect(mocks.updateTrigger).not.toHaveBeenCalled();
-    expect(screen.queryByTestId('replace-dialog')).toBeNull();
-  });
-
-  it('switches without a dialog when no schedule is stored', async () => {
-    render(<TriggerTypeSelector />);
-
-    fireEvent.click(screen.getByTestId('option-webhook'));
-
-    await waitFor(() => expect(mocks.updateTrigger).toHaveBeenCalledTimes(1));
     expect(screen.queryByTestId('replace-dialog')).toBeNull();
   });
 
@@ -218,7 +230,8 @@ describe('TriggerTypeSelector', () => {
     expect(screen.getByText(/no longer editable here/i)).toBeTruthy();
   });
 
-  it('greys out Webhook when the pipeline gains an interactive node', () => {
+  it('greys out a stored Webhook when the pipeline gains an interactive node', () => {
+    mocks.triggerData = { type: 'webhook' };
     setForm(HITL_YAML);
 
     render(<TriggerTypeSelector />);
@@ -237,40 +250,44 @@ describe('TriggerTypeSelector', () => {
     expect(mocks.updateTrigger).not.toHaveBeenCalled();
   });
 
-  it('still resets a stored webhook when the pipeline becomes restricted', () => {
+  it('keeps a stored legacy webhook, greyed out, when the pipeline becomes restricted (#7402)', () => {
+    // A reset would delete it for good: the option is gone once the trigger is Chat Message
     mocks.triggerData = { type: 'webhook' };
     const { rerender } = render(<TriggerTypeSelector />);
 
     setForm(HITL_YAML);
     rerender(<TriggerTypeSelector disabled={false} />);
 
-    expect(mocks.updateTrigger).toHaveBeenCalledTimes(1);
+    expect(mocks.updateTrigger).not.toHaveBeenCalled();
+    expect(screen.getByTestId('select').dataset.value).toBe('webhook');
+    expect(screen.getByTestId('option-webhook').dataset.disabled).toBe('true');
   });
 
-  it('shows a hint that names the Schedules section', () => {
+  it('shows a hint that names the Schedules', () => {
     render(<TriggerTypeSelector />);
 
-    expect(screen.getByText(/to run this pipeline on a timer, use the/i)).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Schedules section' })).toBeTruthy();
+    expect(screen.getByText(/Run this pipeline automatically: use/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Schedules' })).toBeTruthy();
   });
 
-  it('scrolls to the Schedules section when the link is activated', () => {
+  it('scrolls to the Schedules section when the link is activated', async () => {
     const section = document.createElement('div');
     section.id = 'entity-schedules-section';
     section.scrollIntoView = vi.fn();
     document.body.appendChild(section);
 
     render(<TriggerTypeSelector />);
-    fireEvent.click(screen.getByRole('button', { name: 'Schedules section' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Schedules' }));
 
-    expect(section.scrollIntoView).toHaveBeenCalledTimes(1);
+    // the scroll is deferred so the general panel can expand first
+    await waitFor(() => expect(section.scrollIntoView).toHaveBeenCalledTimes(1));
     section.remove();
   });
 
   it('keeps the hint and does nothing when the Schedules section is missing', () => {
     render(<TriggerTypeSelector />);
 
-    expect(() => fireEvent.click(screen.getByRole('button', { name: 'Schedules section' }))).not.toThrow();
-    expect(screen.getByText(/to run this pipeline on a timer/i)).toBeTruthy();
+    expect(() => fireEvent.click(screen.getByRole('button', { name: 'Schedules' }))).not.toThrow();
+    expect(screen.getByText(/for timed runs/i)).toBeTruthy();
   });
 });

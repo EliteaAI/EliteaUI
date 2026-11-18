@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-import { Box, Divider, Tooltip } from '@mui/material';
+import { Box, Divider, Tooltip, useTheme } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -9,6 +9,7 @@ import CloseIcon from '@/components/Icons/CloseIcon';
 const TestPanelCloseButton = memo(props => {
   const { onClose, testId = 'test-panel-close' } = props;
 
+  const theme = useTheme();
   const styles = testPanelCloseButtonStyles();
 
   return (
@@ -25,7 +26,12 @@ const TestPanelCloseButton = memo(props => {
         <Box component="span">
           <Button.BaseBtn
             variant={BUTTON_VARIANTS.secondary}
-            startIcon={<CloseIcon sx={styles.closeIcon} />}
+            startIcon={
+              <CloseIcon
+                fill={theme.palette.icon.secondary}
+                sx={styles.closeIcon}
+              />
+            }
             onClick={onClose}
             aria-label="Close test panel"
             data-testid={testId}

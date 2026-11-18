@@ -145,4 +145,18 @@ describe('ScheduleRunDetail', () => {
       '/agents/all/3/history?trigger=test&viewMode=owner',
     );
   });
+
+  it('shows no response section for an ended run of a toolkit index and keeps the log and history link', () => {
+    renderDetail(
+      { id: 1, status: 'success' },
+      { entityType: 'toolkit_index', applicationId: 3, indexName: 'docs' },
+    );
+
+    expect(screen.queryByTestId('schedule-run-answer')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Run logs' })).toBeInTheDocument();
+    expect(screen.getByTestId('schedule-run-open-history')).toHaveAttribute(
+      'href',
+      expect.stringContaining('docs'),
+    );
+  });
 });

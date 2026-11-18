@@ -21,6 +21,15 @@ const FIXED_TRACKS = {
   duration: 'minmax(7.5rem, 1fr)',
 };
 
+// The schedule columns keep the measured 48 rem; any further column adds exactly its own width
+const SCHEDULE_LIST_WIDTH_REM = 48;
+const sumColumnWidthsRem = columns => columns.reduce((sum, column) => sum + parseFloat(column.width), 0);
+
+export const resolveRunHistoryListWidth = (extraColumns = []) =>
+  extraColumns.length
+    ? `${SCHEDULE_LIST_WIDTH_REM - sumColumnWidthsRem(SCHEDULE_RUN_COLUMNS) + sumColumnWidthsRem(extraColumns)}rem`
+    : '32rem';
+
 export const resolveRunHistoryColumns = (noVersions, hasEvent, extraColumns = []) => {
   if (extraColumns.length) {
     const { date, event, version, duration } = FIXED_TRACKS;
@@ -161,18 +170,21 @@ const EXECUTION_TYPE_LABELS = new Map([
 ]);
 
 // A missing or unknown type (older runs) renders "-" and the row stays selectable. Older test runs were stored
-// as schedule_manual, so the run record's trigger still tells a test apart
-export const toExecutionTypeRow = row => ({
-  ...row,
-  event_label:
-    row.schedule_run?.trigger === 'test' ? 'Test' : (EXECUTION_TYPE_LABELS.get(row.execution_type) ?? '-'),
-});
+// as schedule_manual, so the run record's trigger still tells a test apart; a webhook test is its sample-body run
+const toEventLabel = row => {
+  // Early webhook runs were stored as scheduled; their run record still says webhook
+  if (row.schedule_run?.trigger === 'webhook') return EXECUTION_TYPE_LABELS.get('webhook');
+  if (row.schedule_run?.trigger !== 'test') return EXECUTION_TYPE_LABELS.get(row.execution_type) ?? '-';
+  return row.execution_type === 'webhook' ? 'Webhook (sample)' : 'Test';
+};
+
+export const toExecutionTypeRow = row => ({ ...row, event_label: toEventLabel(row) });
 
 // The Schedule and Status columns of Agent and Pipeline Run History; '-' without a run record
 export const SCHEDULE_RUN_COLUMNS = [
   {
     id: 'schedule',
-    label: 'Schedule',
+    label: 'Schedule/Webhook',
     width: '7.5rem',
     render: row => row.schedule_run?.schedule_name ?? '-',
   },

@@ -8,7 +8,7 @@ export const TEST_PANEL_WIDTH = {
 
 export const TEST_PANEL_STORAGE_KEYS = {
   pipeline: 'pipelineTestPanelWidth',
-  // Shared by Agents and Skills, so both open at the same width
+  // Shared by Agents and Skills, so a width set in one opens the other at it too
   chat: 'chatTestPanelWidth',
 };
 

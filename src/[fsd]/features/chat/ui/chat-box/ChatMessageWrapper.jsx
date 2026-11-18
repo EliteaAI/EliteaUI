@@ -86,9 +86,12 @@ const ChatMessageWrapper = memo(props => {
     [isLoading, isStreaming, message?.isLoading, messageParticipant?.entity_name, message?.id],
   );
 
-  const onCopy = useCallback(() => {
-    onCopyToClipboard(message.id);
-  }, [message?.id, onCopyToClipboard]);
+  const onCopy = useCallback(
+    format => {
+      onCopyToClipboard(message.id, format);
+    },
+    [message?.id, onCopyToClipboard],
+  );
 
   const onSendToClick = useCallback(() => {
     onClickSentTo(message.sentTo);

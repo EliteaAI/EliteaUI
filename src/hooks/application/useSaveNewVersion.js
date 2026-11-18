@@ -3,6 +3,8 @@ import { useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
+import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
+import { useRefetchConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import {
   useNameFromUrl,
@@ -41,6 +43,7 @@ const useSaveNewVersion = ({
   const { nodes: flowNodes } = useSelector(state => state.pipelineEditor);
   const { setBlockNav } = useNavBlocker();
   const { captureSaveTarget, isSaveTargetCurrent } = useStaleSaveGuard(applicationId);
+  const refetchLimit = useRefetchConversationStartersLimit();
 
   const [
     saveNewVersion,
@@ -121,9 +124,13 @@ const useSaveNewVersion = ({
   );
 
   const onCreateNewVersion = useCallback(
-    async newVersionName => {
+    // `overrides.yamlCode` is for a caller that changed the canvas in the same tick, before this callback re-rendered
+    async (newVersionName, overrides = {}) => {
       const saveTarget = captureSaveTarget();
-      const { nodes, edges } = isFromPipeline ? calculateNodesAndEdges(yamlCode, orientation, flowNodes) : {};
+      const versionYaml = overrides.yamlCode ?? yamlCode;
+      const { nodes, edges } = isFromPipeline
+        ? calculateNodesAndEdges(versionYaml, orientation, flowNodes)
+        : {};
 
       // Reset trigger to default 'chat_message' for new versions
       const triggerConfig = isFromPipeline ? { type: 'chat_message' } : null;
@@ -137,7 +144,7 @@ const useSaveNewVersion = ({
         projectId: selectedProjectId,
         webhook_secret: webhook_secret || null,
         applicationId,
-        instructions: !isFromPipeline ? versionDetails.instructions : yamlCode,
+        instructions: !isFromPipeline ? versionDetails.instructions : versionYaml,
         pipeline_settings: isFromPipeline
           ? {
               nodes,
@@ -179,6 +186,7 @@ const useSaveNewVersion = ({
   useEffect(() => {
     if (isSavingNewVersionError) {
       toastError(buildErrorMessage(error));
+      if (conversationStartersHelpers.isConversationStartersLimitError(error)) refetchLimit();
       reset();
     } else if (isSavingNewVersionSuccess) {
       toastSuccess && toastSuccess('Saved new version successfully');

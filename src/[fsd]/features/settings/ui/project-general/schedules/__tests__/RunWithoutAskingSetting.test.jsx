@@ -59,7 +59,11 @@ describe('Run without approval setting', () => {
     api.query = { data: { allow_run_without_asking: true }, isError: false };
     renderSetting();
     expect(box()).toBeChecked();
-    expect(screen.getByText(/run sensitive actions without asking the schedule owner/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/sensitive actions of schedules and webhooks without asking the owner/i),
+    ).toBeInTheDocument();
+    // #7456: the admin sees that the setting also covers webhook secrets
+    expect(screen.getByText(/Treat it like a password/)).toBeInTheDocument();
   });
 
   it('checks the schedules admin permission', () => {

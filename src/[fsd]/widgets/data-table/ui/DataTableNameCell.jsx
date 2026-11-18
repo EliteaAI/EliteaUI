@@ -3,12 +3,8 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import {
-  useCardNavigate,
-  useDataViewMode,
-  useProjectType,
-  useSelectedProjectId,
-} from '@/[fsd]/shared/lib/hooks';
+import { useCardLink, useDataViewMode, useProjectType, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { AppLink } from '@/[fsd]/shared/ui';
 import { useEliteaAssistantRef, useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/support-assistant';
 import EliteaAssistantIcon from '@/assets/icons/elitea-assistant-icon.svg?react';
 import PublishIcon from '@/assets/publish-version.svg?react';
@@ -25,7 +21,7 @@ const DataTableNameCell = memo(props => {
   const { data: supportAssistantConfig } = useGetSupportAssistantConfigQuery({ enabled: false });
   const assistantRef = useEliteaAssistantRef();
   const dataViewMode = useDataViewMode(viewMode, row);
-  const doNavigate = useCardNavigate({
+  const cardLink = useCardLink({
     viewMode: dataViewMode,
     id,
     type: row.cardType || cardType,
@@ -49,10 +45,7 @@ const DataTableNameCell = memo(props => {
   );
 
   return (
-    <Box
-      sx={styles.nameContainer}
-      onClick={doNavigate}
-    >
+    <Box sx={styles.nameContainer}>
       <StyledTooltip
         placement="top"
         enterDelay={1000}
@@ -64,7 +57,12 @@ const DataTableNameCell = memo(props => {
           </>
         }
       >
-        <Box sx={styles.textContainer}>
+        <Box
+          // Only the text is the link: the icons and the assistant button beside it must not be nested in it
+          component={AppLink}
+          {...cardLink}
+          sx={styles.textContainer}
+        >
           <Typography
             variant="headingSmall"
             component="div"

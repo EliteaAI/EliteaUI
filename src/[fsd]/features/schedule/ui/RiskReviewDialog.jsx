@@ -4,6 +4,7 @@ import { Link as RouterLink } from 'react-router-dom';
 
 import { Box, CircularProgress, Link, Typography } from '@mui/material';
 
+import { APPROVAL_RULE, DEFAULT_APPROVAL_RULE } from '@/[fsd]/entities/schedule/lib/constants';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import BannerMessage from '@/[fsd]/shared/ui/banner-message/BannerMessage';
@@ -11,7 +12,6 @@ import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn
 import StyledInputEnhancer from '@/[fsd]/shared/ui/input/StyledInputEnhancer';
 import RouteDefinitions from '@/routes';
 
-import { APPROVAL_RULE, DEFAULT_APPROVAL_RULE } from '../lib/constants';
 import ApprovalRuleCards from './ApprovalRuleCards';
 import RiskToolCard from './RiskToolCard';
 

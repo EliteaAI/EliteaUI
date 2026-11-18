@@ -13,9 +13,12 @@ import {
   fmtDuration,
   fmtNum,
   formatTriggerLabel,
+  formatUserName,
   formatVersionLabel,
   getPresetRange,
+  isCompleteDateRange,
   pickEntityRoutePattern,
+  toValidISOString,
   triggerSourceLabel,
 } from '../analyticsCommon.helpers.js';
 
@@ -49,6 +52,36 @@ describe('getPresetRange', () => {
     const { from, to } = getPresetRange(7);
     expect(from).toEqual(new Date('2025-12-27T00:00:00'));
     expect(to).toEqual(new Date('2026-01-02T23:59:59.999'));
+  });
+});
+
+describe('isCompleteDateRange', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it.each([0, 1, 7, 30])('accepts the %i-day preset, and both of its bounds serialize', days => {
+    vi.setSystemTime(new Date('2026-03-15T14:30:00'));
+    const { from, to } = getPresetRange(days);
+    expect(isCompleteDateRange(from, to)).toBe(true);
+    expect(toValidISOString(from)).toEqual(expect.any(String));
+    expect(toValidISOString(to)).toEqual(expect.any(String));
+  });
+
+  it('rejects a cleared bound, which would reach the backend as a missing one', () => {
+    expect(isCompleteDateRange(null, new Date())).toBe(false);
+    expect(isCompleteDateRange(new Date(), undefined)).toBe(false);
+  });
+
+  it('rejects a half-edited picker value (an Invalid Date)', () => {
+    expect(isCompleteDateRange(new Date(NaN), new Date())).toBe(false);
+    expect(isCompleteDateRange(new Date(), new Date(NaN))).toBe(false);
+  });
+
+  it('rejects a start after the end and accepts equal bounds', () => {
+    const early = new Date('2026-03-01T00:00:00');
+    const late = new Date('2026-03-02T00:00:00');
+    expect(isCompleteDateRange(late, early)).toBe(false);
+    expect(isCompleteDateRange(early, early)).toBe(true);
   });
 });
 
@@ -271,5 +304,22 @@ describe('analytics texts name the trigger sources', () => {
     manualTexts.forEach(text => expect(text).not.toMatch(/Schedule run now.*(manual|user activity)/i));
     expect(overview.TEAM).toContain('Schedule run now');
     expect(overview.AI_ACTIVE).toContain('Schedule run now');
+  });
+});
+
+describe('formatUserName', () => {
+  it('prefers a display name, then the email, then the id', () => {
+    expect(formatUserName({ user_id: 1, user_display_name: 'Alice A', user_email: 'a@x.y' })).toBe('Alice A');
+    expect(formatUserName({ user_id: 1, user_email: 'a@x.y' })).toBe('a@x.y');
+    expect(formatUserName({ user_id: 12, user_email: null })).toBe('User 12');
+  });
+
+  it('is empty, not "User undefined", when nothing is known', () => {
+    expect(formatUserName({})).toBe('');
+    expect(formatUserName({ user_id: null, user_email: '' })).toBe('');
+  });
+
+  it('keeps an id of 0', () => {
+    expect(formatUserName({ user_id: 0 })).toBe('User 0');
   });
 });

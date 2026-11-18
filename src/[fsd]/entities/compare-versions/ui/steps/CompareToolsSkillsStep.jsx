@@ -4,11 +4,21 @@ import { Box, Typography } from '@mui/material';
 
 import { EditEntityComparisonLayout, ToolItemCard } from '@/[fsd]/entities/edit-entity-with-ai';
 
+import { COMPARE_MESSAGES } from '../../lib/constants/compareVersions.constants';
 import { matchDependencies } from '../../lib/helpers/compareVersions.helpers';
 import CompareVersionHeader from '../CompareVersionHeader';
 
+// Agents list tools and skills; pipelines pass their own empty text (they have no skills)
 const CompareToolsSkillsStep = memo(props => {
-  const { leftVersion, rightVersion, leftData, rightData } = props;
+  const {
+    leftVersion,
+    rightVersion,
+    leftData,
+    rightData,
+    emptyText = COMPARE_MESSAGES.noAgentTools,
+    // Shown under the right column, e.g. what the comparison leaves out
+    rightNote,
+  } = props;
 
   const matchedRows = useMemo(
     () => matchDependencies(leftData.tools ?? [], rightData.tools ?? []),
@@ -27,7 +37,11 @@ const CompareToolsSkillsStep = memo(props => {
       currentContent={
         <Box sx={compareToolsSkillsStepStyles.column}>
           {noDiff && (
-            <Typography sx={compareToolsSkillsStepStyles.noDiffNote}>
+            <Typography
+              variant="bodySmall"
+              color="text.primary"
+              sx={compareToolsSkillsStepStyles.noDiffNote}
+            >
               No differences in this section.
             </Typography>
           )}
@@ -45,6 +59,16 @@ const CompareToolsSkillsStep = memo(props => {
                   item={row.left}
                   entityType={row.left.entityType}
                 />
+                {row.left.isAvailable === false && (
+                  <Typography
+                    variant="bodySmall"
+                    color="text.warning"
+                    sx={compareToolsSkillsStepStyles.notAvailable}
+                    data-testid={`compare-tool-not-available-left-${row.key}`}
+                  >
+                    {COMPARE_MESSAGES.toolNotAvailable}
+                  </Typography>
+                )}
               </Box>
             ) : (
               <Box
@@ -54,8 +78,12 @@ const CompareToolsSkillsStep = memo(props => {
             ),
           )}
           {matchedRows.length === 0 && (
-            <Typography sx={compareToolsSkillsStepStyles.emptyText}>
-              No tools, agents, pipelines or skills attached
+            <Typography
+              variant="bodySmall"
+              color="text.primary"
+              sx={compareToolsSkillsStepStyles.emptyText}
+            >
+              {emptyText}
             </Typography>
           )}
         </Box>
@@ -63,7 +91,11 @@ const CompareToolsSkillsStep = memo(props => {
       suggestedContent={
         <Box sx={compareToolsSkillsStepStyles.column}>
           {noDiff && (
-            <Typography sx={compareToolsSkillsStepStyles.noDiffNote}>
+            <Typography
+              variant="bodySmall"
+              color="text.primary"
+              sx={compareToolsSkillsStepStyles.noDiffNote}
+            >
               No differences in this section.
             </Typography>
           )}
@@ -81,6 +113,16 @@ const CompareToolsSkillsStep = memo(props => {
                   item={row.right}
                   entityType={row.right.entityType}
                 />
+                {row.right.isAvailable === false && (
+                  <Typography
+                    variant="bodySmall"
+                    color="text.warning"
+                    sx={compareToolsSkillsStepStyles.notAvailable}
+                    data-testid={`compare-tool-not-available-right-${row.key}`}
+                  >
+                    {COMPARE_MESSAGES.toolNotAvailable}
+                  </Typography>
+                )}
               </Box>
             ) : (
               <Box
@@ -90,8 +132,22 @@ const CompareToolsSkillsStep = memo(props => {
             ),
           )}
           {matchedRows.length === 0 && (
-            <Typography sx={compareToolsSkillsStepStyles.emptyText}>
-              No tools, agents, pipelines or skills attached
+            <Typography
+              variant="bodySmall"
+              color="text.primary"
+              sx={compareToolsSkillsStepStyles.emptyText}
+            >
+              {emptyText}
+            </Typography>
+          )}
+          {rightNote && (
+            <Typography
+              variant="bodySmall"
+              color="text.primary"
+              sx={compareToolsSkillsStepStyles.emptyText}
+              data-testid="compare-tools-right-note"
+            >
+              {rightNote}
             </Typography>
           )}
         </Box>
@@ -124,14 +180,13 @@ const compareToolsSkillsStepStyles = {
     borderRadius: '0.5rem',
     border: `0.0625rem dashed ${palette.border.lines}`,
   }),
+  notAvailable: {
+    padding: '0.25rem 0.75rem 0',
+  },
   emptyText: {
-    fontSize: '0.75rem',
-    color: 'text.primary',
     fontStyle: 'italic',
   },
   noDiffNote: {
-    fontSize: '0.75rem',
-    color: 'text.primary',
     fontStyle: 'italic',
     marginBottom: '0.5rem',
   },

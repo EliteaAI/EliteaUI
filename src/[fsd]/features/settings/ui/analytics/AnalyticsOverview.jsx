@@ -20,7 +20,9 @@ import {
   ChartTooltip,
   KPICard,
   ModelUsageTable,
+  UserLabel,
 } from '@/[fsd]/features/settings/ui/analytics';
+import { analyticsTableWrapperSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { CHART_COLORS, EVENT_TYPE_COLORS, MEDAL_COLORS } from '@/[fsd]/shared/config/theme';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
@@ -60,7 +62,7 @@ const AnalyticsOverview = memo(props => {
           tooltip={tt.AI_ACTIVE}
         />
         <KPICard
-          label="LLM CALLS"
+          label="MODEL CALLS"
           value={AnalyticCommonHelpers.fmtNum(kpis.llm_calls)}
           subtitle="event_type = llm"
           tooltip={tt.LLM_CALLS}
@@ -171,7 +173,7 @@ const AnalyticsOverview = memo(props => {
                   yAxisId="metrics"
                   type="monotone"
                   dataKey="llm_calls"
-                  name="LLM Calls"
+                  name="Model Calls"
                   stroke={EVENT_TYPE_COLORS.llm}
                   fill={EVENT_TYPE_COLORS.llm}
                   fillOpacity={0.15}
@@ -237,7 +239,7 @@ const AnalyticsOverview = memo(props => {
               variant="bodySmall"
               sx={styles.chartSubtitle}
             >
-              {`Leaderboard by AI events (LLM + Tool + Agent / Pipeline${canViewSkills ? ' + Skill' : ''})`}
+              Leaderboard by AI events (Model + Tool)
             </Typography>
             <InfoTooltip
               infoTooltip={{
@@ -274,25 +276,23 @@ const AnalyticsOverview = memo(props => {
                     ]}
                   >
                     <Typography sx={styles.leaderboardInitial}>
-                      {(u.user_email || '?')[0].toUpperCase()}
+                      {(AnalyticCommonHelpers.formatUserName(u)[0] || '?').toUpperCase()}
                     </Typography>
                   </Box>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography
-                      variant="bodySmall"
-                      noWrap
+                    <UserLabel
+                      user={u}
+                      testId="analytics-leaderboard-deleted-chip"
                       sx={[
                         styles.leaderboardEmail,
-                        onUserClick && { '&:hover': { textDecoration: 'underline' } },
+                        onUserClick && { '&:hover .user-label-name': { textDecoration: 'underline' } },
                       ]}
-                    >
-                      {u.user_email}
-                    </Typography>
+                    />
                     <Typography
                       variant="bodySmall"
                       sx={styles.leaderboardStats}
                     >
-                      {AnalyticCommonHelpers.fmtNum(u.llm_calls)} LLM &middot;{' '}
+                      {AnalyticCommonHelpers.fmtNum(u.llm_calls)} Model &middot;{' '}
                       {AnalyticCommonHelpers.fmtNum(u.tool_runs)} Tool &middot;{' '}
                       {AnalyticCommonHelpers.fmtNum(u.agent_runs)} Agent / Pipeline
                       {canViewSkills && <> &middot; {AnalyticCommonHelpers.fmtNum(u.skill_runs)} Skill</>}
@@ -358,7 +358,7 @@ const analyticsOverviewStyles = () => ({
   },
   chartWrapper: { width: '100%', overflow: 'hidden', flex: 1, minHeight: 200 },
   legendLabel: ({ palette }) => ({ color: palette.text.secondary }),
-  tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
+  tableWrapper: analyticsTableWrapperSx,
   leaderboardRow: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
@@ -389,10 +389,11 @@ const analyticsOverviewStyles = () => ({
     color: palette.components.button.text.primary,
     lineHeight: 1,
   }),
-  leaderboardEmail: ({ palette }) => ({
+  leaderboardEmail: ({ palette, typography }) => ({
+    ...typography.bodySmall,
     color: palette.text.secondary,
     fontWeight: 500,
-    display: 'block',
+    display: 'flex',
   }),
   leaderboardStats: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,

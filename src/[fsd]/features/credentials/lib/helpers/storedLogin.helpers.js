@@ -29,9 +29,31 @@ const STORED_LOGIN_TOOLKITS = {
     getAuthority: authorityFromDiscoveryEndpoint,
     keepBrowserToken: true,
   },
+  ms_graph: {
+    configurationType: 'ms_graph',
+    settingsKey: 'ms_graph_configuration',
+    getAuthority: authorityFromDiscoveryEndpoint,
+    keepBrowserToken: true,
+  },
 };
 
 export const getStoredLoginConfig = toolkitType => STORED_LOGIN_TOOLKITS[toolkitType] ?? null;
+
+// A chat sign-in is saved only where the run reads the login by credential uuid and tenant authority
+const CHAT_SAVED_LOGIN_TOOLKITS = new Set(['dataverse']);
+
+export const getChatStoredLoginConfig = toolkitType =>
+  CHAT_SAVED_LOGIN_TOOLKITS.has(toolkitType) ? getStoredLoginConfig(toolkitType) : null;
+
+// Authority a credential's login is keyed by, from its settings alone (no 401 needed). Dataverse has no
+// discovery endpoint, so it is built from tenant_id exactly as the SDK builds the 401's server_url.
+export const getCredentialAuthority = (type, settings) => {
+  if (type === 'dataverse') {
+    const tenant = (settings?.tenant_id || '').trim();
+    return tenant ? `https://login.microsoftonline.com/${tenant}` : '';
+  }
+  return settings?.oauth_discovery_endpoint || '';
+};
 
 // Validation reports a rejected saved login as a connection error whose message asks the user to log in.
 const LOGIN_REQUIRED_PATTERN = /sign in|log in|authori[sz]ation|oauth flow/i;

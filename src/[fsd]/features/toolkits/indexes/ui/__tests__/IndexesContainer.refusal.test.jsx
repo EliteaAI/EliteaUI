@@ -12,7 +12,6 @@ const polling = vi.hoisted(() => ({ startedTimeStamp: 0, fulfilledTimeStamp: 0 }
 
 vi.mock('@/[fsd]/features/toolkits/indexes/api', () => ({
   useDeleteIndexItemMutation: () => [vi.fn(), { isLoading: false }],
-  useGetIndexScheduleQuery: () => ({}),
 }));
 vi.mock('@/[fsd]/features/toolkits/indexes/lib/hooks', () => ({
   useIndexNavigation: () => ({ goToCreateIndex: vi.fn(), goToIndex: vi.fn(), openIndexInNewTab: vi.fn() }),

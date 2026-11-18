@@ -3,15 +3,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCheckScheduleRiskMutation } from '@/[fsd]/entities/schedule';
 
 import { RISK_CHECK_STATUS } from '../constants';
-import { splitRiskFindings } from '../helpers';
+import { isIndexType, splitRiskFindings } from '../helpers';
 
 // The state keeps the phase of the request. The blocked and clear status come from the findings
 // and the rule, so they have no second copy in the state.
 const ANSWERED = 'answered';
 const IDLE_STATE = { phase: RISK_CHECK_STATUS.IDLE, result: null };
 
-const statusOf = (result, approvalRule) =>
-  splitRiskFindings(result, approvalRule).blocking.length
+const statusOf = (result, approvalRule, isWebhook) =>
+  splitRiskFindings(result, approvalRule, isWebhook).blocking.length
     ? RISK_CHECK_STATUS.BLOCKED
     : RISK_CHECK_STATUS.CLEAR;
 
@@ -21,15 +21,18 @@ const statusOf = (result, approvalRule) =>
  * and resolves to the findings, or null when the check did not run. `approvalRule` is the rule of the form:
  * under "Pause and ask me" a missing credential or a personal sign-in is `waiting`, not `blocking`. `applyFindings(data)` takes the
  * findings of a 409 save answer. On an edit, `scheduleId` makes the server scan as the schedule owner
- * and answer `confirmed`.
+ * and answer `confirmed`. `isWebhook`: the server scans for a webhook, which never waits for a sign-in.
  */
 export const useScheduleRiskCheck = ({
   projectId,
   entityType,
   applicationId,
   versionId,
+  toolkitId,
+  indexName,
   scheduleId,
   approvalRule,
+  isWebhook = false,
 }) => {
   const [checkRisk] = useCheckScheduleRiskMutation();
   const [state, setState] = useState(IDLE_STATE);
@@ -38,20 +41,26 @@ export const useScheduleRiskCheck = ({
 
   const runCheck = useCallback(async () => {
     const call = ++latestCall.current;
-    if (!applicationId || !versionId) {
+    // A toolkit index is checked by its toolkit and index name; it has no version
+    const isIndex = isIndexType(entityType);
+    if (isIndex ? !toolkitId || !indexName : !applicationId || !versionId) {
       setState(IDLE_STATE);
       return null;
     }
     // The findings belong to one entity and version; a failed re-check of the same pair keeps them, with the failed status
-    const key = `${entityType}:${applicationId}:${versionId}`;
+    const key = isIndex
+      ? `${entityType}:${toolkitId}:${indexName}`
+      : `${entityType}:${applicationId}:${versionId}`;
     setState(prev => ({ ...prev, phase: RISK_CHECK_STATUS.CHECKING }));
     try {
       const result = await checkRisk({
         projectId,
         entity_type: entityType,
-        application_id: applicationId,
-        version_id: versionId,
+        ...(isIndex
+          ? { toolkit_id: toolkitId, index_name: indexName }
+          : { application_id: applicationId, version_id: versionId }),
         ...(scheduleId && { schedule_id: scheduleId }),
+        ...(isWebhook && { trigger_kind: 'webhook' }),
       }).unwrap();
       if (call === latestCall.current) setState({ phase: ANSWERED, result, key });
       return result;
@@ -66,7 +75,17 @@ export const useScheduleRiskCheck = ({
       }
       return null;
     }
-  }, [checkRisk, projectId, entityType, applicationId, versionId, scheduleId]);
+  }, [
+    checkRisk,
+    projectId,
+    entityType,
+    applicationId,
+    versionId,
+    toolkitId,
+    indexName,
+    scheduleId,
+    isWebhook,
+  ]);
 
   useEffect(() => {
     runCheck();
@@ -97,8 +116,11 @@ export const useScheduleRiskCheck = ({
   // The rule can change after the answer came, so the findings are split again for the current rule
   // without a new request
   const { phase, result, key } = state;
-  const findings = useMemo(() => splitRiskFindings(result, approvalRule), [result, approvalRule]);
-  const status = phase === ANSWERED ? statusOf(result, approvalRule) : phase;
+  const findings = useMemo(
+    () => splitRiskFindings(result, approvalRule, isWebhook),
+    [result, approvalRule, isWebhook],
+  );
+  const status = phase === ANSWERED ? statusOf(result, approvalRule, isWebhook) : phase;
 
   return { status, result, key, ...findings, runCheck, applyFindings };
 };

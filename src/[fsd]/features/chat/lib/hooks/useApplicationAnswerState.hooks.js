@@ -12,6 +12,7 @@ import {
 } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
 import { groupToolkitAuthorizationActions } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
 import { computeBreadcrumbs } from '@/[fsd]/features/chat/lib/helpers/subAgentGrouping.helpers.js';
+import { MessageCopyConstants } from '@/[fsd]/shared/lib/constants';
 import { formatJsonBlock } from '@/[fsd]/shared/lib/utils';
 import {
   CANVAS_ADMIN_USER,
@@ -21,7 +22,8 @@ import {
   ToolActionStatus,
 } from '@/common/constants.js';
 import { isImageFile } from '@/common/utils';
-import useCopyDownloadHandlers from '@/hooks/chat/useCopyEventHandlers';
+
+const { COPY_FORMATS } = MessageCopyConstants;
 
 export const useApplicationAnswerState = props => {
   const {
@@ -52,7 +54,8 @@ export const useApplicationAnswerState = props => {
 
   const headerRef = useRef(null);
 
-  const { onClickCopy } = useCopyDownloadHandlers({ onCopy });
+  const onClickCopyMarkdown = useCallback(() => onCopy?.(COPY_FORMATS.markdown), [onCopy]);
+  const onClickCopyText = useCallback(() => onCopy?.(COPY_FORMATS.text), [onCopy]);
 
   const authRequiredActions = useMemo(
     () => toolActions.filter(action => action.status === ToolActionStatus.actionRequired),
@@ -415,6 +418,7 @@ export const useApplicationAnswerState = props => {
     resolveAuthorizationAgentType,
     onContinueWithConfirmation,
     onClickEdit,
-    onClickCopy,
+    onClickCopyMarkdown,
+    onClickCopyText,
   };
 };

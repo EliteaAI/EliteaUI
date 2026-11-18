@@ -79,6 +79,8 @@ export const usePageDetails = () => {
   const isAgentScheduleDetailPage = useMatch({ path: RouteDefinitions.ApplicationsScheduleDetail });
   const isPipelineScheduleCreatePage = useMatch({ path: RouteDefinitions.PipelineCreateSchedule });
   const isPipelineScheduleDetailPage = useMatch({ path: RouteDefinitions.PipelineScheduleDetail });
+  const isIndexScheduleCreatePage = useMatch({ path: RouteDefinitions.ToolkitIndexCreateSchedule });
+  const isIndexScheduleDetailPage = useMatch({ path: RouteDefinitions.ToolkitIndexScheduleDetail });
   const isWebhookCreatePage = useMatch({ path: RouteDefinitions.CreateWebhook });
   const isWebhookDetailPage = useMatch({ path: RouteDefinitions.WebhookDetail });
   const isAgentWebhookCreatePage = useMatch({ path: RouteDefinitions.ApplicationsCreateWebhook });
@@ -248,7 +250,9 @@ export const usePageDetails = () => {
     isAgentScheduleCreatePage ||
     isAgentScheduleDetailPage ||
     isPipelineScheduleCreatePage ||
-    isPipelineScheduleDetailPage
+    isPipelineScheduleDetailPage ||
+    isIndexScheduleCreatePage ||
+    isIndexScheduleDetailPage
   ) {
     pageType = 'ScheduleDetails';
   } else if (

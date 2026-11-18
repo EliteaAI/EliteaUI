@@ -6,6 +6,13 @@ import RouteDefinitions, { PathSessionMap } from '@/routes';
  * resolved yet is hidden together with its separator, preserving how the per-page breadcrumbs behaved.
  */
 export const BREADCRUMB_REGISTRY = {
+  [RouteDefinitions.AppsApplications]: { label: 'Applications' },
+  [RouteDefinitions.AppDetail]: {
+    parent: RouteDefinitions.AppsApplications,
+    entityName: true,
+    fallbackLabel: 'Application',
+    testId: 'app-detail-title',
+  },
   [RouteDefinitions.ToolkitsWithTab]: { label: PathSessionMap[RouteDefinitions.Toolkits] },
   [RouteDefinitions.MCPsWithTab]: { label: 'MCPs' },
 
@@ -39,6 +46,14 @@ export const BREADCRUMB_REGISTRY = {
   [RouteDefinitions.ToolkitIndexSearch]: {
     parent: RouteDefinitions.ToolkitIndex,
     label: 'Search',
+  },
+  [RouteDefinitions.ToolkitIndexCreateSchedule]: {
+    parent: RouteDefinitions.ToolkitIndex,
+    label: 'Add Schedule',
+  },
+  [RouteDefinitions.ToolkitIndexScheduleDetail]: {
+    parent: RouteDefinitions.ToolkitIndex,
+    label: 'Edit Schedule',
   },
 
   [RouteDefinitions.MCPDetail]: {

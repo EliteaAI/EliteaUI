@@ -16,6 +16,7 @@ const ParticipantsWrapper = memo(props => {
     collapsed,
     rightPanelWidth,
     activeConversation,
+    onAccessSaved,
     editingToolkit,
     onParticipantsCollapsed,
     activeParticipant,
@@ -54,6 +55,8 @@ const ParticipantsWrapper = memo(props => {
           onCollapsed={onParticipantsCollapsed}
           activeParticipantId={getChatParticipantUniqueId(activeParticipant)}
           participants={activeConversation?.participants || []}
+          conversation={activeConversation}
+          onAccessSaved={onAccessSaved}
           onDeleteParticipant={onDeleteParticipant}
           onSelectParticipant={onSelectParticipant}
           onUpdateParticipant={onChangeParticipantSettings}

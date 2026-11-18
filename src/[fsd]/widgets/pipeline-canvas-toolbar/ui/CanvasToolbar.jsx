@@ -16,6 +16,7 @@ const CanvasToolbar = memo(props => {
     testDisabledReason,
     disabled,
     isCompact = false,
+    extraActions,
   } = props;
 
   const modeItems = useMemo(
@@ -34,6 +35,7 @@ const CanvasToolbar = memo(props => {
         buttonItems={modeItems}
       />
       <Box sx={styles.actions}>
+        {extraActions && <Box sx={styles.extraActionsWrapper}>{extraActions}</Box>}
         {isFlowMode && (
           <FlowEditorAddNode.AddNodeButton
             onAddNode={onAddNode}
@@ -69,6 +71,10 @@ const canvasToolbarStyles = isCompact => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
+  },
+  extraActionsWrapper: {
+    display: 'flex',
+    alignItems: 'center',
   },
 });
 

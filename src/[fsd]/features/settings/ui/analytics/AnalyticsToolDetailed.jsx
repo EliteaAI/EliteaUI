@@ -6,8 +6,14 @@ import { Box, CircularProgress, IconButton, TableSortLabel, Typography, useTheme
 
 import { useAnalyticsToolDetailQuery } from '@/[fsd]/features/settings/api/analyticsApi';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { ChartTooltip, KPICard } from '@/[fsd]/features/settings/ui/analytics';
-import { analyticsTableSortLabelSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
+import { ChartTooltip, KPICard, UserLabel } from '@/[fsd]/features/settings/ui/analytics';
+import {
+  analyticsColumnSx,
+  analyticsHeaderCellSx,
+  analyticsRowMinWidthSx,
+  analyticsTableSortLabelSx,
+  analyticsTableWrapperSx,
+} from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { useClientSort, useSortedRows } from '@/[fsd]/shared/lib/hooks';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 
@@ -22,6 +28,9 @@ const AGENT_COLUMNS = [
   { key: 'entity_name', label: 'Agent / Pipeline', flex: 3 },
   { key: 'calls', label: 'Calls', flex: 1 },
 ];
+
+const USER_ROW_MIN_WIDTH = analyticsRowMinWidthSx(USER_COLUMNS);
+const AGENT_ROW_MIN_WIDTH = analyticsRowMinWidthSx(AGENT_COLUMNS);
 
 const AnalyticsToolDetailed = memo(props => {
   const { projectId, toolName, dateFrom, dateTo, onBack } = props;
@@ -183,11 +192,11 @@ const AnalyticsToolDetailed = memo(props => {
             {users.length} users called this tool
           </Typography>
           <Box sx={styles.tableWrapper}>
-            <Box sx={styles.tableHeader}>
+            <Box sx={[styles.tableHeader, USER_ROW_MIN_WIDTH]}>
               {USER_COLUMNS.map(col => (
                 <Box
                   key={col.key}
-                  sx={[styles.tableCell, { flex: col.flex }]}
+                  sx={[styles.tableCell, analyticsHeaderCellSx, analyticsColumnSx(col)]}
                 >
                   <TableSortLabel
                     active={userSort.sortBy === col.key}
@@ -200,28 +209,26 @@ const AnalyticsToolDetailed = memo(props => {
                 </Box>
               ))}
             </Box>
-            <Box sx={styles.fixedScrollList}>
+            <Box sx={[styles.fixedScrollList, USER_ROW_MIN_WIDTH]}>
               {sortedUsers.map((u, i) => (
                 <Box
                   key={i}
-                  sx={styles.tableRow}
+                  sx={[styles.tableRow, USER_ROW_MIN_WIDTH]}
                 >
-                  <Typography
-                    sx={[styles.tableCellValue, { flex: 3 }]}
-                    noWrap
-                  >
-                    {u.user_email || `User ${u.user_id}`}
-                  </Typography>
-                  <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
+                  <Box sx={[styles.tableCellValue, analyticsColumnSx(USER_COLUMNS[0])]}>
+                    <UserLabel user={u} />
+                  </Box>
+                  <Typography sx={[styles.tableCellValue, analyticsColumnSx(USER_COLUMNS[1])]}>
                     {AnalyticCommonHelpers.fmtNum(u.calls)}
                   </Typography>
-                  <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
+                  <Typography sx={[styles.tableCellValue, analyticsColumnSx(USER_COLUMNS[2])]}>
                     {AnalyticCommonHelpers.fmtDuration(u.avg_duration_ms)}
                   </Typography>
                   <Typography
                     sx={[
                       styles.tableCellValue,
-                      { flex: 1, color: u.errors > 0 ? palette.status.rejected : undefined },
+                      analyticsColumnSx(USER_COLUMNS[3]),
+                      { color: u.errors > 0 ? palette.status.rejected : undefined },
                     ]}
                   >
                     {u.errors}
@@ -253,11 +260,11 @@ const AnalyticsToolDetailed = memo(props => {
             {agents.length} agents & pipelines used this tool
           </Typography>
           <Box sx={styles.tableWrapper}>
-            <Box sx={styles.tableHeader}>
+            <Box sx={[styles.tableHeader, AGENT_ROW_MIN_WIDTH]}>
               {AGENT_COLUMNS.map(col => (
                 <Box
                   key={col.key}
-                  sx={[styles.tableCell, { flex: col.flex }]}
+                  sx={[styles.tableCell, analyticsHeaderCellSx, analyticsColumnSx(col)]}
                 >
                   <TableSortLabel
                     active={agentSort.sortBy === col.key}
@@ -270,19 +277,19 @@ const AnalyticsToolDetailed = memo(props => {
                 </Box>
               ))}
             </Box>
-            <Box sx={styles.fixedScrollList}>
+            <Box sx={[styles.fixedScrollList, AGENT_ROW_MIN_WIDTH]}>
               {sortedAgents.map((a, i) => (
                 <Box
                   key={i}
-                  sx={styles.tableRow}
+                  sx={[styles.tableRow, AGENT_ROW_MIN_WIDTH]}
                 >
                   <Typography
-                    sx={[styles.tableCellValue, { flex: 3 }]}
+                    sx={[styles.tableCellValue, analyticsColumnSx(AGENT_COLUMNS[0])]}
                     noWrap
                   >
                     {a.entity_name}
                   </Typography>
-                  <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
+                  <Typography sx={[styles.tableCellValue, analyticsColumnSx(AGENT_COLUMNS[1])]}>
                     {AnalyticCommonHelpers.fmtNum(a.calls)}
                   </Typography>
                 </Box>
@@ -358,7 +365,7 @@ const analyticsToolDetailedStyles = () => ({
     transform: 'translate(-50%, -50%)',
   },
   emptyText: ({ palette }) => ({ color: palette.text.metrics || palette.text.disabled }),
-  tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
+  tableWrapper: analyticsTableWrapperSx,
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',

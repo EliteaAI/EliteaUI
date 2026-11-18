@@ -49,10 +49,10 @@ describe('UsageTopSkills', () => {
     expect(screen.getByText('$0.0020')).toBeInTheDocument();
   });
 
-  it('shows "Top Spend Skills" title by default', () => {
+  it('shows "Top Spent Skills" title by default', () => {
     renderTopSkills();
 
-    expect(screen.getByText('Top Spend Skills')).toBeInTheDocument();
+    expect(screen.getByText('Top Spent Skills')).toBeInTheDocument();
   });
 
   it('switches to "Top Run Skills" title and uses the by-runs dataset when sorted by Runs', () => {

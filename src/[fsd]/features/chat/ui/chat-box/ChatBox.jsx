@@ -55,6 +55,7 @@ import {
   useSelectedChatModel,
   useSlashMention,
 } from '@/[fsd]/features/chat/lib/hooks';
+import { sendFailuresActions } from '@/[fsd]/features/chat/model';
 import {
   areDetailsOfParticipant,
   getSkillUnavailableReason,
@@ -77,13 +78,14 @@ import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { MentionSkillList } from '@/[fsd]/features/skill';
 import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
+import { withSkillVersionMeta } from '@/[fsd]/features/skill/lib/helpers';
 import {
   InputGuardrailConstants,
   LLMSettingsConstants,
   MentionConstants,
 } from '@/[fsd]/shared/lib/constants';
 import { SocketContext } from '@/[fsd]/shared/lib/context';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useCopyChatMessage, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   cleanLLMSettings,
   defaultReasoningEffortFor,
@@ -244,7 +246,7 @@ const ChatBox = memo(
     const isDequeuingRef = useRef(false);
 
     const dispatch = useDispatch();
-    const { toastError, toastInfo } = useToast();
+    const { toastError } = useToast();
     const { rememberSend } = useRejectedSendRecovery({ chatInput, toastError, activeConversationRef });
 
     // Sockets
@@ -859,13 +861,18 @@ const ChatBox = memo(
       setIsStreaming?.(isStreaming);
     }, [isStreaming, setIsStreaming]);
 
-    const { setStreamingInfo, stopStreaming, clearConversationStreamingInfo, isStreamingNow } =
-      useChatStreaming({
-        conversationId: activeConversation?.uuid,
-        chatHistory: chat_history,
-        onStopStreaming,
-        isChatStreaming: !isAgentsPage,
-      });
+    const {
+      setStreamingInfo,
+      setConversationStreamingInfo,
+      stopStreaming,
+      clearConversationStreamingInfo,
+      isStreamingNow,
+    } = useChatStreaming({
+      conversationId: activeConversation?.uuid,
+      chatHistory: chat_history,
+      onStopStreaming,
+      isChatStreaming: !isAgentsPage,
+    });
 
     const stopStreamingRef = useRef(stopStreaming);
 
@@ -1176,6 +1183,17 @@ const ChatBox = memo(
         });
         const initialConversationUuid = activeConversation?.uuid;
         let eventPayload = makeEventPayload(initialConversationUuid);
+        // Tracked app-wide so a failure after the user left is shown in this chat on return
+        if (initialConversationUuid && !isSendingToUser && participant?.entity_name !== 'user') {
+          dispatch(
+            sendFailuresActions.trackSend({
+              questionId: question_id,
+              conversationUuid: initialConversationUuid,
+              question,
+              userMessage: newMessages.find(message => message.role === ROLES.User),
+            }),
+          );
+        }
 
         // Prepare message data for onSend callback
         const messageData = {
@@ -1215,11 +1233,18 @@ const ChatBox = memo(
           eventPayload.participant_id = participantIdRef.current;
         }
 
-        const { success, messages, updatedAttachments } = await uploadAttachments({
+        const {
+          success,
+          messages,
+          updatedAttachments,
+          error: uploadError,
+        } = await uploadAttachments({
           attachments,
           conversationId: activeConversation?.id || sendResult.createdConversation?.id || '',
           messages: newMessages,
         });
+        const isAwayFromConversation = () =>
+          !!initialConversationUuid && activeConversationRef.current?.uuid !== initialConversationUuid;
         if (success) {
           newMessages = messages;
           // Rebuild event payload with sanitized attachment names if they were updated
@@ -1257,7 +1282,39 @@ const ChatBox = memo(
             }
           }
         } else {
+          if (isAwayFromConversation()) {
+            dispatch(
+              sendFailuresActions.recordFailure({
+                questionId: question_id,
+                conversationUuid: initialConversationUuid,
+                error: uploadError,
+              }),
+            );
+          } else {
+            dispatch(sendFailuresActions.settleSend({ questionId: question_id }));
+          }
           return;
+        }
+
+        // Left while awaiting onSend / upload: still send to the original chat, but leave the open one alone
+        if (isAwayFromConversation()) {
+          if (sendResult?.success !== false) {
+            const conversationUuid = eventPayload?.conversation_uuid || initialConversationUuid;
+            dispatch(sendFailuresActions.trackAwaySend({ questionId: question_id, conversationUuid }));
+            emit({ ...eventPayload, conversation_uuid: conversationUuid });
+            if (!isSendingToUser && participant?.entity_name !== 'user') {
+              // Bound to the original chat so its Stop button shows on return
+              setConversationStreamingInfo(conversationUuid, question_id);
+            }
+            emitted = true;
+            // One input serves every chat: the sent text must not stay in the open chat's composer
+            if (!skipInputReset && chatInput.current?.getInputContent() === question) {
+              chatInput.current.reset();
+            }
+          } else {
+            dispatch(sendFailuresActions.settleSend({ questionId: question_id }));
+          }
+          return emitted;
         }
 
         // Continue with common logic if sending was successful
@@ -1328,6 +1385,7 @@ const ChatBox = memo(
         chat_history,
         clearMentions,
         conversationEdit,
+        dispatch,
         emit,
         getPayload,
         isAgentsPage,
@@ -1340,6 +1398,7 @@ const ChatBox = memo(
         projectId,
         setAskingQuestionId,
         setChatHistory,
+        setConversationStreamingInfo,
         setSelectedUsers,
         setStreamingInfo,
         unsavedLLMSettings,
@@ -1348,53 +1407,7 @@ const ChatBox = memo(
       ],
     );
 
-    const onCopyToClipboard = useCallback(
-      async id => {
-        const message = chat_history.find(item => item.id === id);
-
-        if (message) {
-          if (message.exception) {
-            try {
-              await navigator.clipboard.writeText(JSON.stringify(message.exception));
-              toastInfo('The exception has been copied to the clipboard.');
-            } catch {
-              toastError('Failed to copy the exception!');
-            }
-          } else {
-            // Handle different message types including images
-            let contentToCopy;
-
-            if (message.message_items) {
-              contentToCopy = message.message_items
-                .map(item => {
-                  switch (item.item_type) {
-                    case 'canvas_message':
-                      return item.item_details.latest_version?.canvas_content || '';
-                    case 'attachment_message': {
-                      // Handle attachment as link
-                      const attachmentName = item.item_details.name || 'Attachment';
-                      return `[${attachmentName}]`;
-                    }
-                    default:
-                      return item.item_details.content || '';
-                  }
-                })
-                .join(', ');
-            } else {
-              contentToCopy = message.content || '';
-            }
-
-            try {
-              await navigator.clipboard.writeText(contentToCopy);
-              toastInfo('The message has been copied to the clipboard.');
-            } catch {
-              toastError('Failed to copy the message!');
-            }
-          }
-        }
-      },
-      [chat_history, toastError, toastInfo],
-    );
+    const onCopyToClipboard = useCopyChatMessage(chat_history);
 
     const onRegenerateAnswer = useCallback(
       async (uuid, messageParticipant, updatedItems, newAttachmentItems) => {
@@ -2679,7 +2692,11 @@ const ChatBox = memo(
                 version_id: versionDetails.id,
                 icon_meta: versionDetails.meta?.icon_meta || {},
               },
-              meta: { ...activeParticipant.meta, version_name: versionDetails.name, is_available: true },
+              meta: {
+                ...withSkillVersionMeta(activeParticipant.meta, versionDetails),
+                version_name: versionDetails.name,
+                is_available: true,
+              },
             },
             true,
           );

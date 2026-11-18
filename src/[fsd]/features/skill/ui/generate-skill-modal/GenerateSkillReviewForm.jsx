@@ -133,6 +133,7 @@ const generateSkillReviewFormStyles = () => ({
       borderRadius: '0.5rem',
       fontSize: '0.875rem',
       color: palette.text.secondary,
+      padding: 0,
       '& .MuiOutlinedInput-notchedOutline': {
         borderColor: palette.border.lines,
       },
@@ -143,6 +144,10 @@ const generateSkillReviewFormStyles = () => ({
         borderColor: palette.primary.main,
         borderWidth: '0.0625rem',
       },
+    },
+    '& .MuiOutlinedInput-input': {
+      padding: '0.5rem 1rem',
+      minHeight: '2.5rem',
     },
     '& .MuiFormHelperText-root': {
       fontSize: '0.625rem',

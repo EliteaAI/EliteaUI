@@ -9,16 +9,17 @@ const PAGE_SIZE = 100;
 const NO_ROWS = [];
 
 // Every schedule of one agent or pipeline the user may see: pages of 100 load one after another until a page is not full
-export const useAllEntitySchedules = ({ entityType, entityId, skip = false }) => {
+// The list API returns one trigger kind per call and defaults to cron
+export const useAllEntitySchedules = ({ entityType, entityId, triggerKind, skip = false }) => {
   const projectId = useSelectedProjectId();
-  const key = `${projectId}:${entityType}:${entityId}`;
+  const key = `${projectId}:${entityType}:${entityId}:${triggerKind}`;
   const [loaded, setLoaded] = useState({ key, pages: [] });
   const pages = loaded.key === key ? loaded.pages : NO_ROWS;
   const page = pages.length;
   const isDone = page > 0 && pages[page - 1].length < PAGE_SIZE;
 
   const { currentData } = useGetScheduleListQuery(
-    { projectId, entityType, entityId, page, pageSize: PAGE_SIZE },
+    { projectId, entityType, entityId, triggerKind, page, pageSize: PAGE_SIZE },
     { skip: skip || !projectId || !entityId || isDone },
   );
 

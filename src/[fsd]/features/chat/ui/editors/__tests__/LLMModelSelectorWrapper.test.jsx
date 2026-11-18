@@ -24,7 +24,7 @@ vi.mock('@/api/configurations', () => ({
   useListModelsQuery: () => ({
     data: {
       items: [{ name: 'concrete', project_id: 1, default: true }],
-      auto_routing: { enabled: true },
+      auto_routing: { enabled: true, limits: { context_window: 128000, max_output_tokens: 8000, models: 2 } },
       default_selection: { mode: 'auto' },
     },
   }),
@@ -62,5 +62,10 @@ describe('saved agent selection ownership', () => {
     renderEditor();
     expect(fixture.selector.mock.lastCall[0].models.map(model => model.name)).toEqual(['concrete']);
     expect(fixture.setFieldValue).not.toHaveBeenCalled();
+  });
+  it('gives a saved Auto selection the project Auto window', () => {
+    fixture.version_details = { agent_type: 'agent', llm_settings: { selection: autoModel().selection } };
+    renderEditor();
+    expect(fixture.selector.mock.lastCall[0].selectedModel.context_window).toBe(128000);
   });
 });

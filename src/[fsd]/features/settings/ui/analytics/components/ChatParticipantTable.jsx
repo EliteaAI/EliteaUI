@@ -4,11 +4,18 @@ import { Box, Typography } from '@mui/material';
 
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { analyticsTableStyles } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
+import {
+  analyticsColumnSx,
+  analyticsHeaderCellSx,
+  analyticsRowMinWidthSx,
+  analyticsTableStyles,
+} from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
+import { customScrollbarSx } from '@/[fsd]/shared/lib/helpers';
 
 const { CHAT_PARTICIPANT_TYPE_LABELS } = AnalyticsCommonConstants;
 
 const HEADERS = ['Type', 'Responses', 'Tokens', 'Cost'];
+const ROW_MIN_WIDTH = analyticsRowMinWidthSx(HEADERS.map(() => 1));
 
 const ChatParticipantTable = memo(props => {
   const { rows } = props;
@@ -27,11 +34,11 @@ const ChatParticipantTable = memo(props => {
         Cost by Participant
       </Typography>
       <Box sx={styles.tableWrapper}>
-        <Box sx={styles.tableHeader}>
+        <Box sx={[styles.tableHeader, ROW_MIN_WIDTH]}>
           {HEADERS.map(label => (
             <Box
               key={label}
-              sx={[styles.tableCell, { flex: 1 }]}
+              sx={[styles.tableCell, analyticsHeaderCellSx, styles.column]}
             >
               {label}
             </Box>
@@ -42,18 +49,18 @@ const ChatParticipantTable = memo(props => {
             rows.map((row, i) => (
               <Box
                 key={i}
-                sx={styles.tableRow}
+                sx={[styles.tableRow, ROW_MIN_WIDTH]}
               >
-                <Box sx={[styles.tableCellValue, { flex: 1 }]}>
+                <Box sx={[styles.tableCellValue, styles.column]}>
                   {CHAT_PARTICIPANT_TYPE_LABELS[row.type] || row.type || '-'}
                 </Box>
-                <Box sx={[styles.tableCellValue, { flex: 1 }]}>
+                <Box sx={[styles.tableCellValue, styles.column]}>
                   {AnalyticCommonHelpers.fmtNum(row.responses)}
                 </Box>
-                <Box sx={[styles.tableCellValue, { flex: 1 }]}>
+                <Box sx={[styles.tableCellValue, styles.column]}>
                   {AnalyticCommonHelpers.fmtNum(row.total_tokens)}
                 </Box>
-                <Box sx={[styles.tableCellValue, { flex: 1 }]}>
+                <Box sx={[styles.tableCellValue, styles.column]}>
                   {AnalyticCommonHelpers.fmtCost(row.llm_cost)}
                 </Box>
               </Box>
@@ -76,6 +83,7 @@ ChatParticipantTable.displayName = 'ChatParticipantTable';
 
 /** @type {MuiSx} */
 const chatParticipantTableStyles = () => ({
+  column: analyticsColumnSx(1),
   card: ({ palette }) => ({
     flex: 1,
     padding: '1rem',
@@ -86,7 +94,7 @@ const chatParticipantTableStyles = () => ({
     minWidth: 0,
   }),
   title: ({ palette }) => ({ color: palette.text.secondary, marginBottom: '0.25rem', display: 'block' }),
-  tableWrapper: { width: '100%', overflowX: 'auto' },
+  tableWrapper: theme => ({ width: '100%', overflowX: 'auto', ...customScrollbarSx(theme) }),
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',

@@ -1,6 +1,15 @@
 export { filterAttachedSkills } from './attachedSkills.helpers';
+export {
+  argumentHintMeta,
+  argumentHintText,
+  isUserInvocable,
+  skillComposerPlaceholder,
+  skillVersionMeta,
+  userInvocableMeta,
+  withSkillVersionMeta,
+} from './skillInvocation.helpers';
 export { normalizeTagsForSave } from './tags.helpers';
-export { isSkillZip, readSkillZip } from './skillPackage.helpers';
+export { isSkillPackage, readSkillZip } from './skillPackage.helpers';
 export {
   instructionsTooLongMessage,
   isInstructionsOverLimit,
@@ -49,3 +58,21 @@ export {
   encodeEliteaMetadata,
   splitEditorFrontmatter,
 } from './skillEliteaMetadata.helpers';
+export {
+  buildRunVersionSearch,
+  buildSkillFileTree,
+  countFolderFiles,
+  describeSkillFiles,
+  fileBaseName,
+  findMentionLines,
+  findPathMentions,
+  findSkillFile,
+  isPathInFolder,
+  pathsOverlap,
+  resolveFileLink,
+} from './skillFiles.helpers';
+export {
+  FILE_LINK_CLASS,
+  MENTION_LINE_CLASS,
+  skillInstructionsDecorations,
+} from './skillInstructionsDecorations.helpers';

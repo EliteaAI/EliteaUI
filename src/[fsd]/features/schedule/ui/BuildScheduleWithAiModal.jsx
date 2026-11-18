@@ -8,7 +8,13 @@ import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 
 import { useGenerateScheduleDraftMutation } from '../api';
-import { changedFields, draftToFormValues, isScheduleFormEmpty, toDraftRequest } from '../lib/helpers';
+import {
+  changedFields,
+  draftToFormValues,
+  isIndexType,
+  isScheduleFormEmpty,
+  toDraftRequest,
+} from '../lib/helpers';
 
 const PLACEHOLDER = 'Describe the schedule: what to run, when and until when.';
 const STEPS = [{ key: 'changes', label: 'Review changes' }];
@@ -25,6 +31,8 @@ const FIELD_LABELS = {
   type: 'Type',
   entity_type: 'Type',
   application_id: 'Entity',
+  toolkit_id: 'Toolkit',
+  index_name: 'Index',
   version_id: 'Version',
   run_mode: 'Run mode',
   prompt: 'Prompt',
@@ -34,6 +42,14 @@ const FIELD_LABELS = {
   expires_at: 'Expires at',
 };
 const DRAFT_FIELDS = Object.keys(FIELD_LABELS).filter(field => field !== 'type');
+// The fields the lock keeps: the draft cannot change them
+const LOCKED_APPLICATION_FIELDS = ['entity_type', 'application_id'];
+const LOCKED_INDEX_FIELDS = ['entity_type', 'toolkit_id', 'index_name'];
+
+const getLockedFields = lockedEntity => {
+  if (!lockedEntity) return [];
+  return isIndexType(lockedEntity.type) ? LOCKED_INDEX_FIELDS : LOCKED_APPLICATION_FIELDS;
+};
 
 const show = value => (typeof value === 'object' && value ? JSON.stringify(value) : String(value ?? '-'));
 
@@ -59,7 +75,7 @@ const BuildScheduleWithAiModal = memo(props => {
     if (open) setIsEmpty(isScheduleFormEmpty(values));
   }
   const styles = buildScheduleWithAiModalStyles();
-  const lockedFields = lockedEntity ? ['entity_type', 'application_id'] : [];
+  const lockedFields = getLockedFields(lockedEntity);
 
   const handleGenerate = useCallback(
     prompt =>
@@ -98,6 +114,12 @@ const BuildScheduleWithAiModal = memo(props => {
     </Box>
   );
 
+  // A warning names a field the draft cleared or left out; without a row of its own it would never show
+  const renderLeftOutWarnings = (warnings, shownFields) =>
+    [...new Set(warnings.map(warning => warning.field))]
+      .filter(field => !shownFields.includes(field))
+      .map(field => renderRow(field, FIELD_LABELS[field] ?? field, warnings));
+
   const shownError = useMemo(() => toShownError(error), [error]);
   const common = { ...TEST_IDS, open, onClose, entityLabel: 'schedule', placeholder: PLACEHOLDER };
   const generation = { onGenerate: handleGenerate, generateError: shownError, resetGenerate: reset };
@@ -109,25 +131,29 @@ const BuildScheduleWithAiModal = memo(props => {
         {...generation}
         onApprove={apply}
         approveLabel="Apply draft"
-        renderReview={({ draft, warnings = [] }) => (
-          <Box>
-            {DRAFT_FIELDS.filter(
-              field => !lockedFields.includes(field) && draft[field] !== undefined && draft[field] !== null,
-            ).map(field =>
-              renderRow(
-                field,
-                FIELD_LABELS[field],
-                warnings,
-                <Typography
-                  key="value"
-                  sx={styles.value}
-                >
-                  {show(draft[field])}
-                </Typography>,
-              ),
-            )}
-          </Box>
-        )}
+        renderReview={({ draft, warnings = [] }) => {
+          const shownFields = DRAFT_FIELDS.filter(
+            field => !lockedFields.includes(field) && draft[field] !== undefined && draft[field] !== null,
+          );
+          return (
+            <Box>
+              {shownFields.map(field =>
+                renderRow(
+                  field,
+                  FIELD_LABELS[field],
+                  warnings,
+                  <Typography
+                    key="value"
+                    sx={styles.value}
+                  >
+                    {show(draft[field])}
+                  </Typography>,
+                ),
+              )}
+              {renderLeftOutWarnings(warnings, shownFields)}
+            </Box>
+          );
+        }}
       />
     );
   }
@@ -144,33 +170,36 @@ const BuildScheduleWithAiModal = memo(props => {
         changes: changedFields(values, result.draft, lockedEntity),
       })}
       onSave={apply}
-      renderStep={(_key, { changes, warnings = [] }) =>
-        changes.length === 0 ? (
-          <Alert severity="info">The draft has no changes for the current form.</Alert>
-        ) : (
-          <Box sx={styles.changes}>
-            {changes.map(({ field, current, drafted }) =>
-              renderRow(
-                field,
-                FIELD_LABELS[field] ?? field,
-                warnings,
-                <Typography
-                  key="current"
-                  sx={styles.value}
-                >
-                  {show(current)}
-                </Typography>,
-                <Typography
-                  key="drafted"
-                  sx={[styles.value, styles.drafted]}
-                >
-                  {show(drafted)}
-                </Typography>,
-              ),
-            )}
-          </Box>
-        )
-      }
+      renderStep={(_key, { changes, warnings = [] }) => (
+        <Box sx={styles.changes}>
+          {changes.length === 0 && (
+            <Alert severity="info">The draft has no changes for the current form.</Alert>
+          )}
+          {changes.map(({ field, current, drafted }) =>
+            renderRow(
+              field,
+              FIELD_LABELS[field] ?? field,
+              warnings,
+              <Typography
+                key="current"
+                sx={styles.value}
+              >
+                {show(current)}
+              </Typography>,
+              <Typography
+                key="drafted"
+                sx={[styles.value, styles.drafted]}
+              >
+                {show(drafted)}
+              </Typography>,
+            ),
+          )}
+          {renderLeftOutWarnings(
+            warnings,
+            changes.map(({ field }) => field),
+          )}
+        </Box>
+      )}
     />
   );
 });

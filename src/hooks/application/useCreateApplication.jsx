@@ -4,6 +4,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
+// Not the hooks barrel: it re-exports chat hooks that import back into the application hooks
+import { useRefetchConversationStartersLimit } from '@/[fsd]/features/agent/lib/hooks/useConversationStartersLimit.hooks';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useApplicationCreateMutation } from '@/api/applications';
@@ -24,6 +27,7 @@ const useCreateApplication = (formik, resetBlockNav, options = {}) => {
   const [createRequest, { data, error, isLoading, isError }] = useApplicationCreateMutation();
   const { isFromPipeline, yamlCode, orientation } = useSavePipeline();
   const { nodes: flowNodes } = useSelector(state => state.pipelineEditor);
+  const refetchLimit = useRefetchConversationStartersLimit();
   const create = useCallback(async () => {
     const { nodes, edges } = isFromPipeline ? calculateNodesAndEdges(yamlCode, orientation, flowNodes) : {};
     await createRequest({
@@ -81,6 +85,12 @@ const useCreateApplication = (formik, resetBlockNav, options = {}) => {
     orientation,
     flowNodes,
   ]);
+
+  // Separate from the effect below: formik changes on every render, and this must run once per error
+  useEffect(() => {
+    // The limit may have been lowered since the editor opened; show the one the backend applied
+    if (conversationStartersHelpers.isConversationStartersLimitError(error)) refetchLimit();
+  }, [error, refetchLimit]);
 
   useEffect(() => {
     if (error) {

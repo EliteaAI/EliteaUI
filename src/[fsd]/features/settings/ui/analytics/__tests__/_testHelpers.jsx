@@ -51,6 +51,8 @@ export const analyticsTestTheme = createTheme({
       conversation: { hover: '#fafafa' },
     },
     border: { table: '#eee', divider: '#ddd' },
+    // Table wrappers show the themed scrollbar (customScrollbarSx)
+    scrollbar: { thumb: '#ccc', thumbHover: '#aaa' },
     action: { hover: '#eee' },
     alert: { info: { background: '#e3f2fd', border: '#90caf9', text: '#0d47a1' } },
     components: { button: { text: { primary: '#fff' } } },

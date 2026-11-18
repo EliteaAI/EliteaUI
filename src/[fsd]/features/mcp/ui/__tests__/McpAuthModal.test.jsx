@@ -40,6 +40,7 @@ vi.mock('@/[fsd]/shared/ui', () => ({
         value={props.value}
         type={props.type || 'text'}
         required={props.required}
+        disabled={props.disabled}
         onChange={props.onChange}
       />
     ),
@@ -180,6 +181,113 @@ describe('McpAuthModal client secret requirement (#6689)', () => {
       expect(authorizeButton()).toBeEnabled();
     },
   );
+});
+
+describe('McpAuthModal for a Default app (admin OAuth app) sign-in (#7474)', () => {
+  afterEach(() => cleanup());
+
+  it('asks for no secret and shows no MCP wording when the prompt carries the app reference', () => {
+    renderModal(findServerMetadata('Entra v2 tenant'), {
+      mcp_client_id: 'admin-client-id',
+      oauth_app_id: 'app-uuid',
+      credential_type: 'outlook',
+    });
+
+    expect(screen.queryByPlaceholderText('Enter OAuth client secret')).not.toBeInTheDocument();
+    expect(screen.queryByText(/MCP server/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Sign-in settings are managed by your administrator/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Authorize' })).toBeEnabled();
+    // No title passed (e.g. the toolkit test panel): the fallback isn't "MCP Authorization" either
+    expect(screen.getByText('Toolkit Authorization')).toBeInTheDocument();
+    expect(screen.queryByText(/MCP/)).not.toBeInTheDocument();
+  });
+
+  it('confirms a Default app sign-in without MCP wording', async () => {
+    vi.spyOn(window, 'open').mockReturnValue({
+      closed: false,
+      close: vi.fn(),
+      location: { href: 'about:blank' },
+    });
+    startMcpAuthFlow.mockResolvedValue({});
+    renderModal(findServerMetadata('Entra v2 tenant'), {
+      mcp_client_id: 'admin-client-id',
+      oauth_app_id: 'app-uuid',
+      credential_type: 'outlook',
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Authorize' }));
+
+    expect(await screen.findByText(/Authorization successful/)).toHaveTextContent('use the toolkit');
+    expect(screen.queryByText(/MCP/)).not.toBeInTheDocument();
+  });
+});
+
+describe('McpAuthModal for a Microsoft credential with its own Entra app (#7496)', () => {
+  const DATAVERSE_SCOPES = ['https://org.crm4.dynamics.com/user_impersonation', 'offline_access'];
+
+  // Mirrors the Dataverse check_connection 401: the Entra authority is the server, the scopes are fixed
+  const renderCredentialModal = credentialType =>
+    render(
+      <ThemeProvider theme={theme}>
+        <McpAuthModal
+          open
+          serverUrl="https://login.microsoftonline.com/tenant"
+          tokenStorageKey="cred-1:https://login.microsoftonline.com/tenant"
+          mcpAuthMetadata={{
+            authServers: ['https://login.microsoftonline.com/tenant'],
+            oauthAuthorizationServer: findServerMetadata('Entra v2 tenant'),
+            providedSettings: { mcp_client_id: 'own-client-id', scopes: DATAVERSE_SCOPES },
+            resourceScopes: DATAVERSE_SCOPES,
+          }}
+          formClientId="own-client-id"
+          formClientSecret="own-secret"
+          oauthAppCredentialType={credentialType}
+          title="Configuration OAuth"
+          projectId={2}
+          onClose={vi.fn()}
+          onCancel={vi.fn()}
+        />
+      </ThemeProvider>,
+    );
+
+  it('names Dataverse instead of an MCP server and shows its scopes read-only', () => {
+    renderCredentialModal('dataverse');
+
+    expect(
+      screen.getByText('Sign in with your Microsoft account to connect Dataverse (OneCRM).'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/MCP/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Scope (optional)')).not.toBeInTheDocument();
+    const scopeInput = screen.getByDisplayValue(DATAVERSE_SCOPES.join(' '));
+    expect(scopeInput).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Authorize' })).toBeEnabled();
+  });
+
+  it('confirms a Dataverse sign-in without MCP wording', async () => {
+    vi.spyOn(window, 'open').mockReturnValue({
+      closed: false,
+      close: vi.fn(),
+      location: { href: 'about:blank' },
+    });
+    startMcpAuthFlow.mockResolvedValue({});
+    renderCredentialModal('dataverse');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Authorize' }));
+
+    expect(await screen.findByText(/Authorization successful/)).toHaveTextContent('use the toolkit');
+    expect(screen.queryByText(/MCP/)).not.toBeInTheDocument();
+    expect(startMcpAuthFlow).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: DATAVERSE_SCOPES.join(' '), credentialType: 'dataverse' }),
+    );
+  });
+
+  it('drops the MCP wording for an Outlook credential but keeps its scopes editable', () => {
+    renderCredentialModal('outlook');
+
+    expect(screen.getByText(/Sign in with your Microsoft account to connect Outlook/)).toBeInTheDocument();
+    expect(screen.queryByText(/MCP/)).not.toBeInTheDocument();
+    expect(screen.getByDisplayValue(DATAVERSE_SCOPES.join(' '))).toBeEnabled();
+  });
 });
 
 describe('McpAuthModal description names only the credential fields it shows (#6689)', () => {

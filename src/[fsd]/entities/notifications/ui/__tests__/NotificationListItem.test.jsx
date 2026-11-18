@@ -4,21 +4,27 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material';
 
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import NotificationListItem from '../NotificationListItem';
 
+const { bulkMarkSeenNotifications } = vi.hoisted(() => ({
+  bulkMarkSeenNotifications: vi.fn(() => ({ unwrap: vi.fn().mockResolvedValue({}) })),
+}));
+
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
-  useSelectedProjectId: () => 5,
   useToast: () => ({ toastError: vi.fn() }),
 }));
+vi.mock('react-redux', () => ({
+  useSelector: selector => selector({ user: { personal_project_id: 9 } }),
+}));
 vi.mock('@/api/notifications', () => ({
-  useNotificationBulkMarkSeenMutation: () => [vi.fn()],
+  useNotificationBulkMarkSeenMutation: () => [bulkMarkSeenNotifications],
 }));
 vi.mock('@/common/convertChatConversationMessages', () => ({ convertTime: value => value }));
 vi.mock('@/common/utils', () => ({ buildErrorMessage: () => 'error' }));
 vi.mock('@/ComponentsLib/Tooltip', () => ({ default: ({ children }) => children }));
-vi.mock('../../lib/helpers', () => ({ getIcon: () => null }));
+vi.mock('../../lib/helpers', async importOriginal => ({ ...(await importOriginal()), getIcon: () => null }));
 vi.mock('../NotificationListItemMessage', () => ({ default: () => <span>message</span> }));
 
 const notification = {
@@ -57,5 +63,16 @@ describe('NotificationListItem', () => {
   it('has no mark button in the table context', () => {
     renderItem('table');
     expect(screen.queryByRole('button', { name: 'Mark as read' })).not.toBeInTheDocument();
+  });
+
+  it('marks a notification using the personal project ID', () => {
+    renderItem('list');
+    fireEvent.click(screen.getByRole('button', { name: 'Mark as read' }));
+
+    expect(bulkMarkSeenNotifications).toHaveBeenCalledWith({
+      projectId: 9,
+      ids: [notification.id],
+      isSeen: true,
+    });
   });
 });

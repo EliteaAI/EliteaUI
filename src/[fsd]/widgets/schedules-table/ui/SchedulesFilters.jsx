@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Typography, debounce } from '@mui/material';
 
+import { TOOLKIT_INDEX_TYPE } from '@/[fsd]/entities/schedule';
 import { WebhookConstants } from '@/[fsd]/shared/lib/constants';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
@@ -12,7 +13,12 @@ import OwnerFilter from './OwnerFilter';
 const SEARCH_DELAY_MS = 300;
 
 const ALL = { label: 'All', value: '' };
-const TYPE_OPTIONS = [ALL, { label: 'Agent', value: 'agent' }, { label: 'Pipeline', value: 'pipeline' }];
+const TYPE_OPTIONS = [
+  ALL,
+  { label: 'Agent', value: 'agent' },
+  { label: 'Pipeline', value: 'pipeline' },
+  { label: 'Toolkit Index', value: TOOLKIT_INDEX_TYPE },
+];
 const STATUS_OPTIONS = [
   ALL,
   { label: 'Running', value: 'running' },

@@ -3,7 +3,7 @@ import { memo, useCallback } from 'react';
 import { Box, MenuItem, Typography } from '@mui/material';
 
 import { useProjectSkillsPlatformSettingsQuery } from '@/[fsd]/features/settings/api';
-import { useProjectConfigRecord } from '@/[fsd]/features/settings/lib/hooks';
+import { useCanManageProjectSettings, useProjectConfigRecord } from '@/[fsd]/features/settings/lib/hooks';
 import { projectConfigCardStyles as styles } from '@/[fsd]/features/settings/ui/project-general/chat-configuration/projectConfigCard.styles';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Input } from '@/[fsd]/shared/ui';
@@ -37,7 +37,8 @@ const ProjectSkillsSettings = memo(() => {
     event => saveRecord({ enabled: event.target.value === 'default' ? null : event.target.value === 'true' }),
     [saveRecord],
   );
-  const disabled = !checkPermission(PERMISSIONS.configuration.update) || saving;
+  const { canManageSettings } = useCanManageProjectSettings();
+  const disabled = !checkPermission(PERMISSIONS.configuration.update) || !canManageSettings || saving;
 
   return (
     <Box

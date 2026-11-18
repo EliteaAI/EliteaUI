@@ -90,7 +90,7 @@ const UsageSourcesDonut = memo(props => {
           variant="labelMedium"
           sx={styles.title}
         >
-          Spend by source
+          Spent by source
         </Typography>
         <Typography
           variant="bodySmall"

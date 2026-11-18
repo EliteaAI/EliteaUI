@@ -34,8 +34,15 @@ describe('buildRoute', () => {
 describe('resolveBreadcrumbTrail', () => {
   it('returns an empty trail for routes without a registry entry', () => {
     expect(resolveBreadcrumbTrail('/user-public/toolkits/12')).toEqual([]);
-    expect(resolveBreadcrumbTrail('/apps/applications/12')).toEqual([]);
     expect(resolveBreadcrumbTrail('/settings/project-context')).toEqual([]);
+  });
+
+  it.each(['Inventory', 'Repository Wiki'])('links the %s app back to the Applications list', name => {
+    const trail = resolveBreadcrumbTrail('/apps/catalog/12');
+
+    expect(trail.map(crumb => crumb.to)).toEqual(['/apps/applications', '/apps/catalog/12']);
+    expect(labelsOf(applyBreadcrumbLabels(trail, name))).toEqual(['Applications', name]);
+    expect(getBreadcrumbEntityId(trail)).toBe('12');
   });
 
   it('builds the parent chain for a toolkit sub-page and marks the last crumb current', () => {

@@ -108,6 +108,7 @@ const buildSkillsFromFrontmatter = frontmatter => {
           name: block.version || 'base',
           instructions: block.instructions || '',
           ...(block.frontmatter && { meta: { frontmatter: block.frontmatter } }),
+          ...(block.files?.length && { files: block.files, files_folder: block.files_folder }),
         },
       ],
     }));

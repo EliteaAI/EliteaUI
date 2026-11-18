@@ -4,24 +4,24 @@ import { Box } from '@mui/material';
 
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 
-import { TRIGGER_LABELS, toRunStatusMeta } from '../lib/helpers';
+import { TRIGGER_LABELS, toRunStatusMeta, toTriggerLabel } from '../lib/helpers';
 
 const ALL = 'all';
 
 // One select per column of the card: the labels are inline ("Type: All"), as the Runs card of the mockup shows
 const ScheduleRunsFilters = memo(props => {
-  const { runs, trigger, status, onTriggerChange, onStatusChange } = props;
+  const { runs, trigger, status, isWebhook = false, onTriggerChange, onStatusChange } = props;
 
   const styles = scheduleRunsFiltersStyles();
 
   const triggerOptions = useMemo(
     () => [
       { value: ALL, label: 'All' },
-      ...Object.entries(TRIGGER_LABELS)
-        .filter(([value]) => runs.some(run => run.trigger === value))
-        .map(([value, label]) => ({ value, label })),
+      ...Object.keys(TRIGGER_LABELS)
+        .filter(value => runs.some(run => run.trigger === value))
+        .map(value => ({ value, label: toTriggerLabel(value, isWebhook) })),
     ],
-    [runs],
+    [runs, isWebhook],
   );
   const statusOptions = useMemo(
     () => [

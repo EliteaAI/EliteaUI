@@ -45,12 +45,18 @@ export const useConversationNavigation = () => {
     [conversationIdFromUrl, navigate, searchParams],
   );
 
-  const clearUrlConversation = useCallback(() => {
-    navigate({
-      pathname: '/chat',
-      search: '',
-    });
-  }, [navigate]);
+  const clearUrlConversation = useCallback(
+    ({ replace = false } = {}) => {
+      navigate(
+        {
+          pathname: '/chat',
+          search: '',
+        },
+        { replace },
+      );
+    },
+    [navigate],
+  );
 
   const createNewConversation = useCallback(() => {
     const newSearchParams = new URLSearchParams();

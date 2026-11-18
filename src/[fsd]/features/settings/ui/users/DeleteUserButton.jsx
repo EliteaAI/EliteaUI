@@ -11,7 +11,7 @@ import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 
 const DeleteUserButton = memo(props => {
-  const { users, disabled, setSelectedUsers, useSecondaryButton = false, testId } = props;
+  const { users, disabled, setSelectedUsers, useSecondaryButton = false, testId, tooltip } = props;
   const styles = deleteUserButtonStyles(disabled, useSecondaryButton);
   const { toastError, toastSuccess } = useToast();
   const projectId = useSelectedProjectId();
@@ -50,7 +50,7 @@ const DeleteUserButton = memo(props => {
   return (
     <>
       <Tooltip
-        title="Delete user"
+        title={tooltip || 'Delete user'}
         placement="top"
       >
         <Box component="span">

@@ -19,8 +19,9 @@ vi.mock('@/api', () => ({
 
 vi.mock('@/components/SearchInput', () => ({ default: () => null }));
 
-vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
+vi.mock('@/[fsd]/features/settings/ui/analytics', async () => ({
   AnalyticsUserDetailed: () => null,
+  UserLabel: (await vi.importActual('../components/UserLabel')).default,
 }));
 
 vi.mock('@/[fsd]/features/settings/lib/helpers', () => ({

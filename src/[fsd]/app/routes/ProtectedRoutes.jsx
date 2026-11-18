@@ -36,6 +36,12 @@ const AnalyticsContainer = ChunkHelpers.lazyWithRetry(
 const UsageContainer = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/features/settings/ui/usage/UsageContainer'),
 );
+const ComplexityContainer = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/features/settings/ui/complexity/ComplexityContainer'),
+);
+const ComplexityDetailContainer = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/features/settings/ui/complexity/ComplexityDetailContainer'),
+);
 const AppDetail = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/AppDetail'));
 const Apps = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/Apps'));
 const McpAuthPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/mcp'));
@@ -418,6 +424,16 @@ const ProtectedRoutes = memo(() => {
       { path: RouteDefinitions.ToolkitIndex, element: <RunIndex /> },
       { path: RouteDefinitions.ToolkitIndexHistory, element: <IndexHistoryPage /> },
       { path: RouteDefinitions.ToolkitIndexSearch, element: <IndexSearch /> },
+      {
+        path: RouteDefinitions.ToolkitIndexCreateSchedule,
+        element: <CreateSchedulePage entityType="toolkit_index" />,
+        requiredPermissions: [PERMISSIONS.schedules.create],
+      },
+      {
+        path: RouteDefinitions.ToolkitIndexScheduleDetail,
+        element: <ScheduleDetailPage entityType="toolkit_index" />,
+        requiredPermissions: [PERMISSIONS.schedules.details],
+      },
 
       /* mcp */
       { path: RouteDefinitions.MCPs, element: getIndexElement(ToolkitsTabs[0]) },
@@ -627,6 +643,14 @@ const ProtectedRoutes = memo(() => {
             <Route
               path="usage"
               element={<UsageContainer />}
+            />
+            <Route
+              path="complexity"
+              element={<ComplexityContainer />}
+            />
+            <Route
+              path="complexity/:entityProjectId/:entityId"
+              element={<ComplexityDetailContainer />}
             />
             <Route
               path="profile"

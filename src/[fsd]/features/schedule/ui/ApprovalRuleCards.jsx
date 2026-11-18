@@ -2,19 +2,20 @@ import { memo, useId } from 'react';
 
 import { Box, Chip, Radio, RadioGroup, Typography, alpha } from '@mui/material';
 
+import { APPROVAL_RULE, APPROVAL_RULE_LABELS } from '@/[fsd]/entities/schedule/lib/constants';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 
-import { APPROVAL_RULE, APPROVAL_RULE_INFO } from '../lib/constants';
+import { APPROVAL_RULE_INFO } from '../lib/constants';
 
 const CARDS = [
   {
     value: APPROVAL_RULE.PAUSE_AND_ASK,
-    title: 'Pause and ask me',
+    title: APPROVAL_RULE_LABELS[APPROVAL_RULE.PAUSE_AND_ASK],
     text: 'The run stops before the tool. You get a notice and approve or reject the step in Run History. If nobody answers in 24 hours, the run ends as Expired.',
   },
   {
     value: APPROVAL_RULE.RUN_WITHOUT_ASKING,
-    title: 'Run without asking',
+    title: APPROVAL_RULE_LABELS[APPROVAL_RULE.RUN_WITHOUT_ASKING],
     text: 'The run uses these tools with no stop. Your admin allowed this option for this project. ELITEA records who confirmed it.',
   },
 ];

@@ -1,6 +1,5 @@
 // Index Details
 export { default as IndexHistory } from './index-history/IndexHistory';
-export { default as IndexScheduleModal } from './index-details/IndexScheduleModal';
 
 // Index Chat
 export { default as IndexChatContainer } from './index-details/IndexChat';

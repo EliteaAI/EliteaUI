@@ -36,7 +36,7 @@ export const useAddNewParticipants = props => {
   }, [modelsData?.items]);
 
   const handleNewParticipants = useCallback(
-    async (transformedParticipants, newConversation, onAddedCallback, originalParticipants) => {
+    async (transformedParticipants, newConversation, onAddedCallback, originalParticipants, isOnScreen) => {
       const participantsToAdd = transformedParticipants.filter(participant => {
         const { entity_name: type } = participant;
         const idFieldName = type === ChatParticipantType.Models ? 'model_name' : 'id';
@@ -170,7 +170,8 @@ export const useAddNewParticipants = props => {
               participants: [...newConversation.participants, ...newParticipants],
               ...(attachmentParticipantId && { attachment_participant_id: attachmentParticipantId }),
             };
-            setActiveConversation(finalNewConversation);
+            // The user may have opened another chat while this one was being created
+            if (!isOnScreen || isOnScreen()) setActiveConversation(finalNewConversation);
             setConversations(prev => {
               let foundedConversation = false;
               const newConversationList = prev.map(conversation => {
@@ -232,7 +233,7 @@ export const useAddNewParticipants = props => {
   );
 
   const addParticipantsToNewConversation = useCallback(
-    async (participants, newConversation, onAddedCallback) => {
+    async (participants, newConversation, onAddedCallback, isOnScreen) => {
       if ((!activeConversation?.id || activeConversation?.isPlayback) && !newConversation) {
         return;
       }
@@ -241,7 +242,13 @@ export const useAddNewParticipants = props => {
         return transformParticipant(participantType, participant);
       });
 
-      handleNewParticipants(transformedParticipants, newConversation, onAddedCallback, participants);
+      handleNewParticipants(
+        transformedParticipants,
+        newConversation,
+        onAddedCallback,
+        participants,
+        isOnScreen,
+      );
     },
     [activeConversation?.id, activeConversation?.isPlayback, handleNewParticipants],
   );

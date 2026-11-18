@@ -3,18 +3,31 @@ import { memo } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Box, ButtonBase, Chip, Typography, alpha } from '@mui/material';
 
+import { isWebhookRow } from '@/[fsd]/entities/schedule';
+
 import { describeRunFacts, formatRunStarted, toTriggerLabel } from '../lib/helpers';
 import ScheduleRunDetail from './ScheduleRunDetail';
 import ScheduleRunStatusChip from './ScheduleRunStatusChip';
 
 // One run of the Runs card: the compact line always, the detail only while the card is open
 const ScheduleRunCard = memo(props => {
-  const { run, isLatest, expanded, versionNames, schedule, entityType, applicationId, onToggle, onRunAgain } =
-    props;
+  const {
+    run,
+    isLatest,
+    expanded,
+    versionNames,
+    schedule,
+    entityType,
+    applicationId,
+    indexName,
+    onToggle,
+    onRunAgain,
+  } = props;
 
   const facts = describeRunFacts({
     ...run,
     version_label: run.version_label ?? versionNames[run.version_id],
+    index_name: run.index_name ?? indexName,
   });
   const styles = scheduleRunCardStyles(expanded, isLatest);
 
@@ -51,7 +64,7 @@ const ScheduleRunCard = memo(props => {
           <Chip
             data-testid="schedule-run-trigger"
             size="small"
-            label={toTriggerLabel(run.trigger)}
+            label={toTriggerLabel(run.trigger, isWebhookRow(schedule))}
             sx={styles.trigger}
           />
           <Box sx={styles.status}>
@@ -77,6 +90,7 @@ const ScheduleRunCard = memo(props => {
           schedule={schedule}
           entityType={entityType}
           applicationId={applicationId}
+          indexName={indexName}
           onRunAgain={onRunAgain}
         />
       )}

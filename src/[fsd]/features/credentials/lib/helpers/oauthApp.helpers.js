@@ -1,11 +1,11 @@
-// Default app / Custom app modes of the Teams, Outlook and SharePoint credentials (#7149).
+// Default app / Custom app modes of the Teams, Outlook, SharePoint and Microsoft Graph credentials (#7149).
 export const OAUTH_APP_FIELD = 'oauth_app_id';
 // The Default app subsection is the one keyed by oauth_app_id, never matched by its display name
 export const isOAuthAppSection = subsection => Boolean(subsection?.key_fields?.includes(OAUTH_APP_FIELD));
 // Set on the form by the Default app picker (not stored by the server); cleared when leaving Default app
 export const APP_MIRRORED_FIELDS = ['oauth_discovery_endpoint'];
 
-export const OAUTH_APP_CREDENTIAL_TYPES = ['teams', 'outlook', 'sharepoint'];
+export const OAUTH_APP_CREDENTIAL_TYPES = ['teams', 'outlook', 'sharepoint', 'ms_graph'];
 
 export const isOAuthAppCredentialType = type => OAUTH_APP_CREDENTIAL_TYPES.includes(type);
 

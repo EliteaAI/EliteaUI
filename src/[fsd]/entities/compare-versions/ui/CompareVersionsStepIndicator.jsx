@@ -10,12 +10,18 @@ const CompareVersionsStepIndicator = memo(props => {
   return (
     <Box sx={compareVersionsStepIndicatorStyles.container}>
       <Typography
-        sx={compareVersionsStepIndicatorStyles.title}
+        variant="headingMedium"
+        color="text.secondary"
       >{`${activeStepIndex + 1}. ${activeStep?.label}`}</Typography>
       <Box sx={compareVersionsStepIndicatorStyles.progressBar}>
         {steps.map((step, index) => (
           <Box
             key={step.key}
+            component="button"
+            type="button"
+            aria-label={`Step ${index + 1}: ${step.label}`}
+            aria-current={index === activeStepIndex ? 'step' : undefined}
+            data-testid={`compare-step-${step.key}`}
             onClick={() => onStepChange(index)}
             sx={[
               index <= activeStepIndex
@@ -45,12 +51,6 @@ const compareVersionsStepIndicatorStyles = {
     background: palette.background.default.primary,
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
   }),
-  title: {
-    fontSize: '1rem',
-    fontWeight: 600,
-    lineHeight: '1.5rem',
-    color: 'text.secondary',
-  },
   progressBar: {
     display: 'flex',
     gap: '0.5rem',
@@ -68,9 +68,15 @@ const compareVersionsStepIndicatorStyles = {
     borderRadius: '0.25rem',
     backgroundColor: alpha(palette.primary.main, 0.3),
   }),
-  segmentClickable: {
+  segmentClickable: ({ palette }) => ({
     cursor: 'pointer',
-  },
+    border: 'none',
+    padding: 0,
+    '&:focus-visible': {
+      outline: `0.125rem solid ${palette.primary.main}`,
+      outlineOffset: '0.125rem',
+    },
+  }),
 };
 
 export default CompareVersionsStepIndicator;

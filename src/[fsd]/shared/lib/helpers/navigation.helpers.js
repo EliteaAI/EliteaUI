@@ -86,3 +86,36 @@ export const pickPersistentSearch = search => {
   }
   return result.toString();
 };
+
+/**
+ * True when a click is one the browser handles itself as "open elsewhere": Ctrl/Cmd/Shift/Alt+Click or a
+ * non-primary button (middle-click). The in-app side effects of a navigation (resetting state, closing a
+ * menu that must stay open, ...) must not run for these, because the current tab does not navigate.
+ * @param {{ button?: number, ctrlKey?: boolean, metaKey?: boolean, shiftKey?: boolean, altKey?: boolean }} event
+ * @returns {boolean}
+ */
+export const isModifiedClick = event =>
+  Boolean(event && (event.button > 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey));
+
+/**
+ * Prefixes a link `href` with the active project as a leading path segment (`/114/agents/all/5`), the form
+ * the `/:projectId/*` route (ProjectSwitcher) understands: it checks the project against the user's list,
+ * switches to it and drops the segment. A tab opened from "Open link in new tab" has no per-tab project of
+ * its own, so without the segment it could open under whichever project another tab selected last.
+ * Only for the `href`: in-app clicks navigate to the clean target.
+ * @param {string} href - Router href including the basename, e.g. '/agents/all/5?viewMode=owner#top'
+ * @param {string | number | undefined | null} projectId
+ * @returns {string} The href unchanged when there is no project or it already names one
+ */
+export const prependProjectSegment = (href, projectId) => {
+  if (!href || projectId === undefined || projectId === null || projectId === '') return href;
+
+  const basename = getBasename();
+  const hasBasename = basename && href.startsWith(basename);
+  const rest = hasBasename ? href.slice(basename.length) : href;
+
+  // No route starts with a number, so a leading numeric segment is already a project
+  if (/^\/\d+(?=[/?#]|$)/.test(rest)) return href;
+
+  return `${hasBasename ? basename : ''}/${projectId}${rest === '/' ? '' : rest}`;
+};

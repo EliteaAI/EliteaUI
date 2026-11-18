@@ -42,6 +42,7 @@ const CreateSkillForm = memo(props => {
     showGenerateButton = false,
     summaryEditAction = null,
     showRunSettings = true,
+    showInstructions = true,
   } = props;
   const formik = useFormikContext();
   const theme = useTheme();
@@ -135,7 +136,6 @@ const CreateSkillForm = memo(props => {
     (description.length > SPEC_MAX_DESCRIPTION_LENGTH
       ? `Longer than ${SPEC_MAX_DESCRIPTION_LENGTH} characters: Claude and other Agent Skills tools will reject the exported skill.`
       : undefined);
-  const license = formik.values?.version_details?.meta?.frontmatter?.license;
 
   const instructions = formik.values?.version_details?.instructions || '';
   const instructionsCharactersLeft = maxInstructionsLength - instructions.length;
@@ -257,19 +257,6 @@ const CreateSkillForm = memo(props => {
                   )}
                 </Box>
 
-                {license && (
-                  <Input.StyledInputEnhancer
-                    autoComplete="off"
-                    id="license"
-                    label="License"
-                    data-testid="skill-license"
-                    value={license}
-                    inputProps={{ readOnly: true, 'data-testid': 'skill-license-input-field' }}
-                    multiline
-                    maxRows={5}
-                  />
-                )}
-
                 <TagEditor
                   id="tags"
                   data-testid="skill-tags-input"
@@ -292,104 +279,108 @@ const CreateSkillForm = memo(props => {
         ]}
       />
 
-      <BasicAccordion
-        style={accordionStyle}
-        accordionSX={{ background: `${theme.palette.background.default.tertiary} !important` }}
-        showMode={AccordionConstants.AccordionShowMode.LeftMode}
-        items={[
-          {
-            title: 'Instructions *',
-            summaryAction: (
-              <Box
-                component="span"
-                sx={styles.summaryActions}
-                onClick={e => e.stopPropagation()}
-              >
-                {instructionsViewMode === MARKDOWN_VIEW_MODES.edit && (
-                  <MarkdownEditorActions
-                    value={editorText}
-                    onFullScreen={onOpenFullScreen}
-                    copyMessage="The instructions have been copied to the clipboard."
-                    testIdPrefix="skill-instructions"
+      {showInstructions && (
+        <BasicAccordion
+          style={accordionStyle}
+          accordionSX={{ background: `${theme.palette.background.default.tertiary} !important` }}
+          showMode={AccordionConstants.AccordionShowMode.LeftMode}
+          items={[
+            {
+              title: 'Instructions *',
+              summaryAction: (
+                <Box
+                  component="span"
+                  sx={styles.summaryActions}
+                  onClick={e => e.stopPropagation()}
+                >
+                  {instructionsViewMode === MARKDOWN_VIEW_MODES.edit && (
+                    <MarkdownEditorActions
+                      value={editorText}
+                      onFullScreen={onOpenFullScreen}
+                      copyMessage="The instructions have been copied to the clipboard."
+                      testIdPrefix="skill-instructions"
+                    />
+                  )}
+                  <MarkdownViewToggle
+                    value={instructionsViewMode}
+                    onChange={setInstructionsViewMode}
+                    iconOrder={PREVIEW_FIRST}
                   />
-                )}
-                <MarkdownViewToggle
-                  value={instructionsViewMode}
-                  onChange={setInstructionsViewMode}
-                  iconOrder={PREVIEW_FIRST}
-                />
-              </Box>
-            ),
-            content: (
-              <>
-                {instructionsViewMode === MARKDOWN_VIEW_MODES.edit ? (
-                  <Box sx={styles.instructionsWrapper}>
-                    <Box
-                      data-testid="skill-instructions-editor"
-                      sx={[styles.editorWrapper, Boolean(instructionsError) && styles.errorBorder]}
-                    >
-                      <Field.CodeMirrorEditor
-                        key={instructionsKey}
-                        value={editorText}
-                        notifyChange={onEditorChange}
-                        onBlur={onInstructionsBlur}
-                        extensions={markdownExtensions}
-                        height="100%"
-                        minHeight="0"
-                        maxLength={maxInstructionsLength}
-                        countLength={countSkillBodyLength}
-                        readOnly={disabled}
-                        contentTestId="skill-instructions-editor-content"
-                      />
-                    </Box>
-                    <Box sx={styles.charCounterWrapper}>
-                      {instructionsErrorNode}
-                      {frontmatterErrors.length > 0 && (
-                        <Box
-                          sx={styles.frontmatterErrors}
-                          data-testid="skill-frontmatter-error"
-                        >
-                          {frontmatterErrors.map(error => (
-                            <Typography
-                              key={error}
-                              variant="bodySmall"
-                              sx={styles.instructionsError}
-                            >
-                              {error}
-                            </Typography>
-                          ))}
-                        </Box>
-                      )}
-                      <Typography
-                        variant="bodySmall"
-                        sx={styles.charCounter}
+                </Box>
+              ),
+              content: (
+                <>
+                  {instructionsViewMode === MARKDOWN_VIEW_MODES.edit ? (
+                    <Box sx={styles.instructionsWrapper}>
+                      <Box
+                        data-testid="skill-instructions-editor"
+                        sx={[styles.editorWrapper, Boolean(instructionsError) && styles.errorBorder]}
                       >
-                        {instructionsCounterLabel}
-                      </Typography>
-                    </Box>
-                  </Box>
-                ) : (
-                  <Box sx={styles.instructionsWrapper}>
-                    <Box sx={[styles.instructionsPreview, Boolean(instructionsError) && styles.errorBorder]}>
-                      {instructions ? (
-                        <Markdown>{instructions}</Markdown>
-                      ) : (
+                        <Field.CodeMirrorEditor
+                          key={instructionsKey}
+                          value={editorText}
+                          notifyChange={onEditorChange}
+                          onBlur={onInstructionsBlur}
+                          extensions={markdownExtensions}
+                          height="100%"
+                          minHeight="0"
+                          maxLength={maxInstructionsLength}
+                          countLength={countSkillBodyLength}
+                          readOnly={disabled}
+                          contentTestId="skill-instructions-editor-content"
+                        />
+                      </Box>
+                      <Box sx={styles.charCounterWrapper}>
+                        {instructionsErrorNode}
+                        {frontmatterErrors.length > 0 && (
+                          <Box
+                            sx={styles.frontmatterErrors}
+                            data-testid="skill-frontmatter-error"
+                          >
+                            {frontmatterErrors.map(error => (
+                              <Typography
+                                key={error}
+                                variant="bodySmall"
+                                sx={styles.instructionsError}
+                              >
+                                {error}
+                              </Typography>
+                            ))}
+                          </Box>
+                        )}
                         <Typography
-                          variant="bodyMedium"
-                          sx={styles.emptyPreview}
+                          variant="bodySmall"
+                          sx={styles.charCounter}
                         >
-                          No instructions yet.
+                          {instructionsCounterLabel}
                         </Typography>
-                      )}
+                      </Box>
                     </Box>
-                    {instructionsErrorNode}
-                  </Box>
-                )}
-              </>
-            ),
-          },
-        ]}
-      />
+                  ) : (
+                    <Box sx={styles.instructionsWrapper}>
+                      <Box
+                        sx={[styles.instructionsPreview, Boolean(instructionsError) && styles.errorBorder]}
+                      >
+                        {instructions ? (
+                          <Markdown>{instructions}</Markdown>
+                        ) : (
+                          <Typography
+                            variant="bodyMedium"
+                            sx={styles.emptyPreview}
+                          >
+                            No instructions yet.
+                          </Typography>
+                        )}
+                      </Box>
+                      {instructionsErrorNode}
+                    </Box>
+                  )}
+                </>
+              ),
+            },
+          ]}
+        />
+      )}
 
       {showRunSettings && (
         <SkillRunSettings

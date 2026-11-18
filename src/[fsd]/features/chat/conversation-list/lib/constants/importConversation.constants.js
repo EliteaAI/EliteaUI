@@ -20,3 +20,16 @@ export const IMPORT_MESSAGES = {
   partial: count => `Chat imported. ${count} attachment(s) could not be imported.`,
   failed: 'Import failed. Nothing was imported.',
 };
+
+export const IMPORT_PARTICIPANT_STATUSES = {
+  same: 'same',
+  nameOnly: 'name_only',
+  notFound: 'not_found',
+};
+
+export const IMPORT_PARTICIPANT_MESSAGES = {
+  nameOnly: 'A different agent with the same name exists here. The chat will use its instructions.',
+  notFound: 'Not available. Messages keep the original name.',
+  renamed: name => `Now called "${name}"`,
+  sameAs: name => `Same as "${name}"`,
+};

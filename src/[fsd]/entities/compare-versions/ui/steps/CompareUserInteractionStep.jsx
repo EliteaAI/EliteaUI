@@ -6,6 +6,7 @@ import { EditEntityComparisonLayout, TextDiffHighlight } from '@/[fsd]/entities/
 import { CopyIconButton } from '@/[fsd]/shared/ui/button';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
+import CompareSaveButton from '../CompareSaveButton';
 import CompareVersionHeader from '../CompareVersionHeader';
 
 const CompareUserInteractionStep = memo(props => {
@@ -22,6 +23,11 @@ const CompareUserInteractionStep = memo(props => {
     onSaveRight,
     savingLeftKeys,
     savingRightKeys,
+    leftSaveDisabledReason,
+    // Pipelines always show the Chat Starters block; agents hide it when neither version has starters
+    alwaysShowStarters = false,
+    // Comparing with a public version: both sides are shown to be read and copied from, not edited or saved
+    readOnly = false,
   } = props;
 
   const leftWelcome = leftEdits.welcome_message ?? leftData.welcome_message ?? '';
@@ -36,7 +42,8 @@ const CompareUserInteractionStep = memo(props => {
     [rightEdits.conversation_starters, rightData.conversation_starters],
   );
 
-  const maxStarters = Math.max(leftStarters.length, rightStarters.length);
+  // With alwaysShowStarters, at least one row, so a version without starters still shows an empty field
+  const maxStarters = Math.max(leftStarters.length, rightStarters.length, alwaysShowStarters ? 1 : 0);
 
   const welcomeNoDiff = leftWelcome === rightWelcome;
   const startersNoDiff = useMemo(() => {
@@ -78,14 +85,23 @@ const CompareUserInteractionStep = memo(props => {
         <Box sx={compareUserInteractionStepStyles.fieldsColumn}>
           <Box sx={compareUserInteractionStepStyles.fieldSection}>
             <Box sx={compareUserInteractionStepStyles.fieldHeader}>
-              <Typography sx={compareUserInteractionStepStyles.fieldLabel}>Welcome Message</Typography>
+              <Typography
+                variant="labelMedium"
+                color="text.primary"
+              >
+                Welcome Message
+              </Typography>
               <CopyIconButton
                 value={leftWelcome}
                 tooltip={`Copy Welcome Message from version ${leftVersion?.name}`}
               />
             </Box>
             {welcomeNoDiff && (
-              <Typography sx={compareUserInteractionStepStyles.noDiffNote}>
+              <Typography
+                variant="bodySmall"
+                color="text.secondary"
+                sx={compareUserInteractionStepStyles.noDiffNote}
+              >
                 No differences in this section.
               </Typography>
             )}
@@ -94,28 +110,38 @@ const CompareUserInteractionStep = memo(props => {
                 original={rightWelcome}
                 modified={leftWelcome}
                 mode="modified"
-                editable
+                editable={!readOnly}
                 onChange={handleLeftWelcomeChange}
               />
             </Box>
-            <BaseBtn
-              variant={BUTTON_VARIANTS.elitea}
-              size="small"
-              disabled={!leftWelcomeDirty || savingLeftKeys.welcome_message}
-              onClick={() => onSaveLeft({ welcome_message: leftWelcome })}
-              sx={compareUserInteractionStepStyles.saveBtn}
-            >
-              {savingLeftKeys.welcome_message ? 'Saving...' : `Save ${leftVersion?.name}`}
-            </BaseBtn>
+            {!readOnly && (
+              <CompareSaveButton
+                label={`Save ${leftVersion?.name}`}
+                isDirty={leftWelcomeDirty}
+                isSaving={Boolean(savingLeftKeys.welcome_message)}
+                disabledReason={leftSaveDisabledReason}
+                onClick={() => onSaveLeft({ welcome_message: leftWelcome })}
+                sx={compareUserInteractionStepStyles.saveBtn}
+              />
+            )}
           </Box>
 
           {maxStarters > 0 && (
             <Box sx={compareUserInteractionStepStyles.fieldSectionGrow}>
               <Box sx={compareUserInteractionStepStyles.fieldHeader}>
-                <Typography sx={compareUserInteractionStepStyles.sectionLabel}>Chat Starters</Typography>
+                <Typography
+                  variant="subtitle"
+                  color="text.primary"
+                >
+                  Chat Starters
+                </Typography>
               </Box>
               {startersNoDiff && (
-                <Typography sx={compareUserInteractionStepStyles.noDiffNote}>
+                <Typography
+                  variant="bodySmall"
+                  color="text.secondary"
+                  sx={compareUserInteractionStepStyles.noDiffNote}
+                >
                   No differences in this section.
                 </Typography>
               )}
@@ -134,7 +160,7 @@ const CompareUserInteractionStep = memo(props => {
                           original={rVal ?? ''}
                           modified={lVal ?? ''}
                           mode="modified"
-                          editable
+                          editable={!readOnly}
                           onChange={val => handleLeftStarterChange(i, val)}
                         />
                       </Box>
@@ -147,15 +173,16 @@ const CompareUserInteractionStep = memo(props => {
                   );
                 })}
               </Box>
-              <BaseBtn
-                variant={BUTTON_VARIANTS.elitea}
-                size="small"
-                disabled={!leftStartersDirty || savingLeftKeys.conversation_starters}
-                onClick={() => onSaveLeft({ conversation_starters: leftStarters.filter(s => s?.trim()) })}
-                sx={compareUserInteractionStepStyles.saveBtn}
-              >
-                {savingLeftKeys.conversation_starters ? 'Saving...' : `Save starters — ${leftVersion?.name}`}
-              </BaseBtn>
+              {!readOnly && (
+                <CompareSaveButton
+                  label={`Save starters — ${leftVersion?.name}`}
+                  isDirty={leftStartersDirty}
+                  isSaving={Boolean(savingLeftKeys.conversation_starters)}
+                  disabledReason={leftSaveDisabledReason}
+                  onClick={() => onSaveLeft({ conversation_starters: leftStarters.filter(s => s?.trim()) })}
+                  sx={compareUserInteractionStepStyles.saveBtn}
+                />
+              )}
             </Box>
           )}
         </Box>
@@ -164,14 +191,23 @@ const CompareUserInteractionStep = memo(props => {
         <Box sx={compareUserInteractionStepStyles.fieldsColumn}>
           <Box sx={compareUserInteractionStepStyles.fieldSection}>
             <Box sx={compareUserInteractionStepStyles.fieldHeader}>
-              <Typography sx={compareUserInteractionStepStyles.fieldLabel}>Welcome Message</Typography>
+              <Typography
+                variant="labelMedium"
+                color="text.primary"
+              >
+                Welcome Message
+              </Typography>
               <CopyIconButton
                 value={rightWelcome}
                 tooltip={`Copy Welcome Message from version ${rightVersion?.name}`}
               />
             </Box>
             {welcomeNoDiff && (
-              <Typography sx={compareUserInteractionStepStyles.noDiffNote}>
+              <Typography
+                variant="bodySmall"
+                color="text.secondary"
+                sx={compareUserInteractionStepStyles.noDiffNote}
+              >
                 No differences in this section.
               </Typography>
             )}
@@ -180,28 +216,39 @@ const CompareUserInteractionStep = memo(props => {
                 original={leftWelcome}
                 modified={rightWelcome}
                 mode="modified"
-                editable
+                editable={!readOnly}
                 onChange={handleRightWelcomeChange}
               />
             </Box>
-            <BaseBtn
-              variant={BUTTON_VARIANTS.elitea}
-              size="small"
-              disabled={!rightWelcomeDirty || savingRightKeys.welcome_message}
-              onClick={() => onSaveRight({ welcome_message: rightWelcome })}
-              sx={compareUserInteractionStepStyles.saveBtn}
-            >
-              {savingRightKeys.welcome_message ? 'Saving...' : `Save ${rightVersion?.name}`}
-            </BaseBtn>
+            {!readOnly && (
+              <BaseBtn
+                variant={BUTTON_VARIANTS.elitea}
+                size="small"
+                disabled={!rightWelcomeDirty || savingRightKeys.welcome_message}
+                onClick={() => onSaveRight({ welcome_message: rightWelcome })}
+                sx={compareUserInteractionStepStyles.saveBtn}
+              >
+                {savingRightKeys.welcome_message ? 'Saving...' : `Save ${rightVersion?.name}`}
+              </BaseBtn>
+            )}
           </Box>
 
           {maxStarters > 0 && (
             <Box sx={compareUserInteractionStepStyles.fieldSectionGrow}>
               <Box sx={compareUserInteractionStepStyles.fieldHeader}>
-                <Typography sx={compareUserInteractionStepStyles.sectionLabel}>Chat Starters</Typography>
+                <Typography
+                  variant="subtitle"
+                  color="text.primary"
+                >
+                  Chat Starters
+                </Typography>
               </Box>
               {startersNoDiff && (
-                <Typography sx={compareUserInteractionStepStyles.noDiffNote}>
+                <Typography
+                  variant="bodySmall"
+                  color="text.secondary"
+                  sx={compareUserInteractionStepStyles.noDiffNote}
+                >
                   No differences in this section.
                 </Typography>
               )}
@@ -220,7 +267,7 @@ const CompareUserInteractionStep = memo(props => {
                           original={lVal ?? ''}
                           modified={rVal ?? ''}
                           mode="modified"
-                          editable
+                          editable={!readOnly}
                           onChange={val => handleRightStarterChange(i, val)}
                         />
                       </Box>
@@ -233,17 +280,19 @@ const CompareUserInteractionStep = memo(props => {
                   );
                 })}
               </Box>
-              <BaseBtn
-                variant={BUTTON_VARIANTS.elitea}
-                size="small"
-                disabled={!rightStartersDirty || savingRightKeys.conversation_starters}
-                onClick={() => onSaveRight({ conversation_starters: rightStarters.filter(s => s?.trim()) })}
-                sx={compareUserInteractionStepStyles.saveBtn}
-              >
-                {savingRightKeys.conversation_starters
-                  ? 'Saving...'
-                  : `Save starters — ${rightVersion?.name}`}
-              </BaseBtn>
+              {!readOnly && (
+                <BaseBtn
+                  variant={BUTTON_VARIANTS.elitea}
+                  size="small"
+                  disabled={!rightStartersDirty || savingRightKeys.conversation_starters}
+                  onClick={() => onSaveRight({ conversation_starters: rightStarters.filter(s => s?.trim()) })}
+                  sx={compareUserInteractionStepStyles.saveBtn}
+                >
+                  {savingRightKeys.conversation_starters
+                    ? 'Saving...'
+                    : `Save starters — ${rightVersion?.name}`}
+                </BaseBtn>
+              )}
             </Box>
           )}
         </Box>
@@ -280,23 +329,7 @@ const compareUserInteractionStepStyles = {
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  fieldLabel: {
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    lineHeight: '1.5rem',
-    color: 'text.primary',
-  },
-  sectionLabel: {
-    fontSize: '0.75rem',
-    fontWeight: 500,
-    lineHeight: '1rem',
-    letterSpacing: '0.045rem',
-    color: 'text.primary',
-    textTransform: 'uppercase',
-  },
   noDiffNote: {
-    fontSize: '0.75rem',
-    color: 'text.secondary',
     fontStyle: 'italic',
   },
   editableCard: ({ palette }) => ({

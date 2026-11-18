@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import PersonRemoveOutlinedIcon from '@mui/icons-material/PersonRemoveOutlined';
+
 import { NotificationType } from '@/common/constants';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import ErrorIcon from '@/components/Icons/ErrorIcon';
@@ -39,5 +41,12 @@ describe('getIcon for schedule notifications', () => {
     for (const type of [NotificationType.ScheduleEditedByAdmin, NotificationType.ScheduleOwnerChanged]) {
       expect(getIcon(type, theme).type).toBe(InfoIcon);
     }
+  });
+});
+
+describe('getIcon for project membership notifications', () => {
+  it('reuses the success icon for additions and shows the person-removed icon for removals', () => {
+    expect(getIcon(NotificationType.UserWasAddedToSomeProjectAsTeammate, theme).type).toBe(SuccessIcon);
+    expect(getIcon(NotificationType.UserWasRemovedFromProject, theme).type).toBe(PersonRemoveOutlinedIcon);
   });
 });

@@ -143,7 +143,7 @@ const UsageSpendChart = memo(props => {
             variant="labelMedium"
             sx={styles.title}
           >
-            {isAdmin || canSeeAmounts ? 'Spend over time' : 'Tokens over time'}
+            {isAdmin || canSeeAmounts ? 'Spent over time' : 'Tokens over time'}
           </Typography>
           <Typography
             variant="bodySmall"

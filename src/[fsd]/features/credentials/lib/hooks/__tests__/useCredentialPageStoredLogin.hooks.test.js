@@ -63,8 +63,12 @@ describe('useCredentialPageStoredLogin', () => {
   it('saves the browser login on the credential after a credential-page login', async () => {
     const result = render(TEAMS);
 
-    await act(async () => result.current.saveLogin());
+    let saved;
+    await act(async () => {
+      saved = await result.current.saveLogin();
+    });
 
+    expect(saved).toBe(true);
     expect(mocks.getRefreshToken).toHaveBeenCalledWith(TOKEN_KEY);
     expect(mocks.updateConfiguration).toHaveBeenCalledWith({
       projectId: 596,
@@ -190,5 +194,41 @@ describe('useCredentialPageStoredLogin', () => {
     });
     expect(removed).toBe(false);
     expect(mocks.updateConfiguration).not.toHaveBeenCalled();
+  });
+
+  // The page re-tests the connection after the sign-in only when the save did not fail; otherwise the
+  // re-test asks for the login again and the sign-in reopens in a loop.
+  it.each([
+    ['no refresh token found', () => mocks.getRefreshToken.mockReturnValue(null)],
+    [
+      'the server refused the save',
+      () => mocks.updateConfiguration.mockReturnValue({ unwrap: () => Promise.reject({ data: {} }) }),
+    ],
+  ])('reports a failed save (%s) so the page does not re-test', async (_label, arrange) => {
+    arrange();
+    const result = render(TEAMS);
+    let saved;
+    await act(async () => {
+      saved = await result.current.saveLogin();
+    });
+    expect(saved).toBe(false);
+  });
+
+  it('reports a dirty-form refusal as a failed save', async () => {
+    const result = render(TEAMS);
+    let saved;
+    await act(async () => {
+      saved = await result.current.saveLogin({ isFormDirty: true });
+    });
+    expect(saved).toBe(false);
+  });
+
+  it('reports nothing to do (not a failure) for credentials that do not store a login', async () => {
+    const result = render({ ...TEAMS, type: 'github' });
+    let saved;
+    await act(async () => {
+      saved = await result.current.saveLogin();
+    });
+    expect(saved).toBeUndefined();
   });
 });

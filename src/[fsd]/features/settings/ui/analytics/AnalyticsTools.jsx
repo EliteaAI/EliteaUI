@@ -6,7 +6,13 @@ import { Box, CircularProgress, TablePagination, TableSortLabel, Typography, use
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { AnalyticsToolDetailed, ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
-import { analyticsTableSortLabelSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
+import {
+  analyticsColumnSx,
+  analyticsHeaderCellSx,
+  analyticsRowMinWidthSx,
+  analyticsTableSortLabelSx,
+  analyticsTableWrapperSx,
+} from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { useAnalyticsToolsQuery } from '@/api';
 import StyledSearchInput from '@/components/SearchInput';
@@ -26,6 +32,8 @@ const TOOL_COLUMNS = [
   },
   { key: 'errors', label: 'Errors', render: r => r.errors },
 ];
+
+const TOOL_ROW_MIN_WIDTH = analyticsRowMinWidthSx(TOOL_COLUMNS);
 
 const AnalyticsTools = memo(props => {
   const { projectId, dateFrom, dateTo, runScope } = props;
@@ -207,11 +215,11 @@ const AnalyticsTools = memo(props => {
           />
         </Box>
         <Box sx={styles.tableWrapper}>
-          <Box sx={styles.tableHeader}>
+          <Box sx={[styles.tableHeader, TOOL_ROW_MIN_WIDTH]}>
             {TOOL_COLUMNS.map(column => (
               <Box
                 key={column.key}
-                sx={[styles.tableCell, { flex: column.flex ?? 1 }]}
+                sx={[styles.tableCell, analyticsHeaderCellSx, analyticsColumnSx(column)]}
               >
                 <TableSortLabel
                   active={sort.sortBy === column.key}
@@ -234,7 +242,7 @@ const AnalyticsTools = memo(props => {
             rows.map((t, i) => (
               <Box
                 key={i}
-                sx={isRunScope ? styles.tableRow : styles.clickableRow}
+                sx={[isRunScope ? styles.tableRow : styles.clickableRow, TOOL_ROW_MIN_WIDTH]}
                 onClick={isRunScope ? undefined : () => handleToolClick(t.tool_name)}
               >
                 {TOOL_COLUMNS.map(column => (
@@ -242,7 +250,7 @@ const AnalyticsTools = memo(props => {
                     key={column.key}
                     sx={[
                       styles.tableCellValue,
-                      { flex: column.flex ?? 1 },
+                      analyticsColumnSx(column),
                       column.key === 'errors' && t.errors > 0 && styles.errorValue,
                     ]}
                   >
@@ -295,7 +303,7 @@ const styles = {
   }),
   chartWrapper: { width: '100%', overflow: 'hidden', flex: 1, minHeight: 200 },
   loadingState: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem' },
-  tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
+  tableWrapper: analyticsTableWrapperSx,
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',

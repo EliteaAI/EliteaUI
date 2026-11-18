@@ -13,7 +13,7 @@ import { logout } from '@/slices/user.js';
 
 const Profile = memo(() => {
   const dispatch = useDispatch();
-  const { name, avatar, email, id, last_login } = useSelector(state => state.user);
+  const { name, avatar, email, id, first_login, last_login } = useSelector(state => state.user);
 
   const styles = profileStyles();
 
@@ -71,6 +71,10 @@ const Profile = memo(() => {
             <FieldWithCopy
               label="User ID:"
               value={id != null ? String(id) : ''}
+            />
+            <FieldWithCopy
+              label="First login:"
+              value={dateFormatter(first_login) || '—'}
             />
             <FieldWithCopy
               label="Last login:"

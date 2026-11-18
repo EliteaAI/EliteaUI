@@ -4,11 +4,11 @@ import { Box, IconButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { ToolItemCard, resolveEntityType } from '@/[fsd]/entities/edit-entity-with-ai';
+import { useConversationStartersAddGate } from '@/[fsd]/features/agent/lib/hooks';
 import { Input, Text } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 import {
-  MAX_CONVERSATION_STARTERS,
   MAX_CONVERSATION_STARTER_LENGTH,
   MAX_DESCRIPTION_LENGTH,
   MAX_NAME_LENGTH,
@@ -119,16 +119,15 @@ const SummaryStep = memo(props => {
     onDraftChange({ ...draftData, conversation_starters: updated });
   }, [draftData, fieldApplyFlags, mergedStarters, onDraftChange, onToggleField]);
 
-  const disableAddStarter = useMemo(
-    () => mergedStarters.length >= MAX_CONVERSATION_STARTERS || mergedStarters.some(s => !s?.trim()),
-    [mergedStarters],
-  );
-
-  const addStarterTooltip = useMemo(() => {
-    if (mergedStarters.length >= MAX_CONVERSATION_STARTERS)
-      return 'You have reached the limit of chat starters';
-    return '';
-  }, [mergedStarters]);
+  const {
+    maxStarters,
+    isOverLimit: isOverStartersLimit,
+    disableAdd: disableAddStarter,
+    addTooltip: addStarterTooltip,
+  } = useConversationStartersAddGate({
+    count: mergedStarters.length,
+    hasBlank: mergedStarters.some(s => !s?.trim()),
+  });
 
   const hasStarterErrors = useMemo(
     () => mergedStarters.some(s => s && s.length > MAX_CONVERSATION_STARTER_LENGTH),
@@ -286,6 +285,7 @@ const SummaryStep = memo(props => {
                   variant={BUTTON_VARIANTS.iconLabel}
                   size="small"
                   disabled={disableAddStarter}
+                  data-testid="ai-edit-agent-summary-starter-add"
                   onClick={handleAddStarter}
                   startIcon={<PlusIcon />}
                 >
@@ -293,8 +293,12 @@ const SummaryStep = memo(props => {
                 </BaseBtn>
               </Box>
             </Tooltip>
-            <Typography sx={styles.addedCount}>
-              {mergedStarters.length}/{MAX_CONVERSATION_STARTERS} added.
+            <Typography
+              sx={[styles.addedCount, isOverStartersLimit && styles.addedCountOverLimit]}
+              data-testid="ai-edit-agent-summary-starters-limit-counter"
+              data-over-limit={isOverStartersLimit ? 'true' : undefined}
+            >
+              {mergedStarters.length}/{maxStarters} added.
             </Typography>
           </Box>
         </Box>
@@ -480,6 +484,9 @@ const styles = {
     fontSize: '0.75rem',
     lineHeight: '1rem',
     color: 'text.primary',
+  },
+  addedCountOverLimit: {
+    color: 'text.attention',
   },
   toolsList: {
     display: 'flex',

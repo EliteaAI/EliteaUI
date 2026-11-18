@@ -3,6 +3,7 @@ import { memo, useCallback } from 'react';
 import { Box, FormControlLabel, Typography } from '@mui/material';
 
 import { useGetScheduleSettingsQuery, useUpdateScheduleSettingsMutation } from '@/[fsd]/entities/schedule';
+import { WebhookConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Checkbox } from '@/[fsd]/shared/ui';
 import { PERMISSIONS } from '@/common/constants';
@@ -58,7 +59,7 @@ const RunWithoutAskingSetting = memo(() => {
       >
         {isError
           ? 'Could not load the setting'
-          : 'If checked, ELITEA will run sensitive actions without asking the schedule owner to approve them. Only a project administrator can change this setting.'}
+          : `If checked, ELITEA will run sensitive actions of schedules and webhooks without asking the owner to approve them. ${WebhookConstants.RUN_WITHOUT_ASKING_SECRET_WARNING} Only a project administrator can change this setting.`}
       </Typography>
     </Box>
   );

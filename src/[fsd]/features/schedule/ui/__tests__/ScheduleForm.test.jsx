@@ -49,6 +49,8 @@ let runAllowed = true;
 let listFailed = false;
 let reviewProps;
 const checkRisk = vi.fn();
+// #7401 Connections check: every row ok unless a test sets other rows
+const checkConnections = vi.fn();
 
 vi.mock('@/hooks/useCheckPermission', () => ({
   default: () => ({
@@ -62,6 +64,22 @@ vi.mock('@/[fsd]/entities/schedule', async () => ({
     isError: listFailed,
   }),
   useCheckScheduleRiskMutation: () => [checkRisk],
+  useGetToolkitIndexOptionsQuery: () => ({ data: [], isFetching: false, isError: false }),
+  useCheckScheduleConnectionsMutation: () => [checkConnections],
+}));
+// The sign-in bar needs the store and the auth modal; the panel only passes it the credential
+vi.mock('@/[fsd]/features/credentials/ui', () => ({
+  StoredLoginStatus: props => (
+    <button
+      type="button"
+      data-testid="connection-sign-in"
+      data-title={props.credentialRef?.elitea_title}
+      onClick={props.onLoginChange}
+    />
+  ),
+}));
+vi.mock('../ScheduleReenableAction', () => ({
+  default: () => <span data-testid="schedule-reenable-button" />,
 }));
 vi.mock('../ScheduleActiveToggle', () => ({
   default: props => (
@@ -108,6 +126,14 @@ vi.mock('@/api/applications', async importOriginal => ({
     isFetching: false,
   }),
 }));
+
+vi.mock('@/api/toolkits', async importOriginal => ({
+  ...(await importOriginal()),
+  useToolkitsDetailsQuery: () => ({ currentData: undefined }),
+  useToolkitsListQuery: () => ({ data: undefined, isFetching: false }),
+}));
+
+vi.mock('@/hooks/application/useLibraryToolkits', () => ({ useGetToolkitIconMeta: () => () => ({}) }));
 
 vi.mock('@/[fsd]/shared/lib/hooks', async () => ({
   useModal: (await import('@/[fsd]/shared/lib/hooks/useModal.hooks')).useModal,
@@ -249,6 +275,7 @@ describe('ScheduleForm', () => {
     listFailed = false;
     listQuery.mockReturnValue({ data: { rows: ROWS, total: 2 }, isFetching: false });
     checkRisk.mockReturnValue(answer(CLEAR));
+    checkConnections.mockReturnValue(answer({ rows: [], all_ok: true, blocking: false }));
   });
 
   afterEach(() => {
@@ -709,7 +736,7 @@ describe('ScheduleForm', () => {
     expect(header).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('shows Approval rule with Ask me first selected and sends it', async () => {
+  it('shows Approval rule with Pause and ask me selected and sends it', async () => {
     const { onSubmit } = renderForm();
 
     expect(screen.getByTestId('schedule-approval-rule-pause_and_ask')).toHaveAttribute(
@@ -733,7 +760,7 @@ describe('ScheduleForm', () => {
     );
   });
 
-  it('disables Run automatically with a hint when the project does not allow it', () => {
+  it('disables Run without asking with a hint when the project does not allow it', () => {
     runAllowed = false;
     renderForm();
 
@@ -741,7 +768,7 @@ describe('ScheduleForm', () => {
     expect(screen.getByText(/does not allow/)).toBeInTheDocument();
   });
 
-  it('keeps Run automatically disabled with no hint while the project data loads', () => {
+  it('keeps Run without asking disabled with no hint while the project data loads', () => {
     runAllowed = undefined;
     renderForm();
 
@@ -749,7 +776,7 @@ describe('ScheduleForm', () => {
     expect(screen.queryByText(/does not allow/)).not.toBeInTheDocument();
   });
 
-  it('keeps Run automatically disabled with no hint when the project data fails', () => {
+  it('keeps Run without asking disabled with no hint when the project data fails', () => {
     runAllowed = undefined;
     listFailed = true;
     renderForm();
@@ -807,7 +834,7 @@ describe('ScheduleForm', () => {
     expect(onSaved).toHaveBeenCalledWith(result);
   });
 
-  it('enables Run automatically when the project allows it', () => {
+  it('enables Run without asking when the project allows it', () => {
     renderForm();
 
     expect(screen.getByTestId('schedule-approval-rule-run_without_asking')).toBeEnabled();
@@ -820,7 +847,7 @@ describe('ScheduleForm', () => {
         status: 400,
         data: {
           code: 'approval_rule_not_allowed',
-          error: 'Run automatically is not allowed here.',
+          error: 'Run without asking is not allowed here.',
           field: 'approval_rule',
         },
       }),
@@ -830,7 +857,7 @@ describe('ScheduleForm', () => {
 
     await save();
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Run automatically is not allowed here.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Run without asking is not allowed here.');
   });
 
   it('shows the returned rule and the hint when the save answers a different rule', async () => {
@@ -1459,7 +1486,7 @@ describe('ScheduleForm', () => {
       expect(onSubmit).not.toHaveBeenCalled();
     });
 
-    it('shows a personal sign-in as a warning under "Ask me first" and saves', async () => {
+    it('shows a personal sign-in as a warning under "Pause and ask me" and saves', async () => {
       checkRisk.mockReturnValue(answer({ ...CLEAR, blocking: [SIGNIN] }));
       const { onSubmit } = renderForm();
       await fillAgent();
@@ -1473,7 +1500,7 @@ describe('ScheduleForm', () => {
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     });
 
-    it('turns the warning into a block box when the rule changes to "Run automatically"', async () => {
+    it('turns the warning into a block box when the rule changes to "Run without asking"', async () => {
       checkRisk.mockReturnValue(answer({ ...CLEAR, blocking: [SIGNIN] }));
       renderForm();
       await fillAgent();
@@ -1486,7 +1513,7 @@ describe('ScheduleForm', () => {
       expect(saveButton()).toBeDisabled();
     });
 
-    it('keeps a human-input step blocking under "Ask me first"', async () => {
+    it('keeps a human-input step blocking under "Pause and ask me"', async () => {
       checkRisk.mockReturnValue(
         answer({
           ...CLEAR,
@@ -1531,7 +1558,7 @@ describe('ScheduleForm', () => {
       expect(onSubmit).not.toHaveBeenCalled();
     });
 
-    it('Ask me first saves with the fingerprint and no typed name', async () => {
+    it('Pause and ask me saves with the fingerprint and no typed name', async () => {
       checkRisk.mockReturnValue(answer(RISKY));
       const onSaved = vi.fn();
       const { onSubmit } = renderForm({ onSaved });
@@ -1551,7 +1578,7 @@ describe('ScheduleForm', () => {
       expect(onSaved).toHaveBeenCalledTimes(1);
     });
 
-    it('Run automatically sets the form rule and saves with the typed name', async () => {
+    it('Run without asking sets the form rule and saves with the typed name', async () => {
       checkRisk.mockReturnValue(answer(RISKY));
       const { onSubmit } = renderForm();
       await fillAgent();
@@ -1751,7 +1778,7 @@ describe('ScheduleForm', () => {
       expect(screen.getByRole('alert')).toHaveTextContent('risk_changed');
     });
 
-    it('shows who confirmed Run automatically and when on the edit page', () => {
+    it('shows who confirmed Run without asking and when on the edit page', () => {
       renderForm({
         initialValues: { ...INITIAL, application_id: 7, version_id: 71, approval_rule: 'run_without_asking' },
         schedule: {
@@ -1787,7 +1814,7 @@ describe('ScheduleForm', () => {
       expect(screen.queryByText(/Confirmed by/)).not.toBeInTheDocument();
     });
 
-    // an edit that keeps a confirmed "Run automatically" saves without a new review
+    // an edit that keeps a confirmed "Run without asking" saves without a new review
     const renderConfirmedEdit = rule =>
       renderForm({
         initialValues: { ...INITIAL, application_id: 7, version_id: 71, prompt: 'Hi', approval_rule: rule },
@@ -1810,7 +1837,7 @@ describe('ScheduleForm', () => {
       expect(screen.queryByTestId('risk-dialog')).not.toBeInTheDocument();
     });
 
-    it('still opens the review when the rule is Ask me first', async () => {
+    it('still opens the review when the rule is Pause and ask me', async () => {
       checkRisk.mockReturnValue(answer({ ...RISKY, confirmed: true }));
       const { onSubmit } = renderConfirmedEdit('pause_and_ask');
       typePrompt('Hi again');
@@ -1846,6 +1873,232 @@ describe('ScheduleForm', () => {
         expect.stringMatching(/^https?:\/\/[^/]+.*\/5\/agents\/all\/7\/71\?viewMode=owner$/),
       );
       expect(saveButton()).toBeDisabled();
+    });
+  });
+
+  // #7456 review: only the owner's confirmation clears the badge, and the editor lists only webhooks for it
+  describe('Needs re-confirm badge', () => {
+    const owned = { id: 3, owner: { name: 'Ann Lee' }, allowed_actions: ['edit'], needs_reconfirm: true };
+
+    it('shows on a webhook that needs a new confirmation', () => {
+      renderForm({ schedule: { ...owned, trigger_kind: 'webhook' } }, '/settings/webhooks/3');
+      expect(screen.getByTestId('schedule-needs-reconfirm')).toBeInTheDocument();
+    });
+
+    it('never shows on a schedule, even with needs_reconfirm', () => {
+      renderForm({ schedule: { ...owned, trigger_kind: 'cron' } }, '/settings/schedules/3');
+      expect(screen.queryByTestId('schedule-needs-reconfirm')).toBeNull();
+    });
+  });
+
+  // #7401: one row per toolkit; a webhook saves only when every row is OK
+  describe('Connections panel', () => {
+    const VERSIONED = { ...INITIAL, application_id: '7', version_id: 71, prompt: 'Hi' };
+    const WEBHOOK = {
+      ...VERSIONED,
+      trigger_kind: 'webhook',
+      webhook_type: 'custom',
+      cron: undefined,
+      timezone: undefined,
+    };
+    const SIGN_IN = {
+      toolkit: 'Mail',
+      status: 'sign_in_required',
+      credential_title: 'team_outlook',
+      credential_type: 'outlook',
+      reason: 'no saved login: sign in on the credential',
+    };
+    const REMOTE = { toolkit: 'Remote', status: 'unsupported', reason: 'Webhooks cannot wait for a sign-in' };
+    const saveButton = () => screen.getByTestId('schedule-save-button');
+    const renderWith = initialValues =>
+      renderForm(
+        { initialValues, lockedEntity: { type: 'agent', id: '7' } },
+        '/agents/all/7/webhooks/create',
+      );
+
+    it('blocks a webhook save while a row is not OK, under both rules', async () => {
+      checkConnections.mockReturnValue(answer({ rows: [{ toolkit: 'GH', status: 'ok' }, REMOTE] }));
+      renderWith({ ...WEBHOOK, approval_rule: 'run_without_asking' });
+
+      expect(await screen.findByTestId('schedule-connections-panel')).toBeInTheDocument();
+      expect(screen.getAllByTestId('schedule-connection-row').map(row => row.dataset.status)).toEqual([
+        'ok',
+        'unsupported',
+      ]);
+      expect(screen.getByText('Webhooks cannot wait for a sign-in')).toBeInTheDocument();
+      expect(saveButton()).toBeDisabled();
+      expect(screen.getByText('Sign in to every connection to save')).toBeInTheDocument();
+      expect(checkConnections).toHaveBeenCalledWith(
+        expect.objectContaining({ trigger_kind: 'webhook', version_id: 71 }),
+      );
+    });
+
+    it('saves a webhook once every row is OK', async () => {
+      checkConnections.mockReturnValue(answer({ rows: [{ toolkit: 'Mail', status: 'ok' }] }));
+      renderWith(WEBHOOK);
+
+      await waitFor(() => expect(saveButton()).toBeEnabled());
+    });
+
+    it('shows a sign-in on a saved-login row and checks again after it', async () => {
+      checkConnections.mockReturnValueOnce(answer({ rows: [SIGN_IN] }));
+      renderWith(WEBHOOK);
+
+      const signIn = await screen.findByTestId('connection-sign-in');
+      expect(signIn).toHaveAttribute('data-title', 'team_outlook');
+      checkConnections.mockReturnValue(answer({ rows: [{ ...SIGN_IN, status: 'ok', login: 'ok' }] }));
+      fireEvent.click(signIn);
+
+      await waitFor(() => expect(saveButton()).toBeEnabled());
+      expect(checkConnections).toHaveBeenCalledTimes(2);
+    });
+
+    it('lets a schedule under "Pause and ask me" save with a notice', async () => {
+      checkConnections.mockReturnValue(answer({ rows: [REMOTE] }));
+      renderWith(VERSIONED);
+
+      expect(await screen.findByText(/a run waits for you to sign in/)).toBeInTheDocument();
+      await waitFor(() => expect(saveButton()).toBeEnabled());
+      expect(checkConnections).toHaveBeenCalledWith(expect.objectContaining({ trigger_kind: 'cron' }));
+    });
+
+    it('shows the rows of a refused webhook save in the panel', async () => {
+      checkConnections.mockReturnValue(answer({ rows: [{ toolkit: 'Mail', status: 'ok' }] }));
+      const refused = { status: 409, data: { code: 'connections_not_ready', error: 'x', rows: [REMOTE] } };
+      const onSubmit = vi.fn().mockRejectedValue(refused);
+      renderForm(
+        { initialValues: WEBHOOK, lockedEntity: { type: 'agent', id: '7' }, onSubmit },
+        '/agents/all/7/webhooks/create',
+      );
+      await waitFor(() => expect(saveButton()).toBeEnabled());
+
+      await save();
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+      expect(await screen.findByText('Webhooks cannot wait for a sign-in')).toBeInTheDocument();
+      expect(saveButton()).toBeDisabled();
+    });
+
+    it('says the connections could not be checked when the check fails', async () => {
+      checkConnections.mockReturnValue({ unwrap: () => Promise.reject(new Error('down')) });
+      renderWith(WEBHOOK);
+
+      expect(
+        await screen.findByText('Connections could not be checked; try again to save'),
+      ).toBeInTheDocument();
+      expect(screen.queryByText('Sign in to every connection to save')).toBeNull();
+      expect(saveButton()).toBeDisabled();
+    });
+
+    it('never shows the rows of the previous version while the new one is checked', async () => {
+      checkConnections.mockReturnValueOnce(answer({ rows: [REMOTE] }));
+      renderForm(
+        {
+          initialValues: { ...WEBHOOK, application_id: '' },
+          lockedEntity: undefined,
+        },
+        '/settings/webhooks/create',
+      );
+      pickEntity(7);
+      await waitFor(() => expect(versionProps.value).toBe(71));
+      expect(await screen.findByText('Webhooks cannot wait for a sign-in')).toBeInTheDocument();
+
+      checkConnections.mockReturnValue({ unwrap: () => new Promise(() => {}) });
+      await act(async () => versionProps.onChange(70));
+
+      expect(screen.queryByText('Webhooks cannot wait for a sign-in')).toBeNull();
+      expect(screen.getByText('Checking connections')).toBeInTheDocument();
+    });
+
+    it('shows the server error when a refused save carries no rows', async () => {
+      checkConnections.mockReturnValue(answer({ rows: [{ toolkit: 'Mail', status: 'ok' }] }));
+      const refused = {
+        status: 409,
+        data: { code: 'connections_not_ready', error: 'Every toolkit must run unattended' },
+      };
+      const onSubmit = vi.fn().mockRejectedValue(refused);
+      renderForm(
+        { initialValues: WEBHOOK, lockedEntity: { type: 'agent', id: '7' }, onSubmit },
+        '/agents/all/7/webhooks/create',
+      );
+      await waitFor(() => expect(saveButton()).toBeEnabled());
+
+      await save();
+
+      expect(await screen.findByText('Every toolkit must run unattended')).toBeInTheDocument();
+    });
+
+    it('keeps Save clickable before an agent and a version are chosen, so its errors show', async () => {
+      checkConnections.mockClear();
+      renderForm(
+        { initialValues: { ...WEBHOOK, application_id: '', version_id: '' } },
+        '/settings/webhooks/create',
+      );
+      await act(async () => {});
+
+      expect(saveButton()).toBeEnabled();
+      expect(screen.queryByText('Checking connections')).toBeNull();
+      expect(checkConnections).not.toHaveBeenCalled();
+      fireEvent.click(saveButton());
+      expect(await screen.findByText('Choose an agent or a pipeline')).toBeInTheDocument();
+    });
+
+    it('says why Run Now did nothing while the connections hold the save', async () => {
+      checkConnections.mockReturnValue(answer({ rows: [REMOTE] }));
+      const onRunNow = vi.fn().mockResolvedValue(undefined);
+      renderForm(
+        {
+          initialValues: { ...WEBHOOK, name: 'Changed' },
+          lockedEntity: { type: 'agent', id: '7' },
+          schedule: { id: 3, trigger_kind: 'webhook', enabled: true, allowed_actions: ['edit', 'run'] },
+          onRunNow,
+          sidePanel: ({ onRunNow: run, runNowError }) => (
+            <div>
+              <button
+                type="button"
+                data-testid="run-now"
+                onClick={run}
+              />
+              {runNowError && <p data-testid="run-now-error">{runNowError}</p>}
+            </div>
+          ),
+        },
+        '/agents/all/7/webhooks/3',
+      );
+      await screen.findByTestId('schedule-connections-panel');
+      fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Renamed' } });
+
+      fireEvent.click(screen.getByTestId('run-now'));
+
+      expect(await screen.findByTestId('run-now-error')).toHaveTextContent(
+        'Sign in to every connection to save',
+      );
+      expect(onRunNow).not.toHaveBeenCalled();
+    });
+
+    it('offers Re-enable on a webhook switched off by an expired login', async () => {
+      checkConnections.mockReturnValue(answer({ rows: [SIGN_IN] }));
+      renderForm(
+        {
+          initialValues: WEBHOOK,
+          lockedEntity: { type: 'agent', id: '7' },
+          schedule: {
+            id: 3,
+            trigger_kind: 'webhook',
+            enabled: false,
+            disabled_reason: 'credential_expired',
+            allowed_actions: ['edit', 'resume'],
+            owner: { name: 'Ann Lee' },
+          },
+        },
+        '/agents/all/7/webhooks/3',
+      );
+
+      expect(await screen.findByTestId('schedule-reenable-banner')).toHaveTextContent(
+        /saved login stopped working/,
+      );
+      expect(screen.getByTestId('schedule-reenable-button')).toBeInTheDocument();
+      expect(checkConnections).toHaveBeenCalledWith(expect.objectContaining({ schedule_id: 3 }));
     });
   });
 });

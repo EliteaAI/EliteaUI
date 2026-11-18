@@ -2,6 +2,8 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { usageColumnSx } from './usageTable.styles';
+
 const UsageSortHeader = memo(props => {
   const { label, keyName, flex, sortKey, sortDir, onSort, sortable = true, right = true } = props;
 
@@ -10,10 +12,10 @@ const UsageSortHeader = memo(props => {
   return (
     <Box
       sx={[
+        usageColumnSx(flex),
         {
           display: 'flex',
           alignItems: 'center',
-          flex,
           ...(right && { justifyContent: 'flex-end', textAlign: 'right' }),
           ...(sortable && { cursor: 'pointer', userSelect: 'none' }),
         },

@@ -9,6 +9,7 @@ import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { useAnalyticsChatRunsQuery } from '@/api';
 
 import AnalyticsBreakdownTable from './AnalyticsBreakdownTable';
+import UserLabel from './UserLabel';
 
 const DEFAULT_RUNS_PER_PAGE = 20;
 
@@ -119,7 +120,7 @@ const ChatRecentRunsTable = memo(props => {
       }
       if (column.key === 'total_tokens') return AnalyticCommonHelpers.fmtNum(run.total_tokens);
       if (column.key === 'cost') return AnalyticCommonHelpers.fmtCost(run.cost);
-      if (column.key === 'user_email') return run.user_email || `User ${run.user_id}`;
+      if (column.key === 'user_email') return <UserLabel user={run} />;
       if (column.key === 'is_error') {
         return (
           <Box
