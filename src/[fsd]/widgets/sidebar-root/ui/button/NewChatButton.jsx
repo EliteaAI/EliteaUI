@@ -7,6 +7,7 @@ import { Box } from '@mui/material';
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useNewChat } from '@/[fsd]/widgets/sidebar-root/lib/hooks';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 
@@ -31,7 +32,7 @@ const NewChatButton = memo(() => {
         sx={styles.wrapper}
       >
         <Button.BaseBtn
-          variant="special"
+          variant={BUTTON_VARIANTS.special}
           startIcon={<PlusIcon />}
           disabled={isDisabled}
           onClick={createNewChat}
