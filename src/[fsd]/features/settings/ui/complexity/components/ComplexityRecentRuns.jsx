@@ -15,13 +15,9 @@ import RouteDefinitions from '@/routes';
 import ComplexityBreakdownBar from './ComplexityBreakdownBar';
 import ComplexityLabelChip from './ComplexityLabelChip';
 
-const { ROWS_PER_PAGE_OPTIONS, RUN_ANALYTICS_TAB } = ComplexityConstants;
-
-export const ENTITY_PROJECT_PARAM = 'entity_project_id';
-export const PAGE_KEY = 'runs_page';
-export const ROWS_KEY = 'runs_rows';
-
-const RUNS_PAGING = { rowsKey: ROWS_KEY, pageKey: PAGE_KEY, rowsOptions: ROWS_PER_PAGE_OPTIONS };
+const { ROWS_PER_PAGE_OPTIONS, RUN_ANALYTICS_SEARCH_PARAMS, RUN_ANALYTICS_TAB, RUNS_PAGING } =
+  ComplexityConstants;
+const { pageKey: PAGE_KEY, rowsKey: ROWS_KEY } = RUNS_PAGING;
 
 // Rows come from the detail page's single query, so the summary is not computed twice
 const ComplexityRecentRuns = memo(props => {
@@ -45,7 +41,7 @@ const ComplexityRecentRuns = memo(props => {
     [setSearchParams],
   );
 
-  // Run analytics resolves the run by its conversation uuid and opens straight on the Complexity tab
+  // Opens the run's analytics straight on the Complexity tab
   const runLink = useCallback(
     run => {
       const route =
@@ -55,8 +51,8 @@ const ComplexityRecentRuns = memo(props => {
       const params = new URLSearchParams(buildOwnerViewModeParams());
       // The exact run id: one conversation can hold several scored runs
       params.set(SearchParams.UsageRunId, run.run_id || run.conversation_id);
-      params.set('analytics_tab', RUN_ANALYTICS_TAB);
-      if (entityProjectId) params.set(ENTITY_PROJECT_PARAM, entityProjectId);
+      params.set(RUN_ANALYTICS_SEARCH_PARAMS.tab, RUN_ANALYTICS_TAB);
+      if (entityProjectId) params.set(RUN_ANALYTICS_SEARCH_PARAMS.entityProjectId, entityProjectId);
       return `${NavigationHelpers.buildRoute(route, { tab: 'all', agentId: entityId })}?${params.toString()}`;
     },
     [kind, entityId, entityProjectId],

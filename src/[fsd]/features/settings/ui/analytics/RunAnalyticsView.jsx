@@ -10,7 +10,7 @@ import {
   analyticsApi,
   useProjectAnalyticsQuery,
 } from '@/[fsd]/features/settings/api/analyticsApi';
-import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
+import { AnalyticsCommonConstants, ComplexityConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticsExportHelpers, ComplexityHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { useRunAnalyticsFetching } from '@/[fsd]/features/settings/lib/hooks';
 import {
@@ -37,7 +37,7 @@ const TAB = {
   tokens: 'tokens',
   tools: 'tools',
   health: 'health',
-  complexity: 'complexity',
+  complexity: ComplexityConstants.RUN_ANALYTICS_TAB,
 };
 
 // Per-run analytics keeps only the tabs that make sense for one run (#6816, #6817), in this order
@@ -50,7 +50,7 @@ const RUN_ANALYTICS_TABS = [
 ];
 
 // The tab lives in the URL so a link (e.g. from Complexity Recent Runs) and a reload open it
-const TAB_PARAM = 'analytics_tab';
+const TAB_PARAM = ComplexityConstants.RUN_ANALYTICS_SEARCH_PARAMS.tab;
 
 const NO_QUERY_ARGS = {};
 

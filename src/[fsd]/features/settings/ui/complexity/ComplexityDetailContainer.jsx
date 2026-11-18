@@ -1,8 +1,8 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { Alert, Box, CircularProgress, Link, Snackbar, Tooltip, Typography } from '@mui/material';
+import { Alert, Box, Link, Typography } from '@mui/material';
 
 import { useAnalyticsComplexityDetailQuery } from '@/[fsd]/features/settings/api/analyticsApi';
 import { ComplexityConstants } from '@/[fsd]/features/settings/lib/constants';
@@ -14,7 +14,6 @@ import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useApplicationDetailsQuery } from '@/api/applications';
-import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 import RouteDefinitions from '@/routes';
 
@@ -23,34 +22,31 @@ import ComplexityBreakdownLegend from './components/ComplexityBreakdownLegend';
 import ComplexityInfoPopover from './components/ComplexityInfoPopover';
 import ComplexityLabelChip from './components/ComplexityLabelChip';
 import ComplexityRecentRuns from './components/ComplexityRecentRuns';
+import ComplexityRefreshButton from './components/ComplexityRefreshButton';
 import ComplexityTableInfo from './components/ComplexityTableInfo';
 import { useComplexityListState } from './hooks/useComplexityListState.hooks';
 
-const { DEFAULT_THRESHOLDS_NOTE, LIST_SEARCH_PARAMS, PERIOD_OPTIONS, STALE_NOTE } = ComplexityConstants;
-
-// Keys only the detail page adds; dropped again when returning to the list
-const DETAIL_ONLY_PARAMS = ['entity_type', 'kind', 'runs_page', 'runs_rows'];
+const {
+  DEFAULT_THRESHOLDS_NOTE,
+  DETAIL_SEARCH_PARAMS,
+  LIST_SEARCH_PARAMS,
+  PERIOD_OPTIONS,
+  RUNS_PAGING,
+  STALE_NOTE,
+} = ComplexityConstants;
 
 const VERSIONS_INFO = 'Exact median of each version’s scored runs in the selected period.';
-
-const RUNS_PAGING = {
-  rowsKey: 'runs_rows',
-  pageKey: 'runs_page',
-  rowsOptions: ComplexityConstants.ROWS_PER_PAGE_OPTIONS,
-};
 
 const ComplexityDetailContainer = memo(() => {
   const projectId = useSelectedProjectId();
   const navigate = useNavigate();
   const { entityId, entityProjectId } = useParams();
   const [searchParams] = useSearchParams();
-  const entityType = searchParams.get('entity_type') || 'application';
-  const kindParam = searchParams.get('kind');
+  const entityType = searchParams.get(DETAIL_SEARCH_PARAMS.entityType) || 'application';
+  const kindParam = searchParams.get(DETAIL_SEARCH_PARAMS.kind);
 
   const { periodDays, update } = useComplexityListState();
   const range = useMemo(() => ComplexityHelpers.periodRange(periodDays), [periodDays]);
-  const [refreshing, setRefreshing] = useState(false);
-  const [refreshError, setRefreshError] = useState(false);
 
   const { rowsPerPage, page } = ComplexityHelpers.readRunsPaging(searchParams, RUNS_PAGING);
   const { data, isFetching, isError, refetch } = useAnalyticsComplexityDetailQuery(
@@ -77,7 +73,7 @@ const ComplexityDetailContainer = memo(() => {
   // Same as the list: an out-of-range Recent Runs page resets to the first one
   useEffect(() => {
     if (!isFetching && !isError && data && page > 0 && !data.runs?.length)
-      update({ runs_page: null }, { resetPage: false });
+      update({ [DETAIL_SEARCH_PARAMS.runsPage]: null }, { resetPage: false });
   }, [data, isFetching, isError, page, update]);
 
   const summary = data?.summary;
@@ -88,29 +84,19 @@ const ComplexityDetailContainer = memo(() => {
 
   const handleBack = useCallback(() => {
     const params = new URLSearchParams(searchParams);
-    DETAIL_ONLY_PARAMS.forEach(key => params.delete(key));
+    Object.values(DETAIL_SEARCH_PARAMS).forEach(key => params.delete(key));
     const query = params.toString();
     navigate(`${RouteDefinitions.SettingsComplexity}${query ? `?${query}` : ''}`);
   }, [navigate, searchParams]);
 
   const handlePeriod = useCallback(
-    value => update({ [LIST_SEARCH_PARAMS.period]: value, runs_page: null }, { resetPage: false }),
+    value =>
+      update(
+        { [LIST_SEARCH_PARAMS.period]: value, [DETAIL_SEARCH_PARAMS.runsPage]: null },
+        { resetPage: false },
+      ),
     [update],
   );
-
-  const handleRefresh = useCallback(async () => {
-    if (refreshing) return;
-    setRefreshing(true);
-    setRefreshError(false);
-    try {
-      const result = await refetch();
-      if (result?.error) setRefreshError(true);
-    } catch {
-      setRefreshError(true);
-    } finally {
-      setRefreshing(false);
-    }
-  }, [refetch, refreshing]);
 
   const styles = complexityDetailContainerStyles();
 
@@ -212,30 +198,11 @@ const ComplexityDetailContainer = memo(() => {
             data-testid="complexity-detail-period-select"
           />
         </Box>
-        <Tooltip
-          title="Refresh data"
-          placement="top"
-        >
-          <Box component="span">
-            <BaseBtn
-              variant={BUTTON_VARIANTS.icon}
-              color="secondary"
-              onClick={handleRefresh}
-              disabled={refreshing || !projectId}
-              aria-label="Refresh data"
-              data-testid="complexity-detail-refresh-button"
-            >
-              {refreshing ? (
-                <CircularProgress size={16} />
-              ) : (
-                <RefreshIcon
-                  width="1rem"
-                  height="1rem"
-                />
-              )}
-            </BaseBtn>
-          </Box>
-        </Tooltip>
+        <ComplexityRefreshButton
+          refetch={refetch}
+          disabled={!projectId}
+          testId="complexity-detail-refresh-button"
+        />
         <ComplexityInfoPopover meta={meta} />
       </Box>
 
@@ -321,21 +288,6 @@ const ComplexityDetailContainer = memo(() => {
           }
         />
       </Box>
-
-      <Snackbar
-        open={refreshError}
-        autoHideDuration={8000}
-        onClose={() => setRefreshError(false)}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <Alert
-          onClose={() => setRefreshError(false)}
-          severity="error"
-          variant="filled"
-        >
-          Unable to refresh complexity data. Please try again.
-        </Alert>
-      </Snackbar>
     </DrawerPage>
   );
 });

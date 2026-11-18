@@ -195,6 +195,19 @@ describe('ComplexityContainer (#7581)', () => {
     expect(lastArgs()).toMatchObject({ search: 'flow', offset: 0 });
   });
 
+  it('keeps a trailing space in the search box after the trimmed value reaches the URL', () => {
+    mockData({ meta: META, total: 1, rows: [ROW] });
+    renderAt();
+
+    const input = screen.getByTestId('complexity-search-input');
+    fireEvent.change(input, { target: { value: 'my ' } });
+    expect(lastArgs()).toMatchObject({ search: 'my' });
+    expect(input).toHaveValue('my ');
+
+    fireEvent.change(input, { target: { value: 'my agent' } });
+    expect(lastArgs()).toMatchObject({ search: 'my agent' });
+  });
+
   it('exports every matching row, not just the visible page', async () => {
     mockData({ meta: META, total: 101, rows: [ROW] });
     const pages = [

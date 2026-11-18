@@ -15,7 +15,7 @@ import {
   useAnalyticsCostsQuery,
   useAnalyticsRunDetailQuery,
 } from '@/[fsd]/features/settings/api/analyticsApi';
-import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
+import { AnalyticsCommonConstants, ComplexityConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers, AnalyticsExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { RunAnalyticsView } from '@/[fsd]/features/settings/ui/analytics';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
@@ -27,6 +27,7 @@ import { SearchParams } from '@/common/constants';
 
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 const { RUN_SCOPE_TYPE, RUN_NO_DATA_MESSAGE } = AnalyticsCommonConstants;
+const { RUN_ANALYTICS_SEARCH_PARAMS } = ComplexityConstants;
 
 const readSingleParticipantVersionId = runDetails =>
   runDetails?.meta?.single_participant?.entity_settings?.version_id;
@@ -164,7 +165,7 @@ const RunAnalyticsContainer = memo(props => {
   const complexityArgs = {
     projectId,
     entityId: agentId,
-    entityProjectId: searchParams.get('entity_project_id') || undefined,
+    entityProjectId: searchParams.get(RUN_ANALYTICS_SEARCH_PARAMS.entityProjectId) || undefined,
     runId: complexityRunId,
     limit: 1,
   };

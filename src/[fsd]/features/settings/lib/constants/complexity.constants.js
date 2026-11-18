@@ -64,6 +64,25 @@ export const LIST_SEARCH_PARAMS = {
   rowsPerPage: 'rows',
 };
 
+// Keys only the detail page adds on top of the list's; dropped again when returning to the list
+export const DETAIL_SEARCH_PARAMS = {
+  entityType: 'entity_type',
+  kind: 'kind',
+  runsPage: 'runs_page',
+  runsRows: 'runs_rows',
+};
+
+export const RUNS_PAGING = {
+  rowsKey: DETAIL_SEARCH_PARAMS.runsRows,
+  pageKey: DETAIL_SEARCH_PARAMS.runsPage,
+  rowsOptions: ROWS_PER_PAGE_OPTIONS,
+};
+
+export const RUN_ANALYTICS_SEARCH_PARAMS = {
+  tab: 'analytics_tab',
+  entityProjectId: 'entity_project_id',
+};
+
 export const DEFAULT_SORT = { sortBy: 'cu_median', sortOrder: 'desc' };
 
 export const TABLE_MEDIAN_INFO =

@@ -26,7 +26,6 @@ import { useDebounceValue, useSelectedProjectId, useSelectedProjectName } from '
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
-import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import StyledSearchInput from '@/components/SearchInput';
 import RouteDefinitions from '@/routes';
 
@@ -34,11 +33,13 @@ import ComplexityBreakdownBar from './components/ComplexityBreakdownBar';
 import ComplexityBreakdownLegend from './components/ComplexityBreakdownLegend';
 import ComplexityInfoPopover from './components/ComplexityInfoPopover';
 import ComplexityLabelChip from './components/ComplexityLabelChip';
+import ComplexityRefreshButton from './components/ComplexityRefreshButton';
 import ComplexityTableInfo from './components/ComplexityTableInfo';
 import { useComplexityListState } from './hooks/useComplexityListState.hooks';
 
 const {
   DEFAULT_THRESHOLDS_NOTE,
+  DETAIL_SEARCH_PARAMS,
   EXPORT_PAGE_SIZE,
   LIST_SEARCH_PARAMS,
   PERIOD_OPTIONS,
@@ -81,8 +82,6 @@ const ComplexityContainer = memo(() => {
     useComplexityListState();
   const [searchText, setSearchText] = useState(search);
   const debouncedSearch = useDebounceValue(searchText.trim(), SEARCH_DEBOUNCE_MS);
-  const [refreshing, setRefreshing] = useState(false);
-  const [refreshError, setRefreshError] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(false);
   const mounted = useRef(true);
@@ -94,8 +93,11 @@ const ComplexityContainer = memo(() => {
     };
   }, []);
 
-  // Back/forward changes the URL search; re-sync the box instead of letting the old text overwrite it
-  useEffect(() => setSearchText(search), [search]);
+  // Back/forward changes the URL search; re-sync the box instead of letting the old text overwrite it.
+  // Skipped when only trimming differs, so a trailing space survives while typing
+  useEffect(() => {
+    setSearchText(previous => (previous.trim() === search ? previous : search));
+  }, [search]);
 
   useEffect(() => {
     if (debouncedSearch !== search && debouncedSearch === searchText.trim())
@@ -142,20 +144,6 @@ const ComplexityContainer = memo(() => {
     [update],
   );
 
-  const handleRefresh = useCallback(async () => {
-    if (refreshing) return;
-    setRefreshing(true);
-    setRefreshError(false);
-    try {
-      const result = await refetch();
-      if (result?.error) setRefreshError(true);
-    } catch {
-      setRefreshError(true);
-    } finally {
-      setRefreshing(false);
-    }
-  }, [refetch, refreshing]);
-
   const handleExport = useCallback(async () => {
     setExporting(true);
     setExportError(false);
@@ -186,8 +174,8 @@ const ComplexityContainer = memo(() => {
       });
       // The list's own query string rides along so Back restores search, sort and page
       const params = new URLSearchParams(searchParams);
-      params.set('entity_type', row.entity_type);
-      params.set('kind', row.entity_kind);
+      params.set(DETAIL_SEARCH_PARAMS.entityType, row.entity_type);
+      params.set(DETAIL_SEARCH_PARAMS.kind, row.entity_kind);
       navigate(`${path}?${params.toString()}`);
     },
     [navigate, searchParams],
@@ -285,30 +273,10 @@ const ComplexityContainer = memo(() => {
             data-testid="complexity-period-select"
           />
         </Box>
-        <Tooltip
-          title="Refresh data"
-          placement="top"
-        >
-          <Box component="span">
-            <BaseBtn
-              variant={BUTTON_VARIANTS.icon}
-              color="secondary"
-              onClick={handleRefresh}
-              disabled={refreshing || !projectId}
-              aria-label="Refresh data"
-              data-testid="complexity-refresh-button"
-            >
-              {refreshing ? (
-                <CircularProgress size={16} />
-              ) : (
-                <RefreshIcon
-                  width="1rem"
-                  height="1rem"
-                />
-              )}
-            </BaseBtn>
-          </Box>
-        </Tooltip>
+        <ComplexityRefreshButton
+          refetch={refetch}
+          disabled={!projectId}
+        />
         <Tooltip
           title={exporting ? 'Preparing export…' : 'Export to Excel'}
           placement="top"
@@ -410,20 +378,6 @@ const ComplexityContainer = memo(() => {
         />
       </Box>
 
-      <Snackbar
-        open={refreshError}
-        autoHideDuration={8000}
-        onClose={() => setRefreshError(false)}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <Alert
-          onClose={() => setRefreshError(false)}
-          severity="error"
-          variant="filled"
-        >
-          Unable to refresh complexity data. Please try again.
-        </Alert>
-      </Snackbar>
       <Snackbar
         open={exportError}
         autoHideDuration={8000}
