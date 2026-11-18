@@ -19,6 +19,20 @@ vi.mock('@/[fsd]/features/settings/api/analyticsApi', () => ({
 
 vi.mock('@/[fsd]/features/settings/lib/hooks', () => ({ useRunAnalyticsFetching: () => false }));
 
+const { exportToExcel } = vi.hoisted(() => ({ exportToExcel: vi.fn() }));
+vi.mock('@/[fsd]/shared/lib/utils', async importOriginal => ({ ...(await importOriginal()), exportToExcel }));
+vi.mock('@/[fsd]/features/settings/lib/helpers', async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    AnalyticsExportHelpers: {
+      ...actual.AnalyticsExportHelpers,
+      fetchRunAnalyticsData: vi.fn(async () => ({})),
+      buildRunAnalyticsSheets: vi.fn(() => []),
+    },
+  };
+});
+
 vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({
   useSelectedProjectId: () => 1,
   useSelectedProjectName: () => 'Team',
@@ -237,5 +251,35 @@ describe('RunAnalyticsView', () => {
     fireEvent.click(screen.getByTestId('run-analytics-tab-health'));
 
     expect(screen.queryByTestId('failed-calls-table')).not.toBeInTheDocument();
+  });
+
+  describe('Complexity sheet in the run export (cross-review)', () => {
+    const exportWith = async complexity => {
+      renderView({ complexity });
+      await act(async () => fireEvent.click(screen.getByTestId('run-analytics-export-button')));
+    };
+
+    it('reports a failed Complexity refresh instead of exporting cached scores', async () => {
+      await exportWith({
+        run: { cu_total: 9 },
+        meta: {},
+        fetchLatest: vi.fn().mockRejectedValue(new Error('refresh failed')),
+      });
+
+      expect(exportToExcel).not.toHaveBeenCalled();
+      expect(screen.getByText('Unable to export Analytics data. Please try again.')).toBeInTheDocument();
+    });
+
+    it('writes "unavailable", not the cached score, when the refresh succeeds with no run', async () => {
+      await exportWith({
+        run: { cu_total: 9 },
+        meta: {},
+        fetchLatest: vi.fn().mockResolvedValue({ meta: {} }),
+      });
+
+      const sheet = exportToExcel.mock.lastCall[1].at(-1);
+      expect(sheet.sheetName).toBe('Complexity');
+      expect(sheet.rows[0].metric).toBe('Complexity data is unavailable for this run.');
+    });
   });
 });

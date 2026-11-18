@@ -152,14 +152,9 @@ const RunAnalyticsView = memo(props => {
         },
       });
       if (complexity) {
-        const latest = await complexity.fetchLatest?.();
-        sheets.push(
-          ComplexityHelpers.buildRunSheet(
-            latest?.run ?? complexity.run,
-            latest?.meta ?? complexity.meta,
-            scopeRows,
-          ),
-        );
+        // A failed refresh throws into the export error; a successful empty one stays "unavailable"
+        const latest = complexity.fetchLatest ? await complexity.fetchLatest() : complexity;
+        sheets.push(ComplexityHelpers.buildRunSheet(latest.run, latest.meta, scopeRows));
       }
 
       await exportToExcel(

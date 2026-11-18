@@ -187,8 +187,9 @@ const RunAnalyticsContainer = memo(props => {
       fetchLatest:
         complexityRunId && projectId
           ? async () => {
-              const result = await refetchComplexity();
-              return { run: result?.data?.runs?.[0], meta: result?.data?.meta };
+              // unwrap throws on a failed refresh, so the export reports it rather than writing stale scores
+              const data = await refetchComplexity().unwrap();
+              return { run: data?.runs?.[0], meta: data?.meta };
             }
           : undefined,
     };
