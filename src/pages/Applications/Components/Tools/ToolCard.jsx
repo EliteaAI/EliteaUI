@@ -315,17 +315,15 @@ const ToolCard = memo(props => {
     // Fall back to the generic sentence only when there is no usable backend message.
     if (tool?.type === 'application') {
       const rawMsg = typeof validationInfo === 'string' ? validationInfo : validationInfo?.message;
-      const friendly = rawMsg
-        ? mapAssociationError(rawMsg, tool?.name || entityType, {
+      return ToolkitFormHelpers.applicationToolValidationMessage(
+        rawMsg,
+        msg =>
+          mapAssociationError(msg, tool?.name || entityType, {
             action: 'status',
             entityLabel: tool?.agent_type === 'pipeline' ? 'pipeline' : 'agent',
-          })
-        : '';
-      // Only accept the mapper's output if it actually recognized the error (returns something other
-      // than the raw string); otherwise keep the generic, non-misleading fallback.
-      return friendly && friendly !== rawMsg
-        ? friendly
-        : `Misconfiguration error found. Check the ${entityType}.`;
+          }),
+        entityType,
+      );
     }
 
     const parsedErrorMessage = ToolkitFormHelpers.parseValidationError(

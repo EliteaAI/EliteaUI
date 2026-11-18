@@ -47,6 +47,8 @@ const ParticipantAttentionCard = memo(
       isSkillVersionUnavailable,
       hasMisconfigurationErrors,
       governedRefusal,
+      connectionNotice,
+      signInOnly,
       shouldDisableThisItem,
       mcpIsDisconnected,
       someToolsAreUnavailable,
@@ -79,7 +81,7 @@ const ParticipantAttentionCard = memo(
       <StyledTipsContainer
         ref={ref}
         onClick={
-          isActive || isVersionUnavailable || isSkillGone || isSkillVersionUnavailable
+          isActive || signInOnly || isVersionUnavailable || isSkillGone || isSkillVersionUnavailable
             ? onClickHandler
             : undefined
         }
@@ -150,6 +152,7 @@ const ParticipantAttentionCard = memo(
               isSkillVersionUnavailable={isSkillVersionUnavailable}
               hasMisconfigurationErrors={hasMisconfigurationErrors}
               governedRefusal={governedRefusal}
+              connectionNotice={connectionNotice}
               shouldDisableThisItem={shouldDisableThisItem}
               mcpIsDisconnected={mcpIsDisconnected}
               someToolsAreUnavailable={someToolsAreUnavailable}

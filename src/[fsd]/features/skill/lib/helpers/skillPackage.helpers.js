@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 const SKILL_MD_NAME = 'skill.md';
 const ARCHIVER_FOLDER = '__MACOSX/';
 const ARCHIVER_FILE_NAME = '.DS_Store';
+const SKILL_PACKAGE_EXTENSIONS = ['.zip', '.skill'];
 
 const fileNameOf = memberName => memberName.split('/').pop();
 
@@ -22,7 +23,15 @@ const findSkillMd = members => {
   return found[0];
 };
 
-export const isSkillZip = fileName => fileName.toLowerCase().endsWith('.zip');
+export const isSkillPackage = fileName =>
+  SKILL_PACKAGE_EXTENSIONS.some(extension => fileName.toLowerCase().endsWith(extension));
+
+const loadZip = file =>
+  JSZip.loadAsync(file).catch(error => {
+    if (error.message.startsWith("Can't find end of central directory"))
+      throw new Error('the file is not a valid ZIP archive');
+    throw error;
+  });
 
 const readSkillFolder = async members => {
   const skillMd = findSkillMd(members);
@@ -108,7 +117,7 @@ const readPluginSkills = async (members, root) => {
 };
 
 export const readSkillZip = async file => {
-  const zip = await JSZip.loadAsync(file);
+  const zip = await loadZip(file);
   const members = Object.values(zip.files).filter(isPackageMember);
   const pluginRoot = findPluginRoot(members);
 

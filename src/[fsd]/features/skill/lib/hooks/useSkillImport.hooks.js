@@ -4,13 +4,13 @@ import { useNavigate } from 'react-router-dom';
 
 import { parseMdFrontmatter } from '@/[fsd]/entities/import-wizard';
 import { useSkillImportMutation } from '@/[fsd]/features/skill/api';
-import { isSkillZip, readSkillZip } from '@/[fsd]/features/skill/lib/helpers';
+import { isSkillPackage, readSkillZip } from '@/[fsd]/features/skill/lib/helpers';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
-import { SkillsTabs } from '@/common/constants';
+import { MAX_DESCRIPTION_LENGTH, SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import RouteDefinitions from '@/routes';
 
-const ACCEPT = '.md,.zip,text/markdown,application/zip';
+const ACCEPT = '.md,.zip,.skill,text/markdown,application/zip';
 
 const hasFrontmatter = content =>
   content
@@ -31,7 +31,7 @@ const parseCommand = (content, commandName) => {
     frontmatter: {
       ...frontmatter,
       name: commandName,
-      description: frontmatter?.description || firstText.slice(0, 2304),
+      description: frontmatter?.description || firstText.slice(0, MAX_DESCRIPTION_LENGTH),
     },
     body,
   };
@@ -43,7 +43,7 @@ const parsePackage = ({ content, commandName, ...rest }) => ({
 });
 
 const readSkillFile = async file => {
-  const packages = isSkillZip(file.name)
+  const packages = isSkillPackage(file.name)
     ? await readSkillZip(file)
     : [{ content: await file.text(), filePaths: [] }];
   return packages.map(parsePackage);
@@ -80,8 +80,8 @@ export const useSkillImport = () => {
     async file => {
       if (!file) return;
 
-      if (!file.name.toLowerCase().endsWith('.md') && !isSkillZip(file.name)) {
-        toastError('Only .md or .zip files can be imported.');
+      if (!file.name.toLowerCase().endsWith('.md') && !isSkillPackage(file.name)) {
+        toastError('Only .md, .zip or .skill files can be imported.');
         return;
       }
 

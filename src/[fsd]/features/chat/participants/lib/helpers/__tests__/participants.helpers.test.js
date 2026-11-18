@@ -9,6 +9,8 @@ import {
   isSavedConversation,
   isSkippedContainerParticipant,
   resolveChatSkillParticipant,
+  shouldDeselectParticipant,
+  validationBlocksChat,
 } from '../participants.helpers';
 
 // --- isSkippedContainerParticipant — #5778 depth-aware container gate -------- //
@@ -205,6 +207,48 @@ describe('isSameChatEntity', () => {
     expect(isSameChatEntity(skill, { ...skill, entity_name: 'application' })).toBe(false);
     expect(isSameChatEntity(skill, undefined)).toBe(false);
     expect(isSameChatEntity(null, skill)).toBe(false);
+  });
+});
+
+describe('chat gating of a participant that only needs a sign-in (#7585)', () => {
+  const error = (message, requiresAuthorization) => ({
+    configuration_type: 'dataverse',
+    message,
+    requires_authorization: requiresAuthorization,
+  });
+  const nested = (...errors) => `Value error, ${JSON.stringify({ __connection_errors__: errors })}`;
+  const SIGN_IN = error('Sign in to Dataverse to connect this credential.', true);
+  const WRONG_SECRET = error('The client secret is wrong or expired.', false);
+  const toolkitEntry = requiresAuthorization => ({
+    type: 'connection_error',
+    msg: 'Sign in to Dataverse to connect this credential.',
+    requires_authorization: requiresAuthorization,
+  });
+
+  it('lets a participant chat when every error only needs a sign-in', () => {
+    expect(validationBlocksChat([], [nested(SIGN_IN)])).toBe(false);
+    expect(validationBlocksChat([], [nested(SIGN_IN, SIGN_IN), nested(SIGN_IN)])).toBe(false);
+    expect(validationBlocksChat([toolkitEntry(true)], [])).toBe(false);
+  });
+
+  it('blocks a participant with any error a sign-in will not clear', () => {
+    expect(validationBlocksChat([], [nested(WRONG_SECRET)])).toBe(true);
+    expect(validationBlocksChat([], [nested(SIGN_IN, WRONG_SECRET)])).toBe(true);
+    expect(validationBlocksChat([toolkitEntry(false)], [])).toBe(true);
+    expect(validationBlocksChat([], ['Value error, Application misconfiguration error'])).toBe(true);
+    expect(validationBlocksChat([{ type: 'missing', msg: 'Field required' }], [])).toBe(true);
+  });
+
+  it('does not block a participant without errors', () => {
+    expect(validationBlocksChat([], [])).toBe(false);
+  });
+
+  it('keeps an active sign-in-only participant selected and deselects the others', () => {
+    expect(shouldDeselectParticipant(true, true, false)).toBe(false);
+    expect(shouldDeselectParticipant(true, false, false)).toBe(true);
+    expect(shouldDeselectParticipant(false, false, true)).toBe(true);
+    expect(shouldDeselectParticipant(true, true, true)).toBe(true);
+    expect(shouldDeselectParticipant(false, false, false)).toBe(false);
   });
 });
 

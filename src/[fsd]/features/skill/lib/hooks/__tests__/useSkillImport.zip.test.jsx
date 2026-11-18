@@ -28,10 +28,16 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
 
 const SKILL_MD = '---\nname: pdf\ndescription: Fills PDF forms\n---\n\nRead forms.md first.';
 
-const zipOf = async members => {
+const zipOf = async (members, fileName = 'pdf.zip') => {
   const zip = new JSZip();
   Object.entries(members).forEach(([name, content]) => zip.file(name, content));
-  return new File([await zip.generateAsync({ type: 'uint8array' })], 'pdf.zip', { type: 'application/zip' });
+  return new File([await zip.generateAsync({ type: 'uint8array' })], fileName, { type: 'application/zip' });
+};
+
+const SKILL_CREATOR_MEMBERS = {
+  'pdf/SKILL.md': SKILL_MD,
+  'pdf/forms.md': '# Forms',
+  'pdf/scripts/fill.py': 'print(1)',
 };
 
 const stage = async file => {
@@ -52,10 +58,58 @@ describe('useSkillImport with a skill ZIP', () => {
     vi.clearAllMocks();
   });
 
-  it('offers ZIP files in the file dialog', async () => {
+  it('offers ZIP and .skill files in the file dialog', async () => {
     const { accept } = await stage(new File([SKILL_MD], 'pdf.md'));
 
-    expect(accept.split(',')).toEqual(expect.arrayContaining(['.md', '.zip']));
+    expect(accept.split(',')).toEqual(expect.arrayContaining(['.md', '.zip', '.skill']));
+  });
+
+  it('previews a .skill file exactly like the same archive named .zip', async () => {
+    const { hook: asSkill } = await stage(await zipOf(SKILL_CREATOR_MEMBERS, 'pdf.SKILL'));
+    const { hook: asZip } = await stage(await zipOf(SKILL_CREATOR_MEMBERS, 'pdf.zip'));
+
+    expect(spies.toastError).not.toHaveBeenCalled();
+    expect(asSkill.result.current.pendingSkills[0]).toEqual(asZip.result.current.pendingSkills[0]);
+    expect(asSkill.result.current.pendingSkills[0]).toMatchObject({
+      name: 'pdf',
+      description: 'Fills PDF forms',
+      instructions: 'Read forms.md first.',
+      filePaths: ['forms.md', 'scripts/fill.py'],
+    });
+  });
+
+  it('sends the .skill file itself to the server on confirm', async () => {
+    spies.importSkill.mockReturnValue({ unwrap: () => Promise.resolve({ id: 9 }) });
+    const file = await zipOf(SKILL_CREATOR_MEMBERS, 'pdf.skill');
+    const { hook } = await stage(file);
+
+    await act(async () => {
+      await hook.result.current.confirmImport();
+    });
+
+    expect(spies.importSkill).toHaveBeenCalledWith({ projectId: 2, file });
+  });
+
+  it('refuses a .skill file that is not a ZIP before asking the server', async () => {
+    const { hook } = await stage(new File([SKILL_MD], 'pdf.skill'));
+
+    expect(hook.result.current.isModalOpen).toBe(false);
+    expect(spies.importSkill).not.toHaveBeenCalled();
+    expect(spies.toastError).toHaveBeenCalledWith(
+      'Not supported file [pdf.skill]: the file is not a valid ZIP archive',
+    );
+  });
+
+  it('keeps the reason JSZip gives for a ZIP it cannot read', async () => {
+    const archive = await zipOf(SKILL_CREATOR_MEMBERS, 'pdf.skill');
+    const truncated = new File([(await archive.arrayBuffer()).slice(0, 200)], 'pdf.skill');
+
+    const { hook } = await stage(truncated);
+
+    expect(hook.result.current.isModalOpen).toBe(false);
+    expect(spies.toastError).toHaveBeenCalledWith(
+      expect.stringMatching(/^Not supported file \[pdf\.skill\]: Corrupted zip/),
+    );
   });
 
   it('previews SKILL.md from the top-level folder and lists the other files relative to it', async () => {
@@ -136,7 +190,7 @@ describe('useSkillImport with a skill ZIP', () => {
     const { hook } = await stage(new File(['x'], 'pdf.txt'));
 
     expect(hook.result.current.isModalOpen).toBe(false);
-    expect(spies.toastError).toHaveBeenCalledWith('Only .md or .zip files can be imported.');
+    expect(spies.toastError).toHaveBeenCalledWith('Only .md, .zip or .skill files can be imported.');
   });
 
   it('keeps importing a Markdown skill without files', async () => {

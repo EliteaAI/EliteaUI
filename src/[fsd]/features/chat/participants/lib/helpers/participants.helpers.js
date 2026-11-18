@@ -1,5 +1,6 @@
 import { findSkillParticipant, withPinnedSkillVersion } from '@/[fsd]/features/skill/lib/helpers';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
+import { ValidationErrorHelpers } from '@/[fsd]/shared/lib/helpers';
 import { ChatParticipantType, DEFAULT_PARTICIPANT_NAME } from '@/common/constants';
 
 import { SkillUnavailableReason } from '../constants/participant.constants';
@@ -146,6 +147,15 @@ export const getSkillUnavailableReason = (isUnavailable, versions) => {
   if (!isUnavailable) return undefined;
   return versions?.length ? SkillUnavailableReason.Version : SkillUnavailableReason.Skill;
 };
+
+/** True when a participant's validation errors keep it from chatting: any error that a sign-in at run time won't clear. */
+export const validationBlocksChat = (toolkitEntries = [], agentMessages = []) =>
+  (toolkitEntries.length > 0 || agentMessages.length > 0) &&
+  ValidationErrorHelpers.connectionNoticeOf(toolkitEntries, agentMessages)?.requiresAuthorization !== true;
+
+/** True when an active participant has to be deselected: it is misconfigured beyond a sign-in, or its published agent is gone. */
+export const shouldDeselectParticipant = (hasMisconfigurationErrors, signInOnly, isPublishedAgentGone) =>
+  Boolean((hasMisconfigurationErrors && !signInOnly) || isPublishedAgentGone);
 
 // A chat on the server: a new draft or a playback has no access to show
 export const isSavedConversation = conversation =>
