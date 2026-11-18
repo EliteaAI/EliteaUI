@@ -23,6 +23,7 @@ const SidebarMenuItem = memo(props => {
     tooltip,
     showLabel = true,
     tourId,
+    buttonProps,
   } = props;
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
   const { shouldDisablePersonalSpace } = useDisablePersonalSpace();
@@ -39,6 +40,8 @@ const SidebarMenuItem = memo(props => {
       >
         <ListItemButton
           {...getLinkProps(shouldDisablePersonalSpace || disabled)}
+          aria-label={showLabel ? undefined : menuTitle}
+          {...buttonProps}
           disabled={shouldDisablePersonalSpace || disabled}
           selected={selected}
           onClick={onClick}
@@ -62,6 +65,8 @@ const SidebarMenuItem = memo(props => {
       >
         <ListItemButton
           {...getLinkProps(disabled)}
+          aria-label={showLabel ? undefined : menuTitle}
+          {...buttonProps}
           disabled={disabled}
           selected={selected}
           onClick={onClick}
