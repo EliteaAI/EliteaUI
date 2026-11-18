@@ -305,7 +305,7 @@ const skillsApi = eliteaApi
         },
         providesTags: [],
       }),
-      // Import a skill from a .md or .zip file (multipart 'file') OR json { content, filename }.
+      // Import a skill from a .md, .zip or .skill file (multipart 'file') OR json { content, filename }.
       // Wrong extension, an unsafe ZIP or one over the file caps -> 400 { error }.
       skillImport: build.mutation({
         query: ({ projectId, file, content, filename }) => {
