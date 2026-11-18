@@ -27,3 +27,12 @@ export {
 export { useGenerateSkillDraftMutation } from './generateSkillDraftApi';
 
 export { useGetSkillCategoriesQuery, useLazyGetSkillCategoriesQuery } from './skillCategoriesApi';
+
+export {
+  useDeleteSkillVersionFileMutation,
+  useLazySkillVersionFileBlobQuery,
+  useRenameSkillVersionFileMutation,
+  useSkillVersionFileTextQuery,
+  useSkillVersionFilesQuery,
+  useUploadSkillVersionFileMutation,
+} from './skillFilesApi';

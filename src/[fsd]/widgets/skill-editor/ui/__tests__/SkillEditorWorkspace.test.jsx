@@ -9,19 +9,22 @@ import darkPalette from '@/darkPalette';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
-const { section, clearRun, controlsProps } = vi.hoisted(() => ({
+const { section, clearRun, controlsProps, filesQuery } = vi.hoisted(() => ({
   section: name => props => (
     <div
       data-testid={name}
       data-default-expanded="true"
       data-show-run-settings={String(props.showRunSettings ?? '')}
+      data-show-instructions={String(props.showInstructions ?? '')}
       data-has-summary-action={String(Boolean(props.summaryEditAction))}
+      data-default-expanded-prop={String(props.defaultExpanded ?? '')}
     >
       {props.summaryEditAction}
     </div>
   ),
   clearRun: vi.fn(),
   controlsProps: { current: null },
+  filesQuery: { current: null },
 }));
 
 vi.mock('@/[fsd]/features/skill', async () => {
@@ -41,39 +44,45 @@ vi.mock('@/[fsd]/features/skill', async () => {
     SkillInformation: section('information'),
     SkillRunSettings: section('run-settings'),
     SkillRunPane,
+    SkillSplitEditor: ({
+      settings,
+      settingsActions,
+      files,
+      scope,
+      readOnlyFiles,
+      onOpenTestPanel,
+      renderTestPanelControls,
+      testPanelContent,
+    }) => (
+      <div
+        data-testid="skill-split-editor"
+        data-files={String(files.length)}
+        data-scope={JSON.stringify(scope)}
+        data-read-only-files={String(readOnlyFiles)}
+      >
+        <div data-testid="skill-settings-actions">{settingsActions}</div>
+        <div data-testid="skill-settings-view">{settings}</div>
+        <button
+          data-testid="skill-test-button"
+          onClick={onOpenTestPanel}
+        />
+        <div data-testid="skill-test-header">{renderTestPanelControls({ onClose: () => {} })}</div>
+        {testPanelContent}
+      </div>
+    ),
+    useSkillVersionFilesQuery: (args, options) => {
+      filesQuery.current = { args, options };
+      return { data: [{ path: 'scripts/fill.py' }] };
+    },
   };
 });
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 42 }));
 vi.mock('@/common/constants', () => ({ ViewMode: { Owner: 'owner' } }));
 vi.mock('@/[fsd]/shared/ui', async () => ({
   EditorLayout: await import('@/[fsd]/shared/ui/editor-layout'),
 }));
 vi.mock('@/[fsd]/widgets/entity-test-panel', () => ({
   EntityTestPanelUI: {
-    EntityEditorWorkspace: ({
-      renderConfig,
-      toolbarActions,
-      testButton,
-      testPanelControls,
-      testPanelContent,
-    }) => (
-      <>
-        <div data-testid="toolbar">
-          {toolbarActions}
-          {testButton}
-        </div>
-        {testPanelControls}
-        {renderConfig({ isConfigStacked: false, toolbar: <span data-testid="inline-toolbar" /> })}
-        {testPanelContent}
-      </>
-    ),
-    TestEntityButton: ({ label, onClick, testId }) => (
-      <button
-        data-testid={testId}
-        onClick={onClick}
-      >
-        {label}
-      </button>
-    ),
     EntityTestPanelControls: props => {
       controlsProps.current = props;
       return (
@@ -116,40 +125,73 @@ describe('SkillEditorWorkspace', () => {
   });
   afterEach(() => cleanup());
 
-  it('puts General and Instructions on the left, Run Settings and Information on the right', () => {
+  it('puts General, Run Settings and Information in Settings, without the instructions', () => {
     renderWorkspace();
 
-    expect(childTestIds('skill-config-panels-left')).toEqual(['general-and-instructions']);
+    expect(childTestIds('skill-settings-view')).toEqual([
+      'general-and-instructions',
+      'run-settings',
+      'information',
+    ]);
     expect(screen.getByTestId('general-and-instructions')).toHaveAttribute('data-show-run-settings', 'false');
-    expect(childTestIds('skill-config-panels-right')).toEqual(['run-settings', 'information']);
+    expect(screen.getByTestId('general-and-instructions')).toHaveAttribute('data-show-instructions', 'false');
   });
 
-  it('puts Edit with AI before Test Skill in the toolbar', () => {
+  it('puts Edit with AI in the header of the Settings | Files switch, not in General', () => {
     renderWorkspace();
 
-    const buttons = [...screen.getByTestId('toolbar').querySelectorAll('button')].map(
-      el => el.dataset.testid,
+    expect(screen.getByTestId('skill-settings-actions')).toContainElement(
+      screen.getByTestId('edit-skill-with-ai-button'),
     );
-    expect(buttons).toEqual(['edit-skill-with-ai-button', 'skill-test-button']);
+    expect(screen.getByTestId('general-and-instructions')).toHaveAttribute(
+      'data-has-summary-action',
+      'false',
+    );
   });
 
-  it('puts the inline toolbar on the General header line', () => {
+  it("gives the split editor the version's files", () => {
     renderWorkspace();
 
-    expect(screen.getByTestId('general-and-instructions')).toContainElement(
-      screen.getByTestId('inline-toolbar'),
-    );
-    expect(screen.getByTestId('run-settings')).toBeEmptyDOMElement();
+    expect(screen.getByTestId('skill-split-editor')).toHaveAttribute('data-files', '1');
+    expect(filesQuery.current.args).toEqual({ projectId: 42, skillId: 10, versionId: 22 });
+    expect(JSON.parse(screen.getByTestId('skill-split-editor').dataset.scope)).toEqual({
+      projectId: 42,
+      skillId: 10,
+      versionId: 22,
+    });
   });
 
-  it('opens the Test panel from Test Skill', () => {
+  it.each([
+    ['a draft the person may edit', { versionStatus: 'draft' }, 'false'],
+    ['a published version', { versionStatus: 'published' }, 'true'],
+    ['an embedded version', { versionStatus: 'embedded' }, 'true'],
+    ['a person without edit permission', { versionStatus: 'draft', disabled: true }, 'true'],
+  ])('makes the files read only for %s', (_, props, readOnly) => {
+    renderWorkspace(props);
+
+    expect(screen.getByTestId('skill-split-editor')).toHaveAttribute('data-read-only-files', readOnly);
+  });
+
+  it('opens Settings with General open and Run settings and Information collapsed, as in Figma', () => {
+    renderWorkspace();
+
+    expect(screen.getByTestId('run-settings')).toHaveAttribute('data-default-expanded-prop', 'false');
+    expect(screen.getByTestId('information')).toHaveAttribute('data-default-expanded-prop', 'false');
+  });
+
+  it('opens the Test panel from Test', () => {
     const onOpenTestPanel = vi.fn();
     renderWorkspace({ onOpenTestPanel });
 
     fireEvent.click(screen.getByTestId('skill-test-button'));
 
-    expect(screen.getByTestId('skill-test-button')).toHaveTextContent('Test Skill');
     expect(onOpenTestPanel).toHaveBeenCalledTimes(1);
+  });
+
+  it('puts the Test panel controls in the Test column header', () => {
+    renderWorkspace();
+
+    expect(screen.getByTestId('skill-test-header')).toContainElement(screen.getByTestId('clear'));
   });
 
   it('clears the shown chat from the panel toolbar once it reports it can be cleared', () => {

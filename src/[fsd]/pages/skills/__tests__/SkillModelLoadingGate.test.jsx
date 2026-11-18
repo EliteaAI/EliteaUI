@@ -14,6 +14,7 @@ const fixture = vi.hoisted(() => ({
 }));
 
 vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
+  useOpenRunVersion: () => () => {},
   useSkillModels: () => fixture.models,
   useSkillValidationSchema: () => undefined,
 }));

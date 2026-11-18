@@ -620,12 +620,15 @@ const skillTestPanelStyles = () => ({
     gap: '1rem',
     width: '100%',
   },
-  // Reuse ChatBox's ChatBodyContainer (16px rounded border + eliteaDefault bg);
-  // just make it fill the column and stretch its children full-width.
+  // Reuse ChatBox's ChatBodyContainer; the Test column already draws the frame, so the box draws none
   chatBoxContainer: {
     flex: 1,
     minHeight: 0,
     alignItems: 'stretch',
+    border: 'none',
+    borderRadius: 0,
+    background: 'transparent',
+    overflow: 'visible',
   },
   messageList: {
     flex: 1,

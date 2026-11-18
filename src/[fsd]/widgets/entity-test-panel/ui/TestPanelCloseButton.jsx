@@ -44,9 +44,10 @@ const testPanelCloseButtonStyles = () => ({
     marginY: '0.25rem',
     borderColor: palette.border.lines,
   }),
-  closeIcon: {
+  closeIcon: ({ palette }) => ({
     fontSize: '1rem',
-  },
+    '& path': { fill: palette.icon.secondary },
+  }),
 });
 
 export default TestPanelCloseButton;
