@@ -70,7 +70,7 @@ describe('useSkillImport with a skill ZIP', () => {
     const { hook } = await stage(file);
 
     expect(spies.toastError).not.toHaveBeenCalled();
-    expect(hook.result.current.pendingSkill).toMatchObject({
+    expect(hook.result.current.pendingSkills[0]).toMatchObject({
       name: 'pdf',
       description: 'Fills PDF forms',
       instructions: 'Read forms.md first.',
@@ -81,7 +81,7 @@ describe('useSkillImport with a skill ZIP', () => {
   it('reads SKILL.md at the archive root', async () => {
     const { hook } = await stage(await zipOf({ 'SKILL.md': SKILL_MD, 'reference.md': '# Ref' }));
 
-    expect(hook.result.current.pendingSkill.filePaths).toEqual(['reference.md']);
+    expect(hook.result.current.pendingSkills[0].filePaths).toEqual(['reference.md']);
   });
 
   it('sends the ZIP itself to the server on confirm', async () => {
@@ -142,6 +142,6 @@ describe('useSkillImport with a skill ZIP', () => {
   it('keeps importing a Markdown skill without files', async () => {
     const { hook } = await stage(new File([SKILL_MD], 'pdf.md'));
 
-    expect(hook.result.current.pendingSkill).toMatchObject({ name: 'pdf', filePaths: [] });
+    expect(hook.result.current.pendingSkills[0]).toMatchObject({ name: 'pdf', filePaths: [] });
   });
 });
