@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 import { parseValidationRefusal } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
-import { ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { ValidationErrorHelpers } from '@/[fsd]/shared/lib/helpers';
 import { ChatParticipantType } from '@/common/constants';
 import useValidateApplicationVersion, {
   useToolsValidationInfo,
@@ -55,7 +55,8 @@ export const useParticipantValidation = ({
   );
 
   const connectionNotice = useMemo(
-    () => ToolkitFormHelpers.connectionNoticeOf(toolkitValidationInfoList || [], totalValidationInfo || []),
+    () =>
+      ValidationErrorHelpers.connectionNoticeOf(toolkitValidationInfoList || [], totalValidationInfo || []),
     [toolkitValidationInfoList, totalValidationInfo],
   );
 
