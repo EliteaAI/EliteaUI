@@ -211,4 +211,35 @@ describe('ComplexityContainer (#7581)', () => {
     expect(fileName).toMatch(/^complexity_My_Project_\d{4}-\d{2}-\d{2}_\d{4}-\d{2}-\d{2}\.xlsx$/);
     expect(sheets[0].rows).toHaveLength(101);
   });
+
+  it('returns to page one when a bookmarked page is past the end', () => {
+    mockData({ meta: META, total: 0, rows: [] });
+    renderAt('/settings/complexity?page=7&search=bot');
+
+    const search = new URLSearchParams(location().getAttribute('data-search'));
+    expect(search.get('page')).toBeNull();
+    expect(search.get('search')).toBe('bot');
+  });
+
+  // #1576 review: no hidden cap, the workbook holds every matching row
+  it('pages the export through to the reported total', async () => {
+    mockData({ meta: META, total: 5101, rows: [ROW] });
+    initiate.mockImplementation(args => ({
+      unwrap: () =>
+        Promise.resolve({
+          total: 5101,
+          rows: Array.from({ length: Math.min(100, 5101 - args.offset) }, (_, i) => ({
+            ...ROW,
+            entity_id: args.offset + i,
+          })),
+        }),
+      unsubscribe: () => {},
+    }));
+    renderAt();
+
+    await act(async () => fireEvent.click(screen.getByTestId('complexity-export-button')));
+
+    expect(initiate).toHaveBeenCalledTimes(52);
+    expect(exportToExcel.mock.lastCall[1][0].rows).toHaveLength(5101);
+  });
 });

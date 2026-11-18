@@ -47,12 +47,11 @@ const {
 } = ComplexityConstants;
 
 const SEARCH_DEBOUNCE_MS = 300;
-const MAX_EXPORT_ROWS = 5000;
 
 const fetchAllRows = async (dispatch, args) => {
   const rows = [];
   let total = Infinity;
-  while (rows.length < Math.min(total, MAX_EXPORT_ROWS)) {
+  while (rows.length < total) {
     const subscription = dispatch(
       analyticsApi.endpoints.analyticsComplexity.initiate(
         { ...args, limit: EXPORT_PAGE_SIZE, offset: rows.length },
@@ -106,6 +105,12 @@ const ComplexityContainer = memo(() => {
     { skip: !projectId },
   );
   const meta = data?.meta;
+
+  // A bookmarked page past the end returns nothing (and total 0); go back to page one
+  useEffect(() => {
+    if (!isFetching && !isError && data && page > 0 && !data.rows?.length)
+      update({ [LIST_SEARCH_PARAMS.page]: 0 }, { resetPage: false });
+  }, [data, isFetching, isError, page, update]);
 
   const handleSort = useCallback(
     key =>
@@ -367,7 +372,7 @@ const ComplexityContainer = memo(() => {
               <TablePagination
                 component="div"
                 count={total}
-                page={total ? Math.min(page, Math.max(0, Math.ceil(total / rowsPerPage) - 1)) : 0}
+                page={total ? page : 0}
                 rowsPerPage={rowsPerPage}
                 rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
                 onPageChange={handlePageChange}

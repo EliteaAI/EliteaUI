@@ -17,6 +17,7 @@ import ComplexityLabelChip from './ComplexityLabelChip';
 
 const { ROWS_PER_PAGE_OPTIONS, RUN_ANALYTICS_TAB } = ComplexityConstants;
 
+export const ENTITY_PROJECT_PARAM = 'entity_project_id';
 export const PAGE_KEY = 'runs_page';
 export const ROWS_KEY = 'runs_rows';
 
@@ -24,7 +25,7 @@ const RUNS_PAGING = { rowsKey: ROWS_KEY, pageKey: PAGE_KEY, rowsOptions: ROWS_PE
 
 // Rows come from the detail page's single query, so the summary is not computed twice
 const ComplexityRecentRuns = memo(props => {
-  const { entityId, kind, versions, runs, total = 0, loading, footerInfo } = props;
+  const { entityId, entityProjectId, kind, versions, runs, total = 0, loading, footerInfo } = props;
 
   const [searchParams, setSearchParams] = useSearchParams();
   const { rowsPerPage, page } = ComplexityHelpers.readRunsPaging(searchParams, RUNS_PAGING);
@@ -52,11 +53,13 @@ const ComplexityRecentRuns = memo(props => {
           ? RouteDefinitions.PipelineRunAnalytics
           : RouteDefinitions.ApplicationsRunAnalytics;
       const params = new URLSearchParams(buildOwnerViewModeParams());
-      params.set(SearchParams.UsageRunId, run.conversation_id || run.run_id);
+      // The exact run id: one conversation can hold several scored runs
+      params.set(SearchParams.UsageRunId, run.run_id || run.conversation_id);
       params.set('analytics_tab', RUN_ANALYTICS_TAB);
+      if (entityProjectId) params.set(ENTITY_PROJECT_PARAM, entityProjectId);
       return `${NavigationHelpers.buildRoute(route, { tab: 'all', agentId: entityId })}?${params.toString()}`;
     },
-    [kind, entityId],
+    [kind, entityId, entityProjectId],
   );
 
   const columns = useMemo(
@@ -132,7 +135,7 @@ const ComplexityRecentRuns = memo(props => {
           <TablePagination
             component="div"
             count={total}
-            page={total ? Math.min(page, Math.max(0, Math.ceil(total / rowsPerPage) - 1)) : 0}
+            page={total ? page : 0}
             rowsPerPage={rowsPerPage}
             rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
             onPageChange={(_, next) => setParams({ [PAGE_KEY]: next })}

@@ -160,7 +160,14 @@ const RunAnalyticsContainer = memo(props => {
   const complexityRunId = usageRunId || runDetails?.uuid;
   const showsComplexity =
     Boolean(platformSettings?.complexity_enabled) && !isEntityScoped && Boolean(agentId);
-  const complexityArgs = { projectId, entityId: agentId, runId: complexityRunId, limit: 1 };
+  // A public agent's runs are stored under its owning project, not the one viewing them
+  const complexityArgs = {
+    projectId,
+    entityId: agentId,
+    entityProjectId: searchParams.get('entity_project_id') || undefined,
+    runId: complexityRunId,
+    limit: 1,
+  };
   const {
     data: complexityData,
     isFetching: isComplexityFetching,

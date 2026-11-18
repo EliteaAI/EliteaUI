@@ -144,7 +144,9 @@ describe('ComplexityDetailContainer (#7581)', () => {
     const [path, query] = href.split('?');
     expect(path).toBe('/pipelines/all/7/history/analytics');
     const params = new URLSearchParams(query);
-    expect(params.get('usage_run_id')).toBe('conv-uuid');
+    // #1576 review: one conversation can hold several runs, so the exact run id is sent
+    expect(params.get('usage_run_id')).toBe('r-1');
+    expect(params.get('entity_project_id')).toBe('3');
     expect(params.get('analytics_tab')).toBe('complexity');
     expect(params.get('viewMode')).toBe('owner');
   });
@@ -156,5 +158,16 @@ describe('ComplexityDetailContainer (#7581)', () => {
     expect(location()).toHaveAttribute('data-pathname', '/settings/complexity');
     const search = new URLSearchParams(location().getAttribute('data-search'));
     expect(Object.fromEntries(search)).toEqual({ search: 'code', page: '2', sort_by: 'runs' });
+  });
+
+  it('returns to the first Recent Runs page when a bookmarked page is past the end', () => {
+    useAnalyticsComplexityDetailQuery.mockReturnValue({
+      data: { meta: {}, summary: SUMMARY, versions: [], total: 0, runs: [] },
+      isFetching: false,
+      isError: false,
+    });
+    renderAt('/settings/complexity/3/7?runs_page=9');
+
+    expect(new URLSearchParams(location().getAttribute('data-search')).get('runs_page')).toBeNull();
   });
 });

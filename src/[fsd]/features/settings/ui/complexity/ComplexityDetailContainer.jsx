@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
@@ -73,6 +73,12 @@ const ComplexityDetailContainer = memo(() => {
     { projectId, applicationId: entityId },
     { skip: !projectId || !entityId || !isLocal },
   );
+
+  // Same as the list: an out-of-range Recent Runs page resets to the first one
+  useEffect(() => {
+    if (!isFetching && !isError && data && page > 0 && !data.runs?.length)
+      update({ runs_page: null }, { resetPage: false });
+  }, [data, isFetching, isError, page, update]);
 
   const summary = data?.summary;
   const meta = data?.meta;
@@ -300,6 +306,7 @@ const ComplexityDetailContainer = memo(() => {
 
         <ComplexityRecentRuns
           entityId={entityId}
+          entityProjectId={entityProjectId}
           kind={kind}
           versions={versions}
           runs={data?.runs}
