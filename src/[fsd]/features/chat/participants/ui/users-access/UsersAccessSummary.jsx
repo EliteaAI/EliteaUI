@@ -71,8 +71,8 @@ const UsersAccessSummary = memo(props => {
 
 UsersAccessSummary.displayName = 'UsersAccessSummary';
 
-/** @type {MuiSx} */
 // Muted: the grey heading of the collapsed panel's list, not a value
+/** @type {MuiSx} */
 const usersAccessSummaryStyles = (isLink, muted) => ({
   root: {
     display: 'flex',

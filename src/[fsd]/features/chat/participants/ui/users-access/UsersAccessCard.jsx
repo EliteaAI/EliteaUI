@@ -1,20 +1,14 @@
 import { memo, useCallback, useRef, useState } from 'react';
 
-import { useSelector } from 'react-redux';
-
 import { Box } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { SHARE_MESSAGES } from '@/[fsd]/features/chat/conversation-list/lib/constants';
-import { useCopyChatLink } from '@/[fsd]/features/chat/conversation-list/lib/hooks';
 import { ShareChatModal } from '@/[fsd]/features/chat/conversation-list/ui/share';
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ShareIcon from '@/assets/share-icon.svg?react';
-import { PUBLIC_PROJECT_ID } from '@/common/constants';
 
-import { useChatUsersAccess } from '../../lib/hooks';
+import { useUsersAccessActions } from '../../lib/hooks';
 import ParticipantsAccordion from '../expanded-participants/ParticipantsAccordion';
 import UsersAccessSummary from './UsersAccessSummary';
 import UsersMentionDropdown from './UsersMentionDropdown';
@@ -22,34 +16,21 @@ import UsersMentionDropdown from './UsersMentionDropdown';
 const UsersAccessCard = memo(props => {
   const { conversation, onSelectParticipant, onAccessSaved } = props;
 
-  const projectId = useSelectedProjectId();
-  const userId = useSelector(state => state.user?.id);
-  const access = useChatUsersAccess({ conversation, projectId });
-  const copyChatLink = useCopyChatLink();
-
   const cardRef = useRef(null);
   const [isMentionOpen, setIsMentionOpen] = useState(false);
-  const [isShareOpen, setIsShareOpen] = useState(false);
+
+  const handleCloseMention = useCallback(() => setIsMentionOpen(false), []);
+  const { access, userId, isShareOpen, handleShare, handleMention, handleCloseShare } = useUsersAccessActions(
+    {
+      conversation,
+      onSelectParticipant,
+      onBeforeAction: handleCloseMention,
+    },
+  );
 
   const styles = usersAccessCardStyles();
 
   const handleOpenMention = useCallback(() => setIsMentionOpen(true), []);
-  const handleCloseMention = useCallback(() => setIsMentionOpen(false), []);
-  const handleCloseShare = useCallback(() => setIsShareOpen(false), []);
-
-  // The rule of Share in the chat menu: only the owner changes access, and the Public project has none to change
-  const handleShare = useCallback(() => {
-    if (access.isOwner && projectId != PUBLIC_PROJECT_ID) setIsShareOpen(true);
-    else copyChatLink(conversation, SHARE_MESSAGES.saved);
-  }, [access.isOwner, conversation, copyChatLink, projectId]);
-
-  const handleMention = useCallback(
-    participant => {
-      setIsMentionOpen(false);
-      onSelectParticipant?.(participant);
-    },
-    [onSelectParticipant],
-  );
 
   return (
     <ParticipantsAccordion title="Users">

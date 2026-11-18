@@ -8,6 +8,7 @@ import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { useParticipantDetailsContext } from '@/[fsd]/features/chat/participants/lib/context/ParticipantDetailsContext';
 import {
   getChatParticipantUniqueId,
+  isSavedConversation,
   isSkippedContainerParticipant,
 } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { isMcpToolkitType, isRemoteMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
@@ -95,7 +96,7 @@ const CollapsedPerticapantsList = memo(props => {
   const user = useSelector(state => state.user);
   const isPrivateProject = selectedProjectId == user.personal_project_id;
   const showUsersSection = !isPrivateProject;
-  const isSavedConversation = !!conversation?.id && !conversation?.isNew && !conversation?.isPlayback;
+  const isSaved = isSavedConversation(conversation);
 
   const groupedByType = useMemo(
     () =>
@@ -152,7 +153,7 @@ const CollapsedPerticapantsList = memo(props => {
 
   return (
     <>
-      {showUsersSection && isSavedConversation && (
+      {showUsersSection && isSaved && (
         <UsersAccessCollapsed
           conversation={conversation}
           onSelectParticipant={onSelectParticipant}
@@ -162,7 +163,7 @@ const CollapsedPerticapantsList = memo(props => {
         />
       )}
 
-      {showUsersSection && !isSavedConversation && usersGroup && (
+      {showUsersSection && !isSaved && usersGroup && (
         <StyledTooltip
           disableInteractive
           title={`${USERS_SECTION.label} in this chat`}
@@ -328,7 +329,7 @@ const collapsedPerticapantsListStyles = () => ({
         minWidth: '1.25rem',
         height: '1.25rem',
         borderRadius: '50%',
-        backgroundColor: palette.border.lines,
+        backgroundColor: palette.components.participant.background.countBadge,
         color: palette.text.secondary,
         fontSize: '0.625rem',
         fontWeight: 600,

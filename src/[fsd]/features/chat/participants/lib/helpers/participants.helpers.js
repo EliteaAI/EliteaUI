@@ -146,3 +146,7 @@ export const getSkillUnavailableReason = (isUnavailable, versions) => {
   if (!isUnavailable) return undefined;
   return versions?.length ? SkillUnavailableReason.Version : SkillUnavailableReason.Skill;
 };
+
+// A chat on the server: a new draft or a playback has no access to show
+export const isSavedConversation = conversation =>
+  !!conversation?.id && !conversation?.isNew && !conversation?.isPlayback;

@@ -35,16 +35,16 @@ const UsersMentionDropdown = memo(props => {
     currentUserId,
     ownerId,
     access,
+    showShare = false,
     onMention,
     onShare,
     onClose,
   } = props;
 
   const [query, setQuery] = useState('');
-  // The collapsed panel passes the access summary and gets a Share row; there the list opens beside the icon
-  const isCollapsed = !!access;
-  // As wide as the card it opens under
-  const styles = usersMentionDropdownStyles(isCollapsed ? null : anchorEl?.offsetWidth);
+  const isLeft = placement.startsWith('left');
+  // As wide as the card it opens under; beside an icon it keeps its own width
+  const styles = usersMentionDropdownStyles(isLeft ? null : anchorEl?.offsetWidth);
 
   const isOwner = useCallback(item => ownerId != null && item.entity_meta?.id == ownerId, [ownerId]);
   // The owner comes first, then everyone else by name
@@ -98,8 +98,6 @@ const UsersMentionDropdown = memo(props => {
     onShare?.();
   }, [onShare]);
 
-  const isLeft = placement.startsWith('left');
-
   return (
     <Popper
       open={open}
@@ -134,7 +132,7 @@ const UsersMentionDropdown = memo(props => {
                     />
                   </Box>
                 )}
-                {isCollapsed && (
+                {!!access && (
                   <Box sx={styles.accessRow}>
                     <UsersAccessSummary
                       kind={access.kind}
@@ -242,7 +240,7 @@ const UsersMentionDropdown = memo(props => {
                       </Box>
                     </MenuItem>
                   ))}
-                  {!filtered.length && !showEveryone && !showMe && (!isCollapsed || !!others.length) && (
+                  {!filtered.length && !showEveryone && !showMe && (!showShare || !!others.length) && (
                     <Typography
                       variant="bodyMedium"
                       sx={styles.empty}
@@ -251,7 +249,7 @@ const UsersMentionDropdown = memo(props => {
                       {others.length ? 'No matches found' : 'No one else is in this chat yet'}
                     </Typography>
                   )}
-                  {isCollapsed && (
+                  {showShare && (
                     <MenuItem
                       sx={styles.shareItem(!!others.length)}
                       onClick={handleShare}

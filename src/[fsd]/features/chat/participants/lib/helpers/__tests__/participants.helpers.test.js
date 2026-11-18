@@ -6,6 +6,7 @@ import {
   getDefaultActiveParticipant,
   getSkillUnavailableReason,
   isSameChatEntity,
+  isSavedConversation,
   isSkippedContainerParticipant,
   resolveChatSkillParticipant,
 } from '../participants.helpers';
@@ -204,5 +205,15 @@ describe('isSameChatEntity', () => {
     expect(isSameChatEntity(skill, { ...skill, entity_name: 'application' })).toBe(false);
     expect(isSameChatEntity(skill, undefined)).toBe(false);
     expect(isSameChatEntity(null, skill)).toBe(false);
+  });
+});
+
+describe('isSavedConversation', () => {
+  it('is true only for a chat saved on the server', () => {
+    expect(isSavedConversation({ id: 5 })).toBe(true);
+    expect(isSavedConversation({ id: 5, isNew: true })).toBe(false);
+    expect(isSavedConversation({ id: 5, isPlayback: true })).toBe(false);
+    expect(isSavedConversation({})).toBe(false);
+    expect(isSavedConversation(undefined)).toBe(false);
   });
 });

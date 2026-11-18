@@ -1,55 +1,35 @@
 import { memo, useCallback, useRef, useState } from 'react';
 
-import { useSelector } from 'react-redux';
-
 import { Box, IconButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { SHARE_MESSAGES } from '@/[fsd]/features/chat/conversation-list/lib/constants';
-import { useCopyChatLink } from '@/[fsd]/features/chat/conversation-list/lib/hooks';
 import { ShareChatModal } from '@/[fsd]/features/chat/conversation-list/ui/share';
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
-import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import LockSimple from '@/components/Icons/LockSimple';
 import UsersIcon from '@/components/Icons/UsersIcon';
 
 import { USERS_ACCESS_KIND } from '../../lib/constants';
-import { useChatUsersAccess } from '../../lib/hooks';
+import { useUsersAccessActions } from '../../lib/hooks';
 import UsersMentionDropdown from './UsersMentionDropdown';
 
 const UsersAccessCollapsed = memo(props => {
   const { conversation, onSelectParticipant, onAccessSaved, buttonSx, iconSx } = props;
 
-  const projectId = useSelectedProjectId();
-  const userId = useSelector(state => state.user?.id);
-  const access = useChatUsersAccess({ conversation, projectId });
-  const copyChatLink = useCopyChatLink();
-
   const anchorRef = useRef(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isShareOpen, setIsShareOpen] = useState(false);
+
+  const handleCloseMenu = useCallback(() => setIsMenuOpen(false), []);
+  const { access, userId, isShareOpen, handleShare, handleMention, handleCloseShare } = useUsersAccessActions(
+    {
+      conversation,
+      onSelectParticipant,
+      onBeforeAction: handleCloseMenu,
+    },
+  );
 
   const isOnlyYou = access.kind === USERS_ACCESS_KIND.onlyYou;
   const styles = usersAccessCollapsedStyles();
 
   const handleToggleMenu = useCallback(() => setIsMenuOpen(prev => !prev), []);
-  const handleCloseMenu = useCallback(() => setIsMenuOpen(false), []);
-  const handleCloseShare = useCallback(() => setIsShareOpen(false), []);
-
-  // The rule of Share in the chat menu: only the owner changes access, and the Public project has none to change
-  const handleShare = useCallback(() => {
-    setIsMenuOpen(false);
-    if (access.isOwner && projectId != PUBLIC_PROJECT_ID) setIsShareOpen(true);
-    else copyChatLink(conversation, SHARE_MESSAGES.saved);
-  }, [access.isOwner, conversation, copyChatLink, projectId]);
-
-  const handleMention = useCallback(
-    participant => {
-      setIsMenuOpen(false);
-      onSelectParticipant?.(participant);
-    },
-    [onSelectParticipant],
-  );
 
   return (
     <Box
@@ -91,6 +71,7 @@ const UsersAccessCollapsed = memo(props => {
         currentUserId={userId}
         ownerId={access.ownerId}
         access={access}
+        showShare
         onMention={handleMention}
         onShare={handleShare}
         onClose={handleCloseMenu}
@@ -133,7 +114,7 @@ const usersAccessCollapsedStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: palette.border.lines,
+    backgroundColor: palette.components.participant.background.countBadge,
     color: palette.text.secondary,
     fontSize: '0.625rem',
     fontWeight: 600,
