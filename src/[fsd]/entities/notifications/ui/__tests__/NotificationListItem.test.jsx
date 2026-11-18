@@ -24,7 +24,7 @@ vi.mock('@/api/notifications', () => ({
 vi.mock('@/common/convertChatConversationMessages', () => ({ convertTime: value => value }));
 vi.mock('@/common/utils', () => ({ buildErrorMessage: () => 'error' }));
 vi.mock('@/ComponentsLib/Tooltip', () => ({ default: ({ children }) => children }));
-vi.mock('../../lib/helpers', () => ({ getIcon: () => null }));
+vi.mock('../../lib/helpers', async importOriginal => ({ ...(await importOriginal()), getIcon: () => null }));
 vi.mock('../NotificationListItemMessage', () => ({ default: () => <span>message</span> }));
 
 const notification = {

@@ -5,6 +5,10 @@ import RouteDefinitions, { getBasename } from '@/routes';
 
 const DEFAULT_TOOLKITS_TAB = ToolkitsTabs[0];
 
+export const isProjectMembershipNotification = eventType =>
+  eventType === NotificationType.UserWasAddedToSomeProjectAsTeammate ||
+  eventType === NotificationType.UserWasRemovedFromProject;
+
 const RUN_EVENT_TYPES = new Set([
   NotificationType.ScheduleRunFailed,
   NotificationType.ScheduleRunSucceeded,
@@ -34,6 +38,9 @@ export const resolveHref = (eventType, meta, projectId) => {
       const url = `${route}?${SearchParams.Conversation}=${convId}`;
       return messageId ? `${url}&${SearchParams.MessageId}=${messageId}` : url;
     }
+
+    case NotificationType.UserWasAddedToSomeProjectAsTeammate:
+      return `${base}/${projectId}${RouteDefinitions.Chat}`;
 
     // The index page is addressed by its own route, not by the toolkit page plus an `index_name`
     // query: that query only survives through a back-compat redirect, and the `:tab` it travels

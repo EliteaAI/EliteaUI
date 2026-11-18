@@ -11,7 +11,7 @@ import { Checkbox, Label } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 
 const SkillRunSettings = memo(props => {
-  const { accordionStyle, disabled = false } = props;
+  const { accordionStyle, disabled = false, defaultExpanded = true } = props;
   const theme = useTheme();
   const { values } = useFormikContext();
   const styles = skillRunSettingsStyles();
@@ -28,6 +28,7 @@ const SkillRunSettings = memo(props => {
       style={accordionStyle}
       accordionSX={{ background: `${theme.palette.background.default.tertiary} !important` }}
       showMode={AccordionConstants.AccordionShowMode.LeftMode}
+      defaultExpanded={defaultExpanded}
       items={[
         {
           title: 'Run settings',

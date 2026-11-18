@@ -58,3 +58,21 @@ export {
   encodeEliteaMetadata,
   splitEditorFrontmatter,
 } from './skillEliteaMetadata.helpers';
+export {
+  buildRunVersionSearch,
+  buildSkillFileTree,
+  countFolderFiles,
+  describeSkillFiles,
+  fileBaseName,
+  findMentionLines,
+  findPathMentions,
+  findSkillFile,
+  isPathInFolder,
+  pathsOverlap,
+  resolveFileLink,
+} from './skillFiles.helpers';
+export {
+  FILE_LINK_CLASS,
+  MENTION_LINE_CLASS,
+  skillInstructionsDecorations,
+} from './skillInstructionsDecorations.helpers';

@@ -2,7 +2,12 @@ import { Fragment, memo, useMemo } from 'react';
 
 import { Link, Typography } from '@mui/material';
 
-import { parseMessage, resolveHref } from '@/[fsd]/entities/notifications/lib/helpers';
+import {
+  isProjectMembershipNotification,
+  parseMessage,
+  resolveHref,
+} from '@/[fsd]/entities/notifications/lib/helpers';
+import { NotificationType } from '@/common/constants';
 
 import LegacyNotificationMessage from './LegacyNotificationMessage.jsx';
 
@@ -12,7 +17,40 @@ const NotificationListItemMessage = memo(props => {
   const message = notification.meta?.message;
   const segments = useMemo(() => parseMessage(message), [message]);
   const resolvedHref = resolveHref(notification.event_type, notification.meta, notification.project_id);
+  const isAddedToProject = notification.event_type === NotificationType.UserWasAddedToSomeProjectAsTeammate;
+  const isLegacyMembership = Array.isArray(notification.meta?.users);
+  const projectName = notification.meta?.project_name;
   const styles = notificationListItemMessageStyles(notification.is_seen);
+
+  if (
+    message &&
+    !isLegacyMembership &&
+    isProjectMembershipNotification(notification.event_type) &&
+    typeof projectName === 'string'
+  ) {
+    return (
+      <Typography
+        variant={textVariant}
+        sx={[{ color: textColor }, styles.membershipMessage]}
+      >
+        {isAddedToProject ? 'You have been added to ' : 'You have been removed from '}
+        {resolvedHref ? (
+          <Link
+            variant={textVariant}
+            sx={styles.link}
+            href={resolvedHref}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {projectName}
+          </Link>
+        ) : (
+          projectName
+        )}
+        {' project.'}
+      </Typography>
+    );
+  }
 
   if (message) {
     return (
@@ -59,6 +97,11 @@ const notificationListItemMessageStyles = isSeen => ({
     cursor: 'pointer',
     color: isSeen ? palette.text.visitedLink : palette.text.link,
   }),
+  membershipMessage: {
+    maxWidth: '100%',
+    overflowWrap: 'anywhere',
+    whiteSpace: 'normal',
+  },
 });
 
 export default NotificationListItemMessage;

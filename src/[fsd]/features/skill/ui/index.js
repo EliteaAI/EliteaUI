@@ -16,3 +16,4 @@ export { default as SkillRunSettings } from './skill-details/form/SkillRunSettin
 export { default as SkillTestPanel } from './skill-test-panel/SkillTestPanel';
 export { default as SkillVersionSelector } from './SkillVersionSelector.jsx';
 export { SkillImportButton } from './import';
+export { SkillSplitEditor } from './skill-files';

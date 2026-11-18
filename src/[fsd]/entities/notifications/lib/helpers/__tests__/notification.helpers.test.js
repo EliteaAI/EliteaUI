@@ -51,6 +51,13 @@ describe('resolveHref for budget notifications', () => {
   });
 });
 
+describe('resolveHref for project membership notifications', () => {
+  it('links only the added project to its Chats page', () => {
+    expect(resolveHref(NotificationType.UserWasAddedToSomeProjectAsTeammate, {}, 19)).toBe(`${BASE}/19/chat`);
+    expect(resolveHref(NotificationType.UserWasRemovedFromProject, {}, 19)).toBeNull();
+  });
+});
+
 describe('resolveHref for index notifications', () => {
   // `indexes` is not a toolkits list tab, so a link built with it only reaches the index page
   // through a back-compat redirect and leaves the breadcrumb parent pointing at a dead list.
