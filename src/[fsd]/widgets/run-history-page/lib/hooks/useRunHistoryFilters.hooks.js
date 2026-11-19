@@ -6,8 +6,10 @@ import { toRunStatusLabel } from '@/[fsd]/entities/schedule';
 
 import {
   ALL_OPTION_VALUE,
+  EXECUTION_TYPE_PARAM,
   FILTER_PARAMS,
   NO_QUERY_PARAMS,
+  RUN_RECORD_FILTERS,
   STATUS_VALUES,
   TRIGGER_OPTIONS,
 } from '../constants/runHistoryFilters.constants';
@@ -20,6 +22,9 @@ const STATUS_OPTIONS = [
   ...STATUS_VALUES.map(value => ({ label: toRunStatusLabel(value), value })),
 ];
 const TRIGGER_FILTER_OPTIONS = [ALL_OPTION, ...TRIGGER_OPTIONS];
+const NO_DISABLED_FILTERS = [];
+
+const paramOf = trigger => TRIGGER_OPTIONS.find(option => option.value === trigger)?.param;
 
 // A value outside the allowed set reads as "All", so a hand-edited link never sends a bad filter
 const readParam = (searchParams, name, isValid) => {
@@ -30,13 +35,18 @@ const readParam = (searchParams, name, isValid) => {
 export const useRunHistoryFilters = ({ schedules, versions }) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const scheduleId = readParam(searchParams, FILTER_PARAMS.schedule, value => WHOLE_NUMBER.test(value));
-  const versionId = readParam(searchParams, FILTER_PARAMS.version, value => WHOLE_NUMBER.test(value));
-  const status = readParam(searchParams, FILTER_PARAMS.status, value => STATUS_VALUES.includes(value));
   const trigger = readParam(searchParams, FILTER_PARAMS.trigger, value =>
     TRIGGER_OPTIONS.some(option => option.value === value),
   );
-  const triggerParam = TRIGGER_OPTIONS.find(option => option.value === trigger)?.param;
+  const triggerParam = paramOf(trigger);
+  // An execution type run has no run record: the run record filters of a link read as "All"
+  const isExecutionType = triggerParam === EXECUTION_TYPE_PARAM;
+  const readRunParam = (name, isValid) =>
+    isExecutionType ? ALL_OPTION_VALUE : readParam(searchParams, name, isValid);
+
+  const scheduleId = readRunParam(FILTER_PARAMS.schedule, value => WHOLE_NUMBER.test(value));
+  const versionId = readRunParam(FILTER_PARAMS.version, value => WHOLE_NUMBER.test(value));
+  const status = readRunParam(FILTER_PARAMS.status, value => STATUS_VALUES.includes(value));
 
   const queryParams = useMemo(() => {
     const params = {};
@@ -87,7 +97,23 @@ export const useRunHistoryFilters = ({ schedules, versions }) => {
 
   const onScheduleChange = useCallback(value => setParam(FILTER_PARAMS.schedule, value), [setParam]);
   const onStatusChange = useCallback(value => setParam(FILTER_PARAMS.status, value), [setParam]);
-  const onTriggerChange = useCallback(value => setParam(FILTER_PARAMS.trigger, value), [setParam]);
+  const onTriggerChange = useCallback(
+    value => {
+      setSearchParams(
+        prev => {
+          const next = new URLSearchParams(prev);
+          if (value) next.set(FILTER_PARAMS.trigger, value);
+          else next.delete(FILTER_PARAMS.trigger);
+          if (paramOf(value) === EXECUTION_TYPE_PARAM) {
+            RUN_RECORD_FILTERS.forEach(key => next.delete(FILTER_PARAMS[key]));
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
   const onVersionChange = useCallback(value => setParam(FILTER_PARAMS.version, value), [setParam]);
 
   const onClear = useCallback(() => {
@@ -115,6 +141,7 @@ export const useRunHistoryFilters = ({ schedules, versions }) => {
       trigger: onTriggerChange,
       version: onVersionChange,
     },
+    disabledFilters: isExecutionType ? RUN_RECORD_FILTERS : NO_DISABLED_FILTERS,
     queryParams,
     hasFilters: queryParams !== NO_QUERY_PARAMS,
     onClear,

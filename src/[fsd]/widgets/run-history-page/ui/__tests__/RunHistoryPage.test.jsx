@@ -79,10 +79,11 @@ vi.mock('@/[fsd]/shared/ui/button', () => ({
 }));
 
 vi.mock('@/[fsd]/shared/ui/select', () => ({
-  SingleSelect: ({ label, options, value, onValueChange, displayEmpty }) => (
+  SingleSelect: ({ label, options, value, onValueChange, displayEmpty, disabled }) => (
     <select
       data-display-empty={String(Boolean(displayEmpty))}
       aria-label={label}
+      disabled={disabled}
       value={value}
       onChange={event => onValueChange(event.target.value)}
     >
@@ -326,11 +327,41 @@ describe('RunHistoryPage schedule filter and links', () => {
   });
 
   it('reads trigger=chat from the link and Clear filters resets it', () => {
-    renderAt('/agents/all/127/history?trigger=chat&status=failed', { scheduleEntityType: 'agent' });
-    expect(containerProps.current.queryParams).toEqual({ execution_type: 'chat', status: 'failed' });
+    renderAt('/agents/all/127/history?trigger=chat', { scheduleEntityType: 'agent' });
+    expect(containerProps.current.queryParams).toEqual({ execution_type: 'chat' });
 
     fireEvent.click(screen.getByTestId('run-history-filters-clear'));
     expect(containerProps.current.queryParams).toEqual({});
+  });
+
+  it('an execution type link ignores the run record filters and disables them', () => {
+    renderAt('/agents/all/127/history?trigger=api&status=failed&schedule_id=4&version_id=9', {
+      scheduleEntityType: 'agent',
+    });
+
+    expect(containerProps.current.queryParams).toEqual({ execution_type: 'api' });
+    ['Status', 'Version', 'Schedule/Webhook'].forEach(label => {
+      expect(screen.getByLabelText(label)).toBeDisabled();
+      expect(screen.getByLabelText(label)).toHaveValue('');
+    });
+    expect(screen.getByLabelText('Trigger Type')).toBeEnabled();
+  });
+
+  it('picking an execution type clears the run record filters, and a run trigger enables them again', () => {
+    renderAt('/agents/all/127/history?status=failed&schedule_id=4&version_id=9', {
+      scheduleEntityType: 'agent',
+    });
+
+    fireEvent.change(screen.getByLabelText('Trigger Type'), { target: { value: 'chat' } });
+    expect(containerProps.current.queryParams).toEqual({ execution_type: 'chat' });
+    expect(screen.getByLabelText('Status')).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Trigger Type'), { target: { value: 'manual' } });
+    // the cleared filters stay cleared: they are not restored from before
+    expect(containerProps.current.queryParams).toEqual({ trigger: 'manual' });
+    ['Status', 'Version', 'Schedule/Webhook'].forEach(label =>
+      expect(screen.getByLabelText(label)).toBeEnabled(),
+    );
   });
 
   it('a link with execution_type alone sends no filter', () => {

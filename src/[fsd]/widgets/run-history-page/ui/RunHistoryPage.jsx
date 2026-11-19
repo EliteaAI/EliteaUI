@@ -167,6 +167,7 @@ const RunHistoryPage = memo(props => {
           values={filters.values}
           options={filters.options}
           handlers={filters.handlers}
+          disabledFilters={filters.disabledFilters}
           hasFilters={filters.hasFilters}
           onClear={filters.onClear}
           hasScheduleFilter={Boolean(scheduleEntityType)}

@@ -14,6 +14,10 @@ export const STATUS_VALUES = ['running', 'waiting_for_approval', 'success', 'fai
 // The list API param of an execution type: runs without a run record are told apart by the chat's own type
 export const EXECUTION_TYPE_PARAM = 'execution_type';
 
+// The filters read from the run record: an execution type run has none, so they never match it
+export const RUN_RECORD_FILTERS = ['schedule', 'status', 'version'];
+export const RUN_RECORD_FILTERS_HINT = 'Chat, API and MCP runs have no run record to filter by';
+
 // One `trigger` value in the URL; `param` is the list API param it is sent as
 export const TRIGGER_OPTIONS = [
   { label: 'Scheduled', value: 'cron', param: FILTER_PARAMS.trigger },
