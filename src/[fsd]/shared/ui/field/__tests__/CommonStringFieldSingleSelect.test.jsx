@@ -33,12 +33,12 @@ describe('CommonStringField with the real SingleSelect', () => {
   it('shows a selected numeric option', () => {
     renderSelect([10, 20], 20);
 
-    expect(screen.getByRole('combobox')).toHaveTextContent('20');
+    expect(screen.getByRole('combobox')).toHaveTextContent(/^20$/);
   });
 
   it('shows a selected 0', () => {
     renderSelect([0, 1], 0);
 
-    expect(screen.getByRole('combobox')).toHaveTextContent('0');
+    expect(screen.getByRole('combobox')).toHaveTextContent(/^0$/);
   });
 });
