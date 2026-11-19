@@ -576,7 +576,7 @@ const RestoreProjectDialog = memo(props => {
         size="small"
         onClick={handleSubmit}
         startIcon={isRestoreCompleted ? <CheckOutlined /> : undefined}
-        disabled={isRestoreCompleted || isLoading || !file || (isMismatch && !allowMismatch)}
+        disabled={isRestoreCompleted || error || isLoading || !file || (isMismatch && !allowMismatch)}
         data-testid="project-restore-submit"
       >
         {isRestoreCompleted ? 'Restored' : isLoading ? 'Restoring...' : dryRun ? 'Preview' : 'Restore'}
