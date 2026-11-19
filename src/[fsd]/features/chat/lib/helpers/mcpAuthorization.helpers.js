@@ -192,12 +192,10 @@ const isHttpUrl = value => typeof value === 'string' && /^https?:\/\//i.test(val
 
 const MCP_AUTHORIZE_PREFIX = 'mcp_authorize_';
 
+// Only a gateway action (mcp_authorize_<toolkit>) names the toolkit; any other action name is the invoked tool (#7469).
 const getToolkitNameFromAction = action => {
-  if (typeof action?.name === 'string') {
-    if (action.name.startsWith(MCP_AUTHORIZE_PREFIX)) {
-      return action.name.slice(MCP_AUTHORIZE_PREFIX.length);
-    }
-    return action.name;
+  if (typeof action?.name === 'string' && action.name.startsWith(MCP_AUTHORIZE_PREFIX)) {
+    return action.name.slice(MCP_AUTHORIZE_PREFIX.length);
   }
   return null;
 };
@@ -213,7 +211,6 @@ export const getToolkitAuthorizationContext = action => {
     metadata.toolkit_type ||
     action?.toolOutputs?.toolkit_type ||
     resourceName ||
-    action?.name ||
     'Toolkit';
   const rawType = String(metadata.toolkit_type || action?.toolOutputs?.toolkit_type || resourceName || '');
   const normalizedType = rawType.toLowerCase();
