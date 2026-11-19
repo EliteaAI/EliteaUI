@@ -18,6 +18,10 @@ const DraggableConversationItem = memo(props => {
     },
   });
 
+  // A row that cannot be dragged must not announce itself as a disabled button: that would also mark the
+  // menu and Unpin buttons inside it as disabled
+  const dragAttributes = isDragDisabled ? {} : attributes;
+
   const style = {
     transform: CSS.Translate.toString(transform),
     opacity: isDragging ? 0.5 : 1,
@@ -30,7 +34,7 @@ const DraggableConversationItem = memo(props => {
       ref={setNodeRef}
       style={style}
       {...listeners}
-      {...attributes}
+      {...dragAttributes}
       sx={styles.root(isDragDisabled)}
       className={isActive ? 'active-conversation' : ''}
     >

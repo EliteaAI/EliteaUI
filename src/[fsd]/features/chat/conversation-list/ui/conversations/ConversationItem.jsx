@@ -13,7 +13,8 @@ import {
 } from '@/[fsd]/features/chat/conversation-list/ui';
 import { useConversationRunStatus } from '@/[fsd]/features/chat/lib/hooks';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
-import { Input } from '@/[fsd]/shared/ui';
+import { Button, Input } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import ShareIcon from '@/assets/share-icon.svg?react';
 import {
@@ -54,9 +55,9 @@ const ConversationItem = memo(props => {
     isEditingCanvas,
     enableDragAndDrop = false,
     isDragDisabled = false,
-    isNextItemHovered = false,
     onItemHover,
     onShare,
+    showChatPageActions = true,
   } = props;
   const {
     name,
@@ -97,7 +98,6 @@ const ConversationItem = memo(props => {
   const styles = conversationItemStyles({
     isActive,
     isHovering,
-    isNextItemHovered,
     showMenu,
     isSaveEnabled,
     isDuplicating,
@@ -148,6 +148,14 @@ const ConversationItem = memo(props => {
   const handlePin = useCallback(async () => {
     onPin(conversation, !isPinned);
   }, [conversation, isPinned, onPin]);
+
+  const handleUnpinClick = useCallback(
+    event => {
+      event.stopPropagation();
+      onPin(conversation, false);
+    },
+    [conversation, onPin],
+  );
 
   const handleDelete = useCallback(async () => {
     onDelete(conversation);
@@ -208,19 +216,24 @@ const ConversationItem = memo(props => {
               (isActive && isEditingCanvas),
             subMenuItems: moveToFoldersMenuItems,
           },
-          {
-            key: 'chat-conversation-menu-playback',
-            label: 'Playback',
-            icon: <PlayIcon sx={{ fontSize: '1rem' }} />,
-            disabled: isActive && isEditingCanvas,
-            onClick: handlePlayback,
-          },
-          {
-            label: 'Duplicate',
-            icon: <CopyIcon sx={{ fontSize: '1rem' }} />,
-            disabled: isActive && isEditingCanvas,
-            onClick: handleDuplicate,
-          },
+          // Playback and Duplicate open the chat, so they are offered on the chat page only
+          ...(showChatPageActions
+            ? [
+                {
+                  key: 'chat-conversation-menu-playback',
+                  label: 'Playback',
+                  icon: <PlayIcon sx={{ fontSize: '1rem' }} />,
+                  disabled: isActive && isEditingCanvas,
+                  onClick: handlePlayback,
+                },
+                {
+                  label: 'Duplicate',
+                  icon: <CopyIcon sx={{ fontSize: '1rem' }} />,
+                  disabled: isActive && isEditingCanvas,
+                  onClick: handleDuplicate,
+                },
+              ]
+            : []),
           {
             key: 'chat-conversation-menu-export',
             label: 'Export',
@@ -291,6 +304,7 @@ const ConversationItem = memo(props => {
     conversation.folder_id,
     handlePin,
     name,
+    showChatPageActions,
   ]);
 
   const onMouseEnter = useCallback(() => {
@@ -420,10 +434,19 @@ const ConversationItem = memo(props => {
         {/* Private without users shows nothing as requested */}
         {/* Pin icon */}
         {isPinned && !isPlayback && (
-          <PinIcon
-            data-testid="chat-pin-icon"
-            sx={{ fontSize: '.875rem' }}
-          />
+          <Tooltip
+            title="Unpin"
+            placement="top"
+          >
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.tertiary}
+              data-testid="chat-pin-icon"
+              aria-label="Unpin chat"
+              onClick={handleUnpinClick}
+              startIcon={<PinIcon sx={styles.pinIcon} />}
+              sx={styles.pinButton}
+            />
+          </Tooltip>
         )}
       </Box>
       {!isNamingPending && (
@@ -526,14 +549,7 @@ const ConversationItem = memo(props => {
 ConversationItem.displayName = 'ConversationItem';
 
 /** @type {MuiSx} */
-const conversationItemStyles = ({
-  isActive,
-  isHovering,
-  isNextItemHovered,
-  isDuplicating,
-  isSaveEnabled,
-  showMenu,
-}) => {
+const conversationItemStyles = ({ isActive, isHovering, isDuplicating, isSaveEnabled, showMenu }) => {
   const getBackgroundColor = palette => {
     if (isActive) return palette.components.conversation.background.selected;
     if (isHovering && !isActive) return palette.components.conversation.background.hover;
@@ -542,17 +558,13 @@ const conversationItemStyles = ({
 
   return {
     conversationContentWrapper: ({ palette }) => ({
-      borderBottom:
-        isActive || isHovering || isNextItemHovered
-          ? 'none'
-          : `0.0625rem solid ${palette.components.conversation.border.itemDivider}`,
-      padding: '.5rem .75rem', // Reduced padding to minimize gaps
-      gap: '.5rem', // Reduced gap to minimize spacing
+      padding: '.25rem .75rem',
+      gap: '.5rem',
       display: 'flex',
       flexDirection: 'row',
       alignItems: 'center',
       width: '100%',
-      height: '2.5rem', // Slightly reduced height
+      height: '2.25rem',
       boxSizing: 'border-box',
       background: getBackgroundColor(palette),
       borderTopRightRadius: isActive || isHovering ? '.375rem' : '0rem',
@@ -588,6 +600,18 @@ const conversationItemStyles = ({
       gap: '.375rem',
       alignItems: 'center',
       minWidth: 'fit-content',
+    },
+    pinButton: ({ palette }) => ({
+      minWidth: '1.25rem !important',
+      width: '1.25rem',
+      height: '1.25rem',
+      padding: '0 !important',
+      '&:hover path': {
+        fill: palette.icon.secondary,
+      },
+    }),
+    pinIcon: {
+      fontSize: '.875rem',
     },
     menuWrapper: {
       height: '100%',

@@ -22,20 +22,22 @@ const ChatImportButton = memo(props => {
 
   return (
     <StyledTooltip
-      title={canImport ? 'Import' : "You don't have permission to import chats"}
+      title={canImport ? 'Import chat' : "You don't have permission to import chats"}
       placement="top"
     >
-      <Box component="span">
+      <Box
+        component="span"
+        sx={chatImportButtonStyles().tooltipAnchor}
+      >
         {iconOnly ? (
           <Button.BaseBtn
             variant={BUTTON_VARIANTS.tertiary}
             onClick={onClick}
             disabled={!canImport}
             data-testid="chat-import-button"
-            aria-label="Import"
-          >
-            <ImportIcon />
-          </Button.BaseBtn>
+            aria-label="Import chat"
+            startIcon={<ImportIcon />}
+          />
         ) : (
           <Button.BaseBtn
             variant={BUTTON_VARIANTS.iconLabel}
@@ -53,5 +55,12 @@ const ChatImportButton = memo(props => {
 });
 
 ChatImportButton.displayName = 'ChatImportButton';
+
+/** @type {MuiSx} */
+const chatImportButtonStyles = () => ({
+  tooltipAnchor: {
+    display: 'flex',
+  },
+});
 
 export default ChatImportButton;

@@ -83,13 +83,18 @@ const FolderItem = memo(props => {
     onPinFolder(folder, !folder.meta?.is_pinned);
   }, [folder, onPinFolder]);
 
+  const handleUnpinFolder = useCallback(() => {
+    onPinFolder(folder, false);
+  }, [folder, onPinFolder]);
+
   const handleCreateConversationInFolder = useCallback(() => {
     onCreateConversationInFolder?.(folder);
   }, [folder, onCreateConversationInFolder]);
 
   const menuItems = useMemo(() => {
     const items = [
-      {
+      // Opening a new chat needs the chat page, so the item is offered there only
+      onCreateConversationInFolder && {
         label: 'New chat',
         icon: (
           <ChatIcon
@@ -136,10 +141,11 @@ const FolderItem = memo(props => {
         disabled: userId != owner_id || !checkPermission(PERMISSIONS.chat.folders.delete),
         onConfirm: handleDeleteFolder,
       },
-    ];
+    ].filter(Boolean);
 
     return items;
   }, [
+    onCreateConversationInFolder,
     theme.palette.icon.default,
     theme.palette.icon.disabled,
     userId,
@@ -238,6 +244,7 @@ const FolderItem = memo(props => {
         showMode={AccordionConstants.AccordionShowMode.LeftMode}
         defaultExpanded={containsActiveConversation}
         isPinned={folder.meta?.is_pinned}
+        onUnpin={handleUnpinFolder}
         folderId={folder.id}
         items={[
           {
@@ -267,6 +274,7 @@ const FolderItem = memo(props => {
       isNextFolderHovered,
       showMenu,
       containsActiveConversation,
+      handleUnpinFolder,
       folder,
       name,
       renderConversationItem,
@@ -349,29 +357,34 @@ const folderItemStyles = isFolderSaveEnabled => ({
   slotProps: {
     summary: {
       sx: {
-        padding: '0 0.25rem !important',
+        paddingInline: '0 !important',
+        minHeight: '0 !important',
+        height: '100%',
       },
     },
     summaryContainer: {
       sx: {
-        padding: '0.375rem 0.25rem !important',
-        height: '2.5625rem',
+        padding: '0.25rem 0.75rem !important',
+        height: '2.25rem',
       },
     },
+    // The folder's chats start under the folder's name, as in the prototype
     detail: {
       sx: {
-        paddingLeft: '1rem !important',
+        paddingLeft: '2.75rem !important',
       },
     },
-    sx: ({ palette }) => ({
-      background: `${palette.background.default.tertiary} !important`,
-    }),
+    sx: {
+      background: 'transparent !important',
+      boxShadow: 'none',
+    },
   },
   editorContainer: ({ palette }) => ({
     width: '100%',
+    boxSizing: 'border-box',
     height: '3.125rem',
     borderRadius: '0.375rem',
-    padding: '0.5rem 1rem',
+    padding: '0.5rem 0.75rem',
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',

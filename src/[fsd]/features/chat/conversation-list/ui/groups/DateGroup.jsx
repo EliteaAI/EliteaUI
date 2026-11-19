@@ -1,9 +1,10 @@
 import React, { memo, useCallback, useMemo, useState } from 'react';
 
-import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
-import { Box, Collapse, IconButton, Skeleton, Typography, useTheme } from '@mui/material';
+import { Box, Collapse, Skeleton } from '@mui/material';
 
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
+
+import GroupHeader from './GroupHeader';
 
 const DateGroup = memo(props => {
   const {
@@ -17,8 +18,6 @@ const DateGroup = memo(props => {
     isLoadingMore = false,
   } = props;
   const styles = dateGroupStyles();
-
-  const theme = useTheme();
 
   const [hoveredItemId, setHoveredItemId] = useState(null);
 
@@ -40,55 +39,21 @@ const DateGroup = memo(props => {
   // eslint-disable-next-line no-unused-vars
   const { isValidDropTarget, isActive, ...otherDropState } = dropAreaState;
 
-  const groupHeaderStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    padding: '.5rem .25rem',
-    cursor: 'pointer',
-    borderRadius: '0rem',
-    marginBottom: '.25rem',
-    gap: '.5rem',
-
-    '&:hover': {
-      backgroundColor: theme.palette.action.hover,
-    },
-  };
-
   return (
     // data-testid scopes BOTH the group's header row AND its own Collapse'd
     // conversation items (rendered in this same component instance, below) —
     // the reliable way for automation to assert "conversation X is under
     // Today specifically" (ELITEA-2095), not just "X and Today both exist
     // somewhere on the page".
-    <Box
-      sx={{ marginBottom: '0.5rem' }}
-      data-testid={`chat-conversation-group-header-${group.name}`}
-    >
-      <Box
-        sx={groupHeaderStyle}
-        onClick={handleToggleExpanded}
-      >
-        <IconButton
-          size="small"
-          sx={styles.expandButton(isExpanded)}
-        >
-          <ArrowForwardIosSharpIcon sx={{ fontSize: '0.875rem' }} />
-        </IconButton>
-        <Typography
-          variant="subtitle2"
-          sx={styles.title}
-        >
-          {group.displayName || group.name}
-        </Typography>
-      </Box>
+    <Box data-testid={`chat-conversation-group-header-${group.name}`}>
+      <GroupHeader
+        title={group.displayName || group.name}
+        isExpanded={isExpanded}
+        onToggle={handleToggleExpanded}
+      />
 
       <Collapse in={isExpanded}>
-        <Box
-          sx={{
-            paddingLeft: '1rem',
-          }}
-        >
+        <Box sx={styles.content}>
           {group.conversations.map((conversation, index) => {
             const nextConversation = group.conversations[index + 1];
             const isNextItemHovered = nextConversation?.id === hoveredItemId;
@@ -102,8 +67,8 @@ const DateGroup = memo(props => {
                 animation="wave"
                 variant="rectangular"
                 width="100%"
-                height="2.5rem"
-                sx={{ borderRadius: '.375rem', marginBottom: '0.125rem' }}
+                height="2.25rem"
+                sx={styles.skeleton}
               />
             ))}
 
@@ -123,21 +88,15 @@ DateGroup.displayName = 'DateGroup';
 
 /** @type {MuiSx} */
 const dateGroupStyles = () => ({
-  expandButton:
-    isExpanded =>
-    ({ palette }) => ({
-      color: palette.mode,
-      padding: '.125rem',
-      minWidth: 'auto',
-      transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-      transition: 'transform 0.15s',
-    }),
-  title: ({ palette }) => ({
-    fontSize: '.75rem',
-    fontWeight: 500,
-    textTransform: 'none',
-    color: palette.mode,
-  }),
+  // The space under a group belongs to its open part: a folded group is one row high, like a folder
+  content: {
+    paddingLeft: '1rem',
+    paddingBottom: '0.5rem',
+  },
+  skeleton: {
+    borderRadius: '.375rem',
+    marginBottom: '0.125rem',
+  },
 });
 
 export default DateGroup;

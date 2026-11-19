@@ -26,11 +26,14 @@ const DraggableFolderItem = memo(props => {
 
   const dragStyle = styles.getDragStyle;
 
+  // A folder that cannot be dragged must not announce itself as a disabled button (see DraggableConversationItem)
+  const dragAttributes = isDragDisabled || folder.isNew ? {} : attributes;
+
   return (
     <Box
       ref={setNodeRef}
       style={dragStyle}
-      {...attributes}
+      {...dragAttributes}
       {...listeners}
       sx={styles.container}
     >
