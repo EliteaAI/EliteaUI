@@ -8,7 +8,7 @@ import asMetadata6689 from '@/[fsd]/features/mcp/lib/helpers/__fixtures__/asMeta
 import { startMcpAuthFlow } from '@/[fsd]/features/mcp/lib/helpers/mcpAuthFlow.helpers';
 import McpAuthModal from '@/[fsd]/features/mcp/ui/modal/McpAuthModal';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 vi.hoisted(() => {
   const store = new Map();
@@ -33,17 +33,22 @@ vi.mock('@/[fsd]/features/mcp/lib/helpers/mcpAuth.helpers', () => ({
 
 vi.mock('@/[fsd]/shared/ui', () => ({
   Input: {
-    StyledInputEnhancer: props => (
-      <input
-        placeholder={props.placeholder}
-        aria-label={typeof props.label === 'string' ? props.label : undefined}
-        value={props.value}
-        type={props.type || 'text'}
-        required={props.required}
-        disabled={props.disabled}
-        onChange={props.onChange}
-      />
-    ),
+    // Like the real field: multiline renders a textarea, inputProps reach the native element
+    StyledInputEnhancer: props => {
+      const Field = props.multiline ? 'textarea' : 'input';
+      return (
+        <Field
+          placeholder={props.placeholder}
+          aria-label={typeof props.label === 'string' ? props.label : undefined}
+          value={props.value}
+          type={props.multiline ? undefined : props.type || 'text'}
+          required={props.required}
+          disabled={props.disabled}
+          onChange={props.onChange}
+          {...props.inputProps}
+        />
+      );
+    },
   },
   Checkbox: {
     BaseCheckbox: props => (
@@ -186,7 +191,7 @@ describe('McpAuthModal client secret requirement (#6689)', () => {
 describe('McpAuthModal shows every scope of an admin app sign-in (#7449)', () => {
   afterEach(() => cleanup());
 
-  it('lists each locked scope instead of a truncated disabled input', () => {
+  it('shows every locked scope in a wrapping read-only field instead of a truncated disabled one', () => {
     const scopes = [
       'offline_access',
       'User.ReadBasic.All',
@@ -204,9 +209,10 @@ describe('McpAuthModal shows every scope of an admin app sign-in (#7449)', () =>
       scopes,
     });
 
-    const scopeList = screen.getByTestId('oauth-scope-list');
-    scopes.forEach(scope => expect(within(scopeList).getByText(scope)).toBeInTheDocument());
-    expect(screen.queryByTestId('oauth-scope-input')).not.toBeInTheDocument();
+    const scopeField = screen.getByDisplayValue(scopes.join(' '));
+    expect(scopeField.tagName).toBe('TEXTAREA');
+    expect(scopeField).toHaveAttribute('readonly');
+    expect(scopeField).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Authorize' })).toBeEnabled();
   });
 
@@ -216,8 +222,9 @@ describe('McpAuthModal shows every scope of an admin app sign-in (#7449)', () =>
       scopes: ['Mail.Read'],
     });
 
-    expect(screen.queryByTestId('oauth-scope-list')).not.toBeInTheDocument();
-    expect(screen.getByDisplayValue('Mail.Read')).toBeEnabled();
+    const scopeField = screen.getByDisplayValue('Mail.Read');
+    expect(scopeField).toBeEnabled();
+    expect(scopeField).not.toHaveAttribute('readonly');
   });
 });
 
@@ -296,10 +303,9 @@ describe('McpAuthModal for a Microsoft credential with its own Entra app (#7496)
     ).toBeInTheDocument();
     expect(screen.queryByText(/MCP/)).not.toBeInTheDocument();
     expect(screen.queryByText('Scope (optional)')).not.toBeInTheDocument();
-    // Fixed scopes are listed, not put in a disabled input (#7449)
-    const scopeList = screen.getByTestId('oauth-scope-list');
-    DATAVERSE_SCOPES.forEach(scope => expect(within(scopeList).getByText(scope)).toBeInTheDocument());
-    expect(screen.queryByTestId('oauth-scope-input')).not.toBeInTheDocument();
+    // Fixed scopes are read-only and selectable, not disabled (#7449)
+    const scopeInput = screen.getByDisplayValue(DATAVERSE_SCOPES.join(' '));
+    expect(scopeInput).toHaveAttribute('readonly');
     expect(screen.getByRole('button', { name: 'Authorize' })).toBeEnabled();
   });
 
