@@ -24,22 +24,25 @@ const ToolFormContainer = memo(props => {
     return result;
   }, [fieldKey, property, toolInputVariables]);
 
-  const fieldProperties = useMemo(
-    () => ({
+  const fieldProperties = useMemo(() => {
+    const nonNullBranches = property?.anyOf?.filter(item => item.type !== 'null') ?? [property];
+    const choiceSchema = nonNullBranches.length === 1 ? nonNullBranches[0] : undefined;
+
+    return {
       isRequired: schema?.required?.includes(fieldKey) || false,
       label: property?.title || fieldKey,
       description: property?.description,
       format: property?.format,
       secret: property?.secret,
-      enumValues: property?.enum,
+      enumValues:
+        choiceSchema?.enum ?? (choiceSchema && 'const' in choiceSchema ? [choiceSchema.const] : undefined),
       codeLanguage: property?.code_language,
       lines: property?.lines,
       disabled: changesDisabled,
       error: property?.error,
       clipboard: property?.clipboard || false,
-    }),
-    [schema, fieldKey, property, changesDisabled],
-  );
+    };
+  }, [schema, fieldKey, property, changesDisabled]);
 
   const fieldPropsShared = useMemo(
     () => ({
@@ -127,6 +130,15 @@ const ToolFormContainer = memo(props => {
   if (isSecretField) return <Field.SecretInputField {...fieldPropsShared} />;
 
   if (property.hidden) return null;
+
+  if (fieldProperties.enumValues)
+    return (
+      <Field.CommonStringField
+        {...fieldPropsShared}
+        property={property}
+        inputTestId={inputTestId}
+      />
+    );
 
   switch (fieldType) {
     case 'object':
