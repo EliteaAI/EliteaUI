@@ -116,6 +116,27 @@ describe('IndexRunDetail', () => {
     expect(screen.getAllByText('Unauthorized (401)')).toHaveLength(1);
   });
 
+  it("shows a refused run's own error, not the earlier failed run's report it carries", () => {
+    const earlierFailure = 'Indexing failed: the loader returned no content while the index holds data.';
+    const refusal =
+      'The toolkit changed after its index-schedule mandate was approved; approve a new revision.';
+    const earlierReport = JSON.stringify({
+      version: 1,
+      status: 'error',
+      totals: { indexed: 0, skipped: 0, not_indexed: 0, failed: 0, unchanged: 0, total: 0 },
+      categories: [],
+      errors: [earlierFailure],
+      errors_total: 1,
+    });
+    renderRow({
+      ...baseRow,
+      entry: { ...baseRow.entry, state: 'failed', error: refusal, report: earlierReport },
+    });
+
+    expect(screen.getAllByText(refusal)).toHaveLength(1);
+    expect(screen.queryByText(earlierFailure)).not.toBeInTheDocument();
+  });
+
   it('keeps the human budget sentence even though the report repeats the raw error', () => {
     const raw = 'Budget exceeded: project_budget_exceeded';
     const budgetReport = JSON.stringify({
