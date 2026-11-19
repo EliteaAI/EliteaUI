@@ -64,6 +64,12 @@ describe('ToolFormContainer option lists', () => {
     expect(screen.queryByTestId('number-choice')).not.toBeInTheDocument();
   });
 
+  it('keeps a top-level enum declared next to anyOf', () => {
+    renderField({ enum: ['a', 'b'], anyOf: [{ type: 'string' }, { type: 'null' }] });
+
+    expect(optionsOf('string')).toEqual(['a', 'b']);
+  });
+
   it('offers a single-value Literal emitted as const', () => {
     renderField({ type: 'string', const: 'release' });
 

@@ -2,6 +2,17 @@ import { memo, useMemo } from 'react';
 
 import { Field } from '@/[fsd]/shared/ui';
 
+const getChoiceValues = property => {
+  if (property?.enum) return property.enum;
+
+  const nonNullBranches = property?.anyOf?.filter(item => item.type !== 'null') ?? [property];
+  if (nonNullBranches.length !== 1) return undefined;
+
+  const [choiceSchema] = nonNullBranches;
+  if (choiceSchema?.enum) return choiceSchema.enum;
+  return choiceSchema && 'const' in choiceSchema ? [choiceSchema.const] : undefined;
+};
+
 const ToolFormContainer = memo(props => {
   const {
     fieldKey,
@@ -24,25 +35,22 @@ const ToolFormContainer = memo(props => {
     return result;
   }, [fieldKey, property, toolInputVariables]);
 
-  const fieldProperties = useMemo(() => {
-    const nonNullBranches = property?.anyOf?.filter(item => item.type !== 'null') ?? [property];
-    const choiceSchema = nonNullBranches.length === 1 ? nonNullBranches[0] : undefined;
-
-    return {
+  const fieldProperties = useMemo(
+    () => ({
       isRequired: schema?.required?.includes(fieldKey) || false,
       label: property?.title || fieldKey,
       description: property?.description,
       format: property?.format,
       secret: property?.secret,
-      enumValues:
-        choiceSchema?.enum ?? (choiceSchema && 'const' in choiceSchema ? [choiceSchema.const] : undefined),
+      enumValues: getChoiceValues(property),
       codeLanguage: property?.code_language,
       lines: property?.lines,
       disabled: changesDisabled,
       error: property?.error,
       clipboard: property?.clipboard || false,
-    };
-  }, [schema, fieldKey, property, changesDisabled]);
+    }),
+    [schema, fieldKey, property, changesDisabled],
+  );
 
   const fieldPropsShared = useMemo(
     () => ({
@@ -131,16 +139,7 @@ const ToolFormContainer = memo(props => {
 
   if (property.hidden) return null;
 
-  if (fieldProperties.enumValues)
-    return (
-      <Field.CommonStringField
-        {...fieldPropsShared}
-        property={property}
-        inputTestId={inputTestId}
-      />
-    );
-
-  switch (fieldType) {
+  switch (fieldProperties.enumValues ? 'string' : fieldType) {
     case 'object':
       return <Field.CommonObjectField {...fieldPropsShared} />;
     case 'boolean':
