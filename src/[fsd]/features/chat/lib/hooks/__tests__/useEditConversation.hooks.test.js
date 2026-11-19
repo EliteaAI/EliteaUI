@@ -6,6 +6,7 @@ import { act, renderHook } from '@testing-library/react';
 import { useEditConversation } from '../useEditConversation.hooks';
 
 const editConversation = vi.hoisted(() => vi.fn());
+const changeUrlByConversation = vi.hoisted(() => vi.fn());
 
 vi.mock('@/api', () => ({
   useConversationEditMutation: () => [editConversation],
@@ -21,7 +22,7 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
 }));
 
 vi.mock('@/[fsd]/features/chat/lib/hooks/useConversationNavigation.hooks', () => ({
-  useConversationNavigation: () => ({ changeUrlByConversation: vi.fn() }),
+  useConversationNavigation: () => ({ changeUrlByConversation }),
 }));
 
 const PINNED_ID = 11;
@@ -45,6 +46,22 @@ describe('useEditConversation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     editConversation.mockResolvedValue({ data: { updated_at: '2026-10-05T00:00:00Z' } });
+  });
+
+  it('updates the URL when the open chat is renamed', async () => {
+    const { onEditConversation } = renderEditHook();
+
+    await act(() => onEditConversation({ id: 99, name: 'Renamed' }));
+
+    expect(changeUrlByConversation).toHaveBeenCalledWith(99, 'Renamed');
+  });
+
+  it('does not navigate when another chat is renamed (the menu on any page)', async () => {
+    const { onEditConversation } = renderEditHook();
+
+    await act(() => onEditConversation({ id: 5, name: 'Renamed' }));
+
+    expect(changeUrlByConversation).not.toHaveBeenCalled();
   });
 
   it('makes a pinned conversation public in the pinned list', async () => {

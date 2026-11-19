@@ -42,9 +42,10 @@ export const useEditConversation = ({
           isNamingPending: undefined,
         };
 
-        changeUrlByConversation(conversation.id, conversation.name);
-
+        // Only the open chat's URL carries its name: renaming another chat (or one in the menu on another
+        // page) must not navigate to it
         if (areTheSameConversations(conversation, activeConversation)) {
+          changeUrlByConversation(conversation.id, conversation.name);
           setActiveConversation({
             ...activeConversation,
             name: updatedConversation.name,
