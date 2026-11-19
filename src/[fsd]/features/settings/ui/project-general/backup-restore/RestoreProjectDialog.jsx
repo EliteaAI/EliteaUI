@@ -57,6 +57,7 @@ const RestoreProjectDialog = memo(props => {
   const [dryRun, setDryRun] = useState(true);
   const [allowMismatch, setAllowMismatch] = useState(false);
   const [error, setError] = useState('');
+  const [isBackupFileInvalid, setIsBackupFileInvalid] = useState(false);
   const [result, setResult] = useState(null);
   const [restoreChats, setRestoreChats] = useState(CHATS_OPTION.none);
   const [isInspecting, setIsInspecting] = useState(false);
@@ -171,6 +172,7 @@ const RestoreProjectDialog = memo(props => {
     async event => {
       const picked = event.target.files?.[0] ?? null;
       setError('');
+      setIsBackupFileInvalid(false);
       setResult(null);
       setArtifact(null);
       setAllowMismatch(false);
@@ -194,6 +196,7 @@ const RestoreProjectDialog = memo(props => {
         }
       } catch (err) {
         setError(getRestoreErrorMessage(err));
+        setIsBackupFileInvalid(true);
         if (err?.data?.artifact) setArtifact(err.data.artifact);
       } finally {
         setIsInspecting(false);
@@ -576,7 +579,9 @@ const RestoreProjectDialog = memo(props => {
         size="small"
         onClick={handleSubmit}
         startIcon={isRestoreCompleted ? <CheckOutlined /> : undefined}
-        disabled={isRestoreCompleted || isLoading || !file || (isMismatch && !allowMismatch)}
+        disabled={
+          isRestoreCompleted || isBackupFileInvalid || isLoading || !file || (isMismatch && !allowMismatch)
+        }
         data-testid="project-restore-submit"
       >
         {isRestoreCompleted ? 'Restored' : isLoading ? 'Restoring...' : dryRun ? 'Preview' : 'Restore'}
