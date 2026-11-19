@@ -63,11 +63,68 @@ const findExactNode = (nodes, name) =>
 const findRunNode = (nodes, tool_name, langgraph_node) =>
   findExactNode(nodes, langgraph_node) || findExactNode(nodes, tool_name) || findNode(nodes, tool_name);
 
-const isNestedAgentEvent = event =>
-  Boolean(
-    ExecutionHierarchyHelpers.normalizeExecutionHierarchy(event.response_metadata?.metadata)
-      .parent_agent_name,
-  );
+const applicationGroupId = callId => (callId ? `application:${callId}` : '');
+
+const appendTimelineStep = (data, step, metadata, owner) => {
+  const namespace = metadata?.langgraph_checkpoint_ns;
+  const groupedTimeline = (data.groupedTimeline ??= []);
+  const taskId = typeof namespace === 'string' && namespace ? `task:${namespace}` : '';
+  const row = {
+    ...step,
+    group_id: (owner ? applicationGroupId(owner.call_id) : taskId) || `row:${groupedTimeline.length}`,
+    group_label: owner?.name || metadata?.langgraph_node || step.id,
+  };
+  if (!owner || owner.wrapper) data.timeline.push(row);
+  groupedTimeline.push(row);
+};
+
+const collectNestedStep = (data, event, owner) => {
+  const { metadata, tool_name, tool_run_id, node_name, state } = event.response_metadata || {};
+  const node = metadata?.langgraph_node;
+  const namespace = metadata?.langgraph_checkpoint_ns;
+  const append = (id, status, stepState = {}) =>
+    appendTimelineStep(
+      data,
+      {
+        id,
+        status,
+        state: stepState,
+        langgraph_node: node,
+        langgraph_checkpoint_ns: namespace,
+        tool_run_id,
+        created_at: Date.now(),
+        is_nested: true,
+      },
+      metadata,
+      owner,
+    );
+
+  switch (event.type) {
+    case SocketMessageType.AgentLlmStart:
+    case SocketMessageType.AgentToolStart: {
+      const id = event.type === SocketMessageType.AgentLlmStart ? node || tool_name : tool_name;
+      if (id) append(id, PipelineStatus.InProgress);
+      break;
+    }
+    case SocketMessageType.AgentHitlInterrupt:
+      if (node_name || node) append(node_name || node, PipelineStatus.InProgress);
+      break;
+    case SocketMessageType.AgentOnTransitionalEdge: {
+      if (!node || node === 'StateDefaultNode') break;
+      const row = data.groupedTimeline?.findLast(
+        step =>
+          step.is_nested &&
+          step.group_id === applicationGroupId(owner.call_id) &&
+          (namespace ? step.langgraph_checkpoint_ns === namespace : step.langgraph_node === node),
+      );
+      if (row) row.state = { ...state };
+      else append(node, PipelineStatus.Completed, { ...state });
+      break;
+    }
+    default:
+      break;
+  }
+};
 
 export const parseRunEvent = (
   event,
@@ -81,7 +138,36 @@ export const parseRunEvent = (
   runPipelineStatus,
   nextRunName,
 ) => {
-  if (isNestedAgentEvent(event)) {
+  const { metadata, tool_run_id } = event.response_metadata || {};
+  const hierarchy = ExecutionHierarchyHelpers.normalizeExecutionHierarchy(metadata);
+  const owner =
+    hierarchy.parent_agent_path.at(-1) ||
+    (hierarchy.parent_agent_name && {
+      name: hierarchy.parent_agent_name,
+      call_id: hierarchy.parent_agent_call_id,
+    });
+  const data = runPipelineStatus.current?.data;
+  // Some completion events only carry the callback's run ID.
+  if (
+    isRunningPipeline &&
+    data &&
+    tool_run_id &&
+    [
+      SocketMessageType.AgentLlmEnd,
+      SocketMessageType.AgentToolEnd,
+      SocketMessageType.AgentToolError,
+    ].includes(event.type)
+  ) {
+    const row = data.groupedTimeline?.findLast(step => step.is_nested && step.tool_run_id === tool_run_id);
+    if (row) {
+      row.status =
+        event.type === SocketMessageType.AgentToolError ? PipelineStatus.Error : PipelineStatus.Completed;
+      if (row.status === PipelineStatus.Error) row.error = convertJsonToString(event.content ?? '');
+      return;
+    }
+  }
+  if (owner) {
+    if (isRunningPipeline && data) collectNestedStep(data, event, owner);
     return;
   }
   switch (event.type) {
@@ -96,6 +182,7 @@ export const parseRunEvent = (
           data: {
             label: nextRunName,
             timeline: [],
+            groupedTimeline: [],
             status: PipelineStatus.InProgress,
           },
           type: RUN_STATE_NODE,
@@ -109,14 +196,18 @@ export const parseRunEvent = (
         const tool_name =
           event.response_metadata.metadata?.original_name || event.response_metadata.metadata?.langgraph_node;
         if (tool_name) {
-          runPipelineStatus.current.data.timeline.push({
-            id: tool_name,
-            langgraph_node: event.response_metadata.metadata?.langgraph_node,
-            status: PipelineStatus.InProgress,
-            state: {},
-            created_at: new Date().getTime(),
-            tool_run_id: event.response_metadata.tool_run_id,
-          });
+          appendTimelineStep(
+            runPipelineStatus.current.data,
+            {
+              id: tool_name,
+              langgraph_node: event.response_metadata.metadata?.langgraph_node,
+              status: PipelineStatus.InProgress,
+              state: {},
+              created_at: new Date().getTime(),
+              tool_run_id: event.response_metadata.tool_run_id,
+            },
+            event.response_metadata.metadata,
+          );
           activeNodeIdRef.current = findRunNode(
             nodes,
             tool_name,
@@ -149,14 +240,27 @@ export const parseRunEvent = (
           const real_tool_name = SANDBOX_TOOL_NAMES.has(tool_name)
             ? event.response_metadata.metadata?.langgraph_node || tool_name
             : tool_name;
-          runPipelineStatus.current.data.timeline.push({
-            id: real_tool_name,
-            langgraph_node: event.response_metadata.metadata?.langgraph_node,
-            status: PipelineStatus.InProgress,
-            state: {},
-            created_at: new Date().getTime(),
-            tool_run_id: event.response_metadata.tool_run_id,
-          });
+          const wrapper =
+            ['application', 'pipeline'].includes(metadata?.toolkit_type) && hierarchy.parent_agent_call_id
+              ? {
+                  call_id: hierarchy.parent_agent_call_id,
+                  name: metadata.original_name || metadata.display_name || tool_name,
+                  wrapper: true,
+                }
+              : undefined;
+          appendTimelineStep(
+            runPipelineStatus.current.data,
+            {
+              id: real_tool_name,
+              langgraph_node: event.response_metadata.metadata?.langgraph_node,
+              status: PipelineStatus.InProgress,
+              state: {},
+              created_at: new Date().getTime(),
+              tool_run_id: event.response_metadata.tool_run_id,
+            },
+            event.response_metadata.metadata,
+            wrapper,
+          );
           activeNodeIdRef.current = findRunNode(
             nodes,
             real_tool_name,
@@ -207,12 +311,16 @@ export const parseRunEvent = (
         // start a node
         const nodeId = event.response_metadata.node_name;
         if (nodeId) {
-          runPipelineStatus.current.data.timeline.push({
-            id: nodeId,
-            status: PipelineStatus.InProgress,
-            state: {},
-            created_at: new Date().getTime(),
-          });
+          appendTimelineStep(
+            runPipelineStatus.current.data,
+            {
+              id: nodeId,
+              status: PipelineStatus.InProgress,
+              state: {},
+              created_at: new Date().getTime(),
+            },
+            event.response_metadata.metadata,
+          );
           activeNodeIdRef.current = findRunNode(nodes, nodeId)?.id;
         }
       }
@@ -248,15 +356,19 @@ export const parseRunEvent = (
             const target = event.response_metadata?.next_step;
             if (interrupt_after.includes(source) || interrupt_before.includes(target)) {
               const foundTargetId = findRunNode(nodes, target)?.id;
-              runPipelineStatus.current.data.timeline.push({
-                id: 'interrupt',
-                source,
-                target: foundTargetId || target,
-                state: {
-                  ...(event.response_metadata.state || {}),
+              appendTimelineStep(
+                runPipelineStatus.current.data,
+                {
+                  id: 'interrupt',
+                  source,
+                  target: foundTargetId || target,
+                  state: {
+                    ...(event.response_metadata.state || {}),
+                  },
+                  created_at: new Date().getTime(),
                 },
-                created_at: new Date().getTime(),
-              });
+                event.response_metadata.metadata,
+              );
             } else {
               const lastTimelineItem =
                 runPipelineStatus.current.data.timeline[runPipelineStatus.current.data.timeline.length - 1];
@@ -278,16 +390,20 @@ export const parseRunEvent = (
                 event.response_metadata.metadata?.langgraph_node,
               );
               if (foundNode) {
-                runPipelineStatus.current.data.timeline.push({
-                  id: tool_name,
-                  langgraph_node: event.response_metadata.metadata?.langgraph_node,
-                  status: PipelineStatus.Completed,
-                  state: {
-                    ...(event.response_metadata.state || {}),
+                appendTimelineStep(
+                  runPipelineStatus.current.data,
+                  {
+                    id: tool_name,
+                    langgraph_node: event.response_metadata.metadata?.langgraph_node,
+                    status: PipelineStatus.Completed,
+                    state: {
+                      ...(event.response_metadata.state || {}),
+                    },
+                    created_at: new Date().getTime(),
+                    tool_run_id: event.response_metadata.tool_run_id,
                   },
-                  created_at: new Date().getTime(),
-                  tool_run_id: event.response_metadata.tool_run_id,
-                });
+                  event.response_metadata.metadata,
+                );
                 activeNodeIdRef.current = foundNode.id;
               }
             }
