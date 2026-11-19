@@ -714,7 +714,12 @@ const ChatBox = memo(
         const participant = buildEntityParticipant({ entity_id, entity_name, version_id, is_mcp, projectId });
         if (entity_type === 'agent' || entity_type === 'pipeline') {
           // (#7383) the Builder may have changed an open agent (e.g. linked a toolkit): drop its cached details
-          dispatch(eliteaApi.util.invalidateTags([{ type: TAG_TYPE_APPLICATION_DETAILS, id: entity_id }]));
+          dispatch(
+            eliteaApi.util.invalidateTags([
+              { type: TAG_TYPE_APPLICATION_DETAILS, id: entity_id },
+              { type: TAG_TYPE_APPLICATION_DETAILS, id: `${projectId}_${entity_id}_${version_id}` },
+            ]),
+          );
         }
         if (entity_type === 'agent') {
           onShowAgentEditor?.(participant);
