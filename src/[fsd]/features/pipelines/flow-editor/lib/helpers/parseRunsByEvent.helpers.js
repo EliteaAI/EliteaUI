@@ -65,20 +65,25 @@ const findRunNode = (nodes, tool_name, langgraph_node) =>
 
 const applicationGroupId = callId => (callId ? `application:${callId}` : '');
 
-const appendTimelineStep = (data, step, metadata, owner) => {
+// `owner` is the root application of the invocation and decides which group a row belongs to.
+// `scope` is the immediate parent. Below the first nesting level the two differ, and state and
+// edge updates must stay inside the immediate parent while the rows still share one group.
+const appendTimelineStep = (data, step, metadata, owner, scope = owner) => {
   const namespace = metadata?.langgraph_checkpoint_ns;
   const groupedTimeline = (data.groupedTimeline ??= []);
   const taskId = typeof namespace === 'string' && namespace ? `task:${namespace}` : '';
+  const groupId = (owner ? applicationGroupId(owner.call_id) : taskId) || `row:${groupedTimeline.length}`;
   const row = {
     ...step,
-    group_id: (owner ? applicationGroupId(owner.call_id) : taskId) || `row:${groupedTimeline.length}`,
+    group_id: groupId,
+    scope_id: (scope && applicationGroupId(scope.call_id)) || groupId,
     group_label: owner?.name || metadata?.langgraph_node || step.id,
   };
   if (!owner || owner.wrapper) data.timeline.push(row);
   groupedTimeline.push(row);
 };
 
-const collectNestedStep = (data, event, owner) => {
+const collectNestedStep = (data, event, owner, scope) => {
   const { metadata, tool_name, tool_run_id, node_name, state } = event.response_metadata || {};
   const node = metadata?.langgraph_node;
   const namespace = metadata?.langgraph_checkpoint_ns;
@@ -97,6 +102,7 @@ const collectNestedStep = (data, event, owner) => {
       },
       metadata,
       owner,
+      scope,
     );
 
   switch (event.type) {
@@ -114,7 +120,7 @@ const collectNestedStep = (data, event, owner) => {
       const row = data.groupedTimeline?.findLast(
         step =>
           step.is_nested &&
-          step.group_id === applicationGroupId(owner.call_id) &&
+          step.scope_id === applicationGroupId(scope.call_id) &&
           (namespace ? step.langgraph_checkpoint_ns === namespace : step.langgraph_node === node),
       );
       if (row) row.state = { ...state };
@@ -140,12 +146,12 @@ export const parseRunEvent = (
 ) => {
   const { metadata, tool_run_id } = event.response_metadata || {};
   const hierarchy = ExecutionHierarchyHelpers.normalizeExecutionHierarchy(metadata);
-  const owner =
-    hierarchy.parent_agent_path.at(-1) ||
-    (hierarchy.parent_agent_name && {
-      name: hierarchy.parent_agent_name,
-      call_id: hierarchy.parent_agent_call_id,
-    });
+  const legacyOwner = hierarchy.parent_agent_name && {
+    name: hierarchy.parent_agent_name,
+    call_id: hierarchy.parent_agent_call_id,
+  };
+  const owner = hierarchy.parent_agent_path[0] || legacyOwner;
+  const scope = hierarchy.parent_agent_path.at(-1) || legacyOwner;
   const data = runPipelineStatus.current?.data;
   // Some completion events only carry the callback's run ID.
   if (
@@ -167,7 +173,7 @@ export const parseRunEvent = (
     }
   }
   if (owner) {
-    if (isRunningPipeline && data) collectNestedStep(data, event, owner);
+    if (isRunningPipeline && data) collectNestedStep(data, event, owner, scope);
     return;
   }
   switch (event.type) {

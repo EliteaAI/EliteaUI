@@ -282,6 +282,84 @@ describe('pipeline timeline group IDs', () => {
     },
   );
 
+  describe('a nested agent that calls another nested agent', () => {
+    // Pipeline P calls A (call tA), and A calls C (call tC).
+    const pathA = [{ name: 'A', call_id: 'tA' }];
+    const pathAC = [...pathA, { name: 'C', call_id: 'tC' }];
+    const innerMetadata = (path, langgraph_node, extra = {}) => ({
+      langgraph_node,
+      parent_agent_name: path.at(-1).name,
+      parent_agent_call_id: path.at(-1).call_id,
+      parent_agent_path: path,
+      ...extra,
+    });
+    const aWrapper = {
+      type: SocketMessageType.AgentToolStart,
+      response_metadata: {
+        tool_name: 'A',
+        tool_run_id: 'wrapper-A',
+        metadata: {
+          toolkit_type: 'application',
+          original_name: 'A',
+          parent_agent_call_id: 'tA',
+          langgraph_node: 'Ask',
+        },
+      },
+    };
+    const events = [
+      { type: SocketMessageType.StartTask },
+      aWrapper,
+      llmStart(innerMetadata(pathA, 'agent'), 'a-llm-1'),
+      llmStart(innerMetadata(pathAC, 'agent'), 'c-llm'),
+      edge(innerMetadata(pathAC, 'agent'), 'END', { who: 'C' }, 'c-edge'),
+      edge(innerMetadata(pathA, 'agent'), 'END', { who: 'A' }, 'a-edge'),
+      llmStart(innerMetadata(pathA, 'finish'), 'a-llm-2'),
+    ];
+
+    it('keeps every row of the outer invocation in one group, including the deeper one', () => {
+      const data = runPipeline(nodes, events);
+
+      const groupIds = data.groupedTimeline.map(step => step.group_id);
+      expect(new Set(groupIds)).toEqual(new Set(['application:tA']));
+      expect(new Set(data.groupedTimeline.map(step => step.group_label))).toEqual(new Set(['A']));
+    });
+
+    it('scopes each row to its immediate parent', () => {
+      const data = runPipeline(nodes, events);
+
+      expect(data.groupedTimeline.map(step => step.scope_id)).toEqual([
+        'application:tA',
+        'application:tA',
+        'application:tC',
+        'application:tA',
+      ]);
+    });
+
+    it('does not let the deeper agent edge overwrite a row of the outer agent with the same node name', () => {
+      const data = runPipeline(nodes, events);
+
+      const outerAgent = data.groupedTimeline.find(
+        step => step.scope_id === 'application:tA' && step.langgraph_node === 'agent',
+      );
+      const innerAgent = data.groupedTimeline.find(step => step.scope_id === 'application:tC');
+      expect(innerAgent.state).toEqual({ who: 'C' });
+      expect(outerAgent.state).toEqual({ who: 'A' });
+    });
+
+    it('still groups and scopes a one-level child by the same call', () => {
+      const data = runPipeline(nodes, [
+        { type: SocketMessageType.StartTask },
+        aWrapper,
+        llmStart(innerMetadata(pathA, 'agent'), 'a-llm'),
+      ]);
+
+      expect(data.groupedTimeline.map(step => [step.group_id, step.scope_id])).toEqual([
+        ['application:tA', 'application:tA'],
+        ['application:tA', 'application:tA'],
+      ]);
+    });
+  });
+
   it('groups model and tool callbacks from one node invocation but separates a revisit', () => {
     const data = runPipeline(nodes, [
       { type: SocketMessageType.StartTask },

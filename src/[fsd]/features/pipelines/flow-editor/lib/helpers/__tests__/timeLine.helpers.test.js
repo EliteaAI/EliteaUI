@@ -7,6 +7,7 @@ import {
   getActiveRowPosition,
   getVisibleSteps,
   groupConsecutiveSteps,
+  isRowActive,
 } from '../timeLine.helpers';
 
 const step = (groupId, status = PipelineStatus.Completed) => ({ group_id: groupId, status });
@@ -132,5 +133,26 @@ describe('formatBadgeCount', () => {
   it('collapses counts above the cap', () => {
     expect(formatBadgeCount(100)).toBe('99+');
     expect(formatBadgeCount(12345)).toBe('99+');
+  });
+});
+
+describe('isRowActive', () => {
+  it('is active when the row itself is selected', () => {
+    expect(isRowActive(2, 2, false, 2)).toBe(true);
+    expect(isRowActive(1, 3, true, 1)).toBe(true);
+  });
+
+  it('is active for a collapsed group that holds the selected child', () => {
+    expect(isRowActive(1, 3, false, 2)).toBe(true);
+    expect(isRowActive(1, 3, false, 3)).toBe(true);
+  });
+
+  it('is not active for an expanded group when only a child is selected', () => {
+    expect(isRowActive(1, 3, true, 2)).toBe(false);
+  });
+
+  it('is not active when the selection is outside the group', () => {
+    expect(isRowActive(1, 3, false, 0)).toBe(false);
+    expect(isRowActive(1, 3, false, 4)).toBe(false);
   });
 });

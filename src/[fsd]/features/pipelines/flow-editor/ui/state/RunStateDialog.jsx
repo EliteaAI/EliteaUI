@@ -27,11 +27,11 @@ const RunStateDialog = memo(props => {
   const steps = data.groupedTimeline?.length ? data.groupedTimeline : data.timeline;
   const lastOuterStep = steps.findLastIndex(step => !step.is_nested);
   const currentStep = steps[selectedStep];
-  // Child state belongs to its own invocation, not the enclosing pipeline.
+  // Child state belongs to its immediate parent's invocation, not the enclosing pipeline or the root group.
   const previousStep = steps.findLast(
     (step, index) =>
       index < selectedStep &&
-      (currentStep?.is_nested ? step.is_nested && step.group_id === currentStep.group_id : !step.is_nested),
+      (currentStep?.is_nested ? step.is_nested && step.scope_id === currentStep.scope_id : !step.is_nested),
   );
 
   const onSelect = useCallback(index => {

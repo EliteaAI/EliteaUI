@@ -34,10 +34,11 @@ afterEach(() => {
 });
 
 const theme = createTheme({ palette: lightPalette });
-const step = (id, value, groupId, isNested) => ({
+const step = (id, value, groupId, isNested, scopeId = groupId) => ({
   id,
   state: { value },
   group_id: groupId,
+  scope_id: scopeId,
   is_nested: isNested,
   created_at: 1700000000000,
   status: PipelineStatus.Completed,
@@ -164,6 +165,26 @@ describe('RunStateDialog timeline groups', () => {
     expect(badge).toHaveTextContent(/^99\+$/u);
     expect(badge).toHaveAttribute('aria-label', '150 steps in Nested agent');
     expect(screen.getByRole('button', { name: 'Expand Nested agent (150 steps)' })).toBeVisible();
+  });
+
+  it('keeps a deeper invocation inside the root group but compares its state only within its own scope', () => {
+    const root = { ...step('A start', 'a start', 'call-A', true), group_label: 'Agent A' };
+    const inner1 = step('C first', 'c first', 'call-A', true, 'call-C');
+    const inner2 = step('C second', 'c second', 'call-A', true, 'call-C');
+    const back = step('A after C', 'a after c', 'call-A', true);
+    renderDialog([root], [root, inner1, inner2, back]);
+
+    expect(screen.getByTestId('pipeline-run-details-timeline-group-count-0')).toHaveTextContent('4');
+    fireEvent.click(screen.getByTestId('pipeline-run-details-timeline-expand-all'));
+
+    fireEvent.click(dot(1));
+    expect(screen.getByTestId('state-values')).toHaveTextContent(/^ → c first$/u, {
+      normalizeWhitespace: false,
+    });
+    fireEvent.click(dot(2));
+    expect(screen.getByTestId('state-values')).toHaveTextContent('c first → c second');
+    fireEvent.click(dot(3));
+    expect(screen.getByTestId('state-values')).toHaveTextContent('a start → a after c');
   });
 
   it('renders runs without grouped data as ordinary steps', () => {

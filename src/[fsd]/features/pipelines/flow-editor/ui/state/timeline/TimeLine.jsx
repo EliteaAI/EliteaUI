@@ -3,10 +3,12 @@ import { memo } from 'react';
 import { Box, Stepper } from '@mui/material';
 
 import { FlowEditorConstants, TimeLineConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { getActiveRowPosition } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/timeLine.helpers';
+import {
+  getActiveRowPosition,
+  isRowActive,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/timeLine.helpers';
 import { useTimeLineGroups } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import ProcessConnector from '@/[fsd]/features/pipelines/flow-editor/ui/state/timeline/ProcessConnector';
-import TimeLineEndConnector from '@/[fsd]/features/pipelines/flow-editor/ui/state/timeline/TimeLineEndConnector';
 import TimeLineHeader from '@/[fsd]/features/pipelines/flow-editor/ui/state/timeline/TimeLineHeader';
 import TimeLineStep from '@/[fsd]/features/pipelines/flow-editor/ui/state/timeline/TimeLineStep';
 import { customScrollbarSx } from '@/[fsd]/shared/lib/helpers';
@@ -49,18 +51,19 @@ const TimeLine = memo(props => {
           activeStep={getActiveRowPosition(visibleSteps, inProgressStep)}
           connector={<ProcessConnector isError={isError} />}
         >
-          {visibleSteps.map(row => (
+          {visibleSteps.map(({ index, end, expanded = false }) => (
             <TimeLineStep
-              key={row.index}
-              row={row}
-              steps={steps}
-              selectedStep={selectedStep}
+              key={index}
+              stepIndex={index}
+              end={end}
+              expanded={expanded}
+              active={isRowActive(index, end, expanded, selectedStep)}
+              step={steps[index]}
               isError={isError}
               onSelect={onSelect}
               onToggleGroup={toggleGroup}
             />
           ))}
-          <TimeLineEndConnector />
         </Stepper>
       </Box>
     </>
@@ -84,7 +87,7 @@ const timeLineStyles = () => ({
     minWidth: '100%',
     // Top padding fits the name area (button height plus its offset).
     padding: '2rem 1.5rem 2.625rem',
-    '& > .MuiStepConnector-root:not(:last-child)': {
+    '& > .MuiStepConnector-root': {
       minWidth: STEP_CONNECTOR_MIN_WIDTH,
       '& .MuiStepConnector-line': {
         marginInline: `calc(${STEP_MIN_WIDTH} / -2)`,
@@ -92,8 +95,7 @@ const timeLineStyles = () => ({
       '&:nth-child(2) .MuiStepConnector-line': {
         marginInlineStart: `calc(${STEP_MIN_WIDTH} / -4)`,
       },
-      // The final step is followed by the standalone connector.
-      '&:nth-last-child(3) .MuiStepConnector-line': {
+      '&:nth-last-child(2) .MuiStepConnector-line': {
         marginInlineEnd: `calc(${STEP_MIN_WIDTH} / -4)`,
       },
     },

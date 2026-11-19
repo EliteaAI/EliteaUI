@@ -71,6 +71,21 @@ describe('useTimeLineGroups', () => {
     expect(indexes(result)).toEqual([0, 1, 2, 3, 4, 5, 6]);
   });
 
+  it('keeps its handlers while the selection moves, and still uses the latest selection', () => {
+    const onSelect = vi.fn();
+    const { result, rerender } = renderHook(({ selected }) => useTimeLineGroups(steps, selected, onSelect), {
+      initialProps: { selected: 0 },
+    });
+    const { toggleGroup, toggleExpandAll } = result.current;
+
+    rerender({ selected: 2 });
+
+    expect(result.current.toggleGroup).toBe(toggleGroup);
+    expect(result.current.toggleExpandAll).toBe(toggleExpandAll);
+    act(() => result.current.toggleGroup(1, 3, true));
+    expect(onSelect).toHaveBeenCalledWith(1);
+  });
+
   describe('selection hand-off', () => {
     it('moves the selection to the group head when collapsing a group that holds it', () => {
       const onSelect = vi.fn();

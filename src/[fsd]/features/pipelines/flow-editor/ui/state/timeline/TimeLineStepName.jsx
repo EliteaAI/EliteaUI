@@ -7,7 +7,7 @@ import { formatBadgeCount } from '@/[fsd]/features/pipelines/flow-editor/lib/hel
 import TimeLineGroupToggle from '@/[fsd]/features/pipelines/flow-editor/ui/state/timeline/TimeLineGroupToggle';
 import { Chip, Text } from '@/[fsd]/shared/ui';
 
-const { MAX_BADGE_COUNT, STEP_NAME_EDGE_MAX_WIDTH, STEP_NAME_HEIGHT, STEP_NAME_MAX_WIDTH } =
+const { GROUP_TOGGLE_BUTTON_HEIGHT, MAX_BADGE_COUNT, STEP_NAME_EDGE_MAX_WIDTH, STEP_NAME_MAX_WIDTH } =
   TimeLineConstants;
 
 const TimeLineStepName = memo(props => {
@@ -56,10 +56,10 @@ const timeLineStepNameStyles = () => ({
     alignItems: 'center',
     justifyContent: 'center',
     gap: '0.25rem',
-    minHeight: STEP_NAME_HEIGHT,
+    minHeight: GROUP_TOGGLE_BUTTON_HEIGHT,
     width: 'max-content',
     maxWidth: STEP_NAME_MAX_WIDTH,
-    '.MuiStep-root:first-child > &, .MuiStep-root:nth-last-child(2) > &': {
+    '.MuiStep-root:first-child > &, .MuiStep-root:last-child > &': {
       maxWidth: STEP_NAME_EDGE_MAX_WIDTH,
     },
   },
@@ -77,7 +77,6 @@ const timeLineStepNameStyles = () => ({
     marginRight: 0,
     textAlign: 'center',
   },
-  // The badge never shrinks, so a long name truncates before it does.
   countBadge: {
     display: 'flex',
     flexShrink: 0,

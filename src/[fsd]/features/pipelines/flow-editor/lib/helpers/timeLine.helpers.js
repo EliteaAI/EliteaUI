@@ -41,3 +41,7 @@ export const getActiveRowPosition = (visibleSteps, inProgressStep) =>
 
 /** Text for a count badge. Counts above the cap collapse to e.g. `99+`; the exact value belongs in a label. */
 export const formatBadgeCount = count => (count > MAX_BADGE_COUNT ? `${MAX_BADGE_COUNT}+` : count);
+
+/** A row is active when it is selected, or when it is a collapsed group that holds the selected step. */
+export const isRowActive = (index, end, expanded, selectedStep) =>
+  index === selectedStep || (!expanded && index < selectedStep && selectedStep <= end);

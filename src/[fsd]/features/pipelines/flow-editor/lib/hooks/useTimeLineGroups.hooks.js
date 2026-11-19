@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   getVisibleSteps,
@@ -8,6 +8,12 @@ import {
 export const useTimeLineGroups = (steps, selectedStep, onSelect) => {
   const [expandAll, setExpandAll] = useState(false);
   const [toggledGroups, setToggledGroups] = useState(() => new Set());
+  // Read through a ref so the handlers keep their identity while the selection follows a running step.
+  const selectedStepRef = useRef(selectedStep);
+
+  useEffect(() => {
+    selectedStepRef.current = selectedStep;
+  }, [selectedStep]);
 
   const groups = useMemo(() => groupConsecutiveSteps(steps), [steps]);
   const visibleSteps = useMemo(
@@ -25,9 +31,9 @@ export const useTimeLineGroups = (steps, selectedStep, onSelect) => {
         return next;
       });
       // Collapsing hides the selected child, so the group head takes over the selection.
-      if (expanded && selectedStep > start && selectedStep <= end) onSelect(start);
+      if (expanded && selectedStepRef.current > start && selectedStepRef.current <= end) onSelect(start);
     },
-    [onSelect, selectedStep],
+    [onSelect],
   );
 
   const toggleExpandAll = useCallback(
@@ -35,11 +41,13 @@ export const useTimeLineGroups = (steps, selectedStep, onSelect) => {
       setExpandAll(checked);
       setToggledGroups(new Set());
       if (!checked) {
-        const selectedGroup = groups.find(({ start, end }) => selectedStep > start && selectedStep <= end);
+        const selectedGroup = groups.find(
+          ({ start, end }) => selectedStepRef.current > start && selectedStepRef.current <= end,
+        );
         if (selectedGroup) onSelect(selectedGroup.start);
       }
     },
-    [groups, onSelect, selectedStep],
+    [groups, onSelect],
   );
 
   return { expandAll, hasGroups, visibleSteps, toggleGroup, toggleExpandAll };
