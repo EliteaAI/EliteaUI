@@ -10,6 +10,8 @@ import { ChatHistoryActionsContext } from '../../context';
 import { useChatHistoryActions } from '../useChatHistory.hooks';
 import { useRegisterChatPage } from '../useRegisterChatPage.hooks';
 
+const noop = () => {};
+
 const renderWithHistory = initialProps => {
   const probe = {};
 
@@ -19,7 +21,9 @@ const renderWithHistory = initialProps => {
     probe.chatPageState = chatPageState;
     probe.chatPageActionsRef = chatPageActionsRef;
     return (
-      <ChatHistoryActionsContext.Provider value={{ chatPageActionsRef, setChatPageState }}>
+      <ChatHistoryActionsContext.Provider
+        value={{ chatPageActionsRef, setChatPageState, setConversations: noop, setFolders: noop }}
+      >
         {children}
       </ChatHistoryActionsContext.Provider>
     );
@@ -70,11 +74,20 @@ describe('useRegisterChatPage', () => {
     };
     const Host = ({ showPage }) => {
       const [chatPageState, setChatPageState] = useState(EMPTY_CHAT_PAGE_STATE);
+      const [conversations, setConversations] = useState([{ id: 1 }, { id: 1, isPlayback: true }, { id: 2 }]);
+      const [folders, setFolders] = useState([
+        { id: 7, conversations: [{ id: 3, isPlayback: true }, { id: 3 }] },
+        { id: 8, conversations: [{ id: 4 }] },
+      ]);
       const chatPageActionsRef = useRef(null);
       probe.chatPageState = chatPageState;
       probe.chatPageActionsRef = chatPageActionsRef;
+      probe.conversations = conversations;
+      probe.folders = folders;
       return (
-        <ChatHistoryActionsContext.Provider value={{ chatPageActionsRef, setChatPageState }}>
+        <ChatHistoryActionsContext.Provider
+          value={{ chatPageActionsRef, setChatPageState, setConversations, setFolders }}
+        >
           {showPage && <ChatPage />}
         </ChatHistoryActionsContext.Provider>
       );
@@ -87,6 +100,11 @@ describe('useRegisterChatPage', () => {
 
     expect(probe.chatPageActionsRef.current).toBeNull();
     expect(probe.chatPageState).toEqual(EMPTY_CHAT_PAGE_STATE);
+    expect(probe.conversations).toEqual([{ id: 1 }, { id: 2 }]);
+    expect(probe.folders).toEqual([
+      { id: 7, conversations: [{ id: 3 }] },
+      { id: 8, conversations: [{ id: 4 }] },
+    ]);
   });
 
   it('throws outside the provider', () => {

@@ -7,7 +7,7 @@ import { useChatHistoryActions } from '@/[fsd]/features/chat/conversation-list/l
 // The handlers go into a ref: they change with every streamed token and must not re-render the menu.
 export const useRegisterChatPage = props => {
   const { actions, selectedConversationId = null, duplicatingConversationId = null } = props;
-  const { chatPageActionsRef, setChatPageState } = useChatHistoryActions();
+  const { chatPageActionsRef, setChatPageState, setConversations, setFolders } = useChatHistoryActions();
 
   useLayoutEffect(() => {
     chatPageActionsRef.current = actions;
@@ -18,8 +18,20 @@ export const useRegisterChatPage = props => {
     return () => {
       chatPageActionsRef.current = null;
       setChatPageState(EMPTY_CHAT_PAGE_STATE);
+      // A playback copy only makes sense on the chat page
+      setConversations(prev => prev.filter(conversation => !conversation.isPlayback));
+      setFolders(prev =>
+        prev.map(folder =>
+          folder.conversations?.some(conversation => conversation.isPlayback)
+            ? {
+                ...folder,
+                conversations: folder.conversations.filter(conversation => !conversation.isPlayback),
+              }
+            : folder,
+        ),
+      );
     };
-  }, [chatPageActionsRef, setChatPageState]);
+  }, [chatPageActionsRef, setChatPageState, setConversations, setFolders]);
 
   useEffect(() => {
     setChatPageState(prev =>

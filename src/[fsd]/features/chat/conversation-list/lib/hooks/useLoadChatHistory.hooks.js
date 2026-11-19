@@ -48,7 +48,7 @@ export const useLoadChatHistory = props => {
   );
 
   const updateDateGroups = useCallback(
-    (dateGroupsList, pinnedIds, isRefetch) => {
+    (dateGroupsList, pinnedIds, folderConversationIds, isRefetch) => {
       const processedGroups = (dateGroupsList || []).map(group => {
         const filtered = pinnedIds?.size
           ? (group.conversations || []).filter(c => !pinnedIds.has(c.id))
@@ -60,7 +60,10 @@ export const useLoadChatHistory = props => {
         };
       });
 
-      if (isRefetch) setDateGroups(prev => mergeDateGroupsFirstPage(prev, processedGroups));
+      if (isRefetch)
+        setDateGroups(prev =>
+          mergeDateGroupsFirstPage(prev, processedGroups, [...pinnedIds, ...folderConversationIds]),
+        );
       else setDateGroups(processedGroups);
     },
     [setDateGroups],
@@ -132,7 +135,10 @@ export const useLoadChatHistory = props => {
       hydratedKeyRef.current = key;
 
       const pinnedIds = new Set((data?.pinned?.conversations || []).map(c => c.id));
-      updateDateGroups(data?.date_groups, pinnedIds, isRefetch);
+      const folderConversationIds = (data?.folders || []).flatMap(folder =>
+        (folder?.conversations || []).map(c => c.id),
+      );
+      updateDateGroups(data?.date_groups, pinnedIds, folderConversationIds, isRefetch);
       updateFolders(data?.folders, pinnedIds);
       updatePinnedConversations(data?.pinned);
       setIsConversationsLoaded(true);

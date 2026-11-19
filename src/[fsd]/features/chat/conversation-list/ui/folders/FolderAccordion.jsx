@@ -39,7 +39,6 @@ const FolderAccordion = memo(props => {
     onCloseMenuList,
     showMenu,
     isHovering,
-    isNextFolderHovered = false,
     isPinned = false,
     onUnpin,
     folderId,
@@ -53,7 +52,6 @@ const FolderAccordion = memo(props => {
     isActive,
     isHovering,
     expanded,
-    isNextFolderHovered,
     is_private,
     showMenu,
     shouldBeSelected,
@@ -177,15 +175,7 @@ const FolderAccordion = memo(props => {
 FolderAccordion.displayName = 'FolderAccordion';
 
 /** @type {MuiSx} */
-const folderAccordionStyles = (
-  isActive,
-  isHovering,
-  expanded,
-  isNextFolderHovered,
-  is_private,
-  showMenu,
-  shouldBeSelected,
-) => ({
+const folderAccordionStyles = (isActive, isHovering, expanded, is_private, showMenu, shouldBeSelected) => ({
   accordion: {
     background: 'transparent',
   },

@@ -405,7 +405,7 @@ const ChatHistory = memo(props => {
   );
 
   const renderConversationItem = useCallback(
-    (conversation, onItemHover, isNextItemHovered) => (
+    conversation => (
       <ConversationItem
         isActive={selectedConversationId === genConversationId(conversation)}
         key={genConversationId(conversation)}
@@ -425,8 +425,6 @@ const ChatHistory = memo(props => {
         isEditingCanvas={isEditingCanvas}
         enableDragAndDrop
         isDragDisabled={isEditingCanvas || conversation.isPlayback || conversation.isPinned}
-        onItemHover={onItemHover}
-        isNextItemHovered={isNextItemHovered}
         onShare={setShareChatConversation}
         showChatPageActions={isChatPageMounted}
       />

@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { Box, Collapse, Skeleton } from '@mui/material';
 
@@ -18,12 +18,6 @@ const DateGroup = memo(props => {
     isLoadingMore = false,
   } = props;
   const styles = dateGroupStyles();
-
-  const [hoveredItemId, setHoveredItemId] = useState(null);
-
-  const handleItemHover = useCallback((itemId, isHovered) => {
-    setHoveredItemId(isHovered ? itemId : null);
-  }, []);
 
   const handleToggleExpanded = useCallback(() => {
     onToggleExpanded(group.name);
@@ -54,11 +48,7 @@ const DateGroup = memo(props => {
 
       <Collapse in={isExpanded}>
         <Box sx={styles.content}>
-          {group.conversations.map((conversation, index) => {
-            const nextConversation = group.conversations[index + 1];
-            const isNextItemHovered = nextConversation?.id === hoveredItemId;
-            return renderConversationItem(conversation, handleItemHover, isNextItemHovered);
-          })}
+          {group.conversations.map(conversation => renderConversationItem(conversation))}
 
           {isLoadingMore &&
             Array.from({ length: 3 }).map((_, index) => (

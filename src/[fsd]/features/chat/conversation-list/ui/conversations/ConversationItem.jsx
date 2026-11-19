@@ -55,7 +55,6 @@ const ConversationItem = memo(props => {
     isEditingCanvas,
     enableDragAndDrop = false,
     isDragDisabled = false,
-    onItemHover,
     onShare,
     showChatPageActions = true,
   } = props;
@@ -307,15 +306,9 @@ const ConversationItem = memo(props => {
     showChatPageActions,
   ]);
 
-  const onMouseEnter = useCallback(() => {
-    setIsHovering(true);
-    onItemHover?.(conversation.id, true);
-  }, [conversation.id, onItemHover]);
+  const onMouseEnter = useCallback(() => setIsHovering(true), []);
 
-  const onMouseLeave = useCallback(() => {
-    setIsHovering(false);
-    onItemHover?.(conversation.id, false);
-  }, [conversation.id, onItemHover]);
+  const onMouseLeave = useCallback(() => setIsHovering(false), []);
 
   const onCloseMenuList = useCallback(() => {
     setShowMenu(false);

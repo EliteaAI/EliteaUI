@@ -43,8 +43,6 @@ const FolderItem = memo(props => {
     isDropDisabled = false,
     isDragDisabled = false,
     getDropAreaState,
-    isNextFolderHovered = false,
-    onFolderHover,
     onLoadMoreInFolder,
     isLoadingMoreInFolder = false,
     onCreateConversationInFolder,
@@ -160,15 +158,9 @@ const FolderItem = memo(props => {
     name,
   ]);
 
-  const onMouseEnter = useCallback(() => {
-    setIsHovering(true);
-    onFolderHover?.(folder.id, true);
-  }, [folder.id, onFolderHover]);
+  const onMouseEnter = useCallback(() => setIsHovering(true), []);
 
-  const onMouseLeave = useCallback(() => {
-    setIsHovering(false);
-    onFolderHover?.(folder.id, false);
-  }, [folder.id, onFolderHover]);
+  const onMouseLeave = useCallback(() => setIsHovering(false), []);
 
   const onCloseMenuList = useCallback(() => {
     setShowMenu(false);
@@ -239,7 +231,6 @@ const FolderItem = memo(props => {
         onShowMenuList={onShowMenuList}
         onCloseMenuList={onCloseMenuList}
         isHovering={isHovering}
-        isNextFolderHovered={isNextFolderHovered}
         showMenu={showMenu}
         showMode={AccordionConstants.AccordionShowMode.LeftMode}
         defaultExpanded={containsActiveConversation}
@@ -271,7 +262,6 @@ const FolderItem = memo(props => {
       onShowMenuList,
       onCloseMenuList,
       isHovering,
-      isNextFolderHovered,
       showMenu,
       containsActiveConversation,
       handleUnpinFolder,
