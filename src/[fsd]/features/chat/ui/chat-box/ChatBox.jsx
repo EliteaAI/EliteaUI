@@ -106,9 +106,8 @@ import {
   useUpdateMessageMetaMutation,
   useUpdateParticipantLlmSettingsMutation,
 } from '@/api';
-import { TAG_TYPE_APPLICATION_DETAILS, useDeleteApplicationMutation } from '@/api/applications';
+import { useDeleteApplicationMutation } from '@/api/applications';
 import { useListModelsQuery } from '@/api/configurations.js';
-import { eliteaApi } from '@/api/eliteaApi';
 import { apis as projectContextApis, useDeleteProjectContextMutation } from '@/api/projectContext';
 import { useToolkitDeleteMutation } from '@/api/toolkits';
 import {
@@ -712,15 +711,6 @@ const ChatBox = memo(
     const onEntityCreated = useCallback(
       ({ entity_type, entity_id, version_id, entity_name, is_mcp }) => {
         const participant = buildEntityParticipant({ entity_id, entity_name, version_id, is_mcp, projectId });
-        if (entity_type === 'agent' || entity_type === 'pipeline') {
-          // (#7383) the Builder may have changed an open agent (e.g. linked a toolkit): drop its cached details
-          dispatch(
-            eliteaApi.util.invalidateTags([
-              { type: TAG_TYPE_APPLICATION_DETAILS, id: entity_id },
-              { type: TAG_TYPE_APPLICATION_DETAILS, id: `${projectId}_${entity_id}_${version_id}` },
-            ]),
-          );
-        }
         if (entity_type === 'agent') {
           onShowAgentEditor?.(participant);
         } else if (entity_type === 'pipeline') {
