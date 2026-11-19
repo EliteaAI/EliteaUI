@@ -2,10 +2,8 @@ import { memo, useCallback } from 'react';
 
 import { Box } from '@mui/material';
 
-import StyledTooltip from '@/ComponentsLib/Tooltip';
-
 const ProcessStepIcon = memo(props => {
-  const { active, tooltip, index, onSelect, isError } = props;
+  const { active, index, onSelect, isError } = props;
 
   const styles = processStepIconStyles(active, isError);
 
@@ -14,19 +12,14 @@ const ProcessStepIcon = memo(props => {
   }, [index, onSelect]);
 
   return (
-    <StyledTooltip
-      title={tooltip}
-      placement="top"
+    <Box
+      sx={styles.outerBox}
+      onClick={onClick}
+      data-testid={`pipeline-run-details-timeline-step-${index}`}
+      data-status={isError ? 'error' : 'completed'}
     >
-      <Box
-        sx={styles.outerBox}
-        onClick={onClick}
-        data-testid={`pipeline-run-details-timeline-step-${index}`}
-        data-status={isError ? 'error' : 'completed'}
-      >
-        <Box sx={styles.innerBox} />
-      </Box>
-    </StyledTooltip>
+      <Box sx={styles.innerBox} />
+    </Box>
   );
 });
 
