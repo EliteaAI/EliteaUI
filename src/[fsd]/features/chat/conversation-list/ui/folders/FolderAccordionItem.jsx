@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useMemo } from 'react';
 
 import { Box, Skeleton, Typography, useTheme } from '@mui/material';
 
@@ -8,12 +8,6 @@ const FolderAccordionItem = memo(props => {
   const { folder, renderConversationItem, onLoadMore, isLoadingMore } = props;
 
   const theme = useTheme();
-
-  const [hoveredItemId, setHoveredItemId] = useState(null);
-
-  const handleItemHover = useCallback((itemId, isHovered) => {
-    setHoveredItemId(isHovered ? itemId : null);
-  }, []);
 
   const sortedConversations = useMemo(() => {
     if (!folder?.conversations?.length) return [];
@@ -37,12 +31,7 @@ const FolderAccordionItem = memo(props => {
     >
       {sortedConversations?.length ? (
         <>
-          {sortedConversations.map((conversation, index) => {
-            const nextConversation = sortedConversations[index + 1];
-            const isNextItemHovered = nextConversation?.id === hoveredItemId;
-
-            return renderConversationItem(conversation, handleItemHover, isNextItemHovered);
-          })}
+          {sortedConversations.map(conversation => renderConversationItem(conversation))}
 
           {isLoadingMore &&
             Array.from({ length: 3 }).map((_, index) => (
