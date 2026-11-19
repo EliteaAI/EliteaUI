@@ -135,8 +135,12 @@ export const useDuplicateConversation = props => {
           updated_at: new Date().toISOString(),
         };
 
+        // The create request refreshes the list too, and that refetch may already have added the copy
         setConversations(prevConversations =>
-          sortConversations([...prevConversations, conversationWithTimestamp]),
+          sortConversations([
+            ...prevConversations.filter(item => item.id !== finalConversation.id || item.isPlayback),
+            conversationWithTimestamp,
+          ]),
         );
 
         selectConversation({ projectId, conversationId: finalConversation.id }).then(({ error }) => {

@@ -463,7 +463,7 @@ const Conversations = memo(props => {
   );
 
   const renderConversationItem = useCallback(
-    (conversation, onItemHover, isNextItemHovered) => (
+    conversation => (
       <ConversationItem
         isActive={selectedConversationId === genConversationId(conversation)}
         key={genConversationId(conversation)}
@@ -484,8 +484,6 @@ const Conversations = memo(props => {
         isEditingCanvas={isEditingCanvas}
         enableDragAndDrop={enableDragAndDrop}
         isDragDisabled={isEditingCanvas || conversation.isPlayback || conversation.isPinned}
-        onItemHover={onItemHover}
-        isNextItemHovered={isNextItemHovered}
         onShare={setShareChatConversation}
       />
     ),

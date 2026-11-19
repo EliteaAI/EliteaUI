@@ -3,7 +3,7 @@ import React, { memo, useEffect, useMemo, useRef } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { DATE_GROUP_DISPLAY_NAMES } from '@/[fsd]/features/chat/conversation-list/lib/constants';
-import { useDateGroupExpansion } from '@/[fsd]/features/chat/conversation-list/lib/hooks';
+import { useChatHistoryData } from '@/[fsd]/features/chat/conversation-list/lib/hooks';
 
 import DateGroup from './DateGroup';
 
@@ -26,8 +26,9 @@ const GroupedConversations = memo(props => {
     [dateGroups],
   );
 
+  const { dateGroupExpansion } = useChatHistoryData();
   const { isGroupExpanded, toggleGroup, initializeExpansion, setSearchModeExpansion, exitSearchMode } =
-    useDateGroupExpansion();
+    dateGroupExpansion;
 
   const prevSearchModeRef = useRef(isSearchMode);
   const prevSearchQueryRef = useRef(searchQuery);

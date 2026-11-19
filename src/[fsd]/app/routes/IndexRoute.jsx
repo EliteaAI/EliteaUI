@@ -12,19 +12,16 @@ const IndexRoute = memo(() => {
   // Show loading page while user info is being fetched
   if (!user.id) return <LoadingPage />;
 
-  if (!user.personal_project_id)
-    return (
+  // The router keeps this screen while the next page's code loads (navigations run in a transition), so it
+  // shows the loader instead of an empty page until the chat or onboarding page is ready
+  return (
+    <>
+      <LoadingPage />
       <Navigate
-        to={RouteDefinitions.Onboarding}
+        to={user.personal_project_id ? RouteDefinitions.Chat : RouteDefinitions.Onboarding}
         replace
       />
-    );
-
-  return (
-    <Navigate
-      to={RouteDefinitions.Chat}
-      replace
-    />
+    </>
   );
 });
 

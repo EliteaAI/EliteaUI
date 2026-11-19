@@ -21,13 +21,13 @@ Each conversation is an independent dialogue session. Context is not shared betw
     target: CHAT_TOUR_TARGETS.conversations,
     placement: 'right',
     title: 'Chats',
-    content: `Every interaction in Chats takes place inside a chat. Chats are automatically named based on your first message and organized by time period (Today, Yesterday, This Week, Older). Pinned chats always appear at the top.
+    content: `Your chats are listed in the menu on the left, on every page. Every interaction in Chats takes place inside a chat. Chats are automatically named based on your first message and organized by time period (Today, This Week, Older). Pinned chats and folders appear at the top, in the **Pinned** group.
 
 Chats can be **Private** (visible only to you) or **Public** (shared with all project members who can join and collaborate).
 
-Use the **search** icon in the CHATS header to filter chats by name — results update as you type.
+Use the **search** icon next to **Chats** to filter chats by name — results update as you type.
 
-Use **Import** in the CHATS header to restore a chat exported from this ELITEA setup (.json.enc or .zip.enc). You can choose which attachments to bring in; the imported chat appears under Today.
+Use **Import** next to **Chats** to restore a chat exported from this ELITEA setup (.json.enc or .zip.enc). You can choose which attachments to bring in; the imported chat appears under Today.
 
 **Chat actions** (three-dot menu on any chat):
 
