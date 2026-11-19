@@ -80,13 +80,15 @@ export const useRunHistoryFilters = ({ schedules, versions }) => {
     [versions, versionId],
   );
 
+  // `alsoEdit` makes further changes to the same copy, so one change writes the URL once
   const setParam = useCallback(
-    (name, value) => {
+    (name, value, alsoEdit) => {
       setSearchParams(
         prev => {
           const next = new URLSearchParams(prev);
           if (value) next.set(name, value);
           else next.delete(name);
+          alsoEdit?.(next);
           return next;
         },
         { replace: true },
@@ -98,21 +100,14 @@ export const useRunHistoryFilters = ({ schedules, versions }) => {
   const onScheduleChange = useCallback(value => setParam(FILTER_PARAMS.schedule, value), [setParam]);
   const onStatusChange = useCallback(value => setParam(FILTER_PARAMS.status, value), [setParam]);
   const onTriggerChange = useCallback(
-    value => {
-      setSearchParams(
-        prev => {
-          const next = new URLSearchParams(prev);
-          if (value) next.set(FILTER_PARAMS.trigger, value);
-          else next.delete(FILTER_PARAMS.trigger);
-          if (paramOf(value) === EXECUTION_TYPE_PARAM) {
-            RUN_RECORD_FILTERS.forEach(key => next.delete(FILTER_PARAMS[key]));
-          }
-          return next;
-        },
-        { replace: true },
-      );
-    },
-    [setSearchParams],
+    value =>
+      setParam(FILTER_PARAMS.trigger, value, next => {
+        if (paramOf(value) !== EXECUTION_TYPE_PARAM) return;
+        // readRunParam only hides the run record filters while an execution type is picked;
+        // dropping them here keeps them from coming back when a run trigger is picked later
+        RUN_RECORD_FILTERS.forEach(key => next.delete(FILTER_PARAMS[key]));
+      }),
+    [setParam],
   );
   const onVersionChange = useCallback(value => setParam(FILTER_PARAMS.version, value), [setParam]);
 
