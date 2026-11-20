@@ -49,10 +49,9 @@ const SectionPage = memo(props => {
     [isFiltersOpen, toolbarBottom],
   );
 
-  const showPublicFilter = isPublic && hasPublicViews;
+  const showPublicFilter = isPublic && hasPublicViews && !isDiscover;
 
   const content = useMemo(() => {
-    if (showPublicFilter) return publicViews[tab] ?? null;
     if (isDiscover) {
       return renderDiscover?.({
         query: discoverQuery,
@@ -60,6 +59,7 @@ const SectionPage = memo(props => {
         onFilterCountChange: setDiscoverFilterCount,
       });
     }
+    if (showPublicFilter) return publicViews[tab] ?? null;
     return projectContent;
   }, [
     discoverQuery,

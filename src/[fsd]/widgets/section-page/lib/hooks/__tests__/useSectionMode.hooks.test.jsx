@@ -97,8 +97,24 @@ describe('useSectionMode', () => {
 
   it('shows the project list of Skills in Public, which has no public views', () => {
     fixture.isPublic = true;
-    renderAt('/skills/discover', { sectionKey: 'skills', hasPublicViews: false });
+    renderAt('/skills/latest', { sectionKey: 'skills', hasPublicViews: false });
     expect(path()).toBe('/skills/all');
+  });
+
+  it('keeps Discover reachable in Public for catalog links', () => {
+    fixture.isPublic = true;
+    renderAt('/agents/discover?agentId=5');
+    expect(screen.getByTestId('discover')).toHaveTextContent('true');
+    expect(path()).toBe('/agents/discover?agentId=5');
+    cleanup();
+    renderAt('/skills/discover?skillId=7', { sectionKey: 'skills', hasPublicViews: false });
+    expect(path()).toBe('/skills/discover?skillId=7');
+  });
+
+  it('does not keep Discover on Pipelines in Public', () => {
+    fixture.isPublic = true;
+    renderAt('/pipelines/discover', { sectionKey: 'pipelines' });
+    expect(path()).toBe('/pipelines/latest');
   });
 
   it('does not redirect before the project is known', () => {

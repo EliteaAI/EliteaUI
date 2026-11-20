@@ -10,9 +10,10 @@ import {
 } from '@/[fsd]/widgets/section-page/lib/constants/sectionPage.constants';
 import { PathSessionMap } from '@/routes';
 
+// In Public, Discover is not offered as a tab but stays reachable, so catalog share links and tours land there
 const getAllowedTabs = (isPublic, hasDiscover, hasPublicViews) => {
-  if (isPublic) return hasPublicViews ? Object.values(PUBLIC_VIEWS) : [SECTION_MODES.project];
-  return hasDiscover ? [SECTION_MODES.project, SECTION_MODES.discover] : [SECTION_MODES.project];
+  const baseTabs = isPublic && hasPublicViews ? Object.values(PUBLIC_VIEWS) : [SECTION_MODES.project];
+  return hasDiscover ? [...baseTabs, SECTION_MODES.discover] : baseTabs;
 };
 
 export const useSectionMode = (sectionKey, hasPublicViews = false) => {
