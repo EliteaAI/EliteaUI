@@ -70,12 +70,42 @@ describe('the MCP exposed versions line (EL-7269, #7341)', () => {
     fixture.settings = { governance_enforced: true };
     fixture.versions.mockReturnValue({
       data: {
-        rows: [{ application_id: 7, application_name: 'Jira helper', version_id: 70, version_name: 'base' }],
+        rows: [
+          {
+            application_id: 7,
+            application_name: 'Jira helper',
+            version_id: 70,
+            version_name: 'base',
+            rule: 'bound',
+          },
+        ],
       },
     });
     render(<McpExposedVersions />);
     expect(screen.getByTestId('mcp-exposed-version-70')).toHaveTextContent(
       /^Jira helper — base \(its approved identity\)$/,
     );
+  });
+
+  it.each([
+    ['tagged', 'served by its tag'],
+    ['published', 'picked by an older platform'],
+  ])('claims no approved identity for a %s row (%s)', rule => {
+    fixture.settings = { governance_enforced: true };
+    fixture.versions.mockReturnValue({
+      data: {
+        rows: [
+          {
+            application_id: 7,
+            application_name: 'Jira helper',
+            version_id: 70,
+            version_name: 'base',
+            rule,
+          },
+        ],
+      },
+    });
+    render(<McpExposedVersions />);
+    expect(screen.getByTestId('mcp-exposed-version-70')).toHaveTextContent(/^Jira helper — base$/);
   });
 });

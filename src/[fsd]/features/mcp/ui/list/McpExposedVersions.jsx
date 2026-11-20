@@ -37,7 +37,7 @@ const McpExposedVersions = memo(() => {
           sx={styles.row}
           data-testid={`mcp-exposed-version-${row.version_id}`}
         >
-          {`${row.application_name} — ${row.version_name}${row.tool_name ? `, tool ${row.tool_name}` : ''} (its approved identity)`}
+          {`${row.application_name} — ${row.version_name}${row.tool_name ? `, tool ${row.tool_name}` : ''}${row.rule === 'bound' ? ' (its approved identity)' : ''}`}
         </Typography>
       ))}
       {rows.length > MAX_SHOWN && (
