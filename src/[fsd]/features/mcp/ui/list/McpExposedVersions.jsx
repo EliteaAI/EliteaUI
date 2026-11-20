@@ -7,15 +7,7 @@ import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 
 const MAX_SHOWN = 8;
-const RULE_TEXT = {
-  bound: 'its approved identity',
-  published: 'latest published',
-  stored: 'first version',
-};
 
-// Which version of each agent external MCP clients reach through this project's MCP server (C-1009, #7341), while
-// credential governance is enforced: the version with an approved identity, else the latest published one, else the
-// first. Under off and audit only nothing is shown or read (the first version is reached, as before).
 const McpExposedVersions = memo(() => {
   const projectId = useSelectedProjectId();
   const styles = mcpExposedVersionsStyles();
@@ -39,13 +31,13 @@ const McpExposedVersions = memo(() => {
       </Typography>
       {rows.slice(0, MAX_SHOWN).map(row => (
         <Typography
-          key={row.application_id}
+          key={row.version_id}
           variant="bodySmall"
           color="text.secondary"
           sx={styles.row}
-          data-testid={`mcp-exposed-version-${row.application_id}`}
+          data-testid={`mcp-exposed-version-${row.version_id}`}
         >
-          {`${row.application_name} — ${row.version_name} (${RULE_TEXT[row.rule] ?? row.rule})`}
+          {`${row.application_name} — ${row.version_name} (its approved identity)`}
         </Typography>
       ))}
       {rows.length > MAX_SHOWN && (
