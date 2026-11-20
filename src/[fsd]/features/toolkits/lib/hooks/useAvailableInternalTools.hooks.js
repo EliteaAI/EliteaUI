@@ -10,12 +10,17 @@ const EMPTY_TOOL_NAMES = [];
 
 export const useAvailableInternalTools = (options = {}) => {
   // activeToolNames: tools already on in this conversation/agent stay listed (inactive) when unavailable
-  const { includeAgentOnly = false, activeToolNames = EMPTY_TOOL_NAMES } = options;
+  // modelName: the agent's model, checked against the admin's Code Mode model list
+  const { includeAgentOnly = false, activeToolNames = EMPTY_TOOL_NAMES, modelName } = options;
   const { toolkitSchemas } = useGetCurrentToolkitSchemas();
   const isMcpVisible = useIsMcpVisible();
   const projectId = useSelectedProjectId();
   const { data: platformSettings } = useGetPlatformSettingsQuery({ projectId }, { skip: !projectId });
   const isWebSearchAvailable = Boolean(platformSettings?.tool_spend?.web_search?.available);
+  const isCodeModeAvailable = Boolean(platformSettings?.is_code_mode_available);
+  const codeModeModels = platformSettings?.code_mode_allowed_models;
+  // No model yet (form loading, new agent): don't lock; the server re-checks on every predict
+  const isCodeModeModelAllowed = !codeModeModels?.length || !modelName || codeModeModels.includes(modelName);
 
   const availableTools = useMemo(() => {
     return InternalToolsConstants.INTERNAL_TOOLS_LIST.flatMap(tool => {
@@ -31,12 +36,29 @@ export const useAvailableInternalTools = (options = {}) => {
         return activeToolNames.includes(tool.name) ? [{ ...tool, unavailable: true }] : [];
       }
 
+      if (tool.requiresCodeMode) {
+        if (!isCodeModeAvailable) {
+          return activeToolNames.includes(tool.name) ? [{ ...tool, unavailable: true }] : [];
+        }
+        if (!isCodeModeModelAllowed) {
+          return [{ ...tool, unavailable: true, unavailableTooltip: tool.modelUnavailableTooltip }];
+        }
+      }
+
       if (!tool.requiredToolkitType) {
         return [tool];
       }
       return toolkitSchemas?.[tool.requiredToolkitType] ? [tool] : [];
     });
-  }, [toolkitSchemas, includeAgentOnly, isMcpVisible, isWebSearchAvailable, activeToolNames]);
+  }, [
+    toolkitSchemas,
+    includeAgentOnly,
+    isMcpVisible,
+    isWebSearchAvailable,
+    isCodeModeAvailable,
+    isCodeModeModelAllowed,
+    activeToolNames,
+  ]);
 
   return availableTools;
 };

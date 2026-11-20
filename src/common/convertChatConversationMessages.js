@@ -347,6 +347,8 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
           icon_meta: step.tool_meta?.icon_meta,
           loaded_skill: step.tool_meta?.loaded_skill,
           agent_type: step.tool_meta?.metadata?.agent_type,
+          via_code_mode:
+            step.metadata?.via_code_mode === true || step.tool_meta?.metadata?.via_code_mode === true,
           ...hierarchy,
         },
         created_at: step.timestamp_start || convertTime(created_at),

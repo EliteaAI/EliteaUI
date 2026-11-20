@@ -81,3 +81,49 @@ describe('useAvailableInternalTools web_search gate (#6982)', () => {
     expect(result.current).toBe(first);
   });
 });
+
+describe('useAvailableInternalTools code_mode gate (#7580)', () => {
+  const agent = extra => ({ includeAgentOnly: true, ...extra });
+  const codeMode = tools => tools.find(t => t.name === 'code_mode');
+
+  beforeEach(() => {
+    shared.platformSettings = undefined;
+  });
+
+  it('hides code_mode when the admin gate is closed for the project', () => {
+    shared.platformSettings = { is_code_mode_available: false };
+    const { result } = renderHook(() => useAvailableInternalTools(agent()));
+    expect(codeMode(result.current)).toBeUndefined();
+  });
+
+  it('keeps a saved code_mode listed but locked when the gate is closed', () => {
+    shared.platformSettings = { is_code_mode_available: false };
+    const { result } = renderHook(() => useAvailableInternalTools(agent({ activeToolNames: ['code_mode'] })));
+    expect(codeMode(result.current).unavailable).toBe(true);
+  });
+
+  it('shows code_mode for agents only when the gate is open', () => {
+    shared.platformSettings = { is_code_mode_available: true };
+    const { result } = renderHook(() => useAvailableInternalTools(agent({ modelName: 'any' })));
+    expect(codeMode(result.current).unavailable).toBeUndefined();
+    const { result: chat } = renderHook(() => useAvailableInternalTools());
+    expect(codeMode(chat.current)).toBeUndefined();
+  });
+
+  it('locks code_mode with the model tooltip when the model is not on the allowlist', () => {
+    shared.platformSettings = { is_code_mode_available: true, code_mode_allowed_models: ['opus'] };
+    const { result } = renderHook(() => useAvailableInternalTools(agent({ modelName: 'haiku' })));
+    expect(codeMode(result.current).unavailable).toBe(true);
+    expect(codeMode(result.current).unavailableTooltip).toMatch(/stronger model/);
+    const { result: strong } = renderHook(() => useAvailableInternalTools(agent({ modelName: 'opus' })));
+    expect(codeMode(strong.current).unavailable).toBeUndefined();
+  });
+});
+
+describe('useAvailableInternalTools code_mode before the model loads (#7580)', () => {
+  it('does not lock code_mode while the agent has no model name yet', () => {
+    shared.platformSettings = { is_code_mode_available: true, code_mode_allowed_models: ['opus'] };
+    const { result } = renderHook(() => useAvailableInternalTools({ includeAgentOnly: true }));
+    expect(result.current.find(t => t.name === 'code_mode').unavailable).toBeUndefined();
+  });
+});

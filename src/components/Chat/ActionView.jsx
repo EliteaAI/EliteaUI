@@ -15,6 +15,7 @@ import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import { useLazyMessageTraceQuery } from '@/api';
 import { useListModelsQuery } from '@/api/configurations';
+import CodeIcon from '@/assets/code-icon.svg?react';
 import { TOOL_ACTION_TYPES, ToolActionStatus } from '@/common/constants';
 import { getToolInfoFromAction } from '@/common/toolActionUitls';
 import { getToolIconByType } from '@/common/toolkitUtils';
@@ -89,6 +90,8 @@ const PreviousExecutionView = memo(({ execution, index, styles }) => {
 
 PreviousExecutionView.displayName = 'PreviousExecutionView';
 
+const CODE_MODE_CHIP_HINT = 'Called from a Code Mode program (execute_code)';
+
 const ActionView = memo(props => {
   const {
     action,
@@ -150,6 +153,8 @@ const ActionView = memo(props => {
   );
 
   const styles = actionViewStyles();
+  // #7580: calls a Code Mode program made through execute_code
+  const isViaCodeMode = Boolean(action?.toolMeta?.via_code_mode);
 
   const needAuthAction = useMemo(
     () => action.status === ToolActionStatus.actionRequired && !!action?.toolMeta?.server_url,
@@ -417,34 +422,47 @@ const ActionView = memo(props => {
       <Box sx={styles.container(width)}>
         {showHeader && (
           <Box sx={styles.header}>
-            <Box
-              sx={styles.toolkitBadge}
-              onClick={onClickToolkit}
-              data-testid={toolkitType === 'model' ? 'chat-answer-model-chip' : 'chat-answer-tool-chip'}
+            <Tooltip
+              title={isViaCodeMode ? CODE_MODE_CHIP_HINT : ''}
+              placement="top"
             >
-              <Box sx={styles.iconContainer}>
-                {showProgress ? (
-                  <StyledCircleProgress
-                    size={14}
-                    sx={styles.progress}
+              <Box
+                sx={[styles.toolkitBadge, isViaCodeMode && styles.codeModeBadge]}
+                onClick={onClickToolkit}
+                data-testid={toolkitType === 'model' ? 'chat-answer-model-chip' : 'chat-answer-tool-chip'}
+                data-via-code-mode={isViaCodeMode || undefined}
+              >
+                <Box sx={styles.iconContainer}>
+                  {showProgress ? (
+                    <StyledCircleProgress
+                      size={14}
+                      sx={styles.progress}
+                    />
+                  ) : (
+                    renderIcon()
+                  )}
+                </Box>
+                <Typography
+                  variant="bodySmall2"
+                  color="text.secondary"
+                  sx={styles.toolkitName}
+                >
+                  {displayTitle}
+                </Typography>
+                <DurationLabel
+                  durationMs={durationMs}
+                  includesApprovalWait={durationMs != null && DurationHelpers.includesApprovalWait(action)}
+                  testId="chat-answer-chip-duration"
+                />
+                {isViaCodeMode && (
+                  <Box
+                    component={CodeIcon}
+                    sx={styles.codeModeIcon}
+                    data-testid="chat-answer-chip-code-mode"
                   />
-                ) : (
-                  renderIcon()
                 )}
               </Box>
-              <Typography
-                variant="bodySmall2"
-                color="text.secondary"
-                sx={styles.toolkitName}
-              >
-                {displayTitle}
-              </Typography>
-              <DurationLabel
-                durationMs={durationMs}
-                includesApprovalWait={durationMs != null && DurationHelpers.includesApprovalWait(action)}
-                testId="chat-answer-chip-duration"
-              />
-            </Box>
+            </Tooltip>
             {needAuthAction && onAuth && (
               <Button.BaseBtn
                 variant={BUTTON_VARIANTS.elitea}
@@ -651,6 +669,16 @@ const actionViewStyles = () => ({
     '&:hover': {
       background: palette.background.interactiveItem.hover,
     },
+  }),
+  codeModeBadge: {
+    borderStyle: 'dashed',
+    opacity: 0.85,
+  },
+  codeModeIcon: ({ palette }) => ({
+    width: '0.75rem',
+    height: '0.75rem',
+    flexShrink: 0,
+    color: palette.icon.default,
   }),
   iconContainer: ({ palette }) => ({
     width: '1rem',
