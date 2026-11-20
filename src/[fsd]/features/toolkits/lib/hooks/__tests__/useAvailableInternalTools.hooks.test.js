@@ -81,3 +81,38 @@ describe('useAvailableInternalTools web_search gate (#6982)', () => {
     expect(result.current).toBe(first);
   });
 });
+
+describe('useAvailableInternalTools code_mode gate (#7580)', () => {
+  const agent = extra => ({ includeAgentOnly: true, ...extra });
+  const codeMode = tools => tools.find(t => t.name === 'code_mode');
+
+  beforeEach(() => {
+    shared.platformSettings = undefined;
+  });
+
+  it('hides code_mode when the admin gate is closed for the project', () => {
+    shared.platformSettings = { is_code_mode_available: false };
+    const { result } = renderHook(() => useAvailableInternalTools(agent()));
+    expect(codeMode(result.current)).toBeUndefined();
+  });
+
+  it('keeps a saved code_mode listed but locked when the gate is closed', () => {
+    shared.platformSettings = { is_code_mode_available: false };
+    const { result } = renderHook(() => useAvailableInternalTools(agent({ activeToolNames: ['code_mode'] })));
+    expect(codeMode(result.current).unavailable).toBe(true);
+  });
+
+  it('shows code_mode for agents only when the gate is open', () => {
+    shared.platformSettings = { is_code_mode_available: true };
+    const { result } = renderHook(() => useAvailableInternalTools(agent()));
+    expect(codeMode(result.current).unavailable).toBeUndefined();
+    const { result: chat } = renderHook(() => useAvailableInternalTools());
+    expect(codeMode(chat.current)).toBeUndefined();
+  });
+
+  it('never locks code_mode by model, even with a leftover model list in settings', () => {
+    shared.platformSettings = { is_code_mode_available: true, code_mode_allowed_models: ['opus'] };
+    const { result } = renderHook(() => useAvailableInternalTools(agent()));
+    expect(codeMode(result.current).unavailable).toBeUndefined();
+  });
+});

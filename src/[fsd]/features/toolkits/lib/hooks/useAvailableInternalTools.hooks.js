@@ -16,6 +16,7 @@ export const useAvailableInternalTools = (options = {}) => {
   const projectId = useSelectedProjectId();
   const { data: platformSettings } = useGetPlatformSettingsQuery({ projectId }, { skip: !projectId });
   const isWebSearchAvailable = Boolean(platformSettings?.tool_spend?.web_search?.available);
+  const isCodeModeAvailable = Boolean(platformSettings?.is_code_mode_available);
 
   const availableTools = useMemo(() => {
     return InternalToolsConstants.INTERNAL_TOOLS_LIST.flatMap(tool => {
@@ -31,12 +32,23 @@ export const useAvailableInternalTools = (options = {}) => {
         return activeToolNames.includes(tool.name) ? [{ ...tool, unavailable: true }] : [];
       }
 
+      if (tool.requiresCodeMode && !isCodeModeAvailable) {
+        return activeToolNames.includes(tool.name) ? [{ ...tool, unavailable: true }] : [];
+      }
+
       if (!tool.requiredToolkitType) {
         return [tool];
       }
       return toolkitSchemas?.[tool.requiredToolkitType] ? [tool] : [];
     });
-  }, [toolkitSchemas, includeAgentOnly, isMcpVisible, isWebSearchAvailable, activeToolNames]);
+  }, [
+    toolkitSchemas,
+    includeAgentOnly,
+    isMcpVisible,
+    isWebSearchAvailable,
+    isCodeModeAvailable,
+    activeToolNames,
+  ]);
 
   return availableTools;
 };

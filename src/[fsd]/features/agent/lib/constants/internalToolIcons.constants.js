@@ -1,5 +1,6 @@
 import AttachSvgIcon from '@/assets/attach-icon.svg?react';
 import CalendarIcon from '@/assets/calendar.svg?react';
+import CodeModeSvgIcon from '@/assets/code-icon.svg?react';
 import ImageSvgIcon from '@/assets/image.svg?react';
 import McpIconSVG from '@/assets/mcp-icon.svg?react';
 import PieChartIcon from '@/assets/pie-chart-icon.svg?react';
@@ -18,4 +19,5 @@ export const INTERNAL_TOOL_ICONS = {
   AttachSvgIcon,
   McpIcon: McpIconSVG,
   GlobeIcon: WebSearchIcon,
+  CodeModeIcon: CodeModeSvgIcon,
 };

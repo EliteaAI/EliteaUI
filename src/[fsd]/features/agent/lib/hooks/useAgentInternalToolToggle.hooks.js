@@ -23,5 +23,5 @@ export const useAgentInternalToolToggle = ({ name, unavailable = false }) => {
     [setFieldValue, internalTools, name, unavailable],
   );
 
-  return { checked, onToggle };
+  return { checked, onToggle, internalTools };
 };

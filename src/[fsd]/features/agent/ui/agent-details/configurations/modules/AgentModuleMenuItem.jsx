@@ -13,8 +13,16 @@ import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 const stopPropagation = event => event.stopPropagation();
 
 const AgentModuleMenuItem = memo(props => {
-  const { module, readOnly = false, ...menuItemProps } = props;
-  const { name, title, icon, unavailable = false, unavailableTooltip, infoTooltip } = module;
+  const { module, readOnly = false, onRequestEnable, ...menuItemProps } = props;
+  const {
+    name,
+    title,
+    icon,
+    unavailable = false,
+    unavailableTooltip,
+    infoTooltip,
+    requiresCodeModeWarning,
+  } = module;
 
   const isLocked = readOnly || unavailable;
   const tooltip = unavailable ? unavailableTooltip && { text: unavailableTooltip } : infoTooltip;
@@ -25,8 +33,12 @@ const AgentModuleMenuItem = memo(props => {
 
   const handleClick = useCallback(() => {
     if (isLocked) return;
+    if (!checked && requiresCodeModeWarning) {
+      onRequestEnable?.(name);
+      return;
+    }
     onToggle(!checked);
-  }, [isLocked, onToggle, checked]);
+  }, [isLocked, onToggle, checked, requiresCodeModeWarning, onRequestEnable, name]);
 
   const toolIcon = useMemo(() => {
     const IconComponent = INTERNAL_TOOL_ICONS[icon];

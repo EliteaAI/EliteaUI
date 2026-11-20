@@ -126,6 +126,21 @@ export const INTERNAL_TOOLS_LIST = [
     unavailableTooltip: 'Web Search is disabled by your administrator.',
     toolkitNames: ['Web Search', 'tavily'],
   },
+  {
+    name: 'code_mode',
+    title: 'Code Mode (beta)',
+    icon: 'CodeModeIcon',
+    infoTooltip: {
+      text: 'The agent writes one program that calls its tools, instead of calling them one by one. Saves tokens on multi-step tool work.',
+    },
+    agentOnly: true,
+    // Shown only when platform_settings.is_code_mode_available
+    requiresCodeMode: true,
+    // Enabling opens the Code Mode limitations warning first
+    requiresCodeModeWarning: true,
+    unavailableTooltip: 'Code Mode is disabled by your administrator.',
+    toolkitNames: ['code_mode'],
+  },
 ];
 
 export const INTERNAL_TOOL_PERSONALIZATION_FIELD_MAP = {
