@@ -14,7 +14,7 @@ import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-edi
 import { useResolvedSharepointConfig } from '@/[fsd]/features/sharepoint/lib/hooks';
 import { SharepointDelegatedLoginButton } from '@/[fsd]/features/sharepoint/ui';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
-import { useToolValidation } from '@/[fsd]/features/toolkits/lib/hooks/useToolValidation.hooks';
+import { useToolValidation } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolValidationBanner } from '@/[fsd]/features/toolkits/ui/tool-validation-banner';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { useSearchParamValue, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';

@@ -7,7 +7,7 @@ import {
   PIPELINE_TOOL_CARD_ACTION_CLASS,
 } from '@/[fsd]/features/pipelines/tool-picker/lib/constants/toolPicker.constants';
 import { getToolkitDisplayName } from '@/[fsd]/features/toolkits/lib/helpers/toolkits.helpers';
-import { useToolValidation } from '@/[fsd]/features/toolkits/lib/hooks/useToolValidation.hooks';
+import { useToolValidation } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolValidationBanner } from '@/[fsd]/features/toolkits/ui/tool-validation-banner';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import ArrowRightIcon from '@/components/Icons/ArrowRightIcon';

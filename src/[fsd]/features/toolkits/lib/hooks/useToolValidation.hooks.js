@@ -3,12 +3,12 @@ import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 
 import { parseValidationRefusal } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
+import { ToolValidationConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import * as ToolkitFormHelpers from '@/[fsd]/features/toolkits/lib/helpers/toolkitForm.helpers';
 import { mapAssociationError } from '@/hooks/application/useAgentPipelineAssociation';
 import { useToolValidationInfo } from '@/hooks/application/useValidateApplicationVersion';
 
-const PRIVATE_CREDENTIAL_NOT_FOUND = 'private_credential_not_found';
-
+const { PRIVATE_CREDENTIAL_NOT_FOUND } = ToolValidationConstants;
 /**
  * Validation state of one tool attached to an agent or pipeline version.
  * Reads the parent version's errors for the tool, or the sub-agent's own errors for an agent or pipeline tool.

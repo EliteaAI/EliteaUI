@@ -2,8 +2,11 @@ import { memo } from 'react';
 
 import { Typography } from '@mui/material';
 
+import { ToolValidationConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { Banner, Chip } from '@/[fsd]/shared/ui';
 import CredentialWarningBanner from '@/components/CredentialWarningBanner';
+
+const { CREDENTIAL_NOT_FOUND, CONFIGURATION_MODEL_NOT_FOUND } = ToolValidationConstants;
 
 const PRIVATE_CREDENTIAL_NOT_FOUND = 'private_credential_not_found';
 
@@ -38,7 +41,7 @@ const ToolValidationBanner = memo(props => {
     );
   }
 
-  if (errorType === 'credential_not_found' || errorType === PRIVATE_CREDENTIAL_NOT_FOUND) {
+  if (errorType === CREDENTIAL_NOT_FOUND || errorType === PRIVATE_CREDENTIAL_NOT_FOUND) {
     return (
       <Banner.BannerMessage
         containerSx={styles.containerBanner}
@@ -47,7 +50,7 @@ const ToolValidationBanner = memo(props => {
     );
   }
 
-  if (errorType === 'configuration_model_not_found') {
+  if (errorType === CONFIGURATION_MODEL_NOT_FOUND) {
     return (
       <Banner.BannerMessage
         containerSx={styles.containerBanner}
