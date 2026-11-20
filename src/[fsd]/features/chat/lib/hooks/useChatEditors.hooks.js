@@ -3,6 +3,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 import { resolveChatSkillParticipant } from '@/[fsd]/features/chat/participants/lib/helpers';
+import { TAG_TYPE_APPLICATION_DETAILS } from '@/api/applications';
+import { eliteaApi } from '@/api/eliteaApi';
 import useAgentCreation from '@/hooks/chat/useAgentCreation';
 import { useAgentEditorUrlSync } from '@/hooks/chat/useAgentEditorUrlSync';
 import useEditAgent from '@/hooks/chat/useEditAgent';
@@ -152,6 +154,14 @@ export const useChatEditors = ({
   const onGeneratedEntityCreated = useCallback(
     ({ entity_type, entity_id, version_id, entity_name, is_mcp }, setAsActive) => {
       const participant = buildEntityParticipant({ entity_id, entity_name, version_id, is_mcp, projectId });
+      if (entity_type === 'agent' || entity_type === 'pipeline') {
+        // (#7383) the Builder may have changed an already open agent (e.g. linked a toolkit): reload its version
+        dispatch(
+          eliteaApi.util.invalidateTags([
+            { type: TAG_TYPE_APPLICATION_DETAILS, id: `${projectId}_${entity_id}_${version_id}` },
+          ]),
+        );
+      }
       setGeneratedEditorTabs(prev => {
         if (prev.some(t => t.entity_id === entity_id)) return prev;
         if (prev.length === 0) setActiveGeneratedTabIndex(0);
@@ -162,7 +172,7 @@ export const useChatEditors = ({
       });
       setIsEditingGeneratedEntities(true);
     },
-    [projectId],
+    [dispatch, projectId],
   );
 
   // Ancillary hooks

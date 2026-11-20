@@ -8,6 +8,8 @@ import { useChatEditors } from '../useChatEditors.hooks';
 const editSkill = vi.hoisted(() => ({ current: null }));
 
 vi.mock('react-redux', () => ({ useDispatch: () => vi.fn() }));
+vi.mock('@/api/eliteaApi', () => ({ eliteaApi: { util: { invalidateTags: vi.fn() } } }));
+vi.mock('@/api/applications', () => ({ TAG_TYPE_APPLICATION_DETAILS: 'TAG_TYPE_APPLICATION_DETAILS' }));
 vi.mock('@/slices/settings', () => ({ actions: { setBlockNav: vi.fn() } }));
 vi.mock('@/hooks/chat/useAgentCreation', () => ({ default: () => ({}) }));
 vi.mock('@/hooks/chat/usePipelineCreation', () => ({ default: () => ({}) }));
