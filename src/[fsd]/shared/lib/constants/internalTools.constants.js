@@ -139,7 +139,6 @@ export const INTERNAL_TOOLS_LIST = [
     // Enabling opens a limitations warning first
     confirmOnEnable: true,
     unavailableTooltip: 'Code Mode is disabled by your administrator.',
-    modelUnavailableTooltip: 'Code Mode needs a stronger model.',
     toolkitNames: ['code_mode'],
   },
 ];

@@ -44,7 +44,6 @@ const ApplicationTools = memo(props => {
   const availableInternalTools = useAvailableInternalTools({
     includeAgentOnly: true,
     activeToolNames: currentInternalTools,
-    modelName: values?.version_details?.llm_settings?.model_name,
   });
 
   const tools = useMemo(() => values?.version_details?.tools || [], [values?.version_details?.tools]);

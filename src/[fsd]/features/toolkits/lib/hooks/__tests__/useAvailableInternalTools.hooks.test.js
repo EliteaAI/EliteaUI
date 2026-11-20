@@ -104,26 +104,15 @@ describe('useAvailableInternalTools code_mode gate (#7580)', () => {
 
   it('shows code_mode for agents only when the gate is open', () => {
     shared.platformSettings = { is_code_mode_available: true };
-    const { result } = renderHook(() => useAvailableInternalTools(agent({ modelName: 'any' })));
+    const { result } = renderHook(() => useAvailableInternalTools(agent()));
     expect(codeMode(result.current).unavailable).toBeUndefined();
     const { result: chat } = renderHook(() => useAvailableInternalTools());
     expect(codeMode(chat.current)).toBeUndefined();
   });
 
-  it('locks code_mode with the model tooltip when the model is not on the allowlist', () => {
+  it('never locks code_mode by model, even with a leftover model list in settings', () => {
     shared.platformSettings = { is_code_mode_available: true, code_mode_allowed_models: ['opus'] };
-    const { result } = renderHook(() => useAvailableInternalTools(agent({ modelName: 'haiku' })));
-    expect(codeMode(result.current).unavailable).toBe(true);
-    expect(codeMode(result.current).unavailableTooltip).toMatch(/stronger model/);
-    const { result: strong } = renderHook(() => useAvailableInternalTools(agent({ modelName: 'opus' })));
-    expect(codeMode(strong.current).unavailable).toBeUndefined();
-  });
-});
-
-describe('useAvailableInternalTools code_mode before the model loads (#7580)', () => {
-  it('does not lock code_mode while the agent has no model name yet', () => {
-    shared.platformSettings = { is_code_mode_available: true, code_mode_allowed_models: ['opus'] };
-    const { result } = renderHook(() => useAvailableInternalTools({ includeAgentOnly: true }));
-    expect(result.current.find(t => t.name === 'code_mode').unavailable).toBeUndefined();
+    const { result } = renderHook(() => useAvailableInternalTools(agent()));
+    expect(codeMode(result.current).unavailable).toBeUndefined();
   });
 });
