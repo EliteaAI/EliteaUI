@@ -16,7 +16,7 @@ import { useIsVersionLocked } from '@/[fsd]/features/pipelines/tool-picker/lib/h
 import { usePipelineAttachments } from '@/[fsd]/features/pipelines/tool-picker/lib/hooks/usePipelineAttachments.hooks';
 import { useAvailableInternalTools } from '@/[fsd]/features/toolkits/lib/hooks/useAvailableInternalTools.hooks';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
-import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
+import { useIsMcpVisible, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { selectActivePipeline } from '@/slices/pipeline';
 
@@ -32,7 +32,7 @@ const ATTACHMENTS_TOOL_NAME = 'attachments';
  * nodes; "Used by" opens a node's panel.
  */
 const PipelineToolsSection = memo(props => {
-  const { style, disabled = false, onSelectNode } = props;
+  const { style, disabled = false, onSelectNode, applicationId, entityProjectId } = props;
 
   const { values } = useFormikContext();
   const { detach } = usePipelineAttachments();
@@ -42,6 +42,10 @@ const PipelineToolsSection = memo(props => {
   const { yamlJsonObject } = useSelector(selectActivePipeline);
   const { getToolkitNameFromSchema } = useGetToolkitNameFromSchema();
   const isMcpVisible = useIsMcpVisible();
+  // Same project resolution as the agent tool card, so validation errors are read under the same key
+  const selectedProjectId = useSelectedProjectId();
+  const projectId = entityProjectId || selectedProjectId;
+  const versionId = values?.version_details?.id;
 
   const internalTools = useMemo(
     () => values?.version_details?.meta?.internal_tools || [],
@@ -111,6 +115,9 @@ const PipelineToolsSection = memo(props => {
                         kind={item.kind}
                         usedBy={item.usedBy}
                         onSelectNode={onSelectNode}
+                        applicationId={applicationId}
+                        projectId={projectId}
+                        versionId={versionId}
                         onRemove={canRemoveUnused && !item.usedBy.length ? detach : undefined}
                       />
                     )),
