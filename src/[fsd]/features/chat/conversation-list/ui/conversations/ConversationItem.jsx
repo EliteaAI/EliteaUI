@@ -119,30 +119,6 @@ const ConversationItem = memo(props => {
 
   const conversationType = getConversationType();
 
-  const mainBodyWidth = useMemo(() => {
-    // Calculate width based on conversation type and state
-    let rightMargin = 0;
-
-    // Add margin for menu when hovering
-    if (isHovering || showMenu) rightMargin += 32;
-
-    // Add margin for pin icon
-    if (isPinned && !isPlayback) rightMargin += 20;
-
-    // Add margin for users icon based on conversation type
-    if (conversationType === 'private_with_users' || conversationType === 'public') {
-      rightMargin += 20;
-    }
-
-    // Add margin for playback icon
-    if (isPlayback) rightMargin += 24;
-
-    // Add margin for the run spinner / unread dot
-    if (showRunIndicator) rightMargin += 20;
-
-    return `calc(100% - ${rightMargin}px)`;
-  }, [isHovering, showMenu, isPinned, isPlayback, conversationType, showRunIndicator]);
-
   // A real link (href) lets the browser offer "Open link in new tab"; drafts and playbacks have no page of their own
   const conversationLinkProps = useMemo(() => {
     if (isNew || isPlayback || typeof conversation.id !== 'number') return {};
@@ -398,7 +374,7 @@ const ConversationItem = memo(props => {
           <PlayIcon sx={{ fontSize: '1rem' }} />
         </Box>
       )}
-      <Box sx={{ width: mainBodyWidth }}>
+      <Box sx={styles.nameColumn}>
         <Box sx={styles.mainBody}>
           {isNamingPending && !isEditing ? (
             <Box
@@ -611,6 +587,8 @@ const conversationItemStyles = ({ isActive, isHovering, isDuplicating, isSaveEna
       alignItems: 'center',
       gap: '.5rem',
     },
+    // The name takes what the icons leave, so the icons keep one column however long the name is
+    nameColumn: { flex: 1, minWidth: 0 },
     mainBody: { width: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', gap: '.375rem' },
     nameText: {
       whiteSpace: 'nowrap',
@@ -624,6 +602,7 @@ const conversationItemStyles = ({ isActive, isHovering, isDuplicating, isSaveEna
       gap: '.375rem',
       alignItems: 'center',
       minWidth: 'fit-content',
+      flexShrink: 0,
     },
     pinButton: ({ palette }) => ({
       minWidth: '1.25rem !important',
@@ -645,6 +624,7 @@ const conversationItemStyles = ({ isActive, isHovering, isDuplicating, isSaveEna
       justifyContent: 'center',
       alignItems: 'center',
       alignSelf: 'center',
+      flexShrink: 0,
     },
     inputWrapper: ({ palette }) => ({
       width: '100%',

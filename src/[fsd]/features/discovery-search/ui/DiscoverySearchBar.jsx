@@ -26,6 +26,8 @@ const DiscoverySearchBar = memo(props => {
     setSearchTags,
     onClear,
     testId = 'agent-search-input',
+    placeholder = "Let's find something amazing!",
+    extraEndAdornment,
   } = props;
   const theme = useTheme();
   const dispatch = useDispatch();
@@ -191,32 +193,38 @@ const DiscoverySearchBar = memo(props => {
     </Box>
   ) : null;
 
-  const endAdornment = shouldShowActions ? (
-    <Box sx={styles.actions}>
-      <Button.BaseBtn
-        data-testid="search-clear-button"
-        aria-label="Clear search"
-        variant={BUTTON_VARIANTS.tertiary}
-        startIcon={
-          <CancelIcon
-            width="1rem"
-            height="1rem"
-            fill={theme.palette.icon.default}
-          />
-        }
-        onClick={onClear}
-        sx={styles.actionButton}
-      />
-      <Button.BaseBtn
-        data-testid="search-send-button"
-        aria-label="Submit search"
-        variant={BUTTON_VARIANTS.tertiary}
-        startIcon={<SendIcon />}
-        onClick={handleSearch}
-        sx={[styles.actionButton, styles.sendActionButton]}
-      />
-    </Box>
-  ) : null;
+  const endAdornment =
+    shouldShowActions || extraEndAdornment ? (
+      <Box sx={styles.actions}>
+        {shouldShowActions && (
+          <>
+            <Button.BaseBtn
+              data-testid="search-clear-button"
+              aria-label="Clear search"
+              variant={BUTTON_VARIANTS.tertiary}
+              startIcon={
+                <CancelIcon
+                  width="1rem"
+                  height="1rem"
+                  fill={theme.palette.icon.default}
+                />
+              }
+              onClick={onClear}
+              sx={styles.actionButton}
+            />
+            <Button.BaseBtn
+              data-testid="search-send-button"
+              aria-label="Submit search"
+              variant={BUTTON_VARIANTS.tertiary}
+              startIcon={<SendIcon />}
+              onClick={handleSearch}
+              sx={[styles.actionButton, styles.sendActionButton]}
+            />
+          </>
+        )}
+        {extraEndAdornment}
+      </Box>
+    ) : null;
 
   return (
     <ClickAwayListener onClickAway={handleClickAway}>
@@ -225,7 +233,7 @@ const DiscoverySearchBar = memo(props => {
           ref={panelRef}
           searchQuery={searchString}
           onSearchChange={handleInputChange}
-          placeholder={searchTags.length ? '' : "Let's find something amazing!"}
+          placeholder={searchTags.length ? '' : placeholder}
           autoFocus={false}
           inputRef={inputRef}
           onFocus={handleFocus}

@@ -6,12 +6,13 @@ import { PERMISSIONS } from '@/common/constants';
 import AIEditPipelineModal from './AIEditPipelineModal';
 
 const AIEditPipelineButton = memo(props => {
-  const { label, isCreateMode = false } = props;
+  const { label, isCreateMode = false, defaultOpen = false } = props;
   return (
     <EditEntityButton
       permission={PERMISSIONS.applications.update}
       buttonTestId="edit-pipeline-with-ai-button"
       label={label}
+      defaultOpen={defaultOpen}
       renderModal={({ open, onClose }) => (
         <AIEditPipelineModal
           open={open}

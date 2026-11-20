@@ -4,6 +4,7 @@ import ReactGA from 'react-ga4';
 import { useDispatch, useSelector } from 'react-redux';
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 
+import CatalogRedirect from '@/[fsd]/app/routes/CatalogRedirect';
 import IndexRoute from '@/[fsd]/app/routes/IndexRoute';
 import IntegrationGuard from '@/[fsd]/app/routes/IntegrationGuard';
 import LegacyCatalogRedirect from '@/[fsd]/app/routes/LegacyCatalogRedirect';
@@ -13,10 +14,10 @@ import RemountOnEntityChange from '@/[fsd]/app/routes/RemountOnEntityChange';
 import SkillsGuard from '@/[fsd]/app/routes/SkillsGuard';
 import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { SECTION_MODES } from '@/[fsd]/widgets/section-page/lib/constants';
 import { useLazyPermissionListQuery, useLazyPublicPermissionListQuery } from '@/api/auth';
 import { useLazyAuthorDetailsQuery } from '@/api/social.js';
 import {
-  ApplicationsTabs,
   CredentialsTabs,
   MISSING_ENVS,
   PERMISSIONS,
@@ -75,8 +76,7 @@ const ServicePromptsPage = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/pages/settings/ServicePromptsPage'),
 );
 const Users = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/Users'));
-const EliteaCatalog = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/elitea-catalog'));
-const Applications = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/Applications'));
+const AgentsPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/agent/AgentsPage'));
 const CreateApplication = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/CreateApplication'));
 const EditApplication = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/EditApplication.jsx'));
 const AgentEvaluatePage = ChunkHelpers.lazyWithRetry(
@@ -116,7 +116,7 @@ const NotificationCenter = ChunkHelpers.lazyWithRetry(
 const Onboarding = ChunkHelpers.lazyWithRetry(() => import('@/pages/Onboarding/Onboarding'));
 const CreatePipeline = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/pipeline/CreatePipelinePage'));
 const EditPipeline = ChunkHelpers.lazyWithRetry(() => import('@/pages/Pipelines/EditPipeline'));
-const Pipelines = ChunkHelpers.lazyWithRetry(() => import('@/pages/Pipelines/Pipelines'));
+const PipelinesPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/pipeline/PipelinesPage'));
 const ProjectSwitcher = ChunkHelpers.lazyWithRetry(() => import('@/pages/ProjectSwitcher.jsx'));
 const CreateToolkit = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/CreateToolkit'));
 const EditToolkit = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/EditToolkit'));
@@ -222,7 +222,7 @@ const ProtectedRoutes = memo(() => {
       /* onboarding */
       { path: RouteDefinitions.Onboarding, element: <Onboarding /> },
       { path: RouteDefinitions.HelpCenter, element: <Resources /> },
-      { path: RouteDefinitions.EliteaCatalog, element: <EliteaCatalog /> },
+      { path: RouteDefinitions.EliteaCatalog, element: <CatalogRedirect /> },
       { path: RouteDefinitions.AgentHub, element: <LegacyCatalogRedirect /> },
 
       /* chat */
@@ -230,9 +230,9 @@ const ProtectedRoutes = memo(() => {
       { path: RouteDefinitions.ChatConversation, element: <ChatWrapper /> },
 
       /* applications */
-      { path: RouteDefinitions.Applications, element: getIndexElement(ApplicationsTabs[0]) },
+      { path: RouteDefinitions.Applications, element: getIndexElement(SECTION_MODES.project) },
       { path: RouteDefinitions.CreateApplication, element: <CreateApplication /> },
-      { path: RouteDefinitions.ApplicationsWithTab, element: <Applications /> },
+      { path: RouteDefinitions.ApplicationsWithTab, element: <AgentsPage /> },
       {
         path: RouteDefinitions.ApplicationsDetail,
         element: (
@@ -351,9 +351,9 @@ const ProtectedRoutes = memo(() => {
       },
 
       /* pipelines */
-      { path: RouteDefinitions.Pipelines, element: getIndexElement(ApplicationsTabs[0]) },
+      { path: RouteDefinitions.Pipelines, element: getIndexElement(SECTION_MODES.project) },
       { path: RouteDefinitions.CreatePipeline, element: <CreatePipeline /> },
-      { path: RouteDefinitions.PipelinesWithTab, element: <Pipelines /> },
+      { path: RouteDefinitions.PipelinesWithTab, element: <PipelinesPage /> },
       {
         path: RouteDefinitions.PipelineDetail,
         element: (
