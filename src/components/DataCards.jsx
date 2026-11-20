@@ -14,6 +14,9 @@ import {
 } from '@/common/constants';
 import { getCardGradientStyles } from '@/utils/cardStyles';
 
+const LOADING_SKELETONS_COUNT = 10;
+const LOADING_MORE_SKELETONS_COUNT = 8;
+
 const DataCards = memo(props => {
   const {
     data: cardList,
@@ -35,7 +38,9 @@ const DataCards = memo(props => {
 
   const isDefaultCardHeight = cardHeight === '7rem';
 
-  const layoutCardWidth = useCardLayout(cardListWidth, cardList.length, isFullWidth);
+  // Skeletons get the width of a full grid; with no cards yet the layout would fall back to breakpoint widths
+  const layoutCardCount = isLoading ? LOADING_SKELETONS_COUNT : cardList.length;
+  const layoutCardWidth = useCardLayout(cardListWidth, layoutCardCount, isFullWidth);
   const cardWidth = cardWidthOverride || layoutCardWidth;
 
   const styles = dataCardStyles(cardWidth, isFullWidth, cardHeight, isDefaultCardHeight);
@@ -67,7 +72,7 @@ const DataCards = memo(props => {
       sx={styles.cardListContainer}
     >
       {isLoading
-        ? renderSkeletons(10)
+        ? renderSkeletons(LOADING_SKELETONS_COUNT)
         : cardList.length
           ? cardList.map((cardData, index) => (
               <Grid
@@ -79,7 +84,7 @@ const DataCards = memo(props => {
             ))
           : null}
 
-      {isLoadingMore && renderSkeletons(8)}
+      {isLoadingMore && renderSkeletons(LOADING_MORE_SKELETONS_COUNT)}
 
       <ListInfiniteMoreLoader
         listCurrentSize={cardList?.length}

@@ -16,7 +16,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Box, Typography, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip.jsx';
-import { AIEditPipelineButton } from '@/[fsd]/features/pipelines/ai-edit-pipeline';
+import {
+  AIEditPipelineButton,
+  useOpenBuildWithAiOnArrival,
+} from '@/[fsd]/features/pipelines/ai-edit-pipeline';
 import {
   DumpYamlHelpers,
   ParsePipelineHelpers,
@@ -70,6 +73,7 @@ const EditorPanel = forwardRef((props, ref) => {
   const { isSmallWindow } = useIsSmallWindow();
   const theme = useTheme();
   const isFromChat = useIsFrom(RouteDefinitions.Chat);
+  const shouldOpenBuildWithAi = useOpenBuildWithAiOnArrival(isCreateMode && !isFromChat);
   const [mode, setMode] = useState(PipelineEditorMode.Flow);
   const flowEditorRef = useRef();
   const isYamlCodeDirty = useIsPipelineYamlCodeDirty();
@@ -212,6 +216,7 @@ const EditorPanel = forwardRef((props, ref) => {
             <AIEditPipelineButton
               label={isCreateMode ? 'Build with AI' : 'Edit with AI'}
               isCreateMode={isCreateMode}
+              defaultOpen={shouldOpenBuildWithAi}
             />
           ) : undefined
         }

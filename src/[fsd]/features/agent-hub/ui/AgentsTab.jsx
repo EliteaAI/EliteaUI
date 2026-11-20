@@ -17,7 +17,7 @@ import { Category } from '@/[fsd]/shared/ui';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 
 const AgentsTab = memo(props => {
-  const { query = '', onTotalCountChange } = props;
+  const { query = '', onTotalCountChange, showCategoryRail = true, onSelectedCategoriesChange } = props;
   const debouncedQuery = useDebounceValue(query, 300);
   const { data: platformSettings } = useGetPlatformSettingsQuery();
   const newItemDays = platformSettings?.agent_catalog_new_item_days ?? DEFAULT_NEW_ITEM_DAYS;
@@ -53,6 +53,7 @@ const AgentsTab = memo(props => {
     currentPageByTag,
     loadingTags,
     isFetching,
+    isInitialLoading,
     isCacheValid,
     lastRefreshedAt,
     fetchApplicationsForCategoryName,
@@ -124,6 +125,10 @@ const AgentsTab = memo(props => {
   useEffect(() => {
     onTotalCountChange?.(visibleUniqueCount);
   }, [visibleUniqueCount, onTotalCountChange]);
+
+  useEffect(() => {
+    onSelectedCategoriesChange?.(selectedCategories.length);
+  }, [selectedCategories.length, onSelectedCategoriesChange]);
 
   const handleTagSelect = useCallback(
     category => {
@@ -239,7 +244,7 @@ const AgentsTab = memo(props => {
         <Category.CatalogBody
           noResultsTitle="No agents found"
           noResultsDescription="Try adjusting your search terms"
-          isLoading={isFetching && Object.keys(applicationsByTag).length === 0}
+          isLoading={(isInitialLoading || isFetching) && Object.keys(applicationsByTag).length === 0}
           allCategories={allCategories}
           groupedItems={groupedItems}
           selectedCategories={selectedCategories}
@@ -247,6 +252,7 @@ const AgentsTab = memo(props => {
           renderNoResults={renderNoResults}
           onSelectCategory={handleTagSelect}
           chipTestIdPrefix="catalog-agent-category-filter-chip"
+          showRail={showCategoryRail}
         />
         {selectedApplication && (
           <AgentModal

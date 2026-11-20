@@ -17,7 +17,7 @@ import { Category } from '@/[fsd]/shared/ui';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 
 const SkillsTab = memo(props => {
-  const { query = '', onTotalCountChange } = props;
+  const { query = '', onTotalCountChange, showCategoryRail = true, onSelectedCategoriesChange } = props;
   const debouncedQuery = useDebounceValue(query, 300);
   const { data: platformSettings } = useGetPlatformSettingsQuery();
   const newItemDays = platformSettings?.skill_catalog_new_item_days ?? DEFAULT_NEW_ITEM_DAYS;
@@ -53,6 +53,7 @@ const SkillsTab = memo(props => {
     currentPageByTag,
     loadingTags,
     isFetching,
+    isInitialLoading,
     isCacheValid,
     lastRefreshedAt,
     fetchTrendingSkills,
@@ -119,6 +120,10 @@ const SkillsTab = memo(props => {
   useEffect(() => {
     onTotalCountChange?.(visibleUniqueCount);
   }, [visibleUniqueCount, onTotalCountChange]);
+
+  useEffect(() => {
+    onSelectedCategoriesChange?.(selectedCategories.length);
+  }, [selectedCategories.length, onSelectedCategoriesChange]);
 
   const firstVisibleSkill = useMemo(() => {
     for (const category of allCategories) {
@@ -236,7 +241,7 @@ const SkillsTab = memo(props => {
         <Category.CatalogBody
           noResultsTitle="No skills found"
           noResultsDescription="Try adjusting your search terms"
-          isLoading={isFetching && Object.keys(skillsByTag).length === 0}
+          isLoading={(isInitialLoading || isFetching) && Object.keys(skillsByTag).length === 0}
           allCategories={allCategories}
           groupedItems={groupedItems}
           selectedCategories={selectedCategories}
@@ -244,6 +249,7 @@ const SkillsTab = memo(props => {
           renderNoResults={renderNoResults}
           onSelectCategory={handleTagSelect}
           chipTestIdPrefix="catalog-skill-category-filter-chip"
+          showRail={showCategoryRail}
         />
         {selectedSkill && (
           <SkillHubModal
