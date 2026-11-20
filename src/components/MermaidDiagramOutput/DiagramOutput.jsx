@@ -1,10 +1,12 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import { Box, CircularProgress, IconButton, Typography, useTheme } from '@mui/material';
+import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { MermaidHelpers } from '@/[fsd]/shared/lib/helpers';
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import FullscreenIcon from '@/assets/full-screen-icon.svg?react';
 import MinusIcon from '@/assets/minus-icon.svg?react';
@@ -259,11 +261,10 @@ const MermaidDiagramOutput = memo(props => {
   useEffect(() => {
     MermaidHelpers.getMermaid().then(m => {
       m.initialize({
-        startOnLoad: true,
+        startOnLoad: false,
         securityLevel: 'loose',
         theme: theme.palette.mode === 'dark' ? 'dark' : 'light',
       });
-      m.contentLoaded();
     });
   }, [theme.palette.mode]);
 
@@ -451,29 +452,25 @@ const MermaidDiagramOutput = memo(props => {
             placement="bottom"
           >
             <Box component="span">
-              <IconButton
+              <Button.BaseBtn
+                variant={BUTTON_VARIANTS.elitea}
                 onClick={handleQuickFix}
                 disabled={isQuickFixLoading}
                 disableRipple
                 sx={styles.quickFixButton}
-              >
-                <Box sx={styles.quickFixIconWrapper}>
-                  {isQuickFixLoading ? (
+                startIcon={
+                  isQuickFixLoading ? (
                     <CircularProgress
                       size={16}
                       color="inherit"
                     />
                   ) : (
                     <AutoFixHighIcon fontSize="small" />
-                  )}
-                </Box>
-                <Typography
-                  sx={styles.quickFixText}
-                  variant="labelSmall"
-                >
-                  {isQuickFixLoading ? 'Fixing...' : 'Quick Fix'}
-                </Typography>
-              </IconButton>
+                  )
+                }
+              >
+                {isQuickFixLoading ? 'Fixing...' : 'Quick Fix'}
+              </Button.BaseBtn>
             </Box>
           </Tooltip>
         )}
@@ -495,31 +492,25 @@ const MermaidDiagramOutput = memo(props => {
         </DotMenu>
       </Box>
       <Box sx={styles.zoomControls}>
-        <IconButton
-          variant="elitea"
-          color="tertiary"
+        <Button.BaseBtn
+          variant={BUTTON_VARIANTS.tertiary}
           sx={styles.zoomButton}
+          startIcon={<PlusIcon sx={styles.zoomIcon} />}
           onClick={onZoomIn}
-        >
-          <PlusIcon sx={styles.zoomIcon} />
-        </IconButton>
-        <IconButton
-          variant="elitea"
-          color="tertiary"
+        />
+        <Button.BaseBtn
+          variant={BUTTON_VARIANTS.tertiary}
           sx={styles.zoomButton}
+          startIcon={<MinusIcon sx={styles.zoomIcon} />}
           onClick={onZoomOut}
-        >
-          <MinusIcon sx={styles.zoomIcon} />
-        </IconButton>
-        <IconButton
+        />
+        <Button.BaseBtn
+          variant={BUTTON_VARIANTS.tertiary}
           disabled={!hasBeenChanged}
-          variant="elitea"
-          color="tertiary"
           sx={styles.zoomButtonLast}
+          startIcon={<FullscreenIcon sx={styles.zoomIcon} />}
           onClick={onReset}
-        >
-          <FullscreenIcon sx={styles.fullscreenIcon} />
-        </IconButton>
+        />
       </Box>
       <Box sx={styles.diagramContainer}>
         {errorMessage && (
@@ -599,19 +590,18 @@ const mermaidDiagramOutputStyles = (theme, isValidCode, errorMessage, widthsValu
     gap: '0.5rem',
   },
   quickFixButton: ({ palette }) => ({
-    boxSizing: 'border-box',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    justifyContent: 'center',
-    height: '1.75rem',
     paddingLeft: '0.75rem',
     paddingRight: '0.75rem',
     color: palette.components.accentButton.text.default,
     background: palette.components.accentButton.background.default,
-    borderRadius: '1.5rem',
     whiteSpace: 'nowrap',
+    '& .MuiButton-startIcon': {
+      color: palette.components.button.text.create,
+    },
     '&:hover': {
+      background: palette.components.accentButton.background.hover,
+    },
+    '&:focus-visible': {
       background: palette.components.accentButton.background.hover,
     },
     '&:active': {
@@ -622,17 +612,6 @@ const mermaidDiagramOutputStyles = (theme, isValidCode, errorMessage, widthsValu
       color: palette.components.accentButton.text.disabled,
       backgroundColor: palette.components.accentButton.background.disabled,
     },
-  }),
-  quickFixIconWrapper: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: ({ palette }) => palette.components.button.text.create,
-  },
-  quickFixText: ({ typography }) => ({
-    color: 'inherit',
-    fontFamily: typography.fontFamily,
-    fontFeatureSettings: typography.fontFeatureSettings,
   }),
   downloadIcon: {
     fontSize: '1rem',
@@ -652,21 +631,14 @@ const mermaidDiagramOutputStyles = (theme, isValidCode, errorMessage, widthsValu
     border: `0.0625rem solid ${palette.border.lines}`,
   }),
   zoomButton: ({ palette }) => ({
-    marginLeft: 0,
     borderRadius: 0,
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
   }),
   zoomButtonLast: {
-    marginLeft: 0,
     borderRadius: 0,
   },
   zoomIcon: {
     fontSize: '1rem',
-    fill: theme.palette.icon.default,
-  },
-  fullscreenIcon: {
-    fontSize: '1rem',
-    fill: theme.palette.icon.secondary,
   },
   diagramContainer: ({ palette }) => ({
     height: '100%',

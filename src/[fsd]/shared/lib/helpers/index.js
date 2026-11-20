@@ -33,6 +33,7 @@ export {
 export * as ModalHelpers from './modal.helpers.js';
 export { getFilenameFromContentDisposition } from './download.helpers';
 export * as ParseYamlToMermaidHelpers from './parseYamlToMermaid.helpers.js';
+export * as MermaidQuickFixHelpers from './mermaidQuickFix.helpers.js';
 export * as ScheduleHelpers from './schedule.helpers';
 export * as WebhookHelpers from './webhook.helpers.js';
 export * as AgentNestingHelpers from './agentNesting.helpers';
