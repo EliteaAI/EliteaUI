@@ -108,6 +108,12 @@ describe('InstructionsInput view mode', () => {
     expect(screen.getByTestId('markdown-edit-mode-toggle')).toHaveAttribute('aria-pressed', 'true');
   });
 
+  it('wraps long unbroken words inside the preview', () => {
+    renderInput();
+
+    expect(screen.getByTestId('agent-instructions-preview')).toHaveStyle({ overflowWrap: 'anywhere' });
+  });
+
   it('shows an empty state in Preview when there are no instructions', () => {
     renderInput('');
 

@@ -5,6 +5,12 @@ import MarkdownLink from '@/[fsd]/shared/ui/markdown/MarkdownLink';
 
 export const removeHTMLTags = htmlString => htmlString.replace(/<\/?[^>]+(>|$)/g, '');
 
+export const escapeGfmDisallowedRawHtml = html =>
+  html.replace(
+    /<(?=\/?(?:title|textarea|style|xmp|iframe|noembed|noframes|script|plaintext)(?:[\s>]|\/>))/gi,
+    '&lt;',
+  );
+
 export const MarkdownMapping = {
   h1: {
     component: Typography,

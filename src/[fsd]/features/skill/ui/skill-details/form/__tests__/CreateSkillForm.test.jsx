@@ -95,6 +95,14 @@ describe('CreateSkillForm instructions view mode', () => {
     expect(screen.getByTestId('markdown-preview-mode-toggle')).toHaveAttribute('aria-pressed', 'true');
   });
 
+  it('wraps long unbroken words inside the preview', () => {
+    renderForm();
+
+    expect(screen.getByTestId('instructions-markdown').parentElement).toHaveStyle({
+      overflowWrap: 'anywhere',
+    });
+  });
+
   it('opens a new skill in Edit mode', () => {
     renderForm({ isCreateMode: true });
 
