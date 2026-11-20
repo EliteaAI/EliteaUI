@@ -106,7 +106,7 @@ export const generateMessagePayload = ({
         conversation_uuid,
         question_id,
         interaction_uuid,
-        // Project user ids (EliteaAI/elitea_core#726): a person who never opened the chat can be mentioned too
+        // Project user ids: a person who never opened the chat can be mentioned too
         mentioned_user_ids: isSendingToUser && mentionedUserIds?.length > 0 ? mentionedUserIds : undefined,
         attachments_info: attachmentList
           .filter(item => item.filepath)

@@ -48,6 +48,12 @@ describe('useChatUsersAccess', () => {
     expect(userList).toHaveBeenCalledWith(expect.objectContaining({ forceSkip: false }));
   });
 
+  it('pages the members in a cache entry of its own, apart from the Share window', () => {
+    renderAccess({ id: 5, author_id: 1, is_private: false, participants: [user(1, 1)] });
+
+    expect(userList).toHaveBeenCalledWith(expect.objectContaining({ cacheKey: expect.any(String) }));
+  });
+
   it('counts only the people of a private chat, not the AI participants', () => {
     const access = renderAccess({
       id: 5,

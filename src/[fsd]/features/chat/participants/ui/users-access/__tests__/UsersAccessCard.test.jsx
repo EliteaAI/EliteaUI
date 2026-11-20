@@ -258,6 +258,19 @@ describe('UsersAccessCard', () => {
       expect(access.current.search.onLoadMore).toHaveBeenCalled();
     });
 
+    it('keeps Everyone while the server finds no one for «every»', () => {
+      access.current = {
+        ...access.current,
+        users: [],
+        count: 24,
+        search: search({ query: 'every', fetched: 0 }),
+      };
+      renderCard();
+      fireEvent.click(screen.getByTestId('chat-users-access-label'));
+
+      expect(screen.getByTestId('chat-users-mention-everyone')).toBeInTheDocument();
+    });
+
     it('shows the search by the team size even when the first page is short', () => {
       access.current = { ...access.current, users: teamUsers.slice(0, 3), count: 24, search: search() };
       renderCard();

@@ -68,7 +68,6 @@ const UsersMentionDropdown = memo(props => {
   // You are listed as one of the people with access, but cannot mention yourself
   const me = useMemo(() => users.find(item => item.entity_meta?.id == currentUserId), [currentUserId, users]);
   const search = query.trim().toLowerCase();
-  // The server has already filtered its page, by email too
   const matches = useCallback(
     item => !!serverSearch || getUserName(item).toLowerCase().includes(search),
     [search, serverSearch],
@@ -76,7 +75,8 @@ const UsersMentionDropdown = memo(props => {
   const filtered = useMemo(() => others.filter(matches), [others, matches]);
   const showMe = !!others.length && !!me && matches(me);
   // With one person besides the owner, Everyone would mention just that person
-  const peopleBesidesOwner = users.filter(item => !isOwner(item)).length;
+  const peopleBesidesOwner =
+    serverSearch && total != null ? total - 1 : users.filter(item => !isOwner(item)).length;
   const showEveryone =
     peopleBesidesOwner >= MENTION_EVERYONE_MIN_USERS && EVERYONE_LABEL.toLowerCase().includes(search);
   // Counted by everyone with access but you, not by the loaded page or the search result

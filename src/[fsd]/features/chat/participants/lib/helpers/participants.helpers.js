@@ -161,12 +161,7 @@ export const shouldDeselectParticipant = (hasMisconfigurationErrors, signInOnly,
 export const isSavedConversation = conversation =>
   !!conversation?.id && !conversation?.isNew && !conversation?.isPlayback;
 
-/**
- * The project user ids an «@Everyone» message mentions, the sender left out.
- *
- * A whole-team chat passes every project member (`everyoneUserIds`), most of whom never opened the chat;
- * a restricted chat, or a whole-team chat whose member list failed to load, falls back to its people.
- */
+// Falls back to the chat's people when the project list did not load
 export const getEveryoneUserIds = ({ everyoneUserIds, participants = [], userId }) => {
   const ids =
     everyoneUserIds ??

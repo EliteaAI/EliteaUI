@@ -9,14 +9,12 @@ import { ChatParticipantType } from '@/common/constants';
 
 import { USERS_ACCESS_KIND } from '../constants/usersAccess.constants';
 
-// The page size of the Share window, so both read one cached list
 const MEMBERS_PAGE_SIZE = 20;
+const MEMBERS_CACHE_KEY = 'chat-mentions';
 const NO_LINKS = [];
 const NO_ROWS = [];
-// The debounce of the Share window search
 const SEARCH_DEBOUNCE_MS = 300;
 
-// A project member in the shape of a chat participant, so the list and the mention read one shape
 const toMemberParticipant = member => ({
   id: `member-${member.id}`,
   entity_name: ChatParticipantType.Users,
@@ -41,6 +39,7 @@ export const useChatUsersAccess = ({ conversation, projectId }) => {
     sortOrder: 'asc',
     query: debouncedQuery,
     pageSize: MEMBERS_PAGE_SIZE,
+    cacheKey: MEMBERS_CACHE_KEY,
     forceSkip: !conversationId || !isPublic,
   });
   // The whole-team count must not shrink while the search filters the list
@@ -60,8 +59,7 @@ export const useChatUsersAccess = ({ conversation, projectId }) => {
     [conversation?.participants],
   );
   const memberRows = membersData?.rows ?? NO_ROWS;
-  // Whole Team: everyone in the project can open the chat, so the list is the project members; a member
-  // who already joined keeps the participant entry
+  // Whole Team: anyone in the project can open the chat, so the list is the project members
   const users = useMemo(() => {
     if (!isPublic) return participants;
     const byUserId = new Map(participants.map(item => [item.entity_meta?.id, item]));
@@ -93,7 +91,6 @@ export const useChatUsersAccess = ({ conversation, projectId }) => {
       isOwner,
       ownerId: conversation?.author_id,
       users,
-      // Whole Team searches and pages on the server; a private chat filters its participants in place
       search: isPublic
         ? {
             query,

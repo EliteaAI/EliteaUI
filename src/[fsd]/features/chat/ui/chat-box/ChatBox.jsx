@@ -102,7 +102,7 @@ import { Modal } from '@/[fsd]/shared/ui';
 import {
   useConversationEditMutation,
   useInjectMessageMutation,
-  useLazyProjectMemberIdsQuery,
+  useProjectMemberIdsQuery,
   useRegenerateMutation,
   useRemoveAttachmentsMutation,
   useUpdateMessageMetaMutation,
@@ -338,7 +338,17 @@ const ChatBox = memo(
     const [isMentioningEveryone, setIsMentioningEveryone] = useState(false);
     // People mentioned from the Users panel who have not joined the chat yet (any member of a whole-team chat)
     const [panelMentionedUsers, setPanelMentionedUsers] = useState([]);
-    const [fetchProjectMemberIds] = useLazyProjectMemberIdsQuery();
+    const isWholeTeamChat = activeConversation?.is_private === false;
+    // Loaded as soon as Everyone is picked, so sending does not wait for it
+    const {
+      data: projectMemberIds,
+      isFetching: isFetchingEveryoneIds,
+      isError: isEveryoneIdsError,
+      refetch: refetchProjectMemberIds,
+    } = useProjectMemberIdsQuery(
+      { projectId },
+      { skip: !isMentioningEveryone || !isWholeTeamChat || !projectId },
+    );
 
     // Speaking mode states
     const [isSpeakingMode, setIsSpeakingMode] = useState(false);
@@ -1064,7 +1074,6 @@ const ChatBox = memo(
 
     useImperativeHandle(boxRef, () => ({
       onClear: onClickClearChat,
-      // The Users panel passes the person, who may not be a participant yet, so the input can detect the name
       mentionUser: (content, participant) => {
         if (participant?.entity_meta?.id != null) {
           setPanelMentionedUsers(prev =>
@@ -1175,15 +1184,13 @@ const ChatBox = memo(
           });
         }
 
+        if (isMentioningEveryone && isWholeTeamChat && isEveryoneIdsError) {
+          toastError('Failed to load the project members to mention. Please try again.');
+          refetchProjectMemberIds();
+          return false;
+        }
         const participant = activeParticipant;
         const question_id = uuidv4(); // Use uuidv4 instead of useId hook
-        // Everyone of a whole-team chat is every project member, most of whom never opened the chat
-        const everyoneUserIds =
-          isMentioningEveryone && activeConversation?.is_private === false
-            ? await fetchProjectMemberIds({ projectId }, true)
-                .unwrap()
-                .catch(() => undefined)
-            : undefined;
         const makeEventPayload = conversationUuid =>
           getPayload({
             question,
@@ -1191,7 +1198,7 @@ const ChatBox = memo(
             question_id,
             conversationUuid,
             attachmentList: attachments,
-            everyoneUserIds,
+            everyoneUserIds: isWholeTeamChat ? projectMemberIds : undefined,
           });
         let newMessages = initializeNewMessages({
           question,
@@ -1283,7 +1290,7 @@ const ChatBox = memo(
               question_id,
               conversationUuid: activeConversation?.uuid || sendResult.createdConversation?.uuid,
               attachmentList: updatedAttachments,
-              everyoneUserIds,
+              everyoneUserIds: isWholeTeamChat ? projectMemberIds : undefined,
             });
 
             // For agent chats with new conversation creation, always preserve the existing participant_id
@@ -1409,12 +1416,15 @@ const ChatBox = memo(
         conversationEdit,
         dispatch,
         emit,
-        fetchProjectMemberIds,
         getPayload,
         isAgentsPage,
+        isEveryoneIdsError,
         isMentioningEveryone,
+        isWholeTeamChat,
         isSendingToUser,
         name,
+        projectMemberIds,
+        refetchProjectMemberIds,
         rememberSend,
         onClearActiveParticipant,
         onClearAttachments,
@@ -1425,6 +1435,7 @@ const ChatBox = memo(
         setConversationStreamingInfo,
         setSelectedUsers,
         setStreamingInfo,
+        toastError,
         unsavedLLMSettings,
         uploadAttachments,
         userId,
@@ -2554,43 +2565,31 @@ const ChatBox = memo(
     const { fetchOriginalDetails, isFetchingParticipant, fetchOriginalVersionDetails } =
       useFetchParticipantDetails();
     const users = useMemo(() => {
-      const userParticipants = (activeConversation?.participants || [])
-        .filter(
-          participant =>
-            participant.entity_name === ChatParticipantType.Users && participant.entity_meta?.id !== userId,
-        )
-        .map(participant => ({
-          id: participant.id,
-          name: participant.meta.user_name,
-          participant,
-        }));
+      const userParticipants = (activeConversation?.participants || []).filter(
+        participant =>
+          participant.entity_name === ChatParticipantType.Users && participant.entity_meta?.id !== userId,
+      );
+      const joined = new Set(userParticipants.map(participant => participant.entity_meta?.id));
+      const panelOnly = panelMentionedUsers.filter(
+        participant => !joined.has(participant.entity_meta.id) && participant.entity_meta.id != userId,
+      );
+      const mentionable = [...userParticipants, ...panelOnly].map(participant => ({
+        id: participant.id,
+        name: participant.meta?.user_name,
+        participant,
+      }));
 
-      if (userParticipants.length > 0) {
-        userParticipants.push({
+      // A whole-team chat keeps Everyone with no one joined yet, or the input would drop the panel's «@Everyone»
+      if (userParticipants.length > 0 || isWholeTeamChat) {
+        mentionable.push({
           id: '@everyone',
           name: 'Everyone',
           participant: 'All users',
         });
       }
 
-      return userParticipants;
-    }, [activeConversation?.participants, userId]);
-
-    // The names the input detects: the «@» list plus the people mentioned from the Users panel. A whole-team
-    // chat keeps Everyone even with no one else joined yet, or the input would drop the panel's «@Everyone»
-    const isWholeTeamChat = activeConversation?.is_private === false;
-    const mentionableUsers = useMemo(() => {
-      const known = new Set(users.map(item => item.participant?.entity_meta?.id).filter(Boolean));
-      const extra = panelMentionedUsers
-        .filter(item => !known.has(item.entity_meta.id) && item.entity_meta.id != userId)
-        .map(item => ({ id: item.id, name: item.meta?.user_name, participant: item }));
-      const hasEveryone = users.some(item => item.id === '@everyone');
-      const everyone =
-        isWholeTeamChat && !hasEveryone
-          ? [{ id: '@everyone', name: 'Everyone', participant: 'All users' }]
-          : [];
-      return extra.length || everyone.length ? [...extra, ...users, ...everyone] : users;
-    }, [isWholeTeamChat, panelMentionedUsers, userId, users]);
+      return mentionable;
+    }, [activeConversation?.participants, isWholeTeamChat, panelMentionedUsers, userId]);
 
     useEffect(() => {
       setPanelMentionedUsers([]);
@@ -3071,6 +3070,7 @@ const ChatBox = memo(
         isProcessingSymbols ||
         isFetchingParticipant ||
         isUploadingAttachments ||
+        isFetchingEveryoneIds ||
         isUpdatingInternalToolsConfig ||
         activeConversation?.isSending ||
         hasBlockingHitlInterrupt ||
@@ -3087,6 +3087,7 @@ const ChatBox = memo(
         isProcessingSymbols,
         isFetchingParticipant,
         isUploadingAttachments,
+        isFetchingEveryoneIds,
         isUpdatingInternalToolsConfig,
         activeConversation?.isSending,
         hasBlockingHitlInterrupt,
@@ -3271,7 +3272,7 @@ const ChatBox = memo(
               onInject={onInjectMessage}
               onStopGeneration={handleStopStreaming}
               disableSwitchingParticipant={shouldDisableSwitchingParticipant}
-              users={mentionableUsers}
+              users={users}
               onMentionChange={onMentionChange}
               isEditingAgent={isEditingAgent}
               onShowAgentEditor={onShowAgentEditor}

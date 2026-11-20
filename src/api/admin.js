@@ -8,6 +8,10 @@ const TAG_TYPE_USERS = 'TAG_TYPE_USERS';
 const TAG_TYPE_ROLES = 'TAG_TYPE_ROLES';
 const TAG_TYPE_MODERATION_STATUS = 'TAG_TYPE_MODERATION_STATUS';
 const PROJECT_MODE = 'default';
+// The users list answers at most 100 rows per call
+const MEMBER_IDS_PAGE_SIZE = 100;
+
+const getUsersUrl = projectId => apiSlicePath + '/users/' + PROJECT_MODE + '/' + projectId;
 
 export const apis = eliteaApi
   .enhanceEndpoints({
@@ -17,7 +21,7 @@ export const apis = eliteaApi
     endpoints: build => ({
       userList: build.query({
         query: ({ projectId, page, params, pageSize = PAGE_SIZE }) => ({
-          url: apiSlicePath + '/users/' + PROJECT_MODE + '/' + projectId,
+          url: getUsersUrl(projectId),
           params: {
             ...params,
             limit: pageSize,
@@ -62,6 +66,23 @@ export const apis = eliteaApi
         forceRefetch({ currentArg, previousArg }) {
           return currentArg !== previousArg;
         },
+      }),
+      // Everyone in a whole-team chat mentions every project member, so all pages are read
+      projectMemberIds: build.query({
+        queryFn: async ({ projectId }, _queryApi, _extraOptions, baseQuery) => {
+          const ids = [];
+          for (let offset = 0; ; offset += MEMBER_IDS_PAGE_SIZE) {
+            const result = await baseQuery({
+              url: getUsersUrl(projectId),
+              params: { limit: MEMBER_IDS_PAGE_SIZE, offset },
+            });
+            if (result.error) return { error: result.error };
+            const rows = result.data?.rows ?? [];
+            ids.push(...rows.map(user => user.id));
+            if (!rows.length || ids.length >= (result.data?.total ?? ids.length)) return { data: ids };
+          }
+        },
+        providesTags: (result, error) => (error ? [] : [TAG_TYPE_USERS]),
       }),
       roleList: build.query({
         query: ({ projectId, page, params, pageSize = PAGE_SIZE }) => ({
@@ -181,6 +202,7 @@ export const apis = eliteaApi
 
 export const {
   useUserListQuery,
+  useProjectMemberIdsQuery,
   useRoleListQuery,
   useUserCreateMutation,
   useUserUpdateMutation,
