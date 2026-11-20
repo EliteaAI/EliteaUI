@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -30,6 +30,8 @@ const FolderAccordion = memo(props => {
       },
     },
     defaultExpanded = false,
+    storedExpanded,
+    onExpandedChange,
     menuItems,
     isActive,
     is_private,
@@ -44,7 +46,8 @@ const FolderAccordion = memo(props => {
     folderId,
   } = props;
 
-  const [expanded, setExpanded] = useState(defaultExpanded);
+  // The user's own choice, kept over a remount of the list, wins over the default
+  const [expanded, setExpanded] = useState(storedExpanded ?? defaultExpanded);
 
   const shouldBeSelected = !expanded && defaultExpanded;
 
@@ -57,9 +60,13 @@ const FolderAccordion = memo(props => {
     shouldBeSelected,
   );
 
-  const onChange = useCallback((_, value) => {
-    setExpanded(value);
-  }, []);
+  const onChange = useCallback(
+    (_, value) => {
+      setExpanded(value);
+      onExpandedChange?.(value);
+    },
+    [onExpandedChange],
+  );
 
   const handleUnpinClick = useCallback(
     event => {
@@ -69,9 +76,15 @@ const FolderAccordion = memo(props => {
     [onUnpin],
   );
 
+  // Auto-opens (e.g. its chat gets selected) and keeps that, so a remount does not fold it again
+  const prevDefaultExpandedRef = useRef(defaultExpanded);
   useEffect(() => {
-    if (defaultExpanded) setExpanded(true);
-  }, [defaultExpanded]);
+    if (defaultExpanded && !prevDefaultExpandedRef.current) {
+      setExpanded(true);
+      onExpandedChange?.(true);
+    }
+    prevDefaultExpandedRef.current = defaultExpanded;
+  }, [defaultExpanded, onExpandedChange]);
 
   return (
     <Box sx={style}>

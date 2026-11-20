@@ -1,5 +1,7 @@
 import RouteDefinitions from '@/routes';
 
+export const SIDEBAR_COLLAPSE_STATE_KEY = 'sidebarCollapseId';
+
 // Explore list order; `permissionKey` is the PERMISSION_GROUPS entry gating the row (none = always shown)
 export const ExploreSections = [
   { value: 'agents', label: 'Agents', url: RouteDefinitions.Applications, permissionKey: 'agents' },

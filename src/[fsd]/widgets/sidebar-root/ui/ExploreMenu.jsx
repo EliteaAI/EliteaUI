@@ -29,6 +29,9 @@ const SECTION_ICONS = {
 const POPPER_MODIFIERS = [{ name: 'offset', options: { offset: [0, 24] } }];
 // Time for the pointer to cross the gap between the item and the list
 const CLOSE_DELAY_MS = 200;
+// The list opens to the right of Explore, so these keys step into it / back out of it
+const OPEN_LIST_KEYS = ['ArrowDown', 'ArrowRight'];
+const CLOSE_LIST_KEY = 'ArrowLeft';
 
 const ExploreMenu = memo(props => {
   const { showLabel = true } = props;
@@ -77,15 +80,23 @@ const ExploreMenu = memo(props => {
 
   const onKeyDown = useCallback(
     event => {
-      if (event.key === 'Escape' && open) closeAndRefocus();
+      if (event.key === 'Escape' && open) {
+        closeAndRefocus();
+        return;
+      }
+      if (OPEN_LIST_KEYS.includes(event.key) && event.target === triggerRef.current) {
+        event.preventDefault();
+        keepOpen();
+        setFocusList(true);
+      }
     },
-    [closeAndRefocus, open],
+    [closeAndRefocus, keepOpen, open],
   );
 
   const onListKeyDown = useCallback(
     event => {
-      if (event.key !== 'Tab') return;
       // The list lives at the end of the page, so Tab would leave the sidebar: return to Explore instead
+      if (event.key !== 'Tab' && event.key !== CLOSE_LIST_KEY) return;
       event.preventDefault();
       closeAndRefocus();
     },
@@ -95,7 +106,7 @@ const ExploreMenu = memo(props => {
   const onSelectSection = useCallback(
     section => event => {
       close();
-      navigateToPage(section.url, section.breadCrumb ?? section.label)(event);
+      navigateToPage(section.url, section.breadCrumb ?? section.label, { collapseSidebar: true })(event);
     },
     [close, navigateToPage],
   );
