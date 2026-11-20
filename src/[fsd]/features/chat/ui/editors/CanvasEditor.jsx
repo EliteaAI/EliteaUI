@@ -19,23 +19,18 @@ import { useTrackEvent } from '@/GA';
 import { extraCodeFromBlock } from '@/[fsd]/features/chat/lib/helpers';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import {
-  SERVICE_PROMPT_KEYS,
   useIsSmallWindow,
   useLanguageLinter,
+  useMermaidQuickFix,
   useSelectedProjectId,
-  useServicePromptByKey,
   useToast,
 } from '@/[fsd]/shared/lib/hooks';
 import { Field } from '@/[fsd]/shared/ui';
 import { useEditCanvasMutation } from '@/api';
-import { useListModelsQuery } from '@/api/configurations.js';
-import { useGenerateContentBlockingMutation } from '@/api/llm.js';
-import { CANVAS_ADMIN_USER, CANVAS_SYSTEM_USER, PUBLIC_PROJECT_ID } from '@/common/constants';
+import { CANVAS_ADMIN_USER, CANVAS_SYSTEM_USER } from '@/common/constants';
 import { buildErrorMessage, handleCopy, isNullOrUndefined } from '@/common/utils';
 import MarkdownTableEditor, { parseMarkdownTable } from '@/components/MarkdownTableEditor';
 import MermaidDiagramOutput from '@/components/MermaidDiagramOutput/DiagramOutput';
-import { getMermaidQuickFixModelInfo } from '@/components/MermaidDiagramOutput/mermaidQuickFixModel.helpers';
-import { buildMermaidQuickFixPrompt } from '@/components/MermaidDiagramOutput/mermaidQuickFixPrompt';
 import {
   useCanvasDetailSocket,
   useCanvasEditSocket,
@@ -169,98 +164,10 @@ const CanvasEditor = memo(
       hasSelectedColumns: false,
     });
     const [code, setCode] = useState(selectedCodeBlockInfo?.codeBlock);
-    const [generateContentBlocking, { isLoading: isQuickFixLoading }] = useGenerateContentBlockingMutation();
     const { joinTheCanvasRoom } = useJoinCanvasSocket();
     const { leaveTheCanvasRoom } = useLeaveCanvasRoomSocket();
     const { sendChangeToRemote } = useCanvasEditSocket();
     const hasJoinedTheCanvas = useRef(false);
-
-    const { data: modelsData = {} } = useListModelsQuery(
-      { projectId, include_shared: projectId != PUBLIC_PROJECT_ID, section: 'llm' },
-      { skip: !projectId },
-    );
-
-    const { prompt: quickFixBasePrompt, isLoading: isServicePromptLoading } = useServicePromptByKey(
-      projectId,
-      SERVICE_PROMPT_KEYS.MERMAID_QUICK_FIX,
-    );
-
-    const quickFixModelInfo = useMemo(() => {
-      return getMermaidQuickFixModelInfo(modelsData);
-    }, [modelsData]);
-
-    const extractMermaidCode = useCallback(text => {
-      if (!text) return '';
-      const raw = String(text).trim();
-
-      const fencedMermaid = raw.match(/```mermaid\s*([\s\S]*?)```/i);
-      if (fencedMermaid?.[1]) {
-        return fencedMermaid[1].trim();
-      }
-
-      const fencedAny = raw.match(/```\s*([\s\S]*?)```/);
-      if (fencedAny?.[1]) {
-        return fencedAny[1].trim();
-      }
-
-      return raw;
-    }, []);
-
-    const extractPredictText = useCallback(response => {
-      const result = response?.result ?? response;
-
-      if (typeof result === 'string') return result;
-      if (!result) return '';
-
-      const coerceContentToText = value => {
-        if (typeof value === 'string') return value;
-        if (Array.isArray(value)) {
-          return value.map(part => part?.text || part?.content || '').join('');
-        }
-        return '';
-      };
-
-      const extractLastChatHistoryText = chatHistory => {
-        if (!Array.isArray(chatHistory) || chatHistory.length === 0) return '';
-
-        for (let index = chatHistory.length - 1; index >= 0; index -= 1) {
-          const msg = chatHistory[index];
-          const role = msg?.role || msg?.type;
-          const contentText = coerceContentToText(msg?.content ?? msg);
-
-          if (!contentText) continue;
-
-          if (role === 'assistant' || role === 'ai') {
-            return contentText;
-          }
-        }
-
-        const fallback = chatHistory[chatHistory.length - 1];
-        return coerceContentToText(fallback?.content ?? fallback);
-      };
-
-      if (typeof result.elitea_response === 'string') return result.elitea_response;
-      if (typeof result.output === 'string') return result.output;
-
-      const chatHistoryText = extractLastChatHistoryText(result.chat_history);
-      if (chatHistoryText) return chatHistoryText;
-
-      const messages = result.messages;
-      if (Array.isArray(messages) && messages.length > 0) {
-        const last = messages[messages.length - 1];
-        if (typeof last === 'string') return last;
-        if (typeof last?.content === 'string') return last.content;
-        if (Array.isArray(last?.content)) {
-          return last.content.map(part => part?.text || '').join('');
-        }
-      }
-
-      try {
-        return JSON.stringify(result);
-      } catch {
-        return String(result);
-      }
-    }, []);
 
     const onCopy = useCallback(() => {
       handleCopy(editorRef.current?.getCode?.());
@@ -369,87 +276,18 @@ const CanvasEditor = memo(
       [code, selectedCodeBlockInfo?.canvasId, sendChangeToRemote],
     );
 
-    const handleQuickFix = useCallback(
-      async ({ error: mermaidError, code: mermaidCode }) => {
-        if (readOnly) {
-          toastError('Diagram is read-only right now');
-          return;
-        }
-
-        if (!projectId) {
-          toastError('Select a project to use Quick Fix');
-          return;
-        }
-
-        if (!quickFixModelInfo?.modelName || !quickFixModelInfo?.modelProjectId) {
-          toastError('No model is available for Quick Fix');
-          return;
-        }
-
-        if (isServicePromptLoading) {
-          toastInfo('Loading Service Prompt…');
-          return;
-        }
-
-        if (!quickFixBasePrompt) {
-          toastError('Service Prompt is not configured');
-          return;
-        }
-
-        const prompt = buildMermaidQuickFixPrompt({
-          basePrompt: quickFixBasePrompt,
-          error: mermaidError,
-          code: mermaidCode,
-        });
-
-        try {
-          const response = await generateContentBlocking({
-            projectId,
-            user_input: prompt,
-            chat_history: [],
-            tools: [],
-            instructions: null,
-            llm_settings: {
-              model_name: quickFixModelInfo.modelName,
-              model_project_id: quickFixModelInfo.modelProjectId,
-              temperature: 0.1,
-            },
-            await_task_timeout: 60,
-          }).unwrap();
-
-          if (response?.task_id) {
-            toastError('Quick Fix is taking longer than expected. Please try again.');
-            return;
-          }
-
-          const text = extractPredictText(response);
-          const newCode = extractMermaidCode(text);
-
-          if (!newCode) {
-            toastError('Quick Fix did not return Mermaid code');
-            return;
-          }
-
-          editorRef.current?.setCode?.(newCode);
-          notifyChange(newCode);
-        } catch (e) {
-          toastError(e?.data?.error || e?.message || 'Quick Fix failed');
-        }
+    const onQuickFixed = useCallback(
+      newCode => {
+        editorRef.current?.setCode?.(newCode);
+        notifyChange(newCode);
       },
-      [
-        extractMermaidCode,
-        extractPredictText,
-        generateContentBlocking,
-        isServicePromptLoading,
-        quickFixModelInfo,
-        notifyChange,
-        projectId,
-        quickFixBasePrompt,
-        readOnly,
-        toastError,
-        toastInfo,
-      ],
+      [notifyChange],
     );
+
+    const { handleQuickFix, isQuickFixLoading, quickFixTooltip } = useMermaidQuickFix({
+      readOnly,
+      onFixed: onQuickFixed,
+    });
 
     const { extensions, onChangeLanguage, language } = useLanguageLinter(
       selectedCodeBlockInfo?.language !== 'markdownTable'
@@ -682,7 +520,7 @@ const CanvasEditor = memo(
                 code={code}
                 onQuickFix={readOnly ? undefined : handleQuickFix}
                 isQuickFixLoading={isQuickFixLoading}
-                quickFixTooltip={quickFixModelInfo?.tooltip || ''}
+                quickFixTooltip={quickFixTooltip}
               />
             </Split>
           )
