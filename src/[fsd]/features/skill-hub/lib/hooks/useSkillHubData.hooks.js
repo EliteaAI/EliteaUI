@@ -32,7 +32,14 @@ export const useSkillHubData = (query, selectedTagNames) => {
 
   const [loadingTags, setLoadingTags] = useState(new Set());
 
-  const { data: categoriesData, isFetching: isFetchingCategories } = useGetSkillCategoriesQuery({
+  // Until the first load ends the empty catalog is still loading, not "nothing found"
+  const [hasLoaded, setHasLoaded] = useState(isCacheValid);
+
+  const {
+    data: categoriesData,
+    isFetching: isFetchingCategories,
+    isError: isCategoriesError,
+  } = useGetSkillCategoriesQuery({
     projectId: PUBLIC_PROJECT_ID,
   });
   const categoryNames = useMemo(() => (categoriesData?.categories || []).map(c => c.name), [categoriesData]);
@@ -103,6 +110,7 @@ export const useSkillHubData = (query, selectedTagNames) => {
         });
       } finally {
         setLoading('bulk_fetch', false);
+        setHasLoaded(true);
       }
     },
     [fetchSkills, query, setLoading, bucketSkillsByCategory, updateSkillData],
@@ -202,6 +210,7 @@ export const useSkillHubData = (query, selectedTagNames) => {
       }
     } finally {
       setLoading('global_search', false);
+      setHasLoaded(true);
     }
   }, [fetchSkills, query, setLoading, resetSearchByTag, bucketSkillsByCategory, categoryNames, dispatch]);
 
@@ -225,7 +234,10 @@ export const useSkillHubData = (query, selectedTagNames) => {
   ]);
 
   useEffect(() => {
-    if (categoryNames.length === 0) return;
+    if (categoryNames.length === 0) {
+      if (!isFetchingCategories && (categoriesData || isCategoriesError)) setHasLoaded(true);
+      return;
+    }
 
     if (query) {
       if (!isCacheValid) {
@@ -243,6 +255,9 @@ export const useSkillHubData = (query, selectedTagNames) => {
     }
   }, [
     categoryNames,
+    categoriesData,
+    isCategoriesError,
+    isFetchingCategories,
     query,
     isCacheValid,
     searchAndCategorize,
@@ -315,6 +330,7 @@ export const useSkillHubData = (query, selectedTagNames) => {
     currentPageByTag,
     loadingTags,
     isFetching,
+    isInitialLoading: !hasLoaded && !isCacheValid,
     isCacheValid,
     lastRefreshedAt,
     fetchTrendingSkills,
