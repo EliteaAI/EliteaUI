@@ -359,6 +359,7 @@ const CreateSkillForm = memo(props => {
                   ) : (
                     <Box sx={styles.instructionsWrapper}>
                       <Box
+                        data-testid="create-skill-instructions-preview"
                         sx={[styles.instructionsPreview, Boolean(instructionsError) && styles.errorBorder]}
                       >
                         {instructions ? (

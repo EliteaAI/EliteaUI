@@ -52,6 +52,13 @@ describe('Token raw HTML rendering', () => {
     expect(body.querySelector('script')).toBeNull();
   });
 
+  it('shows an iframe block as text instead of dropping it', () => {
+    const body = renderToBody('<iframe src="https://example.com"></iframe>\nafter');
+
+    expect(visibleText(body)).toBe('<iframe src="https://example.com"></iframe> after');
+    expect(body.querySelector('iframe')).toBeNull();
+  });
+
   it('still renders allowed HTML elements', () => {
     const body = renderToBody('<details><summary>More</summary>inner</details>\n');
 

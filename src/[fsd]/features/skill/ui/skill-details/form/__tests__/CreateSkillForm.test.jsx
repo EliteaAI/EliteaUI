@@ -98,7 +98,7 @@ describe('CreateSkillForm instructions view mode', () => {
   it('wraps long unbroken words inside the preview', () => {
     renderForm();
 
-    expect(screen.getByTestId('instructions-markdown').parentElement).toHaveStyle({
+    expect(screen.getByTestId('create-skill-instructions-preview')).toHaveStyle({
       overflowWrap: 'anywhere',
     });
   });
