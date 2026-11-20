@@ -80,3 +80,12 @@ describe('SkillInstructionsPane counter', () => {
     expect(last.extensions).toBe(first.extensions);
   });
 });
+
+describe('SkillInstructionsPane preview', () => {
+  afterEach(cleanup);
+
+  it('wraps long unbroken words inside the preview', () => {
+    renderPane(0, { showViewToggle: true });
+    expect(screen.getByTestId('skill-instructions-preview')).toHaveStyle({ overflowWrap: 'anywhere' });
+  });
+});

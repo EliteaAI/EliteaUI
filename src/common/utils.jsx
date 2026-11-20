@@ -148,6 +148,9 @@ export const buildErrorMessage = err => {
   if (err?.originalStatus === 404) {
     return 'The requested resource was not found!';
   }
+  if (err?.status === 'PARSING_ERROR') {
+    return `The server sent an unexpected response (HTTP ${err.originalStatus}). Please try again or contact your administrator.`;
+  }
   if (err?.status === 403) {
     // A 403 that carries a code and a readable message is a refusal with a reason; show the reason
     const refusal = readRefusal(err);

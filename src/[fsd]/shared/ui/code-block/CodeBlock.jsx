@@ -1,6 +1,7 @@
 import { Suspense, lazy, memo, useCallback } from 'react';
 
 import { Highlight, themes } from 'prism-react-renderer';
+import { ErrorBoundary } from 'react-error-boundary';
 
 import { Box, useTheme } from '@mui/material';
 
@@ -15,6 +16,8 @@ import DownloadIcon from '@/components/Icons/DownloadIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 import { useShouldDisableEditCanvas } from '@/components/MarkdownTableBlock';
 import useCopyDownloadHandlers from '@/hooks/chat/useCopyEventHandlers';
+
+import MermaidCodeBlockFallback from './MermaidCodeBlockFallback';
 
 const MermaidCodeBlock = lazy(() => import('@/components/MermaidCodeBlock'));
 
@@ -82,21 +85,27 @@ const CodeBlock = memo(props => {
   ]);
 
   if (markedToken.lang === 'mermaid') {
+    // A failed chunk load or render error must stay inside this block instead of taking the whole chat down
     return (
-      <Suspense fallback={<Box sx={styles.mermaidFallback} />}>
-        <MermaidCodeBlock
-          markedToken={markedToken}
-          theme={theme}
-          onEdit={onEdit}
-          startPos={startPos}
-          endPos={endPos}
-          selectedCodeBlockInfo={selectedCodeBlockInfo}
-          canvasId={canvasId}
-          messageItemId={messageItemId}
-          isStreaming={isStreaming}
-          showToolbar={showToolbar}
-        />
-      </Suspense>
+      <ErrorBoundary
+        fallback={<MermaidCodeBlockFallback code={markedToken.text} />}
+        resetKeys={[markedToken.text]}
+      >
+        <Suspense fallback={<Box sx={styles.mermaidFallback} />}>
+          <MermaidCodeBlock
+            markedToken={markedToken}
+            theme={theme}
+            onEdit={onEdit}
+            startPos={startPos}
+            endPos={endPos}
+            selectedCodeBlockInfo={selectedCodeBlockInfo}
+            canvasId={canvasId}
+            messageItemId={messageItemId}
+            isStreaming={isStreaming}
+            showToolbar={showToolbar}
+          />
+        </Suspense>
+      </ErrorBoundary>
     );
   }
 

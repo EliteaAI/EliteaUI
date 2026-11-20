@@ -39,7 +39,6 @@ vi.mock('@/[fsd]/entities/run-history', async () => ({
 
 vi.mock('@/[fsd]/features/chat', () => ({ ChatMessageList: () => null }));
 vi.mock('@/[fsd]/features/settings/ui/complexity', () => ({
-  ComplexityAgentBlock: () => null,
   useRunComplexityColumn: () => null,
 }));
 vi.mock('@/[fsd]/features/schedule', () => ({
@@ -80,10 +79,11 @@ vi.mock('@/[fsd]/shared/ui/button', () => ({
 }));
 
 vi.mock('@/[fsd]/shared/ui/select', () => ({
-  SingleSelect: ({ label, options, value, onValueChange, displayEmpty }) => (
+  SingleSelect: ({ label, options, value, onValueChange, displayEmpty, disabled }) => (
     <select
       data-display-empty={String(Boolean(displayEmpty))}
       aria-label={label}
+      disabled={disabled}
       value={value}
       onChange={event => onValueChange(event.target.value)}
     >
@@ -312,7 +312,65 @@ describe('RunHistoryPage schedule filter and links', () => {
     expect(containerProps.current.queryParams).toEqual({});
   });
 
-  it('offers the four trigger types and ignores an unknown value in the link', () => {
+  it.each([
+    ['chat', 'Chat'],
+    ['api', 'API'],
+    ['mcp', 'MCP'],
+  ])('sends execution_type=%s for the %s option, not a run trigger', (value, label) => {
+    renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
+
+    fireEvent.change(screen.getByLabelText('Trigger Type'), { target: { value } });
+
+    expect(containerProps.current.queryParams).toEqual({ execution_type: value });
+    expect(screen.getByLabelText('Trigger Type')).toHaveValue(value);
+    expect(screen.getByRole('option', { name: label })).toBeInTheDocument();
+  });
+
+  it('reads trigger=chat from the link and Clear filters resets it', () => {
+    renderAt('/agents/all/127/history?trigger=chat', { scheduleEntityType: 'agent' });
+    expect(containerProps.current.queryParams).toEqual({ execution_type: 'chat' });
+
+    fireEvent.click(screen.getByTestId('run-history-filters-clear'));
+    expect(containerProps.current.queryParams).toEqual({});
+  });
+
+  it('an execution type link ignores the run record filters and disables them', () => {
+    renderAt('/agents/all/127/history?trigger=api&status=failed&schedule_id=4&version_id=9', {
+      scheduleEntityType: 'agent',
+    });
+
+    expect(containerProps.current.queryParams).toEqual({ execution_type: 'api' });
+    ['Status', 'Version', 'Schedule/Webhook'].forEach(label => {
+      expect(screen.getByLabelText(label)).toBeDisabled();
+      expect(screen.getByLabelText(label)).toHaveValue('');
+    });
+    expect(screen.getByLabelText('Trigger Type')).toBeEnabled();
+  });
+
+  it('picking an execution type clears the run record filters, and a run trigger enables them again', () => {
+    renderAt('/agents/all/127/history?status=failed&schedule_id=4&version_id=9', {
+      scheduleEntityType: 'agent',
+    });
+
+    fireEvent.change(screen.getByLabelText('Trigger Type'), { target: { value: 'chat' } });
+    expect(containerProps.current.queryParams).toEqual({ execution_type: 'chat' });
+    expect(screen.getByLabelText('Status')).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Trigger Type'), { target: { value: 'manual' } });
+    // the cleared filters stay cleared: they are not restored from before
+    expect(containerProps.current.queryParams).toEqual({ trigger: 'manual' });
+    ['Status', 'Version', 'Schedule/Webhook'].forEach(label =>
+      expect(screen.getByLabelText(label)).toBeEnabled(),
+    );
+  });
+
+  it('a link with execution_type alone sends no filter', () => {
+    renderAt('/agents/all/127/history?execution_type=chat', { scheduleEntityType: 'agent' });
+
+    expect(containerProps.current.queryParams).toEqual({});
+  });
+
+  it('offers every trigger type and ignores an unknown value in the link', () => {
     renderAt('/agents/all/127/history?trigger=bogus&status=bogus', { scheduleEntityType: 'agent' });
 
     expect(containerProps.current.queryParams).toEqual({});
@@ -323,6 +381,9 @@ describe('RunHistoryPage schedule filter and links', () => {
       'Manual',
       'Webhook',
       'Test',
+      'Chat',
+      'API',
+      'MCP',
     ]);
   });
 

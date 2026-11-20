@@ -448,6 +448,62 @@ describe('a report that disagrees with its run state is leftover', () => {
     expect(report.totals.indexed).toBe(0);
   });
 
+  it('discards an earlier failed run report whose errors are not this failure', () => {
+    const report = normalizeIndexingReport({
+      report: canonicalReport({
+        status: 'error',
+        errors: ['Indexing failed: the loader returned no content while the index holds data.'],
+        errors_total: 1,
+      }),
+      state: 'failed',
+      error: 'The toolkit changed after its index-schedule mandate was approved; approve a new revision.',
+    });
+
+    expect(report.isLegacy).toBe(true);
+    expect(report.errors).toEqual([
+      'The toolkit changed after its index-schedule mandate was approved; approve a new revision.',
+    ]);
+  });
+
+  it('keeps a failed run report whose error the stored error repeats', () => {
+    const report = normalizeIndexingReport({
+      report: canonicalReport({ status: 'error', errors: ['Rate limit exceeded'], errors_total: 1 }),
+      state: 'failed',
+      error: 'Indexing failed: 3 pages\n  Errors:\n    - Rate limit exceeded',
+    });
+
+    expect(report.isLegacy).toBe(false);
+    expect(report.errors).toEqual(['Rate limit exceeded']);
+    expect(report.totals.indexed).toBe(179);
+  });
+
+  it('keeps a failed run report whose error the report shortened', () => {
+    const fullError = `429 Too Many Requests: ${'x'.repeat(600)}; the progress already made is discarded`;
+    const report = normalizeIndexingReport({
+      report: canonicalReport({
+        status: 'error',
+        errors: [`${fullError.slice(0, 500).trimEnd()}…`],
+        errors_total: 1,
+      }),
+      state: 'failed',
+      error: fullError,
+    });
+
+    expect(report.isLegacy).toBe(false);
+    expect(report.totals.indexed).toBe(179);
+  });
+
+  it('keeps a failed run report that names no errors of its own', () => {
+    const report = normalizeIndexingReport({
+      report: canonicalReport({ status: 'error', errors: [] }),
+      state: 'failed',
+      error: 'Indexing failed: 0 pages indexed',
+    });
+
+    expect(report.isLegacy).toBe(false);
+    expect(report.totals.indexed).toBe(179);
+  });
+
   it('keeps a report that agrees with its run state', () => {
     const report = normalizeIndexingReport({
       report: canonicalReport({ status: 'partly_indexed' }),

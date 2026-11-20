@@ -1,9 +1,11 @@
 import { memo } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, Tooltip } from '@mui/material';
 
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
+
+import { RUN_RECORD_FILTERS_HINT } from '../lib/constants/runHistoryFilters.constants';
 
 // The order and the inline "Label: All" form of the Run History mockup
 const FILTERS = [
@@ -14,7 +16,7 @@ const FILTERS = [
 ];
 
 const RunHistoryFilters = memo(props => {
-  const { values, options, handlers, hasFilters, onClear, hasScheduleFilter } = props;
+  const { values, options, handlers, disabledFilters = [], hasFilters, onClear, hasScheduleFilter } = props;
   const styles = runHistoryFiltersStyles();
 
   return (
@@ -22,26 +24,35 @@ const RunHistoryFilters = memo(props => {
       sx={styles.bar}
       data-testid="run-history-filters"
     >
-      {FILTERS.filter(({ key }) => key !== 'schedule' || hasScheduleFilter).map(({ key, label }) => (
-        <Box
-          key={key}
-          sx={styles.select}
-          data-testid={`run-history-filter-${key}`}
-        >
-          <SingleSelect
-            separateLabel
-            label={label}
-            labelSX={styles.label}
-            options={options[key]}
-            value={values[key]}
-            onValueChange={handlers[key]}
-            // The empty value is "All": show its label instead of a blank select
-            displayEmpty
-            showEmptyPlaceholder={false}
-            inputProps={{ 'aria-label': label }}
-          />
-        </Box>
-      ))}
+      {FILTERS.filter(({ key }) => key !== 'schedule' || hasScheduleFilter).map(({ key, label }) => {
+        const disabled = disabledFilters.includes(key);
+        return (
+          <Tooltip
+            key={key}
+            title={disabled ? RUN_RECORD_FILTERS_HINT : ''}
+            placement="top"
+          >
+            <Box
+              sx={styles.select}
+              data-testid={`run-history-filter-${key}`}
+            >
+              <SingleSelect
+                separateLabel
+                label={label}
+                labelSX={styles.label}
+                options={options[key]}
+                value={values[key]}
+                onValueChange={handlers[key]}
+                disabled={disabled}
+                // The empty value is "All": show its label instead of a blank select
+                displayEmpty
+                showEmptyPlaceholder={false}
+                inputProps={{ 'aria-label': label }}
+              />
+            </Box>
+          </Tooltip>
+        );
+      })}
       {hasFilters && (
         <BaseBtn
           variant={BUTTON_VARIANTS.text}

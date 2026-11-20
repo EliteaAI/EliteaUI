@@ -1,76 +1,184 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useStore } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import { Alert, Box, Link, TablePagination, Typography } from '@mui/material';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  Link,
+  Snackbar,
+  TablePagination,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 
-import { buildOwnerViewModeParams } from '@/[fsd]/entities/schedule';
-import { useAnalyticsComplexityQuery } from '@/[fsd]/features/settings/api/analyticsApi';
+import { analyticsApi, useAnalyticsComplexityQuery } from '@/[fsd]/features/settings/api/analyticsApi';
 import { ComplexityConstants } from '@/[fsd]/features/settings/lib/constants';
 import { ComplexityHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { AnalyticsBreakdownTable } from '@/[fsd]/features/settings/ui/analytics';
-import EntityKindChip from '@/[fsd]/features/settings/ui/analytics/components/EntityKindChip';
+import EntityTypeBadge from '@/[fsd]/features/settings/ui/analytics/components/EntityTypeBadge';
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { useDebounceValue, useSelectedProjectId, useSelectedProjectName } from '@/[fsd]/shared/lib/hooks';
+import { exportToExcel } from '@/[fsd]/shared/lib/utils';
+import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
-import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
+import StyledSearchInput from '@/components/SearchInput';
 import RouteDefinitions from '@/routes';
 
 import ComplexityBreakdownBar from './components/ComplexityBreakdownBar';
 import ComplexityBreakdownLegend from './components/ComplexityBreakdownLegend';
-import ComplexityInfo from './components/ComplexityInfo';
+import ComplexityInfoPopover from './components/ComplexityInfoPopover';
 import ComplexityLabelChip from './components/ComplexityLabelChip';
+import ComplexityRefreshButton from './components/ComplexityRefreshButton';
+import ComplexityTableInfo from './components/ComplexityTableInfo';
+import { useComplexityListState } from './hooks/useComplexityListState.hooks';
 
 const {
-  DEFAULT_PERIOD_DAYS,
   DEFAULT_THRESHOLDS_NOTE,
-  LIST_MEDIAN_TOOLTIP,
-  PAGE_SIZE,
+  DETAIL_SEARCH_PARAMS,
+  EXPORT_PAGE_SIZE,
+  LIST_SEARCH_PARAMS,
   PERIOD_OPTIONS,
+  ROWS_PER_PAGE_OPTIONS,
+  SEARCH_TRUNCATED_NOTE,
   STALE_NOTE,
 } = ComplexityConstants;
 
+const SEARCH_DEBOUNCE_MS = 300;
+
+const fetchAllRows = async (dispatch, args) => {
+  const rows = [];
+  let total = Infinity;
+  while (rows.length < total) {
+    const subscription = dispatch(
+      analyticsApi.endpoints.analyticsComplexity.initiate(
+        { ...args, limit: EXPORT_PAGE_SIZE, offset: rows.length },
+        { forceRefetch: true },
+      ),
+    );
+    try {
+      const page = await subscription.unwrap();
+      total = page?.total ?? 0;
+      if (!page?.rows?.length) break;
+      rows.push(...page.rows);
+    } finally {
+      subscription.unsubscribe();
+    }
+  }
+  return rows;
+};
+
 const ComplexityContainer = memo(() => {
   const projectId = useSelectedProjectId();
+  const projectName = useSelectedProjectName();
   const navigate = useNavigate();
+  const store = useStore();
 
-  const [periodDays, setPeriodDays] = useState(DEFAULT_PERIOD_DAYS);
-  const [sort, setSort] = useState({ sortBy: 'cu_median', sortOrder: 'desc' });
-  const [page, setPage] = useState(0);
+  const { periodDays, search, sortBy, sortOrder, page, rowsPerPage, searchParams, update } =
+    useComplexityListState();
+  const [searchText, setSearchText] = useState(search);
+  const debouncedSearch = useDebounceValue(searchText.trim(), SEARCH_DEBOUNCE_MS);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(false);
+  const mounted = useRef(true);
+  // Set on setup too: StrictMode runs setup, cleanup, setup in development
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+
+  // Back/forward changes the URL search; re-sync the box instead of letting the old text overwrite it.
+  // Skipped when only trimming differs, so a trailing space survives while typing
+  useEffect(() => {
+    setSearchText(previous => (previous.trim() === search ? previous : search));
+  }, [search]);
+
+  useEffect(() => {
+    if (debouncedSearch !== search && debouncedSearch === searchText.trim())
+      update({ [LIST_SEARCH_PARAMS.search]: debouncedSearch });
+  }, [debouncedSearch, search, searchText, update]);
 
   const range = useMemo(() => ComplexityHelpers.periodRange(periodDays), [periodDays]);
-  const { data, isFetching, isError } = useAnalyticsComplexityQuery(
-    { projectId, ...range, ...sort, limit: PAGE_SIZE, offset: page * PAGE_SIZE },
+  const queryArgs = useMemo(
+    () => ({ projectId, ...range, sortBy, sortOrder, search }),
+    [projectId, range, sortBy, sortOrder, search],
+  );
+  const { data, isFetching, isError, refetch } = useAnalyticsComplexityQuery(
+    { ...queryArgs, limit: rowsPerPage, offset: page * rowsPerPage },
     { skip: !projectId },
   );
   const meta = data?.meta;
 
-  const handleSort = useCallback(sortBy => {
-    setSort(prev => ({
-      sortBy,
-      sortOrder: prev.sortBy === sortBy && prev.sortOrder === 'desc' ? 'asc' : 'desc',
-    }));
-    setPage(0);
-  }, []);
+  // A bookmarked page past the end returns nothing (and total 0); go back to page one
+  useEffect(() => {
+    if (!isFetching && !isError && data && page > 0 && !data.rows?.length)
+      update({ [LIST_SEARCH_PARAMS.page]: 0 }, { resetPage: false });
+  }, [data, isFetching, isError, page, update]);
 
-  const handlePeriod = useCallback(value => {
-    setPeriodDays(value);
-    setPage(0);
-  }, []);
+  const handleSort = useCallback(
+    key =>
+      update({
+        [LIST_SEARCH_PARAMS.sortBy]: key,
+        [LIST_SEARCH_PARAMS.sortOrder]: sortBy === key && sortOrder === 'desc' ? 'asc' : 'desc',
+      }),
+    [sortBy, sortOrder, update],
+  );
+
+  const handlePeriod = useCallback(value => update({ [LIST_SEARCH_PARAMS.period]: value }), [update]);
+
+  const handleSearchChange = useCallback(event => setSearchText(event.target.value), []);
+
+  const handlePageChange = useCallback(
+    (_, next) => update({ [LIST_SEARCH_PARAMS.page]: next }, { resetPage: false }),
+    [update],
+  );
+
+  const handleRowsPerPageChange = useCallback(
+    event => update({ [LIST_SEARCH_PARAMS.rowsPerPage]: parseInt(event.target.value, 10) }),
+    [update],
+  );
+
+  const handleExport = useCallback(async () => {
+    setExporting(true);
+    setExportError(false);
+    try {
+      const rows = await fetchAllRows(store.dispatch, queryArgs);
+      await exportToExcel(ComplexityHelpers.exportFileName(projectName, range), [
+        ComplexityHelpers.buildExportSheet({
+          rows,
+          meta,
+          projectName,
+          range,
+          search,
+          searchTruncated: Boolean(data?.search_truncated),
+        }),
+      ]);
+    } catch {
+      if (mounted.current) setExportError(true);
+    } finally {
+      if (mounted.current) setExporting(false);
+    }
+  }, [store, queryArgs, projectName, range, meta, search, data?.search_truncated]);
 
   const openEntity = useCallback(
     row => {
-      const route =
-        row.entity_kind === 'pipeline'
-          ? RouteDefinitions.PipelineRunHistory
-          : RouteDefinitions.ApplicationsRunHistory;
-      // Without the owner view mode the editor behind the breadcrumb falls back to public mode and 404s
-      navigate(
-        `${NavigationHelpers.buildRoute(route, { tab: 'all', agentId: row.entity_id })}?${buildOwnerViewModeParams()}`,
-      );
+      const path = NavigationHelpers.buildRoute(RouteDefinitions.SettingsComplexityDetail, {
+        entityProjectId: row.entity_project_id,
+        entityId: row.entity_id,
+      });
+      // The list's own query string rides along so Back restores search, sort and page
+      const params = new URLSearchParams(searchParams);
+      params.set(DETAIL_SEARCH_PARAMS.entityType, row.entity_type);
+      params.set(DETAIL_SEARCH_PARAMS.kind, row.entity_kind);
+      navigate(`${path}?${params.toString()}`);
     },
-    [navigate],
+    [navigate, searchParams],
   );
 
   const styles = complexityContainerStyles();
@@ -84,6 +192,7 @@ const ComplexityContainer = memo(() => {
         flex: 2.5,
         render: row => (
           <Box sx={styles.nameCell}>
+            <EntityTypeBadge kind={row.entity_kind} />
             <Link
               component="button"
               variant="bodyMedium"
@@ -93,25 +202,13 @@ const ComplexityContainer = memo(() => {
             >
               {row.entity_name}
             </Link>
-            <EntityKindChip kind={row.entity_kind} />
           </Box>
         ),
       },
       { key: 'runs', label: 'Runs', flex: 0.7 },
       {
         key: 'cu_median',
-        label: (
-          <Box
-            component="span"
-            sx={styles.headerWithInfo}
-          >
-            Median CU
-            <InfoTooltip
-              infoTooltip={{ title: LIST_MEDIAN_TOOLTIP, icon: { width: 12, height: 12 } }}
-              testId="complexity-median-info"
-            />
-          </Box>
-        ),
+        label: 'Median CU',
         flex: 0.9,
         render: row => ComplexityHelpers.formatCu(row.cu_median),
       },
@@ -119,7 +216,7 @@ const ComplexityContainer = memo(() => {
       {
         key: 'label',
         label: 'Complexity',
-        // Label and percentile follow the median; sort by Median CU instead
+        // Label follows the median; Percentile and Median CU give the same order
         sortable: false,
         flex: 1.1,
         render: row => (
@@ -132,7 +229,6 @@ const ComplexityContainer = memo(() => {
       {
         key: 'percentile',
         label: 'Percentile',
-        sortable: false,
         flex: 0.8,
         render: row => ComplexityHelpers.formatPercentile(row.percentile),
       },
@@ -144,7 +240,7 @@ const ComplexityContainer = memo(() => {
         render: row => <ComplexityBreakdownBar breakdown={row.breakdown} />,
       },
     ],
-    [openEntity, styles.headerWithInfo, styles.nameCell, styles.nameLink],
+    [openEntity, styles.nameCell, styles.nameLink],
   );
 
   const rows = useMemo(
@@ -155,6 +251,7 @@ const ComplexityContainer = memo(() => {
       })),
     [data?.rows],
   );
+  const total = data?.total ?? 0;
 
   return (
     <DrawerPage data-testid="complexity-page">
@@ -165,12 +262,6 @@ const ComplexityContainer = memo(() => {
         >
           Complexity
         </Typography>
-        <InfoTooltip
-          pinnable
-          label="About complexity"
-          infoTooltip={{ title: <ComplexityInfo meta={meta} /> }}
-          testId="complexity-info-icon"
-        />
         <Box sx={styles.headerSpacer} />
         <Box sx={styles.periodSelect}>
           <SingleSelect
@@ -182,27 +273,40 @@ const ComplexityContainer = memo(() => {
             data-testid="complexity-period-select"
           />
         </Box>
+        <ComplexityRefreshButton
+          refetch={refetch}
+          disabled={!projectId}
+        />
+        <Tooltip
+          title={exporting ? 'Preparing export…' : 'Export to Excel'}
+          placement="top"
+        >
+          <Box component="span">
+            <BaseBtn
+              variant={BUTTON_VARIANTS.icon}
+              color="secondary"
+              onClick={handleExport}
+              disabled={exporting || !data}
+              aria-label="Export to Excel"
+              data-testid="complexity-export-button"
+            >
+              {exporting ? <CircularProgress size={16} /> : <FileDownloadOutlinedIcon fontSize="small" />}
+            </BaseBtn>
+          </Box>
+        </Tooltip>
+        <ComplexityInfoPopover meta={meta} />
       </Box>
 
       <Box sx={styles.contentArea}>
-        <Box sx={styles.notes}>
+        {meta?.thresholds_source === 'default' && (
           <Typography
             variant="bodySmall"
             sx={styles.note}
-            data-testid="complexity-freshness"
+            data-testid="complexity-default-thresholds"
           >
-            {ComplexityHelpers.freshnessNote(meta)}
+            {DEFAULT_THRESHOLDS_NOTE}
           </Typography>
-          {meta?.thresholds_source === 'default' && (
-            <Typography
-              variant="bodySmall"
-              sx={styles.note}
-              data-testid="complexity-default-thresholds"
-            >
-              {DEFAULT_THRESHOLDS_NOTE}
-            </Typography>
-          )}
-        </Box>
+        )}
         {meta?.stale && (
           <Alert
             severity="warning"
@@ -212,32 +316,82 @@ const ComplexityContainer = memo(() => {
           </Alert>
         )}
         {isError && <Alert severity="error">Failed to load complexity scores.</Alert>}
+        {data?.search_truncated && (
+          <Alert
+            severity="warning"
+            data-testid="complexity-search-truncated"
+          >
+            {SEARCH_TRUNCATED_NOTE}
+          </Alert>
+        )}
 
         <AnalyticsBreakdownTable
-          title="Agents and pipelines"
-          subtitle={<ComplexityBreakdownLegend />}
+          title="Agents & Pipelines"
+          subtitle={
+            <Box sx={styles.subtitle}>
+              <Box
+                component="span"
+                data-testid="complexity-total"
+              >
+                {total} agents & pipelines
+              </Box>
+              <ComplexityBreakdownLegend />
+            </Box>
+          }
+          titleAction={
+            <StyledSearchInput
+              search={searchText}
+              onChangeSearch={handleSearchChange}
+              placeholder="Search by agent or pipeline"
+              sx={styles.search}
+              testId="complexity-search-input"
+            />
+          }
           columns={columns}
           rows={rows}
           loading={isFetching && !data}
-          emptyText="No scored runs in this period."
+          emptyText={search ? 'No agents or pipelines match the search.' : 'No scored runs in this period.'}
           testId="complexity-table"
-          sortBy={sort.sortBy}
-          sortOrder={sort.sortOrder}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
           onSort={handleSort}
+          fullHeight
           footer={
-            data?.total > PAGE_SIZE && (
+            <Box sx={styles.footer}>
+              <ComplexityTableInfo meta={meta} />
               <TablePagination
                 component="div"
-                count={data.total}
-                page={page}
-                rowsPerPage={PAGE_SIZE}
-                rowsPerPageOptions={[PAGE_SIZE]}
-                onPageChange={(_, next) => setPage(next)}
+                count={total}
+                page={total ? page : 0}
+                rowsPerPage={rowsPerPage}
+                rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
+                onPageChange={handlePageChange}
+                onRowsPerPageChange={handleRowsPerPageChange}
+                sx={styles.pagination}
+                slotProps={{
+                  select: { 'data-testid': 'complexity-pagination-rows-select' },
+                  displayedRows: { 'data-testid': 'complexity-pagination-range' },
+                }}
               />
-            )
+            </Box>
           }
         />
       </Box>
+
+      <Snackbar
+        open={exportError}
+        autoHideDuration={8000}
+        onClose={() => setExportError(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setExportError(false)}
+          severity="error"
+          variant="filled"
+        >
+          Unable to export complexity data. Please try again.
+        </Alert>
+      </Snackbar>
     </DrawerPage>
   );
 });
@@ -267,9 +421,22 @@ const complexityContainerStyles = () => ({
     flexDirection: 'column',
     gap: '1rem',
   },
-  notes: { display: 'flex', flexDirection: 'column', gap: '0.25rem' },
   note: ({ palette }) => ({ color: palette.text.metrics || palette.text.secondary }),
-  headerWithInfo: { display: 'inline-flex', alignItems: 'center', gap: '0.25rem' },
+  subtitle: { display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' },
+  search: {
+    width: '15rem',
+    height: '2.25rem',
+    backgroundColor: ({ palette }) => palette.background.surface.interactive.default,
+    borderRadius: '1.6875rem',
+    gap: '.5rem',
+    borderBottom: '0rem',
+    padding: '0.375rem 0.75rem',
+  },
+  footer: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' },
+  pagination: ({ palette }) => ({
+    color: palette.text.secondary,
+    '& .MuiTablePagination-selectIcon': { color: palette.text.secondary },
+  }),
   nameCell: { display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 },
   nameLink: {
     textAlign: 'left',

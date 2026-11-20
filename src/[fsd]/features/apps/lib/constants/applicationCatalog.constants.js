@@ -1,4 +1,5 @@
 import InventorySearchIcon from '@/assets/inventory_search.svg?react';
+import QuestionnaireIcon from '@/assets/questionnaire.svg?react';
 import WikiQueryIcon from '@/assets/wiki_query.svg?react';
 
 export const APPLICATION_REQUEST_SUPPORT_EMAIL = 'SupportAlita@epam.com';
@@ -32,5 +33,16 @@ export const APPLICATION_CATALOG = [
     capabilities: ['Component inventory', 'Dependency discovery', 'Ownership context'],
     bestFor: 'Modernization, impact analysis, and engineering governance',
     documentation: 'https://docs.elitea.ai/integrations/apps/inventory',
+  },
+  {
+    type: 'questionnaire',
+    name: 'Questionnaire',
+    IconComponent: QuestionnaireIcon,
+    shortDescription: 'Answer questionnaires from your project sources, with references.',
+    description:
+      'Questionnaire fills in questionnaires from SharePoint, Confluence, Jira and uploaded documents, with a reference for every answer and an honest "not found" when the sources are silent.',
+    capabilities: ['Question extraction', 'Referenced answers', 'Excel export'],
+    bestFor: 'Vendor, customer and internal questionnaires answered from one document base',
+    documentation: 'https://docs.elitea.ai/integrations/apps/questionnaire',
   },
 ];

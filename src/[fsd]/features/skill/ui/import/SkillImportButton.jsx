@@ -17,7 +17,7 @@ const SkillImportButton = memo(() => {
     openFileDialog,
     isImporting,
     isModalOpen,
-    pendingSkill,
+    pendingSkills,
     pendingFileName,
     confirmImport,
     cancelImport,
@@ -43,7 +43,7 @@ const SkillImportButton = memo(() => {
       </StyledTooltip>
       <SkillImportModal
         open={isModalOpen}
-        skill={pendingSkill}
+        skills={pendingSkills}
         fileName={pendingFileName}
         isImporting={isImporting}
         onClose={cancelImport}

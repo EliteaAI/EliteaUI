@@ -2,6 +2,17 @@ import { memo, useMemo } from 'react';
 
 import { Field } from '@/[fsd]/shared/ui';
 
+const getChoiceValues = property => {
+  if (property?.enum) return property.enum;
+
+  const nonNullBranches = property?.anyOf?.filter(item => item.type !== 'null') ?? [property];
+  if (nonNullBranches.length !== 1) return undefined;
+
+  const [choiceSchema] = nonNullBranches;
+  if (choiceSchema?.enum) return choiceSchema.enum;
+  return choiceSchema && 'const' in choiceSchema ? [choiceSchema.const] : undefined;
+};
+
 const ToolFormContainer = memo(props => {
   const {
     fieldKey,
@@ -31,7 +42,7 @@ const ToolFormContainer = memo(props => {
       description: property?.description,
       format: property?.format,
       secret: property?.secret,
-      enumValues: property?.enum,
+      enumValues: getChoiceValues(property),
       codeLanguage: property?.code_language,
       lines: property?.lines,
       disabled: changesDisabled,
@@ -128,7 +139,7 @@ const ToolFormContainer = memo(props => {
 
   if (property.hidden) return null;
 
-  switch (fieldType) {
+  switch (fieldProperties.enumValues ? 'string' : fieldType) {
     case 'object':
       return <Field.CommonObjectField {...fieldPropsShared} />;
     case 'boolean':

@@ -14,7 +14,10 @@ import {
   useSlashMention,
 } from '@/[fsd]/features/chat/lib/hooks';
 import { sendFailuresActions } from '@/[fsd]/features/chat/model';
-import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
+import {
+  getChatParticipantUniqueId,
+  validationBlocksChat,
+} from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
 import {
   BudgetWarningBanner,
@@ -489,6 +492,11 @@ const NewConversationView = forwardRef(
             toolkitId: selectedParticipant?.id,
           }
         : {},
+    );
+
+    const validationBlocksSend = useMemo(
+      () => validationBlocksChat(toolkitValidationInfoList || [], totalValidationInfo || []),
+      [toolkitValidationInfoList, totalValidationInfo],
     );
 
     useEffect(() => {
@@ -1216,8 +1224,7 @@ const NewConversationView = forwardRef(
               disabledSend={
                 !(!!selectedParticipant || !!selectedModel) ||
                 isConversationNameInvalid ||
-                totalValidationInfo?.length ||
-                toolkitValidationInfoList?.length
+                validationBlocksSend
               }
               onNormalKeyDown={combinedKeyDown}
               onInputChange={combinedInputChange}

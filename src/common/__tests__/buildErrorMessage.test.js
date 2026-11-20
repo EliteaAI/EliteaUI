@@ -35,3 +35,21 @@ describe('buildErrorMessage on a 403', () => {
     );
   });
 });
+
+describe('buildErrorMessage on a response that is not JSON', () => {
+  const blockPage = '<html>\n<head><title>403 Forbidden</title></head>\n<body>blocked</body>\n</html>';
+
+  it('names the status instead of showing the HTML page a proxy answered with', () => {
+    const error = { status: 'PARSING_ERROR', originalStatus: 403, data: blockPage, error: 'SyntaxError' };
+
+    expect(buildErrorMessage(error)).toBe(
+      'The server sent an unexpected response (HTTP 403). Please try again or contact your administrator.',
+    );
+  });
+
+  it('keeps the not-found text for an HTML 404', () => {
+    expect(buildErrorMessage({ status: 'PARSING_ERROR', originalStatus: 404, data: '<html></html>' })).toBe(
+      'The requested resource was not found!',
+    );
+  });
+});

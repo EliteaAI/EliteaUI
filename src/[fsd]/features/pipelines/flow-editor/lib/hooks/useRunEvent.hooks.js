@@ -122,6 +122,7 @@ export const useRunEvent = (setFlowNodes, yamlJsonObject) => {
                     data: {
                       ...runPipelineStatus.current.data,
                       timeline: [...runPipelineStatus.current.data.timeline],
+                      groupedTimeline: [...runPipelineStatus.current.data.groupedTimeline],
                     },
                   },
             );
@@ -133,6 +134,7 @@ export const useRunEvent = (setFlowNodes, yamlJsonObject) => {
                 data: {
                   ...runPipelineStatus.current.data,
                   timeline: [...runPipelineStatus.current.data.timeline],
+                  groupedTimeline: [...runPipelineStatus.current.data.groupedTimeline],
                 },
               },
             ];

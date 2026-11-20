@@ -93,11 +93,30 @@ const EXPECTED_REPORT_STATUS_BY_TERMINAL_STATE = new Map([
   [CANCELLED_STATE, WRITES_NO_REPORT_OF_ITS_OWN],
 ]);
 
-const reportBelongsToEarlierRun = (report, state) => {
+const TRUNCATION_MARK = '…';
+
+const withoutTruncationMark = reportError =>
+  reportError.endsWith(TRUNCATION_MARK) ? reportError.slice(0, -TRUNCATION_MARK.length) : reportError;
+
+const reportErrorsMissFromEntryError = (report, entryError) => {
+  const reportErrors = report?.errors || [];
+  if (typeof entryError !== 'string' || !entryError.trim() || !reportErrors.length) return false;
+
+  return !reportErrors.some(
+    reportError => typeof reportError === 'string' && entryError.includes(withoutTruncationMark(reportError)),
+  );
+};
+
+const reportBelongsToEarlierRun = (report, entry) => {
+  const { state, error } = entry;
   if (!EXPECTED_REPORT_STATUS_BY_TERMINAL_STATE.has(state)) return false;
 
   const expected = EXPECTED_REPORT_STATUS_BY_TERMINAL_STATE.get(state);
-  return expected === WRITES_NO_REPORT_OF_ITS_OWN || (report?.status || IndexingReportStatus.ok) !== expected;
+  return (
+    expected === WRITES_NO_REPORT_OF_ITS_OWN ||
+    (report?.status || IndexingReportStatus.ok) !== expected ||
+    reportErrorsMissFromEntryError(report, error)
+  );
 };
 
 const fromCanonicalReport = (report, entry) => {
@@ -262,7 +281,7 @@ export const normalizeIndexingReport = source => {
   const entry = source.metadata && typeof source.metadata === 'object' ? source.metadata : source;
   const report = parseIndexEntryJson(entry.report);
 
-  if (report && !reportBelongsToEarlierRun(report, entry.state)) return fromCanonicalReport(report, entry);
+  if (report && !reportBelongsToEarlierRun(report, entry)) return fromCanonicalReport(report, entry);
   if (entry.skipped || entry.indexed !== undefined || entry.state || entry.error) {
     return fromLegacyEntry(entry);
   }

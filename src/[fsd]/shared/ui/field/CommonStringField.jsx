@@ -94,7 +94,7 @@ const CommonStringField = memo(props => {
       // Only show "None" option for optional fields without a default value
       ...(!isRequired && !hasDefault ? [{ label: 'None', value: '' }] : []),
       ...filteredEnumValues.map(option => ({
-        label: option,
+        label: String(option),
         value: option,
       })),
     ];
@@ -126,7 +126,7 @@ const CommonStringField = memo(props => {
         <SingleSelect
           sx={{ width: 'calc(100% - 0.35rem)', margin: '0 auto' }}
           required={isRequired}
-          value={fieldValue || ''}
+          value={fieldValue ?? ''}
           onValueChange={value => handleSelectChange(fieldKey, value)}
           options={enumOptions}
           placeholder="Select an option..."

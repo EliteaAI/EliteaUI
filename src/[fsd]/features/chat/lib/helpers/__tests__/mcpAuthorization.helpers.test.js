@@ -231,6 +231,23 @@ describe('toolkit authorization helpers', () => {
     });
   });
 
+  it('never shows the invoked tool name as the toolkit name (#7469)', () => {
+    const toolAction = {
+      name: 'get_me',
+      toolMeta: { server_url: 'https://api.githubcopilot.com/mcp', toolkit_type: 'mcp' },
+      toolOutputs: {},
+    };
+
+    expect(getToolkitAuthorizationContext(toolAction).toolkitName).not.toBe('get_me');
+    expect(getToolkitAuthorizationContext(toolAction).toolkitName).toBe('mcp');
+
+    const withToolkitName = {
+      ...toolAction,
+      toolMeta: { ...toolAction.toolMeta, toolkit_name: 'Github mcp remote Oleks' },
+    };
+    expect(getToolkitAuthorizationContext(withToolkitName).toolkitName).toBe('Github mcp remote Oleks');
+  });
+
   it('reports an actionable error when a server omits OAuth discovery metadata', () => {
     const action = buildMcpAuthorizationToolAction({
       metadata: {

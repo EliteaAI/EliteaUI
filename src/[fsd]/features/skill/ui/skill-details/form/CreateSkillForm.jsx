@@ -359,6 +359,7 @@ const CreateSkillForm = memo(props => {
                   ) : (
                     <Box sx={styles.instructionsWrapper}>
                       <Box
+                        data-testid="create-skill-instructions-preview"
                         sx={[styles.instructionsPreview, Boolean(instructionsError) && styles.errorBorder]}
                       >
                         {instructions ? (
@@ -500,6 +501,7 @@ const skillCreateFormStyles = () => ({
   }),
   instructionsPreview: ({ palette }) => ({
     minHeight: '12rem',
+    overflowWrap: 'anywhere',
     marginBottom: '1rem',
     padding: '0.75rem',
     borderRadius: '0.375rem',

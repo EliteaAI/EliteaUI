@@ -227,6 +227,7 @@ const componentStyles = () => ({
     width: '100%',
     display: 'flex',
     flexDirection: 'column',
+    gap: '1rem',
   },
   sectionContent: {
     display: 'flex',
@@ -239,12 +240,12 @@ const componentStyles = () => ({
   },
   dialogActions: ({ palette }) => ({
     flexDirection: 'row',
-    padding: '0.9rem !important',
+    padding: '1rem 1.5rem !important',
     gap: '.3rem',
     width: '100%',
     position: 'sticky',
     bottom: 0,
-    backgroundColor: palette.background.default.secondary,
+    backgroundColor: palette.background.default.tertiary,
     zIndex: 1,
   }),
 });

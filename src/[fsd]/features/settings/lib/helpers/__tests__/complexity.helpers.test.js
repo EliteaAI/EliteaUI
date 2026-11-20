@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   breakdownShares,
+  dataFreshnessNote,
   formatCu,
-  freshnessNote,
   periodRange,
   runScoreState,
   runTooltip,
@@ -26,13 +26,10 @@ describe('complexity helpers (EL-7556)', () => {
   it('formats CU and the freshness note', () => {
     expect(formatCu(null)).toBe('—');
     expect(formatCu(12.44)).toBe('12.4');
-    expect(freshnessNote({})).toMatch(/No runs scored yet\. Runs are scored about 30–90 minutes/);
-    expect(freshnessNote({ as_of: '2026-11-16T10:00:00Z' })).toMatch(
-      /^Scores as of .* · updated hourly · labels recalibrated daily\.$/,
-    );
+    expect(dataFreshnessNote({})).toMatch(/^Data freshness: No runs scored yet\. Scores update hourly/);
     expect(
-      freshnessNote({ as_of: '2026-11-16T10:00:00Z', thresholds_computed_at: '2026-11-16T02:41:00Z' }),
-    ).toMatch(/labels recalibrated daily \(Nov 16, 2026 .*\)\.$/);
+      dataFreshnessNote({ as_of: '2026-11-16T10:00:00Z', thresholds_computed_at: '2026-11-16T02:41:00Z' }),
+    ).toMatch(/Scores as of .*\. Scores update hourly\. .*last recalibration: Nov 16, 2026/);
   });
 
   it('describes the labels with the live cut points and their source', () => {

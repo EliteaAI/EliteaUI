@@ -197,7 +197,7 @@ const tailNodeEvents = (agentOut, tailOut) => [
 
 const pipelineNode = (id, type, transition, tool) => ({ id, type, transition, tool });
 
-const runPipeline = (nodes, events) => {
+const runPipeline = (nodes, events, interruptAfter = []) => {
   const runPipelineStatus = { current: null };
   let isRunningPipeline = false;
   events.forEach(event => {
@@ -206,7 +206,7 @@ const runPipeline = (nodes, events) => {
       event,
       nodes,
       [],
-      [],
+      interruptAfter,
       isRunningPipeline,
       value => {
         nextIsRunning = value;
@@ -222,6 +222,193 @@ const runPipeline = (nodes, events) => {
 };
 
 const timelineIds = data => data.timeline.map(step => step.id);
+
+describe('pipeline timeline group IDs', () => {
+  const nodes = [pipelineNode('Ask', 'llm', 'Review'), pipelineNode('Review', 'code', 'Ask')];
+  const task = { langgraph_node: 'Ask', langgraph_checkpoint_ns: 'Ask:task-1' };
+
+  it.each(['agent', 'pipeline'])(
+    'groups a nested %s by call, without changing the displayed timeline',
+    agentType => {
+      const app = call_id => {
+        const owner = {
+          parent_agent_name: 'Delegate',
+          parent_agent_path: [{ name: 'Delegate', call_id }],
+        };
+        return [
+          {
+            type: SocketMessageType.AgentToolStart,
+            response_metadata: {
+              tool_name: 'Delegate',
+              tool_run_id: `wrapper-${call_id}`,
+              metadata: {
+                toolkit_type: 'application',
+                agent_type: agentType,
+                original_name: 'Delegate',
+                parent_agent_call_id: call_id,
+                langgraph_node: 'Ask',
+              },
+            },
+          },
+          llmStart({ ...owner, langgraph_node: 'Ask' }, `child-${call_id}`),
+          llmEnd(`child-${call_id}`),
+          edge({ ...owner, langgraph_node: 'Ask' }, 'END', { child: call_id }, `edge-${call_id}`),
+        ];
+      };
+
+      const data = runPipeline(nodes, [
+        { type: SocketMessageType.StartTask },
+        ...app('first'),
+        llmStart(task, 'outer-model'),
+        ...app('second'),
+      ]);
+
+      expect(timelineIds(data)).toEqual(['Delegate', 'Ask', 'Delegate']);
+      expect(data.status).toBe(FlowEditorConstants.PipelineStatus.InProgress);
+      expect(
+        data.groupedTimeline.map(({ id, group_id, group_label }) => [id, group_id, group_label]),
+      ).toEqual([
+        ['Delegate', 'application:first', 'Delegate'],
+        ['Ask', 'application:first', 'Delegate'],
+        ['Ask', 'task:Ask:task-1', 'Ask'],
+        ['Delegate', 'application:second', 'Delegate'],
+        ['Ask', 'application:second', 'Delegate'],
+      ]);
+      expect(data.groupedTimeline[1]).toMatchObject({
+        status: FlowEditorConstants.PipelineStatus.Completed,
+        state: { child: 'first' },
+      });
+      expect(data.timeline[0].state).toEqual({});
+    },
+  );
+
+  describe('a nested agent that calls another nested agent', () => {
+    // Pipeline P calls A (call tA), and A calls C (call tC).
+    const pathA = [{ name: 'A', call_id: 'tA' }];
+    const pathAC = [...pathA, { name: 'C', call_id: 'tC' }];
+    const innerMetadata = (path, langgraph_node, extra = {}) => ({
+      langgraph_node,
+      parent_agent_name: path.at(-1).name,
+      parent_agent_call_id: path.at(-1).call_id,
+      parent_agent_path: path,
+      ...extra,
+    });
+    const aWrapper = {
+      type: SocketMessageType.AgentToolStart,
+      response_metadata: {
+        tool_name: 'A',
+        tool_run_id: 'wrapper-A',
+        metadata: {
+          toolkit_type: 'application',
+          original_name: 'A',
+          parent_agent_call_id: 'tA',
+          langgraph_node: 'Ask',
+        },
+      },
+    };
+    const events = [
+      { type: SocketMessageType.StartTask },
+      aWrapper,
+      llmStart(innerMetadata(pathA, 'agent'), 'a-llm-1'),
+      llmStart(innerMetadata(pathAC, 'agent'), 'c-llm'),
+      edge(innerMetadata(pathAC, 'agent'), 'END', { who: 'C' }, 'c-edge'),
+      edge(innerMetadata(pathA, 'agent'), 'END', { who: 'A' }, 'a-edge'),
+      llmStart(innerMetadata(pathA, 'finish'), 'a-llm-2'),
+    ];
+
+    it('keeps every row of the outer invocation in one group, including the deeper one', () => {
+      const data = runPipeline(nodes, events);
+
+      const groupIds = data.groupedTimeline.map(step => step.group_id);
+      expect(new Set(groupIds)).toEqual(new Set(['application:tA']));
+      expect(new Set(data.groupedTimeline.map(step => step.group_label))).toEqual(new Set(['A']));
+    });
+
+    it('scopes each row to its immediate parent', () => {
+      const data = runPipeline(nodes, events);
+
+      expect(data.groupedTimeline.map(step => step.scope_id)).toEqual([
+        'application:tA',
+        'application:tA',
+        'application:tC',
+        'application:tA',
+      ]);
+    });
+
+    it('does not let the deeper agent edge overwrite a row of the outer agent with the same node name', () => {
+      const data = runPipeline(nodes, events);
+
+      const outerAgent = data.groupedTimeline.find(
+        step => step.scope_id === 'application:tA' && step.langgraph_node === 'agent',
+      );
+      const innerAgent = data.groupedTimeline.find(step => step.scope_id === 'application:tC');
+      expect(innerAgent.state).toEqual({ who: 'C' });
+      expect(outerAgent.state).toEqual({ who: 'A' });
+    });
+
+    it('still groups and scopes a one-level child by the same call', () => {
+      const data = runPipeline(nodes, [
+        { type: SocketMessageType.StartTask },
+        aWrapper,
+        llmStart(innerMetadata(pathA, 'agent'), 'a-llm'),
+      ]);
+
+      expect(data.groupedTimeline.map(step => [step.group_id, step.scope_id])).toEqual([
+        ['application:tA', 'application:tA'],
+        ['application:tA', 'application:tA'],
+      ]);
+    });
+  });
+
+  it('groups model and tool callbacks from one node invocation but separates a revisit', () => {
+    const data = runPipeline(nodes, [
+      { type: SocketMessageType.StartTask },
+      llmStart(task, 'model-1'),
+      llmEnd('model-1'),
+      {
+        type: SocketMessageType.AgentToolStart,
+        response_metadata: { metadata: task, tool_name: 'search', tool_run_id: 'tool-1' },
+      },
+      llmStart(task, 'model-2'),
+      edge(task, 'Review', { answer: 'first' }, 'edge-1'),
+      edge({ langgraph_node: 'Review', langgraph_checkpoint_ns: 'Review:task-2' }, 'Ask', {}, 'edge-2'),
+      llmStart({ ...task, langgraph_checkpoint_ns: 'Ask:task-3' }, 'model-3'),
+    ]);
+
+    expect(timelineIds(data)).toEqual(['Ask', 'search', 'Ask', 'Review', 'Ask']);
+    const [first, tool, second, review, revisit] = data.timeline;
+    expect(first.group_id).toEqual(expect.any(String));
+    expect(tool.group_id).toBe(first.group_id);
+    expect(second.group_id).toBe(first.group_id);
+    expect(new Set([first.group_id, review.group_id, revisit.group_id]).size).toBe(3);
+    expect(data.timeline.map(step => step.group_label)).toEqual(['Ask', 'Ask', 'Ask', 'Review', 'Ask']);
+    expect(second.state).toEqual({ answer: 'first' });
+  });
+
+  it('uses the emitting invocation for an edge-derived interrupt and keeps unscoped rows separate', () => {
+    const data = runPipeline(
+      nodes,
+      [
+        { type: SocketMessageType.StartTask },
+        llmStart(task, 'model-1'),
+        edge(task, 'Review', {}, 'edge-1'),
+        { type: SocketMessageType.AgentHitlInterrupt, response_metadata: { node_name: 'Review' } },
+        llmStart({ langgraph_node: 'Ask' }, 'model-2'),
+        llmStart({ langgraph_node: 'Ask' }, 'model-3'),
+      ],
+      ['Ask'],
+    );
+
+    expect(timelineIds(data)).toEqual(['Ask', 'interrupt', 'Review', 'Ask', 'Ask']);
+    const [first, interrupt, hitl, second, third] = data.timeline;
+    expect(interrupt.group_id).toBe(first.group_id);
+    expect(interrupt.group_label).toBe(first.group_label);
+    expect(hitl.group_label).toBe('Review');
+    const groupIds = [first, hitl, second, third].map(step => step.group_id);
+    expect(groupIds).toEqual(Array(4).fill(expect.any(String)));
+    expect(new Set(groupIds).size).toBe(4);
+  });
+});
 
 describe('agent node in a pipeline run timeline', () => {
   const terminalAgentNodes = [

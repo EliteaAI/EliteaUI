@@ -343,6 +343,7 @@ const skillInstructionsPaneStyles = ({ fitContent }) => ({
   }),
   preview: ({ palette }) => ({
     padding: '0 1.5rem 1rem 2rem',
+    overflowWrap: 'anywhere',
     fontSize: '0.875rem',
     color: palette.text.secondary,
     '& p, & li, & ol, & ul, & h1, & h2, & h3, & h4, & h5, & h6, & strong, & em, & td, & th': {

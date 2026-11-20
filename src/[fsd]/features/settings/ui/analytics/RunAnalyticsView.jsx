@@ -1,6 +1,7 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useStore } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
 
 import { Alert, Box, CircularProgress, Snackbar, Tooltip, Typography } from '@mui/material';
 
@@ -9,8 +10,8 @@ import {
   analyticsApi,
   useProjectAnalyticsQuery,
 } from '@/[fsd]/features/settings/api/analyticsApi';
-import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
-import { AnalyticsExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { AnalyticsCommonConstants, ComplexityConstants } from '@/[fsd]/features/settings/lib/constants';
+import { AnalyticsExportHelpers, ComplexityHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { useRunAnalyticsFetching } from '@/[fsd]/features/settings/lib/hooks';
 import {
   AnalyticsCosts,
@@ -28,6 +29,7 @@ import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import DownloadIcon from '@/assets/download.svg?react';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 
+import RunComplexityTab from '../complexity/components/RunComplexityTab';
 import RunAnalyticsEmptyState from './components/RunAnalyticsEmptyState';
 
 const TAB = {
@@ -35,6 +37,7 @@ const TAB = {
   tokens: 'tokens',
   tools: 'tools',
   health: 'health',
+  complexity: ComplexityConstants.RUN_ANALYTICS_TAB,
 };
 
 // Per-run analytics keeps only the tabs that make sense for one run (#6816, #6817), in this order
@@ -43,7 +46,11 @@ const RUN_ANALYTICS_TABS = [
   { value: TAB.tokens, label: 'Tokens', testid: 'run-analytics-tab-tokens' },
   { value: TAB.tools, label: 'Tools', testid: 'run-analytics-tab-tools' },
   { value: TAB.health, label: 'Health', testid: 'run-analytics-tab-health' },
+  { value: TAB.complexity, label: 'Complexity', testid: 'run-analytics-tab-complexity' },
 ];
+
+// The tab lives in the URL so a link (e.g. from Complexity Recent Runs) and a reload open it
+const TAB_PARAM = ComplexityConstants.RUN_ANALYTICS_SEARCH_PARAMS.tab;
 
 const NO_QUERY_ARGS = {};
 
@@ -63,6 +70,7 @@ const RunAnalyticsView = memo(props => {
     isRunLoading = false,
     showToolsTab = true,
     failedCalls,
+    complexity,
   } = props;
 
   const projectId = useSelectedProjectId();
@@ -71,15 +79,19 @@ const RunAnalyticsView = memo(props => {
 
   const styles = runAnalyticsViewStyles();
 
-  const [selectedTab, setSelectedTab] = useState(TAB.costs);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedTab = searchParams.get(TAB_PARAM) || TAB.costs;
   const [costsInfoAutoOpened, setCostsInfoAutoOpened] = useState(false);
   const handleCostsInfoAutoOpen = useCallback(() => setCostsInfoAutoOpened(true), []);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(false);
 
   const tabs = useMemo(
-    () => RUN_ANALYTICS_TABS.filter(({ value }) => showToolsTab || value !== TAB.tools),
-    [showToolsTab],
+    () =>
+      RUN_ANALYTICS_TABS.filter(
+        ({ value }) => (showToolsTab || value !== TAB.tools) && (complexity || value !== TAB.complexity),
+      ),
+    [showToolsTab, complexity],
   );
   const activeTab = tabs.some(({ value }) => value === selectedTab) ? selectedTab : TAB.costs;
 
@@ -98,13 +110,26 @@ const RunAnalyticsView = memo(props => {
 
   const isFetching = useRunAnalyticsFetching(queryArgs);
 
-  const handleTabChange = useCallback((_, newTab) => setSelectedTab(newTab), []);
+  const handleTabChange = useCallback(
+    (_, newTab) =>
+      setSearchParams(
+        previous => {
+          const next = new URLSearchParams(previous);
+          if (newTab === TAB.costs) next.delete(TAB_PARAM);
+          else next.set(TAB_PARAM, newTab);
+          return next;
+        },
+        { replace: true },
+      ),
+    [setSearchParams],
+  );
 
   const handleRefresh = useCallback(() => {
     if (isFetching) return;
 
     store.dispatch(analyticsApi.util.invalidateTags([TAG_TYPE_ANALYTICS]));
   }, [store, isFetching]);
+  const refreshing = isFetching || Boolean(complexity?.loading);
 
   const handleExport = useCallback(async () => {
     setExporting(true);
@@ -117,14 +142,20 @@ const RunAnalyticsView = memo(props => {
         { projectId, queryArgs },
       );
 
+      const scopeRows = [['Project', projectName], ...(exportMeta.scopeRows ?? [])];
       const sheets = AnalyticsExportHelpers.buildRunAnalyticsSheets({
         ...allData,
         meta: {
-          scopeRows: [['Project', projectName], ...(exportMeta.scopeRows ?? [])],
+          scopeRows,
           noDataMessage: runScope.noDataMessage,
           timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         },
       });
+      if (complexity) {
+        // A failed refresh throws into the export error; a successful empty one stays "unavailable"
+        const latest = complexity.fetchLatest ? await complexity.fetchLatest() : complexity;
+        sheets.push(ComplexityHelpers.buildRunSheet(latest.run, latest.meta, scopeRows));
+      }
 
       await exportToExcel(
         AnalyticsExportHelpers.runAnalyticsExportFileName({
@@ -139,7 +170,7 @@ const RunAnalyticsView = memo(props => {
     } finally {
       setExporting(false);
     }
-  }, [store, projectId, queryArgs, projectName, exportMeta, runScope]);
+  }, [store, projectId, queryArgs, projectName, exportMeta, runScope, complexity]);
 
   const handleCloseExportError = useCallback(() => setExportError(false), []);
 
@@ -159,10 +190,10 @@ const RunAnalyticsView = memo(props => {
               variant={BUTTON_VARIANTS.secondary}
               color="secondary"
               onClick={handleRefresh}
-              disabled={!runScope || isFetching}
+              disabled={!runScope || refreshing}
               aria-label="Refresh data"
               data-testid="run-analytics-refresh-button"
-              startIcon={isFetching ? <CircularProgress size="1rem" /> : <RefreshIcon sx={styles.icon} />}
+              startIcon={refreshing ? <CircularProgress size="1rem" /> : <RefreshIcon sx={styles.icon} />}
             />
           </Box>
         </Tooltip>
@@ -292,6 +323,14 @@ const RunAnalyticsView = memo(props => {
             <AnalyticsHealth
               health={healthData.health}
               hideTrend
+            />
+          )}
+          {runScope && complexity && activeTab === TAB.complexity && (
+            <RunComplexityTab
+              run={complexity.run}
+              meta={complexity.meta}
+              loading={complexity.loading}
+              error={complexity.error}
             />
           )}
           {runScope && isHealthTab && !healthFetching && hasFailedCalls && (
