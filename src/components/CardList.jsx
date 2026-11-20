@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
+import { useListLayout } from '@/[fsd]/shared/lib/context';
 import { useIsTableView, useShouldCollapseRightToolbar } from '@/[fsd]/shared/lib/hooks';
 import DataTable from '@/[fsd]/widgets/data-table';
 import { RIGHT_PANEL_WIDTH } from '@/common/constants';
@@ -31,8 +32,10 @@ const CardList = memo(props => {
 
   const isTableView = useIsTableView();
   const { shouldCollapseRightToolbar } = useShouldCollapseRightToolbar();
+  const listLayout = useListLayout();
   const isEmptyList = useMemo(() => cardList.length === 0, [cardList.length]);
-  const shouldShowRightPanel = Boolean(rightPanelContent) && !shouldCollapseRightToolbar;
+  const isRightPanelAllowed = listLayout ? listLayout.isRightPanelOpen : !shouldCollapseRightToolbar;
+  const shouldShowRightPanel = Boolean(rightPanelContent) && isRightPanelAllowed;
   const isListFullWidth = isFullWidth || !shouldShowRightPanel;
   const shouldRenderTable = isTableView && !disableTableView;
 

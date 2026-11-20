@@ -9,7 +9,10 @@ export const useOpenImportedConversation = props => {
     async conversation => {
       // Unknown ids land in the "today" date group
       setConversations(prevConversations =>
-        sortConversations([...prevConversations, { ...conversation, updated_at: new Date().toISOString() }]),
+        sortConversations([
+          ...prevConversations.filter(item => item.id !== conversation.id || item.isPlayback),
+          { ...conversation, updated_at: new Date().toISOString() },
+        ]),
       );
       // Regular selection loads details + traces and builds chat_history, so messages render right away
       await onSelectConversation(conversation);

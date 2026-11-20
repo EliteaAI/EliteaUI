@@ -1,11 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-
-import { useDispatch, useSelector } from 'react-redux';
-
 import { Box, Grid } from '@mui/material';
 
-import { DiscoverySearchBar } from '@/[fsd]/features/discovery-search';
-import { useSearchBar, useTags } from '@/[fsd]/shared/lib/hooks';
+import { DiscoverySearchBar, useDiscoverySearchState } from '@/[fsd]/features/discovery-search';
+import { useListLayout } from '@/[fsd]/shared/lib/context';
+import { useSearchBar } from '@/[fsd]/shared/lib/hooks';
 import {
   NAV_BAR_HEIGHT_TABLET,
   PAGE_PADDING,
@@ -13,7 +10,6 @@ import {
   RIGHT_PANEL_WIDTH_OF_CARD_LIST_PAGE,
 } from '@/common/constants';
 import { filterProps } from '@/common/utils';
-import { actions } from '@/slices/search';
 
 export const FixedGrid = styled(
   Grid,
@@ -42,33 +38,24 @@ const ContainerBox = styled(
 }));
 
 export default function RightPanel({ children, offsetFromTop = RIGHT_PANEL_HEIGHT_OFFSET }) {
-  const dispatch = useDispatch();
+  const listLayout = useListLayout();
   const { showSearchBar, isPipelinesPage } = useSearchBar();
-  const { query, queryTags } = useSelector(state => state.search);
-  const [searchString, setSearchString] = useState(query);
-  const [searchTags, setSearchTags] = useState(queryTags);
-  const { navigateWithTags, selectedTags: urlTags } = useTags();
-  const onClear = useCallback(() => {
-    setSearchString('');
-    setSearchTags([]);
-    dispatch(actions.resetQuery());
-    if (urlTags) {
-      navigateWithTags([]);
-    }
-  }, [dispatch, navigateWithTags, urlTags]);
-  const onClearRef = useRef(onClear);
+  const { searchString, setSearchString, searchTags, setSearchTags, onClear } = useDiscoverySearchState();
 
-  useEffect(() => {
-    onClearRef.current = onClear;
-  }, [onClear]);
+  const top = listLayout ? `${listLayout.rightPanelTop}px` : offsetFromTop;
+  const showSearch = showSearchBar && !listLayout?.isSearchInToolbar;
 
   return (
     <FixedGrid
       size={{ xs: 3 }}
-      offsetFromTop={offsetFromTop}
+      offsetFromTop={top}
+      sx={listLayout ? rightPanelStyles.sectionFrame(top) : undefined}
     >
-      <ContainerBox offsetFromTop={offsetFromTop}>
-        {showSearchBar && (
+      <ContainerBox
+        offsetFromTop={top}
+        sx={listLayout ? rightPanelStyles.sectionContainer(top) : undefined}
+      >
+        {showSearch && (
           <DiscoverySearchBar
             searchString={searchString}
             setSearchString={setSearchString}
@@ -83,3 +70,21 @@ export default function RightPanel({ children, offsetFromTop = RIGHT_PANEL_HEIGH
     </FixedGrid>
   );
 }
+
+/** @type {MuiSx} */
+const rightPanelStyles = {
+  // Under a section page's toolbar on every width, not under the old tablet nav bar; its right edge
+  // follows the page padding, so the panel ends where the toolbar's «+ Add» ends
+  sectionFrame:
+    top =>
+    ({ breakpoints }) => ({
+      right: '1.5rem',
+      [breakpoints.down('tablet')]: { top },
+    }),
+  sectionContainer: top => ({
+    height: `calc(100vh - ${top} - 1rem)`,
+    maxHeight: 'none',
+    overflow: 'hidden',
+    '& > *': { minHeight: 0, maxHeight: '100%' },
+  }),
+};

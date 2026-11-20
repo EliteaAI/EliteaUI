@@ -4,6 +4,7 @@ import { Box } from '@mui/material';
 
 import MainPanel from '@/[fsd]/app/layout/MainPanel';
 import MainSidebar from '@/[fsd]/app/layout/MainSidebar';
+import { ChatHistoryProvider } from '@/[fsd]/features/chat/conversation-list/ui';
 import { useChatRunStatusSocket, useChatSendOutcomeTracker } from '@/[fsd]/features/chat/lib/hooks';
 import { useTourFromUrl } from '@/[fsd]/features/interactive-tours';
 
@@ -16,10 +17,12 @@ const AppLayoutInner = memo(props => {
   const styles = appLayoutInnerStyles();
 
   return (
-    <Box sx={styles.appContainer}>
-      <MainSidebar onToggleAssistant={onToggleAssistant} />
-      <MainPanel />
-    </Box>
+    <ChatHistoryProvider>
+      <Box sx={styles.appContainer}>
+        <MainSidebar onToggleAssistant={onToggleAssistant} />
+        <MainPanel />
+      </Box>
+    </ChatHistoryProvider>
   );
 });
 

@@ -95,7 +95,7 @@ const applicationCatalogStyles = () => ({
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 20rem), 36rem))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 20rem), 33.75rem))',
     gap: '1rem',
     alignItems: 'stretch',
   },

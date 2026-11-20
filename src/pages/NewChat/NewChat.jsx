@@ -10,20 +10,17 @@ import { Box, CircularProgress, Grid, useTheme } from '@mui/material';
 import { useEditingArtifactsNavBlocker } from '@/[fsd]/features/artifacts/lib/hooks';
 import { useManualSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { useLazyConversationDetailsQuery } from '@/[fsd]/features/chat/api';
+import { applyParticipantChanges } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
 import {
-  applyParticipantChanges,
-  redistributeConversationsIntoGroups,
-} from '@/[fsd]/features/chat/conversation-list/lib/helpers';
-import {
+  useChatHistoryActions,
+  useChatHistoryData,
   useCreateFolder,
-  useDeleteFolder,
   useDuplicateConversation,
-  useMoveToFolderConversation,
   useOpenImportedConversation,
   usePinConversation,
-  useQueryFoldersList,
+  useRegisterChatPage,
+  useSelectInitialConversation,
 } from '@/[fsd]/features/chat/conversation-list/lib/hooks';
-import { Conversations } from '@/[fsd]/features/chat/conversation-list/ui';
 import {
   useApplyChatSendFailures,
   useChatEditors,
@@ -51,16 +48,13 @@ import { ChatEditorPanel } from '@/[fsd]/features/chat/ui/editors';
 import { FIRST_ELITEA_TOUR_ID, useProposePendingTour } from '@/[fsd]/features/interactive-tours';
 import { skillComposerPlaceholder } from '@/[fsd]/features/skill/lib/helpers';
 import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
-import { useGetWindowWidth, useIsSmallWindow, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useIsSmallWindow, useToast } from '@/[fsd]/shared/lib/hooks';
 import { eliteaApi } from '@/api/eliteaApi';
 import {
   ChatParticipantType,
   DefaultConversationName,
-  DefaultFolderName,
-  SIDE_BAR_WIDTH,
   SearchParams,
   dummyConversation,
-  dummyFolder,
   sioEvents,
 } from '@/common/constants';
 import { genConversationId, getRawParticipantUniqueId } from '@/common/utils';
@@ -86,12 +80,10 @@ import useDeleteConversation from '@/hooks/chat/useDeleteConversation';
 import useDeleteMessageFromConversation from '@/hooks/chat/useDeleteMessageFromConversation';
 import useDeleteParticipant from '@/hooks/chat/useDeleteParticipant';
 import useEditCanvas from '@/hooks/chat/useEditCanvas';
-import useEditFolder from '@/hooks/chat/useEditFolder.js';
 import useEditingCanvasNavBlocker from '@/hooks/chat/useEditingCanvasNavBlocker';
 import useLocalActiveParticipant from '@/hooks/chat/useLocalActiveParticipant';
 import usePlaybackConversation from '@/hooks/chat/usePlaybackConversation';
 import useRemoteParticipantUpdate from '@/hooks/chat/useRemoteParticipantUpdate';
-import useReorderFolders from '@/hooks/chat/useReorderFolders.js';
 import useSelectConversation from '@/hooks/chat/useSelectConversation';
 import useSynChatMessage from '@/hooks/chat/useSyncChatMessage';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
@@ -105,6 +97,8 @@ const PlaybackChatBox = ChunkHelpers.lazyWithRetry(
 );
 
 const TAG_TYPE_FOLDERS = 'TAG_TYPE_FOLDERS';
+
+const noop = () => {};
 
 const NewChat = props => {
   const { projectId, preProjectId, setPreProjectId } = props;
@@ -126,24 +120,21 @@ const NewChat = props => {
   const { isAnyEditorOpen } = useNavBlocker();
 
   const [activeConversation, setActiveConversation] = useState(dummyConversation);
-  const [dateGroups, setDateGroups] = useState([]);
-  const [pinnedConversations, setPinnedConversations] = useState([]);
+
+  // The chat list lives in the menu (ChatHistoryProvider); the page edits it through the same setters
+  const {
+    dateGroups,
+    pinnedConversations,
+    folders,
+    searchQuery: sidebarSearchQuery,
+    isLoadMoreConversations,
+    isConversationsLoaded,
+  } = useChatHistoryData();
+  const { setDateGroups, setConversations, setPinnedConversations, setFolders, setActiveFolder } =
+    useChatHistoryActions();
 
   const conversations = useMemo(() => dateGroups.flatMap(g => g.conversations), [dateGroups]);
 
-  const setConversations = useCallback(updater => {
-    setDateGroups(prevGroups => {
-      const prevFlat = prevGroups.flatMap(g => g.conversations);
-      const newFlat = typeof updater === 'function' ? updater(prevFlat) : updater;
-      return redistributeConversationsIntoGroups(prevGroups, newFlat);
-    });
-  }, []);
-
-  const [collapsedConversations, setCollapsedConversations] = useState(false);
-
-  const [activeFolder, setActiveFolder] = useState(dummyFolder);
-  const [folders, setFolders] = useState([]);
-  const [sidebarSearchQuery, setSidebarSearchQuery] = useState();
   const [conversationNotFound, setConversationNotFound] = useState(false);
   const isPlayback = useMemo(() => activeConversation?.isPlayback, [activeConversation]);
   const isNewConversation = useMemo(
@@ -167,33 +158,15 @@ const NewChat = props => {
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [newConversationQuestion, setNewConversationQuestion] = useState('');
 
-  const { windowWidth } = useGetWindowWidth();
   const { isSmallWindow } = useIsSmallWindow();
 
-  const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
   const { id: userId } = useSelector(state => state.user);
-
-  const leftPanelWidth = useMemo(
-    () => (sideBarCollapsed ? 300 : windowWidth > 1700 ? 300 : 380 - SIDE_BAR_WIDTH / 2),
-    [sideBarCollapsed, windowWidth],
-  );
 
   // The 248px Participants panel of the design plus the column's 24px and 16px paddings
   const rightPanelWidth = 288;
 
   const { clearLocalActiveParticipant, getLocalActiveParticipant, setLocalActiveParticipant } =
     useLocalActiveParticipant();
-
-  const ungroupedConversationsCount = useMemo(() => {
-    return dateGroups.reduce((sum, g) => sum + (g.total || 0), 0);
-  }, [dateGroups]);
-
-  const totalConversationsAmount = useMemo(() => {
-    const folderConversationsCount = (Array.isArray(folders) ? folders : []).reduce((acc, folder) => {
-      return acc + (folder.total || folder.conversations?.length || 0);
-    }, 0);
-    return ungroupedConversationsCount + folderConversationsCount;
-  }, [ungroupedConversationsCount, folders]);
 
   const isCreatingConversation = useIsCreatingConversation();
 
@@ -320,7 +293,7 @@ const NewChat = props => {
       );
       dispatch(eliteaApi.util.invalidateTags([TAG_TYPE_FOLDERS]));
     },
-    [activeConversation?.uuid, changeUrlByConversation, dispatch, setConversations],
+    [activeConversation?.uuid, changeUrlByConversation, dispatch, setConversations, setFolders],
   );
 
   useChatConversationNameUpdateSocket({ onRemoteUpdateConversationName });
@@ -537,20 +510,8 @@ const NewChat = props => {
     if (firstAvailable) onSelectConversation(firstAvailable);
   }, [clearUrlConversation, pinnedConversations, dateGroups, folders, onSelectConversation]);
 
-  const {
-    isLoadFolders: isLoadConversations,
-    isLoadMoreFolders: isLoadMoreConversations,
-    isConversationsLoaded,
-  } = useQueryFoldersList({
-    toastError,
-    setFolders,
-    setDateGroups,
-    setPinnedConversations,
+  useSelectInitialConversation({
     onSelectConversation,
-    searchQuery: sidebarSearchQuery,
-    folders,
-    dateGroups,
-    pinnedConversations,
     skipSetConversation:
       isCreatingConversation ||
       activeConversation?.isNew ||
@@ -570,7 +531,7 @@ const NewChat = props => {
     canvasEditorRef,
   } = useEditCanvas({
     setCollapsedParticipants,
-    setCollapsedConversations,
+    setCollapsedConversations: noop,
     setChatHistory,
   });
 
@@ -750,10 +711,6 @@ const NewChat = props => {
     [activeConversation, addNewParticipants, onSelectParticipant],
   );
 
-  const onCloseCanvas = useCallback(() => {
-    canvasEditorRef.current?.save?.();
-  }, [canvasEditorRef]);
-
   const detectedEditorType = useMemo(() => {
     if (selectedCodeBlockInfo) return 'canvas';
     if (isEditingAgent) return 'agent';
@@ -830,7 +787,6 @@ const NewChat = props => {
   const isAnyPanelOpen = isAnyEditorOpen || isAnyEditorPanelOpen;
   useEffect(() => {
     if (isAnyPanelOpen) setCollapsedParticipants(isAnyPanelOpen);
-    setCollapsedConversations(isAnyPanelOpen);
   }, [isAnyPanelOpen]);
 
   const [newConversationSelectedManager, setNewConversationSelectedManager] = useState(null);
@@ -1034,10 +990,6 @@ const NewChat = props => {
     setCollapsedParticipants(prev => !prev);
   }, []);
 
-  const onConversationCollapsed = useCallback(() => {
-    setCollapsedConversations(prev => !prev);
-  }, []);
-
   const { onEditConversation } = useEditConversation({
     activeConversation,
     setActiveConversation,
@@ -1045,35 +997,6 @@ const NewChat = props => {
     setPinnedConversations,
     setFolders,
     toastError,
-  });
-
-  const { onEditFolder, onPinFolder } = useEditFolder({
-    activeFolder,
-    setActiveFolder,
-    setFolders,
-    toastError,
-  });
-
-  const {
-    onMoveToFolderConversation,
-    onMoveToNewFolderConversation,
-    moveTargetConversationToNewFolder,
-    cancelMovingTargetConversationToNewFolder,
-  } = useMoveToFolderConversation({
-    setFolders,
-    setActiveFolder,
-    setConversations,
-    toastError,
-    toastSuccess,
-    conversations,
-    folders,
-  });
-
-  const { onReorderFolders, isFolderUpdate } = useReorderFolders({
-    folders,
-    setFolders,
-    toastError,
-    toastSuccess,
   });
 
   const { onDeleteConversation } = useDeleteConversation({
@@ -1094,12 +1017,6 @@ const NewChat = props => {
     isConversationDeleted,
   });
 
-  const { onDeleteFolder } = useDeleteFolder({
-    setFolders,
-    toastError,
-    toastSuccess,
-  });
-
   const { onPlaybackConversation } = usePlaybackConversation({
     setActiveConversation,
     setConversations,
@@ -1112,23 +1029,6 @@ const NewChat = props => {
   const onChangeActiveConversationName = useCallback(newName => {
     setActiveConversation(prev => ({ ...prev, name: newName }));
   }, []);
-
-  const onChangeActiveFolderName = useCallback(newName => {
-    setActiveFolder(prev => ({ ...prev, name: newName }));
-  }, []);
-
-  const onClickCreateNewFolder = useCallback(() => {
-    if (!activeFolder?.isNew) {
-      const newFolder = {
-        id: uuidv4(),
-        name: DefaultFolderName,
-        conversations: [],
-        isNew: true,
-      };
-      setActiveFolder({ ...newFolder });
-      setFolders(prev => [newFolder, ...prev]);
-    }
-  }, [activeFolder?.isNew]);
 
   const startNewConversation = useCallback(
     (folderId = null) => {
@@ -1194,6 +1094,28 @@ const NewChat = props => {
     [startNewConversation, userId],
   );
 
+  // The menu's chat history runs these while the page is open: they know the open chat
+  useRegisterChatPage({
+    actions: {
+      onSelectConversation: onHandleSelectConversation,
+      onEditConversation,
+      onDeleteConversation,
+      onPinConversation,
+      onDuplicateConversation,
+      onPlaybackConversation,
+      onCreateConversation,
+      onCancelCreateConversation,
+      onChangeActiveConversationName,
+      onCreateConversationInFolder,
+      onImportedConversation,
+      onRestrictAccessSuccess: handleRestrictAccessSuccess,
+      onCreateFolder,
+      onCancelCreateFolder,
+    },
+    selectedConversationId: genConversationId(activeConversation),
+    duplicatingConversationId,
+  });
+
   useEffect(() => {
     if (isCreatingConversation && !activeConversation?.isNew) {
       startNewConversation();
@@ -1253,9 +1175,7 @@ const NewChat = props => {
   const styles = chatStyles({
     theme,
     isSmallWindow,
-    collapsedConversations,
     collapsedParticipants,
-    leftPanelWidth,
     rightPanelWidth,
     showResizeGutter,
     isAnyEditorOpen: isAnyPanelOpen,
@@ -1325,58 +1245,6 @@ const NewChat = props => {
         container
         sx={styles.container}
       >
-        <Grid
-          size={{ xs: 12, lg: collapsedConversations ? 0.5 : 3 }}
-          sx={styles.wrapper}
-        >
-          <Conversations
-            isLoadConversations={isLoadConversations}
-            isLoadMoreConversations={isLoadMoreConversations}
-            selectedConversationId={genConversationId(activeConversation)}
-            conversations={conversations}
-            pinnedConversations={pinnedConversations}
-            dateGroups={dateGroups}
-            setDateGroups={setDateGroups}
-            ungroupedConversationsCount={ungroupedConversationsCount}
-            totalConversationsAmount={totalConversationsAmount}
-            onSelectConversation={onHandleSelectConversation}
-            onEditConversation={onEditConversation}
-            onDeleteConversation={onDeleteConversation}
-            onDuplicateConversation={onDuplicateConversation}
-            duplicatingConversationId={duplicatingConversationId}
-            onPlaybackConversation={onPlaybackConversation}
-            collapsed={collapsedConversations}
-            onCollapsed={onConversationCollapsed}
-            onLoadMore={() => {}}
-            onPinConversation={onPinConversation}
-            onCreateConversation={onCreateConversation}
-            onCancelCreateConversation={onCancelCreateConversation}
-            onChangeActiveConversationName={onChangeActiveConversationName}
-            folders={folders}
-            setFolders={setFolders}
-            onCreateFolder={onCreateFolder}
-            onCancelCreateFolder={onCancelCreateFolder}
-            onDeleteFolder={onDeleteFolder}
-            onChangeActiveFolderName={onChangeActiveFolderName}
-            onEditFolder={onEditFolder}
-            onPinFolder={onPinFolder}
-            onMoveToFolderConversation={onMoveToFolderConversation}
-            onMoveToNewFolderConversation={onMoveToNewFolderConversation}
-            moveTargetConversationToNewFolder={moveTargetConversationToNewFolder}
-            cancelMovingTargetConversationToNewFolder={cancelMovingTargetConversationToNewFolder}
-            onClickCreateNewFolder={onClickCreateNewFolder}
-            onCreateConversationInFolder={onCreateConversationInFolder}
-            onCloseCanvas={onCloseCanvas}
-            toastSuccess={toastSuccess}
-            toastError={toastError}
-            onSearchQueryChange={setSidebarSearchQuery}
-            onReorderFolders={onReorderFolders}
-            isFolderOperationInProgress={isFolderUpdate || isLoadConversations || isLoadMoreConversations}
-            onRestrictAccessSuccess={handleRestrictAccessSuccess}
-            onImportedConversation={onImportedConversation}
-          />
-        </Grid>
-
         {renderRightPanel(isSmallWindow)}
 
         <Grid
@@ -1612,28 +1480,17 @@ const NewChat = props => {
 const chatStyles = ({
   theme,
   isSmallWindow,
-  collapsedConversations,
   collapsedParticipants,
-  leftPanelWidth,
   rightPanelWidth,
   showResizeGutter,
   isAnyEditorOpen,
 }) => {
-  const COLLAPSED_LEFT = 60;
   const COLLAPSED_RIGHT = 80;
 
-  const getChatWidthLG = () => {
-    const left = collapsedConversations ? COLLAPSED_LEFT : leftPanelWidth;
+  // The chat list moved to the menu: the chat takes all the width the Participants panel leaves
+  const getChatWidth = () => {
     const right = collapsedParticipants ? COLLAPSED_RIGHT : rightPanelWidth;
-    return `calc(100% - ${left + right}px) !important`;
-  };
-
-  const getChatWidthSM = () => {
-    const right = collapsedParticipants ? COLLAPSED_RIGHT : rightPanelWidth;
-    if (collapsedConversations) {
-      return `calc(100% - ${COLLAPSED_LEFT + right}px) !important`;
-    }
-    return `calc(75% - ${right}px) !important`;
+    return `calc(100% - ${right}px) !important`;
   };
 
   return {
@@ -1645,46 +1502,19 @@ const chatStyles = ({
       background: theme.palette.background.default.tertiary,
       width: '100%',
     },
-    wrapper: {
-      height: isSmallWindow ? 'auto' : '100%',
-      marginBottom: isSmallWindow ? '16px' : undefined,
-      boxSizing: 'border-box',
-      paddingRight: {
-        lg: '24px',
-      },
-      [theme.breakpoints.up('prompt_list_lg')]: {
-        maxWidth: collapsedConversations ? '60px !important' : `${leftPanelWidth}px !important`,
-        minWidth: collapsedConversations ? '60px !important' : `${leftPanelWidth}px !important`,
-      },
-      [theme.breakpoints.down('prompt_list_lg')]: {
-        maxWidth: collapsedConversations ? '60px !important' : '25% !important',
-        minWidth: collapsedConversations ? '60px !important' : '25% !important',
-      },
-      [theme.breakpoints.down('lg')]: {
-        maxWidth: '100% !important',
-        minWidth: '100% !important',
-      },
-    },
     conversationWrapper: {
       height: '100%',
       minHeight: '100%',
       boxSizing: 'border-box',
-      marginTop: {
-        xs: '32px',
-        lg: '0px',
-      },
-      paddingBottom: {
-        xs: '10px',
-        lg: '0px',
-      },
+      marginTop: '32px',
+      paddingBottom: '10px',
       gap: '12px',
-      [theme.breakpoints.up('prompt_list_lg')]: {
-        maxWidth: getChatWidthLG(),
-        minWidth: getChatWidthLG(),
-      },
-      [theme.breakpoints.down('prompt_list_lg')]: {
-        maxWidth: getChatWidthSM(),
-        minWidth: getChatWidthSM(),
+      // One lg block: a responsive marginTop/paddingBottom object would emit the same media query and be lost
+      [theme.breakpoints.up('lg')]: {
+        marginTop: 0,
+        paddingBottom: 0,
+        maxWidth: getChatWidth(),
+        minWidth: getChatWidth(),
       },
       [theme.breakpoints.down('lg')]: {
         maxWidth: '100% !important',

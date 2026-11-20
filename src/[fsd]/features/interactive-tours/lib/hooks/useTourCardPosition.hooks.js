@@ -209,12 +209,19 @@ export const useTourCardPosition = currentStep => {
         return { top: verticalTop, left: clampLeft(rect.left - CARD_WIDTH_PX - CARD_GAP_PX) };
       case 'right': {
         const cardLeft = clampLeft(rect.right + CARD_GAP_PX);
+        // A long card scrolls inside the space the window leaves it, so its buttons stay on screen
+        const bodySxFor = space => ({ maxHeight: `${Math.max(80, space - CARD_CHROME_HEIGHT_PX)}px` });
         // If the card fits below the target's top edge, top-align to the target
         if (rect.top + CARD_ESTIMATED_HEIGHT_PX + VIEWPORT_MARGIN_PX <= vh) {
-          return { top: Math.max(VIEWPORT_MARGIN_PX, rect.top), left: cardLeft };
+          const top = Math.max(VIEWPORT_MARGIN_PX, rect.top);
+          return { positionSx: { top, left: cardLeft }, bodySx: bodySxFor(vh - top - VIEWPORT_MARGIN_PX) };
         }
         // Target is near the bottom — bottom-align the card to the target's bottom edge
-        return { bottom: Math.max(VIEWPORT_MARGIN_PX, vh - rect.bottom), left: cardLeft };
+        const bottom = Math.max(VIEWPORT_MARGIN_PX, vh - rect.bottom);
+        return {
+          positionSx: { bottom, left: cardLeft },
+          bodySx: bodySxFor(vh - bottom - VIEWPORT_MARGIN_PX),
+        };
       }
       case 'top': {
         const fitsAbove = rect.top - CARD_GAP_PX - CARD_ESTIMATED_HEIGHT_PX - VIEWPORT_MARGIN_PX >= 0;
@@ -262,7 +269,7 @@ export const useTourCardPosition = currentStep => {
     }
   }, [targetInfo, viewport, currentStep?.placement]);
 
-  // bottom returns a split { positionSx, bodySx } shape; all others return a flat sx object.
+  // bottom and right return a split { positionSx, bodySx } shape; all others return a flat sx object.
   const isBottomSplit = cardPositionSx !== null && 'positionSx' in cardPositionSx;
 
   return {

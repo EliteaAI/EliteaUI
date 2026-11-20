@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 
 import { Box, Skeleton } from '@mui/material';
 
@@ -33,19 +33,15 @@ const Folders = memo(props => {
     onLoadMoreInFolder,
     loadingFolders,
     onCreateConversationInFolder,
+    folderExpansion,
   } = props;
 
   const { isSmallWindow } = useIsSmallWindow();
 
   const [forceRerenderKey, setForceRerenderKey] = useState(0);
   const [wasInSearchMode, setWasInSearchMode] = useState(false);
-  const [hoveredFolderId, setHoveredFolderId] = useState(null);
 
   const styles = foldersStyles(collapsed, isSmallWindow);
-
-  const handleFolderHover = useCallback((folderId, isHovered) => {
-    setHoveredFolderId(isHovered ? folderId : null);
-  }, []);
 
   // Force re-render when transitioning out of search mode to reset folder expansion
   useEffect(() => {
@@ -61,9 +57,7 @@ const Folders = memo(props => {
   }, [folders, enableDragAndDrop, isSearchMode, isPinned]);
 
   const renderFolderItems = () =>
-    folders.map((folder, index) => {
-      const nextFolder = folders[index + 1];
-      const isNextFolderHovered = nextFolder?.id === hoveredFolderId;
+    folders.map(folder => {
       const containsActiveConversation = folder.conversations.find(
         conversation => genConversationId(conversation) === selectedConversationId,
       );
@@ -94,12 +88,12 @@ const Folders = memo(props => {
           containsActiveConversation={shouldExpandByDefault}
           enableDragAndDrop={enableDragAndDrop}
           getDropAreaState={getDropAreaState}
-          onFolderHover={handleFolderHover}
-          isNextFolderHovered={isNextFolderHovered}
           isDragDisabled={isSearchMode || isFolderOperationInProgress || isPinned}
           onLoadMoreInFolder={onLoadMoreInFolder}
           isLoadingMoreInFolder={loadingFolders?.has(folder.id)}
           onCreateConversationInFolder={onCreateConversationInFolder}
+          // Search opens folders by its matches only for as long as it lasts: it never touches the kept state
+          folderExpansion={isSearchMode ? undefined : folderExpansion}
         />
       );
     });

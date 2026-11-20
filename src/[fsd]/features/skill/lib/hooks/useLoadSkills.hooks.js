@@ -1,7 +1,5 @@
 import { useCallback, useMemo } from 'react';
 
-import { useSelector } from 'react-redux';
-
 import { useSkillListQuery } from '@/[fsd]/features/skill/api';
 import { useAuthorIdFromUrl, usePageQuery } from '@/[fsd]/shared/lib/hooks';
 
@@ -11,8 +9,8 @@ export const useLoadSkills = ({
   forceSkip = false,
   folderEntityIds = null,
 } = {}) => {
-  const { page, pageSize, setPage, tagList, selectedTagIds, projectId } = usePageQuery();
-  const { query } = useSelector(state => state.search);
+  // The query comes with the page reset, so a new search never asks for a later page
+  const { query, page, pageSize, setPage, tagList, selectedTagIds, projectId } = usePageQuery();
   const authorId = useAuthorIdFromUrl();
 
   const {
