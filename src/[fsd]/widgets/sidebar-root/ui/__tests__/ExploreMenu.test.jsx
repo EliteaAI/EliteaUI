@@ -19,9 +19,9 @@ vi.mock('@/[fsd]/features/interactive-tours', () => ({ SIDEBAR_TOUR_TARGET_IDS: 
 vi.mock('@/[fsd]/widgets/sidebar-root/lib/hooks', () => ({
   useExploreSections: () => ({ sections: fixture.sections, selectedSection: fixture.selectedSection }),
   useSidebarNavigation: () => ({
-    navigateToPage: (path, breadCrumb) => event => {
+    navigateToPage: (path, breadCrumb, options) => event => {
       event?.preventDefault?.();
-      fixture.navigate(path, breadCrumb);
+      fixture.navigate(path, breadCrumb, options);
     },
     getLinkTarget: path => path,
   }),
@@ -171,8 +171,48 @@ describe('ExploreMenu', () => {
     renderMenu();
     fireEvent.click(screen.getByTestId('explore-item'));
     fireEvent.click(screen.getByTestId('sidebar-explore-mcps'));
-    expect(fixture.navigate).toHaveBeenCalledWith('/mcps', 'MCP');
+    expect(fixture.navigate).toHaveBeenCalledWith('/mcps', 'MCP', { collapseSidebar: true });
     expect(list()).toBeNull();
+  });
+
+  it('opens from the folded menu (no label) on hover and on click', () => {
+    fixture.sections = SECTIONS;
+    fixture.selectedSection = null;
+    render(
+      <ThemeProvider theme={theme}>
+        <ExploreMenu showLabel={false} />
+      </ThemeProvider>,
+    );
+    fireEvent.mouseEnter(screen.getByTestId('sidebar-explore'));
+    expect(list()).toBeInTheDocument();
+    fireEvent.keyDown(screen.getByTestId('explore-item'), { key: 'Escape' });
+    expect(list()).toBeNull();
+    fireEvent.click(screen.getByTestId('explore-item'));
+    expect(list()).toBeInTheDocument();
+  });
+
+  it.each(['ArrowDown', 'ArrowRight'])('opens the list and focuses the first row on %s', key => {
+    renderMenu();
+    fireEvent.keyDown(screen.getByTestId('explore-item'), { key });
+    expect(list()).toBeInTheDocument();
+    expect(screen.getByTestId('sidebar-explore-agents')).toHaveFocus();
+  });
+
+  it('closes the list and returns to Explore on ArrowLeft', () => {
+    renderMenu();
+    const item = screen.getByTestId('explore-item');
+    fireEvent.keyDown(item, { key: 'ArrowDown' });
+    fireEvent.keyDown(screen.getByTestId('sidebar-explore-agents'), { key: 'ArrowLeft' });
+    expect(list()).toBeNull();
+    expect(item).toHaveFocus();
+  });
+
+  it('moves between rows with the arrows without closing the list', () => {
+    renderMenu();
+    fireEvent.keyDown(screen.getByTestId('explore-item'), { key: 'ArrowDown' });
+    fireEvent.keyDown(screen.getByTestId('sidebar-explore-agents'), { key: 'ArrowDown' });
+    expect(list()).toBeInTheDocument();
+    expect(screen.getByTestId('sidebar-explore-mcps')).toHaveFocus();
   });
 
   it('selects Explore and the open section', () => {

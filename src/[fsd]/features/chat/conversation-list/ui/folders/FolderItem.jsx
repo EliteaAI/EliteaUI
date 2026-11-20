@@ -46,6 +46,7 @@ const FolderItem = memo(props => {
     onLoadMoreInFolder,
     isLoadingMoreInFolder = false,
     onCreateConversationInFolder,
+    folderExpansion,
   } = props;
   const { name, isNew: isNewFolder, owner_id } = folder;
 
@@ -84,6 +85,11 @@ const FolderItem = memo(props => {
   const handleUnpinFolder = useCallback(() => {
     onPinFolder(folder, false);
   }, [folder, onPinFolder]);
+
+  const handleExpandedChange = useCallback(
+    expanded => folderExpansion?.set(folder.id, expanded),
+    [folder.id, folderExpansion],
+  );
 
   const handleCreateConversationInFolder = useCallback(() => {
     onCreateConversationInFolder?.(folder);
@@ -234,6 +240,8 @@ const FolderItem = memo(props => {
         showMenu={showMenu}
         showMode={AccordionConstants.AccordionShowMode.LeftMode}
         defaultExpanded={containsActiveConversation}
+        storedExpanded={folderExpansion?.get(folder.id)}
+        onExpandedChange={handleExpandedChange}
         isPinned={folder.meta?.is_pinned}
         onUnpin={handleUnpinFolder}
         folderId={folder.id}
@@ -264,6 +272,8 @@ const FolderItem = memo(props => {
       isHovering,
       showMenu,
       containsActiveConversation,
+      folderExpansion,
+      handleExpandedChange,
       handleUnpinFolder,
       folder,
       name,
