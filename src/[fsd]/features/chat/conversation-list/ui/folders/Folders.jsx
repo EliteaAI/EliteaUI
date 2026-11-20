@@ -33,6 +33,7 @@ const Folders = memo(props => {
     onLoadMoreInFolder,
     loadingFolders,
     onCreateConversationInFolder,
+    folderExpansion,
   } = props;
 
   const { isSmallWindow } = useIsSmallWindow();
@@ -91,6 +92,8 @@ const Folders = memo(props => {
           onLoadMoreInFolder={onLoadMoreInFolder}
           isLoadingMoreInFolder={loadingFolders?.has(folder.id)}
           onCreateConversationInFolder={onCreateConversationInFolder}
+          // Search opens folders by its matches only for as long as it lasts: it never touches the kept state
+          folderExpansion={isSearchMode ? undefined : folderExpansion}
         />
       );
     });

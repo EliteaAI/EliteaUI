@@ -26,6 +26,9 @@ const ChatHistoryProvider = memo(props => {
   const [chatPageState, setChatPageState] = useState(EMPTY_CHAT_PAGE_STATE);
 
   const chatPageActionsRef = useRef(null);
+  // The list's view state, kept over its remounts without re-rendering the history
+  const folderExpansionRef = useRef(new Map());
+  const historyScrollTopRef = useRef(0);
 
   const setConversations = useCallback(updater => {
     setDateGroups(prevGroups => {
@@ -46,6 +49,8 @@ const ChatHistoryProvider = memo(props => {
     setPinnedConversations([]);
     setFolders([]);
     setActiveFolder(dummyFolder);
+    folderExpansionRef.current.clear();
+    historyScrollTopRef.current = 0;
   }, [projectId]);
 
   const {
@@ -107,6 +112,8 @@ const ChatHistoryProvider = memo(props => {
       togglePinnedGroup,
       setChatPageState,
       chatPageActionsRef,
+      folderExpansionRef,
+      historyScrollTopRef,
     }),
     [setConversations, togglePinnedGroup],
   );

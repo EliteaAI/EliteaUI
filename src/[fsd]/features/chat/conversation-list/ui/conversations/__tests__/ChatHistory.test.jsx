@@ -33,6 +33,7 @@ vi.mock('@/[fsd]/features/chat/conversation-list/ui', () => ({
         key={folder.id}
         data-testid={`folder-${folder.id}`}
         data-new-chat={String(!!props.onCreateConversationInFolder)}
+        data-kept-expansion={String(props.folderExpansion === fixture.actions.folderExpansionRef.current)}
       />
     )),
   PinnedConversations: props => props.pinnedConversations.map(chat => props.renderConversationItem(chat)),
@@ -103,12 +104,11 @@ const makeData = overrides => ({
 
 const renderHistory = () => {
   const onOpenConversation = vi.fn();
-  render(
+  return render(
     <ThemeProvider theme={theme}>
       <ChatHistory onOpenConversation={onOpenConversation} />
     </ThemeProvider>,
   );
-  return onOpenConversation;
 };
 
 const isBefore = (first, second) =>
@@ -124,6 +124,8 @@ describe('ChatHistory', () => {
       setSearchQuery: vi.fn(),
       setIsPinnedExpanded: vi.fn(),
       togglePinnedGroup: vi.fn(),
+      folderExpansionRef: { current: new Map() },
+      historyScrollTopRef: { current: 0 },
     };
     fixture.itemActions = { onSelectConversation: vi.fn(), isFolderUpdate: false };
   });
@@ -201,6 +203,52 @@ describe('ChatHistory', () => {
     expect(fixture.itemActions.onSelectConversation).toHaveBeenCalledWith(
       expect.objectContaining({ id: 12 }),
     );
+  });
+
+  it('keeps the scroll position over a remount (the collapsed menu unmounts the list)', () => {
+    const { unmount } = renderHistory();
+    const list = screen.getByTestId('sidebar-chats-list');
+    list.scrollTop = 240;
+    fireEvent.scroll(list);
+    expect(fixture.actions.historyScrollTopRef.current).toBe(240);
+
+    unmount();
+    renderHistory();
+
+    expect(screen.getByTestId('sidebar-chats-list').scrollTop).toBe(240);
+  });
+
+  it('restores the scroll position only once the rows are there', () => {
+    fixture.actions.historyScrollTopRef.current = 120;
+    fixture.data = makeData({ isLoadConversations: true });
+    const { rerender } = renderHistory();
+    expect(screen.getByTestId('sidebar-chats-list').scrollTop).toBe(0);
+
+    fixture.data = makeData();
+    rerender(
+      <ThemeProvider theme={theme}>
+        <ChatHistory onOpenConversation={vi.fn()} />
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByTestId('sidebar-chats-list').scrollTop).toBe(120);
+  });
+
+  it('gives the folders the kept open/folded state', () => {
+    renderHistory();
+
+    expect(screen.getByTestId('folder-100')).toHaveAttribute('data-kept-expansion', 'true');
+    expect(screen.getByTestId('folder-200')).toHaveAttribute('data-kept-expansion', 'true');
+  });
+
+  it('selects no chat after a remount away from the chat page', () => {
+    const { unmount } = renderHistory();
+    unmount();
+    renderHistory();
+
+    expect(screen.getByTestId('row-11')).toHaveAttribute('data-active', 'false');
+    expect(screen.getByTestId('row-1')).toHaveAttribute('data-active', 'false');
+    expect(fixture.itemActions.onSelectConversation).not.toHaveBeenCalled();
   });
 
   it('shows skeletons while the history loads', () => {
