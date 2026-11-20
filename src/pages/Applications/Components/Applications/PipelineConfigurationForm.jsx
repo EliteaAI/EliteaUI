@@ -24,6 +24,7 @@ const PipelineConfigurationForm = memo(props => {
     containerStyle = {},
     isChatView = false,
     isCreateMode = false,
+    entityProjectId,
     onSelectNode,
   } = props;
   // The saved name, not an unsaved edit, names the entity chip on the Schedules page
@@ -42,6 +43,8 @@ const PipelineConfigurationForm = memo(props => {
       <PipelineToolsSection
         style={styles.applicationTools}
         disabled={isDisabled}
+        applicationId={applicationId}
+        entityProjectId={entityProjectId}
         onSelectNode={onSelectNode}
       />
       <AgentInput.WelcomeMessageInput disabled={isDisabled} />

@@ -7,6 +7,8 @@ import {
   PIPELINE_TOOL_CARD_ACTION_CLASS,
 } from '@/[fsd]/features/pipelines/tool-picker/lib/constants/toolPicker.constants';
 import { getToolkitDisplayName } from '@/[fsd]/features/toolkits/lib/helpers/toolkits.helpers';
+import { useToolValidation } from '@/[fsd]/features/toolkits/lib/hooks';
+import { ToolValidationBanner } from '@/[fsd]/features/toolkits/ui/tool-validation-banner';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import ArrowRightIcon from '@/components/Icons/ArrowRightIcon';
 import EnhancedCardToolActions from '@/pages/Applications/Components/Tools/CardActions/EnhancedCardToolActions';
@@ -28,12 +30,14 @@ const ENTITY_LABELS = {
 /**
  * Read-only card of a pipeline attachment, in the look of the agent tool card: icon, name, version or
  * "Show tools", and the nodes that use it. `onRemove` is passed only for items no node uses.
+ * Validation errors of the pipeline version are shown below the card, as on the agent tool card.
  */
 const PipelineToolCard = memo(props => {
-  const { tool, kind, usedBy = [], onSelectNode, onRemove } = props;
+  const { tool, kind, usedBy = [], onSelectNode, onRemove, applicationId, projectId, versionId } = props;
 
   const [showTools, setShowTools] = useState(false);
   const toggleTools = useCallback(() => setShowTools(prev => !prev), []);
+  const validation = useToolValidation({ projectId, applicationId, versionId, tool });
 
   const isApplication = kind === PICKER_KINDS.agent || kind === PICKER_KINDS.pipeline;
   const name = isApplication ? tool.name : getToolkitDisplayName(tool);
@@ -48,125 +52,131 @@ const PipelineToolCard = memo(props => {
   const styles = pipelineToolCardStyles(showTools);
 
   return (
-    <Box
-      sx={styles.root}
-      data-testid="pipeline-tool-card"
-    >
-      <Box sx={styles.header}>
-        <PickerEntityIcon
-          source={tool}
-          mcp={kind === PICKER_KINDS.mcp}
-          isApplication={isApplication}
-          isPipeline={kind === PICKER_KINDS.pipeline}
-          large
-        />
-        <Box sx={styles.content}>
-          <TypographyWithConditionalTooltip
-            title={name}
-            placement="right"
-            variant="bodyMedium"
-            component="div"
-            color="text.secondary"
-            sx={styles.ellipsis}
-            data-testid="pipeline-tool-card-name"
-          >
-            {name}
-          </TypographyWithConditionalTooltip>
-          {isApplication ? (
-            <PipelineToolVersionLabel tool={tool} />
-          ) : exposedTools.length ? (
-            <Box
-              component="span"
-              role="button"
-              tabIndex={0}
-              aria-expanded={showTools}
-              onClick={toggleTools}
-              onKeyDown={event => (event.key === 'Enter' || event.key === ' ') && toggleTools()}
-              sx={styles.toolsToggle}
-              data-testid="pipeline-tool-card-show-tools"
-            >
-              <Typography
-                variant="bodySmall2"
-                color="inherit"
-              >
-                {showTools ? 'Hide tools' : 'Show tools'}
-              </Typography>
-              <ArrowRightIcon
-                fill="currentColor"
-                style={styles.toolsToggleIcon}
-              />
-            </Box>
-          ) : (
-            <Typography
-              variant="bodySmall"
-              color="text.primary"
-              noWrap
-            >
-              {tool.description}
-            </Typography>
-          )}
-        </Box>
-        <PipelineToolCardActions
-          tool={tool}
-          name={name}
-          entityLabel={ENTITY_LABELS[kind]}
-          onRemove={onRemove}
-        />
-        {kind === PICKER_KINDS.mcp && <PickerMcpStatus mcp={tool} />}
-      </Box>
-
-      {usedBy.length > 0 ? (
-        <Box sx={styles.usage}>
-          <Typography
-            variant="labelTiny"
-            sx={styles.usageText}
-          >
-            Used by
-          </Typography>
-          {usedBy.map(nodeId => (
-            <Chip
-              key={nodeId}
-              size="small"
-              label={
-                <Typography
-                  variant="labelTiny"
-                  sx={styles.usageText}
-                >
-                  {nodeId}
-                </Typography>
-              }
-              sx={styles.nodeChip}
-              onClick={onSelectNode ? () => onSelectNode(nodeId) : undefined}
-              data-testid="pipeline-tool-card-used-by"
-            />
-          ))}
-        </Box>
-      ) : (
-        <Box sx={styles.usage}>
-          <Typography
-            variant="labelTiny"
-            sx={styles.usageText}
-            data-testid="pipeline-tool-card-not-used"
-          >
-            Not used by any node
-          </Typography>
-        </Box>
-      )}
-
-      {showTools && (
-        <Box
-          sx={styles.tools}
-          data-testid="pipeline-tool-card-tools"
-        >
-          <EnhancedCardToolActions
-            toolOptions={toolOptions}
-            selectedTools={exposedTools}
-            showActions
-            disabled
+    <>
+      <Box
+        sx={styles.root}
+        data-testid="pipeline-tool-card"
+      >
+        <Box sx={styles.header}>
+          <PickerEntityIcon
+            source={tool}
+            mcp={kind === PICKER_KINDS.mcp}
+            isApplication={isApplication}
+            isPipeline={kind === PICKER_KINDS.pipeline}
+            large
           />
+          <Box sx={styles.content}>
+            <TypographyWithConditionalTooltip
+              title={name}
+              placement="right"
+              variant="bodyMedium"
+              component="div"
+              color="text.secondary"
+              sx={styles.ellipsis}
+              data-testid="pipeline-tool-card-name"
+            >
+              {name}
+            </TypographyWithConditionalTooltip>
+            {isApplication ? (
+              <PipelineToolVersionLabel tool={tool} />
+            ) : exposedTools.length ? (
+              <Box
+                component="span"
+                role="button"
+                tabIndex={0}
+                aria-expanded={showTools}
+                onClick={toggleTools}
+                onKeyDown={event => (event.key === 'Enter' || event.key === ' ') && toggleTools()}
+                sx={styles.toolsToggle}
+                data-testid="pipeline-tool-card-show-tools"
+              >
+                <Typography
+                  variant="bodySmall2"
+                  color="inherit"
+                >
+                  {showTools ? 'Hide tools' : 'Show tools'}
+                </Typography>
+                <ArrowRightIcon
+                  fill="currentColor"
+                  style={styles.toolsToggleIcon}
+                />
+              </Box>
+            ) : (
+              <Typography
+                variant="bodySmall"
+                color="text.primary"
+                noWrap
+              >
+                {tool.description}
+              </Typography>
+            )}
+          </Box>
+          <PipelineToolCardActions
+            tool={tool}
+            name={name}
+            entityLabel={ENTITY_LABELS[kind]}
+            onRemove={onRemove}
+          />
+          {kind === PICKER_KINDS.mcp && <PickerMcpStatus mcp={tool} />}
         </Box>
-      )}
-    </Box>
+
+        {usedBy.length > 0 ? (
+          <Box sx={styles.usage}>
+            <Typography
+              variant="labelTiny"
+              sx={styles.usageText}
+            >
+              Used by
+            </Typography>
+            {usedBy.map(nodeId => (
+              <Chip
+                key={nodeId}
+                size="small"
+                label={
+                  <Typography
+                    variant="labelTiny"
+                    sx={styles.usageText}
+                  >
+                    {nodeId}
+                  </Typography>
+                }
+                sx={styles.nodeChip}
+                onClick={onSelectNode ? () => onSelectNode(nodeId) : undefined}
+                data-testid="pipeline-tool-card-used-by"
+              />
+            ))}
+          </Box>
+        ) : (
+          <Box sx={styles.usage}>
+            <Typography
+              variant="labelTiny"
+              sx={styles.usageText}
+              data-testid="pipeline-tool-card-not-used"
+            >
+              Not used by any node
+            </Typography>
+          </Box>
+        )}
+
+        {showTools && (
+          <Box
+            sx={styles.tools}
+            data-testid="pipeline-tool-card-tools"
+          >
+            <EnhancedCardToolActions
+              toolOptions={toolOptions}
+              selectedTools={exposedTools}
+              showActions
+              disabled
+            />
+          </Box>
+        )}
+      </Box>
+      <ToolValidationBanner
+        tool={tool}
+        validation={validation}
+      />
+    </>
   );
 });
 

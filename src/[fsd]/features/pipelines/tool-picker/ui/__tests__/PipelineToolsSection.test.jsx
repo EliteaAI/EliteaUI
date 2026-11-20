@@ -10,7 +10,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 
 import PipelineToolsSection from '../PipelineToolsSection';
 
-const mocks = vi.hoisted(() => ({ yamlJsonObject: { nodes: [] } }));
+const mocks = vi.hoisted(() => ({ yamlJsonObject: { nodes: [] }, versionValidationInfo: {} }));
 
 vi.mock('react-redux', () => ({
   useSelector: selector =>
@@ -19,7 +19,9 @@ vi.mock('react-redux', () => ({
         byKey: { default: { yamlJsonObject: mocks.yamlJsonObject } },
         activePipelineKey: 'default',
       },
-      applications: { toolkitSchemas: {} },
+      applications: { toolkitSchemas: {}, versionValidationInfo: mocks.versionValidationInfo },
+      user: { personal_project_id: 'personal-project' },
+      settings: { project: { id: 'project-1' } },
     }),
 }));
 vi.mock('@/[fsd]/features/pipelines/lib/constants', () => ({ DEFAULT_PIPELINE_KEY: 'default' }));
@@ -87,16 +89,20 @@ const renderSection = ({ tools = [], onSelectNode, status } = {}) =>
   render(
     <ThemeProvider theme={theme}>
       <Formik
-        initialValues={{ version_details: { tools, meta: {}, status } }}
+        initialValues={{ version_details: { id: 501, tools, meta: {}, status } }}
         onSubmit={vi.fn()}
       >
-        <PipelineToolsSection onSelectNode={onSelectNode} />
+        <PipelineToolsSection
+          applicationId={42}
+          onSelectNode={onSelectNode}
+        />
       </Formik>
     </ThemeProvider>,
   );
 
 describe('PipelineToolsSection', () => {
   beforeEach(() => {
+    mocks.versionValidationInfo = {};
     mocks.yamlJsonObject = {
       nodes: [
         { id: 'jira_1', type: 'toolkit', toolkit_name: 'jira', tool: 'search' },
@@ -171,5 +177,14 @@ describe('PipelineToolsSection', () => {
     expect(screen.queryByTestId('pipeline-tool-card-tools')).toBeNull();
     fireEvent.click(screen.getByTestId('pipeline-tool-card-show-tools'));
     expect(screen.getByTestId('pipeline-tool-card-tools')).toHaveTextContent('Search');
+  });
+
+  it('shows the validation error of an attached tool below its card', () => {
+    mocks.versionValidationInfo = {
+      'project-1_42_501': [{ loc: ['body', 1], msg: 'Jira connection failed' }],
+    };
+    renderSection({ tools: [jira, slack] });
+    expect(screen.getByText('Jira connection failed')).toBeInTheDocument();
+    expect(screen.getAllByTestId('pipeline-tool-card')).toHaveLength(2);
   });
 });

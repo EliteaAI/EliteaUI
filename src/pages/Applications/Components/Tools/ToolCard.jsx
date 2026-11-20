@@ -1,12 +1,10 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
-import { useSelector } from 'react-redux';
 
 import { Box, IconButton, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { useDisassociateToolkit, useSaveAgentToolVariables } from '@/[fsd]/features/agent/lib/hooks';
-import { parseValidationRefusal } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpLogInButton, McpLogoutButton } from '@/[fsd]/features/mcp/ui';
@@ -15,10 +13,12 @@ import { OpenApiDelegatedLoginButton } from '@/[fsd]/features/openapi/ui';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { useResolvedSharepointConfig } from '@/[fsd]/features/sharepoint/lib/hooks';
 import { SharepointDelegatedLoginButton } from '@/[fsd]/features/sharepoint/ui';
-import { ToolkitFormHelpers, ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { useToolValidation } from '@/[fsd]/features/toolkits/lib/hooks';
+import { ToolValidationBanner } from '@/[fsd]/features/toolkits/ui/tool-validation-banner';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { useSearchParamValue, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
-import { Banner, Chip, Modal } from '@/[fsd]/shared/ui';
+import { Banner, Modal } from '@/[fsd]/shared/ui';
 import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import AttachIcon from '@/assets/attach-icon.svg?react';
@@ -29,15 +29,10 @@ import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import { PERMISSIONS, PUBLIC_PROJECT_ID, SearchParams, ViewMode } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
-import CredentialWarningBanner from '@/components/CredentialWarningBanner';
 import AttentionIcon from '@/components/Icons/AttentionIcon.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
-import { mapAssociationError } from '@/hooks/application/useAgentPipelineAssociation';
 import { useGetToolkitIconMeta } from '@/hooks/application/useLibraryToolkits';
-import {
-  useManualValidateApplicationVersion,
-  useToolValidationInfo,
-} from '@/hooks/application/useValidateApplicationVersion';
+import { useManualValidateApplicationVersion } from '@/hooks/application/useValidateApplicationVersion';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { getBasename } from '@/routes';
 
@@ -71,8 +66,6 @@ const ToolCard = memo(props => {
   });
   const isPrebuildMcp = McpAuthHelpers.isPrebuildMcpType(tool.type);
   const isMcp = tool.meta?.mcp || tool.type === 'mcp' || isPrebuildMcp;
-
-  const { personal_project_id } = useSelector(state => state.user);
 
   // Monitor MCP token changes for remote MCP toolkits
   const mcpServerUrl = tool?.settings?.url || '';
@@ -131,13 +124,13 @@ const ToolCard = memo(props => {
   const { values } = useFormikContext();
   const versionId = values?.version_details?.id;
   const { getSelectedTools } = useGetToolkitNameFromSchema();
-  const validationInfo = useToolValidationInfo({
+  const validation = useToolValidation({
     projectId,
     applicationId,
     versionId,
-    toolId: tool.id,
     tool,
   });
+  const { validationInfo } = validation;
 
   const isAttachmentToolkit = useMemo(
     () => tool.id && values?.version_details?.meta?.attachment_toolkit_id === tool.id,
@@ -301,108 +294,8 @@ const ToolCard = memo(props => {
   const openTooltipText = `Open ${entityTypeLabel} in new tab`;
   const removeTooltipText = `Remove ${entityTypeLabel}`;
 
-  // a credential refused by governance (#7281): its text and code, for a toolkit and for an agent that nests one
-  const governedRefusal = useMemo(() => parseValidationRefusal(validationInfo), [validationInfo]);
-
-  const toolValidationMessage = useMemo(() => {
-    if (!validationInfo) return null;
-    if (governedRefusal) return governedRefusal.message;
-
-    // For agent/pipeline (application-type) tools the backend already tells us WHY the sub-agent is
-    // invalid (circular reference, "uses other agents" / leaf-only, self-reference). `validationInfo`
-    // carries that message — route it through the shared mapper (issue #5717) so the card shows the
-    // same friendly, ID-free phrasing as the add/switch toasts instead of the vague generic line.
-    // Fall back to the generic sentence only when there is no usable backend message.
-    if (tool?.type === 'application') {
-      const rawMsg = typeof validationInfo === 'string' ? validationInfo : validationInfo?.message;
-      return ToolkitFormHelpers.applicationToolValidationMessage(
-        rawMsg,
-        msg =>
-          mapAssociationError(msg, tool?.name || entityType, {
-            action: 'status',
-            entityLabel: tool?.agent_type === 'pipeline' ? 'pipeline' : 'agent',
-          }),
-        entityType,
-      );
-    }
-
-    const parsedErrorMessage = ToolkitFormHelpers.parseValidationError(
-      typeof validationInfo === 'object'
-        ? validationInfo
-        : {
-            msg: validationInfo || '',
-          },
-    );
-    return parsedErrorMessage?.message || validationInfo;
-  }, [validationInfo, governedRefusal, tool, entityType]);
-
   const hasVariables = variables?.length > 0;
   const styles = toolCardStyles(showActions, isDuplicate, showVariables, hasVariables);
-
-  const validationBanner = useMemo(() => {
-    if (!validationInfo) return null;
-
-    if (governedRefusal) {
-      return (
-        <Banner.BannerMessage containerSx={styles.containerBanner}>
-          <Typography variant="labelSmall">{governedRefusal.message}</Typography>
-          <Chip.ErrorCodeChip
-            code={governedRefusal.code}
-            testId="tool-refusal-code-chip"
-          />
-        </Banner.BannerMessage>
-      );
-    }
-
-    const errorType = toolValidationMessage?.error_type;
-
-    if (errorType === 'private_credential_not_found' && personal_project_id !== projectId) {
-      return (
-        <CredentialWarningBanner
-          credentialId={toolValidationMessage.credential_id}
-          credentialType={tool?.type}
-          section="credentials"
-        />
-      );
-    }
-
-    if (errorType === 'credential_not_found' || errorType === 'private_credential_not_found') {
-      return (
-        <Banner.BannerMessage
-          containerSx={styles.containerBanner}
-          message="Your configuration does not match any available configurations."
-        />
-      );
-    }
-
-    if (errorType === 'configuration_model_not_found') {
-      return (
-        <Banner.BannerMessage
-          containerSx={styles.containerBanner}
-          message={`Model "${toolValidationMessage.model_name}" is no longer available in project configurations.`}
-        />
-      );
-    }
-
-    return (
-      <Banner.BannerMessage
-        containerSx={styles.containerBanner}
-        message={
-          typeof toolValidationMessage === 'string'
-            ? toolValidationMessage
-            : toolValidationMessage?.message || JSON.stringify(toolValidationMessage)
-        }
-      />
-    );
-  }, [
-    validationInfo,
-    governedRefusal,
-    toolValidationMessage,
-    personal_project_id,
-    projectId,
-    tool,
-    styles.containerBanner,
-  ]);
 
   const dialogTitle = useMemo(() => `Remove ${entityTypeLabel}?`, [entityTypeLabel]);
 
@@ -660,7 +553,10 @@ const ToolCard = memo(props => {
             confirmButtonText="Remove"
           />
         </Box>
-        {validationBanner}
+        <ToolValidationBanner
+          tool={tool}
+          validation={validation}
+        />
       </>
     </Tooltip>
   );
