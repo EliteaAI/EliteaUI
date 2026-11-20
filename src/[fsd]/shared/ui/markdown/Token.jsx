@@ -8,7 +8,7 @@ import { Box, useTheme } from '@mui/material';
 import { MarkdownConstants } from '@/[fsd]/shared/lib/constants';
 import { useArtifactLinkResolver } from '@/[fsd]/shared/lib/context/ArtifactLinkContext';
 import { resolveArtifactHrefsInHtml } from '@/[fsd]/shared/lib/helpers/link.helpers';
-import { MarkdownMapping, removeHTMLTags } from '@/[fsd]/shared/lib/utils';
+import { MarkdownMapping, escapeGfmDisallowedRawHtml, removeHTMLTags } from '@/[fsd]/shared/lib/utils';
 import MarkdownTableBlock from '@/components/MarkdownTableBlock';
 
 import CodeBlock from '../code-block';
@@ -218,10 +218,9 @@ const Token = memo(props => {
       }
       return fallback;
     case 'html': {
+      const rawHtml = markedToken.block ? escapeGfmDisallowedRawHtml(markedToken.raw) : markedToken.raw;
       const clean = resolveArtifactHrefsInHtml(
-        DOMPurify.sanitize(markedToken.raw, {
-          FORBID_TAGS: MarkdownConstants.FORBIDDEN_HTML_TAGS,
-        }),
+        DOMPurify.sanitize(rawHtml, { FORBID_TAGS: MarkdownConstants.FORBIDDEN_HTML_TAGS }),
         resolveArtifact,
       );
       return clean ? (

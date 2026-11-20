@@ -292,6 +292,7 @@ const instructionsInputStyles = () => ({
     border: `0.0625rem solid ${palette.border.default}`,
     backgroundColor: palette.background.surface.interactive.default,
     overflow: 'auto',
+    overflowWrap: 'anywhere',
     fontSize: '0.875rem',
   }),
   emptyPreview: ({ palette }) => ({
