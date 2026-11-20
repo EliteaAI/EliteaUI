@@ -1,10 +1,10 @@
 import { memo, useMemo } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, List, ListItem, Typography } from '@mui/material';
 
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
-import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';
+import { Modal } from '@/[fsd]/shared/ui';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 
 const EMPTY_LIMITATIONS = [];
@@ -29,7 +29,7 @@ const CodeModeWarningModal = memo(props => {
   const styles = codeModeWarningModalStyles();
 
   return (
-    <BaseModal
+    <Modal.BaseModal
       variant={ModalConstants.MODAL_VARIANT.simple}
       titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
       title="Warning"
@@ -42,16 +42,26 @@ const CodeModeWarningModal = memo(props => {
       content={
         <Box sx={styles.root}>
           <Typography variant="bodyMedium">Code Mode (beta) does not apply to:</Typography>
-          {items.map(item => (
-            <Typography
-              key={item.key}
-              variant="bodyMedium"
-              sx={item.highlighted ? styles.highlighted : undefined}
-              data-testid={`agent-code-mode-limitation-${item.key}`}
-            >
-              • {item.text}
-            </Typography>
-          ))}
+          <List
+            disablePadding
+            sx={styles.list}
+          >
+            {items.map(item => (
+              <ListItem
+                key={item.key}
+                disableGutters
+                sx={item.highlighted ? styles.highlighted : styles.item}
+                data-testid={`agent-code-mode-limitation-${item.key}`}
+              >
+                <Typography
+                  variant="bodyMedium"
+                  color="inherit"
+                >
+                  {item.text}
+                </Typography>
+              </ListItem>
+            ))}
+          </List>
         </Box>
       }
     />
@@ -67,8 +77,18 @@ const codeModeWarningModalStyles = () => ({
     flexDirection: 'column',
     gap: '0.25rem',
   },
+  list: {
+    listStyleType: 'disc',
+    paddingLeft: '1.25rem',
+  },
+  item: {
+    display: 'list-item',
+    padding: 0,
+  },
   highlighted: ({ palette }) => ({
-    color: palette.warning.main,
+    display: 'list-item',
+    padding: 0,
+    color: palette.text.warning,
     fontWeight: 500,
   }),
 });

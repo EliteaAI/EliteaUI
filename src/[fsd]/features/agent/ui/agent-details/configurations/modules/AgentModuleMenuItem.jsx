@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { Box, MenuItem } from '@mui/material';
 
@@ -10,37 +10,35 @@ import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 
-import CodeModeWarningModal from './CodeModeWarningModal';
-
 const stopPropagation = event => event.stopPropagation();
 
 const AgentModuleMenuItem = memo(props => {
-  const { module, readOnly = false, ...menuItemProps } = props;
-  const { name, title, icon, unavailable = false, unavailableTooltip, infoTooltip, confirmOnEnable } = module;
+  const { module, readOnly = false, onRequestEnable, ...menuItemProps } = props;
+  const {
+    name,
+    title,
+    icon,
+    unavailable = false,
+    unavailableTooltip,
+    infoTooltip,
+    requiresCodeModeWarning,
+  } = module;
 
   const isLocked = readOnly || unavailable;
   const tooltip = unavailable ? unavailableTooltip && { text: unavailableTooltip } : infoTooltip;
 
   const styles = agentModuleMenuItemStyles(isLocked);
 
-  const { checked, onToggle, internalTools } = useAgentInternalToolToggle({ name, unavailable });
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const { checked, onToggle } = useAgentInternalToolToggle({ name, unavailable });
 
   const handleClick = useCallback(() => {
     if (isLocked) return;
-    if (!checked && confirmOnEnable) {
-      setConfirmOpen(true);
+    if (!checked && requiresCodeModeWarning) {
+      onRequestEnable?.(name);
       return;
     }
     onToggle(!checked);
-  }, [isLocked, onToggle, checked, confirmOnEnable]);
-
-  const handleConfirmEnable = useCallback(() => {
-    setConfirmOpen(false);
-    onToggle(true);
-  }, [onToggle]);
-
-  const handleCancelEnable = useCallback(() => setConfirmOpen(false), []);
+  }, [isLocked, onToggle, checked, requiresCodeModeWarning, onRequestEnable, name]);
 
   const toolIcon = useMemo(() => {
     const IconComponent = INTERNAL_TOOL_ICONS[icon];
@@ -56,63 +54,53 @@ const AgentModuleMenuItem = memo(props => {
   }, [icon, styles.toolSvgIcon]);
 
   return (
-    <>
-      <MenuItem
-        {...menuItemProps}
-        data-testid={`agent-module-menu-item-${name}`}
-        aria-disabled={isLocked}
-        aria-checked={checked}
-        role="menuitemcheckbox"
-        onClick={handleClick}
-        sx={styles.item}
-      >
-        <EntityIcon
-          sx={styles.entityIcon}
-          icon={toolIcon}
-          editable={false}
-        />
-        <Box sx={styles.labelContainer}>
-          <TypographyWithConditionalTooltip
-            title={title}
-            placement="top"
-            variant="bodyMedium"
-            color="text.secondary"
+    <MenuItem
+      {...menuItemProps}
+      data-testid={`agent-module-menu-item-${name}`}
+      aria-disabled={isLocked}
+      aria-checked={checked}
+      role="menuitemcheckbox"
+      onClick={handleClick}
+      sx={styles.item}
+    >
+      <EntityIcon
+        sx={styles.entityIcon}
+        icon={toolIcon}
+        editable={false}
+      />
+      <Box sx={styles.labelContainer}>
+        <TypographyWithConditionalTooltip
+          title={title}
+          placement="top"
+          variant="bodyMedium"
+          color="text.secondary"
+        >
+          {title}
+        </TypographyWithConditionalTooltip>
+        {tooltip && (
+          <Box
+            component="span"
+            sx={styles.infoContainer}
+            onClick={stopPropagation}
           >
-            {title}
-          </TypographyWithConditionalTooltip>
-          {tooltip && (
-            <Box
-              component="span"
-              sx={styles.infoContainer}
-              onClick={stopPropagation}
-            >
-              <InfoTooltip
-                infoTooltip={tooltip}
-                TitleComponent={Text.TextWithLink}
-                sx={styles.infoIcon}
-              />
-            </Box>
-          )}
-        </Box>
-        <Switch.BaseSwitch
-          checked={checked}
-          disabled={isLocked}
-          slotProps={{
-            switch: {
-              slotProps: { input: { tabIndex: -1, 'data-testid': `agent-canvas-tools-toggle-${name}` } },
-            },
-          }}
-        />
-      </MenuItem>
-      {confirmOnEnable && (
-        <CodeModeWarningModal
-          open={confirmOpen}
-          internalTools={internalTools}
-          onConfirm={handleConfirmEnable}
-          onClose={handleCancelEnable}
-        />
-      )}
-    </>
+            <InfoTooltip
+              infoTooltip={tooltip}
+              TitleComponent={Text.TextWithLink}
+              sx={styles.infoIcon}
+            />
+          </Box>
+        )}
+      </Box>
+      <Switch.BaseSwitch
+        checked={checked}
+        disabled={isLocked}
+        slotProps={{
+          switch: {
+            slotProps: { input: { tabIndex: -1, 'data-testid': `agent-canvas-tools-toggle-${name}` } },
+          },
+        }}
+      />
+    </MenuItem>
   );
 });
 

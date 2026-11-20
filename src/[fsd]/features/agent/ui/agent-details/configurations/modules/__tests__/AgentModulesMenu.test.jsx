@@ -57,6 +57,21 @@ vi.mock('@/[fsd]/shared/ui/tooltip/InfoTooltip', () => ({ default: () => null })
 vi.mock('@/[fsd]/features/agent/lib/constants', () => ({
   INTERNAL_TOOL_ICONS: {},
 }));
+vi.mock('../CodeModeWarningModal', () => ({
+  default: ({ open, onConfirm, onClose }) =>
+    open ? (
+      <div data-testid="code-mode-warning">
+        <button
+          data-testid="code-mode-warning-confirm"
+          onClick={onConfirm}
+        />
+        <button
+          data-testid="code-mode-warning-cancel"
+          onClick={onClose}
+        />
+      </div>
+    ) : null,
+}));
 vi.mock('@/assets/plus-icon.svg?react', () => ({ default: () => null }));
 vi.mock('@/components/Icons/SearchIcon', () => ({ default: () => null }));
 
@@ -64,6 +79,7 @@ const MODULES = [
   { name: 'attachments', title: 'Attachments', icon: 'AttachSvgIcon' },
   { name: 'web_search', title: 'Web Search', icon: 'GlobeIcon' },
   { name: 'image_generation', title: 'Image Creation', icon: 'ImageSvgIcon', unavailable: true },
+  { name: 'code_mode', title: 'Code Mode (beta)', icon: 'CodeModeIcon', requiresCodeModeWarning: true },
 ];
 
 const ValuesProbe = () => {
@@ -165,5 +181,48 @@ describe('AgentModulesMenu', () => {
     openMenu();
     fireEvent.keyDown(screen.getByTestId('agent-modules-search-input'), { key: 'Escape' });
     await waitFor(() => expect(screen.queryByTestId('agent-modules-menu')).not.toBeInTheDocument());
+  });
+
+  describe('Code Mode warning (#7580)', () => {
+    it('closes the menu and asks for confirmation before enabling, without enabling yet', async () => {
+      renderMenu();
+      openMenu();
+      fireEvent.click(screen.getByTestId('agent-module-menu-item-code_mode'));
+      expect(screen.getByTestId('code-mode-warning')).toBeInTheDocument();
+      await waitFor(() => expect(screen.queryByTestId('agent-modules-menu')).not.toBeInTheDocument());
+      expect(storedTools()).toBe('');
+    });
+
+    it('enables Code Mode on confirm and leaves it off on cancel', () => {
+      renderMenu();
+      openMenu();
+      fireEvent.click(screen.getByTestId('agent-module-menu-item-code_mode'));
+      fireEvent.click(screen.getByTestId('code-mode-warning-cancel'));
+      expect(storedTools()).toBe('');
+      openMenu();
+      fireEvent.click(screen.getByTestId('agent-module-menu-item-code_mode'));
+      fireEvent.click(screen.getByTestId('code-mode-warning-confirm'));
+      expect(storedTools()).toBe('code_mode');
+      expect(screen.queryByTestId('code-mode-warning')).not.toBeInTheDocument();
+    });
+
+    it('asks every time it is enabled but turns it off without asking', () => {
+      renderMenu({ initial: ['code_mode'] });
+      openMenu();
+      fireEvent.click(screen.getByTestId('agent-module-menu-item-code_mode'));
+      expect(screen.queryByTestId('code-mode-warning')).not.toBeInTheDocument();
+      expect(storedTools()).toBe('');
+      openMenu();
+      fireEvent.click(screen.getByTestId('agent-module-menu-item-code_mode'));
+      expect(screen.getByTestId('code-mode-warning')).toBeInTheDocument();
+    });
+
+    it('does not ask for tools that do not need a warning', () => {
+      renderMenu();
+      openMenu();
+      fireEvent.click(screen.getByTestId('agent-module-menu-item-attachments'));
+      expect(screen.queryByTestId('code-mode-warning')).not.toBeInTheDocument();
+      expect(storedTools()).toBe('attachments');
+    });
   });
 });

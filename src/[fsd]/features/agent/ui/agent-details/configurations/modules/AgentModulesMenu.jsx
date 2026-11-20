@@ -2,6 +2,7 @@ import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Box, ClickAwayListener, Grow, MenuList, Paper, Popper, Typography, useTheme } from '@mui/material';
 
+import { useAgentInternalToolToggle } from '@/[fsd]/features/agent/lib/hooks';
 import { DropdownConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import { Button, Input } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -10,6 +11,7 @@ import PlusIcon from '@/assets/plus-icon.svg?react';
 import SearchIcon from '@/components/Icons/SearchIcon';
 
 import AgentModuleMenuItem from './AgentModuleMenuItem';
+import CodeModeWarningModal from './CodeModeWarningModal';
 
 const POPPER_MODIFIERS = [
   { name: 'offset', options: { offset: [0, 8] } },
@@ -25,8 +27,10 @@ const AgentModulesMenu = memo(props => {
   const listRef = useRef(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [search, setSearch] = useState('');
+  const [warningOpen, setWarningOpen] = useState(false);
 
   const open = Boolean(anchorEl);
+  const { onToggle: toggleCodeMode, internalTools } = useAgentInternalToolToggle({ name: 'code_mode' });
 
   const filteredModules = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -38,6 +42,19 @@ const AgentModulesMenu = memo(props => {
     setAnchorEl(null);
     setSearch('');
   }, []);
+
+  // The menu popper sits above modals, so close it before the warning opens
+  const handleRequestEnable = useCallback(() => {
+    handleClose();
+    setWarningOpen(true);
+  }, [handleClose]);
+
+  const handleConfirmEnable = useCallback(() => {
+    setWarningOpen(false);
+    toggleCodeMode(true);
+  }, [toggleCodeMode]);
+
+  const handleCancelEnable = useCallback(() => setWarningOpen(false), []);
 
   const handleToggleMenu = useCallback(
     event => {
@@ -143,6 +160,7 @@ const AgentModulesMenu = memo(props => {
                           key={module.name}
                           module={module}
                           readOnly={readOnly}
+                          onRequestEnable={handleRequestEnable}
                         />
                       ))}
                     </MenuList>
@@ -161,6 +179,13 @@ const AgentModulesMenu = memo(props => {
           </Grow>
         )}
       </Popper>
+
+      <CodeModeWarningModal
+        open={warningOpen}
+        internalTools={internalTools}
+        onConfirm={handleConfirmEnable}
+        onClose={handleCancelEnable}
+      />
     </>
   );
 });

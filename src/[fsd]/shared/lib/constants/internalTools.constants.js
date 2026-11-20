@@ -136,8 +136,8 @@ export const INTERNAL_TOOLS_LIST = [
     agentOnly: true,
     // Shown only when platform_settings.is_code_mode_available
     requiresCodeMode: true,
-    // Enabling opens a limitations warning first
-    confirmOnEnable: true,
+    // Enabling opens the Code Mode limitations warning first
+    requiresCodeModeWarning: true,
     unavailableTooltip: 'Code Mode is disabled by your administrator.',
     toolkitNames: ['code_mode'],
   },
