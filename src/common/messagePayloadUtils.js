@@ -31,7 +31,7 @@ export const generateMessagePayload = ({
   projectId,
   selectedModel = { name: null, project_id: null },
   isSendingToUser = false,
-  userIds = [],
+  mentionedUserIds = [],
   attachmentList = [],
   unsavedLLMSettings = undefined,
   allowLLMSettingsOverride = false, // Whether to allow unsavedLLMSettings to override agent's configured model
@@ -106,7 +106,8 @@ export const generateMessagePayload = ({
         conversation_uuid,
         question_id,
         interaction_uuid,
-        user_ids: isSendingToUser && userIds?.length > 0 ? userIds : undefined,
+        // Project user ids: a person who never opened the chat can be mentioned too
+        mentioned_user_ids: isSendingToUser && mentionedUserIds?.length > 0 ? mentionedUserIds : undefined,
         attachments_info: attachmentList
           .filter(item => item.filepath)
           .map(item => ({

@@ -11,7 +11,15 @@ const sameTagIds = (a, b) =>
   a === b ||
   (Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((id, i) => id === b[i]));
 
-export const useUserList = ({ sortBy, sortOrder, query, pageSize, selectedTagIds, forceSkip = false }) => {
+export const useUserList = ({
+  sortBy,
+  sortOrder,
+  query,
+  pageSize,
+  selectedTagIds,
+  cacheKey,
+  forceSkip = false,
+}) => {
   const { personal_project_id: privateProjectId } = useSelector(state => state.user);
   const projectId = useSelectedProjectId();
   // The page belongs to the filters it was set for. When they change, reset the stored state in the
@@ -31,6 +39,8 @@ export const useUserList = ({ sortBy, sortOrder, query, pageSize, selectedTagIds
       projectId,
       page,
       pageSize,
+      // Not sent: two lists with the same filters but their own pages must not share one cache entry
+      cacheKey,
       params: {
         sort_by: sortBy,
         sort_order: sortOrder,

@@ -694,7 +694,8 @@ const NewChat = props => {
           activeConversation?.isNew || !activeConversation?.id
             ? newConversationViewRef.current
             : boxRef.current;
-        shouldMentionUser && mentionTarget?.mentionUser?.(`@${participant.meta.user_name} `);
+        // The person goes too: a member of a whole-team chat may not be a participant yet
+        shouldMentionUser && mentionTarget?.mentionUser?.(`@${participant.meta.user_name} `, participant);
         return;
       } else if (participant === 'All users') {
         const mentionTarget =

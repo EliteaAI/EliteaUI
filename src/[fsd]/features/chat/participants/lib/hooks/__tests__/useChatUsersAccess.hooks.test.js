@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 
 import { USERS_ACCESS_KIND } from '../../constants';
 import { useChatUsersAccess } from '../useChatUsersAccess.hooks';
@@ -17,6 +17,7 @@ vi.mock('@/[fsd]/features/chat/conversation-list/api/sharedLinksApi', () => ({
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useUserList: args => userList(args),
+  useDebounceValue: value => value,
 }));
 
 const user = (id, userId) => ({
@@ -45,6 +46,12 @@ describe('useChatUsersAccess', () => {
     expect(access.label).toBe('Whole Team (24)');
     expect(access.count).toBe(24);
     expect(userList).toHaveBeenCalledWith(expect.objectContaining({ forceSkip: false }));
+  });
+
+  it('pages the members in a cache entry of its own, apart from the Share window', () => {
+    renderAccess({ id: 5, author_id: 1, is_private: false, participants: [user(1, 1)] });
+
+    expect(userList).toHaveBeenCalledWith(expect.objectContaining({ cacheKey: expect.any(String) }));
   });
 
   it('counts only the people of a private chat, not the AI participants', () => {
@@ -88,5 +95,60 @@ describe('useChatUsersAccess', () => {
 
     expect(access.isOwner).toBe(false);
     expect(linksQuery).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ skip: true }));
+  });
+
+  it('lists every project member of a whole-team chat, the joined ones as their participant', () => {
+    userList.mockReturnValue({
+      data: {
+        rows: [
+          { id: 1, name: 'Me' },
+          { id: 7, name: 'Never Joined', avatar: 'a.png' },
+        ],
+        total: 24,
+      },
+    });
+    const joined = user(3, 1);
+    const access = renderAccess({ id: 5, author_id: 1, is_private: false, participants: [joined] });
+
+    expect(access.users).toHaveLength(2);
+    expect(access.users[0]).toBe(joined);
+    expect(access.users[1]).toMatchObject({
+      entity_name: 'user',
+      entity_meta: { id: 7 },
+      meta: { user_name: 'Never Joined', user_avatar: 'a.png' },
+    });
+    expect(access.search).toMatchObject({ fetched: 2, queryTotal: 24 });
+  });
+
+  it('keeps the participants of a private chat and no server search', () => {
+    userList.mockReturnValue({ data: { rows: [{ id: 7, name: 'Other' }], total: 24 } });
+    const access = renderAccess({
+      id: 5,
+      author_id: 1,
+      is_private: true,
+      participants: [user(1, 1), user(2, 2)],
+    });
+
+    expect(access.users.map(item => item.entity_meta.id)).toEqual([1, 2]);
+    expect(access.search).toBeNull();
+  });
+
+  it('sends the search to the server and keeps the whole-team count', () => {
+    userList.mockImplementation(args =>
+      args.query ? { data: { rows: [{ id: 7, name: 'Ann' }], total: 1 } } : { data: { rows: [], total: 24 } },
+    );
+    const { result } = renderHook(() =>
+      useChatUsersAccess({
+        conversation: { id: 5, author_id: 1, is_private: false, participants: [user(1, 1)] },
+        projectId: 406,
+      }),
+    );
+
+    act(() => result.current.search.onQueryChange('ann'));
+
+    expect(userList).toHaveBeenLastCalledWith(expect.objectContaining({ query: 'ann' }));
+    expect(result.current.count).toBe(24);
+    expect(result.current.label).toBe('Whole Team (24)');
+    expect(result.current.search.queryTotal).toBe(1);
   });
 });

@@ -160,3 +160,13 @@ export const shouldDeselectParticipant = (hasMisconfigurationErrors, signInOnly,
 // A chat on the server: a new draft or a playback has no access to show
 export const isSavedConversation = conversation =>
   !!conversation?.id && !conversation?.isNew && !conversation?.isPlayback;
+
+// Falls back to the chat's people when the project list did not load
+export const getEveryoneUserIds = ({ everyoneUserIds, participants = [], userId }) => {
+  const ids =
+    everyoneUserIds ??
+    participants
+      .filter(item => item.entity_name === ChatParticipantType.Users)
+      .map(item => item.entity_meta?.id);
+  return [...new Set(ids.filter(id => id != null && id != userId))];
+};

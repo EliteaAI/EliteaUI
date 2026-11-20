@@ -68,6 +68,8 @@ const UsersAccessCard = memo(props => {
         open={isMentionOpen}
         anchorEl={cardRef.current}
         users={access.users}
+        search={access.search}
+        total={access.count}
         currentUserId={userId}
         ownerId={access.ownerId}
         onMention={handleMention}

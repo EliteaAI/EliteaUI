@@ -58,6 +58,7 @@ import {
 import { sendFailuresActions } from '@/[fsd]/features/chat/model';
 import {
   areDetailsOfParticipant,
+  getEveryoneUserIds,
   getSkillUnavailableReason,
 } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
@@ -101,6 +102,7 @@ import { Modal } from '@/[fsd]/shared/ui';
 import {
   useConversationEditMutation,
   useInjectMessageMutation,
+  useProjectMemberIdsQuery,
   useRegenerateMutation,
   useRemoveAttachmentsMutation,
   useUpdateMessageMetaMutation,
@@ -334,6 +336,19 @@ const ChatBox = memo(
 
     // Mentions states
     const [isMentioningEveryone, setIsMentioningEveryone] = useState(false);
+    // People mentioned from the Users panel who have not joined the chat yet (any member of a whole-team chat)
+    const [panelMentionedUsers, setPanelMentionedUsers] = useState([]);
+    const isWholeTeamChat = activeConversation?.is_private === false;
+    // Loaded as soon as Everyone is picked, so sending does not wait for it
+    const {
+      data: projectMemberIds,
+      isFetching: isFetchingEveryoneIds,
+      isError: isEveryoneIdsError,
+      refetch: refetchProjectMemberIds,
+    } = useProjectMemberIdsQuery(
+      { projectId },
+      { skip: !isMentioningEveryone || !isWholeTeamChat || !projectId },
+    );
 
     // Speaking mode states
     const [isSpeakingMode, setIsSpeakingMode] = useState(false);
@@ -551,7 +566,7 @@ const ChatBox = memo(
     );
 
     const getPayload = useCallback(
-      ({ question, question_id, participant, conversationUuid, attachmentList }) => {
+      ({ question, question_id, participant, conversationUuid, attachmentList, everyoneUserIds }) => {
         // For published agent/pipeline participants on the Chat page, use their entity_settings.llm_settings
         // as fallback so the predict payload carries the correct model override
         const isPublishedAgentParticipant =
@@ -576,16 +591,10 @@ const ChatBox = memo(
           projectId,
           selectedModel,
           isSendingToUser,
-          userIds: isMentioningEveryone
-            ? activeConversation?.participants
-                .filter(
-                  it =>
-                    it.entity_name === ChatParticipantType.Users &&
-                    it.entity_meta?.id &&
-                    userId !== it.entity_meta?.id,
-                )
-                .map(it => it.id) || []
-            : selectedUsers.map(user => user.user.id),
+          // Project user ids, not participant ids: a member who never opened the chat has no participant yet
+          mentionedUserIds: isMentioningEveryone
+            ? getEveryoneUserIds({ everyoneUserIds, participants: activeConversation?.participants, userId })
+            : selectedUsers.map(user => user.user.participant?.entity_meta?.id).filter(Boolean),
           unsavedLLMSettings: unsavedLLMSettings || participantLlmSettings,
           participants: activeConversation?.participants || [],
           allowLLMSettingsOverride: isAgentsPage || !!participantLlmSettings,
@@ -1065,7 +1074,14 @@ const ChatBox = memo(
 
     useImperativeHandle(boxRef, () => ({
       onClear: onClickClearChat,
-      mentionUser: content => {
+      mentionUser: (content, participant) => {
+        if (participant?.entity_meta?.id != null) {
+          setPanelMentionedUsers(prev =>
+            prev.some(item => item.entity_meta?.id == participant.entity_meta.id)
+              ? prev
+              : [...prev, participant],
+          );
+        }
         chatInput.current?.mentionUser(content);
       },
       selectEveryoneMention: () => {
@@ -1168,10 +1184,22 @@ const ChatBox = memo(
           });
         }
 
+        if (isMentioningEveryone && isWholeTeamChat && isEveryoneIdsError) {
+          toastError('Failed to load the project members to mention. Please try again.');
+          refetchProjectMemberIds();
+          return false;
+        }
         const participant = activeParticipant;
         const question_id = uuidv4(); // Use uuidv4 instead of useId hook
         const makeEventPayload = conversationUuid =>
-          getPayload({ question, participant, question_id, conversationUuid, attachmentList: attachments });
+          getPayload({
+            question,
+            participant,
+            question_id,
+            conversationUuid,
+            attachmentList: attachments,
+            everyoneUserIds: isWholeTeamChat ? projectMemberIds : undefined,
+          });
         let newMessages = initializeNewMessages({
           question,
           question_id,
@@ -1262,6 +1290,7 @@ const ChatBox = memo(
               question_id,
               conversationUuid: activeConversation?.uuid || sendResult.createdConversation?.uuid,
               attachmentList: updatedAttachments,
+              everyoneUserIds: isWholeTeamChat ? projectMemberIds : undefined,
             });
 
             // For agent chats with new conversation creation, always preserve the existing participant_id
@@ -1389,8 +1418,13 @@ const ChatBox = memo(
         emit,
         getPayload,
         isAgentsPage,
+        isEveryoneIdsError,
+        isMentioningEveryone,
+        isWholeTeamChat,
         isSendingToUser,
         name,
+        projectMemberIds,
+        refetchProjectMemberIds,
         rememberSend,
         onClearActiveParticipant,
         onClearAttachments,
@@ -1401,6 +1435,7 @@ const ChatBox = memo(
         setConversationStreamingInfo,
         setSelectedUsers,
         setStreamingInfo,
+        toastError,
         unsavedLLMSettings,
         uploadAttachments,
         userId,
@@ -2530,27 +2565,35 @@ const ChatBox = memo(
     const { fetchOriginalDetails, isFetchingParticipant, fetchOriginalVersionDetails } =
       useFetchParticipantDetails();
     const users = useMemo(() => {
-      const userParticipants = (activeConversation?.participants || [])
-        .filter(
-          participant =>
-            participant.entity_name === ChatParticipantType.Users && participant.entity_meta?.id !== userId,
-        )
-        .map(participant => ({
-          id: participant.id,
-          name: participant.meta.user_name,
-          participant,
-        }));
+      const userParticipants = (activeConversation?.participants || []).filter(
+        participant =>
+          participant.entity_name === ChatParticipantType.Users && participant.entity_meta?.id !== userId,
+      );
+      const joined = new Set(userParticipants.map(participant => participant.entity_meta?.id));
+      const panelOnly = panelMentionedUsers.filter(
+        participant => !joined.has(participant.entity_meta.id) && participant.entity_meta.id != userId,
+      );
+      const mentionable = [...userParticipants, ...panelOnly].map(participant => ({
+        id: participant.id,
+        name: participant.meta?.user_name,
+        participant,
+      }));
 
-      if (userParticipants.length > 0) {
-        userParticipants.push({
+      // A whole-team chat keeps Everyone with no one joined yet, or the input would drop the panel's «@Everyone»
+      if (userParticipants.length > 0 || isWholeTeamChat) {
+        mentionable.push({
           id: '@everyone',
           name: 'Everyone',
           participant: 'All users',
         });
       }
 
-      return userParticipants;
-    }, [activeConversation?.participants, userId]);
+      return mentionable;
+    }, [activeConversation?.participants, isWholeTeamChat, panelMentionedUsers, userId]);
+
+    useEffect(() => {
+      setPanelMentionedUsers([]);
+    }, [activeConversation?.id]);
 
     const hasOtherUsers = useMemo(
       () =>
@@ -3027,6 +3070,7 @@ const ChatBox = memo(
         isProcessingSymbols ||
         isFetchingParticipant ||
         isUploadingAttachments ||
+        isFetchingEveryoneIds ||
         isUpdatingInternalToolsConfig ||
         activeConversation?.isSending ||
         hasBlockingHitlInterrupt ||
@@ -3043,6 +3087,7 @@ const ChatBox = memo(
         isProcessingSymbols,
         isFetchingParticipant,
         isUploadingAttachments,
+        isFetchingEveryoneIds,
         isUpdatingInternalToolsConfig,
         activeConversation?.isSending,
         hasBlockingHitlInterrupt,
