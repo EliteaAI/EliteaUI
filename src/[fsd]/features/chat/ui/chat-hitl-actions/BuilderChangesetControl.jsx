@@ -57,18 +57,18 @@ const BuilderChangesetControl = memo(props => {
               </Typography>
               {entry.added_lines || entry.removed_lines ? (
                 <Box>
-                  {(entry.removed_lines || []).map(line => (
+                  {(entry.removed_lines || []).map((line, index) => (
                     <Typography
-                      key={`-${line}`}
+                      key={`-${index}`}
                       variant="bodySmall"
                       sx={styles.removed}
                     >
                       {`- ${line}`}
                     </Typography>
                   ))}
-                  {(entry.added_lines || []).map(line => (
+                  {(entry.added_lines || []).map((line, index) => (
                     <Typography
-                      key={`+${line}`}
+                      key={`+${index}`}
                       variant="bodySmall"
                       sx={styles.added}
                     >
