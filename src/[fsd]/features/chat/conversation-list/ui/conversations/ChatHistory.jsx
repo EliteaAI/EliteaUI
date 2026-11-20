@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
@@ -71,6 +71,8 @@ const ChatHistory = memo(props => {
     setSearchQuery: setHistorySearchQuery,
     setIsPinnedExpanded,
     togglePinnedGroup,
+    folderExpansionRef,
+    historyScrollTopRef,
   } = useChatHistoryActions();
 
   const {
@@ -102,6 +104,21 @@ const ChatHistory = memo(props => {
   } = useChatHistoryItemActions({ onOpenConversation, toastError, toastSuccess });
 
   const { isMounted: isChatPageMounted, selectedConversationId, duplicatingConversationId } = chatPageState;
+
+  // The collapsed menu unmounts the list: it comes back where the user left it (once the rows are there)
+  const listRef = useRef(null);
+  const isScrollRestoredRef = useRef(false);
+  const handleListScroll = useCallback(
+    event => {
+      historyScrollTopRef.current = event.currentTarget.scrollTop;
+    },
+    [historyScrollTopRef],
+  );
+  useLayoutEffect(() => {
+    if (isScrollRestoredRef.current || isLoadConversations || !listRef.current) return;
+    isScrollRestoredRef.current = true;
+    listRef.current.scrollTop = historyScrollTopRef.current;
+  }, [historyScrollTopRef, isLoadConversations]);
 
   const conversations = useMemo(() => dateGroups.flatMap(group => group.conversations), [dateGroups]);
 
@@ -482,11 +499,13 @@ const ChatHistory = memo(props => {
         onLoadMoreInFolder={onLoadMoreInFolder}
         loadingFolders={loadingFolders}
         onCreateConversationInFolder={isChatPageMounted ? onCreateConversationInFolder : undefined}
+        folderExpansion={folderExpansionRef.current}
       />
     ),
     [
       cancelMovingTargetConversationToNewFolder,
       debouncedSearchQuery,
+      folderExpansionRef,
       getDropAreaState,
       isChatPageMounted,
       isFolderOperationInProgress,
@@ -537,7 +556,9 @@ const ChatHistory = memo(props => {
         />
 
         <Box
+          ref={listRef}
           sx={styles.list}
+          onScroll={handleListScroll}
           data-testid="sidebar-chats-list"
         >
           {isLoadConversations ? (
