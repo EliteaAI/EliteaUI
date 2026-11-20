@@ -28,6 +28,8 @@ import useSynAgentChatMessage from '@/hooks/application/useSynAgentChatMessage';
 import useStreamingNavBlocker from '@/hooks/chat/useStreamingNavBlocker';
 import RouteDefinitions from '@/routes';
 
+import { useApplicationChatInternalTools } from './useApplicationChatInternalTools.hooks';
+
 /**
  * Custom hook for managing application chat functionality
  * Encapsulates conversation creation, socket handling, and state management
@@ -78,6 +80,13 @@ export const useApplicationChat = ({
     applicationVersionDetails,
     projectId,
     setActiveParticipant,
+  });
+
+  useApplicationChatInternalTools({
+    activeConversation,
+    setActiveConversation,
+    internalTools: applicationVersionDetails?.meta?.internal_tools,
+    projectId,
   });
 
   // Stop streaming functionality
