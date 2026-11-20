@@ -11,14 +11,6 @@ import { useSelectedProjectId } from './useSelectedProject.hooks';
 import { SERVICE_PROMPT_KEYS, useServicePromptByKey } from './useServicePromptByKey.hooks';
 import { useToast } from './useToast.hooks';
 
-/**
- * Shared Quick Fix flow for a Mermaid diagram: picks the model, loads the service prompt, asks the model
- * for a corrected diagram and hands the result to the caller.
- *
- * - `readOnly`: blocks the fix, e.g. while someone else is editing the canvas.
- * - `onBeforeRequest`: runs once the prompt is ready, right before the model request.
- * - `onFixed(newCode)`: receives the corrected diagram code.
- */
 export const useMermaidQuickFix = props => {
   const { readOnly = false, onBeforeRequest, onFixed } = props || {};
   const { toastError, toastInfo } = useToast();

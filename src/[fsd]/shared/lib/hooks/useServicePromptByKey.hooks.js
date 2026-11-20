@@ -80,14 +80,16 @@ export const useServicePromptByKey = (projectId, key) => {
     return { config: found, error: lookupError };
   }, [fetchPrompt, lookupId]);
 
+  const invalidateInFlightRequest = useCallback(() => {
+    latestRequestRef.current += 1;
+  }, []);
+
   useEffect(() => {
-    const requestRef = latestRequestRef;
     load();
     return () => {
-      // Invalidate any in-flight request when the key changes or the component unmounts
-      requestRef.current++;
+      invalidateInFlightRequest();
     };
-  }, [load]);
+  }, [invalidateInFlightRequest, load]);
 
   const isCurrentResult = result.lookupId === lookupId;
   const config = isCurrentResult ? result.config : null;
@@ -95,7 +97,7 @@ export const useServicePromptByKey = (projectId, key) => {
   const isResolving = Boolean(lookupId) && !isCurrentResult;
   const lookupError = isCurrentResult ? result.error : null;
 
-  // For click handlers: returns the prompt, retrying the lookup once if the earlier one failed.
+  // Click handlers cannot wait for the next render to see the retried result.
   const ensurePrompt = useCallback(async () => {
     const currentPrompt = config?.data?.prompt || '';
     if (currentPrompt || !lookupError) return { prompt: currentPrompt, error: null };
