@@ -77,6 +77,7 @@ import ZephyrIcon from '@/assets/zephyr.svg?react';
 import { capitalizeFirstChar } from '@/common/utils';
 import ApplicationsIcon from '@/components/Icons/ApplicationsIcon.jsx';
 import BrowserIcon from '@/components/Icons/BrowserIcon.jsx';
+import ChatIcon from '@/components/Icons/ChatIcon.jsx';
 import ConfluenceIcon from '@/components/Icons/ConfluenceIcon.jsx';
 import FileCodeIcon from '@/components/Icons/FileCodeIcon.jsx';
 import GitHubIcon from '@/components/Icons/GitHubIcon.jsx';
@@ -198,6 +199,8 @@ const getInternalToolIcon = (toolkitName, iconProps) => {
       return <WebSearchIcon {...iconProps} />;
     case 'memory':
       return <MemoryIcon {...iconProps} />;
+    case 'ask_user':
+      return <ChatIcon {...iconProps} />;
     case 'skills':
       return <ChipSkillIcon {...iconProps} />;
     default:
