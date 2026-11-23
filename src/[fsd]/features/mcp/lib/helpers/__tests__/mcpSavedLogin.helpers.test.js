@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 
-import { withOfflineAccess } from '@/[fsd]/features/mcp/lib/helpers/mcpAuthFlow.helpers';
-
-import { hasSavedMcpLogin, isLoginForServer } from '../useMcpSavedLogin.hooks';
+import { withOfflineAccess } from '../mcpAuthFlow.helpers';
+import { hasSavedMcpLogin, isLoginForServer } from '../mcpSavedLogin.helpers';
 
 describe('#7643 saved MCP login helpers', () => {
   it('matches a login only to its own server (canonical URL)', () => {

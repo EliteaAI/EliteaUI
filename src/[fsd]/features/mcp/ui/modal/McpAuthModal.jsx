@@ -297,21 +297,22 @@ const McpAuthModal = memo(props => {
       });
       if (saveLogin) onSaved?.();
 
-      // Save credentials if checkbox is checked and user provided them
-      const finalClientId = client_id?.trim() || clientId;
-      const finalClientSecret = client_secret?.trim() || clientSecret;
-      if (saveLogin) {
-        // The saved login keeps its client on the credential; per-tab remembered clients are left as they are
-      } else if (saveCredentials && !effectiveOAuthAppId && (finalClientId || finalClientSecret)) {
-        McpAuthHelpers.setSavedCredentials({
-          serverUrl: storageKey,
-          clientId: finalClientId,
-          clientSecret: finalClientSecret,
-          toolkitType,
-        });
-      } else if (!saveCredentials) {
-        // Remove saved credentials if checkbox is unchecked
-        McpAuthHelpers.removeSavedCredentials(storageKey, toolkitType);
+      // The saved login keeps its client on the credential; per-tab remembered clients are left as they are
+      if (!saveLogin) {
+        // Save credentials if checkbox is checked and user provided them
+        const finalClientId = client_id?.trim() || clientId;
+        const finalClientSecret = client_secret?.trim() || clientSecret;
+        if (saveCredentials && !effectiveOAuthAppId && (finalClientId || finalClientSecret)) {
+          McpAuthHelpers.setSavedCredentials({
+            serverUrl: storageKey,
+            clientId: finalClientId,
+            clientSecret: finalClientSecret,
+            toolkitType,
+          });
+        } else if (!saveCredentials) {
+          // Remove saved credentials if checkbox is unchecked
+          McpAuthHelpers.removeSavedCredentials(storageKey, toolkitType);
+        }
       }
 
       authWindowRef.current = null;

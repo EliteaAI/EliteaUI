@@ -5,6 +5,7 @@ import YAML from 'js-yaml';
 import { Box, FormControlLabel, Typography } from '@mui/material';
 
 import { CredentialsSelect, OAuthAppSelect } from '@/[fsd]/features/credentials';
+import { McpSavedLoginConstants } from '@/[fsd]/features/mcp';
 import { OpenApiHelpers, ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { ArrayFieldInput, CheckboxListInput } from '@/[fsd]/features/toolkits/ui/form/tool-base';
@@ -553,7 +554,11 @@ const ToolBaseProperty = memo(props => {
           disabled={disabled}
           presetOptions={presetOptions}
           propKey={k}
-          noneOption={v.configuration_types?.[0] === 'mcp_login' ? MCP_BROWSER_ONLY_OPTION : undefined}
+          noneOption={
+            v.configuration_types?.[0] === McpSavedLoginConstants.MCP_LOGIN_TYPE
+              ? MCP_BROWSER_ONLY_OPTION
+              : undefined
+          }
         />
       );
     } else if (type === 'llm_model') {

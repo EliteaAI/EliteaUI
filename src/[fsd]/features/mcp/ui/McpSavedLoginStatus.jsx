@@ -111,7 +111,8 @@ const McpSavedLoginStatus = memo(props => {
       </Box>
       <McpAuthModal {...modalProps} />
       <McpLogoutModal
-        serverUrl={credential.elitea_title}
+        serverUrl={values?.settings?.url}
+        toolkitType={values?.type}
         open={showLogoutModal}
         onClose={onCloseLogout}
         onConfirm={onConfirmLogout}
