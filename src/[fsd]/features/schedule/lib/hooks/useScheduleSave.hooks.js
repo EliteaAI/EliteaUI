@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { isWebhookRow, toKindNoun } from '@/[fsd]/entities/schedule';
 import { APPROVAL_RULE } from '@/[fsd]/entities/schedule/lib/constants';
@@ -69,6 +69,10 @@ export const useScheduleSave = ({
   const afterSave = useRef(null);
   const afterWarnings = useRef(null);
 
+  useEffect(() => {
+    if (riskCheck.refused && !reviewSaving) setReview(null);
+  }, [riskCheck.refused, reviewSaving]);
+
   // A 409 of the risk scan opens the review again or shows the block box; riskAck answers the review
   const saveSchedule = async (values, { setErrors, resetForm: resetTo }, runAfterSave, riskAck) => {
     setBanner('');
@@ -106,6 +110,7 @@ export const useScheduleSave = ({
         : FIELDS_WITH_INPUT;
       if (Object.keys(fieldErrors).some(field => shownFields.includes(field))) setErrors(fieldErrors);
       else if (error?.status === 400 || error?.status === 409) setBanner(error.data?.error ?? '');
+      else if (error?.status === 404 && error.data?.error) setBanner(error.data.error);
       else toastError(`Failed to save the ${toKindNoun(values.trigger_kind)}`);
       return;
     }
@@ -136,6 +141,7 @@ export const useScheduleSave = ({
     const runAfterSave = afterSave.current;
     // A fresh check on Save: a blocked or failed check shows in the form, sensitive tools open the review
     const risk = await riskCheck.runCheck();
+    if (risk?.refused) return toastError(risk.refused);
     if (!risk) return toastError('The risk check did not run. Try again.');
     // Under "Pause and ask me" a missing credential or sign-in does not stop the save: the run waits
     if (splitRiskFindings(risk, values.approval_rule, isWebhookRow(values)).blocking.length) return;
@@ -167,6 +173,7 @@ export const useScheduleSave = ({
   // The "Needs re-confirm" badge: the review opens even when the stored consent would let a save through
   const reconfirm = async () => {
     const risk = await riskCheck.runCheck();
+    if (risk?.refused) return toastError(risk.refused);
     if (!risk) return toastError('The risk check did not run. Try again.');
     if (splitRiskFindings(risk, formik.values.approval_rule, isWebhookRow(formik.values)).blocking.length)
       return;
@@ -181,6 +188,7 @@ export const useScheduleSave = ({
       return true;
     } catch (error) {
       if (error?.status === 400 || error?.status === 409) setRunNowError(error.data?.error ?? '');
+      else if (error?.status === 404 && error.data?.error) setRunNowError(error.data.error);
       else toastError('Failed to start the run');
       return false;
     } finally {

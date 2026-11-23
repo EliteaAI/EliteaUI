@@ -136,6 +136,21 @@ describe('useScheduleRiskCheck', () => {
     expect(result.current.result.notices).toEqual(notices);
   });
 
+  it('applyFindings of a live answer clears an earlier refusal', async () => {
+    const notFound = {
+      status: 404,
+      data: { code: 'not_found', error: 'The requested item could not be found' },
+    };
+    mocks.check.mockReturnValue({ unwrap: () => Promise.reject(notFound) });
+    const { result } = setup();
+    await waitFor(() => expect(result.current.refused).toBe('The requested item could not be found'));
+
+    act(() => result.current.applyFindings({ code: 'risk_changed', ...CLEAR, fingerprint: 'fp-5' }));
+
+    expect(result.current.refused).toBeNull();
+    expect(result.current.result.fingerprint).toBe('fp-5');
+  });
+
   it('checks again when the version changes', async () => {
     const { result, rerender } = setup();
     await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));
@@ -173,6 +188,24 @@ describe('useScheduleRiskCheck', () => {
     );
   });
 
+  it('drops the findings of the same version when a re-check is refused because the target is gone', async () => {
+    mocks.check.mockReturnValueOnce(answer({ ...CLEAR, sensitive: SENSITIVE, fingerprint: 'fp-1' }));
+    const { result } = setup();
+    await waitFor(() => expect(result.current.result?.fingerprint).toBe('fp-1'));
+
+    const notFound = {
+      status: 404,
+      data: { code: 'not_found', error: 'The requested item could not be found' },
+    };
+    mocks.check.mockReturnValueOnce({ unwrap: () => Promise.reject(notFound) });
+    setVisibility('visible');
+
+    await waitFor(() => expect(result.current.refused).toBe('The requested item could not be found'));
+    expect(result.current.status).toBe(RISK_CHECK_STATUS.FAILED);
+    expect(result.current.result).toBeNull();
+    expect(result.current.waiting).toEqual([]);
+  });
+
   it('fails without findings when the check of another version fails', async () => {
     const { result, rerender } = setup();
     await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));
@@ -182,6 +215,36 @@ describe('useScheduleRiskCheck', () => {
 
     await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.FAILED));
     expect(result.current.result).toBeNull();
+  });
+
+  it('runCheck returns the refusal text when the target is gone or hidden (404)', async () => {
+    const notFound = {
+      status: 404,
+      data: { code: 'not_found', error: 'The requested item could not be found' },
+    };
+    mocks.check.mockReturnValue({ unwrap: () => Promise.reject(notFound) });
+    const { result } = setup();
+    await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.FAILED));
+
+    let refusal;
+    await act(async () => {
+      refusal = await result.current.runCheck();
+    });
+
+    expect(refusal).toEqual({ refused: 'The requested item could not be found' });
+  });
+
+  it('runCheck returns null for a failure without a refusal text', async () => {
+    mocks.check.mockReturnValue(failure());
+    const { result } = setup();
+    await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.FAILED));
+
+    let refusal;
+    await act(async () => {
+      refusal = await result.current.runCheck();
+    });
+
+    expect(refusal).toBeNull();
   });
 
   it('runCheck returns the fresh findings for the Save step', async () => {

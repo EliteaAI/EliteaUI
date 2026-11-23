@@ -18,7 +18,7 @@ const statusOf = (result, approvalRule, isWebhook) =>
 /**
  * The dry-run risk check of the schedule form. It runs when the entity type, the
  * entity or the version changes and when the person returns to the tab. `runCheck()` runs it now
- * and resolves to the findings, or null when the check did not run. `approvalRule` is the rule of the form:
+ * and resolves to the findings, `{ refused }` on a 404, or null when the check did not run. `approvalRule` is the rule of the form:
  * under "Pause and ask me" a missing credential or a personal sign-in is `waiting`, not `blocking`. `applyFindings(data)` takes the
  * findings of a 409 save answer. On an edit, `scheduleId` makes the server scan as the schedule owner
  * and answer `confirmed`. `isWebhook`: the server scans for a webhook, which never waits for a sign-in.
@@ -64,16 +64,20 @@ export const useScheduleRiskCheck = ({
       }).unwrap();
       if (call === latestCall.current) setState({ phase: ANSWERED, result, key });
       return result;
-    } catch {
-      // A failed check shows as failed; the findings of the same pair stay for an open review dialog
+    } catch (error) {
+      const refused = error?.status === 404 && error.data?.error ? error.data.error : null;
       if (call === latestCall.current) {
-        setState(prev => ({
-          phase: RISK_CHECK_STATUS.FAILED,
-          result: prev.key === key ? prev.result : null,
-          key: prev.key,
-        }));
+        setState(prev => {
+          const findingsOfTheSameLiveTarget = !refused && prev.key === key ? prev.result : null;
+          return {
+            phase: RISK_CHECK_STATUS.FAILED,
+            result: findingsOfTheSameLiveTarget,
+            key: prev.key,
+            refused,
+          };
+        });
       }
-      return null;
+      return refused ? { refused } : null;
     }
   }, [
     checkRisk,
@@ -109,18 +113,18 @@ export const useScheduleRiskCheck = ({
         ...(notices && { notices }),
         ...(fingerprint && { fingerprint }),
       };
-      return { ...prev, phase: ANSWERED, result };
+      return { ...prev, phase: ANSWERED, result, refused: null };
     });
   }, []);
 
   // The rule can change after the answer came, so the findings are split again for the current rule
   // without a new request
-  const { phase, result, key } = state;
+  const { phase, result, key, refused = null } = state;
   const findings = useMemo(
     () => splitRiskFindings(result, approvalRule, isWebhook),
     [result, approvalRule, isWebhook],
   );
   const status = phase === ANSWERED ? statusOf(result, approvalRule, isWebhook) : phase;
 
-  return { status, result, key, ...findings, runCheck, applyFindings };
+  return { status, result, key, refused, ...findings, runCheck, applyFindings };
 };

@@ -203,6 +203,7 @@ const ScheduleForm = memo(props => {
       status={riskCheck.status}
       blocking={riskCheck.blocking}
       waiting={riskCheck.waiting}
+      refused={riskCheck.refused}
       entityType={values.type}
       entityId={isIndex ? values.toolkit_id : values.application_id}
       indexName={isIndex ? values.index_name : undefined}

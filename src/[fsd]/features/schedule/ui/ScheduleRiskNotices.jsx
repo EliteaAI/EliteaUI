@@ -9,8 +9,19 @@ import { RISK_CHECK_STATUS } from '../lib/constants';
 import ScheduleRiskBlockBox from './ScheduleRiskBlockBox';
 
 const ScheduleRiskNotices = memo(props => {
-  const { status, blocking, waiting, entityType, entityId, indexName, versionId, projectId, kind, onRetry } =
-    props;
+  const {
+    status,
+    blocking,
+    waiting,
+    refused,
+    entityType,
+    entityId,
+    indexName,
+    versionId,
+    projectId,
+    kind,
+    onRetry,
+  } = props;
   const styles = scheduleRiskNoticesStyles();
 
   return (
@@ -40,7 +51,7 @@ const ScheduleRiskNotices = memo(props => {
       {status === RISK_CHECK_STATUS.FAILED && (
         <BannerMessage variant="warning">
           <Box sx={styles.failed}>
-            <Typography variant="bodySmall">The risk check did not run. Try again.</Typography>
+            <Typography variant="bodySmall">{refused || 'The risk check did not run. Try again.'}</Typography>
             <BaseBtn
               type="button"
               variant="elitea"
