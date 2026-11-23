@@ -91,6 +91,19 @@ describe('SectionPageToolbar', () => {
     expect(screen.getByTestId('project-search')).toHaveTextContent('Search pipelines');
   });
 
+  it.each([
+    ['toolkits', 'Search toolkits & indexes'],
+    ['mcps', 'Search MCPs'],
+    ['credentials', 'Search credentials'],
+  ])('shows %s without tabs, with the view switch and its own placeholder', (sectionKey, placeholder) => {
+    renderToolbar({ sectionKey });
+    expect(screen.queryByTestId(`${sectionKey}-mode-project`)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('public-filter')).not.toBeInTheDocument();
+    expect(screen.getByTestId('view-toggle')).toBeInTheDocument();
+    expect(screen.getByTestId('project-search')).toHaveTextContent(placeholder);
+    expect(screen.getByTestId(`${sectionKey}-filters-button`)).toBeInTheDocument();
+  });
+
   it('shows the Public "Filter by" with Admin only for admins and the period on Trending', () => {
     renderToolbar({ showPublicFilter: true, tab: 'latest' });
     expect(screen.getByText('Filter by:')).toBeInTheDocument();
