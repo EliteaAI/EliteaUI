@@ -23,7 +23,7 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useBreadcrumbTrail: () => [
     {
       key: '/agents/:tab/:agentId/evaluate',
-      label: 'Evaluation (Beta)',
+      label: 'Evaluation',
       to: '/agents/all/7/evaluate',
       isCurrent: false,
       entry: {},

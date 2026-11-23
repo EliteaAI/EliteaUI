@@ -89,10 +89,9 @@ const Artifacts = memo(() => {
   });
 
   const [previewFile, setPreviewFile] = useState(null);
-  const [collapsedBuckets, setCollapsedBuckets] = useState(false);
   const [currentPrefix, setCurrentPrefix] = useState('');
 
-  const styles = artifactsStyles(collapsedBuckets, leftPanelWidth);
+  const styles = artifactsStyles(leftPanelWidth);
 
   // Bucket data will be provided by Buckets component via callback
   const [allBuckets, setAllBuckets] = useState([]);
@@ -407,10 +406,6 @@ const Artifacts = memo(() => {
     setHasUnsavedChanges(hasChanges);
   }, []);
 
-  const onBucketsCollapsed = useCallback(() => {
-    setCollapsedBuckets(prev => !prev);
-  }, []);
-
   const handleUnsavedChangesConfirm = useCallback(() => {
     setShowUnsavedChangesAlert(false);
     setHasUnsavedChanges(false);
@@ -673,8 +668,6 @@ const Artifacts = memo(() => {
               selectedBucket={queryParams.selectedBucket}
               selectedFile={previewFile}
               currentPrefix={currentPrefix}
-              collapsed={collapsedBuckets}
-              onCollapsed={onBucketsCollapsed}
               onCreateBucket={onAddBucket}
               onStorageChange={onStorageChange}
               onBucketsDataChange={onBucketsDataChange}
@@ -783,7 +776,7 @@ Artifacts.displayName = 'Artifacts';
 export default Artifacts;
 
 /** @type {MuiSx} */
-const artifactsStyles = (collapsedBuckets, leftPanelWidth) => ({
+const artifactsStyles = leftPanelWidth => ({
   rootContainer: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
@@ -800,7 +793,7 @@ const artifactsStyles = (collapsedBuckets, leftPanelWidth) => ({
     overflow: 'hidden',
   },
   bucketSidebarBox: ({ palette }) => ({
-    width: collapsedBuckets ? '3.75rem' : `${leftPanelWidth}px`,
+    width: `${leftPanelWidth}px`,
     height: '100%',
     borderRight: `0.0625rem solid ${palette.border.default}`,
     transition: 'width 0.2s ease-in-out',

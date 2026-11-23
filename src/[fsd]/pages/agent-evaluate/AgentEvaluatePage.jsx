@@ -150,7 +150,7 @@ const AgentEvaluatePage = memo(() => {
   return (
     <Box sx={styles.wrapper}>
       <Box sx={styles.header}>
-        <EvaluationBreadcrumbs title="Evaluation (Beta)" />
+        <EvaluationBreadcrumbs title="Evaluation" />
         <EvaluationDocsButton />
       </Box>
       <Box sx={styles.body}>

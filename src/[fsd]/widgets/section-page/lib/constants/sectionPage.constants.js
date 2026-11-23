@@ -8,6 +8,7 @@ export const SECTION_PAGE_KEYS = {
   toolkits: 'toolkits',
   mcps: 'mcps',
   credentials: 'credentials',
+  applications: 'applications',
 };
 
 // The `:tab` of a section's list route in a private or team project
@@ -48,6 +49,7 @@ export const SECTION_PAGE_CONFIG = {
     entityLabel: 'Agent',
     searchPlaceholder: 'Search agents',
     hasDiscover: true,
+    hasDiscoverFilters: true,
     listRoute: RouteDefinitions.Applications,
     createRoute: RouteDefinitions.CreateApplication,
     createPermission: PERMISSIONS.applications.create,
@@ -64,6 +66,7 @@ export const SECTION_PAGE_CONFIG = {
     entityLabel: 'Skill',
     searchPlaceholder: 'Search skills',
     hasDiscover: true,
+    hasDiscoverFilters: true,
     listRoute: RouteDefinitions.Skills,
     createRoute: RouteDefinitions.CreateSkill,
     createPermission: PERMISSIONS.applications.create,
@@ -136,6 +139,29 @@ export const SECTION_PAGE_CONFIG = {
     importKind: null,
     buildWithAi: null,
     testIdPrefix: 'credentials',
+    searchTestId: 'agent-search-input',
+    tableViewTestId: 'agent-table-view-button',
+    cardViewTestId: 'agent-card-view-button',
+  },
+  // The App Catalog has no filter column, and stays reachable in Public as before
+  [SECTION_PAGE_KEYS.applications]: {
+    title: 'Applications',
+    entityLabel: 'Application',
+    searchPlaceholder: 'Search applications',
+    hasDiscover: true,
+    hasDiscoverFilters: false,
+    isDiscoverInPublic: true,
+    legacyTabs: {
+      applications: SECTION_MODES.project,
+      catalog: SECTION_MODES.discover,
+    },
+    listRoute: RouteDefinitions.Apps,
+    createRoute: RouteDefinitions.CreateApp,
+    createPermission: PERMISSIONS.toolkits.create,
+    addLabel: 'Add application',
+    importKind: null,
+    buildWithAi: null,
+    testIdPrefix: 'applications',
     searchTestId: 'agent-search-input',
     tableViewTestId: 'agent-table-view-button',
     cardViewTestId: 'agent-card-view-button',

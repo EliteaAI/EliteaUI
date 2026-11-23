@@ -77,7 +77,7 @@ const getPrevPath = (routeStack, currentPath, search, viewMode, authorId, author
       // Handle /apps/create and /apps/create/:appType - go back to App Catalog
       return `${RouteDefinitions.AppsCatalog}?${SearchParams.ViewMode}=${viewMode}`;
     } else if (currentPath.startsWith(RouteDefinitions.Apps) && hasSubPath(currentPath)) {
-      return `${RouteDefinitions.Apps}/${getTabFromUrl(currentPath, AppsTabs[1])}?${SearchParams.ViewMode}=${viewMode}`;
+      return `${RouteDefinitions.Apps}/${getTabFromUrl(currentPath, AppsTabs[0])}?${SearchParams.ViewMode}=${viewMode}`;
     } else if (currentPath.startsWith(RouteDefinitions.UserPublic)) {
       if (currentPath.match(/\/user-public\/pipelines\/\d+/g)) {
         return `${RouteDefinitions.UserPublic}/${UserPublicTabs[2]}?${SearchParams.ViewMode}=${viewMode}&${SearchParams.AuthorId}=${authorId}&${SearchParams.AuthorName}=${authorName}`;

@@ -88,11 +88,11 @@ export const BREADCRUMB_REGISTRY = {
   },
   [RouteDefinitions.ApplicationsEvaluate]: {
     parent: RouteDefinitions.ApplicationsDetail,
-    label: 'Evaluation (Beta)',
+    label: 'Evaluation',
   },
   [RouteDefinitions.ApplicationsEvaluateSuite]: {
     parent: RouteDefinitions.ApplicationsDetail,
-    label: 'Evaluation (Beta)',
+    label: 'Evaluation',
   },
   [RouteDefinitions.ApplicationsEvaluateDatasets]: {
     parent: RouteDefinitions.ApplicationsEvaluate,
@@ -176,11 +176,11 @@ export const BREADCRUMB_REGISTRY = {
   },
   [RouteDefinitions.PipelineEvaluate]: {
     parent: RouteDefinitions.PipelineDetail,
-    label: 'Evaluation (Beta)',
+    label: 'Evaluation',
   },
   [RouteDefinitions.PipelineEvaluateSuite]: {
     parent: RouteDefinitions.PipelineDetail,
-    label: 'Evaluation (Beta)',
+    label: 'Evaluation',
   },
   [RouteDefinitions.PipelineEvaluateDatasets]: {
     parent: RouteDefinitions.PipelineEvaluate,

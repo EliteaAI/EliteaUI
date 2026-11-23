@@ -29,8 +29,6 @@ const Buckets = memo(props => {
     selectedBucket,
     selectedFile,
     currentPrefix,
-    collapsed,
-    onCollapsed,
     onCreateBucket,
     onStorageChange,
     onBucketsDataChange, // Callback to provide bucket data to parent
@@ -209,10 +207,8 @@ const Buckets = memo(props => {
       currentStorageUsage={currentStorageUsage}
       isLoadingBuckets={isLoadingBuckets}
       isError={isError}
-      collapsed={collapsed}
       // Callbacks
       onSelectBucket={onSelectBucket}
-      onCollapsed={onCollapsed}
       onCreateBucket={onCreateBucket}
       onStorageChange={onStorageChange}
       onUpload={onUpload}
