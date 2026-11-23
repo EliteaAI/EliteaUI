@@ -74,6 +74,15 @@ export const unchangedNotice = report => {
   return { count, text: `${count} ${pickItemNoun(count, report.itemLabels)} already indexed (unchanged)` };
 };
 
+const escapeMarkdown = text => text.replace(/[\\`*_[\]()<>#|~!]/g, '\\$&');
+
+/** Where the run read from, e.g. `Source: github "org/repo@main"`; null for runs that did not say. */
+export const reportSourceText = (report, formatLocation = location => location) => {
+  const { type, location } = report.sourceInfo || {};
+  if (!type) return null;
+  return location ? `Source: ${type} "${formatLocation(location)}"` : `Source: ${type}`;
+};
+
 const groupLine = (group, report) => {
   const counted = group.dependent
     ? `${group.count} ${pickItemNoun(group.count, group.itemLabels || report.dependentLabels)}`
@@ -94,6 +103,9 @@ export const formatIndexingReportText = source => {
   const lines = [];
   const headline = reportHeadline(report);
   if (headline) lines.push(`${headline.icon} ${headline.text}`);
+
+  const sourceText = reportSourceText(report, escapeMarkdown);
+  if (sourceText) lines.push(`📍 ${sourceText}`);
 
   visibleCategories(report).forEach(category => {
     const { icon, text } = categoryHeadline(category, report);

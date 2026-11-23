@@ -426,3 +426,26 @@ describe('formatIndexingReportText warnings (#5261)', () => {
     expect(render(report())).not.toContain('⚠️');
   });
 });
+
+describe('formatIndexingReportText — where the run read from (#6962)', () => {
+  it('names the source before the breakdown', () => {
+    expect(render(report({ source_info: { type: 'github', location: 'org/repo@main' } }))).toBe(
+      '📍 Source: github "org/repo@main"\n✅ 179 pages indexed',
+    );
+  });
+
+  it('names only the type when the run did not resolve a location', () => {
+    expect(render(report({ source_info: { type: 'jira' } }))).toContain('📍 Source: jira\n');
+  });
+
+  it('says nothing about the source for a run that did not report one', () => {
+    expect(render(report())).not.toContain('Source');
+  });
+
+  it('keeps markdown characters in the location literal', () => {
+    const text = render(
+      report({ source_info: { type: 'github', location: 'org/repo@main:docs/_a_*b*[c](d).md' } }),
+    );
+    expect(text).toContain('📍 Source: github "org/repo@main:docs/\\_a\\_\\*b\\*\\[c\\]\\(d\\).md"');
+  });
+});

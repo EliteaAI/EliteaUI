@@ -220,3 +220,21 @@ describe('IndexingReportSummary warnings (#5261)', () => {
     expect(screen.queryByTestId('indexing-report-warnings')).not.toBeInTheDocument();
   });
 });
+
+describe('IndexingReportSummary — where the run read from (#6962)', () => {
+  it('shows the source as plain text', () => {
+    const source = report();
+    source.report.source_info = { type: 'sharepoint', location: 'tenant/sites/team / _Shared_ [Docs]' };
+    renderSummary(source);
+
+    expect(screen.getByTestId('indexing-report-source')).toHaveTextContent(
+      'Source: sharepoint "tenant/sites/team / _Shared_ [Docs]"',
+    );
+  });
+
+  it('shows no source line for a run that did not report one', () => {
+    renderSummary(report());
+
+    expect(screen.queryByTestId('indexing-report-source')).not.toBeInTheDocument();
+  });
+});
