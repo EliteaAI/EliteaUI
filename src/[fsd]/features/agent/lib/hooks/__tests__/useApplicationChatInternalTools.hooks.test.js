@@ -1,11 +1,22 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 
 import { useApplicationChatInternalTools } from '../useApplicationChatInternalTools.hooks';
 
-const shared = vi.hoisted(() => ({ editConversation: vi.fn(() => Promise.resolve({})) }));
+const shared = vi.hoisted(() => ({
+  editConversation: vi.fn(() => Promise.resolve({})),
+  toastError: vi.fn(),
+}));
+
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useToast: () => ({ toastError: shared.toastError }),
+}));
+
+vi.mock('@/common/utils', () => ({
+  buildErrorMessage: err => err?.data?.error,
+}));
 
 vi.mock('@/api', () => ({
   useConversationEditMutation: () => [shared.editConversation],
@@ -81,5 +92,22 @@ describe('useApplicationChatInternalTools (EL-7383)', () => {
     const { rerender } = renderHook(p => useApplicationChatInternalTools(p), { initialProps: props });
     rerender({ ...props, internalTools: ['elitea_builder'] });
     expect(shared.editConversation).toHaveBeenCalledTimes(1);
+  });
+
+  it('reverts the chat modules and shows an error when the save fails', async () => {
+    shared.editConversation.mockResolvedValueOnce({ error: { data: { error: 'boom' } } });
+    const setActiveConversation = vi.fn();
+    renderHook(() =>
+      useApplicationChatInternalTools({
+        activeConversation: conversation(['ask_user']),
+        setActiveConversation,
+        internalTools: ['ask_user', 'elitea_builder'],
+        projectId: 2,
+      }),
+    );
+    await waitFor(() => expect(shared.toastError).toHaveBeenCalledWith('boom'));
+    const revert = setActiveConversation.mock.calls[1][0];
+    const reverted = revert(conversation(['ask_user', 'elitea_builder']));
+    expect(reverted.meta).toEqual({ persona: 'nerdy', internal_tools: ['ask_user'] });
   });
 });

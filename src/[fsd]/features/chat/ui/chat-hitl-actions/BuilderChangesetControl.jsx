@@ -194,11 +194,11 @@ const getStyles = () => ({
     gap: '0.625rem',
     alignItems: 'center',
   },
-  buttonIcon: {
+  buttonIcon: ({ palette }) => ({
     '& .MuiButton-startIcon': {
-      color: 'white',
+      color: palette.text.alwaysWhite,
     },
-  },
+  }),
 });
 
 export default BuilderChangesetControl;
