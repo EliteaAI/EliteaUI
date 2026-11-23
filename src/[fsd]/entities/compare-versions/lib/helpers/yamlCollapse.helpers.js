@@ -62,6 +62,15 @@ const mapToSibling = (pos, info) => {
   return otherStart + (pos - ownStart);
 };
 
+// Opens the block that starts at `pos` in this editor and its counterpart in the other editor
+const expandBlockOnBothSides = (view, pos) => {
+  const info = getChunks(view.state);
+  const siblings = mergeViewSiblings(view);
+  const sibling = siblings && (siblings.a === view ? siblings.b : siblings.a);
+  view.dispatch({ effects: expandBlock.of(pos) });
+  if (sibling && info) sibling.dispatch({ effects: expandBlock.of(mapToSibling(pos, info)) });
+};
+
 class CollapsedBlockWidget extends WidgetType {
   constructor(lines) {
     super();
@@ -79,15 +88,7 @@ class CollapsedBlockWidget extends WidgetType {
     // Reachable and usable by keyboard
     row.setAttribute('role', 'button');
     row.setAttribute('tabindex', '0');
-    const expand = () => {
-      const pos = view.posAtDOM(row);
-      view.dispatch({ effects: expandBlock.of(pos) });
-      // The block opens on both sides at once
-      const info = getChunks(view.state);
-      const siblings = mergeViewSiblings(view);
-      const sibling = siblings && (siblings.a === view ? siblings.b : siblings.a);
-      if (sibling && info) sibling.dispatch({ effects: expandBlock.of(mapToSibling(pos, info)) });
-    };
+    const expand = () => expandBlockOnBothSides(view, view.posAtDOM(row));
     row.addEventListener('click', expand);
     row.addEventListener('keydown', event => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -169,3 +170,26 @@ export const expandBlockAtLine = (view, lineNumber) => {
   });
   if (hiding.length) view.dispatch({ effects: hiding.map(from => expandBlock.of(from)) });
 };
+
+/**
+ * Opens the collapsed block a search match lands in, on both sides, and scrolls the match into view.
+ * Without it the match would be selected inside hidden lines and the user would see nothing happen.
+ */
+export const expandBlocksOnSearch = () =>
+  EditorView.updateListener.of(update => {
+    if (!update.transactions.some(tr => tr.isUserEvent('select.search'))) return;
+    const { view } = update;
+    const field = update.state.field(collapseField, false);
+    if (!field) return;
+    const { from, to } = update.state.selection.main;
+    const hiding = [];
+    field.deco.between(from, to, blockFrom => {
+      hiding.push(blockFrom);
+    });
+    if (!hiding.length) return;
+    // An editor cannot be updated while it is still handling an update
+    queueMicrotask(() => {
+      hiding.forEach(blockFrom => expandBlockOnBothSides(view, blockFrom));
+      view.dispatch({ effects: EditorView.scrollIntoView(from, { y: 'center' }) });
+    });
+  });
