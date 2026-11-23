@@ -6,17 +6,12 @@ import Tooltip from '@/ComponentsLib/Tooltip';
 import SearchIcon from '@/components/Icons/SearchIcon';
 import { useTheme } from '@emotion/react';
 
-const BucketSearch = ({ collapsed = false, onExpand, onSearchActivate }) => {
+const BucketSearch = ({ onSearchActivate }) => {
   const theme = useTheme();
 
   const handleSearchClick = useCallback(() => {
-    // If collapsed, expand first then activate search
-    if (collapsed && onExpand) {
-      onExpand();
-    }
-    // Notify parent that search was activated
     onSearchActivate?.(true);
-  }, [collapsed, onExpand, onSearchActivate]);
+  }, [onSearchActivate]);
 
   return (
     <Tooltip

@@ -32,7 +32,7 @@ const renderTrigger = (menu = {}) =>
   render(
     <ThemeProvider theme={theme}>
       <BreadcrumbMenuTrigger
-        label="Evaluation (Beta)"
+        label="Evaluation"
         menu={{ items, activeId: 12, onSelect: () => {}, header: 'Navigate to...', ...menu }}
       />
     </ThemeProvider>,
@@ -43,7 +43,7 @@ describe('BreadcrumbMenuTrigger', () => {
     renderTrigger();
     const trigger = screen.getByTestId('breadcrumb-menu-trigger');
 
-    expect(trigger).toHaveTextContent('Evaluation (Beta)');
+    expect(trigger).toHaveTextContent('Evaluation');
     expect(trigger).toHaveAttribute('aria-haspopup', 'menu');
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();

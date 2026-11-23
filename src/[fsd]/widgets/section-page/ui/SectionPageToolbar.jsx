@@ -21,6 +21,7 @@ const SectionPageToolbar = memo(
       tab,
       onChangeTab,
       showModeTabs = false,
+      modeTabTourIds,
       showPublicFilter = false,
       showAdminView = false,
       isTrending = false,
@@ -58,6 +59,7 @@ const SectionPageToolbar = memo(
             onChange={onChangeTab}
             isTeam={isTeam}
             testIdPrefix={testIdPrefix}
+            tourIds={modeTabTourIds}
           />
         )}
         {showPublicFilter && (

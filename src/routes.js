@@ -81,8 +81,8 @@ const RouteDefinitions = {
   ToolkitIndexScheduleDetail: '/toolkits/:tab/:toolkitId/index/:indexName/schedules/:scheduleId',
 
   Apps: '/apps',
-  AppsApplications: '/apps/applications',
-  AppsCatalog: '/apps/catalog',
+  AppsApplications: '/apps/all',
+  AppsCatalog: '/apps/discover',
   AppsWithTab: '/apps/:tab',
   CreateApp: '/apps/create',
   CreateAppType: '/apps/create/:appType',

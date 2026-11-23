@@ -117,6 +117,7 @@ describe('useSectionAddActions', () => {
     ['toolkits', '/toolkits/create', 'Toolkits & Indexes', '/toolkits/all', 'New Toolkit'],
     ['mcps', '/mcps/create', 'MCPs', '/mcps/all', 'New MCP'],
     ['credentials', '/credentials/create-credential', 'Credentials', '/credentials/all', 'New Credential'],
+    ['applications', '/apps/create', 'Applications', '/apps/all', 'New Application'],
   ])(
     'opens the %s create page with its route stack',
     (sectionKey, createPath, listLabel, listPath, newLabel) => {
@@ -135,18 +136,22 @@ describe('useSectionAddActions', () => {
     },
   );
 
-  it('offers neither Import nor Build with AI on Toolkits, MCPs and Credentials', () => {
-    ['toolkits', 'mcps', 'credentials'].forEach(sectionKey => {
+  it('offers neither Import nor Build with AI on Toolkits, MCPs, Credentials and Applications', () => {
+    ['toolkits', 'mcps', 'credentials', 'applications'].forEach(sectionKey => {
       const result = renderActions(sectionKey);
       expect(result.current.canImport).toBe(false);
       expect(result.current.canBuildWithAi).toBe(false);
     });
   });
 
-  it('creates toolkits and MCPs only with the toolkit create permission', () => {
+  it('creates toolkits, MCPs and applications only with the toolkit create permission', () => {
     const permissions = [PERMISSIONS.applications.create];
     expect(renderActions('toolkits', { permissions }).current.canCreate).toBe(false);
     expect(renderActions('mcps', { permissions }).current.canCreate).toBe(false);
+    expect(renderActions('applications', { permissions }).current.canCreate).toBe(false);
+    expect(
+      renderActions('applications', { permissions: [PERMISSIONS.toolkits.create] }).current.canCreate,
+    ).toBe(true);
     expect(renderActions('mcps', { permissions: [PERMISSIONS.toolkits.create] }).current.canCreate).toBe(
       true,
     );

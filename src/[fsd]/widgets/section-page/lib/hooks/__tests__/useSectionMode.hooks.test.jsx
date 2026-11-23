@@ -21,13 +21,14 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
 let changeTab;
 
 const Probe = ({ sectionKey, hasPublicViews }) => {
-  const { tab, isDiscover, onChangeTab } = useSectionMode(sectionKey, hasPublicViews);
+  const { tab, isDiscover, showModeTabs, onChangeTab } = useSectionMode(sectionKey, hasPublicViews);
   const location = useLocation();
   changeTab = onChangeTab;
   return (
     <>
       <span data-testid="tab">{tab}</span>
       <span data-testid="discover">{String(isDiscover)}</span>
+      <span data-testid="mode-tabs">{String(showModeTabs)}</span>
       <span data-testid="path">{location.pathname + location.search}</span>
       <span data-testid="state">{JSON.stringify(location.state)}</span>
     </>
@@ -134,6 +135,39 @@ describe('useSectionMode', () => {
     fixture.isPublic = true;
     renderAt('/credentials/latest', { sectionKey: 'credentials', hasPublicViews: false });
     expect(path()).toBe('/credentials/all');
+  });
+
+  it('maps the old Applications tab names to the new ones', () => {
+    renderAt('/apps/applications?view=table', { sectionKey: 'applications', hasPublicViews: false });
+    expect(path()).toBe('/apps/all?view=table');
+    cleanup();
+    renderAt('/apps/catalog', { sectionKey: 'applications', hasPublicViews: false });
+    expect(path()).toBe('/apps/discover');
+    expect(JSON.parse(screen.getByTestId('state').textContent).routeStack[0].breadCrumb).toBe('Applications');
+    cleanup();
+    renderAt('/apps/other', { sectionKey: 'applications', hasPublicViews: false });
+    expect(path()).toBe('/apps/all');
+    cleanup();
+    renderAt('/apps/constructor', { sectionKey: 'applications', hasPublicViews: false });
+    expect(path()).toBe('/apps/all');
+  });
+
+  it('keeps the Applications mode tabs and Discover in Public', () => {
+    fixture.isPublic = true;
+    renderAt('/apps/discover', { sectionKey: 'applications', hasPublicViews: false });
+    expect(path()).toBe('/apps/discover');
+    expect(screen.getByTestId('mode-tabs')).toHaveTextContent('true');
+    cleanup();
+    renderAt('/skills/all', { sectionKey: 'skills', hasPublicViews: false });
+    expect(screen.getByTestId('mode-tabs')).toHaveTextContent('false');
+  });
+
+  it('shows the mode tabs only where Discover exists', () => {
+    renderAt('/agents/all');
+    expect(screen.getByTestId('mode-tabs')).toHaveTextContent('true');
+    cleanup();
+    renderAt('/toolkits/all', { sectionKey: 'toolkits', hasPublicViews: false });
+    expect(screen.getByTestId('mode-tabs')).toHaveTextContent('false');
   });
 
   it('switches tabs keeping the search and the navigation state', () => {

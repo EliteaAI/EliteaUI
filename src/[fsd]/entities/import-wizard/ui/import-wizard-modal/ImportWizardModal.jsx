@@ -83,10 +83,14 @@ const ImportWizardModal = memo(props => {
     };
   }, [forkedData, importSucceedData, values?.importItems]);
 
+  // A project prefix makes ProjectSwitcher reload the page, so it is only added for another project
+  const targetProjectId = values.selectedProject?.id;
+  const isOtherProject = Boolean(targetProjectId) && Number(targetProjectId) !== Number(selectedProjectId);
+
   const doNavigate = useCardNavigate({
     viewMode: ViewMode.Owner,
     id: navigationItemData?.id,
-    projectId: values.selectedProject?.id,
+    projectId: isOtherProject ? targetProjectId : null,
     type: navigationType,
     name: navigationItemData?.name,
     replace: true,

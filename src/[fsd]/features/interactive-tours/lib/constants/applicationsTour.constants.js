@@ -20,11 +20,11 @@ export const applicationsTourSteps = [
     tabIndex: 0,
     target: APPLICATIONS_TOUR_TARGETS.applicationsTab,
     placement: 'bottom',
-    title: 'Applications Tab',
-    content: `The **Applications** tab lists all application instances configured in the current project. Use it to find, open, or manage existing applications.
+    title: 'Yours / Team',
+    content: `The **Yours** tab (**Team** in a team project) lists all application instances configured in the current project. Use it to find, open, or manage existing applications.
 
 - Supports **card view** and **table view**, search, and sort
-- Use the **Types** panel on the right to filter by application type
+- Use the filter icon in the search field to open the **Types** panel and filter by application type
 - **Pin** frequently used applications to keep them at the top of the list`,
   },
   {
@@ -32,8 +32,8 @@ export const applicationsTourSteps = [
     tabIndex: 1,
     target: APPLICATIONS_TOUR_TARGETS.catalogTab,
     placement: 'bottom',
-    title: 'App Catalog Tab',
-    content: `The **App Catalog** tab shows all application types available on the platform. This is where you browse what can be added to the current project before creating a configured application instance.`,
+    title: 'Discover',
+    content: `The **Discover** tab shows all application types available on the platform. This is where you browse what can be added to the current project before creating a configured application instance.`,
   },
   {
     id: 'catalog-actions',
