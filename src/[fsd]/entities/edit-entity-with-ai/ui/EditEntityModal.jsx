@@ -374,6 +374,7 @@ const EditEntityModal = memo(props => {
       open={open}
       title={title}
       onClose={handleClose}
+      disableBackdropClose
       content={renderContent()}
       actions={renderActions()}
       footer={renderWizardFooter()}

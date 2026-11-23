@@ -294,6 +294,7 @@ const AIEditProjectContextModal = memo(props => {
       open={open}
       title="Edit with AI"
       onClose={handleClose}
+      disableBackdropClose
       content={renderContent()}
       actions={renderActions()}
       footer={renderDiffFooter()}

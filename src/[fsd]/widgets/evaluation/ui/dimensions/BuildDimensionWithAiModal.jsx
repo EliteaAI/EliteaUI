@@ -173,6 +173,7 @@ const BuildDimensionWithAiModal = memo(props => {
       open={open}
       title="Build with AI"
       onClose={handleClose}
+      disableBackdropClose
       content={<Box ref={contentRef}>{renderContent()}</Box>}
       actions={
         <BuildDimensionWithAiActions

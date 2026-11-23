@@ -36,6 +36,7 @@ const BaseModal = memo(props => {
     cancelButtonTestId,
     footer,
     showCloseButton = true,
+    disableBackdropClose = false,
   } = props;
 
   const theme = useTheme();
@@ -52,6 +53,14 @@ const BaseModal = memo(props => {
       onKeyDown?.(event);
     },
     [onClose, onKeyDown],
+  );
+
+  const handleDialogClose = useCallback(
+    (event, reason) => {
+      if (disableBackdropClose && reason === 'backdropClick') return;
+      onClose?.(event, reason);
+    },
+    [disableBackdropClose, onClose],
   );
 
   const hasActions = !!(actions || onConfirm);
@@ -123,7 +132,7 @@ const BaseModal = memo(props => {
           sx: [styles.dialogPaper, sx],
         },
       }}
-      onClose={onClose}
+      onClose={handleDialogClose}
       onKeyDown={handleKeyDown}
     >
       <DialogTitle
