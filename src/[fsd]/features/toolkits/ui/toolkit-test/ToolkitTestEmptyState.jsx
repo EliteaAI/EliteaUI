@@ -2,6 +2,7 @@ import { memo, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import Tooltip from '@/ComponentsLib/Tooltip';
 import { ToolGroupConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { useToolkitToolOptions } from '@/[fsd]/features/toolkits/lib/hooks';
 import { Input } from '@/[fsd]/shared/ui';
@@ -88,15 +89,25 @@ const ToolkitTestEmptyState = memo(props => {
                 {tools.map(opt => {
                   const toolKey = typeof opt.value === 'string' ? opt.value : opt.value?.name;
                   return (
-                    <ChipWithCheckIcon
-                      testId={`toolkit-tool-chip-${toolKey}`}
-                      clickable
+                    <Tooltip
                       key={toolKey}
-                      label={opt.label}
-                      onClick={() => onChangeTool(opt.value)}
-                      warning={false}
-                      sx={styles.chip}
-                    />
+                      title={opt.label}
+                      placement="top"
+                    >
+                      <Box
+                        component="span"
+                        sx={styles.chipWrapper}
+                      >
+                        <ChipWithCheckIcon
+                          testId="toolkit-test-start-tool-chip"
+                          clickable
+                          label={opt.label}
+                          onClick={() => onChangeTool(opt.value)}
+                          warning={false}
+                          sx={styles.chip}
+                        />
+                      </Box>
+                    </Tooltip>
                   );
                 })}
               </Box>
@@ -140,12 +151,16 @@ const toolkitTestEmptyStateStyles = () => ({
   },
   chipsGrid: ({ breakpoints }) => ({
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
     gap: '0.5rem',
     [breakpoints.down('lg')]: {
       gridTemplateColumns: '1fr',
     },
   }),
+  chipWrapper: {
+    display: 'block',
+    minWidth: 0,
+  },
   chip: {
     paddingTop: '0.25rem',
     paddingBottom: '0.25rem',
