@@ -5,6 +5,7 @@ import { Box } from '@mui/material';
 import { ChatMessageList } from '@/[fsd]/features/chat';
 import { getMockToolkitIndexConversation } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
 import { useCopyChatMessage } from '@/[fsd]/shared/lib/hooks';
+import { UntrustedMarkdownBoundary } from '@/[fsd]/shared/ui/markdown';
 import { WELCOME_MESSAGE_ID } from '@/common/constants';
 
 const ToolkitTestResults = memo(props => {
@@ -29,18 +30,20 @@ const ToolkitTestResults = memo(props => {
   if (!messages.length) return null;
 
   return (
-    <Box sx={styles.root}>
-      <ChatMessageList
-        chat_history={messages}
-        activeConversation={conversation}
-        isLoading={false}
-        isStreaming={false}
-        isLoadingMore={false}
-        askingQuestionId=""
-        questionItemRef={questionItemRef}
-        onCopyToClipboard={onCopyToClipboard}
-      />
-    </Box>
+    <UntrustedMarkdownBoundary>
+      <Box sx={styles.root}>
+        <ChatMessageList
+          chat_history={messages}
+          activeConversation={conversation}
+          isLoading={false}
+          isStreaming={false}
+          isLoadingMore={false}
+          askingQuestionId=""
+          questionItemRef={questionItemRef}
+          onCopyToClipboard={onCopyToClipboard}
+        />
+      </Box>
+    </UntrustedMarkdownBoundary>
   );
 });
 

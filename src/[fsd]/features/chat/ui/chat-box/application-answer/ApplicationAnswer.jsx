@@ -6,7 +6,7 @@ import { ANSWERLESS_REPLY_TEXT } from '@/[fsd]/features/chat/lib/helpers/applica
 import { useApplicationAnswerState } from '@/[fsd]/features/chat/lib/hooks/useApplicationAnswerState.hooks';
 import { ChatContinue, GeneratedEntityChip } from '@/[fsd]/features/chat/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
-import Markdown from '@/[fsd]/shared/ui/markdown';
+import Markdown, { UntrustedMarkdownBoundary } from '@/[fsd]/shared/ui/markdown';
 import { ChatParticipantType, TOOL_ACTION_TYPES } from '@/common/constants.js';
 import ApplicationThinkView from '@/components/Chat/ApplicationThinkView';
 import EditingPlaceholder from '@/components/Chat/EditingPlaceholder';
@@ -135,6 +135,7 @@ const ApplicationAnswer = memo(
       subAgentTypeByName,
     });
 
+    const isToolkitParticipant = participant?.entity_name === ChatParticipantType.Toolkits;
     const isApplicationParticipant = participant?.entity_name === ChatParticipantType.Applications;
     const hasToolActionsOrException = nonSwarmChildActions.length || swarmChildActions.length || exception;
 
@@ -212,21 +213,23 @@ const ApplicationAnswer = memo(
                 )}
 
                 {canRenderContent && (
-                  <AnswerMessageItems
-                    answer={answer}
-                    message_items={message_items}
-                    nonAttachmentItems={nonAttachmentItems}
-                    interaction_uuid={interaction_uuid}
-                    conversation_uuid={conversation_uuid}
-                    onEdit={onEdit}
-                    selectedCodeBlockInfo={selectedCodeBlockInfo}
-                    isStreaming={isStreaming}
-                    isRegenerating={isRegenerating}
-                    activeSpokenRange={activeSpokenRange}
-                    messageItemOffsets={messageItemOffsets}
-                    toolActions={toolActions}
-                    realAnswer={realAnswer}
-                  />
+                  <UntrustedMarkdownBoundary enabled={isToolkitParticipant}>
+                    <AnswerMessageItems
+                      answer={answer}
+                      message_items={message_items}
+                      nonAttachmentItems={nonAttachmentItems}
+                      interaction_uuid={interaction_uuid}
+                      conversation_uuid={conversation_uuid}
+                      onEdit={onEdit}
+                      selectedCodeBlockInfo={selectedCodeBlockInfo}
+                      isStreaming={isStreaming}
+                      isRegenerating={isRegenerating}
+                      activeSpokenRange={activeSpokenRange}
+                      messageItemOffsets={messageItemOffsets}
+                      toolActions={toolActions}
+                      realAnswer={realAnswer}
+                    />
+                  </UntrustedMarkdownBoundary>
                 )}
 
                 {canRenderContent && hasAttachments && (

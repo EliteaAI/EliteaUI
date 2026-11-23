@@ -15,6 +15,7 @@ import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
+import { UntrustedMarkdownBoundary } from '@/[fsd]/shared/ui/markdown';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import RouteDefinitions from '@/routes';
@@ -89,17 +90,19 @@ const ToolkitRunHistory = memo(() => {
         title={<Breadcrumbs />}
       />
       <Box sx={styles.content}>
-        <RunHistoryContainer
-          entityId={entityId}
-          source={isMCP ? ParticipantEntityTypes.MCP : ParticipantEntityTypes.Toolkit}
-          versions={null}
-          ChatMessageListComponent={ChatMessageList}
-          prettifyConversation={ToolkitsHelpers.prettifyToolkitConversation}
-          additionalRows={indexRunRows}
-          additionalRowsLoading={isIndexRunsLoading}
-          decorateRow={isMCP ? null : decorateRow}
-          DetailComponent={IndexRunDetail}
-        />
+        <UntrustedMarkdownBoundary>
+          <RunHistoryContainer
+            entityId={entityId}
+            source={isMCP ? ParticipantEntityTypes.MCP : ParticipantEntityTypes.Toolkit}
+            versions={null}
+            ChatMessageListComponent={ChatMessageList}
+            prettifyConversation={ToolkitsHelpers.prettifyToolkitConversation}
+            additionalRows={indexRunRows}
+            additionalRowsLoading={isIndexRunsLoading}
+            decorateRow={isMCP ? null : decorateRow}
+            DetailComponent={IndexRunDetail}
+          />
+        </UntrustedMarkdownBoundary>
       </Box>
     </Box>
   );

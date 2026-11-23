@@ -7,12 +7,17 @@ import { Box, useTheme } from '@mui/material';
 
 import { MarkdownConstants } from '@/[fsd]/shared/lib/constants';
 import { useArtifactLinkResolver } from '@/[fsd]/shared/lib/context/ArtifactLinkContext';
+import {
+  MARKDOWN_IMAGE_MODE,
+  useMarkdownImageMode,
+} from '@/[fsd]/shared/lib/context/MarkdownImageModeContext';
 import { resolveArtifactHrefsInHtml } from '@/[fsd]/shared/lib/helpers/link.helpers';
 import { MarkdownMapping, escapeGfmDisallowedRawHtml, removeHTMLTags } from '@/[fsd]/shared/lib/utils';
 import MarkdownTableBlock from '@/components/MarkdownTableBlock';
 
 import CodeBlock from '../code-block';
 import DefaultMarkdown from './DefaultMarkdown';
+import ExternalMarkdownImage from './ExternalMarkdownImage';
 
 const Token = memo(props => {
   const {
@@ -33,11 +38,14 @@ const Token = memo(props => {
   const theme = useTheme();
   const styles = getStyles(theme);
   const resolveArtifact = useArtifactLinkResolver();
+  const imageMode = useMarkdownImageMode();
+  const isExternalImageMode = imageMode === MARKDOWN_IMAGE_MODE.EXTERNAL_LINK;
 
   const overrides = useCallback(
     rawData => ({
       ...getOverrides(),
       ...MarkdownMapping,
+      ...(isExternalImageMode ? { img: { component: ExternalMarkdownImage } } : {}),
       div: {
         component: Box,
         props: {
@@ -74,6 +82,7 @@ const Token = memo(props => {
       messageItemId,
       isStreaming,
       showToolbar,
+      isExternalImageMode,
     ],
   );
 
@@ -220,7 +229,11 @@ const Token = memo(props => {
     case 'html': {
       const rawHtml = markedToken.block ? escapeGfmDisallowedRawHtml(markedToken.raw) : markedToken.raw;
       const clean = resolveArtifactHrefsInHtml(
-        DOMPurify.sanitize(rawHtml, { FORBID_TAGS: MarkdownConstants.FORBIDDEN_HTML_TAGS }),
+        DOMPurify.sanitize(rawHtml, {
+          FORBID_TAGS: isExternalImageMode
+            ? [...MarkdownConstants.FORBIDDEN_HTML_TAGS, 'img']
+            : MarkdownConstants.FORBIDDEN_HTML_TAGS,
+        }),
         resolveArtifact,
       );
       return clean ? (
