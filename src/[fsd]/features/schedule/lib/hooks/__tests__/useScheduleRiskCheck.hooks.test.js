@@ -184,6 +184,36 @@ describe('useScheduleRiskCheck', () => {
     expect(result.current.result).toBeNull();
   });
 
+  it('runCheck returns the refusal text when the target is gone or hidden (404)', async () => {
+    const notFound = {
+      status: 404,
+      data: { code: 'not_found', error: 'The requested item could not be found' },
+    };
+    mocks.check.mockReturnValue({ unwrap: () => Promise.reject(notFound) });
+    const { result } = setup();
+    await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.FAILED));
+
+    let refusal;
+    await act(async () => {
+      refusal = await result.current.runCheck();
+    });
+
+    expect(refusal).toEqual({ refused: 'The requested item could not be found' });
+  });
+
+  it('runCheck returns null for a failure without a refusal text', async () => {
+    mocks.check.mockReturnValue(failure());
+    const { result } = setup();
+    await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.FAILED));
+
+    let refusal;
+    await act(async () => {
+      refusal = await result.current.runCheck();
+    });
+
+    expect(refusal).toBeNull();
+  });
+
   it('runCheck returns the fresh findings for the Save step', async () => {
     const { result } = setup();
     await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));

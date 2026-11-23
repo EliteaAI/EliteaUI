@@ -137,6 +137,7 @@ export const useScheduleSave = ({
     const runAfterSave = afterSave.current;
     // A fresh check on Save: a blocked or failed check shows in the form, sensitive tools open the review
     const risk = await riskCheck.runCheck();
+    if (risk?.refused) return setBanner(risk.refused);
     if (!risk) return toastError('The risk check did not run. Try again.');
     // Under "Pause and ask me" a missing credential or sign-in does not stop the save: the run waits
     if (splitRiskFindings(risk, values.approval_rule, isWebhookRow(values)).blocking.length) return;
@@ -168,6 +169,7 @@ export const useScheduleSave = ({
   // The "Needs re-confirm" badge: the review opens even when the stored consent would let a save through
   const reconfirm = async () => {
     const risk = await riskCheck.runCheck();
+    if (risk?.refused) return setBanner(risk.refused);
     if (!risk) return toastError('The risk check did not run. Try again.');
     if (splitRiskFindings(risk, formik.values.approval_rule, isWebhookRow(formik.values)).blocking.length)
       return;

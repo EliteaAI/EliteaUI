@@ -18,7 +18,8 @@ const statusOf = (result, approvalRule, isWebhook) =>
 /**
  * The dry-run risk check of the schedule form. It runs when the entity type, the
  * entity or the version changes and when the person returns to the tab. `runCheck()` runs it now
- * and resolves to the findings, or null when the check did not run. `approvalRule` is the rule of the form:
+ * and resolves to the findings, `{ refused }` with the server text when the target is gone or hidden (404),
+ * or null when the check did not run. `approvalRule` is the rule of the form:
  * under "Pause and ask me" a missing credential or a personal sign-in is `waiting`, not `blocking`. `applyFindings(data)` takes the
  * findings of a 409 save answer. On an edit, `scheduleId` makes the server scan as the schedule owner
  * and answer `confirmed`. `isWebhook`: the server scans for a webhook, which never waits for a sign-in.
@@ -64,7 +65,7 @@ export const useScheduleRiskCheck = ({
       }).unwrap();
       if (call === latestCall.current) setState({ phase: ANSWERED, result, key });
       return result;
-    } catch {
+    } catch (error) {
       // A failed check shows as failed; the findings of the same pair stay for an open review dialog
       if (call === latestCall.current) {
         setState(prev => ({
@@ -73,7 +74,7 @@ export const useScheduleRiskCheck = ({
           key: prev.key,
         }));
       }
-      return null;
+      return error?.status === 404 && error.data?.error ? { refused: error.data.error } : null;
     }
   }, [
     checkRisk,
