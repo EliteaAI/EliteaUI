@@ -107,7 +107,7 @@ const CreateBucket = ChunkHelpers.lazyWithRetry(() => import('@/pages/Artifacts/
 const CreateCredentialFromMain = ChunkHelpers.lazyWithRetry(
   () => import('@/pages/Credentials/CreateCredential'),
 );
-const Credentials = ChunkHelpers.lazyWithRetry(() => import('@/pages/Credentials/Credentials'));
+const CredentialsPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/credentials/CredentialsPage'));
 const EditCredentialFromMain = ChunkHelpers.lazyWithRetry(() => import('@/pages/Credentials/EditCredential'));
 const ChatWrapper = ChunkHelpers.lazyWithRetry(() => import('@/pages/NewChat/index'));
 const NotificationCenter = ChunkHelpers.lazyWithRetry(
@@ -120,7 +120,7 @@ const PipelinesPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/pip
 const ProjectSwitcher = ChunkHelpers.lazyWithRetry(() => import('@/pages/ProjectSwitcher.jsx'));
 const CreateToolkit = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/CreateToolkit'));
 const EditToolkit = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/EditToolkit'));
-const Toolkits = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/Toolkits'));
+const ToolkitsPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/toolkit/ToolkitsPage'));
 const AgentRunHistory = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/agent/AgentRunHistory'));
 const AgentRunAnalytics = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/agent/AgentRunAnalytics'));
 const PipelineRunAnalytics = ChunkHelpers.lazyWithRetry(
@@ -407,7 +407,7 @@ const ProtectedRoutes = memo(() => {
 
       /* credentials */
       { path: RouteDefinitions.Credentials, element: getIndexElement(CredentialsTabs[0]) },
-      { path: RouteDefinitions.CredentialsWithTab, element: <Credentials /> },
+      { path: RouteDefinitions.CredentialsWithTab, element: <CredentialsPage /> },
       { path: RouteDefinitions.CreateCredentialFromMain, element: <CreateCredentialFromMain /> },
       { path: RouteDefinitions.CreateCredentialTypeFromMain, element: <CreateCredentialFromMain /> },
       { path: RouteDefinitions.EditCredentialFromMain, element: <EditCredentialFromMain /> },
@@ -416,7 +416,7 @@ const ProtectedRoutes = memo(() => {
       { path: RouteDefinitions.Toolkits, element: getIndexElement(ToolkitsTabs[0]) },
       { path: RouteDefinitions.CreateToolkit, element: <CreateToolkit /> },
       { path: RouteDefinitions.CreateToolkitType, element: <CreateToolkit /> },
-      { path: RouteDefinitions.ToolkitsWithTab, element: <Toolkits /> },
+      { path: RouteDefinitions.ToolkitsWithTab, element: <ToolkitsPage /> },
       { path: RouteDefinitions.ToolkitDetail, element: <EditToolkit /> },
       { path: RouteDefinitions.ToolkitRunHistory, element: <ToolkitRunHistory /> },
       { path: RouteDefinitions.ToolkitTest, element: <ToolkitTest /> },
@@ -439,7 +439,7 @@ const ProtectedRoutes = memo(() => {
       { path: RouteDefinitions.MCPs, element: getIndexElement(ToolkitsTabs[0]) },
       { path: RouteDefinitions.CreateMCP, element: <CreateToolkit isMCP={true} /> },
       { path: RouteDefinitions.CreateMCPType, element: <CreateToolkit isMCP={true} /> },
-      { path: RouteDefinitions.MCPsWithTab, element: <Toolkits isMCP={true} /> },
+      { path: RouteDefinitions.MCPsWithTab, element: <ToolkitsPage isMCP /> },
       { path: RouteDefinitions.MCPDetail, element: <EditToolkit isMCP={true} /> },
       { path: RouteDefinitions.MCPRunHistory, element: <ToolkitRunHistory /> },
       { path: RouteDefinitions.MCPTest, element: <ToolkitTest /> },

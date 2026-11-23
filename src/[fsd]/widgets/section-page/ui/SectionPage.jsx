@@ -131,11 +131,13 @@ const sectionPageStyles = () => ({
   title: ({ palette }) => ({
     color: palette.text.secondary,
   }),
-  // The cards and the table have their own 1.5rem inset on the left, as under the old tab bar
+  // The cards and the table have their own 1.5rem inset on the left, as under the old tab bar.
+  // The card list is 1rem wider than this box (DataCards' margin compensation), so no sideways scroll
   listContent: {
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
+    overflowX: 'hidden',
     marginLeft: '-1.5rem',
   },
   // The Catalog keeps its own full-width layout and scroll
