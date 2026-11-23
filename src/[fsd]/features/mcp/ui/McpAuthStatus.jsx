@@ -22,7 +22,7 @@ import OnlineIcon from '@/assets/online-icon.svg?react';
 import RouteDefinitions from '@/routes';
 
 const McpAuthStatus = memo((props = {}) => {
-  const { authConfig } = props;
+  const { authConfig, browserOnlyNote } = props;
   const { values } = useFormikContext();
   const { id, type: toolkitType, settings: { url, client_id, client_secret, scopes } = {} } = values ?? {};
   const { values: formValues } = useFormikContext();
@@ -175,6 +175,17 @@ const McpAuthStatus = memo((props = {}) => {
           >
             {hasLoggedInToMcp ? 'Connected!' : 'Not Connected'}
           </Typography>
+          {browserOnlyNote && (
+            <Tooltip title={browserOnlyNote}>
+              <Typography
+                variant="bodySmall"
+                sx={styles.browserOnlyNote}
+                data-testid="toolkit-browser-only-note"
+              >
+                · Browser only: chats only, not usable by schedules or webhooks
+              </Typography>
+            </Tooltip>
+          )}
         </Box>
         <Tooltip title={patInvalid ? PAT_REQUIRED_ACTION_HINT : ''}>
           <Box component="span">
@@ -230,6 +241,9 @@ const getStyles = hasLoggedInToMcp => ({
   }),
   loginStatusText: ({ palette }) => ({
     color: hasLoggedInToMcp ? palette.components.mcp.text.loginSuccess : palette.components.mcp.text.logout,
+  }),
+  browserOnlyNote: ({ palette }) => ({
+    color: palette.text.secondary,
   }),
   loginStatusContainer: ({ palette }) => ({
     marginTop: '1rem',

@@ -26,7 +26,13 @@ const ERROR_MESSAGE_TYPES = [
 const getConnectionSignature = (projectId, toolkitId, settings) =>
   JSON.stringify([projectId, toolkitId, settings?.url, settings?.headers || {}]);
 
-export const useMcpAuthCheck = ({ toolkitId, values, onMcpAuthRequired, onSuccess }) => {
+export const useMcpAuthCheck = ({
+  toolkitId,
+  values,
+  onMcpAuthRequired,
+  onSuccess,
+  withoutBrowserTokens = false,
+}) => {
   const { toastError } = useToast();
   const projectId = useSelectedProjectId();
   const currentConnectionSignature = getConnectionSignature(
@@ -174,7 +180,9 @@ export const useMcpAuthCheck = ({ toolkitId, values, onMcpAuthRequired, onSucces
           message_id: messageId,
           project_id: projectId,
           toolkit_config: toolkitConfig,
-          mcp_tokens: McpAuthHelpers.getAllTokens(),
+          // A saved-login check must not pass because of this tab's own token
+          mcp_tokens: withoutBrowserTokens ? {} : McpAuthHelpers.getAllTokens(),
+          skip_stored_logins: withoutBrowserTokens || undefined,
         });
       } catch (error) {
         cleanupSession();
@@ -184,7 +192,16 @@ export const useMcpAuthCheck = ({ toolkitId, values, onMcpAuthRequired, onSucces
         }
       }
     },
-    [toolkitId, projectId, values, currentConnectionSignature, subscribeSocket, socketEmit, cleanupSession],
+    [
+      toolkitId,
+      projectId,
+      values,
+      currentConnectionSignature,
+      subscribeSocket,
+      socketEmit,
+      cleanupSession,
+      withoutBrowserTokens,
+    ],
   );
 
   const currentCheckIsActive = checkedSignatureRef.current === currentConnectionSignature;

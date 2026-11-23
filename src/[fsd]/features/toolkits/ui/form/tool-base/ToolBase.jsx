@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Typography, useTheme } from '@mui/material';
 
 import { StoredLoginHelpers, StoredLoginStatus } from '@/[fsd]/features/credentials';
-import { McpAuthStatus } from '@/[fsd]/features/mcp';
+import { McpAuthStatus, McpSavedLoginStatus } from '@/[fsd]/features/mcp';
 import { OpenApiOAuthStatus } from '@/[fsd]/features/openapi/ui';
 import { SharepointOAuthStatus } from '@/[fsd]/features/sharepoint';
 import { ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
@@ -647,13 +647,18 @@ const ToolBase = memo(props => {
   const isAnyMcpType =
     schema?.title === 'mcp' || (editToolDetail?.type?.startsWith('mcp_') && editToolDetail?.type !== 'mcp');
 
+  const hasMcpLoginLinked = Boolean(settings?.mcp_login_configuration?.elitea_title);
   const isSharepointToolkit = schema?.title === 'sharepoint';
   const isOpenApiToolkit = editToolDetail?.type === 'openapi';
   const storedLogin = StoredLoginHelpers.getStoredLoginConfig(editToolDetail?.type);
 
   return (
     <>
-      {isAnyMcpType && <McpAuthStatus />}
+      {/* One bar: a linked saved login also serves chats server-side, so the per-tab login is not shown */}
+      {isAnyMcpType && !hasMcpLoginLinked && (
+        <McpAuthStatus browserOnlyNote="The login stays in this browser tab. Pick a Team or Private MCP login for schedules and webhooks." />
+      )}
+      {isAnyMcpType && hasMcpLoginLinked && <McpSavedLoginStatus onLoginChange={onCredentialReload} />}
       {isSharepointToolkit && (
         <SharepointOAuthStatus
           loginExpired={StoredLoginHelpers.isLoginExpired(toolErrors.sharepoint_configuration)}

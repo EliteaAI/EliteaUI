@@ -33,6 +33,12 @@ const credentialMenuItemValue = Object.freeze({
   keyConfigurationProjectId: 'configuration_project_id',
   kindSaved: 'saved',
   kindCreateAction: 'create_action',
+  kindNone: 'none',
+});
+
+// Opt-in first option meaning "no credential" (e.g. MCP "Browser only"); selected when the value is empty
+const NONE_SELECT_VALUE = JSON.stringify({
+  [credentialMenuItemValue.keyKind]: credentialMenuItemValue.kindNone,
 });
 
 const isBlankEliteaTitle = title => title == null || String(title).trim() === '';
@@ -151,6 +157,7 @@ const CredentialsSelect = memo(props => {
     fallbackToFirstCredential = true,
     onSelectionListedChange,
     getOptionTypeTag,
+    noneOption,
   } = props;
 
   const trackEvent = useTrackEvent();
@@ -389,7 +396,7 @@ const CredentialsSelect = memo(props => {
         );
         return sharedMatch ?? null;
       }
-      return fallbackToFirstCredential ? (savedCredentialsMenuData[0] ?? null) : null;
+      return fallbackToFirstCredential && !noneOption ? (savedCredentialsMenuData[0] ?? null) : null;
     }
 
     return null;
@@ -401,6 +408,7 @@ const CredentialsSelect = memo(props => {
     projectDefaultVectorStorageModel,
     fallbackToFirstCredential,
     personal_project_id,
+    noneOption,
   ]);
 
   useEffect(() => {
@@ -501,28 +509,41 @@ const CredentialsSelect = memo(props => {
       </Tooltip>
     );
 
-    return Object.entries(menuData)
-      .filter(([title, list]) => (title === 'Create' ? list.length > 0 : true))
-      .map(([title, list]) => ({
-        key: title,
-        title,
-        headerEnd: title.includes('Saved') ? refreshButton : undefined,
-        options:
-          title === 'Create'
-            ? list.map(opt => ({
-                value: createActionToSelectValue(opt.private),
-                label: opt.label,
-                variant: 'action',
-                meta: opt,
-                onActivate: () => createSelectHandler(title, opt),
-              }))
-            : list.map(opt => ({
-                value: savedRowToSelectValue(opt),
-                label: opt.label,
-                meta: opt,
-              })),
-      }));
-  }, [menuData, createSelectHandler, onRefresh, styles.refreshIcon]);
+    const noneGroup = noneOption
+      ? [
+          {
+            key: 'none',
+            title: noneOption.groupTitle || 'Login storage',
+            options: [
+              { value: NONE_SELECT_VALUE, label: noneOption.label, meta: { label: noneOption.label } },
+            ],
+          },
+        ]
+      : [];
+    return noneGroup.concat(
+      Object.entries(menuData)
+        .filter(([title, list]) => (title === 'Create' ? list.length > 0 : true))
+        .map(([title, list]) => ({
+          key: title,
+          title,
+          headerEnd: title.includes('Saved') ? refreshButton : undefined,
+          options:
+            title === 'Create'
+              ? list.map(opt => ({
+                  value: createActionToSelectValue(opt.private),
+                  label: opt.label,
+                  variant: 'action',
+                  meta: opt,
+                  onActivate: () => createSelectHandler(title, opt),
+                }))
+              : list.map(opt => ({
+                  value: savedRowToSelectValue(opt),
+                  label: opt.label,
+                  meta: opt,
+                })),
+        })),
+    );
+  }, [menuData, createSelectHandler, onRefresh, styles.refreshIcon, noneOption]);
 
   const isOptionsReady = useMemo(() => {
     if (!hasFetchedData) return false;
@@ -530,6 +551,7 @@ const CredentialsSelect = memo(props => {
   }, [hasFetchedData, createMenuData.length, savedCredentialsMenuData.length]);
 
   const selectStringValue = useMemo(() => {
+    if (noneOption && (!value || isBlankEliteaTitle(value?.elitea_title))) return NONE_SELECT_VALUE;
     if (!isOptionsReady) return '';
     if (selectedOption) {
       const isCreateSelected = createMenuData.some(
@@ -546,10 +568,14 @@ const CredentialsSelect = memo(props => {
       uuid: value.configuration_uuid,
       project_id: value.configuration_project_id,
     });
-  }, [isOptionsReady, selectedOption, createMenuData, value]);
+  }, [isOptionsReady, selectedOption, createMenuData, value, noneOption]);
 
   const handleSelectValueChange = useCallback(
     newValue => {
+      if (noneOption && newValue === NONE_SELECT_VALUE) {
+        commitConfiguration(null);
+        return;
+      }
       const savedRow = selectValueToSavedRow(newValue);
       if (savedRow) {
         const matchingSaved = findSavedOption(savedCredentialsMenuData, savedRow, personal_project_id);
@@ -580,6 +606,8 @@ const CredentialsSelect = memo(props => {
       createMenuData,
       createSelectHandler,
       personal_project_id,
+      noneOption,
+      commitConfiguration,
     ],
   );
 
@@ -591,6 +619,16 @@ const CredentialsSelect = memo(props => {
 
   const customRenderSelectValue = useCallback(
     foundOption => {
+      if (noneOption && (!value || isBlankEliteaTitle(value?.elitea_title))) {
+        return (
+          <Typography
+            variant="labelMedium"
+            sx={styles.selectedValueTypography({ label: noneOption.label })}
+          >
+            {noneOption.label}
+          </Typography>
+        );
+      }
       if (!foundOption) {
         if (!value?.elitea_title) return null;
         return (
@@ -613,7 +651,7 @@ const CredentialsSelect = memo(props => {
         </Typography>
       );
     },
-    [renderValue, value, hasFetchedData, styles],
+    [renderValue, value, hasFetchedData, styles, noneOption],
   );
 
   const isLockedToOnlyConfiguration =

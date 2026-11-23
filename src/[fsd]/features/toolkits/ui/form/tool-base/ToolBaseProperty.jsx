@@ -24,6 +24,9 @@ import ImageGenerationModelSelect from '@/components/ImageGenerationModelSelect'
 import LlmModelSelect from '@/components/LlmModelSelect';
 import ToolkitSelect from '@/components/ToolkitSelect';
 
+// #7643: no saved login - the MCP login stays in this browser tab (chats only, no schedules/webhooks)
+const MCP_BROWSER_ONLY_OPTION = { label: 'Browser only (this tab, chats only)', groupTitle: 'Login storage' };
+
 const ToolBaseProperty = memo(props => {
   const {
     k,
@@ -550,6 +553,7 @@ const ToolBaseProperty = memo(props => {
           disabled={disabled}
           presetOptions={presetOptions}
           propKey={k}
+          noneOption={v.configuration_types?.[0] === 'mcp_login' ? MCP_BROWSER_ONLY_OPTION : undefined}
         />
       );
     } else if (type === 'llm_model') {

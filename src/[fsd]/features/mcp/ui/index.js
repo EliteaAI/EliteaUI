@@ -5,3 +5,4 @@ export * from './modal';
 export { default as McpLogoutButton } from './McpLogoutButton';
 export { default as McpLogInLink } from './McpLogInLink';
 export { default as McpLogInButton } from './McpLogInButton';
+export { default as McpSavedLoginStatus } from './McpSavedLoginStatus';

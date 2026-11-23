@@ -74,6 +74,8 @@ const McpAuthModal = memo(props => {
     toolkitId,
     toolkitType, // Pre-built MCP type (e.g., 'mcp_github') - used as storage key
     title, // Optional modal title override (e.g. 'Configuration OAuth')
+    saveLogin, // #7643: { configurationUuid } - sign in once for unattended runs; the login stays server-side
+    onSaved,
     open,
     onClose,
     onCancel,
@@ -291,12 +293,16 @@ const McpAuthModal = memo(props => {
         credentialType: effectiveCredentialType,
         // Pass toolkitType for pre-built MCPs so tokens are stored under toolkitType key
         toolkitType: isPrebuildMcp ? toolkitType : undefined,
+        saveLogin,
       });
+      if (saveLogin) onSaved?.();
 
       // Save credentials if checkbox is checked and user provided them
       const finalClientId = client_id?.trim() || clientId;
       const finalClientSecret = client_secret?.trim() || clientSecret;
-      if (saveCredentials && !effectiveOAuthAppId && (finalClientId || finalClientSecret)) {
+      if (saveLogin) {
+        // The saved login keeps its client on the credential; per-tab remembered clients are left as they are
+      } else if (saveCredentials && !effectiveOAuthAppId && (finalClientId || finalClientSecret)) {
         McpAuthHelpers.setSavedCredentials({
           serverUrl: storageKey,
           clientId: finalClientId,
@@ -337,6 +343,8 @@ const McpAuthModal = memo(props => {
     clientId,
     clientSecret,
     scope,
+    saveLogin,
+    onSaved,
     onClose,
     projectId,
     toolkitId,
@@ -448,7 +456,8 @@ const McpAuthModal = memo(props => {
             autoFocus={true}
             saveCredentials={saveCredentials}
             onSaveCredentialsChange={onSaveCredentialsChange}
-            showSaveCredentials={showsCredentialFields}
+            // A saved login keeps its client on the credential, so a per-tab "remember" makes no sense there
+            showSaveCredentials={showsCredentialFields && !saveLogin}
             scopeLocked={isScopeLocked}
           />
         ) : (

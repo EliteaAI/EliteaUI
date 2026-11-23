@@ -383,6 +383,39 @@ describe('CredentialsSelect', () => {
     );
   });
 
+  describe('#7643 with a "none" option (MCP Browser only)', () => {
+    const NONE = { label: 'Browser only (this tab, chats only)', groupTitle: 'Login storage' };
+    const renderWithNone = value => {
+      stubCredentialsData({ configurations: CREDENTIAL_CONFIGURATIONS, projectDefault: '' });
+      return render(
+        <CredentialsSelect
+          section="credentials"
+          value={value}
+          onSelectConfiguration={onSelectConfiguration}
+          noneOption={NONE}
+        />,
+      );
+    };
+
+    it('shows the none option for an empty value and never auto-picks a credential', async () => {
+      renderWithNone(null);
+
+      expect(singleSelectProps.optionGroups[0].options[0].label).toBe(NONE.label);
+      expect(singleSelectProps.value).toBe(singleSelectProps.optionGroups[0].options[0].value);
+      expect(within(renderedValue()).getByText(NONE.label)).toBeInTheDocument();
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(onSelectConfiguration).not.toHaveBeenCalled();
+    });
+
+    it('picking the none option clears the saved credential', () => {
+      renderWithNone({ elitea_title: GITHUB_TITLE, private: false });
+
+      expect(singleSelectProps.value).toBe(optionValueFor(GITHUB_TITLE));
+      singleSelectProps.onValueChange(singleSelectProps.optionGroups[0].options[0].value);
+      expect(onSelectConfiguration).toHaveBeenCalledWith(null);
+    });
+  });
+
   describe('with the first-credential fallback switched off', () => {
     const renderWithoutFallback = value => {
       stubCredentialsData({ configurations: CREDENTIAL_CONFIGURATIONS, projectDefault: '' });
