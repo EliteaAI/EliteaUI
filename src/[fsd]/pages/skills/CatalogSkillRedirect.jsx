@@ -11,7 +11,7 @@ const CatalogSkillRedirect = memo(() => {
   return (
     <Navigate
       replace
-      to={`${RouteDefinitions.EliteaCatalog}?tab=skills&${SkillHubConstants.SKILL_ID}=${skillId}`}
+      to={`${RouteDefinitions.SkillsDiscover}?${SkillHubConstants.SKILL_ID}=${skillId}`}
     />
   );
 });

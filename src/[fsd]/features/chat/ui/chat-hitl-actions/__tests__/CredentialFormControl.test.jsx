@@ -42,6 +42,7 @@ vi.mock('@/[fsd]/features/project-governance', async () => ({
   ],
 }));
 vi.mock('@/api/configurations', () => ({
+  TAG_CONFIGURATIONS: 'TAG_CONFIGURATIONS',
   useGetAvailableConfigurationsTypeQuery: () => ({
     data: api.types,
     isFetching: api.typesLoading,

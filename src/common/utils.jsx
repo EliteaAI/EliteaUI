@@ -1020,11 +1020,13 @@ export const buildForkedEntityHref = (entity, meta) => {
 
   // Entities forked from the shared public project (the ELITEA Catalog) can't be
   // opened via the normal project route — that project isn't browsable. Deep-link
-  // to the Catalog with the entity's modal instead.
-  const catalogTab = { skills: 'skills', agents: 'agents' }[entity];
+  // to Discover with the entity's modal instead.
+  const discoverRoute = { skills: RouteDefinitions.SkillsDiscover, agents: RouteDefinitions.AgentsDiscover }[
+    entity
+  ];
   const catalogParam = { skills: 'skillId', agents: 'agentId' }[entity];
-  if (Number(meta.parent_project_id) === PUBLIC_PROJECT_ID && catalogTab) {
-    return `${baseUrl}${basename}${RouteDefinitions.EliteaCatalog}?tab=${catalogTab}&${catalogParam}=${meta.parent_entity_id}`;
+  if (Number(meta.parent_project_id) === PUBLIC_PROJECT_ID && discoverRoute) {
+    return `${baseUrl}${basename}${discoverRoute}?${catalogParam}=${meta.parent_entity_id}`;
   }
 
   const projectEntityPath = `/${meta.parent_project_id}/${entity}/all/${meta.parent_entity_id}${meta.parent_version_id ? `/${meta.parent_version_id}` : ''}`;

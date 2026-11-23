@@ -47,6 +47,7 @@ vi.mock('@/api/platformSettings', () => ({
   useGetPlatformSettingsQuery: () => ({ data: api.settings }),
 }));
 vi.mock('@/api/configurations', () => ({
+  TAG_CONFIGURATIONS: 'TAG_CONFIGURATIONS',
   useGetAvailableConfigurationsTypeQuery: () => ({ data: api.types, isFetching: false }),
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', async importOriginal => ({

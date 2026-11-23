@@ -7,8 +7,6 @@ import Typography from '@mui/material/Typography';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { AppLink } from '@/[fsd]/shared/ui';
-import { useDisablePersonalSpace } from '@/[fsd]/widgets/sidebar-root/lib/hooks';
-import { TooltipForDisablePersonalSpace } from '@/[fsd]/widgets/sidebar-root/ui';
 
 const SidebarMenuItem = memo(props => {
   const {
@@ -18,7 +16,6 @@ const SidebarMenuItem = memo(props => {
     to,
     selected,
     display,
-    isPersonalSpace,
     disabled,
     tooltip,
     showLabel = true,
@@ -26,33 +23,12 @@ const SidebarMenuItem = memo(props => {
     buttonProps,
   } = props;
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
-  const { shouldDisablePersonalSpace } = useDisablePersonalSpace();
-  const styles = sidebarMenuItemStyles(selected, showLabel, isPersonalSpace);
+  const styles = sidebarMenuItemStyles(selected, showLabel);
 
   // A real link (href) lets the browser offer "Open link in new tab"; a disabled item stays a plain button
-  const getLinkProps = isDisabled => (to && !isDisabled ? { component: AppLink, to } : {});
+  const linkProps = to && !disabled ? { component: AppLink, to } : {};
 
-  return isPersonalSpace ? (
-    <TooltipForDisablePersonalSpace>
-      <ListItem
-        data-tour={tourId}
-        sx={{ ...styles.menuItem, display }}
-      >
-        <ListItemButton
-          {...getLinkProps(shouldDisablePersonalSpace || disabled)}
-          aria-label={showLabel ? undefined : menuTitle}
-          {...buttonProps}
-          disabled={shouldDisablePersonalSpace || disabled}
-          selected={selected}
-          onClick={onClick}
-          sx={styles.button}
-        >
-          <ListItemIcon sx={styles.icon}>{menuIcon}</ListItemIcon>
-          {showLabel && <Typography variant="labelSmall">{menuTitle}</Typography>}
-        </ListItemButton>
-      </ListItem>
-    </TooltipForDisablePersonalSpace>
-  ) : (
+  return (
     <Tooltip
       title={sideBarCollapsed ? tooltip : ''}
       placement="right"
@@ -64,7 +40,7 @@ const SidebarMenuItem = memo(props => {
         sx={{ ...styles.menuItem, display }}
       >
         <ListItemButton
-          {...getLinkProps(disabled)}
+          {...linkProps}
           aria-label={showLabel ? undefined : menuTitle}
           {...buttonProps}
           disabled={disabled}
@@ -83,7 +59,7 @@ const SidebarMenuItem = memo(props => {
 SidebarMenuItem.displayName = 'SidebarMenuItem';
 
 /** @type {MuiSx} */
-const sidebarMenuItemStyles = (selected, showLabel, isPersonalSpace) => ({
+const sidebarMenuItemStyles = (selected, showLabel) => ({
   menuItem: {
     padding: '0 !important',
     justifyContent: showLabel ? undefined : 'center',
@@ -101,7 +77,7 @@ const sidebarMenuItemStyles = (selected, showLabel, isPersonalSpace) => ({
     borderRadius: '0.5rem',
     height: '2rem',
     boxSizing: 'border-box',
-    maxWidth: showLabel ? undefined : isPersonalSpace ? '1.5rem !important' : '2rem !important',
+    maxWidth: showLabel ? undefined : '2rem !important',
     '&:hover': {
       background: palette.components.sidebar.menuItem.hover,
     },

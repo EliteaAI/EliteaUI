@@ -5,11 +5,7 @@ import { useCreateCanvasMutation } from '@/api';
 import { isNullOrUndefined } from '@/common/utils';
 import { useCanvasEditSocket } from '@/hooks/chat/useCanvasSocket';
 
-export default function useEditCanvas({
-  setCollapsedParticipants,
-  setCollapsedConversations,
-  setChatHistory,
-}) {
+export default function useEditCanvas({ setCollapsedParticipants, setChatHistory }) {
   const [selectedCodeBlockInfo, setSelectedCodeBlockInfo] = useState();
   const canvasEditorRef = useRef();
   const pendingInitialCanvasContentRef = useRef(null);
@@ -98,9 +94,8 @@ export default function useEditCanvas({
       }
       setSizes([50, 50]);
       setCollapsedParticipants(true);
-      setCollapsedConversations(true);
     },
-    [createCanvas, projectId, setCollapsedConversations, setCollapsedParticipants],
+    [createCanvas, projectId, setCollapsedParticipants],
   );
 
   useEffect(() => {
@@ -174,7 +169,6 @@ export default function useEditCanvas({
       setSelectedCodeBlockInfo();
       setSizes([100, 0]);
       setCollapsedParticipants(false);
-      setCollapsedConversations(false);
     },
     [
       selectedCodeBlockInfo?.canvasId,
@@ -182,7 +176,6 @@ export default function useEditCanvas({
       selectedCodeBlockInfo?.language,
       selectedCodeBlockInfo?.selectedMessage?.id,
       setChatHistory,
-      setCollapsedConversations,
       setCollapsedParticipants,
     ],
   );
