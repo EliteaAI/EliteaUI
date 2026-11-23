@@ -6,6 +6,7 @@ import { Box, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { AppLink } from '@/[fsd]/shared/ui';
 import HelpCenterIcon from '@/assets/help-center.svg?react';
 import RouteDefinitions from '@/routes';
 
@@ -17,6 +18,8 @@ const ResourcesButton = memo(props => {
 
   const handleResourcesClick = useCallback(
     e => {
+      // The link is only a carrier for the href; a plain click keeps the existing navigation with its state
+      e.preventDefault();
       e.stopPropagation();
       if (isOnResources) return;
       navigate(RouteDefinitions.HelpCenter, {
@@ -25,6 +28,14 @@ const ResourcesButton = memo(props => {
     },
     [isOnResources, navigate, location.pathname],
   );
+
+  // A real link (href) lets the browser offer "Open link in new tab"
+  const linkProps = {
+    component: AppLink,
+    to: RouteDefinitions.HelpCenter,
+    'data-tour': SIDEBAR_TOUR_TARGET_IDS.resources,
+    onClick: handleResourcesClick,
+  };
 
   const styles = resourcesButtonStyles(fullWidth, !!isOnResources);
 
@@ -37,8 +48,7 @@ const ResourcesButton = memo(props => {
         enterNextDelay={500}
       >
         <Box
-          data-tour={SIDEBAR_TOUR_TARGET_IDS.resources}
-          onClick={handleResourcesClick}
+          {...linkProps}
           sx={styles.fullWidthContainer}
         >
           <HelpCenterIcon sx={styles.icon} />
@@ -56,8 +66,7 @@ const ResourcesButton = memo(props => {
       enterNextDelay={500}
     >
       <Box
-        data-tour={SIDEBAR_TOUR_TARGET_IDS.resources}
-        onClick={handleResourcesClick}
+        {...linkProps}
         sx={styles.container}
       >
         <Box sx={styles.iconButton}>

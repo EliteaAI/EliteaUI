@@ -7,6 +7,7 @@ import { Box, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { AppLink } from '@/[fsd]/shared/ui';
 import agentHubIconRaw from '@/assets/agent-hub-icon.svg?raw';
 import RouteDefinitions from '@/routes';
 
@@ -18,12 +19,17 @@ const AgentHubButton = memo(() => {
   const location = useLocation();
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
 
-  const handleAgentHubClick = useCallback(() => {
-    if (isOnAgentHub) return;
-    navigate(RouteDefinitions.EliteaCatalog, {
-      state: { from: location.pathname },
-    });
-  }, [isOnAgentHub, navigate, location.pathname]);
+  const handleAgentHubClick = useCallback(
+    event => {
+      // The link is only a carrier for the href; a plain click keeps the existing navigation with its state
+      event?.preventDefault?.();
+      if (isOnAgentHub) return;
+      navigate(RouteDefinitions.EliteaCatalog, {
+        state: { from: location.pathname },
+      });
+    },
+    [isOnAgentHub, navigate, location.pathname],
+  );
 
   const styles = agentHubButtonStyles(sideBarCollapsed, !!isOnAgentHub);
 
@@ -35,6 +41,8 @@ const AgentHubButton = memo(() => {
       enterNextDelay={500}
     >
       <Box
+        component={AppLink}
+        to={RouteDefinitions.EliteaCatalog}
         data-tour={SIDEBAR_TOUR_TARGET_IDS.agentHub}
         onClick={handleAgentHubClick}
         sx={styles.container}

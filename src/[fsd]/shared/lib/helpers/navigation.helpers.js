@@ -98,6 +98,13 @@ export const isModifiedClick = event =>
   Boolean(event && (event.button > 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey));
 
 /**
+ * Click handler that stops the browser from following a link's `href`. Attach it in the capture phase
+ * (`onClickCapture`) to controls nested inside a link, so it still runs when the control stops propagation.
+ * @param {{ preventDefault: () => void }} event
+ */
+export const preventLinkFollow = event => event.preventDefault();
+
+/**
  * Prefixes a link `href` with the active project as a leading path segment (`/114/agents/all/5`), the form
  * the `/:projectId/*` route (ProjectSwitcher) understands: it checks the project against the user's list,
  * switches to it and drops the segment. A tab opened from "Open link in new tab" has no per-tab project of

@@ -1,13 +1,13 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 import { Box, ClickAwayListener, Paper, Popper, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { useIsOwnLLMsRestricted } from '@/[fsd]/shared/lib/hooks';
-import { Button } from '@/[fsd]/shared/ui';
+import { AppLink, Button } from '@/[fsd]/shared/ui';
 import { CreateEntityConstants } from '@/[fsd]/widgets/sidebar-root/lib/constants';
 import { useDisablePersonalSpace } from '@/[fsd]/widgets/sidebar-root/lib/hooks';
 import PlusIcon from '@/assets/plus-icon.svg?react';
@@ -20,7 +20,6 @@ import { actions as artifactActions } from '@/slices/artifact';
 
 const CreateEntityButton = memo(props => {
   const { tourId } = props;
-  const navigate = useNavigate();
   const dispatch = useDispatch();
   const theme = useTheme();
   const { checkPermission } = useCheckPermission();
@@ -102,100 +101,88 @@ const CreateEntityButton = memo(props => {
     return CreateEntityConstants.DropdownItems.find(item => item.label === currentLabel) || null;
   }, [currentLabel]);
 
-  const handleCommand = useCallback(
-    (optionOverride = null) => {
-      const stateOption = optionOverride ?? selectedOption;
-      if (!optionOverride && pathname.startsWith(RouteDefinitions.AppsApplications)) {
-        navigate(RouteDefinitions.AppsCatalog, { state: locationState });
-        return;
-      }
+  // Resolves where a create option leads, so the same target drives both the link `href` and a plain click
+  const getDestination = useCallback(
+    option => {
+      const settingsTabDestination = (tab, search) => ({
+        to: { pathname: RouteDefinitions.SettingsWithTab.replace(':tab', tab), search },
+        state: locationState,
+        replace: false,
+      });
 
-      switch (stateOption) {
+      switch (option) {
         case CreateEntityConstants.OptionsMap.Secret:
-          {
-            // Navigate to settings/secrets with a flag to trigger row creation
-            const secretsPath = RouteDefinitions.SettingsWithTab.replace(':tab', 'secrets');
-            const search = 'createSecret=1';
-            navigate(
-              { pathname: secretsPath, search: search ? `?${search}` : '' },
-              {
-                replace: false,
-                state: locationState,
-              },
-            );
-          }
-          return;
+          return settingsTabDestination('secrets', '?createSecret=1');
         case CreateEntityConstants.OptionsMap.User:
-          {
-            // Navigate to settings/users with a flag to trigger invite user dialog
-            const usersPath = RouteDefinitions.SettingsWithTab.replace(':tab', 'users');
-            const search = 'inviteUsers=1';
-            navigate(
-              { pathname: usersPath, search: search ? `?${search}` : '' },
-              {
-                replace: false,
-                state: locationState,
-              },
-            );
-          }
-          return;
+          return settingsTabDestination('users', '?inviteUsers=1');
         case CreateEntityConstants.OptionsMap.Application:
-          navigate(RouteDefinitions.AppsCatalog, { state: locationState });
-          return;
+          return { to: RouteDefinitions.AppsCatalog, state: locationState };
         default: {
-          const destUrl = CreateEntityConstants.CommandPathMap[stateOption];
-          const breadCrumb = CreateEntityConstants.BreadCrumbMap[stateOption];
-          let search =
-            stateOption === CreateEntityConstants.OptionsMap.Chat
-              ? 'create=1'
-              : `${SearchParams.ViewMode}=${ViewMode.Owner}`;
+          const destUrl = CreateEntityConstants.CommandPathMap[option];
+          if (!destUrl) return null;
 
-          if (stateOption === CreateEntityConstants.OptionsMap.AIProvider) {
+          const isChat = option === CreateEntityConstants.OptionsMap.Chat;
+          const breadCrumb = CreateEntityConstants.BreadCrumbMap[option];
+          let search = isChat ? 'create=1' : `${SearchParams.ViewMode}=${ViewMode.Owner}`;
+          if (option === CreateEntityConstants.OptionsMap.AIProvider) {
             search += '&from=ai-providers';
           }
 
-          if (destUrl !== pathname || stateOption === CreateEntityConstants.OptionsMap.Chat) {
-            let newRouteStack = [...locationState.routeStack];
+          const routeStack = isChat
+            ? [{ breadCrumb, viewMode: ViewMode.Owner, pagePath: destUrl }]
+            : [
+                {
+                  breadCrumb: CreateEntityConstants.BreadCrumbMap[destUrl],
+                  pagePath:
+                    destUrl === RouteDefinitions.CreatePersonalToken
+                      ? RouteDefinitions.SettingsWithTab.replace(':tab', 'tokens')
+                      : `${CreateEntityConstants.PrevUrlPathMap[destUrl]}?${SearchParams.ViewMode}=${ViewMode.Owner}`,
+                },
+                { breadCrumb, viewMode: ViewMode.Owner, pagePath: `${destUrl}?${search}` },
+              ];
 
-            newRouteStack =
-              stateOption === CreateEntityConstants.OptionsMap.Chat
-                ? [
-                    {
-                      breadCrumb,
-                      viewMode: ViewMode.Owner,
-                      pagePath: destUrl,
-                    },
-                  ]
-                : [
-                    {
-                      breadCrumb: CreateEntityConstants.BreadCrumbMap[destUrl],
-                      pagePath:
-                        destUrl === RouteDefinitions.CreatePersonalToken
-                          ? RouteDefinitions.SettingsWithTab.replace(':tab', 'tokens')
-                          : `${CreateEntityConstants.PrevUrlPathMap[destUrl]}?${SearchParams.ViewMode}=${ViewMode.Owner}`,
-                    },
-                    {
-                      breadCrumb,
-                      viewMode: ViewMode.Owner,
-                      pagePath: `${destUrl}${search ? `?${search}` : ''}`,
-                    },
-                  ];
-            navigate(
-              { pathname: destUrl, search },
-              {
-                replace: shouldReplaceThePage,
-                state: { routeStack: newRouteStack },
-              },
-            );
-            if (destUrl === RouteDefinitions.CreateBucket) {
-              dispatch(artifactActions.setBucket(null));
-            }
-          }
+          return {
+            to: { pathname: destUrl, search },
+            state: { routeStack },
+            replace: shouldReplaceThePage,
+            // Already on the create page: a plain click is a no-op (opening in a new tab still works)
+            isCurrentPage: !isChat && destUrl === pathname,
+          };
         }
       }
     },
-    [dispatch, selectedOption, pathname, locationState, navigate, shouldReplaceThePage],
+    [locationState, pathname, shouldReplaceThePage],
   );
+
+  const mainDestination = useMemo(
+    () =>
+      getDestination(
+        isAppCatalogTab || pathname.startsWith(RouteDefinitions.AppsApplications)
+          ? CreateEntityConstants.OptionsMap.Application
+          : selectedOption,
+      ),
+    [isAppCatalogTab, pathname, getDestination, selectedOption],
+  );
+
+  // A real link (href) lets the browser offer "Open link in new tab"; a disabled or unresolved target stays
+  // a plain element. Side effects run in `onClick`, which AppLink skips for a click that opens a new tab.
+  const getLinkProps = (destination, isDisabled, onAfterClick) => {
+    if (!destination || isDisabled) return {};
+
+    return {
+      component: AppLink,
+      to: destination.to,
+      state: destination.state,
+      replace: destination.replace,
+      onClick: event => {
+        if (destination.isCurrentPage) event.preventDefault();
+        else if (destination.to?.pathname === RouteDefinitions.CreateBucket) {
+          dispatch(artifactActions.setBucket(null));
+        }
+        onAfterClick?.();
+      },
+    };
+  };
 
   const handleOpenMenu = useCallback(() => {
     setOpenMenu(prev => !prev);
@@ -259,26 +246,9 @@ const CreateEntityButton = memo(props => {
     [checkPermission, isOwnLLMsRestricted],
   );
 
-  const handleDropdownItemClick = useCallback(
-    item => {
-      if (!getHasPermissionForDropdownItem(item.option)) return;
-      setOpenMenu(false);
-      handleCommand(item.option);
-    },
-    [handleCommand, getHasPermissionForDropdownItem],
-  );
-
   const handleClickAway = useCallback(() => {
     setOpenMenu(false);
   }, []);
-
-  const handleMainButtonClick = useCallback(() => {
-    if (isAppCatalogTab) {
-      navigate(RouteDefinitions.AppsCatalog, { state: locationState });
-      return;
-    }
-    handleCommand();
-  }, [isAppCatalogTab, navigate, locationState, handleCommand]);
 
   const showSimpleButton = sideBarCollapsed || isSimpleCreateRoute;
 
@@ -315,7 +285,7 @@ const CreateEntityButton = memo(props => {
                   disabled={disableCreateButton}
                   startIcon={<PlusIcon />}
                   sx={styles.mainButton}
-                  onClick={handleMainButtonClick}
+                  {...getLinkProps(mainDestination, disableCreateButton)}
                   data-testid="sidebar-create-button"
                 >
                   {currentLabel}
@@ -345,14 +315,16 @@ const CreateEntityButton = memo(props => {
           <Paper sx={styles.dropdown}>
             {CreateEntityConstants.DropdownItems.map(item => {
               const isDisabled = !getHasPermissionForDropdownItem(item.option);
+              const isSelected = currentDropdownItem?.label === item.label;
               return (
                 <Box
                   key={item.label}
-                  sx={styles.dropdownItem(currentDropdownItem?.label === item.label, isDisabled)}
-                  onClick={() => handleDropdownItemClick(item)}
+                  sx={styles.dropdownItem(isSelected, isDisabled)}
+                  data-testid={`sidebar-create-option-${item.option}`}
+                  {...getLinkProps(getDestination(item.option), isDisabled, handleClickAway)}
                 >
                   {item.label}
-                  {currentDropdownItem?.label === item.label && (
+                  {isSelected && (
                     <CheckIcon
                       fill={theme.palette.icon.secondary}
                       sx={styles.checkIcon}

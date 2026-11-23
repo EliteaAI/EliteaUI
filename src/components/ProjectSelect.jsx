@@ -7,6 +7,8 @@ import { Box, useTheme } from '@mui/material';
 
 import { usePublicProjectAccessCheck, useRestoreLastListRoute } from '@/[fsd]/features/project/lib/hooks';
 import { ProjectSelectConstants } from '@/[fsd]/shared/lib/constants';
+import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
+import { usePageDetails } from '@/[fsd]/shared/lib/hooks';
 import { Select } from '@/[fsd]/shared/ui';
 import { useProjectListQuery } from '@/api/project';
 import {
@@ -95,6 +97,18 @@ const ProjectSelect = memo(props => {
 
   useProjectListQuery(undefined, { skip: !hasNoPreselectedProject && !selectedProject?.id });
 
+  const location = useLocation();
+  const { pageType } = usePageDetails();
+
+  // Where a project opens in a new tab: the current list page. An entity page belongs to the old project,
+  // so it falls back to its list, and a project-scoped path is only ever used with the project segment.
+  const newTabPath = useMemo(() => {
+    const path = pageType
+      ? NavigationHelpers.getListRouteByPageType(pageType)
+      : location.pathname.replace(/^\/\d+(?=\/|$)/, '');
+    return path && path !== '/' ? path : '';
+  }, [location.pathname, pageType]);
+
   const getProjectName = useCallback(
     item => {
       if (!item) return '';
@@ -130,10 +144,18 @@ const ProjectSelect = memo(props => {
       });
     }
 
-    return result;
-  }, [projects, filterIds, hasPublicProjectAccess, getProjectName, privateProjectId, selectedProject]);
-
-  const location = useLocation();
+    // A real link (href) lets the browser offer "Open link in new tab"; a local picker only selects
+    return forLocalUsage ? result : result.map(item => ({ ...item, to: `/${item.value}${newTabPath}` }));
+  }, [
+    projects,
+    filterIds,
+    hasPublicProjectAccess,
+    getProjectName,
+    privateProjectId,
+    selectedProject,
+    forLocalUsage,
+    newTabPath,
+  ]);
 
   const changeProject = useCallback(
     (id, name) => {

@@ -86,10 +86,29 @@ const VersionSelect = memo(props => {
       return new Date(b.created_at) - new Date(a.created_at);
     });
 
-    return sortedVersions.map(
-      buildVersionOption({ enableVersionListAvatar, defaultVersionID, handleSetDefaultVersion }),
-    );
-  }, [actualVersions, enableVersionListAvatar, defaultVersionID, handleSetDefaultVersion]);
+    return sortedVersions.map(version => ({
+      ...buildVersionOption({ enableVersionListAvatar, defaultVersionID, handleSetDefaultVersion })(version),
+      // A real link (href) lets the browser offer "Open link in new tab"; in controlled mode the parent owns the value
+      ...(onChange
+        ? {}
+        : {
+            to: {
+              pathname: replaceVersionInPath(version.id, pathname, versionFromParams, actualEntityId),
+              search,
+            },
+          }),
+    }));
+  }, [
+    actualVersions,
+    enableVersionListAvatar,
+    defaultVersionID,
+    handleSetDefaultVersion,
+    onChange,
+    pathname,
+    versionFromParams,
+    actualEntityId,
+    search,
+  ]);
 
   const { searchQuery, filteredOptions, handleSearch } = useVersionSelectSearch(versionSelectOptions);
 

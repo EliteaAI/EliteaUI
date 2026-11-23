@@ -18,6 +18,7 @@ const SkillTabBar = memo(props => {
     currentVersionId,
     defaultVersionId,
     onChangeVersion,
+    getVersionPath,
     onSuccess,
     handleSetDefaultVersion = null,
   } = props;
@@ -40,8 +41,12 @@ const SkillTabBar = memo(props => {
       if (b.name === LATEST_VERSION_NAME) return -1;
       return new Date(b.created_at) - new Date(a.created_at);
     });
-    return sorted.map(buildVersionOption({ defaultVersionID: effectiveDefaultId, handleSetDefaultVersion }));
-  }, [versions, effectiveDefaultId, handleSetDefaultVersion]);
+    return sorted.map(version => ({
+      ...buildVersionOption({ defaultVersionID: effectiveDefaultId, handleSetDefaultVersion })(version),
+      // A real link (href) lets the browser offer "Open link in new tab"
+      ...(getVersionPath ? { to: getVersionPath(version.id) } : {}),
+    }));
+  }, [versions, effectiveDefaultId, handleSetDefaultVersion, getVersionPath]);
 
   const { searchQuery, filteredOptions, handleSearch } = useVersionSelectSearch(versionOptions);
 

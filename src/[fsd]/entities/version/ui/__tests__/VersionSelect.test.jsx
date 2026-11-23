@@ -13,7 +13,7 @@ let singleSelectProps;
 const navigate = vi.fn();
 
 vi.mock('react-router-dom', () => ({
-  useLocation: () => ({ pathname: '/agents/1/2', state: {}, search: '' }),
+  useLocation: () => ({ pathname: '/agents/all/1/2', state: {}, search: '?viewMode=owner' }),
   useNavigate: () => navigate,
   useParams: () => ({ agentId: '1', version: '2' }),
 }));
@@ -98,5 +98,33 @@ describe('VersionSelect controlled mode', () => {
 
     expect(navigate).toHaveBeenCalledTimes(1);
     expect(onVersionChange).toHaveBeenCalledWith(10, VERSIONS[0]);
+  });
+});
+
+describe('VersionSelect open in new tab', () => {
+  beforeEach(() => {
+    singleSelectProps = undefined;
+  });
+  afterEach(cleanup);
+
+  it('links each option to the path that selecting it navigates to', () => {
+    render(<VersionSelect versions={VERSIONS} />);
+
+    expect(singleSelectProps.options.map(option => option.to)).toEqual([
+      { pathname: '/agents/all/1/11', search: '?viewMode=owner' },
+      { pathname: '/agents/all/1/10', search: '?viewMode=owner' },
+    ]);
+  });
+
+  it('does not link options in controlled mode, where the parent owns the value', () => {
+    render(
+      <VersionSelect
+        versions={VERSIONS}
+        value={11}
+        onChange={vi.fn()}
+      />,
+    );
+
+    expect(singleSelectProps.options.every(option => option.to === undefined)).toBe(true);
   });
 });
