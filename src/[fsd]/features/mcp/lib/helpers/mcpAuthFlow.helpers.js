@@ -364,6 +364,14 @@ const waitForAuthorizationResult = (authWindow, state) => {
   });
 };
 
+export const withOfflineAccess = (scope, asMetadata) => {
+  const scopes = (scope || '').split(/\s+/).filter(Boolean);
+  if (!asMetadata?.scopes_supported?.includes('offline_access') || scopes.includes('offline_access')) {
+    return scope;
+  }
+  return [...scopes, 'offline_access'].join(' ');
+};
+
 export const startMcpAuthFlow = async options => {
   const {
     serverUrl,
@@ -378,6 +386,7 @@ export const startMcpAuthFlow = async options => {
     toolkitType, // Pre-built MCP type (e.g., 'mcp_github') - used as storage key
     oauthAppId, // Default app mode (#7149): the backend resolves this admin app's client and secret
     credentialType, // teams/outlook/sharepoint: the backend checks the app serves it
+    saveLogin, // #7643: { configurationUuid } - the backend keeps the refresh token for unattended runs
   } = options;
 
   let clientId = initialClientId;
@@ -481,8 +490,10 @@ export const startMcpAuthFlow = async options => {
       codeChallenge = await McpCryptoHelpers.sha256(codeVerifier);
     }
 
-    // Normalize scope
-    const normalizedScope = McpCryptoHelpers.normalizeScope(scope, isOIDC);
+    // Normalize scope; a saved login needs a refresh token, so ask for offline_access where the server offers it
+    const normalizedScope = saveLogin
+      ? withOfflineAccess(McpCryptoHelpers.normalizeScope(scope, isOIDC), asMetadata)
+      : McpCryptoHelpers.normalizeScope(scope, isOIDC);
 
     const buildingOptions = {
       authorizationEndpoint,
@@ -542,6 +553,8 @@ export const startMcpAuthFlow = async options => {
       toolkit_type: isPrebuildMcp ? toolkitType : undefined,
       used_dcr: usedDCR || undefined,
       resource,
+      save_login: saveLogin ? true : undefined,
+      configuration_uuid: saveLogin?.configurationUuid,
     };
     const tokenResult = await store.dispatch(
       mcpOAuthApi.endpoints.exchangeMcpOAuthToken.initiate(requestBody),
@@ -554,6 +567,8 @@ export const startMcpAuthFlow = async options => {
     }
 
     const tokenJson = tokenResult.data;
+    // The saved login lives server-side only; nothing about it is kept in browser storage
+    if (saveLogin) return tokenJson;
 
     if (!tokenJson.access_token) {
       // noinspection ExceptionCaughtLocallyJS

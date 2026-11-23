@@ -5,6 +5,7 @@ import YAML from 'js-yaml';
 import { Box, FormControlLabel, Typography } from '@mui/material';
 
 import { CredentialsSelect, OAuthAppSelect } from '@/[fsd]/features/credentials';
+import { McpSavedLoginConstants } from '@/[fsd]/features/mcp';
 import { OpenApiHelpers, ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { ArrayFieldInput, CheckboxListInput } from '@/[fsd]/features/toolkits/ui/form/tool-base';
@@ -23,6 +24,9 @@ import FormInput from '@/components/FormInput.jsx';
 import ImageGenerationModelSelect from '@/components/ImageGenerationModelSelect';
 import LlmModelSelect from '@/components/LlmModelSelect';
 import ToolkitSelect from '@/components/ToolkitSelect';
+
+// #7643: no saved login - the MCP login stays in this browser tab (chats only, no schedules/webhooks)
+const MCP_BROWSER_ONLY_OPTION = { label: 'Browser only (this tab, chats only)', groupTitle: 'Login storage' };
 
 const ToolBaseProperty = memo(props => {
   const {
@@ -550,6 +554,11 @@ const ToolBaseProperty = memo(props => {
           disabled={disabled}
           presetOptions={presetOptions}
           propKey={k}
+          noneOption={
+            v.configuration_types?.[0] === McpSavedLoginConstants.MCP_LOGIN_TYPE
+              ? MCP_BROWSER_ONLY_OPTION
+              : undefined
+          }
         />
       );
     } else if (type === 'llm_model') {

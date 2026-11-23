@@ -94,6 +94,16 @@ export const ToolkitForm = memo(props => {
     hasSetViewManually.current = true;
   }, []);
 
+  // #7643: a linked MCP login holds the OAuth client and scopes, so the toolkit's own copies are hidden
+  const hasMcpLogin = Boolean(values?.settings?.mcp_login_configuration?.elitea_title);
+  const mcpExcludedFields = useMemo(
+    () => [
+      'discovery_mode',
+      'discovery_interval',
+      ...(hasMcpLogin ? ['client_id', 'client_secret', 'scopes'] : []),
+    ],
+    [hasMcpLogin],
+  );
   const toolType = useMemo(() => {
     return editToolDetail?.type || '';
   }, [editToolDetail?.type]);
@@ -627,7 +637,7 @@ export const ToolkitForm = memo(props => {
             needToCheckSection={false}
             disabled={disabled}
             onSyntaxError={onSyntaxError}
-            excludedFields={toolType !== 'mcp' ? [] : ['discovery_mode', 'discovery_interval']}
+            excludedFields={toolType !== 'mcp' ? [] : mcpExcludedFields}
             onCredentialReload={onCredentialReload}
           />
         </Box>

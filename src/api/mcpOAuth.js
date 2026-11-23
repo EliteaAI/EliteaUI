@@ -1,3 +1,4 @@
+import { TAG_CONFIGURATIONS } from './configurations.js';
 import { eliteaApi } from './eliteaApi.js';
 
 const apiSlicePath = '/elitea_core';
@@ -35,6 +36,14 @@ export const mcpOAuthApi = eliteaApi.injectEndpoints({
         };
       },
     }),
+    // #7643: log out a saved MCP login (refresh token and cached access tokens go away server-side)
+    logoutMcpSavedLogin: build.mutation({
+      query: ({ projectId, configurationUuid }) => ({
+        url: `${apiSlicePath}/mcp_oauth_proxy/${projectId}?configuration_uuid=${encodeURIComponent(configurationUuid)}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: [TAG_CONFIGURATIONS],
+    }),
     registerMcpDynamicClient: build.mutation({
       query: ({ projectId, ...body }) => {
         // Filter out null/undefined values to avoid sending them to the server
@@ -56,4 +65,5 @@ export const {
   useExchangeMcpOAuthTokenMutation,
   useRefreshMcpOAuthTokenMutation,
   useRegisterMcpDynamicClientMutation,
+  useLogoutMcpSavedLoginMutation,
 } = mcpOAuthApi;
