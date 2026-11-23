@@ -1463,6 +1463,20 @@ describe('ScheduleForm', () => {
       expect(screen.queryByText('The risk check did not run. Try again.')).not.toBeInTheDocument();
     });
 
+    it('shows the generic text instead of "did not run" when the target is gone or hidden (404)', async () => {
+      const notFound = {
+        status: 404,
+        data: { code: 'not_found', error: 'The requested item could not be found' },
+      };
+      checkRisk.mockReturnValue({ unwrap: () => Promise.reject(notFound) });
+      renderForm();
+      pickEntity(7);
+
+      expect(await screen.findByText('The requested item could not be found')).toBeInTheDocument();
+      expect(screen.queryByText('The risk check did not run. Try again.')).not.toBeInTheDocument();
+      expect(saveButton()).toBeDisabled();
+    });
+
     it('shows an error toast and the failed state when the check fails on Save', async () => {
       const { onSubmit } = renderForm();
       await fillAgent();
