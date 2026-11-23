@@ -164,12 +164,10 @@ export const applyEliteaMetadataEdits = ({ textMetadata, formMetadata, tags, run
   let isModelSwitchRefused = false;
 
   const { maxTokens: maxTokensKey } = ELITEA_METADATA_KEYS;
-  const findMaxTokensForModelSwitch = () => {
-    const formMaxTokens = llmSettingsUpdate.max_tokens ?? DEFAULT_MAX_TOKENS;
-    if (!isChanged(maxTokensKey)) return formMaxTokens;
-    if (isRemoved(maxTokensKey)) return DEFAULT_MAX_TOKENS;
+  const findTypedMaxTokens = () => {
+    if (!isChanged(maxTokensKey)) return DEFAULT_MAX_TOKENS;
     const typedMaxTokens = Number(textMetadata[maxTokensKey]);
-    return isMaxTokens(typedMaxTokens) ? typedMaxTokens : formMaxTokens;
+    return isMaxTokens(typedMaxTokens) ? typedMaxTokens : DEFAULT_MAX_TOKENS;
   };
 
   const { tags: tagsKey } = ELITEA_METADATA_KEYS;
@@ -201,13 +199,13 @@ export const applyEliteaMetadataEdits = ({ textMetadata, formMetadata, tags, run
         String(textMetadata[modelKey]),
         llmSettings.model_project_id,
       );
-      const modelLimitMessage = model && findModelLimitMessage(findMaxTokensForModelSwitch(), model);
+      const modelLimitMessage = model && findModelLimitMessage(findTypedMaxTokens(), model);
       if (modelLimitMessage) {
         errors.push(`"metadata.${modelKey}": ${model.name} was not applied. ${modelLimitMessage}`);
         isModelSwitchRefused = true;
       } else if (model) {
         llmSettingsUpdate = {
-          max_tokens: llmSettingsUpdate.max_tokens ?? DEFAULT_MAX_TOKENS,
+          max_tokens: DEFAULT_MAX_TOKENS,
           ...resetLLMSettingsForModel(model),
           ...selectionFields(model),
         };

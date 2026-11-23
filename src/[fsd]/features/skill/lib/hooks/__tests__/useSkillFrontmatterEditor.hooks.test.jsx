@@ -353,7 +353,7 @@ describe('useSkillFrontmatterEditor ELITEA fields mirrored from the export', () 
       name: 'v2',
       tags: [{ id: 4, name: 'python' }],
       run_settings: {
-        llm_settings: { model_name: 'gpt-4.1', model_project_id: 2, temperature: 0.2, max_tokens: 8000 },
+        llm_settings: { model_name: 'gpt-4.1', model_project_id: 2, temperature: 0.2, max_tokens: 4000 },
         ignore_project_context: false,
       },
       meta: { frontmatter: { license: 'MIT' } },
@@ -367,7 +367,7 @@ describe('useSkillFrontmatterEditor ELITEA fields mirrored from the export', () 
     'elitea-version: v2',
     'elitea-model: gpt-4.1',
     `elitea-temperature: '0.2'`,
-    `elitea-max-tokens: '8000'`,
+    `elitea-max-tokens: '4000'`,
   ];
 
   const renderExportEditor = () =>
@@ -459,12 +459,7 @@ describe('useSkillFrontmatterEditor ELITEA fields mirrored from the export', () 
     );
 
     expect(result.current.editor.editorText).toBe(
-      exportText([
-        ...EXPORT_LINES.slice(0, 2),
-        'elitea-model: o3',
-        EXPORT_LINES[4],
-        'elitea-reasoning-effort: medium',
-      ]),
+      exportText([...EXPORT_LINES.slice(0, 2), 'elitea-model: o3', 'elitea-reasoning-effort: medium']),
     );
     expect(result.current.editor.frontmatterErrors).toEqual([]);
   });

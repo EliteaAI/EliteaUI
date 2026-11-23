@@ -17,7 +17,7 @@ const GPT = { name: 'gpt-4.1', project_id: 2 };
 const O3 = { name: 'o3', project_id: 2, supports_reasoning: true, max_output_tokens: 128000 };
 const TAGS = [{ id: 4, name: 'python' }, { name: 'a, b' }];
 const RUN_SETTINGS = {
-  llm_settings: { model_name: 'gpt-4.1', model_project_id: 2, temperature: 0.2, max_tokens: 8000 },
+  llm_settings: { model_name: 'gpt-4.1', model_project_id: 2, temperature: 0.2, max_tokens: 4000 },
   ignore_project_context: true,
 };
 
@@ -30,7 +30,7 @@ describe('encodeEliteaMetadata', () => {
       ['elitea-version', 'v2'],
       ['elitea-model', 'gpt-4.1'],
       ['elitea-temperature', '0.2'],
-      ['elitea-max-tokens', '8000'],
+      ['elitea-max-tokens', '4000'],
       ['elitea-ignore-project-context', 'true'],
     ]);
   });
@@ -265,20 +265,27 @@ describe('applyEliteaMetadataEdits', () => {
     });
 
     it('reports the format errors of the number fields edited with a refused model switch', () => {
-      const runSettings = { llm_settings: { ...RUN_SETTINGS.llm_settings, max_tokens: 1000 } };
-      const unchanged = encodeEliteaMetadata({ tags: TAGS, versionName: 'v2', runSettings });
-
-      const result = edit(
-        { ...unchanged, 'elitea-model': 'o3', 'elitea-max-tokens': '5k', 'elitea-temperature': 'hot' },
-        { runSettings },
-      );
+      const result = edit({
+        ...UNCHANGED,
+        'elitea-model': 'o3',
+        'elitea-max-tokens': '1',
+        'elitea-temperature': 'hot',
+      });
 
       expect(result.errors).toEqual([
         refusedSwitch('o3', REASONING_MINIMUM),
         '"metadata.elitea-temperature" must be a number',
-        '"metadata.elitea-max-tokens" must be a positive integer or -1 for the default',
       ]);
       expect(result).not.toHaveProperty('runSettings');
+    });
+
+    it.each(['5k', '0'])('switches the model and reports a malformed max tokens %s typed with it', value => {
+      const result = edit({ ...UNCHANGED, 'elitea-model': 'o3', 'elitea-max-tokens': value });
+
+      expect(result.errors).toEqual([
+        '"metadata.elitea-max-tokens" must be a positive integer or -1 for the default',
+      ]);
+      expect(result.runSettings.llm_settings).toMatchObject({ model_name: 'o3', max_tokens: -1 });
     });
 
     it('reports only the new model limit when a refused switch carries too many max tokens', () => {
@@ -295,38 +302,21 @@ describe('applyEliteaMetadataEdits', () => {
       expect(result).not.toHaveProperty('runSettings');
     });
 
-    it('refuses a model-only switch to a reasoning model below its minimum, unlike the model picker', () => {
-      const runSettings = { llm_settings: { ...RUN_SETTINGS.llm_settings, max_tokens: 4000 } };
+    it.each([
+      ['below the reasoning minimum', 1, O3],
+      ['above the new model limit', 50000, { name: 'small', project_id: 2, max_output_tokens: 8000 }],
+    ])('resets saved max tokens %s to the default on a model switch', (_, maxTokens, model) => {
+      const runSettings = { llm_settings: { ...RUN_SETTINGS.llm_settings, max_tokens: maxTokens } };
       const unchanged = encodeEliteaMetadata({ tags: TAGS, versionName: 'v2', runSettings });
 
-      const result = edit({ ...unchanged, 'elitea-model': 'o3' }, { runSettings });
+      const result = edit(
+        { ...unchanged, 'elitea-model': model.name },
+        { runSettings, models: [GPT, model] },
+      );
 
-      expect(result.errors).toEqual([refusedSwitch('o3', REASONING_MINIMUM)]);
-      expect(result).not.toHaveProperty('runSettings');
-    });
-
-    it('refuses a model switch the saved max tokens do not fit', () => {
-      const runSettings = { llm_settings: { ...RUN_SETTINGS.llm_settings, max_tokens: 1 } };
-      const unchanged = encodeEliteaMetadata({ tags: TAGS, versionName: 'v2', runSettings });
-
-      const result = edit({ ...unchanged, 'elitea-model': 'o3' }, { runSettings });
-
-      expect(result.errors).toEqual([refusedSwitch('o3', REASONING_MINIMUM)]);
-      expect(result).not.toHaveProperty('hasModelChanged');
-      expect(result).not.toHaveProperty('runSettings');
-    });
-
-    it('refuses a model switch when the saved max tokens exceed the new model limit', () => {
-      const small = { name: 'small', project_id: 2, max_output_tokens: 8000 };
-      const runSettings = { llm_settings: { ...RUN_SETTINGS.llm_settings, max_tokens: 50000 } };
-      const unchanged = encodeEliteaMetadata({ tags: TAGS, versionName: 'v2', runSettings });
-
-      const result = edit({ ...unchanged, 'elitea-model': 'small' }, { runSettings, models: [GPT, small] });
-
-      expect(result.errors).toEqual([
-        refusedSwitch('small', 'Maximum output tokens value exceeded the model limit: 8000'),
-      ]);
-      expect(result).not.toHaveProperty('runSettings');
+      expect(result.errors).toEqual([]);
+      expect(result.hasModelChanged).toBe(true);
+      expect(result.runSettings.llm_settings).toMatchObject({ model_name: model.name, max_tokens: -1 });
     });
 
     it('allows a model switch when max tokens fitting the new model are typed with it', () => {
@@ -386,7 +376,7 @@ describe('applyEliteaMetadataEdits', () => {
     expect(runSettings.llm_settings).toMatchObject({
       model_name: 'o3',
       model_project_id: 2,
-      max_tokens: 8000,
+      max_tokens: -1,
       selection: null,
       temperature: null,
       reasoning_effort: 'medium',
@@ -394,7 +384,7 @@ describe('applyEliteaMetadataEdits', () => {
   });
 
   it('finds a model by name when the saved project differs', () => {
-    const runSettings = { llm_settings: { model_name: 'gpt-4.1', model_project_id: 9 } };
+    const runSettings = { llm_settings: { model_name: 'gpt-4.1', model_project_id: 9, max_tokens: 4000 } };
 
     expect(
       edit({ ...UNCHANGED, 'elitea-model': 'o3' }, { runSettings }).runSettings.llm_settings,
@@ -413,7 +403,7 @@ describe('applyEliteaMetadataEdits', () => {
     expect(runSettings.llm_settings).toMatchObject({
       selection: AUTO_SELECTION,
       model_name: null,
-      max_tokens: 8000,
+      max_tokens: 4000,
     });
   });
 
