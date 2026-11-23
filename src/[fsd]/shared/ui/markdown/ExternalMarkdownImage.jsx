@@ -1,11 +1,12 @@
 import { memo, useCallback } from 'react';
 
-import { Link } from '@mui/material';
+import { Box, Link } from '@mui/material';
 
 // A span-based link so it can sit inside the page's own anchors; the image itself is never fetched.
 const ExternalMarkdownImage = memo(props => {
   const { src, alt, title } = props;
   const label = `[Image: ${alt || title || 'image'}]`;
+  const styles = externalMarkdownImageStyles();
 
   const open = useCallback(
     event => {
@@ -23,7 +24,7 @@ const ExternalMarkdownImage = memo(props => {
     [open],
   );
 
-  if (!src || !/^https?:\/\//i.test(src)) return <Link component="span">{label}</Link>;
+  if (!src || !/^https?:\/\//i.test(src)) return <Box component="span">{label}</Box>;
 
   return (
     <Link
@@ -43,6 +44,8 @@ const ExternalMarkdownImage = memo(props => {
 ExternalMarkdownImage.displayName = 'ExternalMarkdownImage';
 
 /** @type {MuiSx} */
-const styles = { link: { cursor: 'pointer' } };
+const externalMarkdownImageStyles = () => ({
+  link: { cursor: 'pointer' },
+});
 
 export default ExternalMarkdownImage;

@@ -55,6 +55,35 @@ describe('UntrustedMarkdownBoundary', () => {
   });
 });
 
+describe('UntrustedMarkdownBoundary remote-fetch vectors', () => {
+  const theme = createTheme({ palette: { border: { lines: '#000' }, text: { highlighted: '#000' } } });
+  const render = html =>
+    renderToStaticMarkup(
+      <UntrustedMarkdownBoundary>
+        <ThemeProvider theme={theme}>
+          {marked.lexer(html).map((t, i) => (
+            <Token
+              key={i}
+              markedToken={t}
+              renderHtml
+            />
+          ))}
+        </ThemeProvider>
+      </UntrustedMarkdownBoundary>,
+    );
+
+  it.each([
+    ['picture/source srcset', '<picture><source srcset="https://t.example/a.jpg"><p>x</p></picture>'],
+    ['video poster', '<video poster="https://t.example/a.jpg"></video>'],
+    ['audio', '<audio src="https://t.example/a.mp3"></audio>'],
+    ['input type=image', '<input type="image" src="https://t.example/a.jpg">'],
+    ['inline style url()', '<p style="background:url(https://t.example/a.jpg)">x</p>'],
+    ['background attribute', '<table background="https://t.example/a.jpg"><tr><td>x</td></tr></table>'],
+  ])('does not emit a remote fetch for %s', (_name, html) => {
+    expect(render(html)).not.toContain('t.example');
+  });
+});
+
 describe('Token outside the untrusted boundary', () => {
   it('still renders model-authored images as <img>', () => {
     const theme = createTheme({ palette: { border: { lines: '#000' }, text: { highlighted: '#000' } } });

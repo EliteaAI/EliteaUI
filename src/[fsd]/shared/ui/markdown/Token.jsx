@@ -7,10 +7,7 @@ import { Box, useTheme } from '@mui/material';
 
 import { MarkdownConstants } from '@/[fsd]/shared/lib/constants';
 import { useArtifactLinkResolver } from '@/[fsd]/shared/lib/context/ArtifactLinkContext';
-import {
-  MARKDOWN_IMAGE_MODE,
-  useMarkdownImageMode,
-} from '@/[fsd]/shared/lib/context/MarkdownImageModeContext';
+import { useMarkdownImageMode } from '@/[fsd]/shared/lib/context/MarkdownImageModeContext';
 import { resolveArtifactHrefsInHtml } from '@/[fsd]/shared/lib/helpers/link.helpers';
 import { MarkdownMapping, escapeGfmDisallowedRawHtml, removeHTMLTags } from '@/[fsd]/shared/lib/utils';
 import MarkdownTableBlock from '@/components/MarkdownTableBlock';
@@ -18,6 +15,12 @@ import MarkdownTableBlock from '@/components/MarkdownTableBlock';
 import CodeBlock from '../code-block';
 import DefaultMarkdown from './DefaultMarkdown';
 import ExternalMarkdownImage from './ExternalMarkdownImage';
+
+const DEFAULT_SANITIZE_CONFIG = { FORBID_TAGS: MarkdownConstants.FORBIDDEN_HTML_TAGS };
+const UNTRUSTED_SANITIZE_CONFIG = {
+  FORBID_TAGS: [...MarkdownConstants.FORBIDDEN_HTML_TAGS, ...MarkdownConstants.UNTRUSTED_FORBIDDEN_HTML_TAGS],
+  FORBID_ATTR: MarkdownConstants.UNTRUSTED_FORBIDDEN_HTML_ATTRS,
+};
 
 const Token = memo(props => {
   const {
@@ -39,7 +42,7 @@ const Token = memo(props => {
   const styles = getStyles(theme);
   const resolveArtifact = useArtifactLinkResolver();
   const imageMode = useMarkdownImageMode();
-  const isExternalImageMode = imageMode === MARKDOWN_IMAGE_MODE.EXTERNAL_LINK;
+  const isExternalImageMode = imageMode === MarkdownConstants.MARKDOWN_IMAGE_MODE.EXTERNAL_LINK;
 
   const overrides = useCallback(
     rawData => ({
@@ -229,11 +232,10 @@ const Token = memo(props => {
     case 'html': {
       const rawHtml = markedToken.block ? escapeGfmDisallowedRawHtml(markedToken.raw) : markedToken.raw;
       const clean = resolveArtifactHrefsInHtml(
-        DOMPurify.sanitize(rawHtml, {
-          FORBID_TAGS: isExternalImageMode
-            ? [...MarkdownConstants.FORBIDDEN_HTML_TAGS, 'img']
-            : MarkdownConstants.FORBIDDEN_HTML_TAGS,
-        }),
+        DOMPurify.sanitize(
+          rawHtml,
+          isExternalImageMode ? UNTRUSTED_SANITIZE_CONFIG : DEFAULT_SANITIZE_CONFIG,
+        ),
         resolveArtifact,
       );
       return clean ? (
