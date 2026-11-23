@@ -57,6 +57,7 @@ const ToolkitTest = memo(() => {
     <Box sx={styles.wrapper}>
       <DrawerPageHeader
         showBorder
+        sx={styles.header}
         title={<Breadcrumbs />}
       />
       <Box sx={styles.content}>
@@ -93,6 +94,9 @@ ToolkitTest.displayName = 'ToolkitTest';
 
 /** @type {MuiSx} */
 const toolkitTestStyles = () => ({
+  header: ({ palette }) => ({
+    background: palette.background.default.primary,
+  }),
   wrapper: {
     display: 'flex',
     flexDirection: 'column',

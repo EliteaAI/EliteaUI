@@ -4,8 +4,9 @@ import { Box, Typography } from '@mui/material';
 
 import { ToolGroupConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { useToolkitToolOptions } from '@/[fsd]/features/toolkits/lib/hooks';
-import { Button, Input } from '@/[fsd]/shared/ui';
-import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { Input } from '@/[fsd]/shared/ui';
+import EllipsisLabelWithTooltip from '@/[fsd]/shared/ui/label/EllipsisLabelWithTooltip';
+import ChipWithCheckIcon from '@/components/ChipWithCheckIcon';
 
 const { UNCLASSIFIED_GROUP, TOOL_GROUP_ORDER, KNOWN_GROUPS } = ToolGroupConstants;
 
@@ -45,8 +46,8 @@ const ToolkitTestEmptyState = memo(props => {
   return (
     <Box sx={[styles.root, sx]}>
       <Typography
-        variant="bodyMedium"
-        color="text.secondary"
+        variant="labelMedium"
+        color="text.primary"
         sx={styles.hint}
       >
         Pick a tool to configure its parameters and run a test.
@@ -78,8 +79,8 @@ const ToolkitTestEmptyState = memo(props => {
             >
               {groupLabel && (
                 <Typography
-                  variant="labelSmall"
-                  sx={styles.groupLabel}
+                  variant="subtitle"
+                  color="text.primary"
                 >
                   {groupLabel}
                 </Typography>
@@ -88,15 +89,20 @@ const ToolkitTestEmptyState = memo(props => {
                 {tools.map(opt => {
                   const toolKey = typeof opt.value === 'string' ? opt.value : opt.value?.name;
                   return (
-                    <Button.BaseBtn
+                    <ChipWithCheckIcon
                       key={toolKey}
-                      variant={BUTTON_VARIANTS.secondary}
-                      sx={styles.chip}
+                      testId="toolkit-test-start-tool-chip"
+                      clickable
+                      label={
+                        <EllipsisLabelWithTooltip
+                          label={opt.label}
+                          sx={styles.chipLabel}
+                        />
+                      }
                       onClick={() => onChangeTool(opt.value)}
-                      data-testid="toolkit-test-start-tool-chip"
-                    >
-                      {opt.label}
-                    </Button.BaseBtn>
+                      warning={false}
+                      sx={styles.chip}
+                    />
                   );
                 })}
               </Box>
@@ -118,7 +124,7 @@ const toolkitTestEmptyStateStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     flex: 1,
-    gap: '1rem',
+    gap: '1.5rem',
     padding: '1rem 2rem',
     overflowY: 'auto',
   },
@@ -131,34 +137,40 @@ const toolkitTestEmptyStateStyles = () => ({
   groupsContainer: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.75rem',
+    gap: '1.5rem',
   },
   group: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
   },
-  groupLabel: ({ palette }) => ({
-    color: palette.text.secondary,
-    textTransform: 'uppercase',
-    letterSpacing: '0.045rem',
-  }),
   chipsGrid: ({ breakpoints }) => ({
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
     gap: '0.5rem',
     [breakpoints.down('lg')]: {
       gridTemplateColumns: '1fr',
     },
   }),
-  chip: ({ palette }) => ({
+  chipLabel: {
+    display: 'block',
+  },
+  chip: {
+    minWidth: 0,
+    paddingTop: '0.25rem',
+    paddingBottom: '0.25rem',
+    alignItems: 'center',
     justifyContent: 'flex-start',
-    padding: '0.25rem 1rem',
-    borderRadius: '0.5rem',
-    backgroundColor: palette.components.chip.background.default,
-    color: palette.components.chip.text.default,
-    '&:hover': {
-      backgroundColor: palette.background.interactiveItem.hover,
+    textAlign: 'center',
+    '.MuiChip-label': {
+      paddingLeft: 0,
+      paddingRight: 0,
+      fontSize: '0.875rem',
+      lineHeight: '1.5rem',
     },
-  }),
+    '.MuiChip-icon': {
+      marginLeft: 0,
+      marginRight: 0,
+    },
+  },
 });
