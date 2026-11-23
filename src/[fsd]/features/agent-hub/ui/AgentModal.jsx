@@ -73,7 +73,7 @@ const AgentModal = memo(props => {
     const basename = getBasename();
     const pathPrefix = basename ? basename : '';
     return agent
-      ? `${baseUrl}${pathPrefix}${RouteDefinitions.EliteaCatalog}?tab=agents&${AgentHubConstants.AGENT_ID}=${agent.id}`
+      ? `${baseUrl}${pathPrefix}${RouteDefinitions.AgentsDiscover}?${AgentHubConstants.AGENT_ID}=${agent.id}`
       : '';
   }, [agent]);
 

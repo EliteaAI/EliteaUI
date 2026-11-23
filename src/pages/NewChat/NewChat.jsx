@@ -98,8 +98,6 @@ const PlaybackChatBox = ChunkHelpers.lazyWithRetry(
 
 const TAG_TYPE_FOLDERS = 'TAG_TYPE_FOLDERS';
 
-const noop = () => {};
-
 const NewChat = props => {
   const { projectId, preProjectId, setPreProjectId } = props;
 
@@ -531,7 +529,6 @@ const NewChat = props => {
     canvasEditorRef,
   } = useEditCanvas({
     setCollapsedParticipants,
-    setCollapsedConversations: noop,
     setChatHistory,
   });
 

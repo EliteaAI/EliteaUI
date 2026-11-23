@@ -143,9 +143,10 @@ export const BREADCRUMB_REGISTRY = {
     parent: RouteDefinitions.SkillRunHistory,
     label: 'Analytics',
   },
-  [RouteDefinitions.EliteaCatalog]: { label: 'Catalog' },
+  // The Catalog became Skills' Discover tab
+  [RouteDefinitions.SkillsDiscover]: { label: PathSessionMap[RouteDefinitions.Skills] },
   [RouteDefinitions.CatalogSkill]: {
-    parent: RouteDefinitions.EliteaCatalog,
+    parent: RouteDefinitions.SkillsDiscover,
     entityName: true,
     fallbackLabel: 'Skill',
   },

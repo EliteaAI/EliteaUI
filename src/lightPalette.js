@@ -143,10 +143,6 @@ const npsPrimaryDisabled = '#c428dd66';
 const npsSecondaryDefault = '#3d44561a';
 const npsSecondaryHover = '#3d445626';
 const npsSecondaryPressed = '#3d445633';
-const agentHubHoverBg = '#C6B8FF33';
-const agentHubShadowActive = '0 0 0.9375rem 0 #A754FF33 inset';
-const agentHubTextGradient = 'linear-gradient(90deg, #DD32FF 0.7%, #8147FF 30%)';
-const agentHubIconGradient = 'linear-gradient(33.96deg, #E345FF 0%, #A274FF 80%)';
 const tagEditorShadow = '0 0.125rem 0.625rem 0 #64778833';
 const entityIconEntityGradient = 'linear-gradient(45.36deg, #777a7c4d 16.25%, #e2e2e24d 87.07%)';
 const entityIconBorderGradient = 'linear-gradient(225deg, #3b42461a 12.64%, #3b424659 87.88%)';
@@ -570,20 +566,6 @@ const lightPalette = {
         },
         secondary: { default: npsSecondaryDefault, hover: npsSecondaryHover, pressed: npsSecondaryPressed },
       },
-    },
-    agentHubButton: {
-      background: {
-        default: 'transparent',
-        hover: agentHubHoverBg,
-        active: agentHubHoverBg,
-      },
-      shadow: {
-        default: 'none',
-        hover: 'none',
-        active: agentHubShadowActive,
-      },
-      textGradient: agentHubTextGradient,
-      iconGradient: agentHubIconGradient,
     },
     userMessageEditor: { border: magentaDefault },
     notificationItem: { border: light40 },

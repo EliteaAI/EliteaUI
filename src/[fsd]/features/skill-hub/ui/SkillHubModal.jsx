@@ -71,7 +71,7 @@ const SkillHubModal = memo(props => {
     if (!skill?.id) return '';
     const baseUrl = `${window.location.protocol}//${window.location.host}`;
     const basename = getBasename() || '';
-    return `${baseUrl}${basename}${RouteDefinitions.EliteaCatalog}?tab=skills&${SkillHubConstants.SKILL_ID}=${skill.id}`;
+    return `${baseUrl}${basename}${RouteDefinitions.SkillsDiscover}?${SkillHubConstants.SKILL_ID}=${skill.id}`;
   }, [skill]);
 
   const likeData = useMemo(() => (skill?.name ? skill : skillDetails || {}), [skill, skillDetails]);

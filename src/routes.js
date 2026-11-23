@@ -12,6 +12,7 @@ const RouteDefinitions = {
 
   Applications: '/agents',
   ApplicationsWithTab: '/agents/:tab',
+  AgentsDiscover: '/agents/discover',
   CreateApplication: '/agents/create',
   ApplicationsDetail: '/agents/:tab/:agentId',
   ApplicationsRunHistory: '/agents/:tab/:agentId/history',
@@ -29,6 +30,7 @@ const RouteDefinitions = {
 
   Skills: '/skills',
   SkillsWithTab: '/skills/:tab',
+  SkillsDiscover: '/skills/discover',
   CreateSkill: '/skills/create',
   SkillsDetail: '/skills/:tab/:skillId',
   SkillRunHistory: '/skills/:tab/:skillId/history',
