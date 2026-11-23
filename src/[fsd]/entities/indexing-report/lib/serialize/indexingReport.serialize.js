@@ -123,7 +123,7 @@ const textOrNull = value => (typeof value === 'string' && value ? value : null);
 
 const normalizeSourceInfo = sourceInfo =>
   textOrNull(sourceInfo?.type)
-    ? { type: sourceInfo.type, location: textOrNull(sourceInfo.location), url: textOrNull(sourceInfo.url) }
+    ? { type: sourceInfo.type, location: textOrNull(sourceInfo.location) }
     : null;
 
 const fromCanonicalReport = (report, entry) => {

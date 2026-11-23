@@ -589,11 +589,7 @@ describe('normalizeIndexingReport — source_info (#6962)', () => {
         },
       }),
     });
-    expect(normalized.sourceInfo).toEqual({
-      type: 'github',
-      location: 'org/repo@main',
-      url: 'https://github.com/org/repo/tree/main',
-    });
+    expect(normalized.sourceInfo).toEqual({ type: 'github', location: 'org/repo@main' });
   });
 
   it('is null for a report without a source', () => {
