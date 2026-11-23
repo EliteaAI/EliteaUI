@@ -459,12 +459,7 @@ describe('useSkillFrontmatterEditor ELITEA fields mirrored from the export', () 
     );
 
     expect(result.current.editor.editorText).toBe(
-      exportText([
-        ...EXPORT_LINES.slice(0, 2),
-        'elitea-model: o3',
-        EXPORT_LINES[4],
-        'elitea-reasoning-effort: medium',
-      ]),
+      exportText([...EXPORT_LINES.slice(0, 2), 'elitea-model: o3', 'elitea-reasoning-effort: medium']),
     );
     expect(result.current.editor.frontmatterErrors).toEqual([]);
   });
@@ -497,6 +492,24 @@ describe('useSkillFrontmatterEditor ELITEA fields mirrored from the export', () 
 
     expect(result.current.editor.editorText).toContain("elitea-temperature: '0.6'");
     expect(result.current.editor.frontmatterErrors).toEqual([]);
+  });
+
+  it('keeps the max tokens error and the typed text when a model switch is refused', async () => {
+    const { result } = renderExportEditor();
+    const typed = exportText([
+      ...EXPORT_LINES.slice(0, 2),
+      'elitea-model: o3',
+      EXPORT_LINES[3],
+      `elitea-max-tokens: '1'`,
+    ]);
+
+    await typeInEditor(result, typed);
+
+    expect(result.current.editor.frontmatterErrors).toEqual([
+      '"metadata.elitea-model": o3 was not applied. Minimum 4096 tokens required for reasoning models',
+    ]);
+    expect(result.current.editor.editorText).toBe(typed);
+    expect(result.current.formik.values.version_details.run_settings.llm_settings.model_name).toBe('gpt-4.1');
   });
 
   it('clears an error once the run settings panel rewrites the line', async () => {

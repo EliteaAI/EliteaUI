@@ -4,6 +4,7 @@ import {
   isLLMSettingsFamilyConflict,
   resetLLMSettingsForModel,
 } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+import { getMaxTokensHelperText, validateMaxTokens } from '@/[fsd]/widgets/llm-model-selector/lib';
 
 export const ELITEA_METADATA_KEYS = {
   tags: 'elitea-tags',
@@ -125,9 +126,24 @@ const parseNumber = (value, key, isValid, expectation) => {
     : { error: `"metadata.${key}" must be ${expectation}` };
 };
 
+const findModelLimitMessage = (maxTokens, model) =>
+  getMaxTokensHelperText(validateMaxTokens(maxTokens, model), model);
+
+const parseMaxTokens = (value, key, model) => {
+  const parsed = parseNumber(value, key, isMaxTokens, 'a positive integer or -1 for the default');
+  if (parsed.error) return parsed;
+  const modelLimitMessage = findModelLimitMessage(parsed.value, model);
+  return modelLimitMessage ? { error: `"metadata.${key}": ${modelLimitMessage}` } : parsed;
+};
+
 const findModelByName = (models, name, preferredProjectId) =>
   models.find(model => model.name === name && model.project_id === preferredProjectId) ||
   models.find(model => model.name === name);
+
+const findEffectiveModel = (models, llmSettings) =>
+  isAutoSelection(llmSettings) || !llmSettings.model_name
+    ? null
+    : findModelByName(models, llmSettings.model_name, llmSettings.model_project_id);
 
 export const applyEliteaMetadataEdits = ({ textMetadata, formMetadata, tags, runSettings, models }) => {
   const isChanged = key => formatTypedValue(textMetadata[key]) !== formMetadata[key];
@@ -145,6 +161,14 @@ export const applyEliteaMetadataEdits = ({ textMetadata, formMetadata, tags, run
   let isTagsChanged = false;
   let isRunSettingsChanged = false;
   let hasModelChanged = false;
+  let isModelSwitchRefused = false;
+
+  const { maxTokens: maxTokensKey } = ELITEA_METADATA_KEYS;
+  const findTypedMaxTokens = () => {
+    if (!isChanged(maxTokensKey)) return DEFAULT_MAX_TOKENS;
+    const typedMaxTokens = Number(textMetadata[maxTokensKey]);
+    return isMaxTokens(typedMaxTokens) ? typedMaxTokens : DEFAULT_MAX_TOKENS;
+  };
 
   const { tags: tagsKey } = ELITEA_METADATA_KEYS;
   if (isChanged(tagsKey)) {
@@ -175,9 +199,13 @@ export const applyEliteaMetadataEdits = ({ textMetadata, formMetadata, tags, run
         String(textMetadata[modelKey]),
         llmSettings.model_project_id,
       );
-      if (model) {
+      const modelLimitMessage = model && findModelLimitMessage(findTypedMaxTokens(), model);
+      if (modelLimitMessage) {
+        errors.push(`"metadata.${modelKey}": ${model.name} was not applied. ${modelLimitMessage}`);
+        isModelSwitchRefused = true;
+      } else if (model) {
         llmSettingsUpdate = {
-          max_tokens: llmSettingsUpdate.max_tokens ?? DEFAULT_MAX_TOKENS,
+          max_tokens: DEFAULT_MAX_TOKENS,
           ...resetLLMSettingsForModel(model),
           ...selectionFields(model),
         };
@@ -190,7 +218,7 @@ export const applyEliteaMetadataEdits = ({ textMetadata, formMetadata, tags, run
   }
 
   const { modelSelection: selectionKey } = ELITEA_METADATA_KEYS;
-  if (isChanged(selectionKey)) {
+  if (!isModelSwitchRefused && isChanged(selectionKey)) {
     if (isRemoved(selectionKey)) {
       llmSettingsUpdate = { ...llmSettingsUpdate, selection: null };
       isRunSettingsChanged = true;
@@ -215,28 +243,25 @@ export const applyEliteaMetadataEdits = ({ textMetadata, formMetadata, tags, run
   }
 
   const selectedModelSettings = llmSettingsUpdate;
+  const effectiveModel = isModelSwitchRefused
+    ? null
+    : findEffectiveModel(models || [], selectedModelSettings);
   const numericFields = [
-    [ELITEA_METADATA_KEYS.temperature, 'temperature', Number.isFinite, 'a number', null],
-    [
-      ELITEA_METADATA_KEYS.maxTokens,
-      'max_tokens',
-      isMaxTokens,
-      'a positive integer or -1 for the default',
-      DEFAULT_MAX_TOKENS,
-    ],
+    [ELITEA_METADATA_KEYS.temperature, 'temperature', parseNumber, [Number.isFinite, 'a number'], null],
+    [maxTokensKey, 'max_tokens', parseMaxTokens, [effectiveModel], DEFAULT_MAX_TOKENS],
   ];
-  numericFields.forEach(([key, field, isValid, expectation, valueWhenRemoved]) => {
+  numericFields.forEach(([key, field, parse, parseArgs, valueWhenRemoved]) => {
     if (!isChanged(key)) return;
     const parsed = isRemoved(key)
       ? { value: valueWhenRemoved }
-      : recordError(parseNumber(textMetadata[key], key, isValid, expectation));
-    if (parsed.error) return;
+      : recordError(parse(textMetadata[key], key, ...parseArgs));
+    if (parsed.error || isModelSwitchRefused) return;
     llmSettingsUpdate = { ...llmSettingsUpdate, [field]: parsed.value };
     isRunSettingsChanged = true;
   });
 
   const { reasoningEffort: effortKey } = ELITEA_METADATA_KEYS;
-  if (isChanged(effortKey)) {
+  if (!isModelSwitchRefused && isChanged(effortKey)) {
     llmSettingsUpdate = {
       ...llmSettingsUpdate,
       reasoning_effort: isRemoved(effortKey) ? null : String(textMetadata[effortKey]),
