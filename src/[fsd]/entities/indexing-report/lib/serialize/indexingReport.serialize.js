@@ -119,6 +119,13 @@ const reportBelongsToEarlierRun = (report, entry) => {
   );
 };
 
+const textOrNull = value => (typeof value === 'string' && value ? value : null);
+
+const normalizeSourceInfo = sourceInfo =>
+  textOrNull(sourceInfo?.type)
+    ? { type: sourceInfo.type, location: textOrNull(sourceInfo.location), url: textOrNull(sourceInfo.url) }
+    : null;
+
 const fromCanonicalReport = (report, entry) => {
   const itemLabels = labelsOf(report.item_labels, DEFAULT_INDEXING_ITEM_LABELS);
   const dependentLabels = labelsOf(report.dependent_labels, DEFAULT_INDEXING_DEPENDENT_LABELS);
@@ -132,6 +139,7 @@ const fromCanonicalReport = (report, entry) => {
     categories: normalizeCategories(report.categories, dependentLabels),
     errors: report.errors || [],
     errorsTotal: countOf(report.errors_total),
+    sourceInfo: normalizeSourceInfo(report.source_info),
     // Non-failing facts a run reports about itself, e.g. rows resumed from an
     // interrupted run, or previously indexed items kept because the loader could not
     // confirm they were deleted at source.

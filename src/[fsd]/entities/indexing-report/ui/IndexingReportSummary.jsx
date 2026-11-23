@@ -6,6 +6,7 @@ import { INDEXING_REPORT_KIND_PRESENTATION } from '../lib/constants/indexingRepo
 import {
   categoryHeadline,
   reportHeadline,
+  reportSourceText,
   unchangedNotice,
   visibleCategories,
 } from '../lib/helpers/indexingReport.helpers';
@@ -18,6 +19,7 @@ const IndexingReportSummary = memo(props => {
   const categories = useMemo(() => (report ? visibleCategories(report) : []), [report]);
   const headline = useMemo(() => (report ? reportHeadline(report) : null), [report]);
   const unchanged = useMemo(() => (report ? unchangedNotice(report) : null), [report]);
+  const sourceText = useMemo(() => (report ? reportSourceText(report) : null), [report]);
 
   const styles = indexingReportSummaryStyles();
 
@@ -34,6 +36,16 @@ const IndexingReportSummary = memo(props => {
           sx={styles.headline}
         >
           {headline.icon} {headline.text}
+        </Typography>
+      )}
+
+      {sourceText && (
+        <Typography
+          variant="bodySmall"
+          sx={styles.groupLabel}
+          data-testid="indexing-report-source"
+        >
+          {sourceText}
         </Typography>
       )}
 

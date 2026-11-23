@@ -577,3 +577,35 @@ describe('parseIndexEntryJson — the store keeps JSON as strings, callers may h
     expect(parseIndexEntryJson('42')).toBeNull();
   });
 });
+
+describe('normalizeIndexingReport — source_info (#6962)', () => {
+  it('carries the source of the run', () => {
+    const normalized = normalizeIndexingReport({
+      report: canonicalReport({
+        source_info: {
+          type: 'github',
+          location: 'org/repo@main',
+          url: 'https://github.com/org/repo/tree/main',
+        },
+      }),
+    });
+    expect(normalized.sourceInfo).toEqual({
+      type: 'github',
+      location: 'org/repo@main',
+      url: 'https://github.com/org/repo/tree/main',
+    });
+  });
+
+  it('is null for a report without a source', () => {
+    expect(normalizeIndexingReport({ report: canonicalReport() }).sourceInfo).toBeNull();
+  });
+
+  it('ignores a source without a usable type', () => {
+    expect(
+      normalizeIndexingReport({ report: canonicalReport({ source_info: { location: 'x' } }) }).sourceInfo,
+    ).toBeNull();
+    expect(
+      normalizeIndexingReport({ report: canonicalReport({ source_info: 'github' }) }).sourceInfo,
+    ).toBeNull();
+  });
+});
