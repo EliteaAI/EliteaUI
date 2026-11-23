@@ -2,10 +2,10 @@ import { memo, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import Tooltip from '@/ComponentsLib/Tooltip';
 import { ToolGroupConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { useToolkitToolOptions } from '@/[fsd]/features/toolkits/lib/hooks';
 import { Input } from '@/[fsd]/shared/ui';
+import EllipsisLabelWithTooltip from '@/[fsd]/shared/ui/label/EllipsisLabelWithTooltip';
 import ChipWithCheckIcon from '@/components/ChipWithCheckIcon';
 
 const { UNCLASSIFIED_GROUP, TOOL_GROUP_ORDER, KNOWN_GROUPS } = ToolGroupConstants;
@@ -89,25 +89,20 @@ const ToolkitTestEmptyState = memo(props => {
                 {tools.map(opt => {
                   const toolKey = typeof opt.value === 'string' ? opt.value : opt.value?.name;
                   return (
-                    <Tooltip
+                    <ChipWithCheckIcon
                       key={toolKey}
-                      title={opt.label}
-                      placement="top"
-                    >
-                      <Box
-                        component="span"
-                        sx={styles.chipWrapper}
-                      >
-                        <ChipWithCheckIcon
-                          testId="toolkit-test-start-tool-chip"
-                          clickable
+                      testId="toolkit-test-start-tool-chip"
+                      clickable
+                      label={
+                        <EllipsisLabelWithTooltip
                           label={opt.label}
-                          onClick={() => onChangeTool(opt.value)}
-                          warning={false}
-                          sx={styles.chip}
+                          sx={styles.chipLabel}
                         />
-                      </Box>
-                    </Tooltip>
+                      }
+                      onClick={() => onChangeTool(opt.value)}
+                      warning={false}
+                      sx={styles.chip}
+                    />
                   );
                 })}
               </Box>
@@ -157,11 +152,11 @@ const toolkitTestEmptyStateStyles = () => ({
       gridTemplateColumns: '1fr',
     },
   }),
-  chipWrapper: {
+  chipLabel: {
     display: 'block',
-    minWidth: 0,
   },
   chip: {
+    minWidth: 0,
     paddingTop: '0.25rem',
     paddingBottom: '0.25rem',
     alignItems: 'center',
