@@ -8,7 +8,6 @@ import {
   SECTION_MODES,
   SECTION_PAGE_CONFIG,
 } from '@/[fsd]/widgets/section-page/lib/constants/sectionPage.constants';
-import { PathSessionMap } from '@/routes';
 
 // In Public, Discover is not offered as a tab but stays reachable, so catalog share links and tours land there
 const getAllowedTabs = (isPublic, hasDiscover, hasPublicViews) => {
@@ -22,7 +21,7 @@ export const useSectionMode = (sectionKey, hasPublicViews = false) => {
   const { tab } = useParams();
   const projectId = useSelectedProjectId();
   const { isPublic, isTeam } = useProjectType();
-  const { listRoute, hasDiscover } = SECTION_PAGE_CONFIG[sectionKey];
+  const { title, listRoute, hasDiscover } = SECTION_PAGE_CONFIG[sectionKey];
 
   const allowedTabs = useMemo(
     () => getAllowedTabs(isPublic, hasDiscover, hasPublicViews),
@@ -38,11 +37,11 @@ export const useSectionMode = (sectionKey, hasPublicViews = false) => {
         replace,
         state: {
           ...(location.state || {}),
-          routeStack: [{ pagePath, breadCrumb: PathSessionMap[listRoute] }],
+          routeStack: [{ pagePath, breadCrumb: title }],
         },
       });
     },
-    [listRoute, location.search, location.state, navigate],
+    [listRoute, location.search, location.state, navigate, title],
   );
 
   const onChangeTab = useCallback(

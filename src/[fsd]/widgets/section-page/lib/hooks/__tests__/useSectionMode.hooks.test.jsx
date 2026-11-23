@@ -123,6 +123,19 @@ describe('useSectionMode', () => {
     expect(path()).toBe('/agents/latest');
   });
 
+  it('keeps only the project tab on Toolkits, MCPs and Credentials', () => {
+    renderAt('/toolkits/my-liked?view=table', { sectionKey: 'toolkits', hasPublicViews: false });
+    expect(path()).toBe('/toolkits/all?view=table');
+    cleanup();
+    renderAt('/mcps/discover', { sectionKey: 'mcps', hasPublicViews: false });
+    expect(path()).toBe('/mcps/all');
+    expect(JSON.parse(screen.getByTestId('state').textContent).routeStack[0].breadCrumb).toBe('MCPs');
+    cleanup();
+    fixture.isPublic = true;
+    renderAt('/credentials/latest', { sectionKey: 'credentials', hasPublicViews: false });
+    expect(path()).toBe('/credentials/all');
+  });
+
   it('switches tabs keeping the search and the navigation state', () => {
     renderAt('/agents/all?tags[]=x', { state: { trendRange: 'week' } });
     act(() => changeTab('discover'));

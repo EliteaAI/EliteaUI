@@ -15,7 +15,6 @@ import {
 } from '@/[fsd]/widgets/section-page/lib/constants/sectionPage.constants';
 import { PERMISSIONS, PUBLIC_PROJECT_ID, SearchParams, ViewMode } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { PathSessionMap } from '@/routes';
 
 export const useSectionAddActions = sectionKey => {
   const navigate = useNavigate();
@@ -28,7 +27,8 @@ export const useSectionAddActions = sectionKey => {
   const { openFileDialog: openSkillFileDialog } = skillImport;
   const [isBuildWithAiOpen, setIsBuildWithAiOpen] = useState(false);
 
-  const { listRoute, createRoute, entityLabel, importKind, buildWithAi } = SECTION_PAGE_CONFIG[sectionKey];
+  const { title, listRoute, createRoute, createPermission, entityLabel, importKind, buildWithAi } =
+    SECTION_PAGE_CONFIG[sectionKey];
 
   // As the old create button: nothing to create into for a user without a personal project in Public
   const isCreationBlocked = isPublic && !personalProjectId;
@@ -37,9 +37,10 @@ export const useSectionAddActions = sectionKey => {
     [projects],
   );
 
-  const canCreate = !isCreationBlocked && checkPermission(PERMISSIONS.applications.create);
-  const canImport = hasOwnProject;
-  const canBuildWithAi = !isCreationBlocked && checkPermission(PERMISSIONS.applications.update);
+  const canCreate = !isCreationBlocked && (!createPermission || checkPermission(createPermission));
+  const canImport = Boolean(importKind) && hasOwnProject;
+  const canBuildWithAi =
+    Boolean(buildWithAi) && !isCreationBlocked && checkPermission(PERMISSIONS.applications.update);
 
   const navigateToCreate = useCallback(
     (extraState = {}) => {
@@ -51,7 +52,7 @@ export const useSectionAddActions = sectionKey => {
             ...extraState,
             routeStack: [
               {
-                breadCrumb: PathSessionMap[listRoute],
+                breadCrumb: title,
                 pagePath: `${listRoute}/${SECTION_MODES.project}?${search}`,
               },
               {
@@ -64,7 +65,7 @@ export const useSectionAddActions = sectionKey => {
         },
       );
     },
-    [createRoute, entityLabel, listRoute, navigate],
+    [createRoute, entityLabel, listRoute, navigate, title],
   );
 
   const onNew = useCallback(() => navigateToCreate(), [navigateToCreate]);
