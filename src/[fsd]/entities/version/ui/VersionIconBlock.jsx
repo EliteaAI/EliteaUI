@@ -52,6 +52,8 @@ const VersionIconBlock = memo(props => {
           data-testid={`version-option-set-default-${name}`}
           sx={styles.setDefaultBox}
           onClick={e => {
+            // The option is a link: stopPropagation alone would let the browser follow its href
+            e.preventDefault();
             e.stopPropagation();
             handleSetDefaultVersion(id);
           }}
