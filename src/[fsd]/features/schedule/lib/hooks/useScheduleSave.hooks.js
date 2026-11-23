@@ -106,6 +106,7 @@ export const useScheduleSave = ({
         : FIELDS_WITH_INPUT;
       if (Object.keys(fieldErrors).some(field => shownFields.includes(field))) setErrors(fieldErrors);
       else if (error?.status === 400 || error?.status === 409) setBanner(error.data?.error ?? '');
+      else if (error?.status === 404 && error.data?.error) setBanner(error.data.error);
       else toastError(`Failed to save the ${toKindNoun(values.trigger_kind)}`);
       return;
     }
