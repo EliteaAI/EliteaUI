@@ -1477,6 +1477,22 @@ describe('ScheduleForm', () => {
       expect(saveButton()).toBeDisabled();
     });
 
+    it('shows a refusal on Save once in the form, toasts it and sends no save (target gone after mount)', async () => {
+      const text = 'The requested item could not be found';
+      const { onSubmit } = renderForm();
+      await fillAgent();
+      checkRisk.mockReturnValue({
+        unwrap: () => Promise.reject({ status: 404, data: { code: 'not_found', error: text } }),
+      });
+
+      await save();
+
+      await waitFor(() => expect(toastError).toHaveBeenCalledWith(text));
+      expect(screen.getAllByText(text)).toHaveLength(1);
+      expect(screen.queryByText('The risk check did not run. Try again.')).not.toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
     it('shows an error toast and the failed state when the check fails on Save', async () => {
       const { onSubmit } = renderForm();
       await fillAgent();

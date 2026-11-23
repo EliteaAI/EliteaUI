@@ -35,11 +35,11 @@ const saveWith = async ({ error, risk = {} }) => {
 describe('useScheduleSave refused save', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('shows the refusal of the risk check in the banner and sends no save when the target is gone', async () => {
+  it('toasts the refusal of the risk check, keeps the banner for the form notice and sends no save', async () => {
     const { banner, onSubmit } = await saveWith({ risk: { refused: NOT_FOUND_TEXT } });
-    expect(banner).toBe(NOT_FOUND_TEXT);
+    expect(mocks.toastError).toHaveBeenCalledWith(NOT_FOUND_TEXT);
+    expect(banner).toBe('');
     expect(onSubmit).not.toHaveBeenCalled();
-    expect(mocks.toastError).not.toHaveBeenCalled();
   });
 
   it('keeps the toast when the risk check did not run', async () => {
