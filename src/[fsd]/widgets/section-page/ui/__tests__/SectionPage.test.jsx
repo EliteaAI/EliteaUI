@@ -5,7 +5,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import getDesignTokens from '@/MainTheme';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 
 import SectionPage from '../SectionPage';
 
@@ -118,6 +118,26 @@ describe('SectionPage', () => {
     runTourStep('applications', 1);
     renderPage({ modeTourId: undefined });
     expect(fixture.onChangeTab).not.toHaveBeenCalled();
+  });
+
+  it('clears the Discover search when the page tour starts', () => {
+    Object.assign(fixture, { tab: 'discover', isDiscover: true });
+    const { rerender } = renderPage();
+    act(() => fixture.toolbarProps.onDiscoverQueryChange('zzz'));
+    expect(fixture.toolbarProps.discoverQuery).toBe('zzz');
+
+    runTourStep('applications', 1);
+    rerender(
+      <ThemeProvider theme={theme}>
+        <SectionPage
+          sectionKey="applications"
+          projectContent={<div data-testid="project-content" />}
+          renderDiscover={() => <div data-testid="discover-content" />}
+          modeTourId="applications"
+        />
+      </ThemeProvider>,
+    );
+    expect(fixture.toolbarProps.discoverQuery).toBe('');
   });
 
   it('does not switch tabs where the mode tabs are hidden', () => {

@@ -51,6 +51,10 @@ const SectionPage = memo(props => {
   useEffect(() => {
     if (showModeTabs && tourStepMode) onChangeTab(tourStepMode);
   }, [onChangeTab, showModeTabs, tourStepMode]);
+  // A leftover Discover search could hide the cards the tour points at
+  useEffect(() => {
+    if (isModeTourRunning) setDiscoverQuery('');
+  }, [isModeTourRunning]);
 
   const listLayout = useMemo(
     () => ({
