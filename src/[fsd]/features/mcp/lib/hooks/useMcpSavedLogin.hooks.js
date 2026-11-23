@@ -36,7 +36,8 @@ export const useMcpSavedLogin = ({ values, projectId, onLoginChange }) => {
   const canManageLogin = Boolean(loginRef?.private) || checkPermission(PERMISSIONS.users.edit);
 
   const { data, refetch, isLoading } = useGetConfigurationsByTypeQuery(
-    { projectId: credProjectId, type: MCP_LOGIN_TYPE },
+    // Exact title lookup: a project can hold more mcp_login credentials than one page
+    { projectId: credProjectId, type: MCP_LOGIN_TYPE, params: { elitea_title: loginRef?.elitea_title } },
     { skip: !loginRef?.elitea_title || !credProjectId },
   );
   const credential = useMemo(
