@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { isWebhookRow, toKindNoun } from '@/[fsd]/entities/schedule';
 import { APPROVAL_RULE } from '@/[fsd]/entities/schedule/lib/constants';
@@ -68,6 +68,10 @@ export const useScheduleSave = ({
   // afterSave: the Run Now that replaces onSaved after this save; afterWarnings keeps it until the dialog closes
   const afterSave = useRef(null);
   const afterWarnings = useRef(null);
+
+  useEffect(() => {
+    if (riskCheck.refused && !reviewSaving) setReview(null);
+  }, [riskCheck.refused, reviewSaving]);
 
   // A 409 of the risk scan opens the review again or shows the block box; riskAck answers the review
   const saveSchedule = async (values, { setErrors, resetForm: resetTo }, runAfterSave, riskAck) => {
@@ -184,6 +188,7 @@ export const useScheduleSave = ({
       return true;
     } catch (error) {
       if (error?.status === 400 || error?.status === 409) setRunNowError(error.data?.error ?? '');
+      else if (error?.status === 404 && error.data?.error) setRunNowError(error.data.error);
       else toastError('Failed to start the run');
       return false;
     } finally {

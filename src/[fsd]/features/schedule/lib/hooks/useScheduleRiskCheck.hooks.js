@@ -18,8 +18,7 @@ const statusOf = (result, approvalRule, isWebhook) =>
 /**
  * The dry-run risk check of the schedule form. It runs when the entity type, the
  * entity or the version changes and when the person returns to the tab. `runCheck()` runs it now
- * and resolves to the findings, `{ refused }` with the server text when the target is gone or hidden (404),
- * or null when the check did not run. `refused` keeps that 404 text while the check stays failed. `approvalRule` is the rule of the form:
+ * and resolves to the findings, `{ refused }` on a 404, or null when the check did not run. `approvalRule` is the rule of the form:
  * under "Pause and ask me" a missing credential or a personal sign-in is `waiting`, not `blocking`. `applyFindings(data)` takes the
  * findings of a 409 save answer. On an edit, `scheduleId` makes the server scan as the schedule owner
  * and answer `confirmed`. `isWebhook`: the server scans for a webhook, which never waits for a sign-in.
@@ -67,14 +66,16 @@ export const useScheduleRiskCheck = ({
       return result;
     } catch (error) {
       const refused = error?.status === 404 && error.data?.error ? error.data.error : null;
-      // A failed check shows as failed; the findings of the same pair stay for an open review dialog
       if (call === latestCall.current) {
-        setState(prev => ({
-          phase: RISK_CHECK_STATUS.FAILED,
-          result: prev.key === key ? prev.result : null,
-          key: prev.key,
-          refused,
-        }));
+        setState(prev => {
+          const findingsOfTheSameLiveTarget = !refused && prev.key === key ? prev.result : null;
+          return {
+            phase: RISK_CHECK_STATUS.FAILED,
+            result: findingsOfTheSameLiveTarget,
+            key: prev.key,
+            refused,
+          };
+        });
       }
       return refused ? { refused } : null;
     }
@@ -112,7 +113,7 @@ export const useScheduleRiskCheck = ({
         ...(notices && { notices }),
         ...(fingerprint && { fingerprint }),
       };
-      return { ...prev, phase: ANSWERED, result };
+      return { ...prev, phase: ANSWERED, result, refused: null };
     });
   }, []);
 
