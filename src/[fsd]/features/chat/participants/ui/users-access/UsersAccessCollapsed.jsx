@@ -68,6 +68,8 @@ const UsersAccessCollapsed = memo(props => {
         anchorEl={anchorRef.current}
         placement="left-start"
         users={access.users}
+        search={access.search}
+        total={access.count}
         currentUserId={userId}
         ownerId={access.ownerId}
         access={access}

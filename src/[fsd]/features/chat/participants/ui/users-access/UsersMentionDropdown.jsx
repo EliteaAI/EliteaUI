@@ -12,6 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 
+import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
 import { DropdownConstants } from '@/[fsd]/shared/lib/constants';
 import { Input } from '@/[fsd]/shared/ui';
 import AtIcon from '@/assets/at-icon.svg?react';
@@ -36,12 +37,17 @@ const UsersMentionDropdown = memo(props => {
     ownerId,
     access,
     showShare = false,
+    search: serverSearch,
+    total,
     onMention,
     onShare,
     onClose,
   } = props;
 
-  const [query, setQuery] = useState('');
+  const [localQuery, setLocalQuery] = useState('');
+  // Whole Team asks the server: the loaded page is only part of the project
+  const query = serverSearch ? serverSearch.query : localQuery;
+  const setQuery = serverSearch ? serverSearch.onQueryChange : setLocalQuery;
   const isLeft = placement.startsWith('left');
   // As wide as the card it opens under; beside an icon it keeps its own width
   const styles = usersMentionDropdownStyles(isLeft ? null : anchorEl?.offsetWidth);
@@ -62,19 +68,24 @@ const UsersMentionDropdown = memo(props => {
   // You are listed as one of the people with access, but cannot mention yourself
   const me = useMemo(() => users.find(item => item.entity_meta?.id == currentUserId), [currentUserId, users]);
   const search = query.trim().toLowerCase();
-  const matches = useCallback(item => getUserName(item).toLowerCase().includes(search), [search]);
+  const matches = useCallback(
+    item => !!serverSearch || getUserName(item).toLowerCase().includes(search),
+    [search, serverSearch],
+  );
   const filtered = useMemo(() => others.filter(matches), [others, matches]);
   const showMe = !!others.length && !!me && matches(me);
   // With one person besides the owner, Everyone would mention just that person
-  const peopleBesidesOwner = users.filter(item => !isOwner(item)).length;
+  const peopleBesidesOwner =
+    serverSearch && total != null ? total - 1 : users.filter(item => !isOwner(item)).length;
   const showEveryone =
     peopleBesidesOwner >= MENTION_EVERYONE_MIN_USERS && EVERYONE_LABEL.toLowerCase().includes(search);
-  const showSearch = others.length >= MENTION_SEARCH_MIN_USERS;
+  // Counted by everyone with access but you, not by the loaded page or the search result
+  const showSearch = (total != null ? total - 1 : others.length) >= MENTION_SEARCH_MIN_USERS;
 
   const handleClose = useCallback(() => {
     setQuery('');
     onClose?.();
-  }, [onClose]);
+  }, [onClose, setQuery]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -90,13 +101,13 @@ const UsersMentionDropdown = memo(props => {
       setQuery('');
       onMention?.(participant);
     },
-    [onMention],
+    [onMention, setQuery],
   );
 
   const handleShare = useCallback(() => {
     setQuery('');
     onShare?.();
-  }, [onShare]);
+  }, [onShare, setQuery]);
 
   return (
     <Popper
@@ -240,15 +251,28 @@ const UsersMentionDropdown = memo(props => {
                       </Box>
                     </MenuItem>
                   ))}
-                  {!filtered.length && !showEveryone && !showMe && (!showShare || !!others.length) && (
-                    <Typography
-                      variant="bodyMedium"
-                      sx={styles.empty}
-                      data-testid="chat-users-mention-empty"
-                    >
-                      {others.length ? 'No matches found' : 'No one else is in this chat yet'}
-                    </Typography>
+                  {serverSearch && (
+                    <ListInfiniteMoreLoader
+                      listCurrentSize={serverSearch.fetched}
+                      totalAvailableCount={serverSearch.queryTotal}
+                      onLoadMore={serverSearch.onLoadMore}
+                      isLoading={serverSearch.isFetching}
+                      resetPageDependencies={query}
+                    />
                   )}
+                  {!filtered.length &&
+                    !showEveryone &&
+                    !serverSearch?.isFetching &&
+                    !showMe &&
+                    (!showShare || !!others.length) && (
+                      <Typography
+                        variant="bodyMedium"
+                        sx={styles.empty}
+                        data-testid="chat-users-mention-empty"
+                      >
+                        {others.length || search ? 'No matches found' : 'No one else is in this chat yet'}
+                      </Typography>
+                    )}
                   {showShare && (
                     <MenuItem
                       sx={styles.shareItem(!!others.length)}
