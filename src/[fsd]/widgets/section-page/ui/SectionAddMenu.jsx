@@ -13,11 +13,14 @@ import SparkleIcon from '@/assets/ai-sparkle-icon.svg?react';
 import ImportIcon from '@/assets/import-icon.svg?react';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 
+import AddButton from './AddButton';
 import AddMenu from './AddMenu';
 
 const SectionAddMenu = memo(props => {
   const { sectionKey } = props;
-  const { entityLabel, importKind, buildWithAi, testIdPrefix } = SECTION_PAGE_CONFIG[sectionKey];
+  const { entityLabel, addLabel, importKind, buildWithAi, testIdPrefix } = SECTION_PAGE_CONFIG[sectionKey];
+  // Nothing but «New» in the section: «+ Add» creates at once, without a menu
+  const isDirectAdd = !importKind && !buildWithAi;
   const {
     canCreate,
     canImport,
@@ -58,11 +61,21 @@ const SectionAddMenu = memo(props => {
     [canBuildWithAi, canCreate, canImport, entityLabel, onBuildWithAi, onImport, onNew, testIdPrefix],
   );
 
+  if (isDirectAdd) {
+    return canCreate ? (
+      <AddButton
+        label={addLabel}
+        onClick={onNew}
+        testId={`${testIdPrefix}-add-button`}
+      />
+    ) : null;
+  }
+
   return (
     <>
       <AddMenu
         items={items}
-        label={`Add ${entityLabel.toLowerCase()}`}
+        label={addLabel}
         testId={`${testIdPrefix}-add-button`}
       />
       {isBuildWithAiOpen && buildWithAi === BUILD_WITH_AI_KINDS.agent && (

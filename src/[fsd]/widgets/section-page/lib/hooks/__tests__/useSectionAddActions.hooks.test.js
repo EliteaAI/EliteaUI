@@ -40,7 +40,7 @@ vi.mock('@/hooks/useCheckPermission', () => ({
   default: () => ({ checkPermission: permission => fixture.permissions.includes(permission) }),
 }));
 
-const ALL = [PERMISSIONS.applications.create, PERMISSIONS.applications.update];
+const ALL = [PERMISSIONS.applications.create, PERMISSIONS.applications.update, PERMISSIONS.toolkits.create];
 
 const renderActions = (sectionKey, overrides = {}) => {
   Object.assign(fixture, {
@@ -111,5 +111,55 @@ describe('useSectionAddActions', () => {
     const result = renderActions('agents', { isPublic: true, personalProjectId: null });
     expect(result.current.canCreate).toBe(false);
     expect(result.current.canBuildWithAi).toBe(false);
+  });
+
+  it.each([
+    ['toolkits', '/toolkits/create', 'Toolkits & Indexes', '/toolkits/all', 'New Toolkit'],
+    ['mcps', '/mcps/create', 'MCPs', '/mcps/all', 'New MCP'],
+    ['credentials', '/credentials/create-credential', 'Credentials', '/credentials/all', 'New Credential'],
+  ])(
+    'opens the %s create page with its route stack',
+    (sectionKey, createPath, listLabel, listPath, newLabel) => {
+      renderActions(sectionKey).current.onNew();
+      expect(fixture.navigate).toHaveBeenCalledWith(
+        { pathname: createPath, search: 'viewMode=owner' },
+        {
+          state: {
+            routeStack: [
+              { breadCrumb: listLabel, pagePath: `${listPath}?viewMode=owner` },
+              { breadCrumb: newLabel, viewMode: 'owner', pagePath: `${createPath}?viewMode=owner` },
+            ],
+          },
+        },
+      );
+    },
+  );
+
+  it('offers neither Import nor Build with AI on Toolkits, MCPs and Credentials', () => {
+    ['toolkits', 'mcps', 'credentials'].forEach(sectionKey => {
+      const result = renderActions(sectionKey);
+      expect(result.current.canImport).toBe(false);
+      expect(result.current.canBuildWithAi).toBe(false);
+    });
+  });
+
+  it('creates toolkits and MCPs only with the toolkit create permission', () => {
+    const permissions = [PERMISSIONS.applications.create];
+    expect(renderActions('toolkits', { permissions }).current.canCreate).toBe(false);
+    expect(renderActions('mcps', { permissions }).current.canCreate).toBe(false);
+    expect(renderActions('mcps', { permissions: [PERMISSIONS.toolkits.create] }).current.canCreate).toBe(
+      true,
+    );
+    expect(renderActions('agents', { permissions: [PERMISSIONS.toolkits.create] }).current.canCreate).toBe(
+      false,
+    );
+  });
+
+  it('creates credentials without a permission, except in Public without a personal project', () => {
+    expect(renderActions('credentials', { permissions: [] }).current.canCreate).toBe(true);
+    expect(
+      renderActions('credentials', { permissions: [], isPublic: true, personalProjectId: null }).current
+        .canCreate,
+    ).toBe(false);
   });
 });
