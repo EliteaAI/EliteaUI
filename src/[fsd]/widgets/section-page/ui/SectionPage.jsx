@@ -1,10 +1,10 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
 import { ELITEA_CATALOG_TOUR_ID } from '@/[fsd]/features/interactive-tours';
 import { ListLayoutContext, useInteractiveTour } from '@/[fsd]/shared/lib/context';
-import { PUBLIC_VIEWS, SECTION_PAGE_CONFIG } from '@/[fsd]/widgets/section-page/lib/constants';
+import { PUBLIC_VIEWS, SECTION_MODES, SECTION_PAGE_CONFIG } from '@/[fsd]/widgets/section-page/lib/constants';
 import {
   useElementBottom,
   useSectionFilterCount,
@@ -16,15 +16,20 @@ import SectionPageToolbar from './SectionPageToolbar';
 
 // The filter panel starts this far below the toolbar
 const PANEL_GAP_PX = 16;
+// A step's `tabIndex` in a page tour: the mode tab it needs on screen
+const TOUR_STEP_MODES = [SECTION_MODES.project, SECTION_MODES.discover];
 
 // A section's own page, opened from Explore: title, toolbar, then the project list, the Catalog (Discover)
 // or, in the Public project, the view picked in "Filter by"
 const SectionPage = memo(props => {
-  const { sectionKey, projectContent, renderDiscover, publicViews } = props;
-  const { title, testIdPrefix, hasDiscover } = SECTION_PAGE_CONFIG[sectionKey];
+  const { sectionKey, projectContent, renderDiscover, publicViews, modeTabTourIds, modeTourId } = props;
+  const { title, testIdPrefix, hasDiscoverFilters } = SECTION_PAGE_CONFIG[sectionKey];
   const hasPublicViews = Boolean(publicViews);
 
-  const { tab, isPublic, isTeam, isDiscover, onChangeTab } = useSectionMode(sectionKey, hasPublicViews);
+  const { tab, isPublic, isTeam, isDiscover, showModeTabs, onChangeTab } = useSectionMode(
+    sectionKey,
+    hasPublicViews,
+  );
   const hasAdminPermission = useHasAdminPermissionOfThisEntity('agents');
   const tour = useInteractiveTour();
   const projectFilterCount = useSectionFilterCount();
@@ -39,6 +44,13 @@ const SectionPage = memo(props => {
   const isFiltersOpen = filtersOpen || isCatalogTourRunning;
 
   const onToggleFilters = useCallback(() => setFiltersOpen(open => !open), []);
+
+  // The page's own tour opens the tab its current step points at
+  const isModeTourRunning = Boolean(modeTourId) && tour?.phase === 'running' && tour?.tourId === modeTourId;
+  const tourStepMode = isModeTourRunning ? TOUR_STEP_MODES[tour?.currentStep?.tabIndex] : undefined;
+  useEffect(() => {
+    if (showModeTabs && tourStepMode) onChangeTab(tourStepMode);
+  }, [onChangeTab, showModeTabs, tourStepMode]);
 
   const listLayout = useMemo(
     () => ({
@@ -90,12 +102,14 @@ const SectionPage = memo(props => {
           sectionKey={sectionKey}
           tab={tab}
           onChangeTab={onChangeTab}
-          showModeTabs={hasDiscover && !isPublic}
+          showModeTabs={showModeTabs}
+          modeTabTourIds={modeTabTourIds}
           showPublicFilter={showPublicFilter}
           showAdminView={hasAdminPermission}
           isTrending={tab === PUBLIC_VIEWS.trending}
           isTeam={isTeam}
           isDiscover={isDiscover}
+          hasFilters={!isDiscover || Boolean(hasDiscoverFilters)}
           filtersOpen={isFiltersOpen}
           onToggleFilters={onToggleFilters}
           filterCount={isDiscover ? discoverFilterCount : projectFilterCount}

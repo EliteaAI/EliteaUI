@@ -501,7 +501,7 @@ export const publicTabs = ['latest', 'my-liked', 'trending'];
 export const ApplicationsTabs = ['latest', 'my-liked', 'trending', 'admin'];
 export const SkillsTabs = ['all'];
 export const ToolkitsTabs = ['all', 'my-liked', 'trending', 'admin'];
-export const AppsTabs = ['applications', 'catalog'];
+export const AppsTabs = ['all', 'discover'];
 
 export const CredentialsTabs = ['all'];
 

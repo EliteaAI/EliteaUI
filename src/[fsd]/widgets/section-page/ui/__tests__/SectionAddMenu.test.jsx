@@ -50,6 +50,7 @@ describe('SectionAddMenu', () => {
     ['toolkits', 'Add toolkit'],
     ['mcps', 'Add MCP'],
     ['credentials', 'Add credential'],
+    ['applications', 'Add application'],
   ])('opens the %s create flow at once, without a menu', (sectionKey, label) => {
     renderAdd(sectionKey);
     const button = screen.getByTestId(`${sectionKey}-add-button`);

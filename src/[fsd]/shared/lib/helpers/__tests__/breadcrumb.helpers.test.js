@@ -38,9 +38,9 @@ describe('resolveBreadcrumbTrail', () => {
   });
 
   it.each(['Inventory', 'Repository Wiki'])('links the %s app back to the Applications list', name => {
-    const trail = resolveBreadcrumbTrail('/apps/catalog/12');
+    const trail = resolveBreadcrumbTrail('/apps/all/12');
 
-    expect(trail.map(crumb => crumb.to)).toEqual(['/apps/applications', '/apps/catalog/12']);
+    expect(trail.map(crumb => crumb.to)).toEqual(['/apps/all', '/apps/all/12']);
     expect(labelsOf(applyBreadcrumbLabels(trail, name))).toEqual(['Applications', name]);
     expect(getBreadcrumbEntityId(trail)).toBe('12');
   });

@@ -21,7 +21,7 @@ export const useSectionMode = (sectionKey, hasPublicViews = false) => {
   const { tab } = useParams();
   const projectId = useSelectedProjectId();
   const { isPublic, isTeam } = useProjectType();
-  const { title, listRoute, hasDiscover } = SECTION_PAGE_CONFIG[sectionKey];
+  const { title, listRoute, hasDiscover, isDiscoverInPublic, legacyTabs } = SECTION_PAGE_CONFIG[sectionKey];
 
   const allowedTabs = useMemo(
     () => getAllowedTabs(isPublic, hasDiscover, hasPublicViews),
@@ -52,14 +52,17 @@ export const useSectionMode = (sectionKey, hasPublicViews = false) => {
   );
 
   useEffect(() => {
-    if (projectId && !isTabAllowed) goToTab(allowedTabs[0], true);
-  }, [allowedTabs, goToTab, isTabAllowed, projectId]);
+    if (!projectId || isTabAllowed) return;
+    const legacyTab = legacyTabs && Object.hasOwn(legacyTabs, tab) ? legacyTabs[tab] : undefined;
+    goToTab(legacyTab ?? allowedTabs[0], true);
+  }, [allowedTabs, goToTab, isTabAllowed, legacyTabs, projectId, tab]);
 
   return {
     tab: currentTab,
     isPublic,
     isTeam,
     isDiscover: currentTab === SECTION_MODES.discover,
+    showModeTabs: Boolean(hasDiscover) && (!isPublic || Boolean(isDiscoverInPublic)),
     onChangeTab,
   };
 };
