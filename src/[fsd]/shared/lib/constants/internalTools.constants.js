@@ -4,6 +4,9 @@ export const IMAGE_GENERATION_TOOLKIT_TYPE = 'ImageGenServiceProvider_ImageGen';
 // Default bucket name for file attachments (must match backend constant)
 export const DEFAULT_ATTACHMENT_BUCKET = 'attachments';
 
+// One capability for building ELITEA entities from chat (#7383); replaces the three builder modules.
+export const ELITEA_BUILDER_INTERNAL_TOOL = 'elitea_builder';
+
 export const INTERNAL_TOOLS_LIST = [
   {
     name: 'attachments',
@@ -40,31 +43,14 @@ export const INTERNAL_TOOLS_LIST = [
     toolkitNames: ['data_analysis'],
   },
   {
-    name: 'internal_mcp',
-    title: 'Agent & Pipeline Builder',
+    name: ELITEA_BUILDER_INTERNAL_TOOL,
+    title: 'Elitea Builder',
     icon: 'McpIcon',
     infoTooltip: {
-      text: 'Create and edit agents and pipelines from the chat.',
+      text: 'Create and edit agents, pipelines, skills, project context and other project settings from the chat.',
     },
-    toolkitNames: ['internal_mcp'],
-  },
-  {
-    name: 'skill_builder',
-    title: 'Skill Builder',
-    icon: 'McpIcon',
-    infoTooltip: {
-      text: 'Create and edit skills from the chat.',
-    },
-    toolkitNames: ['skill_builder'],
-  },
-  {
-    name: 'project_context_builder',
-    title: 'Project Context Builder',
-    icon: 'McpIcon',
-    infoTooltip: {
-      text: 'Create and edit your project context from the chat.',
-    },
-    toolkitNames: ['project_context_builder'],
+    requiresMcpExposure: true,
+    toolkitNames: [ELITEA_BUILDER_INTERNAL_TOOL],
   },
   {
     name: 'ask_user',
@@ -144,9 +130,7 @@ export const INTERNAL_TOOLS_LIST = [
 ];
 
 export const INTERNAL_TOOL_PERSONALIZATION_FIELD_MAP = {
-  internal_mcp: 'default_internal_mcp_enabled',
-  skill_builder: 'default_skill_builder_enabled',
-  project_context_builder: 'default_project_context_builder_enabled',
+  [ELITEA_BUILDER_INTERNAL_TOOL]: 'default_elitea_builder_enabled',
   ask_user: 'default_ask_user_enabled',
   image_generation: 'default_image_generation_enabled',
   web_search: 'default_web_search_enabled',
@@ -158,9 +142,7 @@ export const INTERNAL_TOOL_PERSONALIZATION_FIELD_MAP = {
 };
 
 export const INTERNAL_TOOL_AGENT_PERSONALIZATION_FIELD_MAP = {
-  internal_mcp: 'default_agent_internal_mcp_enabled',
-  skill_builder: 'default_agent_skill_builder_enabled',
-  project_context_builder: 'default_agent_project_context_builder_enabled',
+  [ELITEA_BUILDER_INTERNAL_TOOL]: 'default_agent_elitea_builder_enabled',
   ask_user: 'default_agent_ask_user_enabled',
   image_generation: 'default_agent_image_generation_enabled',
   web_search: 'default_agent_web_search_enabled',

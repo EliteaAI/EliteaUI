@@ -1349,6 +1349,9 @@ export const useChatSocket = ({
               tool_call_id: response_metadata?.hitl_interrupt?.tool_call_id,
               resume_strategy:
                 response_metadata?.hitl_interrupt?.resume_strategy || response_metadata?.resume_strategy,
+              ...(response_metadata?.hitl_interrupt?.guardrail_type === 'builder_changeset'
+                ? response_metadata.hitl_interrupt
+                : {}),
             };
             incomingInterrupts = [buildHitlInterrupt(singleRaw, fallbackMessage)];
           }

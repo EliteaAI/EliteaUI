@@ -347,3 +347,29 @@ describe('EL-7228 resume values', () => {
     expect(hitlResumeValue('block_with_comment')).toBe('');
   });
 });
+
+describe('EL-7383 Builder Changes card', () => {
+  it('keeps the summary, diff and operation arguments, live and on reload', async () => {
+    const { buildHitlInterruptFromRaw } = await import('../chat.helpers');
+    const raw = {
+      guardrail_type: 'builder_changeset',
+      changeset_id: 'cs-1',
+      builder_project_id: 4,
+      summary: 'Delete agent "Helper"',
+      diff: [{ field: 'name', before: 'Helper', after: null }],
+      arguments: { secret_name: 'token' },
+      available_actions: ['apply', 'cancel'],
+    };
+    for (const found of [normalizeHitlInterrupt(raw), buildHitlInterruptFromRaw(raw)]) {
+      expect(found).toMatchObject({
+        changeset_id: 'cs-1',
+        builder_project_id: 4,
+        summary: 'Delete agent "Helper"',
+        diff: [{ field: 'name', before: 'Helper', after: null }],
+        arguments: { secret_name: 'token' },
+        available_actions: ['apply', 'cancel'],
+      });
+    }
+    expect(normalizeHitlInterrupt({ guardrail_type: 'sensitive_tool' })).not.toHaveProperty('diff');
+  });
+});

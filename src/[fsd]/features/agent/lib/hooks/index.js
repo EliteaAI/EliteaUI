@@ -5,6 +5,7 @@ export { useDisassociateToolkit } from './useDisassociateToolkit.hooks';
 export { useSaveAgentToolVariables } from './useSaveAgentToolVariables.hooks';
 export { useLoadApplications } from './useLoadApplications.hooks';
 export { useAgentInternalToolToggle } from './useAgentInternalToolToggle.hooks';
+export { useApplicationChatInternalTools } from './useApplicationChatInternalTools.hooks';
 export {
   useConversationStartersLimit,
   useRefetchConversationStartersLimit,
