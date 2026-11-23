@@ -12,7 +12,7 @@ import { DurationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useGetComponentWidth, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import Markdown from '@/[fsd]/shared/ui/markdown';
+import Markdown, { UntrustedMarkdownBoundary } from '@/[fsd]/shared/ui/markdown';
 import { useLazyMessageTraceQuery } from '@/api';
 import { useListModelsQuery } from '@/api/configurations';
 import CodeIcon from '@/assets/code-icon.svg?react';
@@ -573,7 +573,9 @@ const ActionView = memo(props => {
               sx={styles.contentBox(contentBoxWidth, isStreaming, streamingWindowLines)}
             >
               {action.markdown ? (
-                <Markdown renderHtml={action.renderHtml || false}>{toolContent}</Markdown>
+                <UntrustedMarkdownBoundary>
+                  <Markdown renderHtml={action.renderHtml || false}>{toolContent}</Markdown>
+                </UntrustedMarkdownBoundary>
               ) : (
                 <Typography
                   variant="bodyMedium"

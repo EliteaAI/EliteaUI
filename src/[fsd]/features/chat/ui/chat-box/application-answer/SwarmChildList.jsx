@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { Box } from '@mui/material';
 
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
-import Markdown from '@/[fsd]/shared/ui/markdown';
+import Markdown, { UntrustedMarkdownBoundary } from '@/[fsd]/shared/ui/markdown';
 import { getToolIcon } from '@/common/toolkitUtils';
 
 const SwarmChildList = memo(props => {
@@ -37,7 +37,11 @@ const SwarmChildList = memo(props => {
                     </Box>
                   </Box>
                 ),
-                content: <Markdown>{action.content || action.toolOutputs || ''}</Markdown>,
+                content: (
+                  <UntrustedMarkdownBoundary>
+                    <Markdown>{action.content || action.toolOutputs || ''}</Markdown>
+                  </UntrustedMarkdownBoundary>
+                ),
               },
             ]}
           />
