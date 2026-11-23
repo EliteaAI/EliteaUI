@@ -2,7 +2,8 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
+import { McpSavedLoginConstants } from '@/[fsd]/features/mcp/lib/constants';
+import { McpAuthHelpers, McpSavedLoginHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { useGetConfigurationsByTypeQuery } from '@/api/configurations';
 import { useLogoutMcpSavedLoginMutation } from '@/api/mcpOAuth';
@@ -11,17 +12,6 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { useMcpAuthCheck } from './useMcpAuthCheck.hooks';
 import { extractMcpAuthMetadata } from './useMcpAuthModal.hooks';
-
-export const MCP_LOGIN_TYPE = 'mcp_login';
-export const NO_REFRESH_TOKEN_ERROR = 'no_refresh_token';
-
-// A saved login only fits the server it was made for
-export const isLoginForServer = (credential, serverUrl) =>
-  Boolean(credential?.data?.url && serverUrl) &&
-  McpAuthHelpers.canonicalizeServerUrl(credential.data.url) ===
-    McpAuthHelpers.canonicalizeServerUrl(serverUrl);
-
-export const hasSavedMcpLogin = credential => Boolean(credential?.data?.refresh_token);
 
 // #7643 one admin sign-in for unattended runs; checked with NO browser tokens, so a 401 means "not saved yet"
 export const useMcpSavedLogin = ({ values, projectId, onLoginChange }) => {
@@ -37,15 +27,19 @@ export const useMcpSavedLogin = ({ values, projectId, onLoginChange }) => {
 
   const { data, refetch, isLoading } = useGetConfigurationsByTypeQuery(
     // Exact title lookup: a project can hold more mcp_login credentials than one page
-    { projectId: credProjectId, type: MCP_LOGIN_TYPE, params: { elitea_title: loginRef?.elitea_title } },
+    {
+      projectId: credProjectId,
+      type: McpSavedLoginConstants.MCP_LOGIN_TYPE,
+      params: { elitea_title: loginRef?.elitea_title },
+    },
     { skip: !loginRef?.elitea_title || !credProjectId },
   );
   const credential = useMemo(
     () => data?.items?.find(item => item.elitea_title === loginRef?.elitea_title),
     [data, loginRef],
   );
-  const matchesServer = isLoginForServer(credential, serverUrl);
-  const isConnected = hasSavedMcpLogin(credential) && matchesServer;
+  const matchesServer = McpSavedLoginHelpers.isLoginForServer(credential, serverUrl);
+  const isConnected = McpSavedLoginHelpers.hasSavedMcpLogin(credential) && matchesServer;
 
   const onAuthRequired = useCallback(message => setAuthMetadata(extractMcpAuthMetadata(message)), []);
   const { runAuthCheck, isRunning } = useMcpAuthCheck({
@@ -68,22 +62,12 @@ export const useMcpSavedLogin = ({ values, projectId, onLoginChange }) => {
     if (!credential || !canManageLogin) return;
     try {
       await logoutSavedLogin({ projectId: credProjectId, configurationUuid: credential.uuid }).unwrap();
-      if (serverUrl) McpAuthHelpers.logout(serverUrl);
       toastSuccess('The saved login was removed.');
       onLoginChange?.();
     } catch (error) {
       toastError(error?.data?.error_description || 'Could not remove the saved login.');
     }
-  }, [
-    credential,
-    canManageLogin,
-    logoutSavedLogin,
-    credProjectId,
-    serverUrl,
-    toastSuccess,
-    toastError,
-    onLoginChange,
-  ]);
+  }, [credential, canManageLogin, logoutSavedLogin, credProjectId, toastSuccess, toastError, onLoginChange]);
 
   const onSaved = useCallback(() => {
     // The save happens server-side in the token exchange, which no cache tag covers: reload the credential
