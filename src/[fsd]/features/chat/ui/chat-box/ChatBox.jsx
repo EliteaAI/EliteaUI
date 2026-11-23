@@ -47,6 +47,7 @@ import {
   useBudgetWarning,
   useChatSkillMention,
   useDeleteMessageAlert,
+  useEveryoneMentionIds,
   useIsMidturnInjectionEnabled,
   useNewInputKeyDownHandler,
   useNextInputSuggestion,
@@ -102,7 +103,6 @@ import { Modal } from '@/[fsd]/shared/ui';
 import {
   useConversationEditMutation,
   useInjectMessageMutation,
-  useProjectMemberIdsQuery,
   useRegenerateMutation,
   useRemoveAttachmentsMutation,
   useUpdateMessageMetaMutation,
@@ -339,16 +339,12 @@ const ChatBox = memo(
     // People mentioned from the Users panel who have not joined the chat yet (any member of a whole-team chat)
     const [panelMentionedUsers, setPanelMentionedUsers] = useState([]);
     const isWholeTeamChat = activeConversation?.is_private === false;
-    // Loaded as soon as Everyone is picked, so sending does not wait for it
-    const {
-      data: projectMemberIds,
-      isFetching: isFetchingEveryoneIds,
-      isError: isEveryoneIdsError,
-      refetch: refetchProjectMemberIds,
-    } = useProjectMemberIdsQuery(
-      { projectId },
-      { skip: !isMentioningEveryone || !isWholeTeamChat || !projectId },
-    );
+    const { everyoneMemberIds, isFetchingEveryoneIds, canSendToEveryone } = useEveryoneMentionIds({
+      projectId,
+      isMentioningEveryone,
+      isWholeTeamChat,
+      toastError,
+    });
 
     // Speaking mode states
     const [isSpeakingMode, setIsSpeakingMode] = useState(false);
@@ -1184,11 +1180,7 @@ const ChatBox = memo(
           });
         }
 
-        if (isMentioningEveryone && isWholeTeamChat && isEveryoneIdsError) {
-          toastError('Failed to load the project members to mention. Please try again.');
-          refetchProjectMemberIds();
-          return false;
-        }
+        if (!canSendToEveryone()) return false;
         const participant = activeParticipant;
         const question_id = uuidv4(); // Use uuidv4 instead of useId hook
         const makeEventPayload = conversationUuid =>
@@ -1198,7 +1190,7 @@ const ChatBox = memo(
             question_id,
             conversationUuid,
             attachmentList: attachments,
-            everyoneUserIds: isWholeTeamChat ? projectMemberIds : undefined,
+            everyoneUserIds: everyoneMemberIds,
           });
         let newMessages = initializeNewMessages({
           question,
@@ -1290,7 +1282,7 @@ const ChatBox = memo(
               question_id,
               conversationUuid: activeConversation?.uuid || sendResult.createdConversation?.uuid,
               attachmentList: updatedAttachments,
-              everyoneUserIds: isWholeTeamChat ? projectMemberIds : undefined,
+              everyoneUserIds: everyoneMemberIds,
             });
 
             // For agent chats with new conversation creation, always preserve the existing participant_id
@@ -1418,13 +1410,10 @@ const ChatBox = memo(
         emit,
         getPayload,
         isAgentsPage,
-        isEveryoneIdsError,
-        isMentioningEveryone,
-        isWholeTeamChat,
+        canSendToEveryone,
+        everyoneMemberIds,
         isSendingToUser,
         name,
-        projectMemberIds,
-        refetchProjectMemberIds,
         rememberSend,
         onClearActiveParticipant,
         onClearAttachments,
@@ -1435,7 +1424,6 @@ const ChatBox = memo(
         setConversationStreamingInfo,
         setSelectedUsers,
         setStreamingInfo,
-        toastError,
         unsavedLLMSettings,
         uploadAttachments,
         userId,
