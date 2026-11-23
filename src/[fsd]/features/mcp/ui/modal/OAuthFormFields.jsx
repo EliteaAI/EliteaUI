@@ -61,7 +61,7 @@ const OAuthFormFields = memo(props => {
             {scopeLocked ? 'Scope' : 'Scope (optional)'}
             {scopeLocked && (
               <InfoTooltip
-                infoTooltip="Set by your administrator for the default app."
+                infoTooltip="Set by your administrator or required by this credential."
                 sx={styles.infoIconWrapper}
               />
             )}
@@ -77,7 +77,9 @@ const OAuthFormFields = memo(props => {
         value={scope}
         placeholder="Enter OAuth scopes (space-separated)"
         enableAutoBlur={false}
-        disabled={scopeLocked}
+        // Locked scopes wrap and stay selectable instead of a disabled one-line field cut off with "..." (#7449)
+        multiline={scopeLocked}
+        inputProps={scopeLocked ? { readOnly: true } : undefined}
         data-testid="oauth-scope-input"
       />
       {showSaveCredentials && (

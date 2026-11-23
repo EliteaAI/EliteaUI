@@ -33,17 +33,22 @@ vi.mock('@/[fsd]/features/mcp/lib/helpers/mcpAuth.helpers', () => ({
 
 vi.mock('@/[fsd]/shared/ui', () => ({
   Input: {
-    StyledInputEnhancer: props => (
-      <input
-        placeholder={props.placeholder}
-        aria-label={typeof props.label === 'string' ? props.label : undefined}
-        value={props.value}
-        type={props.type || 'text'}
-        required={props.required}
-        disabled={props.disabled}
-        onChange={props.onChange}
-      />
-    ),
+    // Like the real field: multiline renders a textarea, inputProps reach the native element
+    StyledInputEnhancer: props => {
+      const Field = props.multiline ? 'textarea' : 'input';
+      return (
+        <Field
+          placeholder={props.placeholder}
+          aria-label={typeof props.label === 'string' ? props.label : undefined}
+          value={props.value}
+          type={props.multiline ? undefined : props.type || 'text'}
+          required={props.required}
+          disabled={props.disabled}
+          onChange={props.onChange}
+          {...props.inputProps}
+        />
+      );
+    },
   },
   Checkbox: {
     BaseCheckbox: props => (
@@ -183,6 +188,46 @@ describe('McpAuthModal client secret requirement (#6689)', () => {
   );
 });
 
+describe('McpAuthModal shows every scope of an admin app sign-in (#7449)', () => {
+  afterEach(() => cleanup());
+
+  it('shows every locked scope in a wrapping read-only field instead of a truncated disabled one', () => {
+    const scopes = [
+      'offline_access',
+      'User.ReadBasic.All',
+      'Chat.Read',
+      'Team.ReadBasic.All',
+      'Channel.ReadBasic.All',
+      'ChatMessage.Send',
+      'Chat.Create',
+      'ChannelMessage.Send',
+    ];
+    renderModal(findServerMetadata('Entra v2 tenant'), {
+      mcp_client_id: 'admin-client-id',
+      oauth_app_id: 'app-uuid',
+      credential_type: 'teams',
+      scopes,
+    });
+
+    const scopeField = screen.getByDisplayValue(scopes.join(' '));
+    expect(scopeField.tagName).toBe('TEXTAREA');
+    expect(scopeField).toHaveAttribute('readonly');
+    expect(scopeField).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Authorize' })).toBeEnabled();
+  });
+
+  it('keeps an editable scope input for a Custom app sign-in', () => {
+    renderModal(findServerMetadata('Entra v2 tenant'), {
+      mcp_client_id: 'own-client-id',
+      scopes: ['Mail.Read'],
+    });
+
+    const scopeField = screen.getByDisplayValue('Mail.Read');
+    expect(scopeField).toBeEnabled();
+    expect(scopeField).not.toHaveAttribute('readonly');
+  });
+});
+
 describe('McpAuthModal for a Default app (admin OAuth app) sign-in (#7474)', () => {
   afterEach(() => cleanup());
 
@@ -258,8 +303,9 @@ describe('McpAuthModal for a Microsoft credential with its own Entra app (#7496)
     ).toBeInTheDocument();
     expect(screen.queryByText(/MCP/)).not.toBeInTheDocument();
     expect(screen.queryByText('Scope (optional)')).not.toBeInTheDocument();
+    // Fixed scopes are read-only and selectable, not disabled (#7449)
     const scopeInput = screen.getByDisplayValue(DATAVERSE_SCOPES.join(' '));
-    expect(scopeInput).toBeDisabled();
+    expect(scopeInput).toHaveAttribute('readonly');
     expect(screen.getByRole('button', { name: 'Authorize' })).toBeEnabled();
   });
 
