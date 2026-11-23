@@ -137,7 +137,7 @@ const toolkitTestPanelStyles = () => ({
     justifyContent: 'center',
     flexShrink: 0,
     height: PANEL_HEADER_HEIGHT,
-    background: palette.background.panel,
+    background: palette.background.default.secondary,
     borderBottom: `0.0625rem solid ${palette.border.default}`,
   }),
   headerActions: {
@@ -146,12 +146,13 @@ const toolkitTestPanelStyles = () => ({
     display: 'flex',
     alignItems: 'center',
   },
-  columnBody: {
+  columnBody: ({ palette }) => ({
     display: 'flex',
     flex: 1,
     minHeight: 0,
     minWidth: 0,
-  },
+    background: palette.background.default.tertiary,
+  }),
 });
 
 export default ToolkitTestPanel;
