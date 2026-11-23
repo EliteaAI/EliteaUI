@@ -5,23 +5,31 @@ import { useSelector } from 'react-redux';
 import { Box, useTheme } from '@mui/material';
 
 import { BucketAccessConstants } from '@/[fsd]/features/artifacts/lib/constants';
+import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useProjectType, useSelectedProjectId, useShareLink } from '@/[fsd]/shared/lib/hooks';
-import { Button, Tooltip } from '@/[fsd]/shared/ui';
+import { AppLink, Button, Tooltip } from '@/[fsd]/shared/ui';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
 import GroupsIcon from '@/assets/groups-icon.svg?react';
 import FileUploadIcon from '@/assets/icons/FileUploadIcon.svg?react';
 import BucketIcon from '@/assets/icons/bucket-icon.svg?react';
 import PinIconFilled from '@/assets/pin-filled-new.svg?react';
 import PinIcon from '@/assets/pin-icon.svg?react';
-import { PERMISSIONS } from '@/common/constants';
+import { PERMISSIONS, SearchParams } from '@/common/constants';
 import DotMenu from '@/components/DotMenu';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { getBasename } from '@/routes';
+import RouteDefinitions, { getBasename } from '@/routes';
 import { generateBucketShareUrl } from '@/utils/shareUtils';
 
 const { BUCKET_ACCESS } = BucketAccessConstants;
+
+// Controls inside the row must neither select the bucket nor follow the row's link. The prevent runs in the
+// capture phase because some of them (the menu button) stop propagation themselves.
+const NESTED_CONTROL_PROPS = {
+  onClickCapture: NavigationHelpers.preventLinkFollow,
+  onClick: event => event.stopPropagation(),
+};
 
 export const BucketItem = forwardRef((props, ref) => {
   const {
@@ -93,13 +101,27 @@ export const BucketItem = forwardRef((props, ref) => {
     [bucket, onPin],
   );
 
-  const handleSelectBucket = useCallback(() => {
-    if (isActive) {
-      onToggle?.(bucket.name);
-    }
-    // Always call onSelect to ensure table navigation resets to root
-    onSelect(bucket);
-  }, [bucket, isActive, onSelect, onToggle]);
+  // A real link (href) lets the browser offer "Open link in new tab"
+  const bucketLink = useMemo(
+    () => ({
+      pathname: RouteDefinitions.Artifacts,
+      search: `?${new URLSearchParams({ [SearchParams.Bucket]: name })}`,
+    }),
+    [name],
+  );
+
+  const handleSelectBucket = useCallback(
+    event => {
+      // The link is only a carrier for the href; a plain click keeps the existing selection logic
+      event?.preventDefault?.();
+      if (isActive) {
+        onToggle?.(bucket.name);
+      }
+      // Always call onSelect to ensure table navigation resets to root
+      onSelect(bucket);
+    },
+    [bucket, isActive, onSelect, onToggle],
+  );
 
   const handleUploadClick = useCallback(
     event => {
@@ -136,10 +158,6 @@ export const BucketItem = forwardRef((props, ref) => {
   const onCloseMenuList = useCallback(() => {
     setShowMenu(false);
     setIsHovering(false);
-  }, []);
-
-  const handleMenuClick = useCallback(e => {
-    e.stopPropagation();
   }, []);
 
   const onShowMenuList = useCallback(() => {
@@ -252,6 +270,8 @@ export const BucketItem = forwardRef((props, ref) => {
 
   return (
     <Box
+      component={AppLink}
+      to={bucketLink}
       data-testid={`artifacts-bucket-row-${name}`}
       data-selected={isActive ? 'true' : 'false'}
       ref={ref}
@@ -279,7 +299,7 @@ export const BucketItem = forwardRef((props, ref) => {
       </Box>
 
       {isPinned && (
-        <Box onClick={e => e.stopPropagation()}>
+        <Box {...NESTED_CONTROL_PROPS}>
           <Button.BaseBtn
             variant="tertiary"
             startIcon={<PinIconFilled />}
@@ -291,7 +311,7 @@ export const BucketItem = forwardRef((props, ref) => {
       )}
 
       {!isPinned && isHovering && canUpdate && (
-        <Box onClick={e => e.stopPropagation()}>
+        <Box {...NESTED_CONTROL_PROPS}>
           <Button.BaseBtn
             variant="tertiary"
             startIcon={<PinIcon />}
@@ -304,7 +324,7 @@ export const BucketItem = forwardRef((props, ref) => {
       <Box
         id="Menu"
         sx={styles.menuContainer}
-        onClick={handleMenuClick}
+        {...NESTED_CONTROL_PROPS}
       >
         <DotMenu
           id={`bucket-menu-${name}`}

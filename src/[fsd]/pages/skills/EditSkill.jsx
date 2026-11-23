@@ -198,16 +198,22 @@ const EditSkill = memo(() => {
     }
   }, [error, isError, shouldShowNotFoundPage, toastError]);
 
-  const handleChangeVersion = useCallback(
-    nextVersionId => {
+  const getVersionPath = useCallback(
+    versionId => {
       const base = `${RouteDefinitions.Skills}/${tab}/${skillId}`;
       // Always carry the version id (including the default). A version-less URL
       // resolves to the skill's default version on the backend, so when a
       // non-default version is selected, omitting it makes that version unreachable.
-      const pathname = nextVersionId ? `${base}/${nextVersionId}` : base;
-      navigate(pathname);
+      return versionId ? `${base}/${versionId}` : base;
     },
-    [navigate, skillId, tab],
+    [skillId, tab],
+  );
+
+  const handleChangeVersion = useCallback(
+    nextVersionId => {
+      navigate(getVersionPath(nextVersionId));
+    },
+    [navigate, getVersionPath],
   );
 
   const handleSuccess = useCallback(() => {
@@ -301,6 +307,7 @@ const EditSkill = memo(() => {
                   currentVersionId={currentVersionId}
                   defaultVersionId={data?.meta?.default_version_id}
                   onChangeVersion={handleChangeVersion}
+                  getVersionPath={getVersionPath}
                   onSuccess={handleSuccess}
                   handleSetDefaultVersion={handleOpenDefaultDialog}
                 />

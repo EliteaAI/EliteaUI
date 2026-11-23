@@ -12,8 +12,9 @@ import {
   DraggableConversationItem,
 } from '@/[fsd]/features/chat/conversation-list/ui';
 import { useConversationRunStatus } from '@/[fsd]/features/chat/lib/hooks';
+import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
-import { Input } from '@/[fsd]/shared/ui';
+import { AppLink, Input } from '@/[fsd]/shared/ui';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import ShareIcon from '@/assets/share-icon.svg?react';
 import {
@@ -21,6 +22,7 @@ import {
   ConversationNameWarningMessage,
   MAX_CONVERSATION_LENGTH,
   PERMISSIONS,
+  SearchParams,
 } from '@/common/constants';
 import DotMenu from '@/components/DotMenu';
 import ArrowRightIcon from '@/components/Icons/ArrowRightIcon.jsx';
@@ -34,6 +36,7 @@ import PinIcon from '@/components/Icons/PinIcon';
 import PlayIcon from '@/components/Icons/PlayIcon';
 import UsersIcon from '@/components/Icons/UsersIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
+import RouteDefinitions from '@/routes';
 
 const ConversationItem = memo(props => {
   const {
@@ -141,9 +144,30 @@ const ConversationItem = memo(props => {
     return `calc(100% - ${rightMargin}px)`;
   }, [isHovering, showMenu, isPinned, isPlayback, conversationType, showRunIndicator]);
 
-  const onClickConversation = useCallback(() => {
-    if (!isActive) onSelectConversation(conversation);
-  }, [conversation, isActive, onSelectConversation]);
+  // A real link (href) lets the browser offer "Open link in new tab"; drafts and playbacks have no page of their own
+  const conversationLinkProps = useMemo(() => {
+    if (isNew || isPlayback || typeof conversation.id !== 'number') return {};
+    return {
+      component: AppLink,
+      to: {
+        pathname: NavigationHelpers.buildRoute(RouteDefinitions.ChatConversation, {
+          conversationId: conversation.id,
+        }),
+        search: name ? `?${new URLSearchParams({ [SearchParams.Name]: name })}` : '',
+      },
+      // A native link drag would compete with the drag-and-drop of the row
+      draggable: false,
+    };
+  }, [conversation.id, isNew, isPlayback, name]);
+
+  const onClickConversation = useCallback(
+    event => {
+      // The link is only a carrier for the href; a plain click keeps the existing selection logic
+      event?.preventDefault?.();
+      if (!isActive) onSelectConversation(conversation);
+    },
+    [conversation, isActive, onSelectConversation],
+  );
 
   const handlePin = useCallback(async () => {
     onPin(conversation, !isPinned);
@@ -349,6 +373,7 @@ const ConversationItem = memo(props => {
 
   const renderConversationContent = () => (
     <Box
+      {...conversationLinkProps}
       data-testid={`chat-conversation-item-${conversation.id}`}
       data-active={isActive ? 'true' : 'false'}
       data-pinned={isPinned ? 'true' : 'false'}
@@ -430,6 +455,8 @@ const ConversationItem = memo(props => {
         <Box
           id="Menu"
           sx={styles.menuWrapper}
+          // Capture phase: the menu button stops propagation, so a bubbling handler would never see the click
+          onClickCapture={NavigationHelpers.preventLinkFollow}
         >
           {isDuplicating ? (
             <CircularProgress

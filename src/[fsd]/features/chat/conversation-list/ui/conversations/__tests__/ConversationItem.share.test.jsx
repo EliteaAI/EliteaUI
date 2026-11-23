@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material';
@@ -29,21 +30,26 @@ vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission
 
 const theme = createTheme(getDesignTokens('dark'));
 
-const renderMenu = (conversation, onShare) => {
+const renderItem = (conversation, props = {}) =>
   render(
-    <ThemeProvider theme={theme}>
-      <ConversationItem
-        conversation={{
-          id: 5,
-          name: 'Design review',
-          is_private: true,
-          has_shared_links: true,
-          ...conversation,
-        }}
-        onShare={onShare}
-      />
-    </ThemeProvider>,
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>
+        <ConversationItem
+          conversation={{
+            id: 5,
+            name: 'Design review',
+            is_private: true,
+            has_shared_links: true,
+            ...conversation,
+          }}
+          {...props}
+        />
+      </ThemeProvider>
+    </MemoryRouter>,
   );
+
+const renderMenu = (conversation, onShare) => {
+  renderItem(conversation, { onShare });
   fireEvent.click(screen.getByTestId('conversation-menu-menu-button'));
 };
 
@@ -87,5 +93,44 @@ describe('ConversationItem share menu', () => {
       expect.objectContaining({ id: 5 }),
       'Link copied. Only people with access can open it.',
     );
+  });
+});
+
+describe('ConversationItem open in new tab', () => {
+  beforeEach(() => vi.clearAllMocks());
+  afterEach(() => cleanup());
+
+  it('renders the row as a link to the chat so the browser can open it in a new tab', () => {
+    renderItem({});
+
+    expect(screen.getByTestId('chat-conversation-item-5')).toHaveAttribute(
+      'href',
+      '/chat/5?name=Design+review',
+    );
+  });
+
+  it('selects the chat on a plain click and leaves a modified click to the browser', () => {
+    const onSelectConversation = vi.fn();
+    renderItem({}, { onSelectConversation });
+    const row = screen.getByTestId('chat-conversation-item-5');
+
+    fireEvent.click(row, { ctrlKey: true });
+    expect(onSelectConversation).not.toHaveBeenCalled();
+
+    fireEvent.click(row);
+    expect(onSelectConversation).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not follow the row link when the menu button is clicked', () => {
+    renderItem({});
+
+    // fireEvent returns false when the click's default action (following the href) was prevented
+    expect(fireEvent.click(screen.getByTestId('conversation-menu-menu-button'))).toBe(false);
+  });
+
+  it('is not a link for a playback, which has no page of its own', () => {
+    renderItem({ isPlayback: true });
+
+    expect(screen.getByTestId('chat-conversation-item-5')).not.toHaveAttribute('href');
   });
 });

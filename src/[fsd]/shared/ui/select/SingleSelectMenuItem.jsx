@@ -3,6 +3,7 @@ import { memo } from 'react';
 import { Box, ListItemIcon, MenuItem, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
+import AppLink from '@/[fsd]/shared/ui/app-link';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import RemoveIcon from '@/assets/remove-icon.svg?react';
@@ -29,6 +30,9 @@ const SingleSelectMenuItem = memo(props => {
   const theme = useTheme();
   const selectedBackground = isSelected ? theme.palette.background.interactiveItem.active : undefined;
 
+  // An option with `to` is a real link, so the browser can open it in a new tab
+  const hasLink = Boolean(option.to) && !option.disabled;
+
   const handleClick = event => {
     if (isSelected && onClear) {
       event.preventDefault();
@@ -36,6 +40,8 @@ const SingleSelectMenuItem = memo(props => {
       onClear(event);
       return;
     }
+    // The link is only a carrier for the href; a plain click keeps the select's own handling
+    if (hasLink) event.preventDefault();
     if (muiOnClick) {
       muiOnClick(event);
     }
@@ -113,6 +119,7 @@ const SingleSelectMenuItem = memo(props => {
 
   return (
     <MenuItem
+      {...(hasLink ? { component: AppLink, to: option.to } : {})}
       {...restProps}
       data-testid={option.testId ?? `select-option-${option.value}`}
       sx={[
