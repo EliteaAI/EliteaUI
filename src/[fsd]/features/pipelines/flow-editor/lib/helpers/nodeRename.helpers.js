@@ -38,22 +38,19 @@ const renameNodeInText = (text, name, newName) =>
 // Jinja tags: {{ expression }}, {% statement %} and {# comment #}. The text between them is rendered as it is.
 const JINJA_TAG_PATTERN = /(\{\{[\s\S]*?\}\}|\{%[\s\S]*?%\}|\{#[\s\S]*?#\})/;
 const JINJA_STRING_LITERAL_PATTERN = /(['"])((?:\\.|(?!\1)[^\\])*)\1/g;
-// The runtime cleans node ids and rendered values the same way before it compares them
-const cleanNodeId = value => value.replace(/[^a-zA-Z0-9_.-]/g, '').replace(/\./g, '_');
 
 // A node name in a Jinja template is a value: text the template renders, or a string literal in a tag.
 // A bare name inside a tag reads a state variable, so it is kept.
 const renameNodeInJinja = (template, name, newName) => {
   if (typeof template !== 'string') return template;
 
-  const cleanedName = cleanNodeId(name);
   return template
     .split(JINJA_TAG_PATTERN)
     .map((part, index) => {
       // split() keeps the tags at the odd indexes
       if (index % 2 === 0) return renameNodeInText(part, name, newName);
       return part.replace(JINJA_STRING_LITERAL_PATTERN, (literal, quote, content) =>
-        cleanNodeId(content) === cleanedName ? `${quote}${newName}${quote}` : literal,
+        content === name ? `${quote}${newName}${quote}` : literal,
       );
     })
     .join('');
@@ -62,8 +59,6 @@ const renameNodeInJinja = (template, name, newName) => {
 export const renameNodeInYaml = (prev, name, newName) => {
   const newNodes = [...(prev?.nodes || [])].map(node => {
     const newNode = node.id === name ? { ...node, id: newName } : { ...node };
-    // A state modifier's Jinja template is rendered by the runtime like the router and condition templates
-    if (typeof node.template === 'string') newNode.template = renameNodeInJinja(node.template, name, newName);
     if (node.type !== PipelineNodeTypes.Router) {
       if (node.condition) {
         newNode.condition = {
@@ -80,14 +75,9 @@ export const renameNodeInYaml = (prev, name, newName) => {
           nodes: node.decision.nodes?.map(item => (item === name ? newName : item)),
           default_output: node.decision.default_output === name ? newName : node.decision.default_output,
         };
-        if (node.decision.description) {
-          newNode.decision.description = renameNodeInText(node.decision.description, name, newName);
-        }
       } else if (node.type === PipelineNodeTypes.Decision) {
         newNode.nodes = node.nodes?.map(item => (item === name ? newName : item));
         newNode.default_output = node.default_output === name ? newName : node.default_output;
-        // The criteria tell the LLM which target to pick, so they can name the nodes too
-        if (node.description) newNode.description = renameNodeInText(node.description, name, newName);
       } else if (node.type === PipelineNodeTypes.Hitl) {
         // routes belongs to the Redux state (frozen by Immer), so build a new object instead of assigning into it
         if (node.routes) {
@@ -122,9 +112,12 @@ export const renameNodeInYaml = (prev, name, newName) => {
   };
 };
 
+// JSON.stringify skips undefined, so the id drops out of the comparison
+const withoutId = node => ({ ...node, id: undefined });
+
 /**
- * Finds the nodes renamed by a YAML edit: same position and type, the old id is gone and the new id is unused.
- * Added, removed or swapped nodes are not renames, so they are left out.
+ * Finds the nodes renamed by a YAML edit: same position and type, the old id is gone, the new id is unused
+ * and the rest of the node is unchanged. Added, removed, swapped or replaced nodes are not renames, so they are left out.
  * Returns `[[oldId, newId], ...]`.
  */
 export const getRenamedNodePairs = (prevNodes, nextNodes) => {
@@ -139,6 +132,7 @@ export const getRenamedNodePairs = (prevNodes, nextNodes) => {
     if (!prevNode || !nextNode || prevNode.id === nextNode.id || prevNode.type !== nextNode.type)
       return pairs;
     if (nextIds.has(prevNode.id) || prevIds.has(nextNode.id)) return pairs;
+    if (JSON.stringify(withoutId(prevNode)) !== JSON.stringify(withoutId(nextNode))) return pairs;
     return [...pairs, [prevNode.id, nextNode.id]];
   }, []);
 };

@@ -140,36 +140,39 @@ describe('renameNodeInYaml', () => {
     expect(withDecision.nodes[0].transition).toBe('summarize');
   });
 
-  it('renames the node in the criteria of a decision node, as whole names only', () => {
+  it('keeps the criteria of a decision node, since they are instructions and not references', () => {
+    const description = 'If the llm_1 is complete go to end';
     const result = rename({
       nodes: [
+        { id: 'decide_1', type: 'decision', description, nodes: ['llm_1', 'end'], default_output: 'end' },
         {
-          id: 'decide_1',
-          type: 'decision',
-          description: 'Go to llm_1 when approved. Never go to llm_10 or my_llm_1.',
-          nodes: ['llm_1', 'end'],
-          default_output: 'end',
+          id: 'decide_2',
+          type: 'llm',
+          decision: { description, nodes: ['llm_1'], default_output: 'end' },
         },
       ],
     });
 
-    expect(result.nodes[0].description).toBe(
-      'Go to summarize when approved. Never go to llm_10 or my_llm_1.',
-    );
+    expect(result.nodes[0].description).toBe(description);
+    expect(result.nodes[0].nodes).toEqual(['summarize', 'end']);
+    expect(result.nodes[1].decision.description).toBe(description);
+    expect(result.nodes[1].decision.nodes).toEqual(['summarize']);
   });
 
-  it('renames the node in the criteria of a legacy inline decision', () => {
-    const result = rename({
-      nodes: [
-        {
-          id: 'decide_1',
-          type: 'llm',
-          decision: { description: 'Pick llm_1 if done', nodes: ['llm_1'], default_output: 'end' },
-        },
-      ],
-    });
+  it('only renames a string literal that is exactly the node name', () => {
+    const condition = (definition, name, newName) =>
+      renameNodeInYaml(
+        { nodes: [{ id: 'check_1', type: 'llm', condition: { condition_definition: definition } }] },
+        name,
+        newName,
+      ).nodes[0].condition.condition_definition;
 
-    expect(result.nodes[0].decision.description).toBe('Pick summarize if done');
+    expect(condition("{{ 'Шаг 1' if count == '1' else 'end' }}", 'Шаг 1', 'Шаг 2')).toBe(
+      "{{ 'Шаг 2' if count == '1' else 'end' }}",
+    );
+    expect(condition("{% if last_message != '' %}end{% endif %}", 'Узел', 'Next')).toBe(
+      "{% if last_message != '' %}end{% endif %}",
+    );
   });
 
   it('renames a node name that a Jinja condition renders or compares as a string, not a state variable', () => {
@@ -209,19 +212,14 @@ describe('renameNodeInYaml', () => {
     expect(result.nodes[0].transition).toBe('end');
   });
 
-  it('renames a node name in the Jinja template of a state modifier, but keeps bare state names', () => {
+  it('keeps the template of a state modifier, since it holds data and not node references', () => {
+    const template =
+      "Please llm_1 the draft: {{ messages }} {% if status == 'llm_1' %}{{ 'llm_1' }}{% endif %}";
     const result = rename({
-      nodes: [
-        {
-          id: 'set_1',
-          type: 'state_modifier',
-          template: "{{ llm_1 }} {{ 'llm_1' }} llm_1",
-          output: ['next'],
-        },
-      ],
+      nodes: [{ id: 'set_1', type: 'state_modifier', template, output: ['next'] }],
     });
 
-    expect(result.nodes[0].template).toBe("{{ llm_1 }} {{ 'summarize' }} summarize");
+    expect(result.nodes[0].template).toBe(template);
   });
 
   it('renames a node name that a router template renders, but keeps bare state names', () => {
@@ -337,6 +335,15 @@ describe('getRenamedNodePairs', () => {
           { id: 'b', type: 'llm' },
           { id: 'a', type: 'llm' },
         ],
+      ),
+    ).toEqual([]);
+  });
+
+  it('ignores a node replaced by a different one at the same position', () => {
+    expect(
+      getRenamedNodePairs(
+        [{ id: 'translate', type: 'llm', input: ['a'] }],
+        [{ id: 'classify', type: 'llm', input: ['b'], structured_output: true }],
       ),
     ).toEqual([]);
   });
