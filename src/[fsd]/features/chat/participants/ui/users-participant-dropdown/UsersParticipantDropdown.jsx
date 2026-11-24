@@ -2,10 +2,10 @@ import { memo, useCallback, useRef, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { Box, ClickAwayListener, Grow, IconButton, Paper, Popper, Typography, useTheme } from '@mui/material';
+import { Box, Grow, IconButton, Paper, Popper, Typography, useTheme } from '@mui/material';
 
 import { DropdownConstants } from '@/[fsd]/shared/lib/constants';
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { usePointerDownAway, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { SPACING } from '@/common/designTokens';
 import UsersIcon from '@/components/Icons/UsersIcon';
 
@@ -38,6 +38,7 @@ const UsersParticipantDropdown = memo(props => {
   const { personal_project_id: privateProjectId } = useSelector(state => state.user);
 
   const anchorRef = useRef(null);
+  const paperRef = useRef(null);
 
   const [open, setOpen] = useState(false);
 
@@ -71,6 +72,8 @@ const UsersParticipantDropdown = memo(props => {
     },
     [onSelectUser, onOpenChange],
   );
+
+  usePointerDownAway({ open, anchorEl: anchorRef.current, contentRef: paperRef, onAway: handleClose });
 
   return (
     <Box>
@@ -114,42 +117,39 @@ const UsersParticipantDropdown = memo(props => {
             style={styles.grow(popperPlacement)}
           >
             <Paper
+              ref={paperRef}
               sx={[styles.paper, slotProps?.Paper?.sx || {}]}
               data-testid="chat-participants-popper"
             >
-              <ClickAwayListener onClickAway={handleClose}>
-                <Box>
-                  <Box sx={styles.titleWrapper}>
-                    <Box sx={styles.titleContent}>
-                      <Typography sx={styles.title}>Users</Typography>
-                    </Box>
-                  </Box>
-                  <UserMenu
-                    options={users}
-                    onClickEvent={handleClose}
-                    onSelectOption={handleSelectUser}
-                    onRemoveOption={onDeleteUser}
-                    width={width}
-                    currentUserId={currentUserId}
-                    selectable={!disabledAdd}
-                    sx={{
-                      padding: '0rem 0rem 0rem 0rem',
-                    }}
-                  />
-
-                  {selectedProjectId !== privateProjectId && !disabledAdd && (
-                    <>
-                      <Box sx={styles.footerDivider} />
-                      <DropdownFooter
-                        onSelectOption={handleSelectUser}
-                        onClickEvent={handleClose}
-                        usersCount={users.length}
-                        width={width}
-                      />
-                    </>
-                  )}
+              <Box sx={styles.titleWrapper}>
+                <Box sx={styles.titleContent}>
+                  <Typography sx={styles.title}>Users</Typography>
                 </Box>
-              </ClickAwayListener>
+              </Box>
+              <UserMenu
+                options={users}
+                onClickEvent={handleClose}
+                onSelectOption={handleSelectUser}
+                onRemoveOption={onDeleteUser}
+                width={width}
+                currentUserId={currentUserId}
+                selectable={!disabledAdd}
+                sx={{
+                  padding: '0rem 0rem 0rem 0rem',
+                }}
+              />
+
+              {selectedProjectId !== privateProjectId && !disabledAdd && (
+                <>
+                  <Box sx={styles.footerDivider} />
+                  <DropdownFooter
+                    onSelectOption={handleSelectUser}
+                    onClickEvent={handleClose}
+                    usersCount={users.length}
+                    width={width}
+                  />
+                </>
+              )}
             </Paper>
           </Grow>
         )}
