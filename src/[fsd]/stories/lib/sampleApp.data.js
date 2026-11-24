@@ -1,8 +1,8 @@
-// Sample data for the sidebar + Customize concept stories. Nothing here reaches a backend.
+// Sample workspace for whole-screen stories (withStoryApi): user, project, chats, entities and the API answers.
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 
-export const PROJECT_ID = 42;
-export const USER = {
+const PROJECT_ID = 42;
+const USER = {
   id: 1,
   name: 'George Smith',
   email: 'george_smith@example.com',
@@ -10,7 +10,7 @@ export const USER = {
 };
 
 const flatten = value => (typeof value === 'string' ? [value] : Object.values(value).flatMap(flatten));
-export const ALL_PERMISSIONS = flatten(PERMISSIONS);
+const ALL_PERMISSIONS = flatten(PERMISSIONS);
 
 const conversation = (id, name, daysAgo, is_private = true) => {
   const date = new Date(Date.now() - daysAgo * 24 * 3600 * 1000).toISOString();
@@ -45,8 +45,7 @@ const DATE_GROUPS = [
   dateGroup('older', [conversation(113, 'Vendor contract summary', 12)]),
 ];
 
-// Chat folders as on dev (owner 2026-11-12: «на Dev есть возможность создавать фолдеры и даже их пинить»); a chat in a
-// folder carries its folder_id. One folder is pinned, so the Pinned group shows both kinds.
+// One folder is pinned, so the Pinned group shows both chats and folders
 const chatFolder = (id, name, is_pinned, conversations) => ({
   id,
   name,
@@ -115,7 +114,7 @@ const TAGS = {
 };
 const T = TAGS;
 
-export const ENTITIES = {
+const ENTITIES = {
   agents: [
     entity(
       11,
@@ -176,8 +175,7 @@ export const ENTITIES = {
   ],
   toolkits: [
     entity(51, 'Jira', 'Read and update issues of the PRODUCT board.', [T.jira], { type: 'jira' }),
-    // A toolkit with indexes carries their number, as the list answer on dev does; its card shows «Indexes: N»
-    // (EntityCard: indexes_count). Levon 2026-11-12: «показывалось количество индексов».
+    // indexes_count shows as «Indexes: N» on the card
     entity(52, 'Confluence', 'Search and read the team space.', [T.writing], {
       type: 'confluence',
       indexes_count: 3,
@@ -228,11 +226,7 @@ const ENTITY_FOLDERS = {
 };
 const ALL_FOLDERS = Object.values(ENTITY_FOLDERS).flat();
 
-// The tab Customize shows now. The product's tag panel asks for the project's tags without saying the kind outside its
-// own pages (Categories.jsx: entity_coverage comes from the route), so the sample answer reads it from here.
-export const customizeSection = { key: 'agents' };
-
-export const CATALOG = [
+const CATALOG = [
   entity(
     81,
     'Code Reviewer',
@@ -255,7 +249,7 @@ export const CATALOG = [
   }),
 ].map(published);
 
-export const CATALOG_SKILLS = [
+const CATALOG_SKILLS = [
   entity(
     91,
     'Meeting Notes',
@@ -320,8 +314,7 @@ export const ROUTES = [
     ],
   ],
   ['/secrets/secrets/', []],
-  // Folders and tags of the Customize lists; before '/folder/prompt_lib/' (the chat folders), which is a substring
-  // of '/social/folder/prompt_lib/'.
+  // Entity folders; before '/folder/prompt_lib/' (the chat folders), a substring of these paths
   [
     '/social/folders/prompt_lib/',
     url => {
@@ -342,7 +335,7 @@ export const ROUTES = [
       return { items, total: items.length };
     },
   ],
-  ['/tags/prompt_lib/', () => list(uniqueTags(ENTITIES[customizeSection.key] || []))],
+  ['/tags/prompt_lib/', () => list(uniqueTags(Object.values(ENTITIES).flat()))],
   ['/skills/prompt_lib/', url => list(ENTITIES.skills, url)],
   ['/tools/prompt_lib/', url => list(toolRows(url), url)],
   // Toolkit types: labels for the cards and the Types filter of the Toolkits panel; App Catalog types are applications.

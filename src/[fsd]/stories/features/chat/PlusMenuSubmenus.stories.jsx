@@ -154,13 +154,12 @@ export default {
         settings: { project: { id: PROJECT_ID, name: 'Product Team' }, sideBarCollapsed: true },
         user: { ...USER, permissions: ALL_PERMISSIONS, publicPermissions: ALL_PERMISSIONS },
       },
-      width: 1366,
-      height: 768,
+      width: '100vw',
+      height: '100vh',
       path: '/chat?create=1',
     }),
   ],
 };
 
-export const Dark = { globals: { theme: 'dark' } };
-
-export const Light = { globals: { theme: 'light' } };
+// One story, the theme comes from the toolbar; named as the title so the sidebar shows it as a single item
+export const PlusMenuSubmenus = { name: 'Plus Menu — Submenus on Click' };

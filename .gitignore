@@ -11,6 +11,7 @@ dist
 .playwright-mcp
 *storybook.log
 storybook-static
+storybook-shots
 .DS_Store
 local_features
 

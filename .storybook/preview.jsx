@@ -8,7 +8,13 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 
 import getDesignTokens from '../src/MainTheme';
 import { ToastProvider } from '../src/[fsd]/shared/ui/toast';
+import ScreenshotCompare from '../src/[fsd]/stories/lib/ScreenshotCompare';
+import { SCREENSHOT_MODES, SCREENSHOT_TAG } from '../src/[fsd]/stories/lib/screenshot.constants';
 import StorybookStore from './storybookStore';
+
+// Storybook 10 keeps the background's key ('dark'), older versions its color
+const getThemeMode = globals =>
+  ['dark', '#121212'].includes(globals.backgrounds?.value) || globals.theme === 'dark' ? 'dark' : 'light';
 
 /** @type { import('@storybook/react-vite').Preview } */
 const preview = {
@@ -82,12 +88,21 @@ const preview = {
   },
 
   decorators: [
+    // Stories tagged 'screenshot' can be shown next to their saved screenshot (scripts/storybookScreenshots.js)
+    (Story, context) =>
+      context.tags.includes(SCREENSHOT_TAG) ? (
+        <ScreenshotCompare
+          Story={Story}
+          storyId={context.id}
+          mode={context.globals.screenshot}
+          theme={getThemeMode(context.globals)}
+        />
+      ) : (
+        <Story />
+      ),
     (Story, context) => {
-      // Determine theme mode based on background or explicit theme setting
-      const isDark = context.globals.backgrounds?.value === '#121212' || context.globals.theme === 'dark';
-
       // Create theme using EliteAUI's theme function
-      const theme = createTheme(getDesignTokens(isDark ? 'dark' : 'light'));
+      const theme = createTheme(getDesignTokens(getThemeMode(context.globals)));
 
       return (
         <Provider store={StorybookStore}>
@@ -126,12 +141,18 @@ const preview = {
         showName: true,
       },
     },
+    // Set by the «Baseline» tool of .storybook/ScreenshotTool.jsx, shown only on stories tagged 'screenshot'
+    screenshot: {
+      name: 'Baseline',
+      description: 'Compare a screenshot-tagged story with its saved screenshot',
+    },
   },
 
   initialGlobals: {
     backgrounds: {
       value: 'light',
     },
+    screenshot: SCREENSHOT_MODES.live,
   },
 };
 
