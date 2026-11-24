@@ -155,4 +155,17 @@ describe('validateToolkitForm number bounds', () => {
   it('rejects an optional field that breaks its minimum', () => {
     expect(validateToolkitForm(schema, { pull_request_id: 5, offset: -5 })).toBe(false);
   });
+
+  it('ignores an out-of-range value in a field hidden by visible_when', () => {
+    const conditional = {
+      ...schema,
+      properties: {
+        ...schema.properties,
+        mode: { type: 'string' },
+        offset: { type: 'integer', minimum: 1, visible_when: { field: 'mode', value: 'paged' } },
+      },
+    };
+    expect(validateToolkitForm(conditional, { pull_request_id: 5, mode: 'all', offset: -5 })).toBe(true);
+    expect(validateToolkitForm(conditional, { pull_request_id: 5, mode: 'Paged', offset: -5 })).toBe(false);
+  });
 });

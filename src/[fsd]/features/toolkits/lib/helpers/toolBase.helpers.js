@@ -108,7 +108,7 @@ export const isIntegerType = propertySchema => {
   );
 };
 
-const matchesVisibleWhen = (visibleWhen, settings) => {
+export const matchesVisibleWhen = (visibleWhen, settings) => {
   const currentValue = settings?.[visibleWhen.field];
   const expectedValue = visibleWhen.value;
   return typeof currentValue === 'string' && typeof expectedValue === 'string'

@@ -1,3 +1,5 @@
+import { matchesVisibleWhen } from './toolBase.helpers';
+
 /**
  * For properties the caller supplies itself: removing them, rather than hiding them, is what stops a
  * rendered field or a seeded default putting a competing value back into the tool params.
@@ -78,9 +80,12 @@ export const validateToolkitForm = (schema, variables) => {
   const inputVariables = variables || {};
   const properties = schema.properties || {};
 
-  const hasOutOfRangeNumber = Object.entries(inputVariables).some(([field, value]) =>
-    isNumberOutOfRange(properties[field], value),
-  );
+  // Fields hidden by `visible_when` show no error, so they must not block the run either
+  const hasOutOfRangeNumber = Object.entries(inputVariables).some(([field, value]) => {
+    const property = properties[field];
+    if (property?.visible_when && !matchesVisibleWhen(property.visible_when, inputVariables)) return false;
+    return isNumberOutOfRange(property, value);
+  });
   if (hasOutOfRangeNumber) return false;
 
   return requiredFields.every(field => {
