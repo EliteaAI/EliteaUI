@@ -1,3 +1,7 @@
+import { fileURLToPath } from 'url';
+
+import { screenshotHistory } from './screenshotHistory.js';
+
 /** @type { import('@storybook/react-vite').StorybookConfig } */
 const config = {
   stories: ['../src/**/*.stories.@(js|jsx|ts|tsx)'],
@@ -19,6 +23,10 @@ const config = {
   },
   docs: {
     defaultName: 'Documentation',
+  },
+  core: {
+    // No «what's new» pop-ups in the sidebar
+    disableWhatsNewNotifications: true,
   },
   features: {
     // No git-based «new / changed story» markers in the sidebar
@@ -45,6 +53,8 @@ const config = {
       define: {
         global: 'globalThis',
       },
+      // Versions of the saved story screenshots from git, for the stories' compare view
+      plugins: [screenshotHistory(fileURLToPath(new URL('..', import.meta.url)))],
     });
   },
 };

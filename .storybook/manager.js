@@ -52,8 +52,7 @@ const darkTheme = create({
 });
 
 // Same rule as the preview's theme decorator
-const isDark = globals =>
-  globals?.theme === 'dark' || ['dark', '#121212'].includes(globals?.backgrounds?.value);
+const isDark = globals => ['dark', '#121212'].includes(globals?.backgrounds?.value);
 
 addons.setConfig({
   theme: lightTheme,
@@ -61,7 +60,7 @@ addons.setConfig({
   selectedPanel: 'storybook/docs/panel',
 });
 
-// The Storybook UI follows the Theme / Backgrounds switches of the toolbar and a story's own theme
+// The Storybook UI follows the toolbar's Backgrounds switch, which is the theme of the stories
 addons.register('elitea/theme-sync', api => {
   const applyTheme = () => api.setOptions({ theme: isDark(api.getGlobals()) ? darkTheme : lightTheme });
   [SET_GLOBALS, GLOBALS_UPDATED, STORY_RENDERED].forEach(event => api.on(event, applyTheme));

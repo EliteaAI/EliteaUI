@@ -12,9 +12,8 @@ import ScreenshotCompare from '../src/[fsd]/stories/lib/ScreenshotCompare';
 import { SCREENSHOT_MODES, SCREENSHOT_TAG } from '../src/[fsd]/stories/lib/screenshot.constants';
 import StorybookStore from './storybookStore';
 
-// Storybook 10 keeps the background's key ('dark'), older versions its color
-const getThemeMode = globals =>
-  ['dark', '#121212'].includes(globals.backgrounds?.value) || globals.theme === 'dark' ? 'dark' : 'light';
+// The toolbar's Backgrounds switch is the theme; Storybook 10 keeps its key ('dark'), older versions its color
+const getThemeMode = globals => (['dark', '#121212'].includes(globals.backgrounds?.value) ? 'dark' : 'light');
 
 /** @type { import('@storybook/react-vite').Preview } */
 const preview = {
@@ -53,11 +52,6 @@ const preview = {
           name: 'dark',
           value: '#121212',
         },
-
-        grey: {
-          name: 'grey',
-          value: '#f5f5f5',
-        },
       },
     },
     viewport: {
@@ -92,6 +86,8 @@ const preview = {
     (Story, context) =>
       context.tags.includes(SCREENSHOT_TAG) ? (
         <ScreenshotCompare
+          // A story or theme of its own starts from its newest screenshot
+          key={`${context.id}-${getThemeMode(context.globals)}`}
           Story={Story}
           storyId={context.id}
           mode={context.globals.screenshot}
@@ -131,16 +127,6 @@ const preview = {
   ],
 
   globalTypes: {
-    theme: {
-      name: 'Theme',
-      description: 'Global theme for components',
-      defaultValue: 'light',
-      toolbar: {
-        icon: 'circlehollow',
-        items: ['light', 'dark'],
-        showName: true,
-      },
-    },
     // Set by the «Baseline» tool of .storybook/ScreenshotTool.jsx, shown only on stories tagged 'screenshot'
     screenshot: {
       name: 'Baseline',

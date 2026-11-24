@@ -1,25 +1,35 @@
-import { memo } from 'react';
+import { memo, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { Select } from '@/[fsd]/shared/ui';
+
 import { SCREENSHOT_MODES, SCREENSHOT_SIZE } from './screenshot.constants';
-import { getBaselineUrl } from './screenshot.helpers';
+import { getBaselineVersions } from './screenshot.helpers';
 import { useFitScale } from './useFitScale.hooks';
 
 const GAP_PX = 16;
-const LABEL_PX = 24;
+const LABEL_PX = 40;
+const LIVE = 'live';
+const LIVE_OPTION = { value: LIVE, label: 'Live' };
 const rem = px => `${px / 16}rem`;
 
 // The same story in its own frame of the screenshot's size, so a page that fills the window (100vh) lays out as it
 // did for the screenshot, whatever the size of the Storybook pane
 const getLiveUrl = (storyId, theme) =>
-  `iframe.html?id=${storyId}&viewMode=story&globals=screenshot:${SCREENSHOT_MODES.live};theme:${theme}`;
+  `iframe.html?id=${storyId}&viewMode=story&globals=screenshot:${SCREENSHOT_MODES.live};backgrounds.value:${theme}`;
 
-// The story next to its saved screenshot; the mode comes from the toolbar's «Baseline» switch
+// The story next to its saved screenshot; the mode comes from the toolbar's «Baseline» switch. Each pane picks a version
+// of the screenshot (the left one also the live story), so two versions can be compared as well
 const ScreenshotCompare = memo(props => {
   const { Story, storyId, mode = SCREENSHOT_MODES.live, theme } = props;
 
-  const baselineUrl = getBaselineUrl(storyId, theme);
+  const versions = useMemo(() => getBaselineVersions(storyId, theme), [storyId, theme]);
+  const [leftValue, setLeftValue] = useState(LIVE);
+  const [rightValue, setRightValue] = useState(() => versions[0]?.value);
+  const leftOptions = useMemo(() => [LIVE_OPTION, ...versions], [versions]);
+  const leftVersion = versions.find(version => version.value === leftValue);
+  const rightVersion = versions.find(version => version.value === rightValue) ?? versions[0];
   const isSideBySide = mode === SCREENSHOT_MODES.side;
   const scale = useFitScale(SCREENSHOT_SIZE, isSideBySide ? 2 : 1, GAP_PX, LABEL_PX);
 
@@ -27,7 +37,7 @@ const ScreenshotCompare = memo(props => {
 
   if (mode === SCREENSHOT_MODES.live) return <Story />;
 
-  if (!baselineUrl) {
+  if (!versions.length) {
     return (
       <>
         <Story />
@@ -45,33 +55,42 @@ const ScreenshotCompare = memo(props => {
     <Box sx={styles.root}>
       {isSideBySide && (
         <Box sx={styles.pane}>
-          <Typography
-            variant="labelMedium"
-            sx={styles.label}
-          >
-            Live
-          </Typography>
-          <Box sx={styles.viewport}>
+          <Select.SingleSelect
+            value={leftVersion ? leftValue : LIVE}
+            options={leftOptions}
+            onValueChange={setLeftValue}
+            sx={styles.select}
+          />
+          {leftVersion ? (
             <Box
-              component="iframe"
-              title="Live"
-              src={getLiveUrl(storyId, theme)}
-              sx={styles.liveFrame}
+              component="img"
+              src={leftVersion.url}
+              alt={leftVersion.label}
+              sx={styles.viewport}
             />
-          </Box>
+          ) : (
+            <Box sx={styles.viewport}>
+              <Box
+                component="iframe"
+                title="Live"
+                src={getLiveUrl(storyId, theme)}
+                sx={styles.liveFrame}
+              />
+            </Box>
+          )}
         </Box>
       )}
       <Box sx={styles.pane}>
-        <Typography
-          variant="labelMedium"
-          sx={styles.label}
-        >
-          Baseline
-        </Typography>
+        <Select.SingleSelect
+          value={rightVersion.value}
+          options={versions}
+          onValueChange={setRightValue}
+          sx={styles.select}
+        />
         <Box
           component="img"
-          src={baselineUrl}
-          alt="Baseline"
+          src={rightVersion.url}
+          alt={rightVersion.label}
           sx={styles.viewport}
         />
       </Box>
@@ -99,10 +118,11 @@ const screenshotCompareStyles = scale => ({
     gap: rem(GAP_PX / 2),
     flexShrink: 0,
   },
-  label: ({ palette }) => ({
+  select: {
     height: rem(LABEL_PX - GAP_PX / 2),
-    color: palette.text.secondary,
-  }),
+    width: rem(SCREENSHOT_SIZE.width * scale),
+    margin: 0,
+  },
   viewport: ({ palette }) => ({
     position: 'relative',
     width: rem(SCREENSHOT_SIZE.width * scale),

@@ -30,6 +30,7 @@ const PIXEL_TOLERANCE = 24;
 const MAX_CHANGED_RATIO = 0.0005;
 const SETTLE_MS = 800;
 const SETTLE_TIMEOUT_MS = 20000;
+const MAX_ATTEMPTS = 3;
 const LOADING_SELECTOR = '.MuiSkeleton-root, .MuiCircularProgress-root, .MuiLinearProgress-root';
 
 const [mode = 'update', ...args] = process.argv.slice(2);
@@ -57,24 +58,51 @@ const loadStories = async () => {
 const baselinePath = (story, theme) =>
   join(ROOT, dirname(story.importPath), SCREENSHOT_DIR, getBaselineFileName(story.id, theme));
 
-const shoot = async (page, story, theme) => {
-  await page.goto(`${url}/iframe.html?id=${story.id}&viewMode=story&globals=theme:${theme}`);
-  await page.waitForFunction(
-    phases => phases.includes(window.__STORYBOOK_PREVIEW__?.currentRender?.phase),
-    DONE_PHASES,
-    { timeout: 30000 },
-  );
-  const phase = await page.evaluate(() => window.__STORYBOOK_PREVIEW__.currentRender.phase);
-  if (phase !== 'finished' && phase !== 'completed') throw new Error(`story ${phase}`);
-  await page.waitForLoadState('networkidle');
-  await page.evaluate(() => document.fonts.ready);
-  const settled = await waitUntilSettled(page);
-  if (!settled) console.log(`         still loading after ${SETTLE_TIMEOUT_MS / 1000}s, shot as is`);
-  return page.screenshot({ animations: 'disabled', caret: 'hide' });
+// A cold Storybook reloads the page while Vite optimizes newly found dependencies: such a shot is taken again
+const shoot = async (page, story, theme, attempt = 1) => {
+  await page.goto(`${url}/iframe.html?id=${story.id}&viewMode=story&globals=backgrounds.value:${theme}`);
+  let reloaded = false;
+  // A reload requests the page again; Storybook's own address updates (replaceState) do not
+  const onRequest = request =>
+    request.isNavigationRequest() && request.frame() === page.mainFrame() && (reloaded = true);
+  page.on('request', onRequest);
+  // On a cold start Vite compiles a lazy page while its request waits, and the DOM stays quiet meanwhile
+  const inFlight = new Set();
+  const onStart = request => inFlight.add(request);
+  const onEnd = request => inFlight.delete(request);
+  page.on('request', onStart);
+  page.on('requestfinished', onEnd);
+  page.on('requestfailed', onEnd);
+  try {
+    await page.waitForFunction(
+      phases => phases.includes(window.__STORYBOOK_PREVIEW__?.currentRender?.phase),
+      DONE_PHASES,
+      { timeout: 30000 },
+    );
+    const phase = await page.evaluate(() => window.__STORYBOOK_PREVIEW__.currentRender.phase);
+    if (phase !== 'finished' && phase !== 'completed') throw new Error(`story ${phase}`);
+    await page.waitForLoadState('networkidle');
+    await page.evaluate(() => document.fonts.ready);
+    const settled = await waitUntilSettled(page, inFlight);
+    const shot = await page.screenshot({ animations: 'disabled', caret: 'hide' });
+    if (!reloaded) {
+      if (!settled) console.log(`         still loading after ${SETTLE_TIMEOUT_MS / 1000}s, shot as is`);
+      return shot;
+    }
+  } catch (error) {
+    if (!reloaded || attempt >= MAX_ATTEMPTS) throw error;
+  } finally {
+    page.off('request', onRequest);
+    page.off('request', onStart);
+    page.off('requestfinished', onEnd);
+    page.off('requestfailed', onEnd);
+  }
+  if (attempt >= MAX_ATTEMPTS) throw new Error('the page kept reloading');
+  return shoot(page, story, theme, attempt + 1);
 };
 
 // Lazy pages and sample answers arrive after the story's render phase: wait until nothing loads and the DOM is quiet
-const waitUntilSettled = page =>
+const waitUntilDomQuiet = page =>
   page.evaluate(
     ({ quietMs, timeoutMs, loadingSelector }) =>
       new Promise(resolveSettled => {
@@ -102,6 +130,17 @@ const waitUntilSettled = page =>
       }),
     { quietMs: SETTLE_MS, timeoutMs: SETTLE_TIMEOUT_MS, loadingSelector: LOADING_SELECTOR },
   );
+
+// Settled: no request in flight and then a quiet DOM, until both hold at once
+const waitUntilSettled = async (page, inFlight) => {
+  const deadline = Date.now() + SETTLE_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    while (inFlight.size && Date.now() < deadline) await page.waitForTimeout(100);
+    if (!(await waitUntilDomQuiet(page))) return false;
+    if (!inFlight.size) return true;
+  }
+  return false;
+};
 
 // Pixel comparison on a canvas of the browser, so no image library is needed
 const compare = (page, baseline, actual) =>
