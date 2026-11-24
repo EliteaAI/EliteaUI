@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { parseIntegerInput, sanitizeIntegerInput } from '@/[fsd]/shared/lib/utils/integerInput.utils';
+import { parseIntegerInput, sanitizeIntegerInput } from '@/[fsd]/shared/lib/utils';
 import { includeFieldWrapperOverlapStyles } from '@/[fsd]/shared/ui/field/styles';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import FormInput from '@/components/FormInput.jsx';
@@ -43,8 +43,10 @@ const CommonNumberField = memo(props => {
     return { exclusiveMinimum: exclMin, exclusiveMaximum: exclMax, minimum: min, maximum: max };
   }, [property]);
 
-  // A lone "-" has no numeric value yet; keep it visible until a digit follows
-  const [isMinusPending, setIsMinusPending] = useState(false);
+  // A lone "-" has no numeric value yet; keep it visible until a digit follows. It is tied to the
+  // variables object it was typed into, so a reset or tool switch from the parent drops it.
+  const [minusPendingFor, setMinusPendingFor] = useState(null);
+  const isMinusPending = minusPendingFor !== null && minusPendingFor === toolInputVariables;
 
   const styles = commonNumberFieldStyles();
 
@@ -63,7 +65,7 @@ const CommonNumberField = memo(props => {
       const rawValue = event.target.value;
       // Empty string -> null
       if (rawValue === '' || rawValue === null || rawValue === undefined) {
-        setIsMinusPending(false);
+        setMinusPendingFor(null);
         onChangeInputVariables({
           ...toolInputVariables,
           [field]: null,
@@ -74,11 +76,12 @@ const CommonNumberField = memo(props => {
       if (fieldType === 'integer') {
         // For integers: keep digits and a leading minus (matching ToolBase pattern)
         const cleanedValue = sanitizeIntegerInput(rawValue);
-        setIsMinusPending(cleanedValue === '-');
-        onChangeInputVariables({
+        const nextVariables = {
           ...toolInputVariables,
           [field]: parseIntegerInput(cleanedValue),
-        });
+        };
+        setMinusPendingFor(cleanedValue === '-' ? nextVariables : null);
+        onChangeInputVariables(nextVariables);
       } else {
         // For floats: parse as float
         const parsedValue = parseFloat(rawValue);

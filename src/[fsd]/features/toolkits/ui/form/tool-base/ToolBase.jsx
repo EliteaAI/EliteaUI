@@ -17,7 +17,7 @@ import {
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { AccordionConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import { useIsMcpVisible, useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
-import { sanitizeIntegerInput } from '@/[fsd]/shared/lib/utils/integerInput.utils';
+import { sanitizeIntegerInput } from '@/[fsd]/shared/lib/utils';
 import { Button, Switch } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button';

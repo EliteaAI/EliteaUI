@@ -3,31 +3,38 @@ import { useState } from 'react';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ThemeProvider, createTheme } from '@mui/material';
+import { Button, ThemeProvider, createTheme } from '@mui/material';
 
 import darkPalette from '@/darkPalette';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
-const { default: CommonNumberField } = await import('../CommonNumberField');
+import CommonNumberField from '../CommonNumberField';
 
 const theme = createTheme({ palette: darkPalette });
 
-const Harness = ({ property = { type: 'integer' }, onChange }) => {
+const Harness = props => {
+  const { property = { type: 'integer' }, onChange } = props;
   const [values, setValues] = useState({ limit: null });
   return (
-    <CommonNumberField
-      fieldKey="limit"
-      fieldValue={values.limit}
-      fieldProperties={{ label: 'Limit' }}
-      toolInputVariables={values}
-      onChangeInputVariables={next => {
-        onChange(next);
-        setValues(next);
-      }}
-      property={property}
-      fieldType="integer"
-    />
+    <>
+      <Button
+        data-testid="reset"
+        onClick={() => setValues({ limit: null })}
+      />
+      <CommonNumberField
+        fieldKey="limit"
+        fieldValue={values.limit}
+        fieldProperties={{ label: 'Limit' }}
+        toolInputVariables={values}
+        onChangeInputVariables={next => {
+          onChange(next);
+          setValues(next);
+        }}
+        property={property}
+        fieldType="integer"
+      />
+    </>
   );
 };
 
@@ -72,6 +79,13 @@ describe('CommonNumberField integer input', () => {
     fireEvent.change(input, { target: { value: '' } });
     expect(input).toHaveValue('');
     expect(lastLimit(onChange)).toBeNull();
+  });
+
+  it('drops a pending lone minus when the parent resets the value', () => {
+    const { input } = renderField();
+    fireEvent.change(input, { target: { value: '-' } });
+    fireEvent.click(screen.getByTestId('reset'));
+    expect(input).toHaveValue('');
   });
 
   it('keeps only a leading minus', () => {

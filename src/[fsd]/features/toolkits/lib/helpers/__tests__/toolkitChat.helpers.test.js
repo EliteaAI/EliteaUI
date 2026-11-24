@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { omitSchemaProperties, sanitizeToolParams, selectRunModel } from '../toolkitChat.helpers';
+import {
+  isNumberOutOfRange,
+  omitSchemaProperties,
+  sanitizeToolParams,
+  selectRunModel,
+  validateToolkitForm,
+} from '../toolkitChat.helpers';
 
 const searchSchema = {
   type: 'object',
@@ -115,5 +121,38 @@ describe('selectRunModel', () => {
 
   it('returns null when the project has no models', () => {
     expect(selectRunModel({ items: [] }, { forIndexing: true })).toBeNull();
+  });
+});
+
+describe('isNumberOutOfRange', () => {
+  it.each([
+    [{ type: 'integer', minimum: 1 }, -5, true],
+    [{ type: 'integer', minimum: 1 }, 1, false],
+    [{ anyOf: [{ type: 'integer', exclusiveMinimum: 0 }, { type: 'null' }] }, 0, true],
+    [{ type: 'integer', maximum: 10 }, 11, true],
+    [{ type: 'integer', exclusiveMaximum: 10 }, 10, true],
+    [{ type: 'integer' }, -1, false],
+    [{ type: 'integer', minimum: 1 }, null, false],
+    [undefined, -1, false],
+  ])('%j with %j -> %j', (property, value, expected) => {
+    expect(isNumberOutOfRange(property, value)).toBe(expected);
+  });
+});
+
+describe('validateToolkitForm number bounds', () => {
+  const schema = {
+    required: ['pull_request_id'],
+    properties: {
+      pull_request_id: { type: 'integer' },
+      offset: { anyOf: [{ type: 'integer', minimum: 1 }, { type: 'null' }] },
+    },
+  };
+
+  it('accepts -1 where no minimum is set', () => {
+    expect(validateToolkitForm(schema, { pull_request_id: -1, offset: null })).toBe(true);
+  });
+
+  it('rejects an optional field that breaks its minimum', () => {
+    expect(validateToolkitForm(schema, { pull_request_id: 5, offset: -5 })).toBe(false);
   });
 });
