@@ -17,6 +17,7 @@ import {
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { AccordionConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import { useIsMcpVisible, useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
+import { sanitizeIntegerInput } from '@/[fsd]/shared/lib/utils/integerInput.utils';
 import { Button, Switch } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button';
@@ -195,10 +196,13 @@ const ToolBase = memo(props => {
 
     if (propertySchema) {
       if (ToolBaseHelpers.isIntegerType(propertySchema)) {
-        processedValue = initialValue.replace(/[^0-9]/g, '');
+        processedValue = sanitizeIntegerInput(initialValue);
 
         const constraints = ToolBaseHelpers.getIntegerConstraints(propertySchema);
-        const errorMessage = ToolBaseHelpers.validateIntegerConstraints(processedValue, constraints);
+        const errorMessage =
+          processedValue === '-'
+            ? 'Enter a whole number'
+            : ToolBaseHelpers.validateIntegerConstraints(processedValue, constraints);
 
         setToolErrors(prev => ({
           ...prev,

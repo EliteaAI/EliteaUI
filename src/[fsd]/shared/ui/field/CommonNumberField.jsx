@@ -1,7 +1,8 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { parseIntegerInput, sanitizeIntegerInput } from '@/[fsd]/shared/lib/utils/integerInput.utils';
 import { includeFieldWrapperOverlapStyles } from '@/[fsd]/shared/ui/field/styles';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import FormInput from '@/components/FormInput.jsx';
@@ -42,6 +43,9 @@ const CommonNumberField = memo(props => {
     return { exclusiveMinimum: exclMin, exclusiveMaximum: exclMax, minimum: min, maximum: max };
   }, [property]);
 
+  // A lone "-" has no numeric value yet; keep it visible until a digit follows
+  const [isMinusPending, setIsMinusPending] = useState(false);
+
   const styles = commonNumberFieldStyles();
 
   const handleSelectChange = useCallback(
@@ -59,6 +63,7 @@ const CommonNumberField = memo(props => {
       const rawValue = event.target.value;
       // Empty string -> null
       if (rawValue === '' || rawValue === null || rawValue === undefined) {
+        setIsMinusPending(false);
         onChangeInputVariables({
           ...toolInputVariables,
           [field]: null,
@@ -67,19 +72,13 @@ const CommonNumberField = memo(props => {
       }
 
       if (fieldType === 'integer') {
-        // For integers: strip non-digit characters (matching ToolBase pattern)
-        const cleanedValue = rawValue.replace(/[^0-9]/g, '');
-        if (cleanedValue === '') {
-          onChangeInputVariables({
-            ...toolInputVariables,
-            [field]: null,
-          });
-        } else {
-          onChangeInputVariables({
-            ...toolInputVariables,
-            [field]: parseInt(cleanedValue, 10),
-          });
-        }
+        // For integers: keep digits and a leading minus (matching ToolBase pattern)
+        const cleanedValue = sanitizeIntegerInput(rawValue);
+        setIsMinusPending(cleanedValue === '-');
+        onChangeInputVariables({
+          ...toolInputVariables,
+          [field]: parseIntegerInput(cleanedValue),
+        });
       } else {
         // For floats: parse as float
         const parsedValue = parseFloat(rawValue);
@@ -156,7 +155,7 @@ const CommonNumberField = memo(props => {
       <FormInput
         required={fieldProperties.isRequired}
         type={fieldType === 'integer' ? 'tel' : 'number'}
-        value={fieldValue ?? ''}
+        value={isMinusPending && fieldValue == null ? '-' : (fieldValue ?? '')}
         onChange={event => handleNumberChange(fieldKey, event)}
         error={!!validationError}
         helperText={validationError}
