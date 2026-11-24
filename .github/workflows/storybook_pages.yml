@@ -1,0 +1,70 @@
+name: Deploy Storybook to GitHub Pages
+
+# Builds the Storybook static site and publishes it to GitHub Pages.
+# Served at https://elitea.ai/EliteaUI/storybook/ (project site under the org's custom domain).
+#
+# One-time setup: repo Settings → Pages → Build and deployment → Source: "GitHub Actions".
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - '.storybook/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/storybook_pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deployment at a time; don't cancel one that is in progress.
+concurrency:
+  group: storybook-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.0.0
+          cache: 'npm'
+
+      - name: Install dependencies
+        env:
+          NODE_OPTIONS: '--max-old-space-size=8192'
+        run: npm install
+
+      - name: Build Storybook
+        env:
+          NODE_OPTIONS: '--max-old-space-size=8192'
+        run: npm run build-storybook -- --output-dir _pages/storybook --quiet
+
+      - name: Disable Jekyll processing
+        run: touch _pages/.nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_pages
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
