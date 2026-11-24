@@ -124,8 +124,10 @@ const ComparePipelineYamlStep = memo(props => {
   const leftLiveValidation = leftValue === debouncedLeft ? leftValidation : validatePipelineYaml(leftValue);
   const rightLiveValidation =
     rightValue === debouncedRight ? rightValidation : validatePipelineYaml(rightValue);
-  const leftIsDirty = leftEdits.instructions !== undefined;
-  const rightIsDirty = rightEdits.instructions !== undefined;
+  const leftIsDirty =
+    leftEdits.instructions !== undefined && leftEdits.instructions !== leftData.instructions;
+  const rightIsDirty =
+    rightEdits.instructions !== undefined && rightEdits.instructions !== rightData.instructions;
 
   const handleSaveLeft = useCallback(() => onSaveLeft({ instructions: leftValue }), [leftValue, onSaveLeft]);
   const handleSaveRight = useCallback(
