@@ -31,7 +31,7 @@ const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // Replaces the node name only where it is a whole word, so "llm_1" inside "my_llm_1" or "llm_10" is kept
 const renameNodeInText = (text, name, newName) =>
-  typeof text === 'string'
+  typeof text === 'string' && typeof name === 'string'
     ? text.replace(new RegExp(`(?<![\\w])${escapeRegExp(name)}(?![\\w])`, 'g'), () => newName)
     : text;
 
@@ -124,6 +124,9 @@ const isSameValue = (left, right) => {
   );
 };
 
+// An id left empty or typed as a number in the YAML is not a node name yet, so it can't be renamed from or to
+const isNodeName = id => typeof id === 'string' && id.trim() !== '';
+
 /**
  * Finds the nodes renamed by a YAML edit: same position and type, the old id is gone, the new id is unused
  * and the rest of the node is unchanged. Added, removed, swapped or replaced nodes are not renames, so they are left out.
@@ -140,6 +143,7 @@ export const getRenamedNodePairs = (prevNodes, nextNodes) => {
     const nextNode = nextNodes[index];
     if (!prevNode || !nextNode || prevNode.id === nextNode.id || prevNode.type !== nextNode.type)
       return pairs;
+    if (!isNodeName(prevNode.id) || !isNodeName(nextNode.id)) return pairs;
     if (nextIds.has(prevNode.id) || prevIds.has(nextNode.id)) return pairs;
     if (!isSameValue({ ...prevNode, id: undefined }, { ...nextNode, id: undefined })) return pairs;
     return [...pairs, [prevNode.id, nextNode.id]];

@@ -275,6 +275,32 @@ describe('renameNodeInYaml', () => {
     expect(prev.nodes[0].routes).toEqual({ approve: 'llm_1', edit: 'llm_1', reject: 'end' });
   });
 
+  it('renames the exact references of a node with a numeric id without throwing on condition text', () => {
+    const result = rename(
+      {
+        entry_point: 1,
+        nodes: [
+          { id: 1, type: 'llm', transition: 'end' },
+          {
+            id: 'check_1',
+            type: 'llm',
+            condition: { condition_definition: 'step 1 {{ 1 }}', default_output: 1 },
+          },
+          { id: 'router_1', type: 'router', condition: 'route 1', routes: [1, 'end'], default_output: 'end' },
+        ],
+      },
+      1,
+      'summarize',
+    );
+
+    expect(result.entry_point).toBe('summarize');
+    expect(result.nodes[0].id).toBe('summarize');
+    expect(result.nodes[1].condition.condition_definition).toBe('step 1 {{ 1 }}');
+    expect(result.nodes[1].condition.default_output).toBe('summarize');
+    expect(result.nodes[2].condition).toBe('route 1');
+    expect(result.nodes[2].routes).toEqual(['summarize', 'end']);
+  });
+
   it('keeps a Hitl node without routes as it is', () => {
     const result = rename({ nodes: [{ id: 'hitl_1', type: 'hitl' }] });
 
@@ -380,6 +406,18 @@ describe('getRenamedNodePairs', () => {
         [{ input: ['y', 'x'], id: 'b', type: 'llm' }],
       ),
     ).toEqual([]);
+  });
+
+  it('ignores an id that is cleared or is not a string, so references are not nulled', () => {
+    const pair = (prevId, nextId) =>
+      getRenamedNodePairs([{ id: prevId, type: 'llm' }], [{ id: nextId, type: 'llm' }]);
+
+    expect(pair('foo', null)).toEqual([]);
+    expect(pair(null, 'foo')).toEqual([]);
+    expect(pair(undefined, 'foo')).toEqual([]);
+    expect(pair(1, 'foo')).toEqual([]);
+    expect(pair('foo', 2)).toEqual([]);
+    expect(pair('foo', '  ')).toEqual([]);
   });
 
   it('tolerates missing lists and empty items', () => {
