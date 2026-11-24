@@ -35,14 +35,40 @@ const renameNodeInText = (text, name, newName) =>
     ? text.replace(new RegExp(`(?<![\\w])${escapeRegExp(name)}(?![\\w])`, 'g'), () => newName)
     : text;
 
+// Jinja tags: {{ expression }}, {% statement %} and {# comment #}. The text between them is rendered as it is.
+const JINJA_TAG_PATTERN = /(\{\{[\s\S]*?\}\}|\{%[\s\S]*?%\}|\{#[\s\S]*?#\})/;
+const JINJA_STRING_LITERAL_PATTERN = /(['"])((?:\\.|(?!\1)[^\\])*)\1/g;
+// The runtime cleans node ids and rendered values the same way before it compares them
+const cleanNodeId = value => value.replace(/[^a-zA-Z0-9_.-]/g, '').replace(/\./g, '_');
+
+// A node name in a Jinja template is a value: text the template renders, or a string literal in a tag.
+// A bare name inside a tag reads a state variable, so it is kept.
+const renameNodeInJinja = (template, name, newName) => {
+  if (typeof template !== 'string') return template;
+
+  const cleanedName = cleanNodeId(name);
+  return template
+    .split(JINJA_TAG_PATTERN)
+    .map((part, index) => {
+      // split() keeps the tags at the odd indexes
+      if (index % 2 === 0) return renameNodeInText(part, name, newName);
+      return part.replace(JINJA_STRING_LITERAL_PATTERN, (literal, quote, content) =>
+        cleanNodeId(content) === cleanedName ? `${quote}${newName}${quote}` : literal,
+      );
+    })
+    .join('');
+};
+
 export const renameNodeInYaml = (prev, name, newName) => {
   const newNodes = [...(prev?.nodes || [])].map(node => {
     const newNode = node.id === name ? { ...node, id: newName } : { ...node };
+    // A state modifier's Jinja template is rendered by the runtime like the router and condition templates
+    if (typeof node.template === 'string') newNode.template = renameNodeInJinja(node.template, name, newName);
     if (node.type !== PipelineNodeTypes.Router) {
       if (node.condition) {
         newNode.condition = {
           ...node.condition,
-          condition_definition: node.condition.condition_definition?.replaceAll(name, newName),
+          condition_definition: renameNodeInJinja(node.condition.condition_definition, name, newName),
           conditional_outputs: node.condition.conditional_outputs?.map(item =>
             item === name ? newName : item,
           ),
@@ -76,7 +102,7 @@ export const renameNodeInYaml = (prev, name, newName) => {
       // The runtime follows a transition even when the node also has an inline condition or decision
       if (node.transition === name) newNode.transition = newName;
     } else {
-      newNode.condition = renameNodeInText(node.condition, name, newName);
+      newNode.condition = renameNodeInJinja(node.condition, name, newName);
       newNode.routes = node.routes?.map(item => (item === name ? newName : item));
       newNode.default_output = node.default_output === name ? newName : node.default_output;
     }
@@ -131,7 +157,11 @@ export const renameNodeInFlowNodes = (prevNodes, name, newName) =>
     if (clonedNode.data.condition) {
       newNode.data.condition = {
         ...clonedNode.data.condition,
-        condition_definition: clonedNode.data.condition.condition_definition?.replaceAll(name, newName),
+        condition_definition: renameNodeInJinja(
+          clonedNode.data.condition.condition_definition,
+          name,
+          newName,
+        ),
         conditional_outputs: clonedNode.data.condition.conditional_outputs?.map(item =>
           item === name ? newName : item,
         ),

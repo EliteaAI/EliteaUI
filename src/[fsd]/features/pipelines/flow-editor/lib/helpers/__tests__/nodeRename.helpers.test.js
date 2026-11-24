@@ -5,6 +5,7 @@ import {
   getNodeNameError,
   getRenamedNodePairs,
   renameNodeInEdges,
+  renameNodeInFlowNodes,
   renameNodeInYaml,
 } from '../nodeRename.helpers';
 
@@ -171,10 +172,72 @@ describe('renameNodeInYaml', () => {
     expect(result.nodes[0].decision.description).toBe('Pick summarize if done');
   });
 
+  it('renames a node name that a Jinja condition renders or compares as a string, not a state variable', () => {
+    const result = rename({
+      nodes: [
+        {
+          id: 'check_1',
+          type: 'llm',
+          condition: {
+            condition_definition:
+              "{% if llm_1 %}llm_1{% else %}end{% endif %}{{ 'llm_1' if llm_1.output == 'llm_10' else \"end\" }}",
+            conditional_outputs: ['llm_1'],
+            default_output: 'end',
+          },
+        },
+      ],
+    });
+
+    expect(result.nodes[0].condition.condition_definition).toBe(
+      "{% if llm_1 %}summarize{% else %}end{% endif %}{{ 'summarize' if llm_1.output == 'llm_10' else \"end\" }}",
+    );
+    expect(result.nodes[0].condition.conditional_outputs).toEqual(['summarize']);
+  });
+
+  it('keeps a bare name inside a Jinja tag, since it reads a state variable', () => {
+    const template = '{{ llm_1 }} {{ llm_1.output }} {% if llm_1 == "llm_10" %}end{% endif %}';
+
+    expect(
+      rename({ nodes: [{ id: 'check_1', type: 'llm', condition: { condition_definition: template } }] })
+        .nodes[0].condition.condition_definition,
+    ).toBe(template);
+  });
+
   it('leaves a transition that points elsewhere alone', () => {
     const result = rename({ nodes: [{ id: 'start_1', type: 'llm', transition: 'end' }] });
 
     expect(result.nodes[0].transition).toBe('end');
+  });
+
+  it('renames a node name in the Jinja template of a state modifier, but keeps bare state names', () => {
+    const result = rename({
+      nodes: [
+        {
+          id: 'set_1',
+          type: 'state_modifier',
+          template: "{{ llm_1 }} {{ 'llm_1' }} llm_1",
+          output: ['next'],
+        },
+      ],
+    });
+
+    expect(result.nodes[0].template).toBe("{{ llm_1 }} {{ 'summarize' }} summarize");
+  });
+
+  it('renames a node name that a router template renders, but keeps bare state names', () => {
+    const result = rename({
+      nodes: [
+        {
+          id: 'router_1',
+          type: 'router',
+          condition: "{{ 'llm_1' if llm_1 else 'end' }}",
+          routes: ['llm_1', 'end'],
+          default_output: 'end',
+        },
+      ],
+    });
+
+    expect(result.nodes[0].condition).toBe("{{ 'summarize' if llm_1 else 'end' }}");
   });
 
   it('renames the condition, routes, and default output of a router node', () => {
@@ -310,6 +373,31 @@ describe('applyNodeRenamesToYaml', () => {
     const yamlJson = { entry_point: 'a', nodes: [{ id: 'a', type: 'llm' }] };
 
     expect(applyNodeRenamesToYaml(yamlJson)).toBe(yamlJson);
+  });
+});
+
+describe('renameNodeInFlowNodes', () => {
+  it('renames only whole node names in the condition shown on the canvas', () => {
+    const result = renameNodeInFlowNodes(
+      deepFreeze([
+        {
+          id: 'check_1',
+          data: {
+            label: 'check_1',
+            condition: {
+              condition_definition: '{{ "llm_1" }}{{ llm_1 }}{{ llm_10 }}',
+              conditional_outputs: ['llm_1'],
+              default_output: 'end',
+            },
+          },
+        },
+      ]),
+      'llm_1',
+      'summarize',
+    );
+
+    expect(result[0].data.condition.condition_definition).toBe('{{ "summarize" }}{{ llm_1 }}{{ llm_10 }}');
+    expect(result[0].data.condition.conditional_outputs).toEqual(['summarize']);
   });
 });
 
