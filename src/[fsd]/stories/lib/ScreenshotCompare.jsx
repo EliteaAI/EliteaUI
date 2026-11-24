@@ -10,6 +10,7 @@ import { useFitScale } from './useFitScale.hooks';
 
 const GAP_PX = 16;
 const LABEL_PX = 40;
+const SELECT_MAX_WIDTH_PX = 400;
 const LIVE = 'live';
 const LIVE_OPTION = { value: LIVE, label: 'Live' };
 const rem = px => `${px / 16}rem`;
@@ -59,6 +60,7 @@ const ScreenshotCompare = memo(props => {
             value={leftVersion ? leftValue : LIVE}
             options={leftOptions}
             onValueChange={setLeftValue}
+            maxDisplayValueLength="100%"
             sx={styles.select}
           />
           {leftVersion ? (
@@ -85,6 +87,7 @@ const ScreenshotCompare = memo(props => {
           value={rightVersion.value}
           options={versions}
           onValueChange={setRightValue}
+          maxDisplayValueLength="100%"
           sx={styles.select}
         />
         <Box
@@ -121,7 +124,13 @@ const screenshotCompareStyles = scale => ({
   select: {
     height: rem(LABEL_PX - GAP_PX / 2),
     width: rem(SCREENSHOT_SIZE.width * scale),
+    maxWidth: rem(SELECT_MAX_WIDTH_PX),
     margin: 0,
+    // The value's wrapper must shrink, or a long commit subject is cut without the ellipsis
+    '& .MuiSelect-select > .MuiBox-root': {
+      minWidth: 0,
+      maxWidth: '100%',
+    },
   },
   viewport: ({ palette }) => ({
     position: 'relative',
