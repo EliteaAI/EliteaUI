@@ -68,6 +68,29 @@ describe('skill files API', () => {
     expect(data).toBe('print(1)');
   });
 
+  it('keeps the byte order mark of a file it reads as text', async () => {
+    fetchSpy.mockResolvedValue(new Response(new Uint8Array([0xef, 0xbb, 0xbf, 0x61, 0x0d, 0x0a, 0x62])));
+    const { data } = await makeStore().dispatch(
+      eliteaApi.endpoints.skillVersionFileText.initiate({ ...SCOPE, path: 'run.ps1' }),
+    );
+    expect(data).toBe('\uFEFFa\r\nb');
+  });
+
+  it('saves edited text as a JSON PUT to its path', async () => {
+    await makeStore().dispatch(
+      eliteaApi.endpoints.saveSkillVersionFileText.initiate({
+        ...SCOPE,
+        path: 'scripts/fill.py',
+        content: 'print(2)\n',
+      }),
+    );
+
+    const request = sentRequest(fetchSpy);
+    expect(request.method).toBe('PUT');
+    expect(request.url).toBe('https://test.local/elitea_core/skill_file/prompt_lib/2/7/70/scripts/fill.py');
+    expect(await request.json()).toEqual({ content: 'print(2)\n' });
+  });
+
   it('uploads a file as a multipart PUT to its path', async () => {
     const file = new File(['x'], 'fill.py');
     await makeStore().dispatch(

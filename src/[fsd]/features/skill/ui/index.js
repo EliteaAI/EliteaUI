@@ -8,6 +8,7 @@ export { default as PrivateSkillsList } from './PrivateSkillsList';
 export { default as SaveSkillButton } from './SaveSkillButton';
 export { default as SaveSkillVersionButton } from './SaveSkillVersionButton';
 export { default as SkillCard } from './SkillCard.jsx';
+export { default as SkillCompareFilesStep } from './skill-compare-files/SkillCompareFilesStep';
 export { default as SkillControls } from './SkillControls';
 export { default as SkillInformation } from './SkillInformation';
 export { default as SkillMenu } from './SkillMenu.jsx';

@@ -19,7 +19,29 @@ vi.mock('../steps', () => {
         data-read-only={String(Boolean(props.readOnly))}
         data-right-note={props.rightNote ?? ''}
         data-nested-rows={props.nestedRows ? String(props.nestedRows.length) : ''}
+        data-header-save={props.leftHeaderSave ? String(props.leftHeaderSave.isDirty) : ''}
+        data-header-save-reason={props.leftHeaderSave?.disabledReason ?? ''}
       >
+        {props.leftHeaderSave && (
+          <button
+            type="button"
+            onClick={props.leftHeaderSave.onSave}
+          >
+            header-save-left
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => props.onLeftEdit?.('instructions', '  ')}
+        >
+          blank-instructions
+        </button>
+        <button
+          type="button"
+          onClick={() => props.onLeftEdit?.('file:scripts/fill.py', 'print(2)')}
+        >
+          edit-file
+        </button>
         <button
           type="button"
           onClick={() => props.onLeftEdit?.('instructions', 'edited')}
@@ -145,6 +167,90 @@ describe('CompareVersionsModal', () => {
     expect(stepLabels()).toEqual(['Step 1: Instructions', 'Step 2: Run settings']);
   });
 
+  describe('for a skill', () => {
+    const withFiles = {
+      ...loaded,
+      leftData: { instructions: 'left', files: [] },
+      rightData: { instructions: 'right', files: [{ path: 'scripts/fill.py' }] },
+    };
+    const renderSkill = props =>
+      renderModal({
+        entityType: 'skill',
+        onLoadVersions: vi.fn().mockResolvedValue(withFiles),
+        renderFilesStep: stepProps => (
+          <div
+            data-testid="files-step"
+            data-header-save={String(Boolean(stepProps.leftHeaderSave && stepProps.rightHeaderSave))}
+          />
+        ),
+        ...props,
+      });
+
+    it('puts Files second when either version has files', async () => {
+      renderSkill();
+      await openWizard();
+      expect(stepLabels()).toEqual(['Step 1: Instructions', 'Step 2: Files', 'Step 3: Run settings']);
+      fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+      expect(screen.getByTestId('files-step')).toHaveAttribute('data-header-save', 'true');
+    });
+
+    it('offers Select versions on the left and only the step buttons on the right', async () => {
+      renderSkill();
+      await openWizard();
+      const stepButtons = () =>
+        ['Previous', 'Next', 'Finish'].filter(name => screen.queryByRole('button', { name }));
+      expect(screen.queryByRole('button', { name: 'Change versions' })).not.toBeInTheDocument();
+      expect(screen.getByTestId('compare-select-versions')).toHaveTextContent('Select versions');
+      expect(stepButtons()).toEqual(['Next']);
+      fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+      expect(stepButtons()).toEqual(['Previous', 'Next']);
+      fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+      expect(stepButtons()).toEqual(['Previous', 'Finish']);
+    });
+
+    it('still asks before Select versions discards edits', async () => {
+      renderSkill();
+      await openWizard();
+      fireEvent.click(screen.getByRole('button', { name: 'edit-instructions' }));
+      fireEvent.click(screen.getByTestId('compare-select-versions'));
+      expect(screen.getByText('Discard unsaved changes?')).toBeInTheDocument();
+    });
+
+    it('saves every unsaved edit of a version with the Save of its header', async () => {
+      const onSaveLeft = vi.fn();
+      renderSkill({ onSaveLeft });
+      await openWizard();
+      expect(screen.getByTestId('stub-instructions')).toHaveAttribute('data-header-save', 'false');
+      fireEvent.click(screen.getByRole('button', { name: 'edit-instructions' }));
+      fireEvent.click(screen.getByRole('button', { name: 'edit-file' }));
+      expect(screen.getByTestId('stub-instructions')).toHaveAttribute('data-header-save', 'true');
+      fireEvent.click(screen.getByRole('button', { name: 'header-save-left' }));
+      expect(onSaveLeft).toHaveBeenCalledWith(
+        expect.objectContaining({
+          fieldPayload: { instructions: 'edited', 'file:scripts/fill.py': 'print(2)' },
+          versionId: 1,
+        }),
+      );
+    });
+
+    it('blocks Save with a reason while the instructions are blank', async () => {
+      renderSkill();
+      await openWizard();
+      expect(screen.getByTestId('stub-instructions')).toHaveAttribute('data-header-save-reason', '');
+      fireEvent.click(screen.getByRole('button', { name: 'blank-instructions' }));
+      expect(screen.getByTestId('stub-instructions')).toHaveAttribute(
+        'data-header-save-reason',
+        'Instructions cannot be empty.',
+      );
+    });
+  });
+
+  it('keeps the Save under each field for agents and pipelines', async () => {
+    renderModal({ entityType: 'agent' });
+    await openWizard();
+    expect(screen.getByTestId('stub-instructions')).toHaveAttribute('data-header-save', '');
+  });
+
   it('gives the pipeline Tools step its own empty text', async () => {
     renderModal();
     await openWizard();
@@ -192,7 +298,7 @@ describe('CompareVersionsModal', () => {
   it.each([
     ['Esc', () => fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })],
     ['the close icon', () => fireEvent.click(screen.getAllByRole('button', { name: 'Close' })[0])],
-    ['Change versions', () => fireEvent.click(screen.getByRole('button', { name: 'Change versions' }))],
+    ['Change versions', () => fireEvent.click(screen.getByRole('button', { name: 'Select versions' }))],
   ])('asks before discarding edits on %s', async (_, act) => {
     const onClose = vi.fn();
     renderModal({ onClose });
@@ -415,7 +521,7 @@ describe('CompareVersionsModal comparing with a public version', () => {
     renderPublic();
     await openWizard();
     fireEvent.click(screen.getByTestId('compare-step-user-interaction'));
-    fireEvent.click(screen.getByRole('button', { name: 'Change versions' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Select versions' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Compare' }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Next' })).toBeInTheDocument());
     expect(screen.getByTestId('stub-instructions')).toBeVisible();

@@ -10,6 +10,7 @@ import { CompareVersionsModal } from '@/[fsd]/entities/compare-versions';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { SetDefaultVersionDialog } from '@/[fsd]/entities/version/ui';
 import {
+  SkillCompareFilesStep,
   SkillControls,
   useCompareSkillVersions,
   useSetSkillDefaultVersionMutation,
@@ -153,6 +154,17 @@ const EditSkill = memo(() => {
     onSaveRight,
     resetSavingState,
   } = useCompareSkillVersions({ projectId, skillId });
+
+  const renderCompareFilesStep = useCallback(
+    stepProps => (
+      <SkillCompareFilesStep
+        {...stepProps}
+        projectId={projectId}
+        skillId={skillId}
+      />
+    ),
+    [projectId, skillId],
+  );
 
   const { data, isFetching, isError, error } = useSkillDetailsQuery(
     { projectId, skillId, versionId: version },
@@ -388,6 +400,7 @@ const EditSkill = memo(() => {
           onSaveLeft={onSaveLeft}
           onSaveRight={onSaveRight}
           resetSavingState={resetSavingState}
+          renderFilesStep={renderCompareFilesStep}
         />
       )}
     </>

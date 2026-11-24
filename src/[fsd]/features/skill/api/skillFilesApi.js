@@ -24,6 +24,9 @@ const toSkillFile = entry => ({
   isText: Boolean(entry.is_text),
 });
 
+const readTextKeepingByteOrderMark = async response =>
+  new TextDecoder('utf-8', { ignoreBOM: true }).decode(await response.arrayBuffer());
+
 const contentTag = ({ versionId, path }) => ({ type: TAG_SKILL_FILE_CONTENT, id: `${versionId}:${path}` });
 
 const invalidateFiles = (versionId, paths) => [
@@ -31,7 +34,7 @@ const invalidateFiles = (versionId, paths) => [
   ...paths.map(path => contentTag({ versionId, path })),
 ];
 
-const skillFilesApi = eliteaApi
+export const skillFilesApi = eliteaApi
   .enhanceEndpoints({
     addTagTypes: [TAG_SKILL_FILES, TAG_SKILL_FILE_CONTENT],
   })
@@ -43,7 +46,7 @@ const skillFilesApi = eliteaApi
         providesTags: (result, error, { versionId }) => [{ type: TAG_SKILL_FILES, id: versionId }],
       }),
       skillVersionFileText: build.query({
-        query: args => ({ url: fileUrl(args), responseHandler: 'text' }),
+        query: args => ({ url: fileUrl(args), responseHandler: readTextKeepingByteOrderMark }),
         providesTags: (result, error, args) => [contentTag(args)],
       }),
       skillVersionFileBlob: build.query({
@@ -56,6 +59,11 @@ const skillFilesApi = eliteaApi
           form.append('file', file);
           return { url: fileUrl(args), method: 'PUT', body: form, formData: true };
         },
+        invalidatesTags: (result, error, { versionId, path }) =>
+          error ? [] : invalidateFiles(versionId, [path]),
+      }),
+      saveSkillVersionFileText: build.mutation({
+        query: ({ content, ...args }) => ({ url: fileUrl(args), method: 'PUT', body: { content } }),
         invalidatesTags: (result, error, { versionId, path }) =>
           error ? [] : invalidateFiles(versionId, [path]),
       }),
@@ -77,9 +85,11 @@ const skillFilesApi = eliteaApi
 
 export const {
   useSkillVersionFilesQuery,
+  useLazySkillVersionFilesQuery,
   useSkillVersionFileTextQuery,
   useLazySkillVersionFileBlobQuery,
   useUploadSkillVersionFileMutation,
+  useSaveSkillVersionFileTextMutation,
   useRenameSkillVersionFileMutation,
   useDeleteSkillVersionFileMutation,
 } = skillFilesApi;
