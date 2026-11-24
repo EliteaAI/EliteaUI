@@ -35,6 +35,9 @@ const yamlMergeEditorStyles = () => ({
     },
     '& .cm-mergeViewEditor': {
       minWidth: 0,
+      // The library clips each editor, which stops the search panel from sticking to the bottom of the
+      // scrolling merge view; it would open below the visible area, out of sight
+      overflow: 'visible',
     },
     '& .cm-mergeViewEditor + .cm-mergeViewEditor': {
       borderLeft: `0.0625rem solid ${palette.border.lines}`,

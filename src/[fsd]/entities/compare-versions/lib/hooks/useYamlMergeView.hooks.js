@@ -7,11 +7,17 @@ import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { StreamLanguage, defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { yaml } from '@codemirror/legacy-modes/mode/yaml';
 import { MergeView } from '@codemirror/merge';
+import { search, searchKeymap } from '@codemirror/search';
+import { EditorState } from '@codemirror/state';
 import { EditorView, GutterMarker, gutter, keymap, lineNumbers } from '@codemirror/view';
 import { vscodeDarkInit, vscodeLightInit } from '@uiw/codemirror-theme-vscode';
 
 import { YAML_DIFF } from '../constants/compareVersions.constants';
-import { collapseUnchangedBlocks, expandBlockAtLine } from '../helpers/yamlCollapse.helpers';
+import {
+  collapseUnchangedBlocks,
+  expandBlockAtLine,
+  expandBlocksOnSearch,
+} from '../helpers/yamlCollapse.helpers';
 
 // A gutter mark that shows a change without colour: − on the base side, + on the compared side
 class ChangeSignMarker extends GutterMarker {
@@ -155,13 +161,19 @@ export const useYamlMergeView = ({ leftValue, rightValue, onLeftChange, onRightC
       EditorView.lineWrapping,
       lineNumbers(),
       history(),
-      keymap.of([...defaultKeymap, ...historyKeymap]),
+      keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
+      // Ctrl/Cmd+F in either editor, as in the pipeline YAML editor
+      search(),
+      // Select all matches selects every match at once, not only the first
+      EditorState.allowMultipleSelections.of(true),
       StreamLanguage.define(yaml),
       syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
       editorTheme,
       buildDiffTheme(theme.palette, isDarkMode),
       // The library's own collapse counts the kept lines into its limit; this one follows the spec
       collapseUnchangedBlocks(),
+      // A match inside a collapsed block opens that block
+      expandBlocksOnSearch(),
     ];
     const changeListener = onChangeRef =>
       EditorView.updateListener.of(update => {
