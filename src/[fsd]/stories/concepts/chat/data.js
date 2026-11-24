@@ -82,7 +82,7 @@ const generated = (firstId, roles, count, make) =>
     const area = AREAS[i % AREAS.length];
     const role = Object.keys(roles)[Math.floor(i / AREAS.length) % Object.keys(roles).length];
     const words = area === area.toUpperCase() ? area : area.toLowerCase();
-    return make(firstId + i, `${area} ${role}`, roles[role].replace('%', words));
+    return make(firstId + i, `${area} ${role}`, roles[role].replaceAll('%', words));
   });
 
 const PROJECT_AGENTS = [
