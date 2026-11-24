@@ -115,7 +115,7 @@ export default [
       'react-refresh/only-export-components': ['off'],
 
       // Import rules
-      'import/no-unresolved': ['error', { ignore: ['.svg'] }],
+      'import/no-unresolved': ['error', { ignore: ['.svg', '^virtual:'] }],
       'import/no-useless-path-segments': 'error',
       'import/no-duplicates': 'error',
       'import/no-unused-modules': 'warn',
