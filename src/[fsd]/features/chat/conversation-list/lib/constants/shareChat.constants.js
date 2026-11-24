@@ -15,6 +15,7 @@ export const SHARE_MESSAGES = {
   unsaved: 'Link copied. Save changes to grant access to added people.',
   saved: 'Link copied. Only people with access can open it.',
   accessUpdated: 'Access updated',
+  availableAfterSend: 'Available after the first message',
   accessFailed: 'Some changes may have been applied. Please refresh and try again.',
   linkCopied: 'Link copied',
   linkCreated: 'Link created',

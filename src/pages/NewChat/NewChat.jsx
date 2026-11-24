@@ -11,6 +11,7 @@ import { useEditingArtifactsNavBlocker } from '@/[fsd]/features/artifacts/lib/ho
 import { useManualSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { useLazyConversationDetailsQuery } from '@/[fsd]/features/chat/api';
 import { applyParticipantChanges } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
+import { hasWholeTeam } from '@/[fsd]/features/chat/conversation-list/lib/helpers/shareChat.helpers';
 import {
   useChatHistoryActions,
   useChatHistoryData,
@@ -21,6 +22,7 @@ import {
   useRegisterChatPage,
   useSelectInitialConversation,
 } from '@/[fsd]/features/chat/conversation-list/lib/hooks';
+import { ShareChatModal } from '@/[fsd]/features/chat/conversation-list/ui/share';
 import {
   useApplyChatSendFailures,
   useChatEditors,
@@ -43,7 +45,6 @@ import {
 } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { ParticipantsWrapper } from '@/[fsd]/features/chat/participants/ui';
 import { ChatBox } from '@/[fsd]/features/chat/ui';
-import { AddNewUserModal } from '@/[fsd]/features/chat/ui/chat-modal';
 import { ChatEditorPanel } from '@/[fsd]/features/chat/ui/editors';
 import { FIRST_ELITEA_TOUR_ID, useProposePendingTour } from '@/[fsd]/features/interactive-tours';
 import { skillComposerPlaceholder } from '@/[fsd]/features/skill/lib/helpers';
@@ -53,6 +54,7 @@ import { eliteaApi } from '@/api/eliteaApi';
 import {
   ChatParticipantType,
   DefaultConversationName,
+  PUBLIC_PROJECT_ID,
   SearchParams,
   dummyConversation,
   sioEvents,
@@ -153,7 +155,7 @@ const NewChat = props => {
   const [activeParticipant, setActiveParticipant] = useState();
   const [collapsedParticipants, setCollapsedParticipants] = useState(true);
 
-  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
   const [newConversationQuestion, setNewConversationQuestion] = useState('');
 
   const { isSmallWindow } = useIsSmallWindow();
@@ -383,17 +385,28 @@ const NewChat = props => {
     stopListenCanvasContentChangeEvent,
   });
 
-  const doAddNewUsers = useCallback(
-    participants => {
-      setShowAddUserModal(false);
-      addNewParticipants(participants);
-    },
-    [addNewParticipants],
+  const isDraftConversation = !activeConversation?.id || !!activeConversation?.isNew;
+  // Only the owner changes access, as the Share item of the chat menu; the Public project has no team
+  const canShareWithTeam =
+    projectId != PUBLIC_PROJECT_ID && (isDraftConversation || activeConversation?.author_id == userId);
+
+  const onAddNewUsers = useMemo(
+    () => (canShareWithTeam ? () => setIsShareOpen(true) : undefined),
+    [canShareWithTeam],
   );
 
-  const onAddNewUsers = useCallback(() => {
-    setShowAddUserModal(true);
-  }, []);
+  const handleCloseShare = useCallback(() => setIsShareOpen(false), []);
+
+  const handleDraftAccessDone = useCallback(
+    list => {
+      const isPrivate = !hasWholeTeam(list);
+      newConversationViewRef.current?.setUsersAccess({
+        isPrivate,
+        users: isPrivate ? list.map(item => ({ ...item, project_id: projectId })) : [],
+      });
+    },
+    [projectId],
+  );
 
   const {
     onSelectConversation: selectConversationNow,
@@ -1440,12 +1453,15 @@ const NewChat = props => {
         {renderRightPanel(!isSmallWindow)}
       </Grid>
 
-      <AddNewUserModal
-        open={showAddUserModal}
-        onAdd={doAddNewUsers}
-        onCancel={() => setShowAddUserModal(false)}
-        participants={activeConversation?.participants || []}
-      />
+      {isShareOpen && (
+        <ShareChatModal
+          conversation={activeConversation}
+          isDraft={isDraftConversation}
+          onClose={handleCloseShare}
+          onAccessSaved={handleRestrictAccessSuccess}
+          onDone={handleDraftAccessDone}
+        />
+      )}
       <AlertDialog
         open={conversationNotFound}
         title={

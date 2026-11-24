@@ -794,11 +794,30 @@ const NewConversationView = forwardRef(
       },
       [selectedParticipant, onClearSelectedParticipant],
     );
+    // Whole team keeps the people already picked, as saving it does for a saved chat
+    const setUsersAccess = useCallback(
+      ({ users, isPrivate }) => {
+        const next = isPrivate
+          ? [
+              ...selectedParticipantsRef.current.filter(p => p.entity_name !== ChatParticipantType.Users),
+              ...users.map(NewConversationHelpers.buildUserParticipant),
+            ]
+          : selectedParticipantsRef.current;
+        selectedParticipantsRef.current = next;
+        setSelectedParticipants(next);
+        setActiveConversation(prev =>
+          prev.isNew || !prev.id ? { ...prev, participants: next, is_private: isPrivate } : prev,
+        );
+      },
+      [setActiveConversation],
+    );
+
     useImperativeHandle(ref, () => ({
       onSelectParticipant,
       onDeleteParticipant,
       mentionUser: (...args) => chatInput.current?.mentionUser?.(...args),
       selectEveryoneMention: () => chatInput.current?.mentionUser?.('@Everyone '),
+      setUsersAccess,
     }));
 
     const conversationStarters = useMemo(() => {
@@ -925,7 +944,7 @@ const NewConversationView = forwardRef(
       const newConversation = {
         id: activeConversationRef.current?.id || uuidv4(),
         name: activeConversationRef.current?.name || DefaultConversationName,
-        is_private: true,
+        is_private: activeConversationRef.current?.is_private ?? true,
         participants: selectedParticipants ?? [],
         chat_history: [],
         isNew: true,
