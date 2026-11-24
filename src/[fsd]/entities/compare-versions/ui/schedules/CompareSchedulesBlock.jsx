@@ -81,6 +81,30 @@ const CompareSchedulesBlock = memo(props => {
   }, [left, right]);
 
   const styles = compareSchedulesBlockStyles();
+  // Each side gets its own title, as the run settings columns do
+  const renderColumnTitle = side => (
+    <Typography
+      variant="labelMedium"
+      color="text.secondary"
+      data-testid={`compare-schedules-title-${side}`}
+    >
+      Schedules
+    </Typography>
+  );
+
+  const renderOnlyYourSchedules = side =>
+    !isAdmin && (
+      <Box sx={styles.header}>
+        <Typography
+          variant="bodySmall"
+          color="text.primary"
+          sx={styles.note}
+          data-testid={`compare-schedules-only-yours-${side}`}
+        >
+          {COMPARE_MESSAGES.onlyYourSchedules}
+        </Typography>
+      </Box>
+    );
 
   const renderColumn = side => {
     const state = sides[side];
@@ -92,6 +116,8 @@ const CompareSchedulesBlock = memo(props => {
         sx={styles.column}
         data-testid={`compare-schedules-${side}`}
       >
+        {renderColumnTitle(side)}
+        {renderOnlyYourSchedules(side)}
         {legacyTrigger && (
           <CompareLegacyScheduleCard
             trigger={legacyTrigger}
@@ -156,30 +182,13 @@ const CompareSchedulesBlock = memo(props => {
       sx={styles.root}
       data-testid="compare-schedules-block"
     >
-      <Box sx={styles.header}>
-        <Typography
-          variant="labelMedium"
-          color="text.secondary"
-        >
-          Schedules
-        </Typography>
-        {!isAdmin && (
-          <Typography
-            variant="bodySmall"
-            color="text.primary"
-            sx={styles.note}
-            data-testid="compare-schedules-only-yours"
-          >
-            {COMPARE_MESSAGES.onlyYourSchedules}
-          </Typography>
-        )}
-      </Box>
       {isError && (
         <Box
           sx={styles.error}
           role="alert"
           data-testid="compare-schedules-error"
         >
+          {renderColumnTitle('all')}
           <Typography variant="bodySmall">{COMPARE_MESSAGES.schedulesFailed}</Typography>
           <BaseBtn
             variant={BUTTON_VARIANTS.secondary}
@@ -205,6 +214,7 @@ const CompareSchedulesBlock = memo(props => {
               key={side}
               sx={styles.column}
             >
+              {renderColumnTitle(side)}
               {SKELETON_CARDS.map(key => (
                 <Skeleton
                   key={key}

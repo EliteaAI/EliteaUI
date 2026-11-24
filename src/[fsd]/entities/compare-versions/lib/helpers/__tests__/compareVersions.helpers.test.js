@@ -111,8 +111,8 @@ describe('buildPipelineRunSettingsRows', () => {
   it('shows the step limit and project context, and flags the rows that differ', () => {
     const left = buildPipelineRunSettingsRows({ step_limit: null, ignore_project_context: false });
     const right = buildPipelineRunSettingsRows({ step_limit: 40, ignore_project_context: false });
-    expect(valuesOf(left)).toEqual({ step_limit: 'Default', project_context: 'Included' });
-    expect(valuesOf(right)).toEqual({ step_limit: '40', project_context: 'Included' });
+    expect(valuesOf(left)).toEqual({ step_limit: 'Default' });
+    expect(valuesOf(right)).toEqual({ step_limit: '40' });
     expect([...getChangedRowKeys(left, right)]).toEqual(['step_limit']);
   });
 });

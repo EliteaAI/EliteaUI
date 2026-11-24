@@ -305,11 +305,6 @@ export const buildPipelineRunSettingsRows = runSettings => [
     label: 'Step limit',
     value: runSettings?.step_limit === '' ? 'Default' : describeSetting(runSettings?.step_limit),
   },
-  {
-    key: 'project_context',
-    label: 'Project context',
-    value: describeProjectContext(runSettings?.ignore_project_context),
-  },
 ];
 
 /** Keys of the rows whose value differs between the two sides (rows are in the same order). */
