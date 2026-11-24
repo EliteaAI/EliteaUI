@@ -19,6 +19,7 @@ import StyledTooltip from '@/ComponentsLib/Tooltip.jsx';
 import { AIEditPipelineButton } from '@/[fsd]/features/pipelines/ai-edit-pipeline';
 import {
   DumpYamlHelpers,
+  NodeRenameHelpers,
   ParsePipelineHelpers,
   PipelineReadinessHelpers,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
@@ -122,8 +123,14 @@ const EditorPanel = forwardRef((props, ref) => {
         // YAML parsing failed, parsedYamlJson remains undefined
       }
       if (parsedYamlJson && !areYamlObjectsEqual(parsedYamlJson, yamlJsonObject)) {
-        setYamlJsonObject(parsedYamlJson);
-        flowEditorRef.current?.calculateLayoutNodes?.(parsedYamlJson, true, false);
+        // A node renamed in the YAML keeps its references (targets, routes, entry point) like a rename in the flow does
+        const renamedPairs = NodeRenameHelpers.getRenamedNodePairs(
+          yamlJsonObject?.nodes,
+          parsedYamlJson.nodes,
+        );
+        const syncedYamlJson = NodeRenameHelpers.applyNodeRenamesToYaml(parsedYamlJson, renamedPairs);
+        setYamlJsonObject(syncedYamlJson);
+        flowEditorRef.current?.calculateLayoutNodes?.(syncedYamlJson, true, false);
       }
     },
     [setYamlJsonObject, yamlJsonObject],

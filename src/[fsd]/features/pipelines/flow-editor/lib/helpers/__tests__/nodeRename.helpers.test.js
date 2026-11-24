@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { getNodeNameError, renameNodeInEdges, renameNodeInYaml } from '../nodeRename.helpers';
+import {
+  applyNodeRenamesToYaml,
+  getNodeNameError,
+  getRenamedNodePairs,
+  renameNodeInEdges,
+  renameNodeInYaml,
+} from '../nodeRename.helpers';
 
 // Redux state is frozen by Immer, so the rename must not write into the objects it was given
 const deepFreeze = value => {
@@ -107,6 +113,64 @@ describe('renameNodeInYaml', () => {
     expect(result.nodes[0].transition).toBe('summarize');
   });
 
+  it('renames the transition of a node that also has an inline condition or decision', () => {
+    const withCondition = rename({
+      nodes: [
+        {
+          id: 'start_1',
+          type: 'llm',
+          transition: 'llm_1',
+          condition: { condition_definition: 'x', conditional_outputs: ['end'], default_output: 'end' },
+        },
+      ],
+    });
+    const withDecision = rename({
+      nodes: [
+        {
+          id: 'start_1',
+          type: 'llm',
+          transition: 'llm_1',
+          decision: { nodes: ['end'], default_output: 'end' },
+        },
+      ],
+    });
+
+    expect(withCondition.nodes[0].transition).toBe('summarize');
+    expect(withDecision.nodes[0].transition).toBe('summarize');
+  });
+
+  it('renames the node in the criteria of a decision node, as whole names only', () => {
+    const result = rename({
+      nodes: [
+        {
+          id: 'decide_1',
+          type: 'decision',
+          description: 'Go to llm_1 when approved. Never go to llm_10 or my_llm_1.',
+          nodes: ['llm_1', 'end'],
+          default_output: 'end',
+        },
+      ],
+    });
+
+    expect(result.nodes[0].description).toBe(
+      'Go to summarize when approved. Never go to llm_10 or my_llm_1.',
+    );
+  });
+
+  it('renames the node in the criteria of a legacy inline decision', () => {
+    const result = rename({
+      nodes: [
+        {
+          id: 'decide_1',
+          type: 'llm',
+          decision: { description: 'Pick llm_1 if done', nodes: ['llm_1'], default_output: 'end' },
+        },
+      ],
+    });
+
+    expect(result.nodes[0].decision.description).toBe('Pick summarize if done');
+  });
+
   it('leaves a transition that points elsewhere alone', () => {
     const result = rename({ nodes: [{ id: 'start_1', type: 'llm', transition: 'end' }] });
 
@@ -167,6 +231,85 @@ describe('renameNodeInYaml', () => {
       nodes: [{ id: 'llm_1', type: 'llm', transition: 'llm_1' }],
       interrupt_before: ['llm_1'],
     });
+  });
+});
+
+describe('getRenamedNodePairs', () => {
+  it('pairs a node whose id changed in place, with the same type', () => {
+    expect(
+      getRenamedNodePairs(
+        [
+          { id: 'Node A', type: 'llm' },
+          { id: 'printer', type: 'printer' },
+        ],
+        [
+          { id: 'Node A renamed', type: 'llm' },
+          { id: 'printer', type: 'printer' },
+        ],
+      ),
+    ).toEqual([['Node A', 'Node A renamed']]);
+  });
+
+  it('ignores nodes that were added, removed or changed type', () => {
+    expect(
+      getRenamedNodePairs(
+        [{ id: 'a', type: 'llm' }],
+        [
+          { id: 'b', type: 'llm' },
+          { id: 'c', type: 'llm' },
+        ],
+      ),
+    ).toEqual([]);
+    expect(getRenamedNodePairs([{ id: 'a', type: 'llm' }], [{ id: 'b', type: 'printer' }])).toEqual([]);
+  });
+
+  it('ignores a swap of ids, where both old ids are still in use', () => {
+    expect(
+      getRenamedNodePairs(
+        [
+          { id: 'a', type: 'llm' },
+          { id: 'b', type: 'llm' },
+        ],
+        [
+          { id: 'b', type: 'llm' },
+          { id: 'a', type: 'llm' },
+        ],
+      ),
+    ).toEqual([]);
+  });
+
+  it('tolerates missing lists and empty items', () => {
+    expect(getRenamedNodePairs(undefined, [])).toEqual([]);
+    expect(getRenamedNodePairs([{ id: 'a', type: 'llm' }], null)).toEqual([]);
+    expect(getRenamedNodePairs([null], [{ id: 'b', type: 'llm' }])).toEqual([]);
+  });
+});
+
+describe('applyNodeRenamesToYaml', () => {
+  it('updates the references of a node renamed in the YAML text', () => {
+    // The YAML already has the new id on the node, but the references still use the old one
+    const yamlJson = {
+      entry_point: 'Node A',
+      nodes: [
+        { id: 'Node A renamed', type: 'llm' },
+        { id: 'hitl', type: 'hitl', routes: { approve: 'Node A', edit: 'hitl', reject: 'Node A' } },
+      ],
+    };
+
+    const result = applyNodeRenamesToYaml(yamlJson, [['Node A', 'Node A renamed']]);
+
+    expect(result.entry_point).toBe('Node A renamed');
+    expect(result.nodes[1].routes).toEqual({
+      approve: 'Node A renamed',
+      edit: 'hitl',
+      reject: 'Node A renamed',
+    });
+  });
+
+  it('returns the pipeline as it is when there are no renames', () => {
+    const yamlJson = { entry_point: 'a', nodes: [{ id: 'a', type: 'llm' }] };
+
+    expect(applyNodeRenamesToYaml(yamlJson)).toBe(yamlJson);
   });
 });
 

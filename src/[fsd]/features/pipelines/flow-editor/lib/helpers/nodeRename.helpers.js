@@ -27,6 +27,14 @@ export const getNodeNameError = ({ newName, currentName, nodes = [], toolNames =
   return null;
 };
 
+const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Replaces the node name only where it is a whole word, so "llm_1" inside "my_llm_1" or "llm_10" is kept
+const renameNodeInText = (text, name, newName) =>
+  typeof text === 'string'
+    ? text.replace(new RegExp(`(?<![\\w])${escapeRegExp(name)}(?![\\w])`, 'g'), () => newName)
+    : text;
+
 export const renameNodeInYaml = (prev, name, newName) => {
   const newNodes = [...(prev?.nodes || [])].map(node => {
     const newNode = node.id === name ? { ...node, id: newName } : { ...node };
@@ -46,9 +54,14 @@ export const renameNodeInYaml = (prev, name, newName) => {
           nodes: node.decision.nodes?.map(item => (item === name ? newName : item)),
           default_output: node.decision.default_output === name ? newName : node.decision.default_output,
         };
+        if (node.decision.description) {
+          newNode.decision.description = renameNodeInText(node.decision.description, name, newName);
+        }
       } else if (node.type === PipelineNodeTypes.Decision) {
         newNode.nodes = node.nodes?.map(item => (item === name ? newName : item));
         newNode.default_output = node.default_output === name ? newName : node.default_output;
+        // The criteria tell the LLM which target to pick, so they can name the nodes too
+        if (node.description) newNode.description = renameNodeInText(node.description, name, newName);
       } else if (node.type === PipelineNodeTypes.Hitl) {
         // routes belongs to the Redux state (frozen by Immer), so build a new object instead of assigning into it
         if (node.routes) {
@@ -59,15 +72,11 @@ export const renameNodeInYaml = (prev, name, newName) => {
             reject: node.routes.reject === name ? newName : node.routes.reject,
           };
         }
-      } else if (node.transition === name) {
-        newNode.transition = newName;
       }
+      // The runtime follows a transition even when the node also has an inline condition or decision
+      if (node.transition === name) newNode.transition = newName;
     } else {
-      const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      newNode.condition = node.condition?.replace(
-        new RegExp(`(?<![\\w])${escapeRegExp(name)}(?![\\w])`, 'g'),
-        newName,
-      );
+      newNode.condition = renameNodeInText(node.condition, name, newName);
       newNode.routes = node.routes?.map(item => (item === name ? newName : item));
       newNode.default_output = node.default_output === name ? newName : node.default_output;
     }
@@ -86,6 +95,31 @@ export const renameNodeInYaml = (prev, name, newName) => {
       : prev.interrupt_after,
   };
 };
+
+/**
+ * Finds the nodes renamed by a YAML edit: same position and type, the old id is gone and the new id is unused.
+ * Added, removed or swapped nodes are not renames, so they are left out.
+ * Returns `[[oldId, newId], ...]`.
+ */
+export const getRenamedNodePairs = (prevNodes, nextNodes) => {
+  if (!Array.isArray(prevNodes) || !Array.isArray(nextNodes) || prevNodes.length !== nextNodes.length)
+    return [];
+
+  const prevIds = new Set(prevNodes.map(node => node?.id));
+  const nextIds = new Set(nextNodes.map(node => node?.id));
+
+  return prevNodes.reduce((pairs, prevNode, index) => {
+    const nextNode = nextNodes[index];
+    if (!prevNode || !nextNode || prevNode.id === nextNode.id || prevNode.type !== nextNode.type)
+      return pairs;
+    if (nextIds.has(prevNode.id) || prevIds.has(nextNode.id)) return pairs;
+    return [...pairs, [prevNode.id, nextNode.id]];
+  }, []);
+};
+
+// Applies the renames to the pipeline YAML, so references to the old ids follow the nodes
+export const applyNodeRenamesToYaml = (yamlJson, renamedPairs = []) =>
+  renamedPairs.reduce((result, [oldId, newId]) => renameNodeInYaml(result, oldId, newId), yamlJson);
 
 export const renameNodeInFlowNodes = (prevNodes, name, newName) =>
   prevNodes.map(node => {
