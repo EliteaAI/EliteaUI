@@ -132,6 +132,19 @@ describe('CompareSchedulesBlock', () => {
     );
   });
 
+  it('titles each side, so both columns are labelled', () => {
+    renderBlock();
+    expect(screen.getByTestId('compare-schedules-title-left')).toHaveTextContent('Schedules');
+    expect(screen.getByTestId('compare-schedules-title-right')).toHaveTextContent('Schedules');
+  });
+
+  it('keeps each side titled while the first schedules load', () => {
+    lists.current = { 1: listOf([], { isFetching: true, data: undefined }), 2: listOf([]) };
+    renderBlock();
+    expect(screen.getByTestId('compare-schedules-title-left')).toBeInTheDocument();
+    expect(screen.getByTestId('compare-schedules-title-right')).toBeInTheDocument();
+  });
+
   it('says when a version runs no schedules', () => {
     renderBlock();
     expect(screen.getByTestId('compare-schedules-empty-left')).toHaveTextContent(
@@ -142,12 +155,16 @@ describe('CompareSchedulesBlock', () => {
 
   it('notes that a non-admin sees only their own schedules, even with none', () => {
     renderBlock({ isAdmin: false });
-    expect(screen.getByTestId('compare-schedules-only-yours')).toHaveTextContent(
+    expect(screen.getByTestId('compare-schedules-only-yours-left')).toHaveTextContent(
+      'Only your schedules are shown.',
+    );
+    expect(screen.getByTestId('compare-schedules-only-yours-right')).toHaveTextContent(
       'Only your schedules are shown.',
     );
     cleanup();
     renderBlock({ isAdmin: true });
-    expect(screen.queryByTestId('compare-schedules-only-yours')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('compare-schedules-only-yours-left')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('compare-schedules-only-yours-right')).not.toBeInTheDocument();
   });
 
   it('offers a retry when the schedules fail to load', () => {
