@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   Avatar,
@@ -21,6 +21,7 @@ import UsersIcon from '@/components/Icons/UsersIcon';
 import UserAvatar from '@/components/UserAvatar';
 
 import { MENTION_EVERYONE, MENTION_EVERYONE_MIN_USERS, MENTION_SEARCH_MIN_USERS } from '../../lib/constants';
+import { usePointerDownAway } from '../../lib/hooks/usePointerDownAway.hooks';
 import UsersAccessSummary from './UsersAccessSummary';
 
 const EVERYONE_LABEL = 'Everyone';
@@ -44,6 +45,7 @@ const UsersMentionDropdown = memo(props => {
     onClose,
   } = props;
 
+  const paperRef = useRef(null);
   const [localQuery, setLocalQuery] = useState('');
   // Whole Team asks the server: the loaded page is only part of the project
   const query = serverSearch ? serverSearch.query : localQuery;
@@ -96,6 +98,8 @@ const UsersMentionDropdown = memo(props => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [open, handleClose]);
 
+  usePointerDownAway({ open, anchorEl, contentRef: paperRef, onAway: handleClose });
+
   const handleMention = useCallback(
     participant => () => {
       setQuery('');
@@ -126,6 +130,7 @@ const UsersMentionDropdown = memo(props => {
       {({ TransitionProps }) => (
         <Grow {...TransitionProps}>
           <Paper
+            ref={paperRef}
             sx={styles.paper}
             data-testid="chat-users-mention-dropdown"
           >
@@ -406,19 +411,28 @@ const usersMentionDropdownStyles = width => ({
   }),
   shareItem:
     withList =>
-    ({ palette }) => ({
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.75rem',
-      height: DropdownConstants.DIMENSIONS.ITEM_HEIGHT,
-      padding: '0.5rem 1rem',
-      // Pinned to the bottom so a long list scrolls under it
-      position: 'sticky',
-      bottom: 0,
-      backgroundColor: palette.background.default.secondary,
-      ...(withList && { borderTop: `0.0625rem solid ${palette.border.lines}`, marginTop: '0.25rem' }),
-      '&:hover, &.Mui-focusVisible': { backgroundColor: palette.background.interactiveItem.hover },
-    }),
+    ({ palette }) => {
+      const hoverTint = palette.background.interactiveItem.hover;
+
+      return {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.75rem',
+        height: DropdownConstants.DIMENSIONS.ITEM_HEIGHT,
+        padding: '0.5rem 1rem',
+        // Pinned to the bottom so a long list scrolls under it
+        position: 'sticky',
+        bottom: 0,
+        backgroundColor: palette.background.default.secondary,
+        ...(withList && { borderTop: `0.0625rem solid ${palette.border.lines}`, marginTop: '0.25rem' }),
+        // MenuItem sets a translucent backgroundColor on hover, so the opaque one is restated here and the
+        // translucent tint is layered over it; otherwise the list rows scrolling under this sticky row show through
+        '&:hover, &.Mui-focusVisible': {
+          backgroundColor: palette.background.default.secondary,
+          backgroundImage: `linear-gradient(${hoverTint}, ${hoverTint})`,
+        },
+      };
+    },
   shareIcon: ({ palette }) => ({
     display: 'flex',
     '& svg': { width: '1rem', height: '1rem' },

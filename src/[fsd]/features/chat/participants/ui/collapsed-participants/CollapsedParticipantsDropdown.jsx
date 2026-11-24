@@ -2,10 +2,11 @@ import { memo, useCallback, useMemo, useRef } from 'react';
 
 import { Box, ClickAwayListener, Grow, Paper, Popper, Typography } from '@mui/material';
 
-import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
+import { getChatParticipantUniqueId, isInsideModal } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { DropdownConstants } from '@/[fsd]/shared/lib/constants';
 import { SPACING } from '@/common/designTokens';
 
+import { usePointerDownAway } from '../../lib/hooks/usePointerDownAway.hooks';
 import ParticipantItem from '../expanded-participants/ParticipantItem';
 
 const CollapsedParticipantsDropdown = memo(props => {
@@ -29,6 +30,7 @@ const CollapsedParticipantsDropdown = memo(props => {
   } = props;
 
   const scrollRef = useRef(null);
+  const paperRef = useRef(null);
   const styles = collapsedParticipantsDropdownStyles();
 
   const popperPlacement = useMemo(() => {
@@ -80,33 +82,16 @@ const CollapsedParticipantsDropdown = memo(props => {
     [onClose, onEditParticipant],
   );
 
-  const isInsideModal = useCallback(element => {
-    if (!element) return false;
-
-    let current = element;
-    while (current) {
-      if (
-        current.classList?.contains('MuiDialog-root') ||
-        current.classList?.contains('MuiModal-root') ||
-        current.classList?.contains('MuiBackdrop-root') ||
-        current.getAttribute?.('role') === 'dialog' ||
-        current.getAttribute?.('role') === 'presentation'
-      )
-        return true;
-
-      current = current.parentElement;
-    }
-    return false;
-  }, []);
-
   const handleClickAway = useCallback(
     event => {
       if (isInsideModal(event.target)) return;
 
       onClose?.();
     },
-    [isInsideModal, onClose],
+    [onClose],
   );
+
+  usePointerDownAway({ open, anchorEl, contentRef: paperRef, onAway: onClose });
 
   return (
     <>
@@ -126,6 +111,7 @@ const CollapsedParticipantsDropdown = memo(props => {
             style={styles.grow(placement)}
           >
             <Paper
+              ref={paperRef}
               sx={[styles.paper, sx]}
               data-testid="chat-participants-popper"
             >

@@ -9,6 +9,7 @@ import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { SPACING } from '@/common/designTokens';
 import UsersIcon from '@/components/Icons/UsersIcon';
 
+import { usePointerDownAway } from '../../lib/hooks/usePointerDownAway.hooks';
 import DropdownFooter from './DropdownFooter';
 import UserMenu from './UserMenu';
 
@@ -38,6 +39,7 @@ const UsersParticipantDropdown = memo(props => {
   const { personal_project_id: privateProjectId } = useSelector(state => state.user);
 
   const anchorRef = useRef(null);
+  const paperRef = useRef(null);
 
   const [open, setOpen] = useState(false);
 
@@ -71,6 +73,8 @@ const UsersParticipantDropdown = memo(props => {
     },
     [onSelectUser, onOpenChange],
   );
+
+  usePointerDownAway({ open, anchorEl: anchorRef.current, contentRef: paperRef, onAway: handleClose });
 
   return (
     <Box>
@@ -114,6 +118,7 @@ const UsersParticipantDropdown = memo(props => {
             style={styles.grow(popperPlacement)}
           >
             <Paper
+              ref={paperRef}
               sx={[styles.paper, slotProps?.Paper?.sx || {}]}
               data-testid="chat-participants-popper"
             >
