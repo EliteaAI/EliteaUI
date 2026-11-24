@@ -1,7 +1,7 @@
 name: Deploy Storybook to GitHub Pages
 
 # Builds the Storybook static site and publishes it to GitHub Pages.
-# Served at https://elitea.ai/EliteaUI/storybook/ (project site under the org's custom domain).
+# Served at https://eliteaai.github.io/EliteaUI/storybook/
 #
 # One-time setup: repo Settings → Pages → Build and deployment → Source: "GitHub Actions".
 
@@ -46,6 +46,13 @@ jobs:
       - name: Build Storybook
         env:
           NODE_OPTIONS: '--max-old-space-size=8192'
+          # Build-time defaults normally supplied by the (gitignored) .env.
+          # Without them module-level constants like VITE_SERVER_URL are undefined and stories crash.
+          # Non-secret placeholders only: stories don't call the backend.
+          VITE_SERVER_URL: '/api/v2/'
+          VITE_BASE_URI: '/elitea_ui'
+          VITE_SOCKET_PATH: '/socket.io/'
+          VITE_PUBLIC_PROJECT_ID: '1'
         run: npm run build-storybook -- --output-dir _pages/storybook --quiet
 
       - name: Disable Jekyll processing
