@@ -7,3 +7,4 @@ export * from './instructionsMention.utils';
 export * from './autoRouting.utils';
 export * from './soundNotification.utils';
 export * from './refusal.utils';
+export * from './integerInput.utils';

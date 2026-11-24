@@ -1,3 +1,5 @@
+import { matchesVisibleWhen } from './toolBase.helpers';
+
 /**
  * For properties the caller supplies itself: removing them, rather than hiding them, is what stops a
  * rendered field or a seeded default putting a competing value back into the tool params.
@@ -48,9 +50,43 @@ export const sanitizeToolParams = (schema, variables) => {
   }, {});
 };
 
+/**
+ * Whether a filled-in number breaks its schema bounds. The number fields show the error inline but
+ * still keep the value (e.g. `-5` against `minimum: 1`), so the run check has to reject it too.
+ * @param {object} property - property schema, possibly an Optional `anyOf`
+ * @param {*} value - current input value
+ * @returns {boolean}
+ */
+export const isNumberOutOfRange = (property, value) => {
+  if (typeof value !== 'number' || Number.isNaN(value)) return false;
+
+  const numericType = property?.anyOf?.find(item => item.type === 'integer' || item.type === 'number');
+  const pick = key => property?.[key] ?? numericType?.[key];
+  const exclusiveMinimum = pick('exclusiveMinimum');
+  const minimum = pick('minimum');
+  const exclusiveMaximum = pick('exclusiveMaximum');
+  const maximum = pick('maximum');
+
+  return (
+    (exclusiveMinimum !== undefined && value <= exclusiveMinimum) ||
+    (minimum !== undefined && value < minimum) ||
+    (exclusiveMaximum !== undefined && value >= exclusiveMaximum) ||
+    (maximum !== undefined && value > maximum)
+  );
+};
+
 export const validateToolkitForm = (schema, variables) => {
   const requiredFields = schema.required || [];
   const inputVariables = variables || {};
+  const properties = schema.properties || {};
+
+  // Fields hidden by `visible_when` show no error, so they must not block the run either
+  const hasOutOfRangeNumber = Object.entries(inputVariables).some(([field, value]) => {
+    const property = properties[field];
+    if (property?.visible_when && !matchesVisibleWhen(property.visible_when, inputVariables)) return false;
+    return isNumberOutOfRange(property, value);
+  });
+  if (hasOutOfRangeNumber) return false;
 
   return requiredFields.every(field => {
     const value = inputVariables[field];
