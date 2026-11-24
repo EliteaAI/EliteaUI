@@ -11,6 +11,7 @@ import SectionAddMenu from '../SectionAddMenu';
 
 const fixture = vi.hoisted(() => ({
   actions: {},
+  importModalProps: null,
 }));
 
 vi.mock('@/[fsd]/widgets/section-page/lib/hooks', () => ({
@@ -18,7 +19,12 @@ vi.mock('@/[fsd]/widgets/section-page/lib/hooks', () => ({
 }));
 vi.mock('@/[fsd]/features/agent/ui/generate-agent-modal', () => ({ GenerateAgentModal: () => null }));
 vi.mock('@/[fsd]/features/skill/ui/generate-skill-modal', () => ({ GenerateSkillModal: () => null }));
-vi.mock('@/[fsd]/features/skill/ui/import/SkillImportModal', () => ({ default: () => null }));
+vi.mock('@/[fsd]/features/skill/ui/import/SkillImportModal', () => ({
+  default: props => {
+    fixture.importModalProps = props;
+    return null;
+  },
+}));
 
 const theme = createTheme(getDesignTokens('dark'));
 
@@ -43,7 +49,10 @@ const renderAdd = (sectionKey, actions = {}) => {
 };
 
 describe('SectionAddMenu', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    fixture.importModalProps = null;
+  });
   afterEach(() => cleanup());
 
   it.each([
@@ -75,5 +84,17 @@ describe('SectionAddMenu', () => {
     expect(screen.getByTestId('agents-add-new')).toBeInTheDocument();
     expect(screen.getByTestId('agents-import-button')).toBeInTheDocument();
     expect(screen.getByTestId('agents-build-with-ai')).toBeInTheDocument();
+  });
+
+  it('passes the pending skills to the Skills import modal', () => {
+    const pendingSkills = [{ name: 'debug' }];
+    renderAdd('skills', {
+      skillImport: { isModalOpen: true, pendingSkills, pendingFileName: 'plugin.zip' },
+    });
+    expect(fixture.importModalProps).toMatchObject({
+      open: true,
+      skills: pendingSkills,
+      fileName: 'plugin.zip',
+    });
   });
 });
