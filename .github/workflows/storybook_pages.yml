@@ -32,6 +32,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # The whole history: older versions of the saved story screenshots are read from git
+          fetch-depth: 0
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
