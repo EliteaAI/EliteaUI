@@ -3,4 +3,4 @@ export { useSocketIcon } from './useSocketIcon.hooks';
 export * from './useSidebarNavigation.hooks';
 export * from './useExploreSections.hooks';
 export * from './useNewChat.hooks';
-export * from './useCollapseAfterExploreNavigation.hooks';
+export * from './useCollapseAfterSidebarNavigation.hooks';

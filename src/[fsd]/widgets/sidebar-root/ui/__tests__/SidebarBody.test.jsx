@@ -10,7 +10,12 @@ import { cleanup, render, screen } from '@testing-library/react';
 
 import SidebarBody from '../SidebarBody';
 
-const fixture = vi.hoisted(() => ({ collapsed: false, permissions: [], pathname: '/chat' }));
+const fixture = vi.hoisted(() => ({
+  collapsed: false,
+  permissions: [],
+  pathname: '/chat',
+  navigateToPage: vi.fn(() => () => {}),
+}));
 
 vi.mock('react-redux', () => ({
   useSelector: select =>
@@ -25,7 +30,7 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSystemSenderName: () => 'x' }));
 vi.mock('@/[fsd]/shared/ui', () => ({ BrandLogo: () => null }));
 vi.mock('@/[fsd]/widgets/sidebar-root/lib/hooks', () => ({
   useSocketIcon: () => ({ isSocketIconVisible: false, socketStatus: '' }),
-  useSidebarNavigation: () => ({ navigateToPage: () => () => {}, getLinkTarget: path => path }),
+  useSidebarNavigation: () => ({ navigateToPage: fixture.navigateToPage, getLinkTarget: path => path }),
 }));
 vi.mock('@/[fsd]/widgets/support-assistant', () => ({ useGetSupportAssistantConfigQuery: () => ({}) }));
 vi.mock('@/[fsd]/widgets/sidebar-root/ui', () => ({
@@ -102,5 +107,10 @@ describe('SidebarBody', () => {
     cleanup();
     renderBody({ pathname: '/artifacts/bucket' });
     expect(screen.getByText('Artifacts')).toHaveAttribute('data-selected', 'true');
+  });
+
+  it('folds the menu after opening Artifacts', () => {
+    renderBody();
+    expect(fixture.navigateToPage).toHaveBeenCalledWith('/artifacts', 'Artifacts', { collapseSidebar: true });
   });
 });

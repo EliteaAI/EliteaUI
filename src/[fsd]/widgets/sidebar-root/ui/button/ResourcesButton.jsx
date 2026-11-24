@@ -1,5 +1,6 @@
 import { memo, useCallback } from 'react';
 
+import { useDispatch } from 'react-redux';
 import { useLocation, useMatch, useNavigate } from 'react-router-dom';
 
 import { Box } from '@mui/material';
@@ -7,13 +8,16 @@ import { Box } from '@mui/material';
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { AppLink } from '@/[fsd]/shared/ui';
+import { SIDEBAR_COLLAPSE_STATE_KEY } from '@/[fsd]/widgets/sidebar-root/lib/constants/sidebar.constants';
 import HelpCenterIcon from '@/assets/help-center.svg?react';
 import RouteDefinitions from '@/routes';
+import { actions as settingsActions } from '@/slices/settings';
 
 const ResourcesButton = memo(props => {
   const { cell = false } = props;
   const isOnResources = useMatch({ path: RouteDefinitions.HelpCenter });
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const location = useLocation();
 
   const handleResourcesClick = useCallback(
@@ -21,12 +25,16 @@ const ResourcesButton = memo(props => {
       // The link is only a carrier for the href; a plain click keeps the existing navigation with its state
       e.preventDefault();
       e.stopPropagation();
-      if (isOnResources) return;
+      if (isOnResources) {
+        dispatch(settingsActions.setSideBarCollapsed(true));
+        return;
+      }
+      // useCollapseAfterSidebarNavigation folds the menu once it lands
       navigate(RouteDefinitions.HelpCenter, {
-        state: { from: location.pathname },
+        state: { from: location.pathname, [SIDEBAR_COLLAPSE_STATE_KEY]: Date.now() },
       });
     },
-    [isOnResources, navigate, location.pathname],
+    [dispatch, isOnResources, navigate, location.pathname],
   );
 
   // A real link (href) lets the browser offer "Open link in new tab"
