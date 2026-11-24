@@ -20,6 +20,13 @@ const config = {
   docs: {
     defaultName: 'Documentation',
   },
+  features: {
+    // No git-based «new / changed story» markers in the sidebar
+    changeDetection: false,
+    // No «Get started» onboarding checklist in the sidebar and the menu
+    sidebarOnboardingChecklist: false,
+    menuOnboardingChecklist: false,
+  },
   typescript: {
     check: false,
     reactDocgen: 'react-docgen-typescript',

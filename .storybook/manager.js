@@ -1,40 +1,75 @@
-import { addons } from 'storybook/manager-api';
+import { GLOBALS_UPDATED, SET_GLOBALS, STORY_RENDERED } from 'storybook/internal/core-events';
+import { addons, types } from 'storybook/manager-api';
 import { create } from 'storybook/theming';
 
-const eliteaTheme = create({
-  base: 'light',
+import ScreenshotTool from './ScreenshotTool';
+
+const BASE = {
   brandTitle: 'EliteAUI Component Library',
   brandUrl: './',
   brandTarget: '_self',
+  appBorderRadius: 8,
+  fontBase: '"Roboto", "Helvetica", "Arial", sans-serif',
+  fontCode: 'monospace',
+  inputBorderRadius: 4,
+};
 
-  // UI
+const lightTheme = create({
+  ...BASE,
+  base: 'light',
   appBg: '#ffffff',
   appContentBg: '#ffffff',
   appBorderColor: '#e0e0e0',
-  appBorderRadius: 8,
-
-  // Typography
-  fontBase: '"Roboto", "Helvetica", "Arial", sans-serif',
-  fontCode: 'monospace',
-
-  // Text colors
   textColor: '#333333',
   textInverseColor: '#ffffff',
-
-  // Toolbar default and active colors
   barTextColor: '#666666',
   barSelectedColor: '#1976d2',
   barBg: '#ffffff',
-
-  // Form colors
   inputBg: '#ffffff',
   inputBorder: '#e0e0e0',
   inputTextColor: '#333333',
-  inputBorderRadius: 4,
 });
 
+// Colors of src/darkPalette.js
+const darkTheme = create({
+  ...BASE,
+  base: 'dark',
+  colorSecondary: '#6ae8fa',
+  appBg: '#0E131D',
+  appContentBg: '#181F2A',
+  appPreviewBg: '#181F2A',
+  appBorderColor: '#3B3E46',
+  textColor: '#FFFFFF',
+  textMutedColor: '#A9B7C1',
+  textInverseColor: '#0E131D',
+  barTextColor: '#A9B7C1',
+  barHoverColor: '#6ae8fa',
+  barSelectedColor: '#6ae8fa',
+  barBg: '#101721',
+  inputBg: '#101721',
+  inputBorder: '#3B3E46',
+  inputTextColor: '#FFFFFF',
+});
+
+// Same rule as the preview's theme decorator
+const isDark = globals =>
+  globals?.theme === 'dark' || ['dark', '#121212'].includes(globals?.backgrounds?.value);
+
 addons.setConfig({
-  theme: eliteaTheme,
+  theme: lightTheme,
   panelPosition: 'bottom',
   selectedPanel: 'storybook/docs/panel',
+});
+
+// The Storybook UI follows the Theme / Backgrounds switches of the toolbar and a story's own theme
+addons.register('elitea/theme-sync', api => {
+  const applyTheme = () => api.setOptions({ theme: isDark(api.getGlobals()) ? darkTheme : lightTheme });
+  [SET_GLOBALS, GLOBALS_UPDATED, STORY_RENDERED].forEach(event => api.on(event, applyTheme));
+});
+
+addons.add('elitea/screenshot', {
+  type: types.TOOL,
+  title: 'Baseline',
+  match: ({ viewMode }) => viewMode === 'story',
+  render: ScreenshotTool,
 });
