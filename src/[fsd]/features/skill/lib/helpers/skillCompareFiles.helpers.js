@@ -1,3 +1,4 @@
+import { computeWordDiff } from '@/[fsd]/entities/edit-entity-with-ai/lib/helpers';
 import { MAX_INSTRUCTIONS_LENGTH } from '@/common/constants';
 
 import {
@@ -87,3 +88,32 @@ export const withStoredLineEndings = (fieldText, storedText) => {
 };
 
 export const listTreeFiles = folder => [...folder.folders.flatMap(listTreeFiles), ...folder.files];
+
+const WORD_DIFF_CELL_BUDGET = 1_000_000;
+
+const toTokens = text => text.match(/\S+|\s+/g) ?? [];
+
+export const highlightDifferingWords = (text, otherText) => {
+  if (!text) return [];
+  if (otherText === undefined || otherText === text) return [{ type: 'equal', text }];
+
+  const tokens = toTokens(text);
+  const otherTokens = toTokens(otherText);
+  const shorter = Math.min(tokens.length, otherTokens.length);
+  const head = countMatching(shorter, index => tokens[index] === otherTokens[index]);
+  const tail = countMatching(shorter - head, index => tokens.at(-1 - index) === otherTokens.at(-1 - index));
+  const middleTokens = tokens.slice(head, tokens.length - tail);
+  const otherMiddleTokens = otherTokens.slice(head, otherTokens.length - tail);
+  const middle = middleTokens.join('');
+
+  const isWordDiffAffordable = middleTokens.length * otherMiddleTokens.length <= WORD_DIFF_CELL_BUDGET;
+  const middleSegments = isWordDiffAffordable
+    ? computeWordDiff(otherMiddleTokens.join(''), middle).filter(segment => segment.type !== 'removed')
+    : [{ type: 'added', text: middle }];
+
+  return [
+    { type: 'equal', text: tokens.slice(0, head).join('') },
+    ...middleSegments,
+    { type: 'equal', text: tokens.slice(tokens.length - tail).join('') },
+  ].filter(segment => segment.text);
+};

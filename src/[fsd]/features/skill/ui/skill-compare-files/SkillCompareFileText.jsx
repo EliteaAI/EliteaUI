@@ -1,8 +1,8 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useDeferredValue, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { computeWordDiff } from '@/[fsd]/entities/edit-entity-with-ai';
+import { highlightDifferingWords } from '@/[fsd]/features/skill/lib/helpers';
 
 const LAST_LINE_FILLER = '\u200b';
 
@@ -10,9 +10,11 @@ const SkillCompareFileText = memo(props => {
   const { value, otherValue, tone, editable, onChange, maxLength } = props;
   const styles = skillCompareFileTextStyles(tone);
 
+  const highlightedValue = useDeferredValue(value);
+  const highlightedOtherValue = useDeferredValue(otherValue);
   const segments = useMemo(
-    () => computeWordDiff(otherValue ?? value, value).filter(segment => segment.type !== 'removed'),
-    [otherValue, value],
+    () => highlightDifferingWords(highlightedValue, highlightedOtherValue),
+    [highlightedValue, highlightedOtherValue],
   );
 
   const handleChange = useCallback(event => onChange?.(event.target.value), [onChange]);

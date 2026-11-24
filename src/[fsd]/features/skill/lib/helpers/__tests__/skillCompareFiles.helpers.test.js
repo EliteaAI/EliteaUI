@@ -5,6 +5,7 @@ import { MAX_INSTRUCTIONS_LENGTH } from '@/common/constants';
 import {
   buildCompareFileEntries,
   fileEditKey,
+  highlightDifferingWords,
   isDiffableTextFile,
   listTreeFiles,
   pickFileEdits,
@@ -132,6 +133,52 @@ describe('listTreeFiles', () => {
       'scripts/rotate.py',
       'scripts/same.py',
       'scripts/validate.py',
+    ]);
+  });
+});
+
+describe('highlightDifferingWords', () => {
+  const differing = segments =>
+    segments.filter(segment => segment.type === 'added').map(segment => segment.text);
+  const shown = segments => segments.map(segment => segment.text).join('');
+
+  it('marks the words the other text does not have and keeps the whole text', () => {
+    const segments = highlightDifferingWords('rect_type: int\nfield: dict', 'rect_type: str\nfield: dict');
+    expect(differing(segments)).toEqual(['int']);
+    expect(shown(segments)).toBe('rect_type: int\nfield: dict');
+  });
+
+  it('marks nothing when the other text is the same or there is no other file', () => {
+    expect(differing(highlightDifferingWords('same()', 'same()'))).toEqual([]);
+    expect(differing(highlightDifferingWords('validate()', undefined))).toEqual([]);
+    expect(highlightDifferingWords('', 'a')).toEqual([]);
+  });
+
+  it('marks the whole text against an empty other file', () => {
+    expect(differing(highlightDifferingWords('a b', ''))).toEqual(['a b']);
+  });
+
+  it('compares only what lies between the shared start and end, so one edit in a long file stays cheap', () => {
+    const lines = Array.from({ length: 20000 }, (unused, index) => `word${index}`);
+    const other = lines.join(' ');
+    const edited = [...lines.slice(0, 10000), 'typed', ...lines.slice(10001)].join(' ');
+    const startedAt = performance.now();
+    const segments = highlightDifferingWords(edited, other);
+    expect(performance.now() - startedAt).toBeLessThan(500);
+    expect(differing(segments)).toEqual(['typed']);
+    expect(shown(segments)).toBe(edited);
+  });
+
+  it('marks the differing stretch as a whole where a word by word comparison would cost too much', () => {
+    const left = Array.from({ length: 3000 }, (unused, index) => `a${index}`).join(' ');
+    const right = Array.from({ length: 3000 }, (unused, index) => `b${index}`).join(' ');
+    const startedAt = performance.now();
+    const segments = highlightDifferingWords(`start ${left} end`, `start ${right} end`);
+    expect(performance.now() - startedAt).toBeLessThan(500);
+    expect(segments).toEqual([
+      { type: 'equal', text: 'start ' },
+      { type: 'added', text: left },
+      { type: 'equal', text: ' end' },
     ]);
   });
 });

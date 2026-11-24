@@ -84,6 +84,7 @@ export {
   listTreeFiles,
   pickFileEdits,
   summarizeCompareFiles,
+  highlightDifferingWords,
   toFieldText,
   withStoredLineEndings,
 } from './skillCompareFiles.helpers';

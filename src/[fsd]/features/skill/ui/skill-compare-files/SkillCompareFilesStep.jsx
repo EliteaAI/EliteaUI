@@ -193,14 +193,14 @@ const SkillCompareFilesStep = memo(props => {
       <Box sx={[styles.headerCell, styles.dividedCell]}>
         <CompareVersionHeader
           version={leftVersion}
-          save={isTextCompare ? leftHeaderSave : undefined}
+          save={isTextCompare || leftHeaderSave?.isDirty ? leftHeaderSave : undefined}
           saveTestId="compare-header-save-left"
         />
       </Box>
       <Box sx={styles.headerCell}>
         <CompareVersionHeader
           version={rightVersion}
-          save={isTextCompare ? rightHeaderSave : undefined}
+          save={isTextCompare || rightHeaderSave?.isDirty ? rightHeaderSave : undefined}
           saveTestId="compare-header-save-right"
         />
       </Box>

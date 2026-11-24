@@ -13,13 +13,22 @@ const SkillCompareFileTreeRow = memo(props => {
   const styles = skillCompareFileTreeRowStyles(depth, isSelected, isOpen);
 
   const handleClick = useCallback(() => onClick?.(path), [onClick, path]);
+  const handleKeyDown = useCallback(
+    event => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      onClick?.(path);
+    },
+    [onClick, path],
+  );
 
   return (
     <Box
-      component="button"
-      type="button"
+      role="button"
+      tabIndex={0}
       sx={styles.row}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
       data-testid={`skill-compare-file-row-${path}`}
       data-selected={isSelected ? 'true' : 'false'}
       aria-expanded={isFolder ? isOpen : undefined}
@@ -50,12 +59,9 @@ const skillCompareFileTreeRowStyles = (depth, isSelected, isOpen) => ({
     height: '2.5rem',
     marginLeft: `${depth * 1.25}rem`,
     padding: '0 0.5rem',
-    border: 'none',
     borderRadius: '0.375rem',
     boxSizing: 'border-box',
     cursor: 'pointer',
-    textAlign: 'left',
-    font: 'inherit',
     backgroundColor: isSelected ? palette.background.interactiveItem.active : 'transparent',
     '&:hover': {
       backgroundColor: isSelected

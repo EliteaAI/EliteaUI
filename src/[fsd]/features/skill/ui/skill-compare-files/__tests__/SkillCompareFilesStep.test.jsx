@@ -201,6 +201,26 @@ describe('SkillCompareFilesStep', () => {
     expect(screen.getByTestId('header-base')).toHaveTextContent('no-save');
   });
 
+  it('keeps Save on a binary file for a version that has unsaved edits', () => {
+    renderStep({ rightHeaderSave: { ...headerSave, isDirty: true } });
+    fireEvent.click(screen.getByTestId('skill-compare-file-row-assets/template.pdf'));
+    expect(screen.getByTestId('header-base')).toHaveTextContent('no-save');
+    expect(screen.getByTestId('header-test')).toHaveTextContent('with-save');
+  });
+
+  it('opens a file from the keyboard', () => {
+    renderStep();
+    const row = screen.getByTestId('skill-compare-file-row-scripts/validate.py');
+    expect(row).toHaveAttribute('tabindex', '0');
+    fireEvent.keyDown(row, { key: 'Enter' });
+    expect(row).toHaveAttribute('data-selected', 'true');
+    fireEvent.keyDown(screen.getByTestId('skill-compare-file-row-scripts/rotate.py'), { key: ' ' });
+    expect(screen.getByTestId('skill-compare-file-row-scripts/rotate.py')).toHaveAttribute(
+      'data-selected',
+      'true',
+    );
+  });
+
   it('keeps an edit under the path of its file', () => {
     const onRightEdit = vi.fn();
     renderStep({ onRightEdit });
