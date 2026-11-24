@@ -1,5 +1,6 @@
 import { memo, useMemo } from 'react';
 
+import { ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { Field } from '@/[fsd]/shared/ui';
 
 const getChoiceValues = property => {
@@ -124,12 +125,7 @@ const ToolFormContainer = memo(props => {
     const visibleWhen = property?.visible_when;
     if (!visibleWhen) return true;
 
-    const { field: conditionField, value: conditionValue } = visibleWhen;
-    const currentFieldValue = toolInputVariables?.[conditionField];
-    // Compare case-insensitively for string values
-    return typeof currentFieldValue === 'string' && typeof conditionValue === 'string'
-      ? currentFieldValue.toLowerCase() === conditionValue.toLowerCase()
-      : currentFieldValue === conditionValue;
+    return ToolBaseHelpers.matchesVisibleWhen(visibleWhen, toolInputVariables);
   }, [property?.visible_when, toolInputVariables]);
 
   if (!isVisible) return null;
