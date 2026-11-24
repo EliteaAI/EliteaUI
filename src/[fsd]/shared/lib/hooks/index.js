@@ -75,3 +75,4 @@ export * from './useInViewOnce.hooks';
 export * from './useCheckIsBlockEditing.hooks';
 export * from './useCopyChatMessage.hooks';
 export * from './useIsOwnLLMsRestricted.hooks';
+export * from './usePointerDownAway.hooks';

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-import { isInsideModal } from '../helpers/popper.helpers';
+import { ModalHelpers } from '@/[fsd]/shared/lib/helpers';
 
 /**
  * Closes a popper when a press lands outside it.
@@ -19,7 +19,11 @@ export const usePointerDownAway = ({ open, anchorEl, contentRef, onAway }) => {
     const handlePointerDown = event => {
       const { target } = event;
 
-      if (contentRef?.current?.contains(target) || anchorEl?.contains(target) || isInsideModal(target))
+      if (
+        contentRef?.current?.contains(target) ||
+        anchorEl?.contains(target) ||
+        ModalHelpers.isInsideModal(target)
+      )
         return;
 
       onAway?.(event);

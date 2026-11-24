@@ -1,19 +1,10 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import {
-  Avatar,
-  Box,
-  ClickAwayListener,
-  Grow,
-  MenuItem,
-  MenuList,
-  Paper,
-  Popper,
-  Typography,
-} from '@mui/material';
+import { Avatar, Box, Grow, MenuItem, MenuList, Paper, Popper, Typography } from '@mui/material';
 
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
 import { DropdownConstants } from '@/[fsd]/shared/lib/constants';
+import { usePointerDownAway } from '@/[fsd]/shared/lib/hooks';
 import { Input } from '@/[fsd]/shared/ui';
 import AtIcon from '@/assets/at-icon.svg?react';
 import ShareIcon from '@/assets/share-icon.svg?react';
@@ -21,7 +12,6 @@ import UsersIcon from '@/components/Icons/UsersIcon';
 import UserAvatar from '@/components/UserAvatar';
 
 import { MENTION_EVERYONE, MENTION_EVERYONE_MIN_USERS, MENTION_SEARCH_MIN_USERS } from '../../lib/constants';
-import { usePointerDownAway } from '../../lib/hooks/usePointerDownAway.hooks';
 import UsersAccessSummary from './UsersAccessSummary';
 
 const EVERYONE_LABEL = 'Everyone';
@@ -134,170 +124,166 @@ const UsersMentionDropdown = memo(props => {
             sx={styles.paper}
             data-testid="chat-users-mention-dropdown"
           >
-            <ClickAwayListener onClickAway={handleClose}>
-              <Box>
-                {showSearch && (
-                  <Box sx={styles.search}>
-                    <Input.SimpleSearchBar
-                      searchQuery={query}
-                      onSearchChange={setQuery}
-                      onSearchClear={() => setQuery('')}
-                      placeholder="Search user ..."
-                      sx={styles.searchBar}
-                      data-testid="chat-users-mention-search"
-                    />
-                  </Box>
-                )}
-                {!!access && (
-                  <Box sx={styles.accessRow}>
-                    <UsersAccessSummary
-                      kind={access.kind}
-                      label={access.label}
-                      linksCount={access.linksCount}
-                      expiredLinksCount={access.expiredLinksCount}
-                      muted
-                    />
-                  </Box>
-                )}
-                <MenuList
-                  autoFocusItem={!showSearch}
-                  sx={styles.list}
-                >
-                  {showEveryone && (
-                    <MenuItem
-                      sx={styles.item}
-                      onClick={handleMention(MENTION_EVERYONE)}
-                      data-testid="chat-users-mention-everyone"
-                    >
-                      <Avatar sx={styles.everyoneAvatar}>
-                        <UsersIcon sx={styles.everyoneIcon} />
-                      </Avatar>
-                      <Typography
-                        variant="bodyMedium"
-                        sx={styles.name}
-                      >
-                        {EVERYONE_LABEL}
-                      </Typography>
-                      <Box
-                        className="mention-icon"
-                        sx={styles.at}
-                      >
-                        <AtIcon />
-                      </Box>
-                    </MenuItem>
-                  )}
-                  {showMe && (
-                    <MenuItem
-                      disabled
-                      sx={styles.meItem}
-                      data-testid="chat-users-mention-me"
-                    >
-                      <UserAvatar
-                        name={getUserName(me)}
-                        avatar={me.meta?.user_avatar}
-                        size={20}
-                      />
-                      <Typography
-                        variant="bodyMedium"
-                        sx={styles.meName}
-                      >
-                        {getUserName(me)}
-                      </Typography>
-                      <Typography
-                        variant="bodyMedium"
-                        sx={styles.you}
-                      >
-                        (You)
-                      </Typography>
-                      {isOwner(me) && (
-                        <Typography
-                          variant="bodySmall"
-                          sx={[styles.ownerBadge, styles.meOwnerBadge]}
-                          data-testid="chat-users-mention-owner"
-                        >
-                          Owner
-                        </Typography>
-                      )}
-                    </MenuItem>
-                  )}
-                  {filtered.map(participant => (
-                    <MenuItem
-                      key={participant.id}
-                      sx={styles.item}
-                      onClick={handleMention(participant)}
-                      data-testid="chat-users-mention-user"
-                    >
-                      <UserAvatar
-                        name={getUserName(participant)}
-                        avatar={participant.meta?.user_avatar}
-                        size={20}
-                      />
-                      <Typography
-                        variant="bodyMedium"
-                        sx={styles.name}
-                        data-testid="chat-users-mention-name"
-                      >
-                        {getUserName(participant)}
-                      </Typography>
-                      {isOwner(participant) && (
-                        <Typography
-                          variant="bodySmall"
-                          sx={styles.ownerBadge}
-                          data-testid="chat-users-mention-owner"
-                        >
-                          Owner
-                        </Typography>
-                      )}
-                      <Box
-                        className="mention-icon"
-                        sx={styles.at}
-                      >
-                        <AtIcon />
-                      </Box>
-                    </MenuItem>
-                  ))}
-                  {serverSearch && (
-                    <ListInfiniteMoreLoader
-                      listCurrentSize={serverSearch.fetched}
-                      totalAvailableCount={serverSearch.queryTotal}
-                      onLoadMore={serverSearch.onLoadMore}
-                      isLoading={serverSearch.isFetching}
-                      resetPageDependencies={query}
-                    />
-                  )}
-                  {!filtered.length &&
-                    !showEveryone &&
-                    !serverSearch?.isFetching &&
-                    !showMe &&
-                    (!showShare || !!others.length) && (
-                      <Typography
-                        variant="bodyMedium"
-                        sx={styles.empty}
-                        data-testid="chat-users-mention-empty"
-                      >
-                        {others.length || search ? 'No matches found' : 'No one else is in this chat yet'}
-                      </Typography>
-                    )}
-                  {showShare && (
-                    <MenuItem
-                      sx={styles.shareItem(!!others.length)}
-                      onClick={handleShare}
-                      data-testid="chat-users-mention-share"
-                    >
-                      <Box sx={styles.shareIcon}>
-                        <ShareIcon />
-                      </Box>
-                      <Typography
-                        variant="bodyMedium"
-                        sx={styles.name}
-                      >
-                        Share
-                      </Typography>
-                    </MenuItem>
-                  )}
-                </MenuList>
+            {showSearch && (
+              <Box sx={styles.search}>
+                <Input.SimpleSearchBar
+                  searchQuery={query}
+                  onSearchChange={setQuery}
+                  onSearchClear={() => setQuery('')}
+                  placeholder="Search user ..."
+                  sx={styles.searchBar}
+                  data-testid="chat-users-mention-search"
+                />
               </Box>
-            </ClickAwayListener>
+            )}
+            {!!access && (
+              <Box sx={styles.accessRow}>
+                <UsersAccessSummary
+                  kind={access.kind}
+                  label={access.label}
+                  linksCount={access.linksCount}
+                  expiredLinksCount={access.expiredLinksCount}
+                  muted
+                />
+              </Box>
+            )}
+            <MenuList
+              autoFocusItem={!showSearch}
+              sx={styles.list}
+            >
+              {showEveryone && (
+                <MenuItem
+                  sx={styles.item}
+                  onClick={handleMention(MENTION_EVERYONE)}
+                  data-testid="chat-users-mention-everyone"
+                >
+                  <Avatar sx={styles.everyoneAvatar}>
+                    <UsersIcon sx={styles.everyoneIcon} />
+                  </Avatar>
+                  <Typography
+                    variant="bodyMedium"
+                    sx={styles.name}
+                  >
+                    {EVERYONE_LABEL}
+                  </Typography>
+                  <Box
+                    className="mention-icon"
+                    sx={styles.at}
+                  >
+                    <AtIcon />
+                  </Box>
+                </MenuItem>
+              )}
+              {showMe && (
+                <MenuItem
+                  disabled
+                  sx={styles.meItem}
+                  data-testid="chat-users-mention-me"
+                >
+                  <UserAvatar
+                    name={getUserName(me)}
+                    avatar={me.meta?.user_avatar}
+                    size={20}
+                  />
+                  <Typography
+                    variant="bodyMedium"
+                    sx={styles.meName}
+                  >
+                    {getUserName(me)}
+                  </Typography>
+                  <Typography
+                    variant="bodyMedium"
+                    sx={styles.you}
+                  >
+                    (You)
+                  </Typography>
+                  {isOwner(me) && (
+                    <Typography
+                      variant="bodySmall"
+                      sx={[styles.ownerBadge, styles.meOwnerBadge]}
+                      data-testid="chat-users-mention-owner"
+                    >
+                      Owner
+                    </Typography>
+                  )}
+                </MenuItem>
+              )}
+              {filtered.map(participant => (
+                <MenuItem
+                  key={participant.id}
+                  sx={styles.item}
+                  onClick={handleMention(participant)}
+                  data-testid="chat-users-mention-user"
+                >
+                  <UserAvatar
+                    name={getUserName(participant)}
+                    avatar={participant.meta?.user_avatar}
+                    size={20}
+                  />
+                  <Typography
+                    variant="bodyMedium"
+                    sx={styles.name}
+                    data-testid="chat-users-mention-name"
+                  >
+                    {getUserName(participant)}
+                  </Typography>
+                  {isOwner(participant) && (
+                    <Typography
+                      variant="bodySmall"
+                      sx={styles.ownerBadge}
+                      data-testid="chat-users-mention-owner"
+                    >
+                      Owner
+                    </Typography>
+                  )}
+                  <Box
+                    className="mention-icon"
+                    sx={styles.at}
+                  >
+                    <AtIcon />
+                  </Box>
+                </MenuItem>
+              ))}
+              {serverSearch && (
+                <ListInfiniteMoreLoader
+                  listCurrentSize={serverSearch.fetched}
+                  totalAvailableCount={serverSearch.queryTotal}
+                  onLoadMore={serverSearch.onLoadMore}
+                  isLoading={serverSearch.isFetching}
+                  resetPageDependencies={query}
+                />
+              )}
+              {!filtered.length &&
+                !showEveryone &&
+                !serverSearch?.isFetching &&
+                !showMe &&
+                (!showShare || !!others.length) && (
+                  <Typography
+                    variant="bodyMedium"
+                    sx={styles.empty}
+                    data-testid="chat-users-mention-empty"
+                  >
+                    {others.length || search ? 'No matches found' : 'No one else is in this chat yet'}
+                  </Typography>
+                )}
+              {showShare && (
+                <MenuItem
+                  sx={styles.shareItem(!!others.length)}
+                  onClick={handleShare}
+                  data-testid="chat-users-mention-share"
+                >
+                  <Box sx={styles.shareIcon}>
+                    <ShareIcon />
+                  </Box>
+                  <Typography
+                    variant="bodyMedium"
+                    sx={styles.name}
+                  >
+                    Share
+                  </Typography>
+                </MenuItem>
+              )}
+            </MenuList>
           </Paper>
         </Grow>
       )}

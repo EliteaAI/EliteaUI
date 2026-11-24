@@ -17,7 +17,10 @@ vi.mock('react-redux', () => ({
 }));
 const projectId = vi.hoisted(() => ({ current: 406 }));
 
-vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => projectId.current }));
+vi.mock('@/[fsd]/shared/lib/hooks', async importOriginal => ({
+  ...(await importOriginal()),
+  useSelectedProjectId: () => projectId.current,
+}));
 vi.mock('@/common/constants', async importOriginal => ({
   ...(await importOriginal()),
   PUBLIC_PROJECT_ID: 1,
