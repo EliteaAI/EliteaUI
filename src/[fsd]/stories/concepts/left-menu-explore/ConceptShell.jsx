@@ -5,6 +5,7 @@ import { Suspense, lazy, memo } from 'react';
 
 import { Box } from '@mui/material';
 
+import { ChatHistoryProvider } from '@/[fsd]/features/chat/conversation-list/ui';
 import { InteractiveTourRoot, useInteractiveTourController } from '@/[fsd]/features/interactive-tours';
 import { InteractiveTourProvider } from '@/[fsd]/shared/lib/context';
 import { SupportAssistantWidget } from '@/[fsd]/widgets/support-assistant';
@@ -31,11 +32,12 @@ export const HIDE_CHAT_PAGE_PARTS = {
 };
 
 // `rail`: the menu folded to icons, as on a section page (2026-11-12).
-const ConceptShell = memo(
-  ({ active, selectedConversationId, hide = HIDE_CHAT_PAGE_PARTS, rail, children }) => {
-    const tourValue = useInteractiveTourController();
-    return (
-      <InteractiveTourProvider value={tourValue}>
+const ConceptShell = memo(({ active, hide = HIDE_CHAT_PAGE_PARTS, rail, children }) => {
+  const tourValue = useInteractiveTourController();
+  return (
+    <InteractiveTourProvider value={tourValue}>
+      {/* The menu's chat list and the chat page share it, as under AppLayoutInner */}
+      <ChatHistoryProvider>
         <SupportAssistantWidget>
           {({ onToggleAssistant }) => (
             <Box sx={styles.app}>
@@ -47,7 +49,6 @@ const ConceptShell = memo(
               ) : (
                 <ConceptSidebar
                   active={active}
-                  selectedConversationId={selectedConversationId}
                   onToggleAssistant={onToggleAssistant}
                 />
               )}
@@ -61,11 +62,11 @@ const ConceptShell = memo(
             </Box>
           )}
         </SupportAssistantWidget>
-        <InteractiveTourRoot />
-      </InteractiveTourProvider>
-    );
-  },
-);
+      </ChatHistoryProvider>
+      <InteractiveTourRoot />
+    </InteractiveTourProvider>
+  );
+});
 ConceptShell.displayName = 'ConceptShell';
 
 const styles = {

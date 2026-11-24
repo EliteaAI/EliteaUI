@@ -27,31 +27,26 @@ const conversation = (id, name, daysAgo, is_private = true) => {
 };
 const dateGroup = (name, conversations) => ({ name, conversations, total: conversations.length });
 
-// Two collapsible groups, as in Katya's menu (Figma Prototypes 72:4208; owner 2026-11-10: «две секции pinned и
-// recent»). The team's group header shows a group's name as is (GroupedConversations: DATE_GROUP_DISPLAY_NAMES[name]
-// || name), and a row with isPinned draws the team's pin.
-const pinned = chat => ({ ...chat, isPinned: true });
-export const DATE_GROUPS = [
-  dateGroup('Pinned', [
-    pinned(conversation(114, 'Roadmap Q1', 15)),
-    pinned(conversation(112, 'Quarterly business review', 9)),
-  ]),
-  dateGroup('Recent', [
+// The chat list as the folders list answers it: pinned chats apart, the rest in the backend's date groups.
+const PINNED_CHATS = [conversation(114, 'Roadmap Q1', 15), conversation(112, 'Quarterly business review', 9)];
+const DATE_GROUPS = [
+  dateGroup('today', [
     conversation(101, 'Release notes for 2.4', 0),
     conversation(102, 'Sprint review summary', 0, false),
     conversation(103, 'Onboarding checklist draft', 0),
     conversation(104, 'Customer interview notes', 0),
+  ]),
+  dateGroup('this_week', [
     conversation(107, 'Design review feedback', 2),
     conversation(108, 'API error triage', 2),
     conversation(109, 'Team retro actions', 3),
     conversation(111, 'Pricing page questions', 4),
-    conversation(113, 'Vendor contract summary', 12),
   ]),
+  dateGroup('older', [conversation(113, 'Vendor contract summary', 12)]),
 ];
 
-// Chat folders as on dev (owner 2026-11-12: «на Dev есть возможность создавать фолдеры и даже их пинить»): the shape
-// the team's list reads (FolderItem: name, owner_id, meta.is_pinned; FolderAccordionItem: conversations, total); a chat
-// in a folder carries its folder_id. One folder is pinned, so the Pinned group shows both kinds.
+// Chat folders as on dev (owner 2026-11-12: «на Dev есть возможность создавать фолдеры и даже их пинить»); a chat in a
+// folder carries its folder_id. One folder is pinned, so the Pinned group shows both kinds.
 const chatFolder = (id, name, is_pinned, conversations) => ({
   id,
   name,
@@ -60,7 +55,7 @@ const chatFolder = (id, name, is_pinned, conversations) => ({
   conversations: conversations.map(c => ({ ...c, folder_id: id })),
   total: conversations.length,
 });
-export const CHAT_FOLDERS = [
+const CHAT_FOLDERS = [
   chatFolder(301, 'Product launch', true, [
     conversation(121, 'Launch checklist', 1),
     conversation(122, 'Press release draft', 5),
@@ -75,7 +70,7 @@ export const CHAT_FOLDERS = [
   ]),
 ];
 
-export const FOLDERS = { date_groups: DATE_GROUPS, folders: CHAT_FOLDERS, pinned: { conversations: [] } };
+const FOLDERS = { date_groups: DATE_GROUPS, folders: CHAT_FOLDERS, pinned: { conversations: PINNED_CHATS } };
 
 const author = { id: USER.id, name: USER.name, avatar: '' };
 // Catalog items are published by other people, so they do not carry the viewer's own avatar.
