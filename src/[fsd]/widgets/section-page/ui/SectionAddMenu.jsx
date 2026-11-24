@@ -93,7 +93,7 @@ const SectionAddMenu = memo(props => {
       {importKind === IMPORT_KINDS.skill && (
         <SkillImportModal
           open={skillImport.isModalOpen}
-          skill={skillImport.pendingSkill}
+          skills={skillImport.pendingSkills}
           fileName={skillImport.pendingFileName}
           isImporting={skillImport.isImporting}
           onClose={skillImport.cancelImport}

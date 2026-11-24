@@ -163,7 +163,7 @@ const SkillImportIconButton = memo(() => {
     openFileDialog,
     isImporting,
     isModalOpen,
-    pendingSkill,
+    pendingSkills,
     pendingFileName,
     confirmImport,
     cancelImport,
@@ -180,7 +180,7 @@ const SkillImportIconButton = memo(() => {
       </IconAction>
       <SkillImportModal
         open={isModalOpen}
-        skill={pendingSkill}
+        skills={pendingSkills}
         fileName={pendingFileName}
         isImporting={isImporting}
         onClose={cancelImport}
@@ -431,7 +431,7 @@ const AddMenu = memo(({ section }) => {
       {section.key === 'skills' && (
         <SkillImportModal
           open={skill.isModalOpen}
-          skill={skill.pendingSkill}
+          skills={skill.pendingSkills}
           fileName={skill.pendingFileName}
           isImporting={skill.isImporting}
           onClose={skill.cancelImport}
