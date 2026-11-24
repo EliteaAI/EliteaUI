@@ -6,8 +6,8 @@ import { NavigationType, useLocation, useNavigationType } from 'react-router-dom
 import { SIDEBAR_COLLAPSE_STATE_KEY } from '@/[fsd]/widgets/sidebar-root/lib/constants/sidebar.constants';
 import { actions as settingsActions } from '@/slices/settings';
 
-// Folds the menu once per landed Explore pick, never on Back/Forward/reload
-export const useCollapseAfterExploreNavigation = () => {
+// Folds the menu once per landed sidebar pick (Explore, Artifacts, Settings, Help), never on Back/Forward/reload
+export const useCollapseAfterSidebarNavigation = () => {
   const dispatch = useDispatch();
   const { state } = useLocation();
   const navigationType = useNavigationType();

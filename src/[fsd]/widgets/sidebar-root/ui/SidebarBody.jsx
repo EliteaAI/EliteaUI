@@ -105,7 +105,7 @@ const SidebarBody = memo(props => {
             menuTitle={ARTIFACTS_LABEL}
             menuIcon={<ArtifactsIcon />}
             selected={pathname.startsWith(RouteDefinitions.Artifacts)}
-            onClick={navigateToPage(RouteDefinitions.Artifacts, ARTIFACTS_LABEL)}
+            onClick={navigateToPage(RouteDefinitions.Artifacts, ARTIFACTS_LABEL, { collapseSidebar: true })}
             to={getLinkTarget(RouteDefinitions.Artifacts)}
             tooltip={ARTIFACTS_LABEL}
             showLabel={!sideBarCollapsed}

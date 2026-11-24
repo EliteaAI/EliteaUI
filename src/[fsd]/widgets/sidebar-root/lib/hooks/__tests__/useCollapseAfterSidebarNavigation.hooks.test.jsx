@@ -6,7 +6,7 @@ import { SIDEBAR_COLLAPSE_STATE_KEY } from '@/[fsd]/widgets/sidebar-root/lib/con
 import { actions as settingsActions } from '@/slices/settings';
 import { act, cleanup, render } from '@testing-library/react';
 
-import { useCollapseAfterExploreNavigation } from '../useCollapseAfterExploreNavigation.hooks';
+import { useCollapseAfterSidebarNavigation } from '../useCollapseAfterSidebarNavigation.hooks';
 
 const fixture = vi.hoisted(() => ({ dispatch: vi.fn(), block: false, blocker: null }));
 
@@ -15,7 +15,7 @@ vi.mock('react-redux', () => ({ useDispatch: () => fixture.dispatch }));
 const COLLAPSE = settingsActions.setSideBarCollapsed(true);
 
 const Layout = () => {
-  useCollapseAfterExploreNavigation();
+  useCollapseAfterSidebarNavigation();
   fixture.blocker = useBlocker(() => fixture.block);
   return null;
 };
@@ -36,7 +36,7 @@ const renderRouter = () => {
 const pick = (router, path, id = 1) =>
   act(() => router.navigate(path, { state: { routeStack: [], [SIDEBAR_COLLAPSE_STATE_KEY]: id } }));
 
-describe('useCollapseAfterExploreNavigation', () => {
+describe('useCollapseAfterSidebarNavigation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     fixture.block = false;

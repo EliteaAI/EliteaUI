@@ -20,7 +20,7 @@ const SettingsButton = memo(props => {
     event => {
       // The link is only a carrier for the href; a plain click keeps the existing guarded navigation
       event.preventDefault();
-      navigateToPage(settingsPath, 'Settings')();
+      navigateToPage(settingsPath, 'Settings', { collapseSidebar: true })();
     },
     [navigateToPage, settingsPath],
   );

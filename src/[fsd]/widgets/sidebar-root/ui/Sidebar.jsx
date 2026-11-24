@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { Box } from '@mui/material';
 import Drawer from '@mui/material/Drawer';
 
-import { useCollapseAfterExploreNavigation } from '@/[fsd]/widgets/sidebar-root/lib/hooks';
+import { useCollapseAfterSidebarNavigation } from '@/[fsd]/widgets/sidebar-root/lib/hooks';
 import { SidebarBody } from '@/[fsd]/widgets/sidebar-root/ui';
 import { COLLAPSED_SIDE_BAR_WIDTH, SIDE_BAR_WIDTH } from '@/common/constants';
 import ArrowLeftIcon from '@/components/Icons/ArrowLeftIcon';
@@ -19,7 +19,7 @@ const Sidebar = memo(props => {
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
   const styles = sideBarStyles(sideBarCollapsed);
 
-  useCollapseAfterExploreNavigation();
+  useCollapseAfterSidebarNavigation();
 
   const onCollapsedHandler = useCallback(
     collapsed => {
