@@ -20,6 +20,7 @@ export * as NodeTypeSelectorHelpers from './nodeTypeSelector.helpers';
 export * as PipelineReadinessHelpers from './pipelineReadiness.helpers';
 export * as NodeSummaryHelpers from './nodeSummary.helpers';
 export * as NodeRenameHelpers from './nodeRename.helpers';
+export * as NodeRenameSyncHelpers from './nodeRenameSync.helpers';
 export * as NodeYamlHelpers from './nodeYaml.helpers';
 export * as InputMappingHelpers from './inputMapping.helpers';
 export * as NodeFieldInfoHelpers from './nodeFieldInfo.helpers';

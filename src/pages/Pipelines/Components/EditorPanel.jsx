@@ -9,7 +9,6 @@ import {
   useState,
 } from 'react';
 
-import YAML from 'js-yaml';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -22,7 +21,7 @@ import {
 } from '@/[fsd]/features/pipelines/ai-edit-pipeline';
 import {
   DumpYamlHelpers,
-  ParsePipelineHelpers,
+  NodeRenameSyncHelpers,
   PipelineReadinessHelpers,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { YamlCodeEditor } from '@/[fsd]/features/pipelines/yaml-editor/ui';
@@ -117,17 +116,12 @@ const EditorPanel = forwardRef((props, ref) => {
 
   const onParseCodeToJson = useCallback(
     code => {
-      let parsedYamlJson = undefined;
-      try {
-        parsedYamlJson = YAML.load(code || '') || {};
-        const { yamlJson } = ParsePipelineHelpers.migerateLegacyNodes(parsedYamlJson);
-        parsedYamlJson = yamlJson;
-      } catch {
-        // YAML parsing failed, parsedYamlJson remains undefined
-      }
-      if (parsedYamlJson && !areYamlObjectsEqual(parsedYamlJson, yamlJsonObject)) {
-        setYamlJsonObject(parsedYamlJson);
-        flowEditorRef.current?.calculateLayoutNodes?.(parsedYamlJson, true, false);
+      // A node renamed in the YAML keeps its references (targets, routes, entry point) like a rename in the flow does
+      const { yamlJson: syncedYamlJson } =
+        NodeRenameSyncHelpers.parseYamlCodeWithRenames(code, yamlJsonObject) || {};
+      if (syncedYamlJson && !areYamlObjectsEqual(syncedYamlJson, yamlJsonObject)) {
+        setYamlJsonObject(syncedYamlJson);
+        flowEditorRef.current?.calculateLayoutNodes?.(syncedYamlJson, true, false);
       }
     },
     [setYamlJsonObject, yamlJsonObject],

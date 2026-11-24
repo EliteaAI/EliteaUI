@@ -1,8 +1,14 @@
+import { useMemo } from 'react';
+
 import YAML from 'js-yaml';
 import { useSelector } from 'react-redux';
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { LayoutHelpers, ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import {
+  LayoutHelpers,
+  NodeRenameSyncHelpers,
+  ParsePipelineHelpers,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useIsFrom, useIsFromPipelineDetail } from '@/[fsd]/shared/lib/hooks';
 import RouteDefinitions from '@/routes';
 import { selectActivePipeline } from '@/slices/pipeline';
@@ -21,11 +27,17 @@ export default function useSavePipeline() {
     yamlJsonObject?.nodes?.length > 0;
   const isFromPipeline = isFromPipelineDetail || (isFromChat && hasPipelineData);
 
+  // A node renamed in the YAML view and saved without switching to Flow keeps its references like a Flow rename
+  const syncedYamlCode = useMemo(
+    () => NodeRenameSyncHelpers.syncYamlCodeRenames(yamlCode, yamlJsonObject),
+    [yamlCode, yamlJsonObject],
+  );
+
   return {
     isFromPipeline,
     nodes,
     edges,
-    yamlCode,
+    yamlCode: syncedYamlCode,
     orientation: orientation || ORIENTATION.vertical,
   };
 }
