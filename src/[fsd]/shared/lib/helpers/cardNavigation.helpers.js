@@ -55,7 +55,7 @@ export const buildCardNavigation = params => {
     [ContentType.PipelineRejected]: buildUrl(RouteDefinitions.Pipelines, tab),
     [ContentType.ToolkitAdmin]: buildUrl(RouteDefinitions.Toolkits, tab),
     [ContentType.ToolkitAll]: buildUrl(RouteDefinitions.Toolkits, tab),
-    [ContentType.AppAll]: buildUrl(RouteDefinitions.Apps, AppsTabs[1]),
+    [ContentType.AppAll]: buildUrl(RouteDefinitions.Apps, AppsTabs[0]),
     [ContentType.MCPAll]: buildUrl(RouteDefinitions.MCPs, tab),
     [ContentType.CredentialAll]: buildUrl(RouteDefinitions.Credentials, tab),
     [ContentType.SkillAll]: buildUrl(RouteDefinitions.Skills, tab),

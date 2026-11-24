@@ -128,7 +128,7 @@ describe('AppDetailActions', () => {
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(mocks.deleteToolkit).toHaveBeenCalledExactlyOnceWith({ projectId: 7, toolkitId: 'app-1' });
-    expect(mocks.navigate).toHaveBeenCalledWith('/apps/applications', { replace: true });
+    expect(mocks.navigate).toHaveBeenCalledWith('/apps/all', { replace: true });
   });
 
   it('shows success and returns to the Applications list only after deletion completes', async () => {
@@ -151,7 +151,7 @@ describe('AppDetailActions', () => {
     expect(mocks.toastSuccess).toHaveBeenCalledWith(
       'The Inventory application has been successfully deleted.',
     );
-    expect(mocks.navigate).toHaveBeenCalledWith('/apps/applications', { replace: true });
+    expect(mocks.navigate).toHaveBeenCalledWith('/apps/all', { replace: true });
   });
 
   it('submits only once when Enter repeats while deletion is pending', async () => {
@@ -176,7 +176,7 @@ describe('AppDetailActions', () => {
       completeDeletion();
     });
 
-    expect(mocks.navigate).toHaveBeenCalledExactlyOnceWith('/apps/applications', { replace: true });
+    expect(mocks.navigate).toHaveBeenCalledExactlyOnceWith('/apps/all', { replace: true });
   });
 
   it('reports deletion failures without navigating away', async () => {

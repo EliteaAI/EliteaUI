@@ -40,7 +40,14 @@ export const useAgentHubData = (query, selectedTagNames) => {
   const stateRef = useRef({ applicationsByTag, totalCountsByTag, currentPageByTag });
   stateRef.current = { applicationsByTag, totalCountsByTag, currentPageByTag };
 
-  const { data: categoriesData, isFetching: isFetchingCategories } = useGetAgentCategoriesQuery({
+  // Until the first load ends the empty catalog is still loading, not "nothing found"
+  const [hasLoaded, setHasLoaded] = useState(isCacheValid);
+
+  const {
+    data: categoriesData,
+    isFetching: isFetchingCategories,
+    isError: isCategoriesError,
+  } = useGetAgentCategoriesQuery({
     projectId: PUBLIC_PROJECT_ID,
   });
   const categoryNames = useMemo(() => (categoriesData?.categories || []).map(c => c.name), [categoriesData]);
@@ -110,6 +117,7 @@ export const useAgentHubData = (query, selectedTagNames) => {
         });
       } finally {
         setLoading('bulk_fetch', false);
+        setHasLoaded(true);
       }
     },
     [fetchApplications, query, setLoading, bucketAppsByCategory, updateApplicationData],
@@ -220,6 +228,7 @@ export const useAgentHubData = (query, selectedTagNames) => {
       }
     } finally {
       setLoading('global_search', false);
+      setHasLoaded(true);
     }
   }, [fetchApplications, query, setLoading, resetSearchByTag, bucketAppsByCategory, categoryNames, dispatch]);
 
@@ -256,7 +265,10 @@ export const useAgentHubData = (query, selectedTagNames) => {
       lastQueryRef.current = query;
     }
 
-    if (categoryNames.length === 0) return;
+    if (categoryNames.length === 0) {
+      if (!isFetchingCategories && (categoriesData || isCategoriesError)) setHasLoaded(true);
+      return;
+    }
 
     if (query) {
       if (!isCacheValid) {
@@ -274,6 +286,9 @@ export const useAgentHubData = (query, selectedTagNames) => {
     }
   }, [
     categoryNames,
+    categoriesData,
+    isCategoriesError,
+    isFetchingCategories,
     query,
     isCacheValid,
     searchAndCategorize,
@@ -365,6 +380,7 @@ export const useAgentHubData = (query, selectedTagNames) => {
     currentPageByTag,
     loadingTags,
     isFetching,
+    isInitialLoading: !hasLoaded && !isCacheValid,
     isCacheValid,
     lastRefreshedAt,
     fetchApplicationsForCategoryName,

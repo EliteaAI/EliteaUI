@@ -60,20 +60,20 @@ const renderBreadcrumbs = () =>
 describe('Breadcrumbs', () => {
   it('gives a crumb its menu while the page sits below it', () => {
     trail.current = [
-      crumb(EVALUATE_ROUTE, 'Evaluation (Beta)', false),
+      crumb(EVALUATE_ROUTE, 'Evaluation', false),
       crumb('/agents/:tab/:agentId/evaluate/datasets', 'Manage Datasets', true),
     ];
     renderBreadcrumbs();
 
-    expect(screen.getByTestId('breadcrumb-menu-trigger')).toHaveTextContent('Evaluation (Beta)');
+    expect(screen.getByTestId('breadcrumb-menu-trigger')).toHaveTextContent('Evaluation');
   });
 
   it('renders that same crumb as plain text once it is the page you are on', () => {
-    trail.current = [crumb(EVALUATE_ROUTE, 'Evaluation (Beta)', true)];
+    trail.current = [crumb(EVALUATE_ROUTE, 'Evaluation', true)];
     renderBreadcrumbs();
 
     expect(screen.queryByTestId('breadcrumb-menu-trigger')).not.toBeInTheDocument();
-    expect(screen.getByTestId('breadcrumb-current')).toHaveTextContent('Evaluation (Beta)');
+    expect(screen.getByTestId('breadcrumb-current')).toHaveTextContent('Evaluation');
   });
 
   it('keeps the search in a crumb link', () => {

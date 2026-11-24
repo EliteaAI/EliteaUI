@@ -1,10 +1,13 @@
 import { memo } from 'react';
 
-import { Box, Divider } from '@mui/material';
+import { Box, Divider, Skeleton } from '@mui/material';
+
+import { getCardGradientStyles } from '@/utils/cardStyles';
 
 import CategoryRail from './CategoryRail';
 
 const FEATURED_COUNT = 3; // Trending, My Liked, New
+const LOADING_CARDS_COUNT = 12;
 
 const CatalogBody = memo(props => {
   const {
@@ -18,6 +21,7 @@ const CatalogBody = memo(props => {
     noResultsTitle,
     noResultsDescription,
     chipTestIdPrefix,
+    showRail = true,
   } = props;
 
   const styles = catalogBodyStyles();
@@ -32,26 +36,37 @@ const CatalogBody = memo(props => {
   const renderSections = () => {
     if (isLoading) {
       return (
-        <Box sx={styles.loadingContainer}>
-          {Array.from({ length: 25 }).map((_, index) => (
+        <Box
+          sx={styles.loadingContainer}
+          data-testid="catalog-loading"
+        >
+          {Array.from({ length: LOADING_CARDS_COUNT }).map((_, index) => (
             <Box
               key={index}
-              sx={styles.loadingSkeleton}
-            />
+              sx={styles.loadingCard}
+            >
+              <Skeleton
+                animation="wave"
+                variant="rectangular"
+                sx={styles.loadingSkeleton}
+              />
+            </Box>
           ))}
         </Box>
       );
     }
 
-    if (Object.keys(groupedItems).length > 0 && renderCategory) {
-      return allCategories
-        .filter(category => {
+    const visibleCategories = renderCategory
+      ? allCategories.filter(category => {
           if (filterOnlyCategories.includes(category) && !selectedCategories.includes(category)) {
             return false;
           }
           return groupedItems[category] && groupedItems[category].length > 0;
         })
-        .map(category => renderCategory(category, groupedItems[category]));
+      : [];
+
+    if (visibleCategories.length > 0) {
+      return visibleCategories.map(category => renderCategory(category, groupedItems[category]));
     }
 
     return renderNoResults ? renderNoResults(noResultsTitle, noResultsDescription) : null;
@@ -60,20 +75,24 @@ const CatalogBody = memo(props => {
   return (
     <Box sx={styles.container}>
       <Box sx={styles.leftColumn}>{renderSections()}</Box>
-      <Divider
-        orientation="vertical"
-        flexItem
-        sx={styles.railDivider}
-      />
-      <Box sx={styles.railWrapper}>
-        <CategoryRail
-          featuredCategories={featuredCategories}
-          categories={categories}
-          selectedCategories={selectedCategories}
-          onSelectCategory={onSelectCategory}
-          chipTestIdPrefix={chipTestIdPrefix}
-        />
-      </Box>
+      {showRail && (
+        <>
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={styles.railDivider}
+          />
+          <Box sx={styles.railWrapper}>
+            <CategoryRail
+              featuredCategories={featuredCategories}
+              categories={categories}
+              selectedCategories={selectedCategories}
+              onSelectCategory={onSelectCategory}
+              chipTestIdPrefix={chipTestIdPrefix}
+            />
+          </Box>
+        </>
+      )}
     </Box>
   );
 });
@@ -107,25 +126,32 @@ const catalogBodyStyles = () => ({
     overflowY: 'auto',
     background: palette.background.default.tertiary,
   }),
-  loadingContainer: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '0.5rem',
-  },
-  loadingSkeleton: ({ palette }) => ({
-    width: '12.75rem',
-    height: '2.5rem',
-    backgroundColor: palette.background.default.secondary,
-    borderRadius: '0.5rem',
-    flexShrink: 0,
-    flexGrow: 0,
-    animation: 'pulse 1.5s ease-in-out infinite',
-    '@keyframes pulse': {
-      '0%': { opacity: 1 },
-      '50%': { opacity: 0.5 },
-      '100%': { opacity: 1 },
+  // The catalog cards' grid (AgentCategorySection, SkillCategorySection) with the list pages' card skeleton
+  loadingContainer: ({ breakpoints }) => ({
+    display: 'grid',
+    width: '100%',
+    maxWidth: '81.375rem',
+    gridTemplateColumns: '1fr',
+    gap: '1rem',
+    [breakpoints.up('sm')]: {
+      gridTemplateColumns: 'repeat(2, 1fr)',
+    },
+    [breakpoints.up('prompt_list_md')]: {
+      gridTemplateColumns: 'repeat(3, 1fr)',
+    },
+    [breakpoints.up('prompt_list_xl')]: {
+      gridTemplateColumns: 'repeat(4, 1fr)',
     },
   }),
+  loadingCard: ({ palette }) => ({
+    ...getCardGradientStyles(palette, { enableHover: false }),
+    height: '7rem',
+  }),
+  loadingSkeleton: {
+    width: '100%',
+    height: '100%',
+    borderRadius: '0.75rem',
+  },
 });
 
 export default CatalogBody;

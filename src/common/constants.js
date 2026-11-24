@@ -50,10 +50,8 @@ export const MIN_SEARCH_KEYWORD_LENGTH = 3;
 export const PAGE_SIZE = 20;
 export const PAGE_SIZE_TOOLKITS_DROPDOWN_LIST = 50;
 export const SUGGESTION_PAGE_SIZE = 5;
-export const SIDE_BAR_WIDTH = 216;
-export const EXPANDED_SIDE_BAR_WIDTH_IN_PX = `${SIDE_BAR_WIDTH}px`;
+export const SIDE_BAR_WIDTH = 288;
 export const COLLAPSED_SIDE_BAR_WIDTH = 64;
-export const COLLAPSED_SIDE_BAR_WIDTH_IN_PX = `${COLLAPSED_SIDE_BAR_WIDTH}px`;
 export const NAV_BAR_HEIGHT = 60;
 export const NAV_BAR_HEIGHT_IN_PX = `${NAV_BAR_HEIGHT}px`;
 export const NAV_BAR_HEIGHT_TABLET = '16px';
@@ -501,7 +499,7 @@ export const publicTabs = ['latest', 'my-liked', 'trending'];
 export const ApplicationsTabs = ['latest', 'my-liked', 'trending', 'admin'];
 export const SkillsTabs = ['all'];
 export const ToolkitsTabs = ['all', 'my-liked', 'trending', 'admin'];
-export const AppsTabs = ['applications', 'catalog'];
+export const AppsTabs = ['all', 'discover'];
 
 export const CredentialsTabs = ['all'];
 
@@ -521,8 +519,6 @@ export const DETAILS_PAGE_COLLAPSE_THRESHOLD_WITH_SIDEBAR_OPEN = 800;
 
 export const CARD_LIST_WIDTH = `calc(100% - ${RIGHT_PANEL_WIDTH_OF_CARD_LIST_PAGE}px)`;
 export const CARD_LIST_WIDTH_FULL = `calc(100% + ${MARGIN_COMPENSATION})`;
-export const calSideBarWidth = sideBarCollapsed =>
-  sideBarCollapsed ? COLLAPSED_SIDE_BAR_WIDTH : SIDE_BAR_WIDTH;
 
 export const VariableSources = {
   Context: 'context',

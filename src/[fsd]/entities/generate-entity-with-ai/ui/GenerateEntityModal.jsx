@@ -227,6 +227,7 @@ const GenerateEntityModal = memo(props => {
       open={open}
       title="Build with AI"
       onClose={handleClose}
+      disableBackdropClose
       content={renderContent()}
       actions={renderActions()}
       dialogSx={styles.dialogContent}

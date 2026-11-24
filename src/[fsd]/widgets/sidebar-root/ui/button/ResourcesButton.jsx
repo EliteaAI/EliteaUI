@@ -2,7 +2,7 @@ import { memo, useCallback } from 'react';
 
 import { useLocation, useMatch, useNavigate } from 'react-router-dom';
 
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
@@ -11,7 +11,7 @@ import HelpCenterIcon from '@/assets/help-center.svg?react';
 import RouteDefinitions from '@/routes';
 
 const ResourcesButton = memo(props => {
-  const { fullWidth = false } = props;
+  const { cell = false } = props;
   const isOnResources = useMatch({ path: RouteDefinitions.HelpCenter });
   const navigate = useNavigate();
   const location = useLocation();
@@ -37,26 +37,7 @@ const ResourcesButton = memo(props => {
     onClick: handleResourcesClick,
   };
 
-  const styles = resourcesButtonStyles(fullWidth, !!isOnResources);
-
-  if (fullWidth) {
-    return (
-      <StyledTooltip
-        placement="right"
-        title=""
-        enterDelay={500}
-        enterNextDelay={500}
-      >
-        <Box
-          {...linkProps}
-          sx={styles.fullWidthContainer}
-        >
-          <HelpCenterIcon sx={styles.icon} />
-          <Typography variant="labelSmall">Help Center</Typography>
-        </Box>
-      </StyledTooltip>
-    );
-  }
+  const styles = resourcesButtonStyles(!!isOnResources, cell);
 
   return (
     <StyledTooltip
@@ -80,7 +61,7 @@ const ResourcesButton = memo(props => {
 ResourcesButton.displayName = 'ResourcesButton';
 
 /** @type {MuiSx} */
-const resourcesButtonStyles = (fullWidth, isActive) => ({
+const resourcesButtonStyles = (isActive, cell) => ({
   container: ({ palette }) => ({
     width: '3.25rem',
     display: 'flex',
@@ -89,11 +70,13 @@ const resourcesButtonStyles = (fullWidth, isActive) => ({
     cursor: 'pointer',
     flexShrink: 0,
     color: palette.text.metrics,
+    ...(cell && { alignSelf: 'stretch' }),
   }),
+  // In a footer cell the whole cell is the button
   iconButton: ({ palette }) => ({
-    width: '2rem',
-    height: '2rem',
-    borderRadius: '0.5rem',
+    width: cell ? '100%' : '2rem',
+    height: cell ? '100%' : '2rem',
+    borderRadius: cell ? 0 : '0.5rem',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -103,27 +86,6 @@ const resourcesButtonStyles = (fullWidth, isActive) => ({
     },
     '&:active': {
       backgroundColor: palette.components.sidebar.menuItem.selected,
-    },
-  }),
-  fullWidthContainer: ({ palette }) => ({
-    width: '100%',
-    height: '2rem',
-    padding: '0.5rem',
-    borderRadius: '0.5rem',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    cursor: 'pointer',
-    boxSizing: 'border-box',
-    color: isActive ? palette.text.secondary : palette.text.metrics,
-    background: isActive ? palette.components.sidebar.menuItem.selected : 'transparent',
-
-    '& svg': {
-      color: isActive ? palette.text.secondary : palette.text.metrics,
-    },
-
-    '&:hover': {
-      background: palette.components.sidebar.menuItem.hover,
     },
   }),
   icon: {

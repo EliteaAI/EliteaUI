@@ -15,7 +15,7 @@ const PREVIOUS_BADGE = 'Previous';
 
 /**
  * Breadcrumbs for every evaluation screen. On a child page such as Manage Datasets the
- * `Evaluation (Beta)` crumb opens the agent's suites instead of navigating up, so the user gets back
+ * `Evaluation` crumb opens the agent's suites instead of navigating up, so the user gets back
  * to the suite they came from without a back button or a bent crumb hierarchy. On the evaluation and
  * suite screens that crumb is the current one, so it stays plain text and the menu never opens.
  */

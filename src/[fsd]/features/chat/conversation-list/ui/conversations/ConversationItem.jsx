@@ -14,7 +14,8 @@ import {
 import { useConversationRunStatus } from '@/[fsd]/features/chat/lib/hooks';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
-import { AppLink, Input } from '@/[fsd]/shared/ui';
+import { AppLink, Button, Input } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import ShareIcon from '@/assets/share-icon.svg?react';
 import {
@@ -53,13 +54,12 @@ const ConversationItem = memo(props => {
     onCreateConversation,
     onCancelCreate,
     onChangeActiveConversationName,
-    moveToFoldersMenuItems = {},
+    getMoveToFoldersMenuItems,
     isEditingCanvas,
     enableDragAndDrop = false,
     isDragDisabled = false,
-    isNextItemHovered = false,
-    onItemHover,
     onShare,
+    showChatPageActions = true,
   } = props;
   const {
     name,
@@ -100,7 +100,6 @@ const ConversationItem = memo(props => {
   const styles = conversationItemStyles({
     isActive,
     isHovering,
-    isNextItemHovered,
     showMenu,
     isSaveEnabled,
     isDuplicating,
@@ -119,30 +118,6 @@ const ConversationItem = memo(props => {
   };
 
   const conversationType = getConversationType();
-
-  const mainBodyWidth = useMemo(() => {
-    // Calculate width based on conversation type and state
-    let rightMargin = 0;
-
-    // Add margin for menu when hovering
-    if (isHovering || showMenu) rightMargin += 32;
-
-    // Add margin for pin icon
-    if (isPinned && !isPlayback) rightMargin += 20;
-
-    // Add margin for users icon based on conversation type
-    if (conversationType === 'private_with_users' || conversationType === 'public') {
-      rightMargin += 20;
-    }
-
-    // Add margin for playback icon
-    if (isPlayback) rightMargin += 24;
-
-    // Add margin for the run spinner / unread dot
-    if (showRunIndicator) rightMargin += 20;
-
-    return `calc(100% - ${rightMargin}px)`;
-  }, [isHovering, showMenu, isPinned, isPlayback, conversationType, showRunIndicator]);
 
   // A real link (href) lets the browser offer "Open link in new tab"; drafts and playbacks have no page of their own
   const conversationLinkProps = useMemo(() => {
@@ -172,6 +147,16 @@ const ConversationItem = memo(props => {
   const handlePin = useCallback(async () => {
     onPin(conversation, !isPinned);
   }, [conversation, isPinned, onPin]);
+
+  const handleUnpinClick = useCallback(
+    event => {
+      // The row is a link, so the click must not follow it
+      event.preventDefault();
+      event.stopPropagation();
+      onPin(conversation, false);
+    },
+    [conversation, onPin],
+  );
 
   const handleDelete = useCallback(async () => {
     onDelete(conversation);
@@ -230,21 +215,27 @@ const ConversationItem = memo(props => {
               !checkPermission(PERMISSIONS.chat.folders.create) ||
               !checkPermission(PERMISSIONS.chat.folders.update) ||
               (isActive && isEditingCanvas),
-            subMenuItems: moveToFoldersMenuItems,
+            // Built only while the menu is open, so a closed row stays memoized
+            subMenuItems: showMenu ? (getMoveToFoldersMenuItems?.(conversation) ?? []) : [],
           },
-          {
-            key: 'chat-conversation-menu-playback',
-            label: 'Playback',
-            icon: <PlayIcon sx={{ fontSize: '1rem' }} />,
-            disabled: isActive && isEditingCanvas,
-            onClick: handlePlayback,
-          },
-          {
-            label: 'Duplicate',
-            icon: <CopyIcon sx={{ fontSize: '1rem' }} />,
-            disabled: isActive && isEditingCanvas,
-            onClick: handleDuplicate,
-          },
+          // Playback and Duplicate open the chat, so they are offered on the chat page only
+          ...(showChatPageActions
+            ? [
+                {
+                  key: 'chat-conversation-menu-playback',
+                  label: 'Playback',
+                  icon: <PlayIcon sx={{ fontSize: '1rem' }} />,
+                  disabled: isActive && isEditingCanvas,
+                  onClick: handlePlayback,
+                },
+                {
+                  label: 'Duplicate',
+                  icon: <CopyIcon sx={{ fontSize: '1rem' }} />,
+                  disabled: isActive && isEditingCanvas,
+                  onClick: handleDuplicate,
+                },
+              ]
+            : []),
           {
             key: 'chat-conversation-menu-export',
             label: 'Export',
@@ -309,23 +300,19 @@ const ConversationItem = memo(props => {
     handleExport,
     isPinned,
     checkPermission,
-    moveToFoldersMenuItems,
+    getMoveToFoldersMenuItems,
+    showMenu,
+    conversation,
     handleShare,
     handlePlayback,
-    conversation.folder_id,
     handlePin,
     name,
+    showChatPageActions,
   ]);
 
-  const onMouseEnter = useCallback(() => {
-    setIsHovering(true);
-    onItemHover?.(conversation.id, true);
-  }, [conversation.id, onItemHover]);
+  const onMouseEnter = useCallback(() => setIsHovering(true), []);
 
-  const onMouseLeave = useCallback(() => {
-    setIsHovering(false);
-    onItemHover?.(conversation.id, false);
-  }, [conversation.id, onItemHover]);
+  const onMouseLeave = useCallback(() => setIsHovering(false), []);
 
   const onCloseMenuList = useCallback(() => {
     setShowMenu(false);
@@ -387,7 +374,7 @@ const ConversationItem = memo(props => {
           <PlayIcon sx={{ fontSize: '1rem' }} />
         </Box>
       )}
-      <Box sx={{ width: mainBodyWidth }}>
+      <Box sx={styles.nameColumn}>
         <Box sx={styles.mainBody}>
           {isNamingPending && !isEditing ? (
             <Box
@@ -445,10 +432,19 @@ const ConversationItem = memo(props => {
         {/* Private without users shows nothing as requested */}
         {/* Pin icon */}
         {isPinned && !isPlayback && (
-          <PinIcon
-            data-testid="chat-pin-icon"
-            sx={{ fontSize: '.875rem' }}
-          />
+          <Tooltip
+            title="Unpin"
+            placement="top"
+          >
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.tertiary}
+              data-testid="chat-pin-icon"
+              aria-label="Unpin chat"
+              onClick={handleUnpinClick}
+              startIcon={<PinIcon sx={styles.pinIcon} />}
+              sx={styles.pinButton}
+            />
+          </Tooltip>
         )}
       </Box>
       {!isNamingPending && (
@@ -553,14 +549,7 @@ const ConversationItem = memo(props => {
 ConversationItem.displayName = 'ConversationItem';
 
 /** @type {MuiSx} */
-const conversationItemStyles = ({
-  isActive,
-  isHovering,
-  isNextItemHovered,
-  isDuplicating,
-  isSaveEnabled,
-  showMenu,
-}) => {
+const conversationItemStyles = ({ isActive, isHovering, isDuplicating, isSaveEnabled, showMenu }) => {
   const getBackgroundColor = palette => {
     if (isActive) return palette.components.conversation.background.selected;
     if (isHovering && !isActive) return palette.components.conversation.background.hover;
@@ -569,17 +558,13 @@ const conversationItemStyles = ({
 
   return {
     conversationContentWrapper: ({ palette }) => ({
-      borderBottom:
-        isActive || isHovering || isNextItemHovered
-          ? 'none'
-          : `0.0625rem solid ${palette.components.conversation.border.itemDivider}`,
-      padding: '.5rem .75rem', // Reduced padding to minimize gaps
-      gap: '.5rem', // Reduced gap to minimize spacing
+      padding: '.25rem .75rem',
+      gap: '.5rem',
       display: 'flex',
       flexDirection: 'row',
       alignItems: 'center',
       width: '100%',
-      height: '2.5rem', // Slightly reduced height
+      height: '2.25rem',
       boxSizing: 'border-box',
       background: getBackgroundColor(palette),
       borderTopRightRadius: isActive || isHovering ? '.375rem' : '0rem',
@@ -602,6 +587,8 @@ const conversationItemStyles = ({
       alignItems: 'center',
       gap: '.5rem',
     },
+    // The name takes what the icons leave, so the icons keep one column however long the name is
+    nameColumn: { flex: 1, minWidth: 0 },
     mainBody: { width: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', gap: '.375rem' },
     nameText: {
       whiteSpace: 'nowrap',
@@ -615,6 +602,19 @@ const conversationItemStyles = ({
       gap: '.375rem',
       alignItems: 'center',
       minWidth: 'fit-content',
+      flexShrink: 0,
+    },
+    pinButton: ({ palette }) => ({
+      minWidth: '1.25rem !important',
+      width: '1.25rem',
+      height: '1.25rem',
+      padding: '0 !important',
+      '&:hover path': {
+        fill: palette.icon.secondary,
+      },
+    }),
+    pinIcon: {
+      fontSize: '.875rem',
     },
     menuWrapper: {
       height: '100%',
@@ -624,6 +624,7 @@ const conversationItemStyles = ({
       justifyContent: 'center',
       alignItems: 'center',
       alignSelf: 'center',
+      flexShrink: 0,
     },
     inputWrapper: ({ palette }) => ({
       width: '100%',

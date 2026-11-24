@@ -1,8 +1,11 @@
 export {
+  CHAT_HISTORY_SORT,
   CONVERSATION_NAME_MAX_LENGTH,
   DATE_GROUP_DISPLAY_NAMES,
   DATE_GROUP_ORDER,
   DEFAULT_EXPANDED_GROUP,
+  EMPTY_CHAT_PAGE_STATE,
+  PINNED_GROUP,
 } from './conversationList.constants';
 
 export { EXPIRY_OPTIONS } from './shareLink.constants';

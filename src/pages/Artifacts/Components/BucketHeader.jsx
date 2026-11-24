@@ -1,99 +1,55 @@
-import { memo, useCallback } from 'react';
+import { memo } from 'react';
 
-import { Box, Button, IconButton, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import DoubleLeftIcon from '@/components/Icons/DoubleLeftIcon';
-import DoubleRightIcon from '@/components/Icons/DoubleRightIcon';
 import NewFolder from '@/components/Icons/NewFolder';
 import { useTheme } from '@emotion/react';
 
 import BucketSearch from './BucketSearch';
 
 const BucketHeader = memo(props => {
-  const {
-    collapsed,
-    onCreateBucket,
-    onCollapsed,
-    searchQuery,
-    onSearchChange,
-    onSearchClear,
-    onSearchActivate,
-  } = props;
+  const { onCreateBucket, searchQuery, onSearchChange, onSearchClear, onSearchActivate } = props;
 
   const theme = useTheme();
-  const styles = bucketHeaderStyles(collapsed);
-
-  const clickCreateBucket = useCallback(
-    shouldCollapse => () => {
-      onCreateBucket?.();
-      if (shouldCollapse) {
-        onCollapsed?.();
-      }
-    },
-    [onCreateBucket, onCollapsed],
-  );
+  const styles = bucketHeaderStyles();
 
   return (
     <>
       <Box sx={styles.header}>
         <Box sx={styles.headerActions}>
-          {!collapsed && (
-            <>
-              <Typography
-                data-testid="artifacts-buckets-heading"
-                variant="subtitle"
+          <Typography
+            data-testid="artifacts-buckets-heading"
+            variant="subtitle"
+          >
+            Buckets
+          </Typography>
+          <Tooltip
+            title="Create bucket"
+            placement="top"
+          >
+            <Box component="span">
+              <Button
+                onClick={onCreateBucket}
+                variant="elitea"
+                color="secondary"
+                sx={styles.createBucketButton}
+                data-testid="artifacts-create-bucket-button"
               >
-                Buckets
-              </Typography>
-              <Tooltip
-                title="Create bucket"
-                placement="top"
-              >
-                <Box component="span">
-                  <Button
-                    onClick={clickCreateBucket(false)}
-                    variant="elitea"
-                    color="secondary"
-                    sx={styles.createBucketButton}
-                    data-testid="artifacts-create-bucket-button"
-                  >
-                    <NewFolder
-                      sx={styles.newFolderIcon}
-                      fill={theme.palette.icon.secondary}
-                    />
-                  </Button>
-                </Box>
-              </Tooltip>
-              <BucketSearch
-                searchQuery={searchQuery}
-                onSearchChange={onSearchChange}
-                onSearchClear={onSearchClear}
-                collapsed={collapsed}
-                onExpand={onCollapsed}
-                onSearchActivate={onSearchActivate}
-              />
-            </>
-          )}
+                <NewFolder
+                  sx={styles.newFolderIcon}
+                  fill={theme.palette.icon.secondary}
+                />
+              </Button>
+            </Box>
+          </Tooltip>
+          <BucketSearch
+            searchQuery={searchQuery}
+            onSearchChange={onSearchChange}
+            onSearchClear={onSearchClear}
+            onSearchActivate={onSearchActivate}
+          />
         </Box>
-
-        <IconButton
-          variant="elitea"
-          color="tertiary"
-          onClick={onCollapsed}
-        >
-          {!collapsed ? (
-            <DoubleLeftIcon
-              fill={theme.palette.icon.default}
-              width={16}
-            />
-          ) : (
-            <DoubleRightIcon
-              fill={theme.palette.icon.default}
-              width={16}
-            />
-          )}
-        </IconButton>
       </Box>
     </>
   );
@@ -102,16 +58,16 @@ const BucketHeader = memo(props => {
 BucketHeader.displayName = 'BucketHeader';
 
 /** @type {MuiSx} */
-const bucketHeaderStyles = collapsed => ({
+const bucketHeaderStyles = () => ({
   header: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'row',
-    justifyContent: collapsed ? 'center' : 'space-between',
+    justifyContent: 'space-between',
     height: '3.7rem',
     alignItems: 'center',
     padding: '1.5rem',
     paddingTop: '1.75rem',
-    borderBottom: !collapsed ? `0.0625rem solid ${palette.border.default}` : 'none',
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
   }),
   headerActions: {
     display: 'flex',
@@ -129,14 +85,6 @@ const bucketHeaderStyles = collapsed => ({
   newFolderIcon: {
     width: '1rem',
     height: '1rem',
-  },
-  collapsedIconsContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
   },
 });
 

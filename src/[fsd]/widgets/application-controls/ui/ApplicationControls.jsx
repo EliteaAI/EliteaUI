@@ -293,7 +293,7 @@ const ApplicationControls = memo(props => {
       },
       {
         key: 'evaluate',
-        label: 'Evaluate (Beta)',
+        label: 'Evaluate',
         icon: <EvaluateIcon sx={{ fontSize: '1rem' }} />,
         addSeparator: false,
         to: {

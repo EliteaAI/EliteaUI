@@ -23,10 +23,8 @@ const BucketsPanel = memo(props => {
     currentStorageUsage,
     isLoadingBuckets,
     isError,
-    collapsed,
     // Callbacks
     onSelectBucket,
-    onCollapsed,
     onCreateBucket,
     onStorageChange,
     onUpload,
@@ -41,7 +39,7 @@ const BucketsPanel = memo(props => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchActive, setIsSearchActive] = useState(false);
 
-  const styles = bucketsPanelStyles(collapsed, isSearchActive);
+  const styles = bucketsPanelStyles(isSearchActive);
 
   // Debounce search query
   const debouncedSearchQuery = useDebounceValue(searchQuery, 300);
@@ -104,24 +102,20 @@ const BucketsPanel = memo(props => {
   return (
     <Box sx={styles.root}>
       <BucketHeader
-        collapsed={collapsed}
         onCreateBucket={onCreateBucket}
-        onCollapsed={onCollapsed}
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
         onSearchClear={handleSearchClear}
         onSearchActivate={handleSearchActivate}
       />
 
-      {!collapsed && (
-        <BucketStorageSelector
-          storageOptions={storageOptions}
-          configurationTitle={configurationTitle}
-          onStorageChange={onStorageChange}
-        />
-      )}
+      <BucketStorageSelector
+        storageOptions={storageOptions}
+        configurationTitle={configurationTitle}
+        onStorageChange={onStorageChange}
+      />
 
-      {isSearchActive && !collapsed && (
+      {isSearchActive && (
         <Box sx={styles.searchBarContainer}>
           <SimpleSearchBar
             data-testid="artifacts-bucket-search-input"
@@ -174,12 +168,10 @@ const BucketsPanel = memo(props => {
         )}
       </Box>
 
-      {!collapsed && (
-        <BucketFooter
-          bucketCount={buckets?.length || 0}
-          totalSize={currentStorageUsage?.totalSize || '0B'}
-        />
-      )}
+      <BucketFooter
+        bucketCount={buckets?.length || 0}
+        totalSize={currentStorageUsage?.totalSize || '0B'}
+      />
     </Box>
   );
 });
@@ -187,14 +179,14 @@ const BucketsPanel = memo(props => {
 BucketsPanel.displayName = 'BucketsPanel';
 
 /** @type {MuiSx} */
-const bucketsPanelStyles = (collapsed, isSearchActive) => ({
+const bucketsPanelStyles = isSearchActive => ({
   root: ({ palette }) => ({
     height: '100%',
     width: '100%',
     position: 'relative',
     display: 'flex',
     flexDirection: 'column',
-    alignItems: collapsed ? 'center' : 'stretch',
+    alignItems: 'stretch',
     background: palette.background.surface.secondary,
   }),
   searchBarContainer: {
@@ -207,7 +199,7 @@ const bucketsPanelStyles = (collapsed, isSearchActive) => ({
     fontSize: '1.25rem',
   },
   bucketListOuterContainer: {
-    display: collapsed ? 'none' : 'flex',
+    display: 'flex',
     flexDirection: 'column',
     flex: 1,
     overflowY: 'auto',

@@ -15,7 +15,7 @@ import {
 } from '@/[fsd]/entities/folder';
 import { useIsTableView, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useCardList } from '@/[fsd]/widgets/entity-card';
-import { ContentType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
+import { ContentType, MARGIN_COMPENSATION, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import { buildErrorMessage, uniqueArrayByProp } from '@/common/utils';
 import CardList from '@/components/CardList';
 import useCredentialTypes from '@/hooks/credentials/useCredentialTypes';
@@ -281,9 +281,11 @@ const credentialsRightPanelStyles = isFoldersExpanded => ({
 const credentialsListStyles = () => ({
   wrapper: {
     width: '100%',
+    // The card list is 1rem wider than its box (DataCards' margin compensation); the grid keeps it free
     '& > .MuiGrid-container': {
       display: 'grid',
       gridTemplateColumns: 'repeat(auto-fill, minmax(18.75rem, 1fr))',
+      paddingRight: MARGIN_COMPENSATION,
     },
     '& > .MuiGrid-container > .MuiGrid-root': {
       width: '100%',

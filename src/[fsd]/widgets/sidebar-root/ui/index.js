@@ -1,8 +1,10 @@
 export { default as SidebarBody } from './SidebarBody';
 export { default as SidebarMenuItem } from './SidebarMenuItem';
-export { default as TooltipForDisablePersonalSpace } from './TooltipForDisablePersonalSpace';
 export { default as FeedbackDialog } from './FeedbackDialog';
 export { default as Sidebar } from './Sidebar';
 export { default as ProjectAvatar } from './ProjectAvatar';
 export { default as SidebarProjectSelect } from './SidebarProjectSelect';
 export * as Buttons from './button';
+export { default as ExploreMenu } from './ExploreMenu';
+export { default as SidebarChatsArea } from './SidebarChatsArea';
+export { default as SidebarFooterRow } from './SidebarFooterRow';

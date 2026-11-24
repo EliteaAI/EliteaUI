@@ -1,74 +1,29 @@
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { memo, useCallback } from 'react';
 
-import { useLocation, useMatch, useNavigate, useParams } from 'react-router-dom';
+import { PrivateSkillsList } from '@/[fsd]/features/skill';
+import { SkillsTab } from '@/[fsd]/features/skill-hub/ui';
+import { SECTION_PAGE_KEYS, SectionPage } from '@/[fsd]/widgets/section-page';
+import { ContentType } from '@/common/constants';
 
-import { PrivateSkillsList, SkillImportButton } from '@/[fsd]/features/skill';
-import { ContentType, SkillsTabs } from '@/common/constants';
-import StickyTabs from '@/components/StickyTabs';
-import ViewToggle from '@/components/ViewToggle';
-import RouteDefinitions, { PathSessionMap } from '@/routes';
+const PROJECT_CONTENT = <PrivateSkillsList cardContentType={ContentType.SkillAll} />;
 
 const Skills = memo(() => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { state: locationState } = location;
-  const { tab = SkillsTabs[0] } = useParams();
-  const isCreating = useMatch({ path: RouteDefinitions.CreateSkill });
-
-  const selectedTab = useMemo(() => {
-    const index = SkillsTabs.findIndex(item => item === tab);
-    return index === -1 ? -1 : index;
-  }, [tab]);
-
-  const onChangeTab = useCallback(
-    newTab => {
-      const pagePath = `${RouteDefinitions.Skills}/${SkillsTabs[newTab]}` + location.search;
-      navigate(pagePath, {
-        state: {
-          ...(locationState || {}),
-          routeStack: [
-            {
-              pagePath,
-              breadCrumb: PathSessionMap[RouteDefinitions.Skills],
-            },
-          ],
-        },
-      });
-    },
-    [location.search, navigate, locationState],
-  );
-
-  useEffect(() => {
-    if (selectedTab === -1 && !isCreating) {
-      onChangeTab(0);
-    }
-  }, [isCreating, onChangeTab, selectedTab]);
-
-  const tabs = useMemo(
-    () => [
-      {
-        label: 'Skills',
-        content: <PrivateSkillsList cardContentType={ContentType.SkillAll} />,
-      },
-    ],
+  const renderDiscover = useCallback(
+    ({ query, showFilters, onFilterCountChange }) => (
+      <SkillsTab
+        query={query}
+        showCategoryRail={showFilters}
+        onSelectedCategoriesChange={onFilterCountChange}
+      />
+    ),
     [],
   );
 
   return (
-    <StickyTabs
-      tabs={tabs}
-      value={selectedTab === -1 ? 0 : selectedTab}
-      onChangeTab={onChangeTab}
-      showTitleAndSwitchBySelect
-      title="Skills"
-      containerStyle={{ padding: '0 1.5rem 0 0' }}
-      tabBarStyle={{ padding: '0 0 0 1.5rem' }}
-      middleTabComponent={
-        <>
-          <SkillImportButton />
-          <ViewToggle />
-        </>
-      }
+    <SectionPage
+      sectionKey={SECTION_PAGE_KEYS.skills}
+      projectContent={PROJECT_CONTENT}
+      renderDiscover={renderDiscover}
     />
   );
 });

@@ -1,16 +1,14 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Box } from '@mui/material';
 
+import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
-import { Tooltip } from '@/[fsd]/shared/ui';
-import {
-  StyledAccordion,
-  StyledAccordionDetails,
-  StyledAccordionSummary,
-  StyledExpandMoreIcon,
-} from '@/[fsd]/shared/ui/accordion';
+import { Button, Tooltip } from '@/[fsd]/shared/ui';
+import { StyledAccordion, StyledAccordionDetails, StyledAccordionSummary } from '@/[fsd]/shared/ui/accordion';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import DotMenu from '@/components/DotMenu.jsx';
+import ArrowRightIcon from '@/components/Icons/ArrowRightIcon';
 import FolderIcon from '@/components/Icons/FolderIcon.jsx';
 import PinIcon from '@/components/Icons/PinIcon';
 
@@ -32,6 +30,8 @@ const FolderAccordion = memo(props => {
       },
     },
     defaultExpanded = false,
+    storedExpanded,
+    onExpandedChange,
     menuItems,
     isActive,
     is_private,
@@ -41,12 +41,13 @@ const FolderAccordion = memo(props => {
     onCloseMenuList,
     showMenu,
     isHovering,
-    isNextFolderHovered = false,
     isPinned = false,
+    onUnpin,
     folderId,
   } = props;
 
-  const [expanded, setExpanded] = useState(defaultExpanded);
+  // The user's own choice, kept over a remount of the list, wins over the default
+  const [expanded, setExpanded] = useState(storedExpanded ?? defaultExpanded);
 
   const shouldBeSelected = !expanded && defaultExpanded;
 
@@ -54,19 +55,36 @@ const FolderAccordion = memo(props => {
     isActive,
     isHovering,
     expanded,
-    isNextFolderHovered,
     is_private,
     showMenu,
     shouldBeSelected,
   );
 
-  const onChange = useCallback((_, value) => {
-    setExpanded(value);
-  }, []);
+  const onChange = useCallback(
+    (_, value) => {
+      setExpanded(value);
+      onExpandedChange?.(value);
+    },
+    [onExpandedChange],
+  );
 
+  const handleUnpinClick = useCallback(
+    event => {
+      event.stopPropagation();
+      onUnpin?.();
+    },
+    [onUnpin],
+  );
+
+  // Auto-opens (e.g. its chat gets selected) and keeps that, so a remount does not fold it again
+  const prevDefaultExpandedRef = useRef(defaultExpanded);
   useEffect(() => {
-    if (defaultExpanded) setExpanded(true);
-  }, [defaultExpanded]);
+    if (defaultExpanded && !prevDefaultExpandedRef.current) {
+      setExpanded(true);
+      onExpandedChange?.(true);
+    }
+    prevDefaultExpandedRef.current = defaultExpanded;
+  }, [defaultExpanded, onExpandedChange]);
 
   return (
     <Box sx={style}>
@@ -87,10 +105,13 @@ const FolderAccordion = memo(props => {
           >
             <StyledAccordionSummary
               expandIcon={
-                <StyledExpandMoreIcon
+                <Box
+                  component="span"
                   data-testid="chat-folder-expand-icon"
                   sx={styles.expandIcon}
-                />
+                >
+                  <ArrowRightIcon />
+                </Box>
               }
               aria-controls={'panel-content' + index}
               showMode={showMode}
@@ -109,9 +130,24 @@ const FolderAccordion = memo(props => {
                 >
                   {title}
                 </Tooltip.TypographyWithConditionalTooltip>
-                {isPinned && <PinIcon sx={{ fontSize: '0.875rem' }} />}
               </Box>
             </StyledAccordionSummary>
+            {/* Outside the summary: the summary is a button, and a button cannot hold another one */}
+            {isPinned && (
+              <StyledTooltip
+                title="Unpin"
+                placement="top"
+              >
+                <Button.BaseBtn
+                  variant={BUTTON_VARIANTS.tertiary}
+                  data-testid="chat-folder-pin-button"
+                  aria-label="Unpin folder"
+                  onClick={handleUnpinClick}
+                  startIcon={<PinIcon sx={styles.pinIcon} />}
+                  sx={styles.pinButton}
+                />
+              </StyledTooltip>
+            )}
             <Box
               id={'Menu'}
               sx={styles.menuContainer}
@@ -152,34 +188,22 @@ const FolderAccordion = memo(props => {
 FolderAccordion.displayName = 'FolderAccordion';
 
 /** @type {MuiSx} */
-const folderAccordionStyles = (
-  isActive,
-  isHovering,
-  expanded,
-  isNextFolderHovered,
-  is_private,
-  showMenu,
-  shouldBeSelected,
-) => ({
+const folderAccordionStyles = (isActive, isHovering, expanded, is_private, showMenu, shouldBeSelected) => ({
   accordion: {
     background: 'transparent',
   },
   summaryContainer: ({ palette }) => ({
-    borderBottom:
-      isActive || isHovering || expanded || isNextFolderHovered || shouldBeSelected
-        ? 'none'
-        : `0.0625rem solid ${palette.border.subtle}`,
     borderLeft: isActive
       ? `0.1875rem solid ${is_private ? palette.primary.main : palette.status.published}`
       : 0,
-    padding: '0.75rem 1rem',
-    gap: '0.75rem',
+    padding: '0.25rem 0.75rem',
+    gap: '0.5rem',
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
-    height: '3.0625rem',
+    height: '2.25rem',
     boxSizing: 'border-box',
     background: isActive
       ? palette.background.surface.interactive.default
@@ -196,23 +220,42 @@ const folderAccordionStyles = (
     },
   }),
   expandIcon: ({ palette }) => ({
-    width: '0.875rem',
-    height: '0.875rem',
-    color: palette.icon.secondary,
+    display: 'flex',
+    '& svg': {
+      width: '1rem',
+      height: '1rem',
+      fill: palette.icon.default,
+    },
   }),
   summary: {
     overflow: 'hidden',
     minWidth: 0,
+    flex: 1,
     '& .MuiAccordionSummary-content': {
       minWidth: 0,
+      marginLeft: '0.25rem !important',
     },
   },
   titleContainer: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.75rem',
+    gap: '0.5rem',
     overflow: 'hidden',
     minWidth: 0,
+    flex: 1,
+  },
+  pinButton: ({ palette }) => ({
+    flexShrink: 0,
+    minWidth: '1.25rem !important',
+    width: '1.25rem',
+    height: '1.25rem',
+    padding: '0 !important',
+    '&:hover path': {
+      fill: palette.icon.secondary,
+    },
+  }),
+  pinIcon: {
+    fontSize: '0.875rem',
   },
   folderIcon: ({ palette }) => ({
     width: '1rem',

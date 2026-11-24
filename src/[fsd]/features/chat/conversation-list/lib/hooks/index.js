@@ -1,3 +1,8 @@
+export * from './useChatHistory.hooks';
+export * from './useChatHistoryItemActions.hooks';
+export * from './useLoadChatHistory.hooks';
+export * from './useRegisterChatPage.hooks';
+export * from './useSelectInitialConversation.hooks';
 export * from './useCopyChatLink.hooks';
 export * from './useCopyToClipboard.hooks';
 export * from './useCreateFolder.hooks';
@@ -10,6 +15,5 @@ export * from './useMessageGroupPages.hooks';
 export * from './useOpenImportedConversation.hooks';
 export * from './useMoveToFolderConversation.hooks';
 export * from './usePinConversation.hooks';
-export * from './useQueryFoldersList.hooks';
 export * from './useShareChat.hooks';
 export * from './useShareChatMessages.hooks';

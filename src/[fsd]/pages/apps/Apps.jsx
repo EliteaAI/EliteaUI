@@ -1,130 +1,49 @@
-import { memo, useCallback, useEffect, useMemo } from 'react';
-
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { memo, useCallback, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
 import { ApplicationCatalog } from '@/[fsd]/features/apps';
-import { APPLICATIONS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
-import { ToolkitsList } from '@/[fsd]/features/toolkits';
-import { useSelectedProjectId, useShouldCollapseRightToolbar } from '@/[fsd]/shared/lib/hooks';
-import { useToolkitsListQuery } from '@/api/toolkits';
-import AppCatalogIcon from '@/assets/app-catalog-icon.svg?react';
-import ApplicationsIcon from '@/assets/applications-icon.svg?react';
-import { AppsTabs, ContentType, SearchParams } from '@/common/constants';
-import StickyTabs from '@/components/StickyTabs';
-import ViewToggle from '@/components/ViewToggle';
-import RouteDefinitions from '@/routes';
+import { APPLICATIONS_TOUR_ID, APPLICATIONS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import ToolkitsList from '@/[fsd]/features/toolkits/ui/list/ToolkitsList';
+import { SECTION_PAGE_KEYS, SectionPage } from '@/[fsd]/widgets/section-page';
+import { ContentType } from '@/common/constants';
 
-const LEGACY_APPS_TABS = {
-  all: AppsTabs[1],
+const MODE_TAB_TOUR_IDS = {
+  project: APPLICATIONS_TOUR_TARGET_IDS.applicationsTab,
+  discover: APPLICATIONS_TOUR_TARGET_IDS.catalogTab,
 };
 
-const APP_TAB_INDEX_BY_KEY = AppsTabs.reduce((acc, tab, index) => {
-  acc[tab] = index;
-  return acc;
-}, {});
-
+// Configured applications of the project (Yours / Team) and the App Catalog (Discover)
 const Apps = memo(() => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { tab } = useParams();
-  const { shouldCollapseRightToolbar } = useShouldCollapseRightToolbar();
-  const projectId = useSelectedProjectId();
+  const styles = appsStyles();
 
-  const { data: applicationsData } = useToolkitsListQuery(
-    { projectId, page: 1, page_size: 1, params: { application: true } },
-    { skip: !projectId },
-  );
-
-  const hasApplications = (applicationsData?.total ?? 0) > 0;
-  const defaultTab = hasApplications ? AppsTabs[0] : AppsTabs[1];
-
-  const getSearchForAppsTab = useCallback((nextTab, search) => {
-    if (nextTab !== AppsTabs[1]) return search;
-
-    const searchParams = new URLSearchParams(search);
-    searchParams.delete(SearchParams.View);
-
-    const nextSearch = searchParams.toString();
-    return nextSearch ? `?${nextSearch}` : '';
-  }, []);
-
-  const normalizedTab = useMemo(() => {
-    if (LEGACY_APPS_TABS[tab]) return LEGACY_APPS_TABS[tab];
-
-    if (APP_TAB_INDEX_BY_KEY[tab] === undefined) return defaultTab;
-
-    return tab;
-  }, [tab, defaultTab]);
-  const normalizedSearch = useMemo(
-    () => getSearchForAppsTab(normalizedTab, location.search),
-    [getSearchForAppsTab, location.search, normalizedTab],
-  );
-  const selectedTab = APP_TAB_INDEX_BY_KEY[normalizedTab] ?? APP_TAB_INDEX_BY_KEY[AppsTabs[1]];
-  const isConfiguredTab = selectedTab === APP_TAB_INDEX_BY_KEY[AppsTabs[0]];
-
-  useEffect(() => {
-    if (normalizedTab === tab && normalizedSearch === location.search) return;
-
-    navigate(`${RouteDefinitions.Apps}/${normalizedTab}${normalizedSearch}`, {
-      replace: true,
-      state: location.state,
-    });
-  }, [location.search, location.state, navigate, normalizedSearch, normalizedTab, tab]);
-
-  const handleChangeTab = useCallback(
-    nextTabIndex => {
-      const nextTab = AppsTabs[nextTabIndex] || AppsTabs[0];
-      const nextSearch = getSearchForAppsTab(nextTab, location.search);
-
-      navigate(`${RouteDefinitions.Apps}/${nextTab}${nextSearch}`, {
-        state: location.state,
-      });
-    },
-    [getSearchForAppsTab, location.search, location.state, navigate],
-  );
-
-  const tabs = useMemo(
-    () => [
-      {
-        label: 'Applications',
-        tabProps: { 'data-tour': APPLICATIONS_TOUR_TARGET_IDS.applicationsTab },
-        content: (
-          <Box data-tour={APPLICATIONS_TOUR_TARGET_IDS.applicationsList}>
-            <ToolkitsList
-              isApplication={true}
-              cardContentType={ContentType.AppAll}
-              disableEmptyRedirect={true}
-              showFolders={false}
-            />
-          </Box>
-        ),
-        icon: <ApplicationsIcon />,
-      },
-      {
-        label: 'App Catalog',
-        tabProps: { 'data-tour': APPLICATIONS_TOUR_TARGET_IDS.catalogTab },
-        content: <ApplicationCatalog />,
-        icon: <AppCatalogIcon />,
-      },
-    ],
+  const projectContent = useMemo(
+    () => (
+      <Box data-tour={APPLICATIONS_TOUR_TARGET_IDS.applicationsList}>
+        <ToolkitsList
+          isApplication
+          cardContentType={ContentType.AppAll}
+          disableEmptyRedirect
+          showFolders={false}
+        />
+      </Box>
+    ),
     [],
   );
+
+  const renderDiscover = useCallback(({ query }) => <ApplicationCatalog query={query} />, []);
 
   return (
     <Box
       data-tour={APPLICATIONS_TOUR_TARGET_IDS.page}
       sx={styles.page}
     >
-      <StickyTabs
-        tabs={tabs}
-        value={selectedTab}
-        containerStyle={{ padding: '0 1.5rem 0 0' }}
-        tabBarStyle={{ padding: '0 0 0 1.5rem' }}
-        noRightPanel={!isConfiguredTab || shouldCollapseRightToolbar}
-        middleTabComponent={isConfiguredTab ? <ViewToggle /> : undefined}
-        onChangeTab={handleChangeTab}
+      <SectionPage
+        sectionKey={SECTION_PAGE_KEYS.applications}
+        projectContent={projectContent}
+        renderDiscover={renderDiscover}
+        modeTabTourIds={MODE_TAB_TOUR_IDS}
+        modeTourId={APPLICATIONS_TOUR_ID}
       />
     </Box>
   );
@@ -133,10 +52,12 @@ const Apps = memo(() => {
 Apps.displayName = 'Apps';
 
 /** @type {MuiSx} */
-const styles = {
+const appsStyles = () => ({
   page: {
     height: '100%',
+    display: 'flex',
+    minWidth: 0,
   },
-};
+});
 
 export default Apps;

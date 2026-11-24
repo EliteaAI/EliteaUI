@@ -9,7 +9,7 @@ import RouteDefinitions from '@/routes';
 import SidebarButton from './SidebarButton';
 
 const SettingsButton = memo(props => {
-  const { navigateToPage } = props;
+  const { navigateToPage, sx } = props;
 
   const isOnSettings = useMatch({ path: RouteDefinitions.SettingsWithTab });
 
@@ -34,6 +34,7 @@ const SettingsButton = memo(props => {
       to={settingsPath}
       onClick={handleSettingsClick}
       isActive={!!isOnSettings}
+      sx={sx}
     />
   );
 });

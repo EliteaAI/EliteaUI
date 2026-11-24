@@ -142,10 +142,6 @@ const npsPrimaryDisabled = '#c428dd66';
 const npsSecondaryDefault = '#3d44561a';
 const npsSecondaryHover = '#3d455726';
 const npsSecondaryPressed = '#3d445633';
-const agentHubHoverBg = '#60339F33';
-const agentHubShadowActive = '0 0 0.75rem 0 #66D1FF1A inset';
-const agentHubTextGradient = 'linear-gradient(90deg, #58CDEA 0.7%, #AF64FF 25%)';
-const agentHubIconGradient = 'linear-gradient(33.96deg, #58CDEA 0%, #AF64FF 80%)';
 const entityIconEntityGradient = 'linear-gradient(45.36deg, #a9b7c14d 16.25%, #a9b7c117 87.07%)';
 const entityIconBorderGradient = 'linear-gradient(225deg, #9ca9b200 12.64%, #9ca9b266 87.88%)';
 const rcBlueCard = 'linear-gradient(0deg, #0e273e66 0%, #0E273E 100%)';
@@ -596,20 +592,6 @@ const darkPalette = {
         },
         secondary: { default: npsSecondaryDefault, hover: npsSecondaryHover, pressed: npsSecondaryPressed },
       },
-    },
-    agentHubButton: {
-      background: {
-        default: 'transparent',
-        hover: agentHubHoverBg,
-        active: agentHubHoverBg,
-      },
-      shadow: {
-        default: 'none',
-        hover: 'none',
-        active: agentHubShadowActive,
-      },
-      textGradient: agentHubTextGradient,
-      iconGradient: agentHubIconGradient,
     },
     userMessageEditor: {
       border: cyanPressed,
