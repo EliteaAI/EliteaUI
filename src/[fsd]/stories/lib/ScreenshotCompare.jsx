@@ -35,6 +35,7 @@ const ScreenshotCompare = memo(props => {
   const scale = useFitScale(SCREENSHOT_SIZE, isSideBySide ? 2 : 1, GAP_PX, LABEL_PX);
 
   const styles = screenshotCompareStyles(scale);
+  const menuProps = useMemo(() => ({ slotProps: { paper: { sx: styles.menu } } }), [styles.menu]);
 
   if (mode === SCREENSHOT_MODES.live) return <Story />;
 
@@ -61,6 +62,7 @@ const ScreenshotCompare = memo(props => {
             options={leftOptions}
             onValueChange={setLeftValue}
             maxDisplayValueLength="100%"
+            customMenuProps={menuProps}
             sx={styles.select}
           />
           {leftVersion ? (
@@ -88,6 +90,7 @@ const ScreenshotCompare = memo(props => {
           options={versions}
           onValueChange={setRightValue}
           maxDisplayValueLength="100%"
+          customMenuProps={menuProps}
           sx={styles.select}
         />
         <Box
@@ -131,6 +134,10 @@ const screenshotCompareStyles = scale => ({
       minWidth: 0,
       maxWidth: '100%',
     },
+  },
+  // Long names end with an ellipsis, the whole one shows on hover
+  menu: {
+    maxWidth: rem(SELECT_MAX_WIDTH_PX),
   },
   viewport: ({ palette }) => ({
     position: 'relative',
