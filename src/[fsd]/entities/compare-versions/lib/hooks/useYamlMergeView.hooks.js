@@ -8,6 +8,7 @@ import { StreamLanguage, defaultHighlightStyle, syntaxHighlighting } from '@code
 import { yaml } from '@codemirror/legacy-modes/mode/yaml';
 import { MergeView } from '@codemirror/merge';
 import { search, searchKeymap } from '@codemirror/search';
+import { EditorState } from '@codemirror/state';
 import { EditorView, GutterMarker, gutter, keymap, lineNumbers } from '@codemirror/view';
 import { vscodeDarkInit, vscodeLightInit } from '@uiw/codemirror-theme-vscode';
 
@@ -163,6 +164,8 @@ export const useYamlMergeView = ({ leftValue, rightValue, onLeftChange, onRightC
       keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
       // Ctrl/Cmd+F in either editor, as in the pipeline YAML editor
       search(),
+      // Select all matches selects every match at once, not only the first
+      EditorState.allowMultipleSelections.of(true),
       StreamLanguage.define(yaml),
       syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
       editorTheme,
