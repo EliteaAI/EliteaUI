@@ -27,6 +27,8 @@ const CompareInstructionsStep = memo(props => {
     leftSaveDisabledReason,
     // Comparing with a public version: both sides are shown to be read and copied from, not edited or saved
     readOnly = false,
+    leftHeaderSave,
+    rightHeaderSave,
   } = props;
 
   const leftValue = leftEdits.instructions ?? leftData.instructions ?? '';
@@ -38,8 +40,20 @@ const CompareInstructionsStep = memo(props => {
 
   return (
     <EditEntityComparisonLayout
-      currentLabel={<CompareVersionHeader version={leftVersion} />}
-      suggestedLabel={<CompareVersionHeader version={rightVersion} />}
+      currentLabel={
+        <CompareVersionHeader
+          version={leftVersion}
+          save={leftHeaderSave}
+          saveTestId="compare-header-save-left"
+        />
+      }
+      suggestedLabel={
+        <CompareVersionHeader
+          version={rightVersion}
+          save={rightHeaderSave}
+          saveTestId="compare-header-save-right"
+        />
+      }
       currentContent={
         <Box sx={compareInstructionsStepStyles.fieldSection}>
           <Box sx={compareInstructionsStepStyles.fieldHeader}>
@@ -72,7 +86,7 @@ const CompareInstructionsStep = memo(props => {
               onChange={handleLeftChange}
             />
           </Box>
-          {!readOnly && (
+          {!readOnly && !leftHeaderSave && (
             <CompareSaveButton
               label={`Save ${leftVersion?.name}`}
               isDirty={leftEdits.instructions !== undefined && !(instructionsRequired && !leftValue?.trim())}
@@ -116,7 +130,7 @@ const CompareInstructionsStep = memo(props => {
               onChange={handleRightChange}
             />
           </Box>
-          {!readOnly && (
+          {!readOnly && !rightHeaderSave && (
             <BaseBtn
               variant={BUTTON_VARIANTS.elitea}
               size="small"

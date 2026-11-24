@@ -32,3 +32,18 @@ export const SKILL_FILE_ACTIONS = {
   uploadHere: 'uploadHere',
   deleteFolder: 'deleteFolder',
 };
+
+export const SKILL_COMPARE_FILE_STATUS = {
+  changed: 'changed',
+  new: 'new',
+  removed: 'removed',
+  replaced: 'replaced',
+  same: 'same',
+};
+
+export const SKILL_COMPARE_FILE_STATUS_LABELS = {
+  [SKILL_COMPARE_FILE_STATUS.changed]: 'Changed',
+  [SKILL_COMPARE_FILE_STATUS.new]: 'New',
+  [SKILL_COMPARE_FILE_STATUS.removed]: 'Removed',
+  [SKILL_COMPARE_FILE_STATUS.replaced]: 'Replaced',
+};

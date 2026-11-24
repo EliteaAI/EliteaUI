@@ -4,7 +4,7 @@ import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
 
 import { useSkillVersionFileTextQuery } from '@/[fsd]/features/skill/api';
 import { SKILL_FILE_PREVIEW_MAX_BYTES } from '@/[fsd]/features/skill/lib/constants';
-import { fileBaseName } from '@/[fsd]/features/skill/lib/helpers';
+import { fileBaseName, withoutByteOrderMark } from '@/[fsd]/features/skill/lib/helpers';
 import { Button, Field } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { formatFileSize } from '@/common/attachmentValidationUtils';
@@ -101,7 +101,7 @@ const SkillFileViewer = memo(props => {
     >
       <Field.CodeMirrorEditor
         key={file.path}
-        value={content ?? ''}
+        value={withoutByteOrderMark(content) ?? ''}
         extensions={extensions}
         height="100%"
         minHeight="0"

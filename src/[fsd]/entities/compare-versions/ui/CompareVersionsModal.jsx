@@ -5,6 +5,7 @@ import { Alert, Box, CircularProgress, Typography } from '@mui/material';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Banner, Modal } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 
 import {
   COMPARE_ENTITY_TYPES,
@@ -32,6 +33,11 @@ const DISCARD_TARGETS = {
   changeVersions: 'changeVersions',
   navigate: 'navigate',
 };
+
+const blankInstructionsReason = edits =>
+  edits.instructions !== undefined && !edits.instructions.trim()
+    ? COMPARE_MESSAGES.blankInstructions
+    : undefined;
 
 const PHASES = {
   SELECTION: 'selection',
@@ -65,6 +71,7 @@ const CompareVersionsModal = memo(props => {
     publicVersions = [],
     isLoadingPublicVersions = false,
     publicLoadError = '',
+    renderFilesStep,
   } = props;
 
   const isPublic = mode === COMPARE_MODES.public;
@@ -86,14 +93,19 @@ const CompareVersionsModal = memo(props => {
   // The sub-agents of both versions, and theirs in turn, paired and ready to show (agents only)
   const [nestedRows, setNestedRows] = useState([]);
 
+  const hasFiles = Boolean(leftData?.files?.length || rightData?.files?.length);
+
   const steps = useMemo(() => {
     const baseSteps = isPublic
       ? PUBLIC_AGENT_COMPARE_STEPS
       : (COMPARE_STEPS_BY_ENTITY[entityType] ?? SKILL_COMPARE_STEPS);
     // The sub-agents step is only worth a click when either version has sub-agents
-    return baseSteps.filter(step => step.key !== 'sub-agents' || nestedRows.length > 0);
-  }, [isPublic, entityType, nestedRows.length]);
+    return baseSteps.filter(
+      step => (step.key !== 'sub-agents' || nestedRows.length > 0) && (step.key !== 'files' || hasFiles),
+    );
+  }, [isPublic, entityType, nestedRows.length, hasFiles]);
   const isPipeline = entityType === COMPARE_ENTITY_TYPES.pipeline;
+  const isSkill = entityType === COMPARE_ENTITY_TYPES.skill;
   const isLastStep = activeStepIndex === steps.length - 1;
   const leftSaveDisabledReason = isEditorDirty ? COMPARE_MESSAGES.editorDirtySave : undefined;
   // In public mode the user chooses the version of this agent; otherwise it is the open one
@@ -265,6 +277,32 @@ const CompareVersionsModal = memo(props => {
     }
   }, [isDirty]);
 
+  const leftHeaderSave = useMemo(
+    () =>
+      isSkill
+        ? {
+            isDirty: Object.keys(leftEdits).length > 0,
+            isSaving: Object.keys(savingLeftKeys ?? {}).length > 0,
+            disabledReason: leftSaveDisabledReason ?? blankInstructionsReason(leftEdits),
+            onSave: () => handleSaveLeftField(leftEdits),
+          }
+        : undefined,
+    [isSkill, leftEdits, savingLeftKeys, leftSaveDisabledReason, handleSaveLeftField],
+  );
+
+  const rightHeaderSave = useMemo(
+    () =>
+      isSkill
+        ? {
+            isDirty: Object.keys(rightEdits).length > 0,
+            isSaving: Object.keys(savingRightKeys ?? {}).length > 0,
+            disabledReason: blankInstructionsReason(rightEdits),
+            onSave: () => handleSaveRightField(rightEdits),
+          }
+        : undefined,
+    [isSkill, rightEdits, savingRightKeys, handleSaveRightField],
+  );
+
   const onLeftEdit = useCallback((field, val) => setLeftEdits(prev => ({ ...prev, [field]: val })), []);
   const onRightEdit = useCallback((field, val) => setRightEdits(prev => ({ ...prev, [field]: val })), []);
 
@@ -287,15 +325,19 @@ const CompareVersionsModal = memo(props => {
       // A public version can be read and copied from, but not changed
       readOnly: isPublic,
     };
+    const headerSaveProps = { leftHeaderSave, rightHeaderSave };
 
     switch (stepKey) {
       case 'instructions':
         return (
           <CompareInstructionsStep
             {...stepProps}
-            instructionsRequired={entityType === 'skill'}
+            {...headerSaveProps}
+            instructionsRequired={isSkill}
           />
         );
+      case 'files':
+        return renderFilesStep?.({ ...stepProps, ...headerSaveProps }) ?? null;
       case 'user-interaction':
         return (
           <CompareUserInteractionStep
@@ -464,15 +506,16 @@ const CompareVersionsModal = memo(props => {
 
     return (
       <Box sx={compareVersionsModalStyles.wizardFooter}>
-        <Box sx={{ flex: 1 }} />
+        <BaseBtn
+          variant={BUTTON_VARIANTS.tertiary}
+          size="small"
+          startIcon={<ArrowBackIcon />}
+          onClick={handleChangeVersions}
+          data-testid="compare-select-versions"
+        >
+          Select versions
+        </BaseBtn>
         <Box sx={compareVersionsModalStyles.wizardFooterRight}>
-          <BaseBtn
-            variant={BUTTON_VARIANTS.secondary}
-            size="small"
-            onClick={handleChangeVersions}
-          >
-            Change versions
-          </BaseBtn>
           {activeStepIndex > 0 && (
             <BaseBtn
               variant={BUTTON_VARIANTS.secondary}

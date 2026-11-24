@@ -70,9 +70,20 @@ export {
   isPathInFolder,
   pathsOverlap,
   resolveFileLink,
+  withoutByteOrderMark,
 } from './skillFiles.helpers';
 export {
   FILE_LINK_CLASS,
   MENTION_LINE_CLASS,
   skillInstructionsDecorations,
 } from './skillInstructionsDecorations.helpers';
+export {
+  buildCompareFileEntries,
+  fileEditKey,
+  isDiffableTextFile,
+  listTreeFiles,
+  pickFileEdits,
+  summarizeCompareFiles,
+  toFieldText,
+  withStoredLineEndings,
+} from './skillCompareFiles.helpers';

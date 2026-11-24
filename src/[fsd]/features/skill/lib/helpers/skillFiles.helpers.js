@@ -9,6 +9,10 @@ const compareNames = (left, right) =>
 
 const capitalize = word => word.charAt(0).toUpperCase() + word.slice(1);
 
+export const BYTE_ORDER_MARK = '\uFEFF';
+
+export const withoutByteOrderMark = text => (text?.startsWith(BYTE_ORDER_MARK) ? text.slice(1) : text);
+
 export const fileBaseName = path => path.slice(path.lastIndexOf('/') + 1);
 
 const createFolder = (path, name) => ({ path, name, folders: [], files: [] });

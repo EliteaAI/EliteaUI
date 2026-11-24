@@ -5,11 +5,13 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import darkPalette from '@/darkPalette';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
 vi.mock('@/[fsd]/entities/edit-entity-with-ai', () => ({
   EditEntityComparisonLayout: props => (
     <div>
+      <div data-testid="left-header">{props.currentLabel}</div>
+      <div data-testid="right-header">{props.suggestedLabel}</div>
       <div data-testid="left">{props.currentContent}</div>
       <div data-testid="right">{props.suggestedContent}</div>
     </div>
@@ -61,6 +63,36 @@ describe('CompareInstructionsStep', () => {
       .forEach(field => expect(field).toHaveAttribute('data-editable', 'true'));
     expect(screen.getByRole('button', { name: 'Save mine' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save public' })).toBeInTheDocument();
+  });
+
+  describe('with one Save in each version header', () => {
+    const headerSave = overrides => ({ isDirty: true, isSaving: false, onSave: vi.fn(), ...overrides });
+
+    it('drops the Save under each field', () => {
+      renderStep({ leftHeaderSave: headerSave(), rightHeaderSave: headerSave() });
+      expect(screen.queryByRole('button', { name: 'Save mine' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Save public' })).not.toBeInTheDocument();
+    });
+
+    it('saves a version from its own header', () => {
+      const left = headerSave();
+      const right = headerSave();
+      renderStep({ leftHeaderSave: left, rightHeaderSave: right });
+      fireEvent.click(within(screen.getByTestId('right-header')).getByRole('button', { name: 'Save' }));
+      expect(right.onSave).toHaveBeenCalledTimes(1);
+      expect(left.onSave).not.toHaveBeenCalled();
+    });
+
+    it('stays disabled until that version has an edit, and while it saves', () => {
+      renderStep({
+        leftHeaderSave: headerSave({ isDirty: false }),
+        rightHeaderSave: headerSave({ isSaving: true }),
+      });
+      expect(within(screen.getByTestId('left-header')).getByRole('button', { name: 'Save' })).toBeDisabled();
+      expect(
+        within(screen.getByTestId('right-header')).getByRole('button', { name: 'Saving...' }),
+      ).toBeDisabled();
+    });
   });
 
   describe('when comparing with a public version', () => {

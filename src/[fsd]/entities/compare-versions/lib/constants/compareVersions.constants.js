@@ -17,6 +17,7 @@ export const PUBLIC_AGENT_COMPARE_STEPS = [
 
 export const SKILL_COMPARE_STEPS = [
   { key: 'instructions', label: 'Instructions' },
+  { key: 'files', label: 'Files' },
   { key: 'run-settings', label: 'Run settings' },
 ];
 
@@ -61,6 +62,7 @@ export const COMPARE_MESSAGES = {
   noDifferences: 'No differences in this section.',
   editorDirty: 'You have unsaved changes in the editor. Compare uses the saved versions.',
   editorDirtySave: 'Save or discard your changes in the editor first.',
+  blankInstructions: 'Instructions cannot be empty.',
   yamlTooLarge: 'This YAML is too large to compare side by side. Showing the text without highlights.',
   noPipelineTools: 'No toolkits, MCPs, agents or pipelines attached',
   noAgentTools: 'No tools, agents, pipelines or skills attached',

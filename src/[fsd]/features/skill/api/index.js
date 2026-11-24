@@ -31,7 +31,9 @@ export { useGetSkillCategoriesQuery, useLazyGetSkillCategoriesQuery } from './sk
 export {
   useDeleteSkillVersionFileMutation,
   useLazySkillVersionFileBlobQuery,
+  useLazySkillVersionFilesQuery,
   useRenameSkillVersionFileMutation,
+  useSaveSkillVersionFileTextMutation,
   useSkillVersionFileTextQuery,
   useSkillVersionFilesQuery,
   useUploadSkillVersionFileMutation,
