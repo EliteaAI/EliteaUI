@@ -62,13 +62,16 @@ const mapToSibling = (pos, info) => {
   return otherStart + (pos - ownStart);
 };
 
-// Opens the block that starts at `pos` in this editor and its counterpart in the other editor
-const expandBlockOnBothSides = (view, pos) => {
+// Opens the blocks that start at `positions` in this editor and their counterparts in the other editor
+const expandBlocksOnBothSides = (view, positions) => {
+  if (!positions.length) return;
   const info = getChunks(view.state);
   const siblings = mergeViewSiblings(view);
   const sibling = siblings && (siblings.a === view ? siblings.b : siblings.a);
-  view.dispatch({ effects: expandBlock.of(pos) });
-  if (sibling && info) sibling.dispatch({ effects: expandBlock.of(mapToSibling(pos, info)) });
+  view.dispatch({ effects: positions.map(pos => expandBlock.of(pos)) });
+  if (sibling && info) {
+    sibling.dispatch({ effects: positions.map(pos => expandBlock.of(mapToSibling(pos, info))) });
+  }
 };
 
 class CollapsedBlockWidget extends WidgetType {
@@ -88,7 +91,7 @@ class CollapsedBlockWidget extends WidgetType {
     // Reachable and usable by keyboard
     row.setAttribute('role', 'button');
     row.setAttribute('tabindex', '0');
-    const expand = () => expandBlockOnBothSides(view, view.posAtDOM(row));
+    const expand = () => expandBlocksOnBothSides(view, [view.posAtDOM(row)]);
     row.addEventListener('click', expand);
     row.addEventListener('keydown', event => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -172,24 +175,31 @@ export const expandBlockAtLine = (view, lineNumber) => {
 };
 
 /**
- * Opens the collapsed block a search match lands in, on both sides, and scrolls the match into view.
- * Without it the match would be selected inside hidden lines and the user would see nothing happen.
+ * Opens every collapsed block that a search selection reaches: the current match after find or replace,
+ * and each match when all matches are selected. Each block opens on both sides and the view scrolls to the
+ * main selection. Without it, the selected text would sit inside hidden lines and nothing visible would change.
  */
 export const expandBlocksOnSearch = () =>
   EditorView.updateListener.of(update => {
-    if (!update.transactions.some(tr => tr.isUserEvent('select.search'))) return;
+    const isSearchUpdate = update.transactions.some(
+      tr => tr.isUserEvent('select.search') || tr.isUserEvent('input.replace'),
+    );
+    if (!isSearchUpdate) return;
     const { view } = update;
     const field = update.state.field(collapseField, false);
     if (!field) return;
-    const { from, to } = update.state.selection.main;
-    const hiding = [];
-    field.deco.between(from, to, blockFrom => {
-      hiding.push(blockFrom);
+    const { selection } = update.state;
+    const hiding = new Set();
+    selection.ranges.forEach(range => {
+      field.deco.between(range.from, range.to, blockFrom => {
+        hiding.add(blockFrom);
+      });
     });
-    if (!hiding.length) return;
+    if (!hiding.size) return;
+    const { from } = selection.main;
     // An editor cannot be updated while it is still handling an update
     queueMicrotask(() => {
-      hiding.forEach(blockFrom => expandBlockOnBothSides(view, blockFrom));
+      expandBlocksOnBothSides(view, [...hiding]);
       view.dispatch({ effects: EditorView.scrollIntoView(from, { y: 'center' }) });
     });
   });
