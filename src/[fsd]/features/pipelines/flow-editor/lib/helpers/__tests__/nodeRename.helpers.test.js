@@ -1,4 +1,7 @@
+import YAML from 'js-yaml';
 import { describe, expect, it } from 'vitest';
+
+import { dumpYaml } from '@/[fsd]/shared/lib/helpers/dumpYaml.helpers';
 
 import {
   applyNodeRenamesToYaml,
@@ -344,6 +347,37 @@ describe('getRenamedNodePairs', () => {
       getRenamedNodePairs(
         [{ id: 'translate', type: 'llm', input: ['a'] }],
         [{ id: 'classify', type: 'llm', input: ['b'], structured_output: true }],
+      ),
+    ).toEqual([]);
+  });
+
+  it('pairs a renamed node whose keys are in a different order, as after the YAML view sorts them', () => {
+    // The order a node gets on the canvas, and not the sorted order the YAML view writes
+    const prevNode = {
+      id: 'llm_1',
+      type: 'llm',
+      input: ['messages'],
+      output: ['messages'],
+      transition: 'end',
+      structured_output: false,
+    };
+    const nextNode = YAML.load(dumpYaml({ nodes: [{ ...prevNode, id: 'summarize' }] })).nodes[0];
+
+    expect(Object.keys(nextNode)).not.toEqual(Object.keys(prevNode));
+    expect(getRenamedNodePairs([prevNode], [nextNode])).toEqual([['llm_1', 'summarize']]);
+  });
+
+  it('still ignores a node whose content changed, whatever the key order', () => {
+    expect(
+      getRenamedNodePairs(
+        [{ id: 'a', type: 'llm', transition: 'end', input: ['x', 'y'] }],
+        [{ input: ['x', 'y'], id: 'b', type: 'llm', transition: 'other' }],
+      ),
+    ).toEqual([]);
+    expect(
+      getRenamedNodePairs(
+        [{ id: 'a', type: 'llm', input: ['x', 'y'] }],
+        [{ input: ['y', 'x'], id: 'b', type: 'llm' }],
       ),
     ).toEqual([]);
   });

@@ -112,8 +112,17 @@ export const renameNodeInYaml = (prev, name, newName) => {
   };
 };
 
-// JSON.stringify skips undefined, so the id drops out of the comparison
-const withoutId = node => ({ ...node, id: undefined });
+// Key order carries no meaning in YAML maps (the YAML view sorts keys), but array order does
+const isSameValue = (left, right) => {
+  if (left === right) return true;
+  if (!left || !right || typeof left !== 'object' || typeof right !== 'object') return false;
+  if (Array.isArray(left) !== Array.isArray(right)) return false;
+  if (Array.isArray(left))
+    return left.length === right.length && left.every((item, index) => isSameValue(item, right[index]));
+  return [...new Set([...Object.keys(left), ...Object.keys(right)])].every(key =>
+    isSameValue(left[key], right[key]),
+  );
+};
 
 /**
  * Finds the nodes renamed by a YAML edit: same position and type, the old id is gone, the new id is unused
@@ -132,7 +141,7 @@ export const getRenamedNodePairs = (prevNodes, nextNodes) => {
     if (!prevNode || !nextNode || prevNode.id === nextNode.id || prevNode.type !== nextNode.type)
       return pairs;
     if (nextIds.has(prevNode.id) || prevIds.has(nextNode.id)) return pairs;
-    if (JSON.stringify(withoutId(prevNode)) !== JSON.stringify(withoutId(nextNode))) return pairs;
+    if (!isSameValue({ ...prevNode, id: undefined }, { ...nextNode, id: undefined })) return pairs;
     return [...pairs, [prevNode.id, nextNode.id]];
   }, []);
 };
