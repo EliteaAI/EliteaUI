@@ -1,0 +1,476 @@
+// Chat concept, part 2 (stories 2.3–2.4): a copy of src/[fsd]/features/chat/lib/hooks/chat-button/useDropdownData.hooks.jsx. The
+// only change, marked «concept:», returns each kind's total from the API's answer, for «All agents · 116» and
+// «Scroll for more · 20 of 116» in the «+» lists (approved.html › addBodyHTML). Everything else is the team's code.
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+import { useTheme } from '@mui/material';
+
+import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
+import { DropdownConstants } from '@/[fsd]/shared/lib/constants';
+import { isMcpToolkit, resolveToolkitSchemaByType } from '@/[fsd]/shared/lib/helpers';
+import { useIsMcpVisible, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
+import { useToolkitsListQuery } from '@/api/toolkits';
+import { PUBLIC_PROJECT_ID } from '@/common/constants';
+import { getToolIconByType } from '@/common/toolkitUtils';
+import { useApplicationParticipants } from '@/hooks/chat/useApplicationParticipants';
+import { usePublicApplicationParticipants } from '@/hooks/chat/usePublicApplicationParticipants';
+
+const pageSize = 20;
+const emptyTagIds = []; // Stable reference to prevent infinite re-renders
+
+/**
+ * Custom hook to provide data for unified dropdowns (agents, pipelines, toolkits)
+ */
+export const useConceptDropdownData = ({
+  agentQuery,
+  pipelineQuery,
+  toolkitQuery,
+  mcpQuery,
+  skip = false,
+}) => {
+  const projectId = useSelectedProjectId();
+  const theme = useTheme();
+  const isMcpVisible = useIsMcpVisible();
+  const { toolkitSchemas } = useGetCurrentToolkitSchemas();
+  const [isLoadingMoreToolkit, setIsLoadingMoreToolkit] = useState(false);
+  const [isLoadingMoreMCP, setIsLoadingMoreMCP] = useState(false);
+
+  // Load agents (applications) with type 'classic'
+  const {
+    data: agentsData,
+    isApplicationsFetching: isAgentsLoading,
+    refetchApplications: refetchAgents,
+    onLoadMoreApplications: onLoadMoreAgents,
+  } = useApplicationParticipants({
+    sortBy: 'created_at',
+    sortOrder: 'desc',
+    query: agentQuery,
+    pageSize,
+    selectedTagIds: emptyTagIds,
+    agents_type: 'classic',
+    forceSkip: skip,
+  });
+
+  // Load pipelines (applications) with type 'pipeline'
+  const {
+    data: pipelinesData,
+    isApplicationsFetching: isPipelinesLoading,
+    refetchApplications: refetchPipelines,
+    onLoadMoreApplications: onLoadMorePipelines,
+  } = useApplicationParticipants({
+    sortBy: 'created_at',
+    sortOrder: 'desc',
+    query: pipelineQuery,
+    pageSize,
+    selectedTagIds: emptyTagIds,
+    agents_type: 'pipeline',
+    forceSkip: skip,
+  });
+
+  // Load public agents (applications) with type 'classic'
+  const {
+    publicApplicationData: publicAgentsData,
+    isPublicApplicationsFetching: isPublicAgentsLoading,
+    refetchPublicApplications: refetchPublicAgents,
+    onLoadMorePublicApplications: onLoadMorePublicAgents,
+  } = usePublicApplicationParticipants({
+    sortBy: 'created_at',
+    sortOrder: 'desc',
+    query: agentQuery,
+    pageSize,
+    selectedTagIds: emptyTagIds,
+    agents_type: 'classic',
+    forceSkip: skip,
+  });
+
+  // Load toolkits
+  const [toolkitPage, setToolkitPage] = useState(0);
+  const {
+    data: toolkitsData,
+    isFetching: isToolkitsLoading,
+    isError: isToolkitsError,
+    isSuccess: isToolkitsSuccess,
+    refetch: refetchToolkits,
+  } = useToolkitsListQuery(
+    {
+      projectId,
+      page: toolkitPage,
+      page_size: pageSize,
+      params: {
+        sort_by: 'created_at',
+        sort_order: 'desc',
+        query: toolkitQuery,
+      },
+    },
+    {
+      skip: !projectId || skip,
+    },
+  );
+
+  const onLoadMoreToolkits = useCallback(() => {
+    if (isToolkitsLoading || isLoadingMoreToolkit || toolkitPage * pageSize >= (toolkitsData?.total || 0))
+      return;
+    setToolkitPage(prev => prev + 1);
+    setIsLoadingMoreToolkit(true);
+  }, [isToolkitsLoading, isLoadingMoreToolkit, toolkitPage, toolkitsData?.total]);
+
+  useEffect(() => {
+    if (isLoadingMoreToolkit && (isToolkitsSuccess || isToolkitsError)) {
+      setIsLoadingMoreToolkit(false);
+    }
+  }, [isToolkitsSuccess, isToolkitsError, isLoadingMoreToolkit]);
+
+  useEffect(() => {
+    setToolkitPage(0);
+  }, [toolkitQuery]);
+
+  // Load mcps
+  const [mcpPage, setMCPPage] = useState(0);
+  const {
+    data: mcpsData,
+    isFetching: isMCPsLoading,
+    isError: isMCPsError,
+    isSuccess: isMCPsSuccess,
+    refetch: refetchMCPs,
+  } = useToolkitsListQuery(
+    {
+      projectId,
+      page: mcpPage,
+      page_size: pageSize,
+      params: {
+        sort_by: 'created_at',
+        sort_order: 'desc',
+        mcp: true,
+        query: mcpQuery,
+      },
+    },
+    {
+      skip: !projectId || skip,
+    },
+  );
+
+  const onLoadMoreMCPs = useCallback(() => {
+    if (isMCPsLoading || isLoadingMoreMCP || mcpPage * pageSize >= (mcpsData?.total || 0)) return;
+    setMCPPage(prev => prev + 1);
+    setIsLoadingMoreMCP(true);
+  }, [isMCPsLoading, isLoadingMoreMCP, mcpPage, mcpsData?.total]);
+
+  useEffect(() => {
+    if (isLoadingMoreMCP && (isMCPsSuccess || isMCPsError)) {
+      setIsLoadingMoreMCP(false);
+    }
+  }, [isMCPsSuccess, isMCPsError, isLoadingMoreMCP]);
+
+  useEffect(() => {
+    setMCPPage(0);
+  }, [mcpQuery]);
+
+  // Shared EntityIcon styles for dropdown items
+  const entityIconSx = useMemo(
+    () => ({
+      minWidth: '1.25rem !important', // component-check: allow icon size copied from the team's hook
+      width: '1.25rem !important', // component-check: allow icon size copied from the team's hook
+      height: '1.25rem !important', // component-check: allow icon size copied from the team's hook
+      '& > div': {
+        width: '1.25rem',
+        height: '1.25rem',
+      },
+      '& svg': {
+        width: DropdownConstants.DIMENSIONS.ICON_SVG_SIZE,
+        height: DropdownConstants.DIMENSIONS.ICON_SVG_SIZE,
+        fontSize: DropdownConstants.DIMENSIONS.ICON_SVG_SIZE,
+      },
+    }),
+    [],
+  );
+  const entityImageStyle = useMemo(
+    () => ({
+      width: '1.25rem',
+      height: '1.25rem',
+      borderRadius: '50%',
+    }),
+    [],
+  );
+
+  // Transform agents data for dropdown display (combine regular + public)
+  const agentMenuItems = useMemo(() => {
+    const regularAgents = (agentsData?.rows || []).map(item => ({
+      ...item,
+      project_id: projectId,
+    }));
+    const publicAgents = (publicAgentsData?.rows || []).map(item => ({
+      ...item,
+      project_id: PUBLIC_PROJECT_ID,
+    }));
+    const allAgents = [...regularAgents, ...publicAgents];
+
+    return allAgents.map(agent => ({
+      key: `agent-${agent.project_id}-${agent.id}`,
+      label: agent.name,
+      description: agent.description,
+      data: agent,
+      icon: (
+        <EntityIcon
+          sx={entityIconSx}
+          imageStyle={entityImageStyle}
+          icon={agent.icon_meta}
+          entityType={'application'}
+          projectId={agent.project_id}
+          editable={false}
+          specifiedFontSize={DropdownConstants.DIMENSIONS.ICON_SVG_SIZE}
+        />
+      ),
+    }));
+  }, [agentsData?.rows, projectId, publicAgentsData?.rows, entityIconSx, entityImageStyle]);
+
+  // Transform pipelines data for dropdown display (combine regular + public)
+  const pipelineMenuItems = useMemo(() => {
+    const regularPipelines = (pipelinesData?.rows || []).map(item => ({
+      ...item,
+      project_id: projectId,
+    }));
+
+    const allPipelines = [...regularPipelines];
+
+    return allPipelines.map(pipeline => ({
+      key: `pipeline-${pipeline.project_id}-${pipeline.id}`,
+      label: pipeline.name,
+      description: pipeline.description,
+      data: pipeline,
+      icon: (
+        <EntityIcon
+          sx={entityIconSx}
+          imageStyle={entityImageStyle}
+          icon={pipeline.icon_meta}
+          entityType={'pipeline'}
+          projectId={pipeline.project_id}
+          editable={false}
+          specifiedFontSize={DropdownConstants.DIMENSIONS.ICON_SVG_SIZE}
+        />
+      ),
+    }));
+  }, [pipelinesData?.rows, projectId, entityIconSx, entityImageStyle]);
+
+  // Transform toolkits data for dropdown display (combine regular + public)
+  const toolkitMenuItems = useMemo(() => {
+    const regularToolkits = (toolkitsData?.rows || [])
+      .filter(item => isMcpVisible || !isMcpToolkit(item))
+      .map(item => ({
+        ...item,
+        project_id: projectId,
+      }));
+
+    return regularToolkits.map(toolkit => {
+      const title = ToolkitsHelpers.getToolkitDisplayName(toolkit);
+
+      return {
+        key: `toolkit-${toolkit.project_id}-${toolkit.id}`,
+        label: title,
+        description: toolkit.description,
+        data: toolkit,
+        icon: (
+          <EntityIcon
+            sx={entityIconSx}
+            imageStyle={entityImageStyle}
+            icon={{
+              component: getToolIconByType(toolkit.type, theme, {
+                toolSchema: resolveToolkitSchemaByType(toolkit.type, toolkitSchemas),
+              }),
+            }}
+            editable={false}
+            specifiedFontSize={DropdownConstants.DIMENSIONS.ICON_SVG_SIZE}
+          />
+        ),
+      };
+    });
+  }, [toolkitsData?.rows, projectId, theme, entityIconSx, entityImageStyle, isMcpVisible, toolkitSchemas]);
+
+  // Transform MCPs data for dropdown display (combine regular + public)
+  const mcpMenuItems = useMemo(() => {
+    const regularMCPs = (mcpsData?.rows || []).map(item => ({
+      ...item,
+      project_id: projectId,
+    }));
+
+    const allMCPs = [...regularMCPs];
+
+    return allMCPs.map(mcp => {
+      const title = ToolkitsHelpers.getToolkitDisplayName(mcp);
+
+      return {
+        key: `mcp-${mcp.project_id}-${mcp.id}`,
+        label: title,
+        description: mcp.description,
+        data: mcp,
+        icon: (
+          <EntityIcon
+            sx={entityIconSx}
+            imageStyle={entityImageStyle}
+            icon={{
+              component: getToolIconByType(mcp.type, theme, {
+                toolSchema: resolveToolkitSchemaByType(mcp.type, toolkitSchemas),
+                isMCP: mcp.type === 'mcp',
+              }),
+            }}
+            editable={false}
+            specifiedFontSize={DropdownConstants.DIMENSIONS.ICON_SVG_SIZE}
+          />
+        ),
+      };
+    });
+  }, [mcpsData?.rows, projectId, theme, entityIconSx, entityImageStyle, toolkitSchemas]);
+
+  // Refresh callback functions - wrapped in useCallback with query state guards
+  const refreshAgents = useCallback(async () => {
+    // Refresh both regular and public agents
+    const promises = [];
+    if (projectId && refetchAgents && agentsData !== undefined) {
+      promises.push(refetchAgents());
+    }
+    if (refetchPublicAgents && publicAgentsData !== undefined) {
+      promises.push(refetchPublicAgents());
+    }
+    if (promises.length > 0) {
+      await Promise.all(promises);
+    }
+  }, [projectId, refetchAgents, agentsData, refetchPublicAgents, publicAgentsData]);
+
+  const refreshPipelines = useCallback(async () => {
+    // Refresh both regular and public pipelines
+    const promises = [];
+    if (projectId && refetchPipelines && pipelinesData !== undefined) {
+      promises.push(refetchPipelines());
+    }
+
+    if (promises.length > 0) {
+      await Promise.all(promises);
+    }
+  }, [projectId, refetchPipelines, pipelinesData]);
+
+  const refreshToolkits = useCallback(async () => {
+    // Refresh regular toolkits
+    const promises = [];
+    if (projectId && refetchToolkits && toolkitsData !== undefined) {
+      promises.push(refetchToolkits());
+    }
+
+    if (promises.length > 0) {
+      await Promise.all(promises);
+    }
+  }, [projectId, refetchToolkits, toolkitsData]);
+
+  const refreshMCPs = useCallback(async () => {
+    // Refresh both regular and public MCPs
+    const promises = [];
+    if (projectId && refetchMCPs && mcpsData !== undefined) {
+      promises.push(refetchMCPs());
+    }
+
+    if (promises.length > 0) {
+      await Promise.all(promises);
+    }
+  }, [projectId, refetchMCPs, mcpsData]);
+
+  // Refresh all data sources - also wrapped in useCallback with proper guards
+  const refreshAll = useCallback(async () => {
+    if (projectId) {
+      const refreshPromises = [];
+
+      // Only include refetch calls for queries that have been executed
+      if (refetchAgents && agentsData !== undefined) {
+        refreshPromises.push(refetchAgents());
+      }
+      if (refetchPublicAgents && publicAgentsData !== undefined) {
+        refreshPromises.push(refetchPublicAgents());
+      }
+      if (refetchPipelines && pipelinesData !== undefined) {
+        refreshPromises.push(refetchPipelines());
+      }
+
+      if (refetchToolkits && toolkitsData !== undefined) {
+        refreshPromises.push(refetchToolkits());
+      }
+      if (refetchMCPs && mcpsData !== undefined) {
+        refreshPromises.push(refetchMCPs());
+      }
+
+      // Only execute if we have at least one query to refresh
+      if (refreshPromises.length > 0) {
+        await Promise.all(refreshPromises);
+      }
+    }
+  }, [
+    projectId,
+    refetchAgents,
+    agentsData,
+    refetchPublicAgents,
+    publicAgentsData,
+    refetchPipelines,
+    pipelinesData,
+    refetchToolkits,
+    toolkitsData,
+    refetchMCPs,
+    mcpsData,
+  ]);
+
+  // Combined load more functions
+  const handleLoadMoreAgents = useCallback(() => {
+    onLoadMoreAgents();
+    onLoadMorePublicAgents();
+  }, [onLoadMoreAgents, onLoadMorePublicAgents]);
+
+  const handleLoadMorePipelines = useCallback(() => {
+    onLoadMorePipelines();
+  }, [onLoadMorePipelines]);
+
+  const handleLoadMoreToolkits = useCallback(() => {
+    onLoadMoreToolkits();
+  }, [onLoadMoreToolkits]);
+
+  const handleLoadMoreMCPs = useCallback(() => {
+    onLoadMoreMCPs();
+  }, [onLoadMoreMCPs]);
+
+  return {
+    // concept: totals of each list as the API counts them (all pages, the search applied)
+    totals: {
+      agents: (agentsData?.total || 0) + (publicAgentsData?.total || 0),
+      pipelines: pipelinesData?.total || 0,
+      toolkits: toolkitsData?.total || 0,
+      mcps: mcpsData?.total || 0,
+    },
+
+    // Agents (combined regular + public)
+    agentMenuItems,
+    isAgentsLoading: isAgentsLoading || isPublicAgentsLoading,
+
+    // Pipelines (combined regular + public)
+    pipelineMenuItems,
+    isPipelinesLoading,
+
+    // Toolkits (combined regular)
+    toolkitMenuItems,
+    isToolkitsLoading: isToolkitsLoading || isLoadingMoreToolkit,
+
+    // MCPs (combined regular + public)
+    mcpMenuItems,
+    isMCPsLoading: isMCPsLoading || isLoadingMoreMCP,
+
+    // Refresh callbacks
+    refreshAgents,
+    refreshPipelines,
+    refreshToolkits,
+    refreshMCPs,
+    refreshAll,
+
+    onLoadMoreAgents: handleLoadMoreAgents,
+    onLoadMorePipelines: handleLoadMorePipelines,
+    onLoadMoreToolkits: handleLoadMoreToolkits,
+    onLoadMoreMCPs: handleLoadMoreMCPs,
+
+    // General
+    projectId,
+  };
+};
