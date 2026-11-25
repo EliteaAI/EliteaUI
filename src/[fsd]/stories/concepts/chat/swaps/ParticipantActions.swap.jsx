@@ -1,13 +1,13 @@
 // Switch for the actions of a participant row (imported by ParticipantNormalCard and ParticipantAttentionCard in
 // Storybook, see .storybook/main.js): the team's ParticipantActions, or the concept's when the row sits in the
-// «who answers» list (piece 3) — the right Participants panel keeps the team's.
+// «who answers» list — the right Participants panel keeps the team's.
 import { memo } from 'react';
 
 import ParticipantActions from '@/[fsd]/features/chat/participants/ui/participant-actions/ParticipantActions';
 
 import ConceptParticipantActions from '../ConceptParticipantActions';
-import { useConceptSwap } from '../conceptSwap';
-import { useWhoAnswers } from '../whoAnswersContext';
+import { useConceptSwap } from '../conceptSwap.hooks';
+import { useWhoAnswers } from '../whoAnswersContext.hooks';
 
 const ParticipantActionsSwap = memo(props => {
   const { whoAnswers } = useConceptSwap();

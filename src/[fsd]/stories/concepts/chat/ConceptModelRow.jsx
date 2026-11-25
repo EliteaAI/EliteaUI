@@ -1,10 +1,10 @@
-// Piece 3 of the chat concept: a model row of the «who answers» list. A copy of
+// Chat concept: a model row of the «who answers» list. A copy of
 // src/[fsd]/widgets/llm-model-selector/ui/ModelRow.jsx; the lines marked «concept:» are the changes:
 // - concept: `end` — what sits at the row's right instead of the check mark: ⚙ «Model settings» on the current model,
-//   and a chevron on the «Model» row that opens the models beside it (approved.html › chatWithHTML, `.md .acts`, `.msw`);
+//   and a chevron on the «Model» row that opens the models beside it;
 // - concept: `rowProps` — the row's own attributes (aria, data-testid) for the «Model» row, which is not an option.
 // - concept: `icon` — on the «Model» row only, the button's icon (shared or project model) in the round of the agent
-//   rows below it, so the list has one column of icons and the row matches the button (owner 2026-11-24).
+//   rows below it, so the list has one column of icons and the row matches the button.
 import { memo } from 'react';
 
 import { Box, MenuItem, Tooltip, Typography } from '@mui/material';
@@ -127,7 +127,7 @@ ConceptModelRow.displayName = 'ConceptModelRow';
 /** @type {MuiSx} */
 const styles = {
   // concept: inset with a radius and framed when it answers, as the agent rows under it (ParticipantNormalCard); the
-  // team's LLMModelsMenu row runs edge to edge and marks the current one by fill only (approved.html › .mi.ag.md.on)
+  // team's LLMModelsMenu row runs edge to edge and marks the current one by fill only
   menuItem: ({ palette }) => ({
     margin: '.125rem .5rem',
     padding: '0.5rem .75rem',
@@ -139,7 +139,7 @@ const styles = {
     '&:hover': {
       backgroundColor: palette.background.surface.interactive.default,
     },
-    // concept: ⚙ «Model settings» under the pointer only, as on every other row (approved.html › `.mi.ag .acts`)
+    // concept: ⚙ «Model settings» under the pointer only, as on every other row
     '& .concept-hover-act': { display: 'none' },
     '&:hover .concept-hover-act, &:focus-within .concept-hover-act': { display: 'inline-flex' },
     '@media (hover: none)': { '& .concept-hover-act': { display: 'inline-flex' } },
@@ -148,7 +148,7 @@ const styles = {
       borderColor: palette.components.split.border.hover,
     },
   }),
-  // concept: the row whose list is open beside it gets the same frame (approved.html › .menu.dparts .mi.act)
+  // concept: the row whose list is open beside it gets the same frame
   open: ({ palette }) => ({
     borderColor: palette.components.split.border.hover,
   }),
@@ -197,9 +197,9 @@ const styles = {
   }),
   divider: ({ palette }) => ({
     flexShrink: 0,
-    width: '0.0625rem',
+    width: 0,
     height: '0.625rem',
-    backgroundColor: palette.border.lines,
+    borderLeft: `0.0625rem solid ${palette.border.lines}`,
   }),
   capabilityIconWrapper: {
     flexShrink: 0,

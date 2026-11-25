@@ -3,8 +3,7 @@ import { fileURLToPath } from 'url';
 
 import { screenshotHistory } from './screenshotHistory.js';
 
-// Storybook runs from the repository root (npm run storybook)
-const ROOT = process.cwd();
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
 // Concept stories show the team's real chat screen with one part replaced, without editing product files: an import
 // listed here is redirected to a switch in src/[fsd]/stories/concepts/chat/swaps/. The switch renders the team's own
@@ -24,7 +23,7 @@ const CONCEPT_SWAPS = [
     source: './ContextBudgetRing',
     to: 'src/[fsd]/stories/concepts/chat/swaps/ContextBudgetRing.swap.jsx',
   },
-  // part 3: a row of the «who answers» list gets ⚙ (version, variables) and «Fix»; the panel's rows stay the team's
+  // a row of the «who answers» list gets ⚙ (version, variables) and «Fix»; the panel's rows stay the team's
   {
     importers: [
       'src/[fsd]/features/chat/participants/ui/expanded-participants/ParticipantNormalCard.jsx',
@@ -46,7 +45,7 @@ const CONCEPT_SWAPS = [
 // live on main, where a team change must never break the whole Storybook (public since 2026-11-24).
 const CONCEPT_PATCHES = [
   {
-    // concept: the field's placeholder stays while the field is empty, also with focus (owner 2026-11-19)
+    // concept: the field's placeholder stays while the field is empty, also with focus
     importers: ['src/[fsd]/stories/concepts/chat/ConceptChatInput.jsx'],
     source: 'src/ComponentsLib/Chat/UserInput',
     query: 'concept-placeholder',
@@ -54,8 +53,8 @@ const CONCEPT_PATCHES = [
     to: 'placeholder={input?.placeholder /* concept: stays with focus (dev hides it) */}',
   },
   {
-    // part 3: ChatBox hands the field onShowToolkitEditor, so the pencil of a toolkit in «who answers» opens its editor
-    // (ChatBox has the prop and does not pass it to the field on dev). The import is relative: chat-box/index.js
+    // ChatBox hands the field onShowToolkitEditor, so the pencil of a toolkit in «who answers» opens its editor
+    // (ChatBox has the prop and does not pass it to the field today). The import is relative: chat-box/index.js
     importers: ['src/[fsd]/features/chat/ui/chat-box/index.js'],
     specifier: './ChatBox',
     source: 'src/[fsd]/features/chat/ui/chat-box/ChatBox',
@@ -64,8 +63,8 @@ const CONCEPT_PATCHES = [
     to: 'onShowParticipantsList={onShowParticipantsList}\n              onShowToolkitEditor={onShowToolkitEditor /* concept */}',
   },
   {
-    // part 3: a row's version label gets a class, so the «who answers» list can give it room (dev caps it at 2.5rem
-    // for the narrow panel: «v3-strict-review» showed as «v3-s…»); the panel keeps the cap (owner 2026-11-24)
+    // a row's version label gets a class, so the «who answers» list can give it room (the panel caps it at 2.5rem,
+    // «v3-strict-review» shows as «v3-s…»); the panel keeps the cap
     importers: ['src/[fsd]/features/chat/participants/ui/expanded-participants/ParticipantItem.jsx'],
     specifier: './ParticipantNormalCard',
     source: 'src/[fsd]/features/chat/participants/ui/expanded-participants/ParticipantNormalCard',
@@ -159,14 +158,13 @@ const config = {
     const { mergeConfig } = await import('vite');
 
     return mergeConfig(viteConfig, {
-      cacheDir: '.vite-cache-chat-part-3', // local only: own Vite cache (elitea-design scripts/storybook-up.mjs); never in a PR
       // Add any custom Vite configuration here if needed
       define: {
         global: 'globalThis',
       },
       plugins: [
         // Versions of the saved story screenshots from git, for the stories' compare view
-        screenshotHistory(fileURLToPath(new URL('..', import.meta.url))),
+        screenshotHistory(ROOT),
         conceptSwaps(),
       ],
     });

@@ -1,4 +1,4 @@
-// Piece 3 of the chat concept: what the rows of the «who answers» list need from the list around them — the ⚙ of a
+// Chat concept: what the rows of the «who answers» list need from the list around them — the ⚙ of a
 // row opens that participant's settings (version, variables) next to it. Read by ConceptParticipantActions.
 import { createContext, useContext } from 'react';
 

@@ -1,6 +1,6 @@
-// Chat concept, part 2 (stories 2.3–2.4): a copy of src/[fsd]/features/chat/lib/hooks/chat-button/useDropdownData.hooks.jsx. The
-// only change, marked «concept:», returns each kind's total from the API's answer, for «All agents · 116» and
-// «Scroll for more · 20 of 116» in the «+» lists (approved.html › addBodyHTML). Everything else is the team's code.
+// Chat concept: a copy of src/[fsd]/features/chat/lib/hooks/chat-button/useDropdownData.hooks.jsx. The only change,
+// marked «concept:», returns each kind's total from the API's answer, for «All agents · 116» and
+// «Scroll for more · 20 of 116» in the «+» lists. Everything else is the team's code.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useTheme } from '@mui/material';
@@ -170,9 +170,9 @@ export const useConceptDropdownData = ({
   // Shared EntityIcon styles for dropdown items
   const entityIconSx = useMemo(
     () => ({
-      minWidth: '1.25rem !important', // component-check: allow icon size copied from the team's hook
-      width: '1.25rem !important', // component-check: allow icon size copied from the team's hook
-      height: '1.25rem !important', // component-check: allow icon size copied from the team's hook
+      minWidth: '1.25rem !important',
+      width: '1.25rem !important',
+      height: '1.25rem !important',
       '& > div': {
         width: '1.25rem',
         height: '1.25rem',

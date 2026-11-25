@@ -1,11 +1,10 @@
-// Piece 3 of the chat concept: ⚙ «Model settings» of the «who answers» list. A copy of
+// Chat concept: ⚙ «Model settings» of the «who answers» list. A copy of
 // src/[fsd]/widgets/llm-model-selector/ui/LLMSettingsDialog.jsx; the lines marked «concept:» are the changes.
-// Reference: approved.html › gearHTML («<model> · settings», then «How the AI works in this chat»).
-// - concept: the title names the model, «gpt-5 · settings» (dev: «Model settings»);
-// - concept: under the model's settings, «How the AI works in this chat» — the five modules that left «+» › Modules
-//   (piece 2): Ask User, Planner, Python Sandbox, Swarm Mode, Smart Tools Selection (dev-check IN-077…081; owner
-//   2026-11-11: «технические переключатели и настройки модели — в шестерёнке модели»). Each row is named by what it does
-//   («Ask before acting»), with the dev name and description under it, as in the prototype;
+// - concept: the title names the model, «gpt-5 · settings» (today: «Model settings»);
+// - concept: under the model's settings, «How the AI works in this chat» — the five modules that left «+» › Modules:
+//   Ask User, Planner, Python Sandbox, Swarm Mode, Smart Tools Selection, since technical switches belong with the
+//   model's settings. Each row is named by what it does («Ask before acting»), with today's name and description
+//   under it;
 // - concept: the switches are part of the dialog and are saved by Apply (each changed one through
 //   onInternalToolsConfigChange, as «+» › Modules saves it), Cancel drops them. In the prototype they were instant —
 //   it had no dialog; here the dialog's Cancel / Apply decides.
@@ -22,7 +21,7 @@ import LLMSettings from '@/[fsd]/widgets/llm-model-selector/ui/LLMSettings';
 import ConceptModuleRow from './ConceptModuleRow';
 import { MODEL_SETTINGS_MODULES } from './ConceptPlusButton';
 
-// concept: what each module does, in the prototype's words (approved.html › TECH)
+// concept: what each module does, in the prototype's words
 const MODULE_NAMES = {
   ask_user: 'Ask before acting',
   planner: 'Track tasks',
@@ -115,7 +114,7 @@ const ConceptModelSettingsDialog = memo(props => {
     <Modal.BaseModal
       open={open}
       data-testid="model-settings-dialog"
-      // concept: the model is named, the list it came from holds agents and skills too (approved.html › gearHTML)
+      // concept: the model is named, the list it came from holds agents and skills too
       title={modelName ? `${modelName} · settings` : 'Model settings'}
       titleVariant="headingMedium"
       onClose={onCancel}

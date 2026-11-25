@@ -1,7 +1,7 @@
 // The chat concept's screen for its stories: the team's real chat screen (AppLayout on /chat) on sample data, with the
 // concept's parts swapped in (ConceptSwapProvider; CONCEPT_SWAPS in .storybook/main.js). The right Participants panel
-// stays as on dev, without its context ring: the ring has moved into the field. With «who answers» (part 3, stories
-// 3.x: screen({ whoAnswers: true })) the panel is hidden: its list has become the «who answers» list under the field.
+// stays as it is today, without its context ring: the ring has moved into the field. With «who answers» (stories 3.x:
+// screen({ whoAnswers: true })) the panel is hidden: its list has become the «who answers» list under the field.
 import { Suspense, lazy } from 'react';
 
 import { Box } from '@mui/material';
@@ -9,8 +9,8 @@ import { Box } from '@mui/material';
 import '@/[fsd]/app/routes';
 import { withStoryApi } from '@/[fsd]/stories/lib/storyApi';
 
-import { ConceptSwapProvider } from './conceptSwap';
-import { CHAT_ID, FULL_CHAT_ID, STATUS_MARK, routes, state } from './data';
+import { CHAT_ID, FULL_CHAT_ID, STATUS_MARK, routes, state } from './chat.data';
+import { ConceptSwapProvider } from './conceptSwap.hooks';
 
 // Lazy so the routes module loads before the layout
 const AppLayout = lazy(() => import('@/[fsd]/app/layout/AppLayout'));
@@ -21,7 +21,7 @@ const HIDE_PANEL_RING = {
   '& [data-tour="chat-context-budget"]:not([data-testid="concept-chat-input"] *)': { display: 'none' },
 };
 
-// part 3: the chat page (src/pages/NewChat/NewChat.jsx) is a Grid: chats column (lg 3), conversation (xs 12), right
+// the chat page (src/pages/NewChat/NewChat.jsx) is a Grid: chats column (lg 3), conversation (xs 12), right
 // panel (lg 0.5) — the panel goes, its list is «who answers» now
 const HIDE_PARTICIPANTS_PANEL = {
   '& main .MuiGrid-container > .MuiGrid-grid-lg-0\\.5': { display: 'none' },
@@ -35,7 +35,12 @@ export const screen = ({ concept, whoAnswers = false }) => {
     <ConceptSwapProvider value={concept ? (whoAnswers ? CONCEPT_WHO_ANSWERS : CONCEPT) : {}}>
       {/* scrolls as the app's page does: below 1200 px the chats list stands over the chat (NewChat › isSmallWindow) and
           the page scrolls down to it; storyApi's frame is fixed, so without this the chat was out of reach */}
-      <Box sx={[{ width: '100%', height: '100%', overflowY: 'auto' }, concept && (whoAnswers ? HIDE_PARTICIPANTS_PANEL : HIDE_PANEL_RING)]}>
+      <Box
+        sx={[
+          { width: '100%', height: '100%', overflowY: 'auto' },
+          concept && (whoAnswers ? HIDE_PARTICIPANTS_PANEL : HIDE_PANEL_RING),
+        ]}
+      >
         <Suspense>
           <AppLayout />
         </Suspense>

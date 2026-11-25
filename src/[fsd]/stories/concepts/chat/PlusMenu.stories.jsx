@@ -1,6 +1,5 @@
-// Chat concept, parts 1 and 2 — the «+» menu under the field (approved prototype, tag chat-prototype-approved-2026-11-18,
-// default view). The team's real chat screen with the concept field; the menu is ConceptPlusButton (a copy of
-// the team's PlusChatButton, changes marked «concept:» in its header); stories 1–2 are part 1, stories 3–4 are part 2:
+// Chat concept — the «+» menu under the field. The team's real chat screen with the concept field; the menu is
+// ConceptPlusButton (a copy of the team's PlusChatButton, changes marked «concept:» in its header); in stories 3–4
 // the list of each kind is ConceptPlusSubmenu (a copy of the team's PlusChatSubmenu). Each story
 // opens the menu when it loads; everything in it can be clicked: Attach Files, every kind, search, Create, rows.
 // Sample data, not wired to the API: a pick changes nothing on the screen. What to build: the GitHub issue of the branch.
@@ -8,8 +7,8 @@ import { userEvent, within } from 'storybook/test';
 
 import { SCREENSHOT_MODES } from '@/[fsd]/stories/lib/screenshot.constants';
 
-import { FULL_CHAT, NEW_CHAT, frame, freshChat, screen } from './conceptScreen';
-import { pageSettled } from './storyPlay';
+import { FULL_CHAT, NEW_CHAT, frame, freshChat, screen } from './conceptScreen.helpers';
+import { pageSettled } from './storyPlay.helpers';
 
 export default {
   title: 'concepts/Chat/2 Plus menu',
@@ -19,8 +18,9 @@ export default {
   beforeEach: freshChat,
 };
 
-const open = (...rows) =>
-  async function play({ canvasElement, globals }) {
+const open =
+  (...rows) =>
+  async ({ canvasElement, globals }) => {
     // in the compare modes the screen lives in a frame that runs the story on its own
     if (globals.screenshot && globals.screenshot !== SCREENSHOT_MODES.live) return;
     const doc = canvasElement.ownerDocument;

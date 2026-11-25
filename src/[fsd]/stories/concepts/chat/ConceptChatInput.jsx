@@ -1,26 +1,25 @@
-// Chat concept, part 1 — the input field (stories 1.1–1.3) and its «+» menu (2.1–2.2). A copy of src/[fsd]/features/chat/ui/chat-input/NewChatInput.jsx; the
-// lines marked «concept:» are the only changes, everything else (keys, voice, speaking mode, files, «#», Stop, Inject)
-// is the team's code as on dev. Reference: tag chat-prototype-approved-2026-11-18, default view (#composer, #modelBtn).
-// - concept: the context ring moves into the field, right, before the mic (from the bottom of the right Participants
-//   panel); shown when the chat has messages (a conversation id), as the panel's block on dev;
+// Chat concept: the input field and its «+» menu. A copy of src/[fsd]/features/chat/ui/chat-input/NewChatInput.jsx;
+// the lines marked «concept:» are the only changes, everything else (keys, voice, speaking mode, files, «#», Stop,
+// Inject) is the team's code.
+// - concept: the context ring moves into the field, right, before the mic (from the bottom of the Participants panel);
+//   shown when the chat has messages (a conversation id), as the panel's block is today;
 // - concept: «who answers» (the model selector, or the agent / pipeline / skill panel) leaves the field and sits under
 //   it, right-aligned. The model's button has no fill (ConceptModelButton); its ⚙ «Model Settings» and its list of
-//   models are the team's, as on dev. The agent, pipeline and skill panels are the team's AgentEditorPanel and
-//   SkillChatPanel as on dev, only placed under the field;
+//   models are the team's. The agent, pipeline and skill panels are the team's AgentEditorPanel and SkillChatPanel,
+//   only placed under the field;
 // - concept: the placeholder names «#»: «Type your message… # for assistants»; with an agent answering —
-//   «Reply to <name>…»; a skill's argument hint («~<skill> <hint>») stays as on dev;
-// - concept: the placeholder stays while the field is empty, also when the field has focus (dev: UserInput hides it on
-//   focus, and a new chat focuses the field at once, so «# for assistants» is never seen). In the product it is one line
-//   of src/ComponentsLib/Chat/UserInput.jsx: placeholder={input?.placeholder}. Here Storybook patches that line for
-//   this field only (CONCEPT_PATCHES in .storybook/main.js); UserInput.jsx itself is not edited (owner 2026-11-19).
-// - concept: the «+» menu is ConceptPlusButton — no Invite Users, counts on its rows, modules with descriptions; the
-//   list of each kind (Agents, Toolkits …) is the team's (see the file's header).
-// The right Participants panel stays as on dev, without its context ring (the ring is here now).
-// - concept (part 3, stories 3.x only — the «whoAnswers» switch of the concept): «who answers» under the field is one
-//   button with its list (ConceptWhoAnswers) — it replaces the model's button with its ⚙, AgentEditorPanel and
-//   SkillChatPanel, and takes the list of the right Participants panel (hidden then); the model's ⚙ «Model settings»
-//   is in that list. The button flashes once after a pick in «+». The host also passes onShowToolkitEditor (ChatBox has
-//   it; Storybook adds that one prop, CONCEPT_PATCHES in .storybook/main.js).
+//   «Reply to <name>…»; a skill's argument hint («~<skill> <hint>») stays as is;
+// - concept: the placeholder stays while the field is empty, also with focus (UserInput hides it on focus today, and a
+//   new chat focuses the field at once, so «# for assistants» would never be seen). In the product it is one line of
+//   src/ComponentsLib/Chat/UserInput.jsx: placeholder={input?.placeholder}. Here Storybook patches that line for this
+//   field only (CONCEPT_PATCHES in .storybook/main.js); UserInput.jsx itself is not edited.
+// - concept: the «+» menu is ConceptPlusButton — no Invite Users, counts on its rows, modules with descriptions.
+// The Participants panel stays as is, without its context ring (the ring is here now).
+// - concept (the «whoAnswers» stories only): «who answers» under the field is one button with its list
+//   (ConceptWhoAnswers) — it replaces the model's button with its ⚙, AgentEditorPanel and SkillChatPanel, and takes the
+//   list of the Participants panel (hidden then); the model's ⚙ «Model settings» is in that list. The button flashes
+//   once after a pick in «+». The host also passes onShowToolkitEditor (ChatBox has it; Storybook adds that one prop,
+//   CONCEPT_PATCHES in .storybook/main.js).
 // The host (ChatBox, NewConversationView) does not change, except that in the product it passes the chat's
 // context_strategy, instructions, persona and setActiveConversation for the ring's card, as ParticipantsWrapper does now.
 import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
@@ -40,9 +39,9 @@ import { ChatParticipantType } from '@/common/constants';
 import ConceptModelButton from './ConceptModelButton';
 import ConceptPlusButton from './ConceptPlusButton';
 import ConceptWhoAnswers from './ConceptWhoAnswers';
-import { useConceptSwap } from './conceptSwap';
+import { useConceptSwap } from './conceptSwap.hooks';
 
-// concept: the placeholder (approved.html › composerD)
+// concept: the placeholder names «#»
 const DEV_PLACEHOLDER = 'Type your message...';
 // the one who answers is named by its details, else by the chat participant's meta (a participant has no `name`)
 const conceptPlaceholder = (placeholder, activeParticipant, activeParticipantDetails) => {
@@ -57,7 +56,7 @@ const conceptPlaceholder = (placeholder, activeParticipant, activeParticipantDet
   return 'Type your message… # for assistants';
 };
 
-const NewChatInput = memo(
+const ConceptChatInput = memo(
   forwardRef((props, ref) => {
     const {
       fromTheChat,
@@ -119,7 +118,7 @@ const NewChatInput = memo(
       showWebhookSecret,
       showStepsLimit,
 
-      // concept (part 3): the pencil of a toolkit row in the «who answers» list (ChatBox has it; dev's field does not take it)
+      // concept: the pencil of a toolkit row in the «who answers» list (ChatBox has it; today's field does not take it)
       onShowToolkitEditor,
 
       //attachment
@@ -276,10 +275,10 @@ const NewChatInput = memo(
       [disableAttachments, isLoading, isStreaming, onAttachFiles, toastError],
     );
 
-    // concept (part 3): the «who answers» list replaces the panels below; the switch is the concept's whoAnswers
+    // concept: the «who answers» list replaces the panels below; the switch is the concept's whoAnswers
     const { whoAnswers: isWhoAnswersList } = useConceptSwap();
 
-    // concept (part 3): the list's pencil opens the right editor, as NewChat.jsx › onEditParticipant does for the panel
+    // concept: the list's pencil opens the right editor, as NewChat.jsx › onEditParticipant does for the panel
     const onEditParticipant = useCallback(
       participant => {
         if (!participant) return;
@@ -295,11 +294,11 @@ const NewChatInput = memo(
       [onShowToolkitEditor, onShowSkillEditor, onShowPipelineEditor, onShowAgentEditor],
     );
 
-    // concept (part 3): one flash of the «who answers» button after a pick in «+»
+    // concept: one flash of the «who answers» button after a pick in «+»
     const [pulseKey, setPulseKey] = useState(0);
     const onPicked = useCallback(() => setPulseKey(key => key + 1), []);
 
-    // concept (part 3): «who answers» under the field — one button and its list
+    // concept: «who answers» under the field — one button and its list
     const whoAnswersList = isAgentsPage ? (
       <ConceptModelButton
         dataTourTargetId={CHAT_TOUR_TARGET_IDS.modelSettings}
@@ -553,7 +552,7 @@ const NewChatInput = memo(
   }),
 );
 
-NewChatInput.displayName = 'ConceptChatInput';
+ConceptChatInput.displayName = 'ConceptChatInput';
 
 /** @type {MuiSx} */
 const newChatInputStyles = () => ({
@@ -608,4 +607,4 @@ const newChatInputStyles = () => ({
   },
 });
 
-export default NewChatInput;
+export default ConceptChatInput;

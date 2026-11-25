@@ -1,12 +1,11 @@
-// Chat concept, part 1: the model's button under the field when the model answers. A copy of the default
-// variant of src/[fsd]/widgets/llm-model-selector/ui/LLMModelSelector.jsx; the lines marked «concept:» are the changes:
+// Chat concept: the model's button under the field when the model answers. A copy of the default variant of
+// src/[fsd]/widgets/llm-model-selector/ui/LLMModelSelector.jsx; the lines marked «concept:» are the changes:
 // - concept: one button with no fill, the team's tertiary button (fill on hover only): the model's icon, its name cut
-//   with «…», a chevron (approved.html › composerHTML, `#modelBtn` in `.below`);
+//   with «…», a chevron;
 // - the list of models is the team's LLMModelsMenu as is;
-// - ⚙ «Model Settings» right after it opens the team's LLMSettingsDialog, as on dev (dev-check IN-096…111); the ⚙ is
-//   a tertiary icon button like the model's (dev: the second half of a filled button group). The approved prototype
-//   moves ⚙ into the «who answers» list — that is a later part, so here it stays next to the model;
-// - concept: tooltip «Switch to model» (dev: «Select LLM Model»).
+// - ⚙ «Model Settings» right after it opens the team's LLMSettingsDialog with the props LLMModelSelector passes it
+//   (onResetToDefaults too); the ⚙ is a tertiary icon button like the model's (today: half of a filled button group);
+// - concept: tooltip «Switch to model» (today: «Select LLM Model»).
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Box, Tooltip, Typography } from '@mui/material';
@@ -32,6 +31,7 @@ const ConceptModelButton = memo(props => {
     onSetLLMSettings,
     showWebhookSecret = false,
     showStepsLimit = false,
+    onResetToDefaults,
   } = props;
 
   const anchorRef = useRef(null);
@@ -129,6 +129,7 @@ const ConceptModelButton = memo(props => {
           llmSettings={normalizedLlmSettings}
           showWebhookSecret={showWebhookSecret}
           showStepsLimit={showStepsLimit}
+          onResetToDefaults={onResetToDefaults}
         />
       )}
     </>
@@ -151,9 +152,9 @@ const conceptModelButtonStyles = () => ({
     // concept: the button's right edge lines up with the field's (tertiary pads 1rem)
     padding: '.375rem .5rem',
     '& .MuiButton-startIcon, & .MuiButton-endIcon': { margin: 0 },
-    // concept: while its list is open the button keeps the hover fill and the chevron turns up (approved.html › `.on`)
+    // concept: while its list is open the button keeps the hover fill and the chevron turns up
     '&[aria-expanded="true"]': {
-      background: ({ palette }) => palette.components.button.background.tertiary.hover,
+      backgroundColor: ({ palette }) => palette.components.button.background.tertiary.hover,
       '& .MuiButton-endIcon': { transform: 'rotate(180deg)' },
     },
   },
@@ -164,7 +165,7 @@ const conceptModelButtonStyles = () => ({
     minWidth: 0,
     padding: '.375rem',
     '&[aria-expanded="true"]': {
-      background: ({ palette }) => palette.components.button.background.tertiary.hover,
+      backgroundColor: ({ palette }) => palette.components.button.background.tertiary.hover,
     },
   },
   icon: {

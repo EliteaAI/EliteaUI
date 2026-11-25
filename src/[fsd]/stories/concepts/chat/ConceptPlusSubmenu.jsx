@@ -1,27 +1,22 @@
-// Chat concept, part 2 (stories 2.3–2.4): one kind's list in the «+» menu (Agents, Pipelines, Skills, Toolkits, MCPs). A copy of
+// Chat concept: one kind's list in the «+» menu (Agents, Pipelines, Skills, Toolkits, MCPs). A copy of
 // src/[fsd]/features/chat/ui/chat-button/PlusChatSubmenu.jsx; the lines marked «concept:» are the changes, the rest
 // (search with autofocus, «Create <Kind>» and the line under it, loading on scroll, empty and not-found rows, the
-// Catalog label, the switch of toolkits and MCPs) is the team's code. Reference: tag chat-prototype-approved-2026-11-18,
-// default view (approved.html › openKind, addBodyHTML, addRow).
-// - concept: a row has two lines, the name and the description (dev: the name only), so the list is 600 px wide;
+// Catalog label, the switch of toolkits and MCPs) is the team's code.
+// - concept: a row has two lines, the name and the description (today: the name only), so the list is 600 px wide;
 // - concept: without a search, rows already in the chat sit on top under «In this chat · N», the others under
 //   «All agents · N» (or «Agents · N» when none is in the chat); the sections are taken when the list opens, so a row
 //   does not jump away under the pointer when it is added or removed; «In this chat · N» counts the rows still in it;
 // - concept: an agent, pipeline or skill in the chat shows a check in icon.secondary, as a selected row of the
-//   product's lists (AutoCompleteDropDown, FolderMenuContent; dev hides such a row); under the pointer the check
-//   gives way to the product's delete icon button (DeleteParticipantButton: DeleteIcon, «Remove agent»), and only that
-//   button removes it — a click on the row does nothing (owner 2026-11-24). The reference wrote «✓ Added» and
-//   «Remove»: the prototype sets the UX, the product sets the UI (docs/design-process.md, Г2). Such a row drops the
-//   Catalog label (owner 2026-11-23);
+//   product's lists (AutoCompleteDropDown, FolderMenuContent; today such a row is hidden); under the pointer or focus
+//   the check gives way to the product's delete icon button (DeleteParticipantButton: DeleteIcon, «Remove agent»), and
+//   only that button removes it — a click on the row does nothing. Such a row drops the Catalog label;
 // - concept: under the rows «Scroll for more · 20 of 116» while more can load, «Loading...» while it loads.
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-// component-check: allow Switch and TextField from MUI, as the team's PlusChatSubmenu that this copies
+// Raw MUI controls as in the team's PlusChatSubmenu, which this file copies
 import { Box, IconButton, MenuItem, Switch, TextField, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-// component-check: allow as PlusChatSubmenu
-
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { BaseListSubheader } from '@/[fsd]/shared/ui/list';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
@@ -418,8 +413,8 @@ const submenuStyles = theme => ({
   },
   dividerLine: {
     width: '100%',
-    height: '0.0625rem',
-    backgroundColor: theme.palette.border.lines,
+    height: 0,
+    borderBottom: `0.0625rem solid ${theme.palette.border.lines}`,
   },
   ellipsisText: {
     overflow: 'hidden',
@@ -486,8 +481,9 @@ const submenuStyles = theme => ({
     '&:hover': {
       backgroundColor: theme.palette.background.interactiveItem.hover,
     },
-    '&:hover .concept-added': { display: 'none' },
-    '&:hover .concept-remove': { display: 'inline-flex' },
+    // the keyboard reaches the delete icon too: a focused row shows it as the pointer does
+    '&:hover .concept-added, &:focus-within .concept-added': { display: 'none' },
+    '&:hover .concept-remove, &:focus-within .concept-remove': { display: 'inline-flex' },
   },
   // concept: the check and the delete icon take the same place, the size of the product's delete button
   added: {

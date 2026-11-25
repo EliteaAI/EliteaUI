@@ -1,6 +1,5 @@
-// Chat concept, part 3 — «who answers»: one button under the field and its list, the new place of the right
-// Participants panel (approved prototype, tag chat-prototype-approved-2026-11-18, default view). The team's real chat
-// screen with the concept field; the button and its list are ConceptWhoAnswers (changes and their reasons in its
+// Chat concept — «who answers»: one button under the field and its list, the new place of the right Participants
+// panel. The team's real chat screen with the concept field; the button and its list are ConceptWhoAnswers (changes and their reasons in its
 // header). Each story opens what its name says when it loads; everything in it can be clicked: a model, a row (makes it
 // answer), Edit, ⚙, Remove, «Fix», «Toolkits & MCP». Sample data, not wired to the API. What to build: the GitHub issue
 // of the branch. Only these stories switch «who answers» on (screen › whoAnswers): stories 1.x and 2.x keep dev's
@@ -9,8 +8,8 @@ import { userEvent, within } from 'storybook/test';
 
 import { SCREENSHOT_MODES } from '@/[fsd]/stories/lib/screenshot.constants';
 
-import { FULL_CHAT, NEW_CHAT, frame, freshChat, screen } from './conceptScreen';
-import { pageSettled, wait } from './storyPlay';
+import { FULL_CHAT, NEW_CHAT, frame, freshChat, screen } from './conceptScreen.helpers';
+import { pageSettled, wait } from './storyPlay.helpers';
 
 export default {
   title: 'concepts/Chat/3 Who answers',

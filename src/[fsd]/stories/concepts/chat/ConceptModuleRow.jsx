@@ -1,6 +1,6 @@
-// One module row of the chat concept: icon, name, description, switch; the whole row toggles it (as the team's
-// AgentModuleMenuItem). Used by «+» › Modules and, in part 3, by «Model settings» › «How the AI works in this chat»,
-// so the two lists look the same. Reference: approved.html › capsHTML and gearHTML (`.tg` rows).
+// One module row of the chat concept: icon, name, description, switch; the whole row toggles it. Used by «+» › Modules
+// and «Model settings» › «How the AI works in this chat», so the two lists look the same.
+// Not AgentModuleMenuItem: it keeps the description in an «i» tooltip and toggles agent modules by its own hook
 import { memo } from 'react';
 
 import { Box, MenuItem, Typography, useTheme } from '@mui/material';

@@ -2,8 +2,8 @@
 // chat with a question and an answer, its context status. Not wired to the backend; the shapes are the API's.
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 
-export const PROJECT_ID = 42;
-export const USER = {
+const PROJECT_ID = 42;
+const USER = {
   id: 1,
   name: 'George Smith',
   email: 'george_smith@example.com',
@@ -11,7 +11,7 @@ export const USER = {
 };
 
 const flatten = value => (typeof value === 'string' ? [value] : Object.values(value).flatMap(flatten));
-export const ALL_PERMISSIONS = flatten(PERMISSIONS);
+const ALL_PERMISSIONS = flatten(PERMISSIONS);
 
 const entity = (id, name, project_id, description = '') => ({
   id,
@@ -35,7 +35,7 @@ const VERSIONS = {
 };
 const versionsOf = id => VERSIONS[id] || [version(id * 100 + 1, 'latest', 'published')];
 const VARIABLES = [{ name: 'project_key', value: 'BUGS' }];
-export const pinnedVersion = id => (id === 11 ? 1104 : id * 100 + 1);
+const pinnedVersion = id => (id === 11 ? 1104 : id * 100 + 1);
 const details = (row, { agent_type = 'chat', variables = VARIABLES } = {}) => {
   const versions = versionsOf(row.id);
   const pinned = versions.find(v => v.id === pinnedVersion(row.id)) || versions[0];
@@ -52,8 +52,7 @@ const details = (row, { agent_type = 'chat', variables = VARIABLES } = {}) => {
   };
 };
 
-// A project's real volume (Levon 13.11: «в одном проекте может быть условно 100»): a few named items, then generated
-// ones, as in the approved prototype — so the «+» lists load by 20 and show «Scroll for more · 20 of N»
+// A project's real volume (up to ~100 items of a kind): a few named items, then generated ones, so the «+» lists load by 20
 const AREAS = [
   'Release',
   'Sprint',
@@ -116,8 +115,8 @@ const TOOLKITS = [
   toolkit(47, 'GitLab', 'gitlab', 'Read merge requests of the platform repos'),
   toolkit(48, 'Billing API', 'openapi', 'Reads invoices and plans through the billing OpenAPI'),
 ];
-// piece 3: SharePoint (45) and Billing API (48) sign in with OAuth, and the user has not signed in in this browser: their
-// rows in «Toolkits & MCP» ask to log in (owner 2026-11-24: «Log in» on the row, as «Fix»). SharePoint keeps a reference
+// SharePoint (45) and Billing API (48) sign in with OAuth, and the user has not signed in in this browser: their
+// rows in «Toolkits & MCP» ask to log in. SharePoint keeps a reference
 // to a saved credential (answered by /configurations/configurations/), the OpenAPI toolkit keeps the endpoint inline.
 const SHAREPOINT_ID = 45;
 const OPENAPI_ID = 48;
@@ -285,7 +284,7 @@ const FULL_PARTICIPANTS = [
   participant(13, 'toolkit', TOOLKITS[4], { entity_settings: { toolkit_type: 'sharepoint' } }),
   participant(14, 'toolkit', TOOLKITS[7], { entity_settings: { toolkit_type: 'openapi' } }),
   // a remote MCP carries toolkit_type «mcp», as on dev: the chat then knows the user is logged out of it (no token in
-  // this browser) and the row asks to log in — «Log in» on the row in the «who answers» list (owner 2026-11-24)
+  // this browser) and the row asks to log in — «Log in» on the row in the «who answers» list
   participant(12, 'toolkit', MCPS[0], {
     entity_settings: { toolkit_type: 'mcp' },
     meta: { name: MCPS[0].name, mcp: true },
@@ -417,8 +416,8 @@ const toolkitOf = url => {
   return row.meta?.mcp ? { ...row, online: true, settings: { url: 'https://mcp.example.com' } } : row;
 };
 
-// part 3: SharePoint and Billing API (no sign-in) and the MCP's «mcp» type are in the full chat only in the «who answers»
-// stories (story 3.4 «Fix and Log in»); stories 1.x and 2.x keep the chat their part was handed over with (3 toolkits)
+// SharePoint and Billing API (no sign-in) and the MCP's «mcp» type are in the full chat only in the «who answers»
+// stories (story 3.4 «Fix and Log in»); stories 1.x and 2.x keep their own chat (3 toolkits)
 const LOG_IN_PARTICIPANT_IDS = [13, 14];
 const fullChatDetails = whoAnswers =>
   whoAnswers
@@ -454,7 +453,7 @@ export const routes = ({ context = contextStatus(), whoAnswers = false } = {}) =
     '/applications/prompt_lib/',
     url => list(byQuery(url, url.includes('agents_type=pipeline') ? PIPELINES : PROJECT_AGENTS), url),
   ],
-  // Billing API exists only for story 3.4: in the stories of parts 1–2 the toolkit list stays as handed over (7 toolkits)
+  // Billing API exists only for story 3.4: in stories 1.x and 2.x the toolkit list stays as it was (7 toolkits)
   [
     '/tools/prompt_lib/',
     url =>

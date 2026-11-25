@@ -1,18 +1,18 @@
-// Piece 3 of the chat concept: the actions of a row in the «who answers» list. A copy of
+// Chat concept: the actions of a row in the «who answers» list. A copy of
 // src/[fsd]/features/chat/participants/ui/participant-actions/ParticipantActions.jsx; the lines marked «concept:» are
-// the changes. Reference: approved.html › agentRowHTML (`.acts`, `.fix`).
+// the changes.
 // - concept: ⚙ between Edit and Remove on an agent, a pipeline or a skill — «Settings in this chat: version,
-//   variables» («…: version» on a skill); it opens their list next to the row (dev: the version and Variables sit in
+//   variables» («…: version» on a skill); it opens their list next to the row (today: the version and Variables sit in
 //   the panel over the field, and only for the one who answers);
-// - concept: «Fix» on a misconfigured agent, pipeline or toolkit, always in view (dev: the link «Check the <kind>» in
-//   the warning line); it does what the pencil does — opens the editor (dev-check PA-083, owner 2026-11-16);
+// - concept: «Fix» on a misconfigured agent, pipeline or toolkit, always in view (today: the link «Check the <kind>» in
+//   the warning line); it does what the pencil does — opens the editor;
 // - concept: «Log in» on a remote MCP server, a SharePoint or an OpenAPI toolkit the user is logged out of, in the
-//   same place and look as «Fix» (dev: the link «Log in.» in the warning line); it starts the same sign-in as dev's link
-//   (ConceptRowLogIn; owner 2026-11-24: every row with a problem has its action in one place, on the right);
-// - Edit, ⚙ and Remove show under the pointer, as on dev.
+//   same place and look as «Fix» (today: the link «Log in.» in the warning line); it starts the same sign-in as that link
+//   (ConceptRowLogIn);
+// - Edit, ⚙ and Remove show under the pointer, as today.
 // - concept: an item the user may only view (a Catalog agent or pipeline without the right to edit the Catalog) has
-//   an eye «View agent» in the pencil's place; dev puts a ⚙ «View settings» there, which stood next to this list's own
-//   ⚙ as two equal gears (owner 2026-11-24).
+//   an eye «View agent» in the pencil's place; today a ⚙ «View settings» sits there, which stood next to this list's own
+//   ⚙ as two equal gears.
 import { memo } from 'react';
 
 import { Box, IconButton } from '@mui/material';
@@ -31,8 +31,9 @@ import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
 import SettingIcon from '@/components/Icons/SettingIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
-import ConceptRowLogIn, { logInOnRow } from './ConceptRowLogIn';
-import { useWhoAnswers } from './whoAnswersContext';
+import ConceptRowLogIn from './ConceptRowLogIn';
+import { logInOnRow } from './conceptRowLogIn.helpers';
+import { useWhoAnswers } from './whoAnswersContext.hooks';
 
 const getEditLabel = participant => {
   if (participant.entity_settings?.agent_type === 'pipeline') return 'Edit pipeline';

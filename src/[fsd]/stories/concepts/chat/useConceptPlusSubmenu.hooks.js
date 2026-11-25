@@ -1,12 +1,11 @@
-// Chat concept, part 2 (stories 2.3–2.4): the lists of the «+» menu. A copy of
+// Chat concept: the lists of the «+» menu. A copy of
 // src/[fsd]/features/chat/lib/hooks/chat-button/useApplicationSubmenu.hooks.js; the lines marked «concept:» are the
 // changes, the rest (queries, search per kind, paging, closing on a pick, toolkit and MCP switches) is the team's code.
-// Reference: tag chat-prototype-approved-2026-11-18, default view (approved.html › addBodyHTML, addRow, addPick).
-// - concept: agents, pipelines and skills already in the chat stay in their list, marked `added` (dev hides them), so
-//   the list can show them on top under «In this chat · N» with a check;
+// - concept: agents, pipelines and skills already in the chat stay in their list, marked `added` (today they are
+//   hidden), so the list can show them on top under «In this chat · N» with a check;
 // - concept: an added row is removed from the chat only by its delete icon (`onRemove`), never by a click on the row
-//   (owner 2026-11-24: a removal by the whole row is dangerous and not obvious); the menu stays open, as a toolkit's
-//   switch does; a click on a row not yet added adds it and closes the menu, as on dev;
+//   (a removal by the whole row is easy to do by mistake); the menu stays open, as a toolkit's switch does; a click on
+//   a row not yet added adds it and closes the menu, as today;
 // - concept: each kind also returns `inChat` (keys of its rows in the chat) and `total` (the API's count), for the
 //   section heads «In this chat · N» / «All agents · N» and «Scroll for more · 20 of 116».
 import { createElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -14,19 +13,18 @@ import { createElement, useCallback, useEffect, useMemo, useRef, useState } from
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useSkillParticipants } from '@/[fsd]/features/skill/lib/hooks';
 import { DropdownConstants } from '@/[fsd]/shared/lib/constants';
-import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
-import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 
-import { useConceptDropdownData } from './useConceptDropdownData';
+import { isMcpParticipant } from './conceptParticipant.helpers';
+import { useConceptDropdownData } from './useConceptDropdownData.hooks';
 
 const SKILL_PAGE_SIZE = 20;
 
 const SKILL_ICON_SX = {
-  minWidth: '1.25rem !important', // component-check: allow icon size copied from the team's hook
-  width: '1.25rem !important', // component-check: allow icon size copied from the team's hook
-  height: '1.25rem !important', // component-check: allow icon size copied from the team's hook
+  minWidth: '1.25rem !important',
+  width: '1.25rem !important',
+  height: '1.25rem !important',
   '& > div': {
     width: '1.25rem',
     height: '1.25rem',
@@ -75,8 +73,6 @@ export const useConceptPlusSubmenu = props => {
 
   const hasBeenOpenedRef = useRef(false);
   const pendingTogglesRef = useRef(new Set());
-
-  const isMcpVisible = useIsMcpVisible();
 
   if (isOpen) hasBeenOpenedRef.current = true;
 
@@ -150,11 +146,7 @@ export const useConceptPlusSubmenu = props => {
   const toolkitParticipantIds = useMemo(() => {
     const ids = new Set();
     participants.forEach(p => {
-      if (
-        p.entity_name === ChatParticipantType.Toolkits &&
-        !p.meta?.mcp &&
-        p.entity_settings?.toolkit_type !== 'mcp'
-      ) {
+      if (p.entity_name === ChatParticipantType.Toolkits && !isMcpParticipant(p)) {
         const key = `${p.entity_meta?.id}_${p.entity_meta?.project_id || ''}`;
         ids.add(key);
       }
@@ -165,10 +157,7 @@ export const useConceptPlusSubmenu = props => {
   const mcpParticipantIds = useMemo(() => {
     const ids = new Set();
     participants.forEach(p => {
-      if (
-        p.entity_name === ChatParticipantType.Toolkits &&
-        (p.meta?.mcp || p.entity_settings?.toolkit_type === 'mcp')
-      ) {
+      if (p.entity_name === ChatParticipantType.Toolkits && isMcpParticipant(p)) {
         const key = `${p.entity_meta?.id}_${p.entity_meta?.project_id || ''}`;
         ids.add(key);
       }
@@ -181,9 +170,7 @@ export const useConceptPlusSubmenu = props => {
       return participants.find(p => {
         if (p.entity_name !== ChatParticipantType.Toolkits) return false;
 
-        const isParticipantMCP = p.meta?.mcp || p.entity_settings?.toolkit_type === 'mcp';
-
-        if (isMCP !== !!isParticipantMCP) return false;
+        if (isMCP !== isMcpParticipant(p)) return false;
 
         return (
           p.entity_meta?.id === itemData.id &&
@@ -278,18 +265,16 @@ export const useConceptPlusSubmenu = props => {
 
   const toolkitItems = useMemo(
     () =>
-      toolkitMenuItems
-        .map(item => {
-          const key = `${item.data.id}_${item.data.project_id || ''}`;
-          return {
-            ...item,
-            checked: toolkitParticipantIds.has(key),
-            onToggle: () => handleToolkitToggle(item, false),
-            pending: pendingToggles.has(key),
-          };
-        })
-        .filter(({ tool }) => isMcpVisible || !isMcpToolkit(tool)),
-    [toolkitMenuItems, toolkitParticipantIds, handleToolkitToggle, isMcpVisible, pendingToggles],
+      toolkitMenuItems.map(item => {
+        const key = `${item.data.id}_${item.data.project_id || ''}`;
+        return {
+          ...item,
+          checked: toolkitParticipantIds.has(key),
+          onToggle: () => handleToolkitToggle(item, false),
+          pending: pendingToggles.has(key),
+        };
+      }),
+    [toolkitMenuItems, toolkitParticipantIds, handleToolkitToggle, pendingToggles],
   );
 
   const mcpItems = useMemo(
