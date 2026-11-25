@@ -6,18 +6,21 @@
 // - concept: an added row is removed from the chat only by its delete icon (`onRemove`), never by a click on the row
 //   (a removal by the whole row is easy to do by mistake); the menu stays open, as a toolkit's switch does; a click on
 //   a row not yet added adds it and closes the menu, as today;
-// - concept: each kind also returns `inChat` (keys of its rows in the chat) and `total` (the API's count), for the
-//   section heads «In this chat · N» / «All agents · N» and «Scroll for more · 20 of 116».
+// - concept: the chat's agents, pipelines and skills are rows of their list even before their page has loaded (built
+//   from the participants), so «In this chat · N» holds all of them;
+// - concept: each kind also returns `inChat` (keys of its rows in the chat) and `total` (the API's count, which
+//   .storybook/main.js › CONCEPT_PATCHES › concept-totals adds to the team's useDropdownData), for the section heads
+//   «In this chat · N» / «All agents · N» and «Scroll for more · 20 of 116».
 import { createElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useDropdownData } from '@/[fsd]/features/chat/lib/hooks/chat-button/useDropdownData.hooks';
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useSkillParticipants } from '@/[fsd]/features/skill/lib/hooks';
 import { DropdownConstants } from '@/[fsd]/shared/lib/constants';
 import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 
-import { isMcpParticipant } from './conceptParticipant.helpers';
-import { useConceptDropdownData } from './useConceptDropdownData.hooks';
+import { isMcpParticipant, isPipelineParticipant } from './conceptParticipant.helpers';
 
 const SKILL_PAGE_SIZE = 20;
 
@@ -68,6 +71,28 @@ const byOwnThenName = (a, b) =>
 const matchesSearch = search => item =>
   !search || (item.label && item.label.toLowerCase().includes(search.toLowerCase()));
 
+// concept: a row for a participant whose page has not loaded yet, with the key the list gives it
+const toParticipantRow = (prefix, entityType) => p => ({
+  key: `${prefix}-${p.entity_meta?.project_id}-${p.entity_meta?.id}`,
+  label: p.meta?.name || p.name,
+  data: { id: p.entity_meta?.id, project_id: p.entity_meta?.project_id, name: p.meta?.name },
+  icon: createElement(EntityIcon, {
+    sx: SKILL_ICON_SX,
+    imageStyle: SKILL_IMAGE_STYLE,
+    icon: p.meta?.icon_meta,
+    entityType,
+    projectId: p.entity_meta?.project_id,
+    editable: false,
+    specifiedFontSize: DropdownConstants.DIMENSIONS.ICON_SVG_SIZE,
+  }),
+});
+
+// concept: the loaded rows, then the chat's rows of that kind not loaded yet
+const withChatRows = (items, chatRows) => {
+  const loaded = new Set(items.map(item => item.key));
+  return [...items, ...chatRows.filter(row => !loaded.has(row.key))];
+};
+
 export const useConceptPlusSubmenu = props => {
   const { participants = [], onSelectParticipant, onDeleteParticipant, onClose, isOpen = false } = props;
 
@@ -97,7 +122,7 @@ export const useConceptPlusSubmenu = props => {
     onLoadMoreToolkits,
     onLoadMoreMCPs,
     totals,
-  } = useConceptDropdownData({
+  } = useDropdownData({
     agentQuery: agentSearch,
     pipelineQuery: pipelineSearch,
     toolkitQuery: toolkitSearch,
@@ -123,12 +148,14 @@ export const useConceptPlusSubmenu = props => {
     [participants],
   );
 
-  // concept: a click on a row not in the chat adds it and closes the menu (dev); a click on an added row does nothing
+  // concept: a click on a row not in the chat adds it, clears the kind's search and closes the menu (dev); a click on
+  // an added row does nothing
   const handlePick = useCallback(
-    (item, participantId, participantType, extra = {}) =>
+    (item, participantId, participantType, setSearch, extra = {}) =>
       () => {
         if (participantsById.has(participantId)) return;
         onSelectParticipant?.({ participantType, ...item.data, ...extra });
+        setSearch('');
         onClose?.();
       },
     [participantsById, onSelectParticipant, onClose],
@@ -141,6 +168,20 @@ export const useConceptPlusSubmenu = props => {
       if (participant) onDeleteParticipant?.(participant);
     },
     [participantsById, onDeleteParticipant],
+  );
+
+  // concept: the chat's agents, pipelines and skills as rows, whether or not their page has loaded
+  const chatRows = useMemo(
+    () => ({
+      agents: participants
+        .filter(p => p.entity_name === ChatParticipantType.Applications && !isPipelineParticipant(p))
+        .map(toParticipantRow('agent', 'application')),
+      pipelines: participants.filter(isPipelineParticipant).map(toParticipantRow('pipeline', 'pipeline')),
+      skills: participants
+        .filter(p => p.entity_name === ChatParticipantType.Skills)
+        .map(toParticipantRow('skill', ChatParticipantType.Skills)),
+    }),
+    [participants],
   );
 
   const toolkitParticipantIds = useMemo(() => {
@@ -216,7 +257,7 @@ export const useConceptPlusSubmenu = props => {
   // concept: agents and pipelines keep the rows already in the chat, marked added (dev: useFilteredEntityItems drops them)
   const agentItems = useMemo(
     () =>
-      agentMenuItems
+      withChatRows(agentMenuItems, chatRows.agents)
         .filter(matchesSearch(agentSearch))
         .sort(byOwnThenName)
         .map(item => {
@@ -224,16 +265,16 @@ export const useConceptPlusSubmenu = props => {
           return {
             ...item,
             added: participantsById.has(id),
-            onClick: handlePick(item, id, ChatParticipantType.Applications),
+            onClick: handlePick(item, id, ChatParticipantType.Applications, setAgentSearch),
             onRemove: handleRemove(id),
           };
         }),
-    [agentMenuItems, agentSearch, participantsById, handlePick, handleRemove],
+    [agentMenuItems, chatRows.agents, agentSearch, participantsById, handlePick, handleRemove],
   );
 
   const pipelineItems = useMemo(
     () =>
-      pipelineMenuItems
+      withChatRows(pipelineMenuItems, chatRows.pipelines)
         .filter(matchesSearch(pipelineSearch))
         .sort(byOwnThenName)
         .map(item => {
@@ -241,26 +282,30 @@ export const useConceptPlusSubmenu = props => {
           return {
             ...item,
             added: participantsById.has(id),
-            onClick: handlePick(item, id, ChatParticipantType.Pipelines, { agent_type: 'pipeline' }),
+            onClick: handlePick(item, id, ChatParticipantType.Pipelines, setPipelineSearch, {
+              agent_type: 'pipeline',
+            }),
             onRemove: handleRemove(id),
           };
         }),
-    [pipelineMenuItems, pipelineSearch, participantsById, handlePick, handleRemove],
+    [pipelineMenuItems, chatRows.pipelines, pipelineSearch, participantsById, handlePick, handleRemove],
   );
 
   // concept: skills keep the rows already in the chat, marked added (dev drops them)
   const skillItems = useMemo(
     () =>
-      [...ownSkills, ...catalogSkills].map(toSkillMenuItem).map(item => {
-        const id = rowParticipantId(item, ChatParticipantType.Skills);
-        return {
-          ...item,
-          added: participantsById.has(id),
-          onClick: handlePick(item, id, ChatParticipantType.Skills),
-          onRemove: handleRemove(id),
-        };
-      }),
-    [ownSkills, catalogSkills, participantsById, handlePick, handleRemove],
+      withChatRows([...ownSkills, ...catalogSkills].map(toSkillMenuItem), chatRows.skills)
+        .filter(matchesSearch(skillSearch))
+        .map(item => {
+          const id = rowParticipantId(item, ChatParticipantType.Skills);
+          return {
+            ...item,
+            added: participantsById.has(id),
+            onClick: handlePick(item, id, ChatParticipantType.Skills, setSkillSearch),
+            onRemove: handleRemove(id),
+          };
+        }),
+    [ownSkills, catalogSkills, chatRows.skills, skillSearch, participantsById, handlePick, handleRemove],
   );
 
   const toolkitItems = useMemo(

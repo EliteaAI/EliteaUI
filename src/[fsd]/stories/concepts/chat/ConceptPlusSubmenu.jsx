@@ -8,16 +8,19 @@
 //   does not jump away under the pointer when it is added or removed; «In this chat · N» counts the rows still in it;
 // - concept: an agent, pipeline or skill in the chat shows a check in icon.secondary, as a selected row of the
 //   product's lists (AutoCompleteDropDown, FolderMenuContent; today such a row is hidden); under the pointer or focus
-//   the check gives way to the product's delete icon button (DeleteParticipantButton: DeleteIcon, «Remove agent»), and
-//   only that button removes it — a click on the row does nothing. Such a row drops the Catalog label;
+//   the check gives way to the product's delete icon button (DeleteParticipantButton: DeleteIcon, «Remove agent»); Tab
+//   reaches it too. Only that button removes it, at once — without DeleteParticipantButton's «Remove agent?»
+//   confirmation, as a toolkit's switch removes a toolkit today — a click on the row does nothing. Such a row drops the
+//   Catalog label;
 // - concept: under the rows «Scroll for more · 20 of 116» while more can load, «Loading...» while it loads.
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-// Raw MUI controls as in the team's PlusChatSubmenu, which this file copies
-import { Box, IconButton, MenuItem, Switch, TextField, Typography, useTheme } from '@mui/material';
+// Raw MUI MenuItem, Switch and TextField as in the team's PlusChatSubmenu, which this file copies
+import { Box, MenuItem, Switch, TextField, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
+import { Button } from '@/[fsd]/shared/ui';
 import { BaseListSubheader } from '@/[fsd]/shared/ui/list';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
@@ -186,17 +189,15 @@ const ConceptPlusSubmenu = memo(props => {
               placement="top"
               slotProps={{ popper: { sx: styles.tooltipPopper } }}
             >
-              <IconButton
+              <Button.BaseBtn
                 className="concept-remove"
-                variant="elitea"
-                color="tertiary"
+                variant={Button.BUTTON_VARIANTS.tertiary}
                 aria-label={removeLabel}
                 onClick={handleRemove(item)}
                 sx={styles.removeButton}
                 data-testid={sectionKey ? `${sectionKey}-remove-${item.key}` : undefined}
-              >
-                <DeleteIcon sx={styles.deleteIcon} />
-              </IconButton>
+                startIcon={<DeleteIcon sx={styles.deleteIcon} />}
+              />
             </Tooltip>
           </Box>
         )}
@@ -481,12 +482,13 @@ const conceptPlusSubmenuStyles = () => ({
     '&:hover': {
       backgroundColor: palette.background.interactiveItem.hover,
     },
-    // the keyboard reaches the delete icon too: a focused row shows it as the pointer does
-    '&:hover .concept-added, &:focus-within .concept-added': { display: 'none' },
-    '&:hover .concept-remove, &:focus-within .concept-remove': { display: 'inline-flex' },
+    // the delete icon stays in the tab order (hidden by opacity): Tab reaches it and shows it as the pointer does
+    '&:hover .concept-added, &:focus-within .concept-added': { visibility: 'hidden' },
+    '&:hover .concept-remove, &:focus-within .concept-remove': { opacity: 1 },
   }),
   // concept: the check and the delete icon take the same place, the size of the product's delete button
   added: {
+    position: 'relative',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -498,9 +500,14 @@ const conceptPlusSubmenuStyles = () => ({
     fontSize: '1rem',
   },
   removeButton: {
-    display: 'none',
+    position: 'absolute',
+    inset: 0,
+    minWidth: 0,
     width: '1.75rem',
     height: '1.75rem',
+    padding: 0,
+    opacity: 0,
+    '& .MuiButton-startIcon': { margin: 0 },
   },
   deleteIcon: {
     fontSize: '1rem',

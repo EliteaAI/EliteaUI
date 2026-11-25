@@ -1,4 +1,5 @@
-// One module row of the chat concept: icon, name, description, switch; the whole row toggles it. Used by «+» › Modules.
+// One module row of the chat concept: icon, name, description, switch; the whole row toggles it, by the pointer or by
+// Tab and then Enter or Space (the team's PlusChatButton: the switch's own checkbox). Used by «+» › Modules.
 // Not AgentModuleMenuItem: it keeps the description in an «i» tooltip and toggles agent modules by its own hook
 import { memo } from 'react';
 
@@ -9,19 +10,20 @@ import { Switch } from '@/[fsd]/shared/ui';
 import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 
 const ConceptModuleRow = memo(props => {
-  const { tool, title, description, checked, disabled, onToggle, component, sx } = props;
+  const { tool, title, description, checked, disabled, onToggle } = props;
 
   const styles = conceptModuleRowStyles();
   const ToolSvg = INTERNAL_TOOL_ICONS[tool.icon];
 
   return (
     <MenuItem
-      component={component}
       role="menuitemcheckbox"
       aria-checked={checked}
       aria-disabled={disabled}
+      // the row is the one tab stop (the switch's input is out of the tab order); Enter and Space toggle it
+      tabIndex={disabled ? -1 : 0}
       onClick={() => !disabled && onToggle?.(!checked)}
-      sx={[styles.row, disabled && styles.rowLocked, sx]}
+      sx={[styles.row, disabled && styles.rowLocked]}
       data-testid={`modules-row-${tool.name}`}
     >
       <EntityIcon

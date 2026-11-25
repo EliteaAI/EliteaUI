@@ -140,13 +140,13 @@ const conceptContextRingStyles = alertColor => ({
     borderRadius: '50%',
     cursor: 'pointer',
     '&:focus-visible': {
-      outline: `0.125rem solid ${palette.primary.main}`,
+      outline: `0.125rem solid ${palette.border.focus || palette.primary.main}`,
       outlineOffset: '0.125rem',
     },
   }),
   track: ({ palette }) => ({
     position: 'absolute',
-    color: palette.components.input.text.placeholder,
+    color: palette.border.lines,
   }),
   progress: ({ palette }) => ({
     position: 'absolute',

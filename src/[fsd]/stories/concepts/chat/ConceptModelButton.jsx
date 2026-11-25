@@ -4,7 +4,8 @@
 //   with «…», a chevron;
 // - the list of models is the team's LLMModelsMenu as is;
 // - ⚙ «Model Settings» right after it opens the team's LLMSettingsDialog with the props LLMModelSelector passes it
-//   (onResetToDefaults too); the ⚙ is a tertiary icon button like the model's (today: half of a filled button group);
+//   (onResetToDefaults too) and, as there, stays enabled while an answer streams; the ⚙ is a tertiary icon button like
+//   the model's (today: half of a filled button group); the chat tour's target (data-tour) holds both, as the group;
 // - concept: tooltip «Switch to model» (today: «Select LLM Model»).
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
@@ -56,72 +57,76 @@ const ConceptModelButton = memo(props => {
 
   return (
     <>
-      <Tooltip
-        placement="top"
-        title="Switch to model"
+      <Box
+        component="span"
+        data-tour={dataTourTargetId || undefined}
+        sx={styles.group}
       >
-        <Box
-          component="span"
-          sx={styles.wrapper}
-        >
-          <Button.BaseBtn
-            ref={anchorRef}
-            id="model-selector-button"
-            variant={Button.BUTTON_VARIANTS.tertiary}
-            disabled={disabled}
-            onClick={() => setAnchorEl(anchorRef.current)}
-            aria-haspopup="listbox"
-            aria-expanded={Boolean(anchorEl)}
-            aria-label={`Answers: ${name}`}
-            data-testid="model-selector-name"
-            data-tour={dataTourTargetId || undefined}
-            startIcon={
-              selectedModel ? (
-                <Box
-                  component={ModelIcon}
-                  sx={styles.icon}
-                />
-              ) : undefined
-            }
-            endIcon={
-              <Box
-                component={ArrowDownIcon}
-                sx={styles.chevron}
-              />
-            }
-            sx={styles.button}
-          >
-            <Typography
-              variant="inherit"
-              noWrap
-              sx={styles.name}
-            >
-              {name}
-            </Typography>
-          </Button.BaseBtn>
-        </Box>
-      </Tooltip>
-
-      {onSetLLMSettings && (
         <Tooltip
           placement="top"
-          title="Model Settings"
+          title="Switch to model"
         >
-          <Box component="span">
+          <Box
+            component="span"
+            sx={styles.wrapper}
+          >
             <Button.BaseBtn
+              ref={anchorRef}
+              id="model-selector-button"
               variant={Button.BUTTON_VARIANTS.tertiary}
               disabled={disabled}
-              onClick={() => setShowSettings(true)}
-              aria-expanded={showSettings ? 'true' : undefined}
-              aria-label="model settings menu"
-              aria-haspopup="menu"
-              data-testid="model-settings-button"
-              sx={styles.settingsButton}
-              startIcon={<SettingIcon sx={styles.icon} />}
-            />
+              onClick={() => setAnchorEl(anchorRef.current)}
+              aria-haspopup="listbox"
+              aria-expanded={Boolean(anchorEl)}
+              aria-label={`Answers: ${name}`}
+              data-testid="model-selector-name"
+              startIcon={
+                selectedModel ? (
+                  <Box
+                    component={ModelIcon}
+                    sx={styles.icon}
+                  />
+                ) : undefined
+              }
+              endIcon={
+                <Box
+                  component={ArrowDownIcon}
+                  sx={styles.chevron}
+                />
+              }
+              sx={styles.button}
+            >
+              <Typography
+                variant="inherit"
+                noWrap
+                sx={styles.name}
+              >
+                {name}
+              </Typography>
+            </Button.BaseBtn>
           </Box>
         </Tooltip>
-      )}
+
+        {onSetLLMSettings && (
+          <Tooltip
+            placement="top"
+            title="Model Settings"
+          >
+            <Box component="span">
+              <Button.BaseBtn
+                variant={Button.BUTTON_VARIANTS.tertiary}
+                onClick={() => setShowSettings(true)}
+                aria-expanded={showSettings ? 'true' : undefined}
+                aria-label="model settings menu"
+                aria-haspopup="menu"
+                data-testid="model-settings-button"
+                sx={styles.settingsButton}
+                startIcon={<SettingIcon sx={styles.icon} />}
+              />
+            </Box>
+          </Tooltip>
+        )}
+      </Box>
 
       <LLMModelsMenu
         anchorEl={anchorEl}
@@ -151,6 +156,12 @@ ConceptModelButton.displayName = 'ConceptModelButton';
 
 /** @type {MuiSx} */
 const conceptModelButtonStyles = () => ({
+  group: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    minWidth: 0,
+    maxWidth: '100%',
+  },
   wrapper: {
     display: 'inline-flex',
     minWidth: 0,
@@ -182,10 +193,12 @@ const conceptModelButtonStyles = () => ({
     height: '1rem',
     fontSize: '1rem',
   },
-  chevron: {
+  // ArrowDownIcon sets fill on its svg; a CSS fill wins over it, and dims with the button
+  chevron: ({ palette }) => ({
     fontSize: '1rem',
-    color: 'icon.default',
-  },
+    fill: palette.icon.default,
+    '.Mui-disabled &': { fill: palette.icon.disabled },
+  }),
 });
 
 export default ConceptModelButton;

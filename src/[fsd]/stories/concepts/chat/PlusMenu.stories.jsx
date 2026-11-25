@@ -55,8 +55,8 @@ export const ModulesWithDescriptions = {
   play: open('internal-tools-menuitem'),
 };
 
-// Agents: «Create Agent» under the search; the chat's agents on top under «In this chat · 3» with «✓ Added» («Remove»
-// under the pointer), then «All agents · N». Catalog agents not in the chat carry the «Catalog» label. A row not yet
+// Agents: «Create Agent» under the search; the chat's agents on top under «In this chat · 3», each with a check that
+// gives way to a delete icon («Remove agent») under the pointer, then «All agents · N». Catalog agents not in the chat carry the «Catalog» label. A row not yet
 // added adds the agent and closes the menu; scrolling down loads the next 20.
 export const AgentsInThisChat = {
   name: '3 Chat — Agents, in this chat on top',

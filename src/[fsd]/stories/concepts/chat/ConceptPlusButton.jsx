@@ -42,7 +42,7 @@ import PlusIcon from '@/components/Icons/PlusIcon';
 
 import ConceptModuleRow from './ConceptModuleRow';
 import ConceptPlusSubmenu from './ConceptPlusSubmenu';
-import { isMcpParticipant } from './conceptParticipant.helpers';
+import { isMcpParticipant, isPipelineParticipant } from './conceptParticipant.helpers';
 import { useConceptPlusSubmenu } from './useConceptPlusSubmenu.hooks';
 
 const SUBMENU_KEYS = {
@@ -72,14 +72,11 @@ const SEARCHABLE_KEYS = [
 ];
 
 // concept: how many of each kind the chat has (the number on the menu's row)
-const isPipelineParticipant = p => p.entity_settings?.agent_type === 'pipeline';
 const countInChat = participants => ({
   [SUBMENU_KEYS.AGENTS]: participants.filter(
     p => p.entity_name === ChatParticipantType.Applications && !isPipelineParticipant(p),
   ).length,
-  [SUBMENU_KEYS.PIPELINES]: participants.filter(
-    p => p.entity_name === ChatParticipantType.Applications && isPipelineParticipant(p),
-  ).length,
+  [SUBMENU_KEYS.PIPELINES]: participants.filter(isPipelineParticipant).length,
   [SUBMENU_KEYS.SKILLS]: participants.filter(p => p.entity_name === ChatParticipantType.Skills).length,
   [SUBMENU_KEYS.TOOLKITS]: participants.filter(
     p => p.entity_name === ChatParticipantType.Toolkits && !isMcpParticipant(p),
@@ -305,7 +302,7 @@ const ConceptPlusButton = memo(props => {
 
   const renderSubmenuContent = useCallback(() => {
     if (openItem === SUBMENU_KEYS.INTERNAL_TOOLS && availableTools.length > 0) {
-      // concept: a module row — icon, name, description, switch (ConceptModuleRow, shared with «Model settings»)
+      // concept: a module row — icon, name, description, switch (ConceptModuleRow)
       return availableTools.map(tool => {
         const description = tool.unavailable ? { text: tool.unavailableTooltip } : tool.infoTooltip;
         return (
