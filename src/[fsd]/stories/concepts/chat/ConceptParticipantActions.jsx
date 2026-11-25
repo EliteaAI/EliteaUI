@@ -125,9 +125,11 @@ const ConceptParticipantActions = memo(props => {
             title={isSkill ? 'Settings in this chat: version' : 'Settings in this chat: version, variables'}
             placement="top"
           >
+            {/* concept: ⚙ is the row's version picker, so it stays enabled where the warning asks to select another
+                version: the attention card disables editing there, and passes the plain chat lock as disabledDeleteButton */}
             <Button.BaseBtn
               variant={Button.BUTTON_VARIANTS.tertiary}
-              disabled={disabledEdit}
+              disabled={disabledDeleteButton}
               onClick={event => onOpenSettings?.(participant, event.currentTarget)}
               data-testid="who-answers-participant-settings"
               aria-label="Settings in this chat"

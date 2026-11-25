@@ -83,17 +83,53 @@ const CONCEPT_PATCHES = [
     ],
   },
   {
-    // concept: the «who answers» list draws the panel's rows, so the chat page hands ChatBox what it hands the panel
+    // concept: the «who answers» list draws the panel's rows and opens their editors, so the chat page hands ChatBox
+    // (a saved chat) and NewConversationView (a new chat) what it hands the panel
     importers: ['src/pages/NewChat/index.jsx'],
     source: 'src/pages/NewChat/NewChat',
     query: 'concept-new-chat',
-    from: 'showParticipantsWelcome',
-    to: [
-      'showParticipantsWelcome',
-      'editingToolkit={editingToolkit}',
-      'selectedManager={selectedManager}',
-      'newConversationSelectedManager={newConversationSelectedManager}',
-    ].join(' '),
+    edits: [
+      {
+        from: 'showParticipantsWelcome',
+        to: [
+          'showParticipantsWelcome',
+          'editingToolkit={editingToolkit}',
+          'selectedManager={selectedManager}',
+          'newConversationSelectedManager={newConversationSelectedManager}',
+        ].join(' '),
+      },
+      {
+        // the first one is NewConversationView's
+        from: 'onShowAgentEditor={onEditAgent}',
+        to: [
+          'onShowAgentEditor={onEditAgent}',
+          'onShowToolkitEditor={onEditToolkit}',
+          'editingToolkit={editingToolkit}',
+          'newConversationSelectedManager={newConversationSelectedManager}',
+        ].join(' '),
+      },
+    ],
+  },
+  {
+    // concept: NewConversationView takes those three and hands them to the field
+    importers: ['src/pages/NewChat/NewChat.jsx'],
+    source: 'src/pages/NewChat/NewConversationView',
+    query: 'concept-new-conversation',
+    edits: [
+      {
+        from: 'addNewParticipants,',
+        to: 'addNewParticipants, onShowToolkitEditor, editingToolkit, newConversationSelectedManager,',
+      },
+      {
+        from: 'onShowParticipantsList={onShowParticipantsList}',
+        to: [
+          'onShowParticipantsList={onShowParticipantsList}',
+          'onShowToolkitEditor={onShowToolkitEditor}',
+          'editingToolkit={editingToolkit}',
+          'newConversationSelectedManager={newConversationSelectedManager}',
+        ].join(' '),
+      },
+    ],
   },
   {
     // a row's version label gets a class, so the «who answers» list can give it room (the panel caps it at 2.5rem,

@@ -58,7 +58,8 @@ import { WhoAnswersProvider } from './WhoAnswersContext';
 
 const isPipeline = p =>
   p.entity_name === ChatParticipantType.Pipelines ||
-  (p.entity_name === ChatParticipantType.Applications && p.entity_settings?.agent_type === 'pipeline');
+  (p.entity_name === ChatParticipantType.Applications &&
+    (p.entity_settings?.agent_type === 'pipeline' || p.agent_type === 'pipeline'));
 const isMcp = p => p.meta?.mcp === true || isRemoteMcpToolkitType(p.entity_settings?.toolkit_type);
 
 // the kinds that answer, in the order of «+» and of the panel on dev (ExpandedParticipantsList › ENTITY_SECTIONS)
@@ -612,6 +613,8 @@ const WhoAnswers = memo(props => {
                 onDelete={onDeleteParticipant}
                 onEdit={editParticipant}
                 editingToolkit={editingToolkit}
+                // the toolkit that keeps the chat's attachments shows its paperclip, as in ParticipantSection
+                isAttachement={(newConversationSelectedManager || selectedManager) === tool.entity_meta?.id}
               />
             ))}
           </Box>

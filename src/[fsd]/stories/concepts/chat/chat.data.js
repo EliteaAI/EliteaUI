@@ -258,7 +258,7 @@ const MODEL_PARTICIPANT = {
 };
 
 // The chat «Sprint 42 bugs» with something of every kind, as the prototype's full chat (?state=full): 3 agents (one
-// from Catalog), 1 pipeline, 2 skills, 3 toolkits, 1 MCP; the modules Web Search and Elitea Builder are on
+// from Catalog), 1 pipeline, 2 skills, 5 toolkits, 1 MCP; the modules Web Search and Elitea Builder are on
 export const FULL_CHAT_ID = 104;
 const participant = (id, entity_name, row, extra = {}) => ({
   id,

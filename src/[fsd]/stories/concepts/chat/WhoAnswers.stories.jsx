@@ -59,8 +59,8 @@ export const NewChatModels = {
 };
 
 // A chat with something of every kind, the model answers: «Model» with the current model (framed), then Agents,
-// Pipelines, Skills as in the panel on dev, then «Toolkits & MCP · 4» — its orange dot says one needs setup, and so does
-// the dot on the button. Edit, ⚙ and Remove show under the pointer; a click on a row makes it answer.
+// Pipelines, Skills as in the panel on dev, then «Toolkits & MCP · 6» — its orange dot says four need setup (GitHub to
+// fix, SharePoint, Billing API and Playwright to log in), and so does the dot on the button. Edit, ⚙ and Remove show under the pointer; a click on a row makes it answer.
 export const ModelAnswers = {
   name: '2 Chat — the model answers',
   render: screen({ concept: true, whoAnswers: true }),
@@ -93,7 +93,8 @@ export const ToolkitsAndMcp = {
 };
 
 // ⚙ «Model settings»: the model's settings as on dev, then «How the AI works in this chat» — the five modules that
-// left «+» › Modules, scrolled into view. The switches are saved by Apply, with the model's settings; Cancel drops them.
+// left «+» › Modules, scrolled into view. A switch is saved when flipped, as in «+» › Modules; Apply saves the model's
+// settings, as on dev.
 export const ModelSettings = {
   name: '5 Chat — ⚙ Model settings',
   render: screen({ concept: true, whoAnswers: true }),

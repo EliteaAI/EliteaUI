@@ -5,9 +5,9 @@
 //   Ask User, Planner, Python Sandbox, Swarm Mode, Smart Tools Selection, since technical switches belong with the
 //   model's settings. Each row is named by what it does («Ask before acting»), with today's name and description
 //   under it;
-// - concept: the switches are part of the dialog and are saved by Apply (each changed one through
-//   onInternalToolsConfigChange, as «+» › Modules saves it), Cancel drops them. In the prototype they were instant —
-//   it had no dialog; here the dialog's Cancel / Apply decides.
+// - concept: a switch is saved when it is flipped, through onInternalToolsConfigChange, as «+» › Modules saves it
+//   (the team's handler builds each change from the chat's saved list, so a batch on Apply would keep only the last
+//   one); Apply and Cancel are the model settings' own, as on dev.
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, Divider, Typography } from '@mui/material';
@@ -54,11 +54,6 @@ const ConceptModelSettingsDialog = memo(props => {
     () => MODEL_SETTINGS_MODULES.map(name => allTools.find(tool => tool.name === name)).filter(Boolean),
     [allTools],
   );
-  const savedModules = useMemo(
-    () => Object.fromEntries(modelTools.map(tool => [tool.name, internal_tools.includes(tool.name)])),
-    [modelTools, internal_tools],
-  );
-  const [localModules, setLocalModules] = useState(savedModules);
 
   const onChangeLLMSettings = useCallback(
     field => value => {
@@ -70,45 +65,19 @@ const ConceptModelSettingsDialog = memo(props => {
     [],
   );
 
-  const hasSettingsChanges = useMemo(
-    () => !shallowEqual(localSettings, llmSettings),
-    [localSettings, llmSettings],
-  );
-  const changedModules = useMemo(
-    () => modelTools.filter(tool => localModules[tool.name] !== savedModules[tool.name]),
-    [modelTools, localModules, savedModules],
-  );
+  const handleOK = useCallback(() => onApply(localSettings), [localSettings, onApply]);
 
-  const handleOK = useCallback(() => {
-    // concept: each changed switch is saved as «+» › Modules saves it
-    changedModules.forEach(tool =>
-      onInternalToolsConfigChange?.({ key: tool.name, value: localModules[tool.name] }),
-    );
-    if (hasSettingsChanges) onApply(localSettings);
-    else onCancel();
-  }, [
-    changedModules,
-    onInternalToolsConfigChange,
-    localModules,
-    hasSettingsChanges,
-    onApply,
-    localSettings,
-    onCancel,
-  ]);
+  const hasChanges = useMemo(() => !shallowEqual(localSettings, llmSettings), [localSettings, llmSettings]);
 
   const isDisabled = useMemo(() => {
-    if (!hasSettingsChanges && !changedModules.length) return true;
+    if (!hasChanges) return true;
     const validationResult = validateMaxTokens(localSettings?.max_tokens, selectedModel);
     return validationResult !== VALIDATION_RULE.VALID;
-  }, [hasSettingsChanges, changedModules.length, localSettings?.max_tokens, selectedModel]);
+  }, [hasChanges, localSettings?.max_tokens, selectedModel]);
 
   useEffect(() => {
     setLocalSettings(llmSettings);
   }, [llmSettings, open]);
-
-  useEffect(() => {
-    setLocalModules(savedModules);
-  }, [savedModules, open]);
 
   return (
     <Modal.BaseModal
@@ -154,9 +123,9 @@ const ConceptModelSettingsDialog = memo(props => {
                           '',
                         )
                   }`}
-                  checked={!!localModules[tool.name] && !tool.unavailable}
+                  checked={internal_tools.includes(tool.name) && !tool.unavailable}
                   disabled={tool.unavailable}
-                  onToggle={value => setLocalModules(prev => ({ ...prev, [tool.name]: value }))}
+                  onToggle={value => onInternalToolsConfigChange?.({ key: tool.name, value })}
                   sx={styles.moduleRow}
                 />
               ))}

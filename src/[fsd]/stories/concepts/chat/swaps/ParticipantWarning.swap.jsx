@@ -15,15 +15,14 @@ import { LOG_IN_TEXT, fixOnRow, logInOnRow } from '../conceptRowLogIn.helpers';
 const asSentence = message => (/[.!?]$/.test(message) ? message : `${message}.`);
 
 const ParticipantWarningSwap = memo(props => {
+  const { connectionNotice } = props;
   const { whoAnswers } = useConceptSwap();
   const { inList } = useWhoAnswers();
   const fixedOnRow = whoAnswers && inList && fixOnRow(props);
   const logInKind = whoAnswers && inList ? logInOnRow(props) : null;
   if (logInKind) return LOG_IN_TEXT[logInKind];
   if (!fixedOnRow) return <ParticipantWarning {...props} />;
-  return props.connectionNotice
-    ? asSentence(props.connectionNotice.message)
-    : 'Misconfiguration errors found.';
+  return connectionNotice ? asSentence(connectionNotice.message) : 'Misconfiguration errors found.';
 });
 
 ParticipantWarningSwap.displayName = 'ParticipantWarningSwap';

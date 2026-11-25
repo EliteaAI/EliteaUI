@@ -288,18 +288,24 @@ const ConceptChatInput = memo(
     // concept: the «who answers» list replaces the panels below; the switch is the concept's whoAnswers
     const { whoAnswers: isWhoAnswersList } = useConceptSwap();
 
-    // concept: the list's pencil opens the right editor, as NewChat.jsx › onEditParticipant does for the panel
+    // concept: the list's pencil opens the right editor, with the same branches as NewChat.jsx › onEditParticipant
     const onEditParticipant = useCallback(
       participant => {
         if (!participant) return;
-        if (participant.entity_name === ChatParticipantType.Toolkits) onShowToolkitEditor?.(participant);
-        else if (participant.entity_name === ChatParticipantType.Skills) onShowSkillEditor?.(participant);
-        else if (
-          participant.entity_name === ChatParticipantType.Pipelines ||
-          participant.entity_settings?.agent_type === 'pipeline'
-        )
+        const { entity_name } = participant;
+        if (entity_name === ChatParticipantType.Toolkits) {
+          onShowToolkitEditor?.(participant);
+        } else if (
+          entity_name === ChatParticipantType.Pipelines ||
+          (entity_name === ChatParticipantType.Applications &&
+            (participant.entity_settings?.agent_type === 'pipeline' || participant.agent_type === 'pipeline'))
+        ) {
           onShowPipelineEditor?.(participant);
-        else onShowAgentEditor?.(participant);
+        } else if (entity_name === ChatParticipantType.Applications) {
+          onShowAgentEditor?.(participant);
+        } else if (entity_name === ChatParticipantType.Skills) {
+          onShowSkillEditor?.(participant);
+        }
       },
       [onShowToolkitEditor, onShowSkillEditor, onShowPipelineEditor, onShowAgentEditor],
     );
