@@ -9,7 +9,7 @@
 //   «i» tooltip, 300 px). All of today's modules stay here: Ask User, Planner, Python Sandbox, Swarm Mode and Smart
 //   Tools Selection;
 // - the list of each kind (Agents, Pipelines, Skills, Toolkits, MCPs) is the team's PlusChatSubmenu as is.
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   Box,
@@ -287,7 +287,7 @@ const ConceptPlusButton = memo(props => {
     ],
   );
 
-  const styles = plusChatButtonStyles(theme);
+  const styles = conceptPlusButtonStyles(theme);
 
   const renderSubmenuContent = useCallback(() => {
     if (openItem === SUBMENU_KEYS.INTERNAL_TOOLS && availableTools.length > 0) {
@@ -461,7 +461,7 @@ const ConceptPlusButton = memo(props => {
 ConceptPlusButton.displayName = 'ConceptPlusButton';
 
 /** @type {MuiSx} */
-const plusChatButtonStyles = theme => ({
+const conceptPlusButtonStyles = theme => ({
   hiddenAttachment: {
     position: 'absolute',
     width: 0,
