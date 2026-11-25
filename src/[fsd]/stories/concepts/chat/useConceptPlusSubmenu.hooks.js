@@ -26,8 +26,8 @@ import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 import { isMcpParticipant, isPipelineParticipant } from './conceptParticipant.helpers';
 
 const SKILL_PAGE_SIZE = 20;
-// the totals come from .storybook/main.js › concept-totals; if that patch did not apply, the lists show no totals
-const NO_TOTALS = { agents: 0, pipelines: 0, toolkits: 0, mcps: 0 };
+// the totals come from .storybook/main.js › concept-totals; if that patch did not apply, the heads show no count
+const NO_TOTALS = { agents: null, pipelines: null, toolkits: null, mcps: null };
 
 const SKILL_ICON_SX = {
   minWidth: '1.25rem !important',

@@ -7,7 +7,7 @@
 //   «Toolkits 3», «MCPs 1» (today: a chevron only);
 // - concept: each Modules row has its icon, name, description and switch in a 420 px list (today: name, switch and an
 //   «i» tooltip, 300 px). All of today's modules stay here: Ask User, Planner, Python Sandbox, Swarm Mode and Smart
-//   Tools Selection;
+//   Tools Selection; the list grows to the window (today: every submenu is cut to the main menu's height);
 // - concept: a kind's list is a 600 px window with two-line rows (ConceptPlusSubmenu, useConceptPlusSubmenu);
 //   it keeps the chat's agents, pipelines and skills on top under «In this chat · N».
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
