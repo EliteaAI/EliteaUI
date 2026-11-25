@@ -12,7 +12,7 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import LlmModelForm from '../LlmModelForm';
-import { LLM_MODEL_PROFILES_FIXTURE } from './llmModelProfiles.fixture.js';
+import { LLM_MODEL_CATALOG_FIXTURE } from './llmModelCatalog.fixture.js';
 
 vi.hoisted(() => {
   const entries = new Map();
@@ -29,7 +29,11 @@ vi.hoisted(() => {
   };
 });
 
-let profilesPayload = LLM_MODEL_PROFILES_FIXTURE;
+const EMPTY_CATALOG = { prefixes: {}, models: {} };
+
+let catalog = LLM_MODEL_CATALOG_FIXTURE;
+let isCatalogPending = false;
+let credentialType = 'open_ai';
 
 vi.mock('../../../lib/hooks', () => {
   const idleConnectionTest = {
@@ -41,20 +45,9 @@ vi.mock('../../../lib/hooks', () => {
   };
   return {
     useLlmModelCheckConnection: () => idleConnectionTest,
-    useLlmModelCredentialType: () => ({ credentialType: 'open_ai', isCredentialTypePending: false }),
+    useLlmModelCredentialType: () => ({ credentialType, isCredentialTypePending: false }),
     useLlmModelTakenIds: () => [],
-    useLlmModelProfiles: () => ({
-      profilesPayload,
-      effortLevels: profilesPayload.effort_levels || [
-        'none',
-        'minimal',
-        'low',
-        'medium',
-        'high',
-        'xhigh',
-        'max',
-      ],
-    }),
+    useLlmModelCatalog: () => ({ catalog, isCatalogPending }),
   };
 });
 
@@ -152,7 +145,7 @@ const nameInput = () => within(screen.getByTestId('llm-model-field-name')).getBy
 const reasoningSwitch = () => screen.getByTestId('llm-model-switch-supports_reasoning');
 const reasoningDescription = () =>
   within(screen.getByTestId('llm-model-field-supports_reasoning')).getAllByText(
-    /effort levels users can pick|Turn it off to save/,
+    /effort levels users can pick|doesn't support reasoning/,
   )[0];
 const checkedLevels = () =>
   screen
@@ -166,80 +159,227 @@ const offeredLevels = () =>
 const defaultCombobox = () =>
   within(screen.getByTestId('llm-model-field-default_effort')).getByRole('combobox');
 
-const typeName = async (user, name) => {
+const typeNameWithoutLeavingTheField = async (user, name) => {
   await user.clear(nameInput());
   await user.click(nameInput());
-  await user.paste(name);
+  if (name) await user.paste(name);
 };
 
-describe('LlmModelForm reasoning profiles', () => {
+const typeName = async (user, name) => {
+  await typeNameWithoutLeavingTheField(user, name);
+  await user.tab();
+};
+
+const rerenderForm = (rerender, initialDetail) =>
+  rerender(
+    <ThemeProvider theme={theme}>
+      <Formik
+        initialValues={initialDetail}
+        onSubmit={() => {}}
+      >
+        <EditableLlmModelForm
+          initialDetail={initialDetail}
+          showValidation={false}
+        />
+      </Formik>
+    </ThemeProvider>,
+  );
+
+const REASONING_OFF = {
+  supports_reasoning: false,
+  thinking_type: null,
+  supported_efforts: null,
+  default_effort: null,
+};
+const EVERY_LEVEL = ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'];
+const GARBAGE_NAME = 'nonexistent  gpt-5.6blablabla';
+
+describe('LlmModelForm reasoning settings from the LiteLLM catalog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    profilesPayload = LLM_MODEL_PROFILES_FIXTURE;
+    catalog = LLM_MODEL_CATALOG_FIXTURE;
+    isCatalogPending = false;
+    credentialType = 'open_ai';
   });
 
   afterEach(() => cleanup());
 
   describe('recognition from the model name', () => {
-    it('shows nothing for an empty name, green for a recognized name, warning otherwise', async () => {
+    it('shows nothing for an empty name, the catalog key for an exact name, a warning otherwise', async () => {
       const user = userEvent.setup();
       renderForm(NEW_MODEL);
       expect(screen.queryByTestId('llm-model-status-name')).not.toBeInTheDocument();
 
-      await typeName(user, 'global.anthropic.claude-sonnet-5');
+      await typeName(user, 'gpt-5.6-luna');
       expect(screen.getByTestId('llm-model-status-name')).toHaveAttribute('data-tone', 'success');
-      expect(screen.getByTestId('llm-model-status-name')).toHaveTextContent(
-        'Recognized: Anthropic Claude Opus 5 / Sonnet 5 / Opus 4.7-4.8. Only the settings it supports are shown.',
-      );
+      expect(screen.getByTestId('llm-model-status-name')).toHaveTextContent('Recognized');
 
-      await typeName(user, 'global.xai.grok-4.6');
+      await typeName(user, 'model-router');
       expect(screen.getByTestId('llm-model-status-name')).toHaveAttribute('data-tone', 'warning');
-      expect(screen.getByTestId('llm-model-status-name')).toHaveTextContent(
-        'Not recognized. All reasoning options are shown; check compatibility with DevOps.',
-      );
+      expect(screen.getByTestId('llm-model-status-name')).toHaveTextContent('Not recognized');
     });
 
-    it('hides the Reasoning row for a recognized model without reasoning', async () => {
+    it('does not recognize a name that only contains a known model name (#7209)', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+      await typeName(user, GARBAGE_NAME);
+
+      expect(screen.getByTestId('llm-model-status-name')).toHaveAttribute('data-tone', 'warning');
+      expect(screen.getByTestId('llm-model-status-name')).not.toHaveTextContent(/Recognized/);
+      expect(reasoningOf()).toEqual(REASONING_OFF);
+
+      await user.click(reasoningSwitch());
+      expect(reasoningSwitch()).not.toHaveAttribute('aria-disabled');
+      expect(screen.getByTestId('llm-model-thinking-type-select')).toHaveTextContent('Not set');
+      expect(offeredLevels()).toEqual(EVERY_LEVEL);
+      expect(checkedLevels()).toEqual([]);
+    });
+
+    it('shows recognition once typing pauses, and fills the settings only when the field is left', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+
+      await typeNameWithoutLeavingTheField(user, 'gpt-5.6-luna');
+      expect(screen.queryByTestId('llm-model-status-name')).not.toBeInTheDocument();
+
+      expect(await screen.findByTestId('llm-model-status-name')).toHaveTextContent('Recognized');
+      expect(nameInput()).toHaveFocus();
+      expect(reasoningOf()).toEqual(REASONING_OFF);
+
+      await user.tab();
+      expect(reasoningOf().supported_efforts).toEqual(['none', 'low', 'medium', 'high', 'xhigh']);
+    });
+
+    it('fills nothing from a shorter catalog name the typing paused on', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+
+      await typeNameWithoutLeavingTheField(user, 'gpt-5.2');
+      expect(await screen.findByTestId('llm-model-status-name')).toHaveTextContent('Recognized');
+      await user.keyboard('-custom');
+      await user.tab();
+
+      expect(screen.getByTestId('llm-model-status-name')).toHaveTextContent('Not recognized');
+      expect(reasoningOf()).toEqual(REASONING_OFF);
+    });
+
+    it('keeps a stored row when typing pauses on a shorter catalog name and returns to the stored name', async () => {
+      const user = userEvent.setup();
+      const stored = {
+        supports_reasoning: true,
+        thinking_type: 'always_on',
+        supported_efforts: ['low'],
+        default_effort: 'low',
+      };
+      renderForm(storedModel('claude-sonnet-5-5', stored));
+
+      await user.click(nameInput());
+      await user.keyboard('{Backspace}{Backspace}');
+      await screen.findByText('Adaptive · always on');
+      await new Promise(resolve => {
+        setTimeout(resolve, 600);
+      });
+      await user.keyboard('-5');
+      await user.tab();
+
+      expect(readSettings().name).toBe('claude-sonnet-5-5');
+      expect(reasoningOf()).toEqual(stored);
+    });
+
+    it('raises no level error for a name still being typed, whose levels are filled when the field is left', async () => {
+      const user = userEvent.setup();
+      renderForm(
+        storedModel('gpt-5.6-luna', {
+          supports_reasoning: true,
+          supported_efforts: ['none', 'low'],
+          default_effort: 'low',
+        }),
+        { showValidation: true },
+      );
+
+      await typeNameWithoutLeavingTheField(user, 'claude-sonnet-5-5');
+      await screen.findByText('Adaptive · always on');
+      expect(screen.queryByTestId('llm-model-error-supported_efforts')).not.toBeInTheDocument();
+      expect(setToolErrors).toHaveBeenLastCalledWith({});
+
+      await user.tab();
+      expect(screen.queryByTestId('llm-model-error-supported_efforts')).not.toBeInTheDocument();
+      expect(reasoningOf().supported_efforts).toEqual(['low', 'medium', 'high', 'xhigh', 'max']);
+    });
+
+    it('looks the name up at once when the field is left before the pause ends', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+
+      await typeNameWithoutLeavingTheField(user, 'gpt-5.6-luna');
+      await user.tab();
+      expect(screen.getByTestId('llm-model-status-name')).toHaveTextContent('Recognized');
+    });
+
+    it('trims the name before the lookup', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+      await typeName(user, '  gpt-5.6-luna ');
+
+      expect(readSettings().name).toBe('gpt-5.6-luna');
+      expect(screen.getByTestId('llm-model-status-name')).toHaveTextContent('Recognized');
+    });
+
+    it('hides the Reasoning row for a model LiteLLM lists without reasoning', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+      await typeName(user, 'text-only-model');
+
+      expect(screen.getByTestId('llm-model-status-name')).toHaveTextContent('Recognized');
+      expect(screen.queryByTestId('llm-model-field-supports_reasoning')).not.toBeInTheDocument();
+      expect(reasoningOf()).toEqual(REASONING_OFF);
+    });
+
+    it('offers Reasoning, switched off, when LiteLLM does not say whether the model reasons', async () => {
       const user = userEvent.setup();
       renderForm(NEW_MODEL);
       await typeName(user, 'gpt-4.1');
 
-      expect(screen.getByTestId('llm-model-status-name')).toHaveTextContent(
-        "Recognized: OpenAI GPT-4 family. Reasoning isn't supported, so its settings are hidden.",
-      );
-      expect(screen.queryByTestId('llm-model-field-supports_reasoning')).not.toBeInTheDocument();
-      expect(reasoningOf()).toEqual({
-        supports_reasoning: false,
-        thinking_type: null,
-        supported_efforts: null,
-        default_effort: null,
-      });
+      expect(reasoningSwitch()).not.toBeChecked();
+      expect(reasoningDescription()).toHaveTextContent('Thinks before answering.');
+      await user.click(reasoningSwitch());
+      expect(offeredLevels()).toEqual(EVERY_LEVEL);
+    });
+
+    it('fills Vision from the entry on a new model', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+      expect(readSettings().supports_vision).toBe(false);
+
+      await typeName(user, 'gpt-4.1');
+      expect(readSettings().supports_vision).toBe(true);
+
+      await typeName(user, 'text-only-model');
+      expect(readSettings().supports_vision).toBe(false);
     });
   });
 
-  it('keeps a stored reasoning switch visible for a no-reasoning family so it can be turned off', async () => {
+  it('keeps a stored reasoning switch visible for a model listed without reasoning so it can be turned off', async () => {
     const user = userEvent.setup();
-    renderForm(storedModel('gpt-4-azure', { supports_reasoning: true }));
+    renderForm(storedModel('text-only-model', { supports_reasoning: true }));
 
     expect(reasoningSwitch()).toBeChecked();
-    expect(reasoningDescription()).toHaveTextContent(
-      "This model family doesn't support reasoning. Turn it off to save.",
-    );
+    expect(reasoningDescription()).toHaveTextContent("This model doesn't support reasoning.");
 
     await user.click(reasoningSwitch());
     expect(screen.queryByTestId('llm-model-field-supports_reasoning')).not.toBeInTheDocument();
     expect(reasoningOf().supports_reasoning).toBe(false);
   });
 
-  describe('Anthropic profiles', () => {
-    it('turns reasoning on, locks it as always on in Elitea and preselects the adaptive profile', async () => {
+  describe('Claude entries', () => {
+    it('turns reasoning on, locks it and preselects the levels of an always-on model', async () => {
       const user = userEvent.setup();
       renderForm(NEW_MODEL);
-      await typeName(user, 'eu.anthropic.claude-opus-4-7');
+      await typeName(user, 'claude-sonnet-5-5');
 
       expect(reasoningSwitch()).toBeChecked();
       expect(reasoningSwitch()).toHaveAttribute('aria-disabled', 'true');
-      expect(reasoningDescription()).toHaveTextContent('Always on in Elitea.');
+      expect(reasoningDescription()).toHaveTextContent('Always on for this model.');
       expect(screen.getByTestId('llm-model-thinking-type-fixed')).toHaveTextContent('Adaptive · always on');
       expect(screen.queryByTestId('llm-model-thinking-type-select')).not.toBeInTheDocument();
       expect(screen.queryByTestId('llm-model-legacy-tag')).not.toBeInTheDocument();
@@ -248,7 +388,7 @@ describe('LlmModelForm reasoning profiles', () => {
       expect(defaultCombobox()).toHaveTextContent('Medium');
       expect(reasoningOf()).toEqual({
         supports_reasoning: true,
-        thinking_type: 'adaptive',
+        thinking_type: 'always_on',
         supported_efforts: ['low', 'medium', 'high', 'xhigh', 'max'],
         default_effort: 'medium',
       });
@@ -257,20 +397,22 @@ describe('LlmModelForm reasoning profiles', () => {
       expect(reasoningSwitch()).toBeChecked();
     });
 
-    it('words the lock as a provider fact for Fable', async () => {
+    it('locks an adaptive model too and stores its thinking mode', async () => {
       const user = userEvent.setup();
       renderForm(NEW_MODEL);
-      await typeName(user, 'claude-fable-5-1');
+      await typeName(user, 'claude-sonnet-5');
 
       expect(reasoningSwitch()).toHaveAttribute('aria-disabled', 'true');
       expect(reasoningDescription()).toHaveTextContent('Always on for this model.');
-      expect(reasoningOf().thinking_type).toBe('always_on');
+      expect(reasoningOf().thinking_type).toBe('adaptive');
+      expect(offeredLevels()).not.toContain('none');
+      expect(offeredLevels()).not.toContain('minimal');
     });
 
     it('shows the legacy token budget read-only for Claude 4.5 and older, not locked', async () => {
       const user = userEvent.setup();
       renderForm(NEW_MODEL);
-      await typeName(user, 'eu.anthropic.claude-haiku-4-5-20251001-v1:0');
+      await typeName(user, 'claude-haiku-4-5');
 
       expect(reasoningSwitch()).toBeChecked();
       expect(reasoningSwitch()).not.toHaveAttribute('aria-disabled');
@@ -279,20 +421,54 @@ describe('LlmModelForm reasoning profiles', () => {
       expect(screen.getByTestId('llm-model-legacy-tag')).toHaveTextContent('Legacy');
       expect(offeredLevels()).toEqual(['low', 'medium', 'high']);
       expect(defaultCombobox()).toHaveTextContent('Medium');
+      expect(reasoningOf().thinking_type).toBe('enabled');
     });
-  });
 
-  describe('OpenAI profiles', () => {
-    it('hides the thinking mode, offers None with its warning and stays unlocked', async () => {
+    it('offers every level and no thinking mode for a recognized model whose entry reports neither', async () => {
       const user = userEvent.setup();
       renderForm(NEW_MODEL);
-      await typeName(user, 'global.openai.gpt-5.6-luna');
+      await typeName(user, 'global.xai.grok-4.6');
 
       expect(reasoningSwitch()).toBeChecked();
       expect(reasoningSwitch()).not.toHaveAttribute('aria-disabled');
       expect(screen.queryByTestId('llm-model-field-thinking_type')).not.toBeInTheDocument();
+      expect(offeredLevels()).toEqual(EVERY_LEVEL);
+      expect(checkedLevels()).toEqual([]);
+    });
+
+    it('stops offering None and Minimal once the admin picks the adaptive thinking mode', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL, { showValidation: true });
+      await typeName(user, 'model-router');
+      await user.click(reasoningSwitch());
+      await user.click(screen.getByTestId('llm-model-effort-none'));
+      await user.click(screen.getByTestId('llm-model-effort-low'));
+
+      await user.click(within(screen.getByTestId('llm-model-field-thinking_type')).getByRole('combobox'));
+      await user.click(screen.getByRole('option', { name: 'Adaptive' }));
+
+      expect(offeredLevels()).toEqual(['none', 'low', 'medium', 'high', 'xhigh', 'max']);
+      expect(screen.getByTestId('llm-model-error-supported_efforts')).toHaveTextContent(
+        "None isn't offered for this model. Uncheck to save.",
+      );
+
+      await user.click(screen.getByTestId('llm-model-effort-none'));
+      expect(offeredLevels()).toEqual(['low', 'medium', 'high', 'xhigh', 'max']);
+      expect(screen.queryByTestId('llm-model-error-supported_efforts')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('OpenAI entries', () => {
+    it('offers None with its warning and stays unlocked', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+      await typeName(user, 'gpt-5.6-luna');
+
+      expect(reasoningSwitch()).toBeChecked();
+      expect(reasoningSwitch()).not.toHaveAttribute('aria-disabled');
       expect(offeredLevels()).toEqual(['none', 'low', 'medium', 'high', 'xhigh']);
       expect(checkedLevels()).toEqual(['none', 'low', 'medium', 'high', 'xhigh']);
+      expect(screen.queryByTestId('llm-model-field-thinking_type')).not.toBeInTheDocument();
       expect(screen.getByTestId('llm-model-warning-supported_efforts')).toHaveTextContent(
         'None lets users turn reasoning off.',
       );
@@ -301,6 +477,16 @@ describe('LlmModelForm reasoning profiles', () => {
       await user.click(screen.getByTestId('llm-model-effort-none'));
       expect(screen.queryByTestId('llm-model-warning-supported_efforts')).not.toBeInTheDocument();
       expect(reasoningOf().supported_efforts).toEqual(['low', 'medium', 'high', 'xhigh']);
+    });
+
+    it('locks a model whose levels leave no way to turn reasoning off', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+      await typeName(user, 'gpt-5-pro');
+
+      expect(reasoningSwitch()).toBeChecked();
+      expect(reasoningSwitch()).toHaveAttribute('aria-disabled', 'true');
+      expect(offeredLevels()).toEqual(['minimal', 'low', 'medium', 'high']);
     });
 
     it('never offers None as the default and drops a default that was deselected', async () => {
@@ -320,18 +506,13 @@ describe('LlmModelForm reasoning profiles', () => {
       );
     });
 
-    it('turning reasoning off clears the stored reasoning fields, turning it back on re-applies the profile', async () => {
+    it('turning reasoning off clears the stored reasoning fields, turning it back on re-applies the entry', async () => {
       const user = userEvent.setup();
       renderForm(NEW_MODEL);
       await typeName(user, 'gpt-5.2');
 
       await user.click(reasoningSwitch());
-      expect(reasoningOf()).toEqual({
-        supports_reasoning: false,
-        thinking_type: null,
-        supported_efforts: null,
-        default_effort: null,
-      });
+      expect(reasoningOf()).toEqual(REASONING_OFF);
       expect(screen.queryByTestId('llm-model-reasoning-panel')).not.toBeInTheDocument();
 
       await user.click(reasoningSwitch());
@@ -344,18 +525,109 @@ describe('LlmModelForm reasoning profiles', () => {
     });
   });
 
-  describe('profile changes while typing', () => {
-    it('keeps edited values within the same profile and resets them on another profile', async () => {
+  describe('the credential route', () => {
+    it('looks an Azure credential up under azure/ first and offers that entry', async () => {
+      credentialType = 'azure_open_ai';
       const user = userEvent.setup();
       renderForm(NEW_MODEL);
-      await typeName(user, 'gpt-5.6');
+      await typeName(user, 'gpt-6-astra');
+
+      expect(screen.getByTestId('llm-model-status-name')).toHaveTextContent('Recognized');
+      expect(offeredLevels()).toEqual(['low', 'medium', 'high', 'xhigh']);
+      expect(reasoningSwitch()).toHaveAttribute('aria-disabled', 'true');
+    });
+
+    it("keeps the admin's edits when a credential picked after the name moves the lookup to another entry", async () => {
+      const user = userEvent.setup();
+      const { rerender } = renderForm(NEW_MODEL);
+      await typeName(user, 'gpt-6-astra');
+      await user.click(screen.getByTestId('llm-model-effort-low'));
+      await user.click(screen.getByTestId('llm-model-switch-supports_vision'));
+      const editedSettings = readSettings();
+      expect(editedSettings.supported_efforts).toEqual(['medium', 'high', 'xhigh', 'max']);
+      expect(editedSettings.supports_vision).toBe(false);
+
+      credentialType = 'azure_open_ai';
+      rerenderForm(rerender, NEW_MODEL);
+
+      expect(screen.getByTestId('llm-model-status-name')).toHaveTextContent('Recognized');
+      expect(readSettings()).toEqual(editedSettings);
+      expect(offeredLevels()).toEqual(['low', 'medium', 'high', 'xhigh', 'max']);
+      expect(screen.getByTestId('llm-model-effort-max')).toBeChecked();
+    });
+
+    it('follows the entry of a credential picked after the name while the admin has not edited the prefill', async () => {
+      const user = userEvent.setup();
+      const { rerender } = renderForm(NEW_MODEL);
+      await typeName(user, 'gpt-6-astra');
+      expect(checkedLevels()).toEqual(['low', 'medium', 'high', 'xhigh', 'max']);
+
+      credentialType = 'azure_open_ai';
+      rerenderForm(rerender, NEW_MODEL);
+
+      expect(screen.getByTestId('llm-model-status-name')).toHaveTextContent('Recognized');
+      expect(offeredLevels()).toEqual(['low', 'medium', 'high', 'xhigh']);
+      expect(reasoningOf().supported_efforts).toEqual(['low', 'medium', 'high', 'xhigh']);
+
+      credentialType = 'open_ai';
+      rerenderForm(rerender, NEW_MODEL);
+      expect(reasoningOf().supported_efforts).toEqual(['low', 'medium', 'high', 'xhigh', 'max']);
+    });
+
+    it('keeps a Vision choice the first entry said nothing about when the credential changes', async () => {
+      const user = userEvent.setup();
+      const { rerender } = renderForm(NEW_MODEL);
+      await typeName(user, 'gpt-4o-audio-preview');
+      await user.click(screen.getByTestId('llm-model-switch-supports_vision'));
+      expect(readSettings().supports_vision).toBe(true);
+
+      credentialType = 'azure_open_ai';
+      rerenderForm(rerender, NEW_MODEL);
+
+      expect(screen.getByTestId('llm-model-status-name')).toHaveTextContent('Recognized');
+      expect(readSettings().supports_vision).toBe(true);
+    });
+
+    it('keeps the prefilled reasoning when the credential moves to an entry that says nothing about reasoning', async () => {
+      const user = userEvent.setup();
+      const { rerender } = renderForm(NEW_MODEL);
+      await typeName(user, 'claude-opus-4-1');
+      const prefilled = reasoningOf();
+      expect(prefilled.thinking_type).toBe('enabled');
+
+      credentialType = 'vertex_ai';
+      rerenderForm(rerender, NEW_MODEL);
+      expect(screen.getByTestId('llm-model-status-name')).toHaveTextContent('Recognized');
+      expect(reasoningOf()).toEqual(prefilled);
+
+      credentialType = 'open_ai';
+      rerenderForm(rerender, NEW_MODEL);
+      expect(reasoningOf()).toEqual(prefilled);
+    });
+
+    it('falls back to the bare name when the route has no entry', async () => {
+      credentialType = 'azure_open_ai';
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+      await typeName(user, 'gpt-5.2');
+
+      expect(screen.getByTestId('llm-model-status-name')).toHaveTextContent('Recognized');
+    });
+  });
+
+  describe('name changes', () => {
+    it('keeps edited values while the entry stays the same and resets them on another entry', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+      await typeName(user, 'gpt-5.6-luna');
       await user.click(screen.getByTestId('llm-model-effort-xhigh'));
       expect(reasoningOf().supported_efforts).toEqual(['none', 'low', 'medium', 'high']);
 
-      await user.type(nameInput(), '-luna');
+      await user.click(nameInput());
+      await user.tab();
       expect(reasoningOf().supported_efforts).toEqual(['none', 'low', 'medium', 'high']);
 
-      await typeName(user, 'claude-fable-5-1');
+      await typeName(user, 'claude-sonnet-5-5');
       expect(reasoningOf()).toEqual({
         supports_reasoning: true,
         thinking_type: 'always_on',
@@ -363,19 +635,97 @@ describe('LlmModelForm reasoning profiles', () => {
         default_effort: 'medium',
       });
     });
+
+    it('changes nothing when the name stops matching the catalog', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+      await typeName(user, 'gpt-5.6-luna');
+      const recognizedSettings = reasoningOf();
+      expect(recognizedSettings.supports_reasoning).toBe(true);
+
+      await typeName(user, GARBAGE_NAME);
+      expect(screen.getByTestId('llm-model-status-name')).toHaveAttribute('data-tone', 'warning');
+      expect(reasoningOf()).toEqual(recognizedSettings);
+      expect(offeredLevels()).toEqual(EVERY_LEVEL);
+    });
+
+    it('applies the entry again when its name is typed back after a name outside the catalog', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+      await typeName(user, 'gpt-5.6-luna');
+      await typeName(user, GARBAGE_NAME);
+      await user.click(screen.getByTestId('llm-model-effort-xhigh'));
+      expect(reasoningOf().supported_efforts).toEqual(['none', 'low', 'medium', 'high']);
+
+      await typeName(user, 'gpt-5.6-luna');
+      expect(reasoningOf().supported_efforts).toEqual(['none', 'low', 'medium', 'high', 'xhigh']);
+    });
+
+    it('applies the entry again when a saved model is renamed to it a second time', async () => {
+      const user = userEvent.setup();
+      renderForm(
+        storedModel('gpt-5.6-luna', {
+          supports_reasoning: true,
+          supported_efforts: ['none', 'low', 'medium', 'high', 'xhigh'],
+          default_effort: 'medium',
+        }),
+      );
+      await typeName(user, 'claude-sonnet-5-5');
+      await typeName(user, 'gpt-5.6-luna');
+      await user.click(screen.getByTestId('llm-model-effort-low'));
+      expect(reasoningOf().supported_efforts).toEqual(['medium', 'high', 'xhigh', 'max']);
+
+      await typeName(user, 'claude-sonnet-5-5');
+      expect(reasoningOf().supported_efforts).toEqual(['low', 'medium', 'high', 'xhigh', 'max']);
+    });
+
+    it('keeps the stored reasoning settings of a saved model renamed to a name outside the catalog', async () => {
+      const user = userEvent.setup();
+      const stored = {
+        supports_reasoning: true,
+        thinking_type: null,
+        supported_efforts: ['low', 'medium'],
+        default_effort: 'low',
+      };
+      renderForm(storedModel('gpt-5.6-luna', stored));
+
+      await typeName(user, 'my-private-deployment');
+      expect(reasoningOf()).toEqual(stored);
+    });
+
+    it('fills the reasoning settings of a saved model from the entry of the name it was renamed to, and keeps its Vision', async () => {
+      const user = userEvent.setup();
+      renderForm(
+        storedModel('gpt-5.6-luna', {
+          supports_vision: false,
+          supports_reasoning: true,
+          supported_efforts: ['none', 'low'],
+          default_effort: 'low',
+        }),
+      );
+
+      await typeName(user, 'claude-sonnet-5-5');
+      expect(reasoningOf()).toEqual({
+        supports_reasoning: true,
+        thinking_type: 'always_on',
+        supported_efforts: ['low', 'medium', 'high', 'xhigh', 'max'],
+        default_effort: 'medium',
+      });
+      expect(readSettings().supports_vision).toBe(false);
+    });
   });
 
-  describe('unrecognized models', () => {
+  describe('models outside the catalog', () => {
     it('starts with reasoning off and shows the full set with nothing preselected once it is on', async () => {
       const user = userEvent.setup();
       renderForm(NEW_MODEL, { showValidation: true });
-      await typeName(user, 'global.xai.grok-4.6');
+      await typeName(user, 'model-router');
 
       expect(reasoningSwitch()).not.toBeChecked();
       await user.click(reasoningSwitch());
 
       expect(screen.getByTestId('llm-model-thinking-type-select')).toHaveTextContent('Not set');
-      expect(offeredLevels()).toEqual(['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max']);
+      expect(offeredLevels()).toEqual(EVERY_LEVEL);
       expect(checkedLevels()).toEqual([]);
       expect(defaultCombobox()).toHaveAttribute('aria-disabled', 'true');
       expect(screen.getByTestId('llm-model-error-supported_efforts')).toHaveTextContent(
@@ -403,72 +753,83 @@ describe('LlmModelForm reasoning profiles', () => {
       });
     });
 
-    it('applies the profile once the list arrives after the name was typed', async () => {
-      profilesPayload = { profiles: [] };
+    it('says nothing about recognition until the catalog has loaded, then applies the entry', async () => {
+      catalog = undefined;
+      isCatalogPending = true;
       const user = userEvent.setup();
       const { rerender } = renderForm(NEW_MODEL);
-      await typeName(user, 'global.openai.gpt-5.6-luna');
+      await typeName(user, 'gpt-5.6-luna');
+      expect(screen.queryByTestId('llm-model-status-name')).not.toBeInTheDocument();
       expect(reasoningSwitch()).not.toBeChecked();
 
-      profilesPayload = LLM_MODEL_PROFILES_FIXTURE;
-      rerender(
-        <ThemeProvider theme={theme}>
-          <Formik
-            initialValues={NEW_MODEL}
-            onSubmit={() => {}}
-          >
-            <EditableLlmModelForm
-              initialDetail={NEW_MODEL}
-              showValidation={false}
-            />
-          </Formik>
-        </ThemeProvider>,
-      );
+      catalog = LLM_MODEL_CATALOG_FIXTURE;
+      isCatalogPending = false;
+      rerenderForm(rerender, NEW_MODEL);
 
-      expect(screen.getByTestId('llm-model-status-name')).toHaveTextContent('Recognized: OpenAI GPT-5.6');
+      expect(screen.getByTestId('llm-model-status-name')).toHaveTextContent('Recognized');
       expect(reasoningSwitch()).toBeChecked();
       expect(reasoningOf().supported_efforts).toEqual(['none', 'low', 'medium', 'high', 'xhigh']);
     });
 
-    it('shows an unconfigured stored row from a late-arriving list without editing it', () => {
-      profilesPayload = { profiles: [] };
-      const stored = storedModel('global.openai.gpt-5.6-luna', { supports_reasoning: true });
+    it('leaves a stored row alone when the catalog arrives while its name is being typed', async () => {
+      catalog = undefined;
+      isCatalogPending = true;
+      const stored = storedModel('claude-haiku-4-5', {
+        supports_reasoning: true,
+        thinking_type: 'enabled',
+        supported_efforts: ['high'],
+        default_effort: 'high',
+      });
+      const user = userEvent.setup();
       const { rerender } = renderForm(stored);
-      profilesPayload = LLM_MODEL_PROFILES_FIXTURE;
-      rerender(
-        <ThemeProvider theme={theme}>
-          <Formik
-            initialValues={stored}
-            onSubmit={() => {}}
-          >
-            <EditableLlmModelForm
-              initialDetail={stored}
-              showValidation={false}
-            />
-          </Formik>
-        </ThemeProvider>,
-      );
+      await user.click(nameInput());
+      await user.keyboard('x');
+
+      catalog = LLM_MODEL_CATALOG_FIXTURE;
+      isCatalogPending = false;
+      rerenderForm(rerender, stored);
+
+      expect(readSettings().name).toBe('claude-haiku-4-5x');
+      expect(reasoningOf()).toEqual({
+        supports_reasoning: true,
+        thinking_type: 'enabled',
+        supported_efforts: ['high'],
+        default_effort: 'high',
+      });
+    });
+
+    it('shows an unconfigured stored row from a late-arriving catalog without editing it', () => {
+      catalog = undefined;
+      isCatalogPending = true;
+      const stored = storedModel('gpt-5.6-luna', { supports_reasoning: true });
+      const { rerender } = renderForm(stored);
+      catalog = LLM_MODEL_CATALOG_FIXTURE;
+      isCatalogPending = false;
+      rerenderForm(rerender, stored);
 
       expect(checkedLevels()).toEqual(['none', 'low', 'medium', 'high', 'xhigh']);
       expect(reasoningOf().supported_efforts).toBeNull();
     });
 
-    it('falls back to the full set when the profile list is unavailable', async () => {
-      profilesPayload = { profiles: [] };
+    it('shows every setting for every name when the catalog is empty', async () => {
+      catalog = EMPTY_CATALOG;
       const user = userEvent.setup();
       renderForm(NEW_MODEL);
-      await typeName(user, 'claude-fable-5-1');
+      await typeName(user, 'claude-sonnet-5-5');
 
       expect(screen.getByTestId('llm-model-status-name')).toHaveAttribute('data-tone', 'warning');
+      expect(screen.getByTestId('llm-model-status-name')).toHaveTextContent('Not recognized');
       await user.click(reasoningSwitch());
-      expect(offeredLevels()).toEqual(['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max']);
+      expect(reasoningSwitch()).not.toHaveAttribute('aria-disabled');
+      expect(offeredLevels()).toEqual(EVERY_LEVEL);
     });
   });
 
   describe('edit mode', () => {
-    it('keeps stored values on load instead of re-applying the profile', () => {
+    it('keeps stored values on load instead of re-applying the entry', () => {
       renderForm(
         storedModel('claude-sonnet-5', {
+          supports_vision: false,
           supports_reasoning: true,
           thinking_type: 'adaptive',
           supported_efforts: ['low', 'high'],
@@ -478,10 +839,11 @@ describe('LlmModelForm reasoning profiles', () => {
 
       expect(checkedLevels()).toEqual(['low', 'high']);
       expect(defaultCombobox()).toHaveTextContent('Low');
+      expect(readSettings().supports_vision).toBe(false);
       expect(setToolErrors).toHaveBeenLastCalledWith({});
     });
 
-    it('shows a row stored before the fields existed from its profile and writes it with the first edit', async () => {
+    it('shows a row stored before the fields existed from its entry and writes it with the first edit', async () => {
       const user = userEvent.setup();
       renderForm(storedModel('claude-sonnet-5', { supports_reasoning: true }), { showValidation: true });
 
@@ -510,27 +872,18 @@ describe('LlmModelForm reasoning profiles', () => {
 
     it('turns reasoning off on an unconfigured stored row in one click', async () => {
       const user = userEvent.setup();
-      renderForm(storedModel('global.openai.gpt-5.6-luna', { supports_reasoning: true }), {
-        showValidation: true,
-      });
+      renderForm(storedModel('gpt-5.6-luna', { supports_reasoning: true }), { showValidation: true });
 
       await user.click(reasoningSwitch());
 
-      expect(reasoningOf()).toEqual({
-        supports_reasoning: false,
-        thinking_type: null,
-        supported_efforts: null,
-        default_effort: null,
-      });
+      expect(reasoningOf()).toEqual(REASONING_OFF);
       expect(screen.queryByTestId('llm-model-reasoning-panel')).not.toBeInTheDocument();
       expect(setToolErrors).toHaveBeenLastCalledWith({});
     });
 
     it('keeps the first level change on an unconfigured stored row', async () => {
       const user = userEvent.setup();
-      renderForm(storedModel('global.openai.gpt-5.6-luna', { supports_reasoning: true }), {
-        showValidation: true,
-      });
+      renderForm(storedModel('gpt-5.6-luna', { supports_reasoning: true }), { showValidation: true });
 
       await user.click(screen.getByTestId('llm-model-effort-medium'));
 
@@ -551,15 +904,18 @@ describe('LlmModelForm reasoning profiles', () => {
       expect(setToolErrors).toHaveBeenLastCalledWith({});
     });
 
-    it('shows the full set with a note for an unrecognized row stored before the fields existed', () => {
-      renderForm(storedModel('model-router', { supports_reasoning: true }), { showValidation: true });
+    it.each(['model-router', 'global.xai.grok-4.6'])(
+      'shows the full set with a note for %s stored before the fields existed',
+      name => {
+        renderForm(storedModel(name, { supports_reasoning: true }), { showValidation: true });
 
-      expect(screen.getByTestId('llm-model-reasoning-not-configured')).toBeInTheDocument();
-      expect(checkedLevels()).toEqual([]);
-      expect(screen.queryByTestId('llm-model-error-supported_efforts')).not.toBeInTheDocument();
-    });
+        expect(screen.getByTestId('llm-model-reasoning-not-configured')).toBeInTheDocument();
+        expect(checkedLevels()).toEqual([]);
+        expect(screen.queryByTestId('llm-model-error-supported_efforts')).not.toBeInTheDocument();
+      },
+    );
 
-    it('shows a stored level the profile does not list and blocks Save until it is unchecked', async () => {
+    it('shows a stored level the entry does not list and blocks Save until it is unchecked', async () => {
       const user = userEvent.setup();
       renderForm(
         storedModel('gpt-5.2', {
@@ -570,7 +926,7 @@ describe('LlmModelForm reasoning profiles', () => {
         { showValidation: true },
       );
 
-      expect(checkedLevels()).toEqual(['none', 'low', 'medium', 'high', 'xhigh'].filter(l => l !== 'none'));
+      expect(checkedLevels()).toEqual(['low', 'medium', 'high', 'xhigh']);
       expect(screen.getByTestId('llm-model-effort-xhigh')).toBeChecked();
       expect(screen.getByTestId('llm-model-error-supported_efforts')).toHaveTextContent(
         "Extra high isn't offered for this model. Uncheck to save.",

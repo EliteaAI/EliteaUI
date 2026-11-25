@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -10,6 +10,19 @@ import LockSimple from '@/components/Icons/LockSimple';
 
 import { LlmModelFormConstants } from '../../lib/constants';
 import { credentialKeyOf, isApiProtocolCredentialType } from '../../lib/helpers/apiProtocol.helpers.js';
+import {
+  areSettingsAsPrefilled,
+  buildPrefillFromCatalogEntry,
+  buildReasoningSettingsFromCatalogEntry,
+  findLlmModelCatalogEntry,
+  getEffortLevelLabel,
+  getLlmModelReasoningDescription,
+  getLlmModelRecognition,
+  getUnsupportedStoredLevels,
+  isAzureReasoningWarned,
+  isLlmModelReasoningConfigured,
+  pickPrefillableSettings,
+} from '../../lib/helpers/llmModelCatalog.helpers.js';
 import {
   convertDisplayNameToLlmModelId,
   getLlmModelCredentialTypeTag,
@@ -23,17 +36,7 @@ import {
   parseLlmModelTokenLimitInput,
   pickVisibleLlmModelErrors,
 } from '../../lib/helpers/llmModelForm.helpers.js';
-import {
-  buildReasoningSettingsFromProfile,
-  getEffortLevelLabel,
-  getLlmModelReasoningDescription,
-  getLlmModelRecognition,
-  getUnsupportedStoredLevels,
-  isAzureReasoningWarned,
-  isLlmModelReasoningConfigured,
-  recognizeLlmModelProfile,
-} from '../../lib/helpers/llmModelProfiles.helpers.js';
-import { useLlmModelCredentialType, useLlmModelProfiles, useLlmModelTakenIds } from '../../lib/hooks';
+import { useLlmModelCatalog, useLlmModelCredentialType, useLlmModelTakenIds } from '../../lib/hooks';
 import { validateLlmModelSettings } from '../../lib/validation';
 import CredentialsSelect from '../credentials-select/CredentialsSelect';
 import LlmModelConnectionTest from './LlmModelConnectionTest';
@@ -85,33 +88,7 @@ const LlmModelForm = memo(props => {
 
   const { credentialType, isCredentialTypePending } = useLlmModelCredentialType(settings.ai_credentials);
   const takenIds = useLlmModelTakenIds({ skip: isEditing });
-  const { profilesPayload, effortLevels } = useLlmModelProfiles();
-  const profile = useMemo(
-    () => recognizeLlmModelProfile(settings.name, profilesPayload),
-    [settings.name, profilesPayload],
-  );
-  const recognition = useMemo(() => getLlmModelRecognition(settings.name, profile), [settings.name, profile]);
-  const isStoredRowUnconfigured =
-    isEditing &&
-    Boolean(settings.supports_reasoning) &&
-    Boolean(profile?.supports_reasoning) &&
-    !isLlmModelReasoningConfigured(settings);
-  const pendingProfileFill = useMemo(
-    () => (isStoredRowUnconfigured ? buildReasoningSettingsFromProfile(profile) : null),
-    [isStoredRowUnconfigured, profile],
-  );
-  const displayedSettings = useMemo(
-    () => (pendingProfileFill ? { ...settings, ...pendingProfileFill } : settings),
-    [settings, pendingProfileFill],
-  );
-
-  const isReasoningShown = !profile || profile.supports_reasoning || Boolean(settings.supports_reasoning);
-  const isReasoningLocked = Boolean(profile?.locked && settings.supports_reasoning);
-  const isReasoningConfigRequired = !isEditing || isLlmModelReasoningConfigured(displayedSettings);
-  const unsupportedEffortLabels = useMemo(
-    () => getUnsupportedStoredLevels(profile, displayedSettings.supported_efforts).map(getEffortLevelLabel),
-    [profile, displayedSettings.supported_efforts],
-  );
+  const { catalog, isCatalogPending } = useLlmModelCatalog();
 
   const isApiProtocolShown = isApiProtocolCredentialType(credentialType);
   const isStoredCredentialKept =
@@ -125,6 +102,53 @@ const LlmModelForm = memo(props => {
   const isSaveHeldForCredentialType = isCredentialTypePending && isTypeGatedSettingEdited;
   const apiProtocol =
     settings.api_protocol || (isStoredModelWithoutProtocol ? LLM_MODEL_STORED_DIAL_PROTOCOL_FALLBACK : '');
+
+  const [isModelNameFocused, setIsModelNameFocused] = useState(false);
+  const [nameAfterTypingPause, setNameAfterTypingPause] = useState(settings.name);
+  useEffect(() => {
+    if (!isModelNameFocused) {
+      setNameAfterTypingPause(settings.name);
+      return undefined;
+    }
+    const typingPause = setTimeout(() => setNameAfterTypingPause(settings.name), 500);
+    return () => clearTimeout(typingPause);
+  }, [isModelNameFocused, settings.name]);
+  const settledName = isModelNameFocused ? nameAfterTypingPause : settings.name;
+  const catalogEntry = useMemo(
+    () => findLlmModelCatalogEntry({ catalog, name: settledName, credentialType, apiProtocol }),
+    [catalog, settledName, credentialType, apiProtocol],
+  );
+  const isRecognitionSettled = !isCatalogPending && settledName === settings.name;
+  const recognition = useMemo(
+    () => (isRecognitionSettled ? getLlmModelRecognition(settledName, catalogEntry) : null),
+    [isRecognitionSettled, settledName, catalogEntry],
+  );
+  const isStoredRowUnconfigured =
+    isEditing &&
+    Boolean(settings.supports_reasoning) &&
+    Boolean(catalogEntry?.supported_efforts) &&
+    !isLlmModelReasoningConfigured(settings);
+  const pendingCatalogFill = useMemo(
+    () => (isStoredRowUnconfigured ? buildReasoningSettingsFromCatalogEntry(catalogEntry) : null),
+    [isStoredRowUnconfigured, catalogEntry],
+  );
+  const displayedSettings = useMemo(
+    () => (pendingCatalogFill ? { ...settings, ...pendingCatalogFill } : settings),
+    [settings, pendingCatalogFill],
+  );
+
+  const isReasoningShown = catalogEntry?.supports_reasoning !== false || Boolean(settings.supports_reasoning);
+  const isReasoningLocked = Boolean(catalogEntry?.reasoning_locked && settings.supports_reasoning);
+  const isReasoningConfigRequired = !isEditing || isLlmModelReasoningConfigured(displayedSettings);
+  const unsupportedEffortLabels = useMemo(
+    () =>
+      getUnsupportedStoredLevels(
+        isModelNameFocused ? null : catalogEntry,
+        displayedSettings.supported_efforts,
+        displayedSettings.thinking_type,
+      ).map(getEffortLevelLabel),
+    [catalogEntry, displayedSettings.supported_efforts, displayedSettings.thinking_type, isModelNameFocused],
+  );
 
   const errors = useMemo(
     () =>
@@ -174,23 +198,23 @@ const LlmModelForm = memo(props => {
 
   const hasVisibleErrorIn = section => section.fields.some(field => visibleErrors[field]);
 
-  const isProfileFillWrittenRef = useRef(false);
+  const isCatalogFillWrittenRef = useRef(false);
   useEffect(() => {
-    if (!pendingProfileFill) isProfileFillWrittenRef.current = false;
-  }, [pendingProfileFill]);
+    if (!pendingCatalogFill) isCatalogFillWrittenRef.current = false;
+  }, [pendingCatalogFill]);
 
   const editSetting = useCallback(
     (field, value) => {
       setValidationErrorMessages?.(serverErrors => omitLlmModelErrorsDependingOn(serverErrors, field));
-      if (pendingProfileFill && !isProfileFillWrittenRef.current) {
-        isProfileFillWrittenRef.current = true;
+      if (pendingCatalogFill && !isCatalogFillWrittenRef.current) {
+        isCatalogFillWrittenRef.current = true;
         LLM_MODEL_REASONING_FIELDS.filter(filled => filled !== field).forEach(filled =>
-          editField(`settings.${filled}`, pendingProfileFill[filled]),
+          editField(`settings.${filled}`, pendingCatalogFill[filled]),
         );
       }
       editField(`settings.${field}`, value);
     },
-    [editField, pendingProfileFill, setValidationErrorMessages],
+    [editField, pendingCatalogFill, setValidationErrorMessages],
   );
 
   const onDisplayNameChange = useCallback(
@@ -231,33 +255,50 @@ const LlmModelForm = memo(props => {
     [editSetting],
   );
 
-  const appliedProfileIdRef = useRef(profile?.id ?? null);
-  const isModelNameEdited = settings.name !== initialSettings?.name;
-  useEffect(() => {
-    const profileId = profile?.id ?? null;
-    if (profileId === appliedProfileIdRef.current) return;
-    appliedProfileIdRef.current = profileId;
-    if (!isEditing || isModelNameEdited) applyReasoningSettings(buildReasoningSettingsFromProfile(profile));
-  }, [applyReasoningSettings, isEditing, isModelNameEdited, profile]);
-
-  const onReasoningChange = useCallback(
-    (field, isChecked) => {
-      if (!isChecked) {
-        applyReasoningSettings(buildReasoningSettingsFromProfile(null));
-        return;
-      }
-      editSetting(FIELDS.reasoning, true);
-      if (profile?.supports_reasoning && !isLlmModelReasoningConfigured(settings)) {
-        applyReasoningSettings(buildReasoningSettingsFromProfile(profile));
-      }
-    },
-    [applyReasoningSettings, editSetting, profile, settings],
-  );
+  const onModelNameFocus = useCallback(() => setIsModelNameFocused(true), []);
 
   const onModelNameBlur = useCallback(() => {
     const trimmedModelName = String(settings.name ?? '').trim();
     if (trimmedModelName !== settings.name) editSetting(FIELDS.modelName, trimmedModelName);
+    setIsModelNameFocused(false);
   }, [editSetting, settings.name]);
+
+  const prefilledCatalogKeyRef = useRef(catalogEntry?.key ?? null);
+  const prefilledNameRef = useRef(catalogEntry ? settledName : null);
+  const lastPrefillRef = useRef(null);
+  const isSettledNameEdited = settledName !== initialSettings?.name;
+  useEffect(() => {
+    if (isModelNameFocused) return;
+    const catalogKey = catalogEntry?.key ?? null;
+    if (catalogKey === prefilledCatalogKeyRef.current) return;
+    prefilledCatalogKeyRef.current = catalogKey;
+    if (prefilledNameRef.current !== settledName) prefilledNameRef.current = null;
+    if (!catalogEntry || (isEditing && !isSettledNameEdited)) return;
+    const isRouteChangeOnly = prefilledNameRef.current === settledName;
+    if (isRouteChangeOnly && !areSettingsAsPrefilled(settings, lastPrefillRef.current)) return;
+    const prefill = buildPrefillFromCatalogEntry(catalogEntry, {
+      isVisionIncluded: !isEditing,
+      isUnreportedReasoningKept: isRouteChangeOnly,
+    });
+    prefilledNameRef.current = settledName;
+    lastPrefillRef.current = { ...pickPrefillableSettings(settings, !isEditing), ...prefill };
+    Object.entries(prefill).forEach(([field, value]) => editSetting(field, value));
+  }, [catalogEntry, editSetting, isEditing, isModelNameFocused, isSettledNameEdited, settings, settledName]);
+
+  const onReasoningChange = useCallback(
+    (field, isChecked) => {
+      if (!isChecked) {
+        applyReasoningSettings(buildReasoningSettingsFromCatalogEntry(null));
+        return;
+      }
+      editSetting(FIELDS.reasoning, true);
+      const catalogSettings = buildReasoningSettingsFromCatalogEntry(catalogEntry);
+      if (catalogSettings[FIELDS.reasoning] && !isLlmModelReasoningConfigured(settings)) {
+        applyReasoningSettings(catalogSettings);
+      }
+    },
+    [applyReasoningSettings, catalogEntry, editSetting, settings],
+  );
 
   const onTokenLimitChange = useCallback(
     event => editSetting(event.target.name, parseLlmModelTokenLimitInput(event.target.value)),
@@ -374,6 +415,7 @@ const LlmModelForm = memo(props => {
             id={`llm-model-${FIELDS.modelName}`}
             value={settings.name ?? ''}
             onChange={onModelNameChange}
+            onFocus={onModelNameFocus}
             onBlur={onModelNameBlur}
             error={Boolean(visibleErrors[FIELDS.modelName])}
             enableAutoBlur={false}
@@ -432,21 +474,20 @@ const LlmModelForm = memo(props => {
                   isApiProtocolShown,
                   apiProtocol,
                   supportsReasoning: settings.supports_reasoning,
-                  profile,
+                  entry: catalogEntry,
                 })
                   ? LLM_MODEL_AZURE_REASONING_WARNING
                   : undefined
               }
               locked={isReasoningLocked}
-              description={getLlmModelReasoningDescription(profile)}
+              description={getLlmModelReasoningDescription(catalogEntry)}
             >
               {settings.supports_reasoning && (
                 <LlmModelReasoningPanel
                   settings={displayedSettings}
                   initialSettings={initialSettings}
                   isEditing={isEditing}
-                  profile={profile}
-                  effortLevels={effortLevels}
+                  catalogEntry={catalogEntry}
                   visibleErrors={visibleErrors}
                   editSetting={editSetting}
                 />
