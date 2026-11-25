@@ -14,6 +14,7 @@ import { chromium } from 'playwright';
 import { fileURLToPath } from 'url';
 
 import {
+  LOADING_SELECTOR,
   SCREENSHOT_DIR,
   SCREENSHOT_SCALE,
   SCREENSHOT_SIZE,
@@ -31,7 +32,6 @@ const MAX_CHANGED_RATIO = 0.0005;
 const SETTLE_MS = 800;
 const SETTLE_TIMEOUT_MS = 20000;
 const MAX_ATTEMPTS = 3;
-const LOADING_SELECTOR = '.MuiSkeleton-root, .MuiCircularProgress-root, .MuiLinearProgress-root';
 
 const [mode = 'update', ...args] = process.argv.slice(2);
 const url = (args.find(arg => arg.startsWith('--url='))?.slice(6) || 'http://localhost:6006').replace(
