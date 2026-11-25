@@ -41,7 +41,7 @@ const EXPIRY_CHECK_MS = 60 * 1000;
 const isSameForm = (left, right) => JSON.stringify(left) === JSON.stringify(right);
 
 const ShareChatModal = memo(props => {
-  const { conversation, onClose, onAccessSaved } = props;
+  const { conversation, isDraft = false, onClose, onAccessSaved, onDone } = props;
 
   const { toastSuccess, toastError } = useToast();
   const copyChatLink = useCopyChatLink();
@@ -54,6 +54,7 @@ const ShareChatModal = memo(props => {
     conversation,
     query: debouncedQuery.trim(),
     isExternallyShown: tab === SHARE_TABS.externally,
+    isDraft,
   });
   const { mode, savedAccess, links, membersTotal, createLink, revokeLink, saveAccess, refetchLinks } = share;
   const currentTab = tab ?? (mode === SHARE_MODES.linksOnly ? SHARE_TABS.externally : SHARE_TABS.team);
@@ -138,6 +139,11 @@ const ShareChatModal = memo(props => {
     else toastSuccess(SHARE_MESSAGES.accessUpdated);
     setIsSaving(false);
   }, [access, conversation?.id, onAccessSaved, saveAccess, toastError, toastSuccess]);
+
+  const handleDone = useCallback(() => {
+    onDone?.(access);
+    onClose?.();
+  }, [access, onClose, onDone]);
 
   const handleCopyChatLink = useCallback(
     () => copyChatLink(conversation, getCopyLinkMessage({ saved: savedAccess, isDirty: isTeamDirty })),
@@ -340,18 +346,25 @@ const ShareChatModal = memo(props => {
           <BaseTab
             data-testid="share-tab-externally"
             value={SHARE_TABS.externally}
+            disabled={isDraft}
+            sx={isDraft ? styles.draftTab : undefined}
             label={
-              <Box sx={styles.tabLabel}>
-                Externally
-                {counts.active > 0 && (
-                  <CountBadge
-                    count={counts.active}
-                    ariaLabel={`${counts.active} active links`}
-                    testId="share-tab-externally-count"
-                    sx={styles.tabCount}
-                  />
-                )}
-              </Box>
+              <Tooltip
+                title={isDraft ? SHARE_MESSAGES.availableAfterSend : ''}
+                placement="top"
+              >
+                <Box sx={styles.tabLabel}>
+                  Externally
+                  {counts.active > 0 && (
+                    <CountBadge
+                      count={counts.active}
+                      ariaLabel={`${counts.active} active links`}
+                      testId="share-tab-externally-count"
+                      sx={styles.tabCount}
+                    />
+                  )}
+                </Box>
+              </Tooltip>
             }
           />
         </BaseTabs>
@@ -382,16 +395,19 @@ const ShareChatModal = memo(props => {
   let right = null;
   if (!showsExternally) {
     left = (
-      <Tooltip title="Copy link">
-        <Button.BaseBtn
-          data-testid="share-copy-link"
-          aria-label="Copy link"
-          variant={BUTTON_VARIANTS.secondary}
-          size="small"
-          startIcon={<LinkIconSvg />}
-          onClick={handleCopyChatLink}
-          sx={styles.copyButton}
-        />
+      <Tooltip title={isDraft ? SHARE_MESSAGES.availableAfterSend : 'Copy link'}>
+        <Box component="span">
+          <Button.BaseBtn
+            data-testid="share-copy-link"
+            aria-label="Copy link"
+            variant={BUTTON_VARIANTS.secondary}
+            size="small"
+            startIcon={<LinkIconSvg />}
+            disabled={isDraft}
+            onClick={handleCopyChatLink}
+            sx={styles.copyButton}
+          />
+        </Box>
       </Tooltip>
     );
     right = (
@@ -405,16 +421,28 @@ const ShareChatModal = memo(props => {
         >
           Cancel
         </Button.BaseBtn>
-        <Button.BaseBtn
-          data-testid="share-save"
-          variant={BUTTON_VARIANTS.elitea}
-          color={BUTTON_COLORS.primary}
-          loading={isSaving}
-          disabled={!isTeamDirty || isSaving}
-          onClick={handleSave}
-        >
-          Save
-        </Button.BaseBtn>
+        {isDraft ? (
+          <Button.BaseBtn
+            data-testid="share-done"
+            variant={BUTTON_VARIANTS.elitea}
+            color={BUTTON_COLORS.primary}
+            disabled={!isTeamDirty}
+            onClick={handleDone}
+          >
+            Done
+          </Button.BaseBtn>
+        ) : (
+          <Button.BaseBtn
+            data-testid="share-save"
+            variant={BUTTON_VARIANTS.elitea}
+            color={BUTTON_COLORS.primary}
+            loading={isSaving}
+            disabled={!isTeamDirty || isSaving}
+            onClick={handleSave}
+          >
+            Save
+          </Button.BaseBtn>
+        )}
       </>
     );
   } else if (isFormOpen && !showsLinksError) {
@@ -561,6 +589,10 @@ const shareChatModalStyles = () => ({
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
     '& .MuiTab-root': { textTransform: 'none', minWidth: 0, padding: '0.5rem 1rem' },
   }),
+  // A disabled tab still takes the pointer, so its tooltip can say why
+  draftTab: {
+    '&.Mui-disabled': { pointerEvents: 'auto' },
+  },
   tabLabel: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -620,6 +652,7 @@ const shareChatModalStyles = () => ({
   },
   copyButton: ({ palette }) => ({
     '& svg path': { fill: palette.icon.secondary },
+    '&.Mui-disabled svg path': { fill: palette.icon.disabled },
   }),
 });
 

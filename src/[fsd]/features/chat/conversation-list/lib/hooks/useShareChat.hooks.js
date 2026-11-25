@@ -31,7 +31,7 @@ import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 const MEMBERS_PAGE_SIZE = 20;
 const NO_LINKS = [];
 
-export const useShareChat = ({ conversation, query = '', isExternallyShown = false }) => {
+export const useShareChat = ({ conversation, query = '', isExternallyShown = false, isDraft = false }) => {
   const projectId = useSelectedProjectId();
   const user = useSelector(state => state.user);
   const conversationId = conversation?.id;
@@ -42,9 +42,10 @@ export const useShareChat = ({ conversation, query = '', isExternallyShown = fal
   const openedAt = useRef(Date.now());
   const { data: details, fulfilledTimeStamp } = useConversationDetailsQuery(
     { projectId, id: conversationId },
-    { skip: !conversationId, refetchOnMountOrArgChange: true },
+    { skip: !conversationId || isDraft, refetchOnMountOrArgChange: true },
   );
-  const isDetailsFresh = !!details && (fulfilledTimeStamp ?? 0) >= openedAt.current;
+  // A chat not sent yet exists only on the screen, so its access is read from it
+  const isDetailsFresh = isDraft || (!!details && (fulfilledTimeStamp ?? 0) >= openedAt.current);
 
   const {
     data: membersData,
@@ -69,11 +70,11 @@ export const useShareChat = ({ conversation, query = '', isExternallyShown = fal
     isSuccess: isLinksLoaded,
     isError: isLinksError,
     refetch: refetchLinks,
-  } = useListShareLinksQuery({ projectId, conversationId }, { skip: !conversationId });
+  } = useListShareLinksQuery({ projectId, conversationId }, { skip: !conversationId || isDraft });
   // Only the Externally content shows the file count
   const { data: summary, isSuccess: isFilesLoaded } = useConversationExportSummaryQuery(
     { projectId, conversationId },
-    { skip: !conversationId || !(isLinksOnly || isExternallyShown) },
+    { skip: !conversationId || isDraft || !(isLinksOnly || isExternallyShown) },
   );
 
   const [conversationEdit] = useConversationEditMutation();
@@ -82,9 +83,10 @@ export const useShareChat = ({ conversation, query = '', isExternallyShown = fal
   const [createShareLink, { isLoading: isCreatingLink }] = useCreateShareLinkMutation();
   const [revokeShareLink] = useRevokeShareLinkMutation();
 
-  const ownerId = details?.author_id ?? conversation?.author_id;
-  const isPrivate = !!(details?.is_private ?? conversation?.is_private);
-  const participants = useMemo(() => details?.participants ?? [], [details?.participants]);
+  const source = isDraft ? conversation : details;
+  const ownerId = isDraft ? user?.id : (details?.author_id ?? conversation?.author_id);
+  const isPrivate = !!(source?.is_private ?? conversation?.is_private);
+  const participants = useMemo(() => source?.participants ?? [], [source?.participants]);
   const userParticipants = useMemo(
     () => participants.filter(item => item.entity_name === ChatParticipantType.Users),
     [participants],
@@ -95,9 +97,9 @@ export const useShareChat = ({ conversation, query = '', isExternallyShown = fal
     return {
       id: ownerId,
       name: participant?.meta?.user_name || (ownerId == user?.id ? user?.name : '') || '',
-      avatar: participant?.meta?.user_avatar || '',
+      avatar: participant?.meta?.user_avatar || (ownerId == user?.id ? user?.avatar : '') || '',
     };
-  }, [ownerId, user?.id, user?.name, userParticipants]);
+  }, [ownerId, user?.avatar, user?.id, user?.name, userParticipants]);
 
   const savedAccess = useMemo(
     () => (isDetailsFresh ? buildSavedAccess({ isPrivate, participants, ownerId }) : []),

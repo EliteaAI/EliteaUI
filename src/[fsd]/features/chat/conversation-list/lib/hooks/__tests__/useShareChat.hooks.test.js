@@ -20,8 +20,11 @@ vi.mock('react-redux', () => ({
   useSelector: selector => selector({ user: { id: 1, name: 'Owner', personal_project_id: 28 } }),
 }));
 
+const detailsQuery = vi.hoisted(() => vi.fn());
+const linksQuery = vi.hoisted(() => vi.fn());
+
 vi.mock('@/[fsd]/features/chat/api', () => ({
-  useConversationDetailsQuery: () => ({ data: details.current, fulfilledTimeStamp: Date.now() + 1000 }),
+  useConversationDetailsQuery: (args, options) => detailsQuery(args, options),
   useConversationEditMutation: () => [conversationEdit],
   useAddParticipantIntoConversationMutation: () => [addParticipant],
   useDeleteParticipantFromConversationMutation: () => [deleteParticipant],
@@ -29,7 +32,7 @@ vi.mock('@/[fsd]/features/chat/api', () => ({
 }));
 
 vi.mock('@/[fsd]/features/chat/conversation-list/api/sharedLinksApi', () => ({
-  useListShareLinksQuery: () => ({ data: [], isFetching: false }),
+  useListShareLinksQuery: (args, options) => linksQuery(args, options),
   useCreateShareLinkMutation: () => [createShareLink, { isLoading: false }],
   useRevokeShareLinkMutation: () => [vi.fn()],
 }));
@@ -69,6 +72,8 @@ describe('useShareChat', () => {
     deleteParticipant.mockReturnValue(unwrapped({}));
     createShareLink.mockReturnValue(unwrapped({ token: 't' }));
     summaryQuery.mockReturnValue({ data: { attachments_count: 5 }, isSuccess: true });
+    detailsQuery.mockImplementation(() => ({ data: details.current, fulfilledTimeStamp: Date.now() + 1000 }));
+    linksQuery.mockReturnValue({ data: [], isFetching: false });
   });
 
   it.each([
@@ -213,5 +218,32 @@ describe('useShareChat', () => {
       expiry: 'never',
       scope: 'messages',
     });
+  });
+
+  it('reads a chat not sent yet from the screen and asks the server nothing', () => {
+    details.current = null;
+    const draft = {
+      id: 'new-chat',
+      isNew: true,
+      is_private: true,
+      participants: [userParticipant('u2', 2, 'Ann'), agentParticipant],
+    };
+    const { result } = renderHook(() =>
+      useShareChat({ conversation: draft, isDraft: true, isExternallyShown: true }),
+    );
+
+    expect(result.current.isReady).toBe(true);
+    expect(result.current.owner).toMatchObject({ id: 1, name: 'Owner' });
+    expect(result.current.savedAccess).toEqual([{ id: 2, name: 'Ann', avatar: '' }]);
+    expect(detailsQuery).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ skip: true }));
+    expect(linksQuery).toHaveBeenLastCalledWith(expect.anything(), { skip: true });
+    expect(summaryQuery).toHaveBeenLastCalledWith(expect.anything(), { skip: true });
+  });
+
+  it('reads Whole team of a chat not sent yet from its privacy', () => {
+    const draft = { id: 'new-chat', isNew: true, is_private: false, participants: [] };
+    const { result } = renderHook(() => useShareChat({ conversation: draft, isDraft: true }));
+
+    expect(result.current.savedAccess).toEqual([{ id: 'whole-team' }]);
   });
 });
