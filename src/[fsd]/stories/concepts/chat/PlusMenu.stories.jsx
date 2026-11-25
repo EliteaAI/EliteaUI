@@ -1,9 +1,6 @@
-// Chat concept, parts 1 and 2 — the «+» menu under the field (approved prototype, tag chat-prototype-approved-2026-11-18,
-// default view). The team's real chat screen with the concept field; the menu is ConceptPlusButton (a copy of
-// the team's PlusChatButton, changes marked «concept:» in its header); stories 1–2 are part 1, stories 3–4 are part 2:
-// the list of each kind is ConceptPlusSubmenu (a copy of the team's PlusChatSubmenu). Each story
-// opens the menu when it loads; everything in it can be clicked: Attach Files, every kind, search, Create, rows.
-// Sample data, not wired to the API: a pick changes nothing on the screen. What to build: the GitHub issue of the branch.
+// The «+» menu under the concept field; ConceptPlusButton copies the team's PlusChatButton and ConceptPlusSubmenu
+// its PlusChatSubmenu, changes marked «concept:». Each story opens the menu on load. Sample data, not wired to the API:
+// a pick changes nothing on the screen.
 import { userEvent, within } from 'storybook/test';
 
 import { SCREENSHOT_MODES } from '@/[fsd]/stories/lib/screenshot.constants';

@@ -1,8 +1,5 @@
-// Chat concept, part 1 — the input field (approved prototype, tag chat-prototype-approved-2026-11-18, default view).
-// The team's real chat screen (AppLayout on /chat) with one part replaced: the input field (ConceptChatInput) and the
-// context ring inside it (ConceptContextRing); see CONCEPT_SWAPS in .storybook/main.js. Everything else is dev as is.
-// The right Participants panel stays as on dev, without its context ring (the ring has moved into the field).
-// Sample data, not wired to the API. What to build and the acceptance criteria: the GitHub issue of this branch.
+// The team's chat screen with the concept input field and its context ring; everything else is the team's screen.
+// Sample data, not wired to the API.
 import { SCREENSHOT_MODES } from '@/[fsd]/stories/lib/screenshot.constants';
 
 import { contextStatus } from './chat.data';

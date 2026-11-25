@@ -122,7 +122,7 @@ const ConceptPlusSubmenu = memo(props => {
     [],
   );
 
-  const styles = submenuStyles(theme);
+  const styles = conceptPlusSubmenuStyles(theme);
 
   const renderRow = item => {
     const isPublic = showPublicLabel && item.data?.project_id == PUBLIC_PROJECT_ID;
@@ -345,7 +345,7 @@ const ConceptPlusSubmenu = memo(props => {
 ConceptPlusSubmenu.displayName = 'ConceptPlusSubmenu';
 
 /** @type {MuiSx} */
-const submenuStyles = theme => ({
+const conceptPlusSubmenuStyles = theme => ({
   root: {
     display: 'flex',
     flexDirection: 'column',

@@ -1,5 +1,5 @@
 // Concept copy of src/[fsd]/widgets/context-budget/ui/ContextBudgetRing.jsx — the context ring moves from the bottom of
-// the right Participants panel into the input field, next to the mic (design sync 2026-11-17: Levon 29:24, Ilya 30:10).
+// the right Participants panel into the input field, next to the mic.
 // What changes against the team's ring:
 // - 26 px instead of 30 px, to sit in the field's 28 px button row; the number stays inside, no «%»;
 // - quiet colour: the bar's icon grey while the chat is far from the limit; the team's warning colour from the compaction
@@ -114,6 +114,7 @@ const ConceptContextRing = memo(props => {
       <ContextBudgetPopover
         {...popoverProps}
         stats={stats}
+        isHighUtilization={isHighUtilization}
         anchorRef={anchorRef}
         open={open}
         onClose={close}
