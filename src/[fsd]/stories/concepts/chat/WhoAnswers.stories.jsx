@@ -7,7 +7,7 @@
 import { userEvent, within } from 'storybook/test';
 
 import { SCREENSHOT_MODES } from '@/[fsd]/stories/lib/screenshot.constants';
-import { pageSettled, wait } from '@/[fsd]/stories/lib/storyPlay.helpers';
+import { wait, waitForQuietPage } from '@/[fsd]/stories/lib/storyPlay.helpers';
 
 import { frame, freshChat, screen } from './conceptScreen';
 import { FULL_CHAT, NEW_CHAT } from './conceptScreen.constants';
@@ -29,7 +29,7 @@ const openList = async ({ canvasElement, globals }, { answer } = {}) => {
   if (globals?.screenshot && globals.screenshot !== SCREENSHOT_MODES.live) return null;
   const doc = canvasElement.ownerDocument;
   const page = within(doc.body);
-  await pageSettled(doc, `[data-testid="${BUTTON}"]`);
+  await waitForQuietPage({ quietMs: 2000, timeoutMs: 30000, readySelector: `[data-testid="${BUTTON}"]` });
   const button = await page.findByTestId(BUTTON, {}, { timeout: 15000 });
   // below 1200 px the chat stands under the chats list: the page scrolls to the button first
   button.scrollIntoView({ block: 'end' });

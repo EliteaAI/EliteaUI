@@ -14,7 +14,10 @@
 import { createElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useDropdownData } from '@/[fsd]/features/chat/lib/hooks/chat-button/useDropdownData.hooks';
-import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
+import {
+  getChatParticipantUniqueId,
+  getParticipantName,
+} from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useSkillParticipants } from '@/[fsd]/features/skill/lib/hooks';
 import { DropdownConstants } from '@/[fsd]/shared/lib/constants';
 import { EntityIcon } from '@/[fsd]/shared/ui/icon';
@@ -23,6 +26,8 @@ import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 import { isMcpParticipant, isPipelineParticipant } from './conceptParticipant.helpers';
 
 const SKILL_PAGE_SIZE = 20;
+// the totals come from .storybook/main.js › concept-totals; if that patch did not apply, the lists show no totals
+const NO_TOTALS = { agents: 0, pipelines: 0, toolkits: 0, mcps: 0 };
 
 const SKILL_ICON_SX = {
   minWidth: '1.25rem !important',
@@ -72,20 +77,24 @@ const matchesSearch = search => item =>
   !search || (item.label && item.label.toLowerCase().includes(search.toLowerCase()));
 
 // concept: a row for a participant whose page has not loaded yet, with the key the list gives it
-const toParticipantRow = (prefix, entityType) => p => ({
-  key: `${prefix}-${p.entity_meta?.project_id}-${p.entity_meta?.id}`,
-  label: p.meta?.name || p.name,
-  data: { id: p.entity_meta?.id, project_id: p.entity_meta?.project_id, name: p.meta?.name },
-  icon: createElement(EntityIcon, {
-    sx: SKILL_ICON_SX,
-    imageStyle: SKILL_IMAGE_STYLE,
-    icon: p.meta?.icon_meta,
-    entityType,
-    projectId: p.entity_meta?.project_id,
-    editable: false,
-    specifiedFontSize: DropdownConstants.DIMENSIONS.ICON_SVG_SIZE,
-  }),
-});
+// (name and icon where the team's add flow writes them: getParticipantName, entity_settings.icon_meta)
+const toParticipantRow = (prefix, entityType) => p => {
+  const name = getParticipantName(p) || p.meta?.name || p.name || '';
+  return {
+    key: `${prefix}-${p.entity_meta?.project_id}-${p.entity_meta?.id}`,
+    label: name,
+    data: { id: p.entity_meta?.id, project_id: p.entity_meta?.project_id, name },
+    icon: createElement(EntityIcon, {
+      sx: SKILL_ICON_SX,
+      imageStyle: SKILL_IMAGE_STYLE,
+      icon: p.entity_settings?.icon_meta || p.icon_meta || p.meta?.icon_meta,
+      entityType,
+      projectId: p.entity_meta?.project_id,
+      editable: false,
+      specifiedFontSize: DropdownConstants.DIMENSIONS.ICON_SVG_SIZE,
+    }),
+  };
+};
 
 // concept: the loaded rows, then the chat's rows of that kind not loaded yet
 const withChatRows = (items, chatRows) => {
@@ -121,7 +130,7 @@ export const useConceptPlusSubmenu = props => {
     onLoadMorePipelines,
     onLoadMoreToolkits,
     onLoadMoreMCPs,
-    totals,
+    totals = NO_TOTALS,
   } = useDropdownData({
     agentQuery: agentSearch,
     pipelineQuery: pipelineSearch,
@@ -144,7 +153,16 @@ export const useConceptPlusSubmenu = props => {
 
   // concept: the chat's participants by their id, to mark rows added and to remove them
   const participantsById = useMemo(
-    () => new Map(participants.map(p => [getChatParticipantUniqueId(p), p])),
+    () =>
+      new Map(
+        participants.map(p => [
+          // a pipeline in any of its shapes (also a template's top-level agent_type) under the key its row uses
+          getChatParticipantUniqueId(
+            isPipelineParticipant(p) ? { ...p, entity_name: ChatParticipantType.Pipelines } : p,
+          ),
+          p,
+        ]),
+      ),
     [participants],
   );
 

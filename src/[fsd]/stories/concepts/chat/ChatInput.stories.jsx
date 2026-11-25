@@ -1,7 +1,7 @@
 // The team's chat screen with the concept input field and its context ring; everything else is the team's screen.
 // Sample data, not wired to the API.
 import { SCREENSHOT_MODES } from '@/[fsd]/stories/lib/screenshot.constants';
-import { pageSettled } from '@/[fsd]/stories/lib/storyPlay.helpers';
+import { waitForQuietPage } from '@/[fsd]/stories/lib/storyPlay.helpers';
 
 import { contextStatus } from './chat.data';
 import { frame, freshChat, screen } from './conceptScreen';
@@ -9,10 +9,14 @@ import { CHAT, NEW_CHAT } from './conceptScreen.constants';
 
 // The story counts as rendered once the chat page has loaded with the field (the app loads in two steps): screenshots
 // (npm run storybook:shots) wait for the story's play, otherwise they caught an empty page before the app drew.
-const settled = async ({ canvasElement, globals }) => {
+const settled = async ({ globals }) => {
   // in the compare modes the screen lives in a frame that runs the story on its own
   if (globals.screenshot && globals.screenshot !== SCREENSHOT_MODES.live) return;
-  await pageSettled(canvasElement.ownerDocument, '[data-testid="concept-chat-input"]');
+  await waitForQuietPage({
+    quietMs: 2000,
+    timeoutMs: 30000,
+    readySelector: '[data-testid="concept-chat-input"]',
+  });
 };
 
 export default {
