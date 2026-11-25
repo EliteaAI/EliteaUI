@@ -8,8 +8,8 @@ import { Box } from '@mui/material';
 import '@/[fsd]/app/routes';
 import { withStoryApi } from '@/[fsd]/stories/lib/storyApi';
 
-import { ConceptSwapProvider } from './conceptSwap';
-import { CHAT_ID, FULL_CHAT_ID, STATUS_MARK, routes, state } from './data';
+import { CHAT_ID, FULL_CHAT_ID, STATUS_MARK, routes, state } from './chat.data';
+import { ConceptSwapProvider } from './conceptSwap.hooks';
 
 // Lazy so the routes module loads before the layout
 const AppLayout = lazy(() => import('@/[fsd]/app/layout/AppLayout'));

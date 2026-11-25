@@ -5,7 +5,7 @@ import { memo } from 'react';
 import ContextBudgetRing from '@/[fsd]/widgets/context-budget/ui/ContextBudgetRing';
 
 import ConceptContextRing from '../ConceptContextRing';
-import { useConceptSwap } from '../conceptSwap';
+import { useConceptSwap } from '../conceptSwap.hooks';
 
 const ContextBudgetRingSwap = memo(props => {
   const { contextRing } = useConceptSwap();
