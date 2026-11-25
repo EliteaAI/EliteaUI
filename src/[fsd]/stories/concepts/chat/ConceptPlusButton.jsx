@@ -13,7 +13,7 @@
 //   agent, pipeline or skill makes the «who answers» button flash once;
 // - concept: a kind's list is a 600 px window with two-line rows (ConceptPlusSubmenu, useConceptPlusSubmenu);
 //   it keeps the chat's agents, pipelines and skills on top under «In this chat · N».
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   Box,
@@ -325,7 +325,7 @@ const ConceptPlusButton = memo(props => {
     ],
   );
 
-  const styles = plusChatButtonStyles(theme);
+  const styles = conceptPlusButtonStyles(theme);
 
   const renderSubmenuContent = useCallback(() => {
     if (openItem === SUBMENU_KEYS.INTERNAL_TOOLS && availableTools.length > 0) {
@@ -501,7 +501,7 @@ const ConceptPlusButton = memo(props => {
 ConceptPlusButton.displayName = 'ConceptPlusButton';
 
 /** @type {MuiSx} */
-const plusChatButtonStyles = theme => ({
+const conceptPlusButtonStyles = theme => ({
   hiddenAttachment: {
     position: 'absolute',
     width: 0,

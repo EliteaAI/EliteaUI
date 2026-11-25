@@ -155,7 +155,7 @@ const ConceptChatInput = memo(
       onSpeakingModeToggle,
       isTTSPlaying = false,
     } = props;
-    const styles = newChatInputStyles();
+    const styles = conceptChatInputStyles();
 
     const theme = useTheme();
     const { toastError } = useToast();
@@ -555,7 +555,7 @@ const ConceptChatInput = memo(
 ConceptChatInput.displayName = 'ConceptChatInput';
 
 /** @type {MuiSx} */
-const newChatInputStyles = () => ({
+const conceptChatInputStyles = () => ({
   // concept: the field and the row under it
   column: {
     display: 'flex',

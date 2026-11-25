@@ -42,7 +42,7 @@ const CONCEPT_SWAPS = [
 // A one-line change to a team file, seen only by the listed importer: the import gets its own patched copy of the
 // module (same path plus ?<query>, so its relative imports still resolve); every other importer gets the file as it is.
 // If the team changes the line, the concept story shows dev's behaviour and the build prints a warning: these stories
-// live on main, where a team change must never break the whole Storybook (public since 2026-11-24).
+// live on main, where a team change must never break the whole Storybook, which is public.
 const CONCEPT_PATCHES = [
   {
     // concept: the field's placeholder stays while the field is empty, also with focus

@@ -209,7 +209,7 @@ const styles = {
     flexDirection: 'column',
     marginTop: '1rem',
   },
-  // as wide as the settings above it (critic 2026-11-23: it ran 24 px past them on the left, 16 px on the right)
+  // as wide as the settings above it
   divider: {
     marginBottom: '1rem',
     marginLeft: '1.5rem',

@@ -121,8 +121,7 @@ export const ModelSettingsModules = {
     await userEvent.hover(await page.findByTestId('who-answers-model-row', {}, { timeout: 5000 }));
     await userEvent.click(await page.findByTestId('who-answers-model-settings', {}, { timeout: 5000 }));
     const modules = await page.findByTestId('model-settings-modules', {}, { timeout: 5000 });
-    // the dialog grows in and its settings load in parts: scrolled again until the section stays at the top (critic
-    // 2026-11-23: one early scroll left 1100 and 630 at the window's top)
+    // the dialog grows in and its settings load in parts: scrolled again until the section stays at the top
     for (let i = 0; i < 10; i += 1) {
       await wait(300);
       modules.scrollIntoView({ block: 'start' });
