@@ -129,7 +129,7 @@ const ConceptParticipantActions = memo(props => {
                 version: the attention card disables editing there, and passes the plain chat lock as disabledDeleteButton */}
             <Button.BaseBtn
               variant={Button.BUTTON_VARIANTS.tertiary}
-              disabled={disabledDeleteButton}
+              disabled={disabledDeleteButton || status?.isPublishedAgentGone}
               onClick={event => onOpenSettings?.(participant, event.currentTarget)}
               data-testid="who-answers-participant-settings"
               aria-label="Settings in this chat"

@@ -55,11 +55,8 @@ import useNavBlocker from '@/hooks/useNavBlocker';
 import ConceptModelRow from './ConceptModelRow';
 import ConceptModelSettingsDialog from './ConceptModelSettingsDialog';
 import { WhoAnswersProvider } from './WhoAnswersContext';
+import { isPipelineParticipant as isPipeline } from './conceptParticipant.helpers';
 
-const isPipeline = p =>
-  p.entity_name === ChatParticipantType.Pipelines ||
-  (p.entity_name === ChatParticipantType.Applications &&
-    (p.entity_settings?.agent_type === 'pipeline' || p.agent_type === 'pipeline'));
 const isMcp = p => p.meta?.mcp === true || isRemoteMcpToolkitType(p.entity_settings?.toolkit_type);
 
 // the kinds that answer, in the order of «+» and of the panel on dev (ExpandedParticipantsList › ENTITY_SECTIONS)
@@ -784,10 +781,12 @@ const whoAnswersStyles = () => ({
     height: '1rem',
     fontSize: '1rem',
   },
-  chevron: {
+  // ArrowDownIcon / ArrowRightIcon set fill on their svg; a CSS fill wins over it, and dims with the button
+  chevron: ({ palette }) => ({
     fontSize: '1rem',
-    color: 'icon.default',
-  },
+    fill: palette.icon.default,
+    '.Mui-disabled &': { fill: palette.icon.disabled },
+  }),
   // An icon glyph, as ConversationRunIndicator's dot: the token goes on color, the shape paints with it
   dot: ({ palette }) => ({
     position: 'absolute',
