@@ -58,7 +58,7 @@ const matches = (list, source, importer) => {
   const file = decodeURIComponent(importer.split('?')[0]);
   // Vite's own alias plugin runs first, so '@/…' arrives here as an absolute path: compare by the path's end
   const raw = decodeURIComponent(source).replace(/\.jsx?$/, '');
-  const target = raw.startsWith('.') ? path.join(path.dirname(file), raw) : raw;
+  const target = raw.startsWith('.') ? path.posix.join(path.posix.dirname(file), raw) : raw;
   return list.find(
     s =>
       (target === s.source || target.endsWith(`/${s.source}`)) &&

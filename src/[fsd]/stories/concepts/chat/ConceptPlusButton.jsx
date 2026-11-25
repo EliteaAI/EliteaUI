@@ -71,14 +71,17 @@ const SEARCHABLE_KEYS = [
 
 // concept: how many of each kind the chat has (the number on the menu's row)
 const isMcpParticipant = p => !!(p.meta?.mcp || p.entity_settings?.toolkit_type === 'mcp');
-const isPipelineParticipant = p => p.entity_settings?.agent_type === 'pipeline';
+// a pipeline: an application with agent_type «pipeline» in a saved chat, a «pipeline» participant in a new chat
+// (NewConversationView builds entity_name from participantType), as NewChat.jsx › onEditParticipant checks both
+const isPipelineParticipant = p =>
+  p.entity_name === ChatParticipantType.Pipelines ||
+  (p.entity_name === ChatParticipantType.Applications &&
+    (p.entity_settings?.agent_type === 'pipeline' || p.agent_type === 'pipeline'));
 const countInChat = participants => ({
   [SUBMENU_KEYS.AGENTS]: participants.filter(
     p => p.entity_name === ChatParticipantType.Applications && !isPipelineParticipant(p),
   ).length,
-  [SUBMENU_KEYS.PIPELINES]: participants.filter(
-    p => p.entity_name === ChatParticipantType.Applications && isPipelineParticipant(p),
-  ).length,
+  [SUBMENU_KEYS.PIPELINES]: participants.filter(isPipelineParticipant).length,
   [SUBMENU_KEYS.SKILLS]: participants.filter(p => p.entity_name === ChatParticipantType.Skills).length,
   [SUBMENU_KEYS.TOOLKITS]: participants.filter(
     p => p.entity_name === ChatParticipantType.Toolkits && !isMcpParticipant(p),
@@ -301,7 +304,7 @@ const ConceptPlusButton = memo(props => {
 
   const renderSubmenuContent = useCallback(() => {
     if (openItem === SUBMENU_KEYS.INTERNAL_TOOLS && availableTools.length > 0) {
-      // concept: a module row — icon, name, description, switch (ConceptModuleRow, shared with «Model settings»)
+      // concept: a module row — icon, name, description, switch (ConceptModuleRow)
       return availableTools.map(tool => {
         const description = tool.unavailable ? { text: tool.unavailableTooltip } : tool.infoTooltip;
         return (
