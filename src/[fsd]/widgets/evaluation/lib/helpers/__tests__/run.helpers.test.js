@@ -6,6 +6,8 @@ import {
   compareRunScore,
   formatRunStatus,
   formatScoreDelta,
+  getCaseHistorySource,
+  getRunHistorySource,
   getRunScoreLabel,
   getScoreDeltaTooltip,
   isRunActive,
@@ -170,5 +172,61 @@ describe('getScoreDeltaTooltip', () => {
   it('is empty when the row has no delta', () => {
     expect(getScoreDeltaTooltip({ delta: null, comparedToRunId: null })).toBe('');
     expect(getScoreDeltaTooltip(undefined)).toBe('');
+  });
+});
+
+describe('getRunHistorySource', () => {
+  it('summarises what a history run scored', () => {
+    const source = getRunHistorySource({
+      history: { sampled: 6, conversations: 3, window_days: 28, reference_free: true },
+    });
+
+    expect(source.summary).toBe('6 turns · 3 chats · 28 days');
+    expect(source.tooltip).toContain('without running the agent: 6 turns · 3 chats · 28 days.');
+    expect(source.tooltip).toContain('reference-based checks are skipped');
+  });
+
+  it('uses the singular for one turn, chat and day', () => {
+    expect(getRunHistorySource({ history: { sampled: 1, conversations: 1, window_days: 1 } }).summary).toBe(
+      '1 turn · 1 chat · 1 day',
+    );
+  });
+
+  it('returns null for a run that executed the agent', () => {
+    expect(getRunHistorySource({})).toBeNull();
+    expect(getRunHistorySource(undefined)).toBeNull();
+  });
+});
+
+describe('getCaseHistorySource', () => {
+  const historyCase = (source, extra = {}) => ({
+    input: 'q',
+    source: { conversation_id: 'c-1', author_id: 7, is_private: false, ...source },
+    ...extra,
+  });
+
+  it('lets anyone open a shared chat', () => {
+    expect(getCaseHistorySource(historyCase({}), 3)).toEqual({ conversationId: 'c-1', canOpen: true });
+  });
+
+  it('opens a private chat for its author only', () => {
+    expect(getCaseHistorySource(historyCase({ is_private: true }), 7).canOpen).toBe(true);
+    expect(getCaseHistorySource(historyCase({ is_private: true }), 3).canOpen).toBe(false);
+  });
+
+  it('matches an author id stored as a string, but not a missing viewer', () => {
+    expect(getCaseHistorySource(historyCase({ is_private: true, author_id: '7' }), 7).canOpen).toBe(true);
+    expect(getCaseHistorySource(historyCase({ is_private: true, author_id: null }), null).canOpen).toBe(
+      false,
+    );
+  });
+
+  it('never opens a case whose text was hidden', () => {
+    expect(getCaseHistorySource(historyCase({}, { redacted: true }), 7).canOpen).toBe(false);
+  });
+
+  it('returns null for a dataset case', () => {
+    expect(getCaseHistorySource({ input: 'q' }, 7)).toBeNull();
+    expect(getCaseHistorySource(undefined, 7)).toBeNull();
   });
 });

@@ -114,3 +114,38 @@ export const resolveRunVersionName = (run, versions = []) => {
   if (versionId == null) return null;
   return versions.find(version => version.id === versionId)?.name ?? null;
 };
+
+const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
+
+/**
+ * What a history run scored, from `run.meta.history`: "12 turns · 5 chats · 28 days", or null for a
+ * run that executed the agent. The tooltip adds that stored turns have no expected output.
+ */
+export const getRunHistorySource = meta => {
+  const history = meta?.history;
+  if (!history) return null;
+  const parts = [plural(history.sampled ?? 0, 'turn')];
+  if (history.conversations) parts.push(plural(history.conversations, 'chat'));
+  if (history.window_days) parts.push(plural(history.window_days, 'day'));
+  const summary = parts.join(' · ');
+  const tooltip = [
+    `Scored from stored chat turns, without running the agent: ${summary}.`,
+    history.reference_free && 'Turns have no expected output, so reference-based checks are skipped.',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  return { summary, tooltip };
+};
+
+/**
+ * The stored chat a history case was taken from, and whether the viewer may open it: a private chat
+ * opens for its author only, even when an admin can read the copied text. Legacy participant rows may
+ * store the author id as a string.
+ */
+export const getCaseHistorySource = (caseItem, viewerId) => {
+  const source = caseItem?.source;
+  if (!source?.conversation_id) return null;
+  const isAuthor = viewerId != null && String(source.author_id) === String(viewerId);
+  const canOpen = !caseItem.redacted && (!source.is_private || isAuthor);
+  return { conversationId: source.conversation_id, canOpen };
+};

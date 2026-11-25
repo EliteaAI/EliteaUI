@@ -116,3 +116,24 @@ describe('EvaluationRunRow scheduled badge', () => {
     expect(screen.queryByTestId('evaluation-run-scheduled-7')).not.toBeInTheDocument();
   });
 });
+
+describe('EvaluationRunRow history badge', () => {
+  afterEach(cleanup);
+
+  it('marks a run scored from stored chat turns', () => {
+    renderRow({
+      status: 'finished',
+      trigger_type: 'history',
+      meta: { history: { sampled: 6, conversations: 3, window_days: 28, reference_free: true } },
+    });
+
+    expect(screen.getByTestId('evaluation-run-history-7')).toHaveTextContent('History');
+    expect(screen.queryByTestId('evaluation-run-scheduled-7')).not.toBeInTheDocument();
+  });
+
+  it('does not mark a run that executed the agent', () => {
+    renderRow({ status: 'finished', trigger_type: 'scheduled', meta: {} });
+
+    expect(screen.queryByTestId('evaluation-run-history-7')).not.toBeInTheDocument();
+  });
+});

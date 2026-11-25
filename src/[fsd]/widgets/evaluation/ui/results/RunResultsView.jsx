@@ -14,12 +14,13 @@ import {
   useEvalRunResultsQuery,
   usePlatformDimensionCatalogQuery,
 } from '../../api';
-import { EVAL_PERMISSIONS, EVAL_RUN_STATUS } from '../../lib/constants';
+import { EVAL_PERMISSIONS, EVAL_RUN_STATUS, EVAL_RUN_TRIGGER } from '../../lib/constants';
 import {
   buildCaseExecutionBadges,
   buildScorecard,
   formatRunStatus,
   getRunEndMessage,
+  getRunHistorySource,
   getRunTimeoutNote,
   isRunTerminal,
 } from '../../lib/helpers';
@@ -161,6 +162,7 @@ const RunResultsView = memo(props => {
 
   // A run stopped by a limit keeps the cases it scored; its message says how many and why.
   const endMessage = hasResults ? getRunEndMessage(run) : null;
+  const historySource = run?.trigger_type === EVAL_RUN_TRIGGER.history ? getRunHistorySource(run.meta) : null;
 
   const styles = runResultsViewStyles();
 
@@ -316,6 +318,17 @@ const RunResultsView = memo(props => {
               message={endMessage.message}
               variant={endMessage.variant}
             />
+          </Box>
+        )}
+        {historySource && (
+          <Box
+            sx={styles.endMessage}
+            data-testid="evaluation-run-history-note"
+          >
+            {/* Children make the banner static, so the whole note wraps instead of clamping to one line. */}
+            <Banner.BannerMessage variant="info">
+              <Typography variant="bodySmall">{historySource.tooltip}</Typography>
+            </Banner.BannerMessage>
           </Box>
         )}
         <RunEfficiencyStrip meta={run.meta} />

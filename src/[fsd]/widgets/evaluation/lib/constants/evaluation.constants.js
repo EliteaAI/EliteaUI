@@ -165,6 +165,8 @@ export const EVAL_RUN_TRIGGER = {
   on_demand: 'on_demand',
   // Started by the environment-wide scheduled evaluation, not by a person.
   scheduled: 'scheduled',
+  // Scored by the scheduled evaluation from the agent's stored chat turns; the agent was not run.
+  history: 'history',
 };
 
 // Per-result status (§17.5). Distinct from EVAL_RUN_STATUS: an individual

@@ -78,6 +78,24 @@ const CaseResultItem = memo(props => {
                 </Box>
               </Tooltip>
             )}
+            {card.case?.redacted && (
+              <Tooltip
+                title="Taken from a private chat. Only its author and project admins see the text; the scores are shown to everyone."
+                placement="top"
+              >
+                <Box
+                  sx={styles.redactedBadge}
+                  data-testid={`case-redacted-badge-${card.id}`}
+                >
+                  <Typography
+                    variant="labelMedium"
+                    sx={styles.redactedBadgeText}
+                  >
+                    Content hidden
+                  </Typography>
+                </Box>
+              </Tooltip>
+            )}
             {pendingCount > 0 && (
               <Box
                 sx={styles.pendingBadge}
@@ -241,6 +259,18 @@ const caseResultItemStyles = () => ({
   }),
   guardrailBadgeText: ({ palette }) => ({
     color: palette.warning.main,
+    fontWeight: 500,
+    whiteSpace: 'nowrap',
+  }),
+  redactedBadge: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    padding: '0 0.5rem',
+    borderRadius: '1rem',
+    border: `0.0625rem solid ${palette.border.lines}`,
+  }),
+  redactedBadgeText: ({ palette }) => ({
+    color: palette.text.secondary,
     fontWeight: 500,
     whiteSpace: 'nowrap',
   }),
