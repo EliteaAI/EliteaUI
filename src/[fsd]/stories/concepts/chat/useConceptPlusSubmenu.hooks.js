@@ -188,18 +188,28 @@ export const useConceptPlusSubmenu = props => {
     [participantsById, onDeleteParticipant],
   );
 
+  // concept: a participant removed while the menu is open keeps its row, unchecked, until the menu closes
+  const listedRef = useRef(new Map());
+  const listedParticipants = useMemo(() => {
+    if (!isOpen) listedRef.current = new Map();
+    participants.forEach(p => listedRef.current.set(getChatParticipantUniqueId(p), p));
+    return [...listedRef.current.values()];
+  }, [participants, isOpen]);
+
   // concept: the chat's agents, pipelines and skills as rows, whether or not their page has loaded
   const chatRows = useMemo(
     () => ({
-      agents: participants
+      agents: listedParticipants
         .filter(p => p.entity_name === ChatParticipantType.Applications && !isPipelineParticipant(p))
         .map(toParticipantRow('agent', 'application')),
-      pipelines: participants.filter(isPipelineParticipant).map(toParticipantRow('pipeline', 'pipeline')),
-      skills: participants
+      pipelines: listedParticipants
+        .filter(isPipelineParticipant)
+        .map(toParticipantRow('pipeline', 'pipeline')),
+      skills: listedParticipants
         .filter(p => p.entity_name === ChatParticipantType.Skills)
         .map(toParticipantRow('skill', ChatParticipantType.Skills)),
     }),
-    [participants],
+    [listedParticipants],
   );
 
   const toolkitParticipantIds = useMemo(() => {
