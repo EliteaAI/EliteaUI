@@ -28,3 +28,19 @@ export const waitForQuietPage = ({ quietMs = 800, timeoutMs = 20000 } = {}) =>
     const timeout = setTimeout(finish, timeoutMs);
     restart();
   });
+
+// waitForQuietPage counts every CircularProgress as loading; a determinate one (a progress ring) stays on the page
+const SPINNER = '.MuiCircularProgress-root:not(.MuiCircularProgress-determinate)';
+
+// Resolves once no spinner shows and readySelector has been on the page for 2 s: a page that mounts its content twice
+// (a shell, then the page after its own spinner) would otherwise be caught between the two
+export const pageSettled = async (doc, readySelector) => {
+  const started = performance.now();
+  let quietSince = null;
+  while (performance.now() - started < 30000) {
+    const busy = doc.querySelector(SPINNER) || !doc.querySelector(readySelector);
+    quietSince = busy ? null : (quietSince ?? performance.now());
+    if (quietSince && performance.now() - quietSince >= 2000) return;
+    await new Promise(resolve => setTimeout(resolve, 200));
+  }
+};

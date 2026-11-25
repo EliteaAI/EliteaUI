@@ -20,7 +20,7 @@ const CONCEPT_SWAPS = [
   },
   {
     importers: ['src/[fsd]/widgets/context-budget/ui/ContextBudgetInfo.jsx'],
-    source: './ContextBudgetRing',
+    source: 'src/[fsd]/widgets/context-budget/ui/ContextBudgetRing',
     to: 'src/[fsd]/stories/concepts/chat/swaps/ContextBudgetRing.swap.jsx',
   },
 ];
@@ -38,12 +38,27 @@ const CONCEPT_PATCHES = [
     from: "placeholder={isFocused ? '' : input?.placeholder}",
     to: 'placeholder={input?.placeholder /* concept: stays with focus (dev hides it) */}',
   },
+  {
+    // concept: the ring sits in the field, so the field gets the chat's values that ParticipantsWrapper gives the ring
+    importers: ['src/[fsd]/features/chat/ui/chat-box/index.js'],
+    source: 'src/[fsd]/features/chat/ui/chat-box/ChatBox',
+    query: 'concept-context-ring',
+    from: 'internal_tools={activeConversation?.meta?.internal_tools || []}',
+    to: [
+      'internal_tools={activeConversation?.meta?.internal_tools || []}',
+      'contextStrategy={activeConversation?.meta?.context_strategy || {}}',
+      'setActiveConversation={setActiveConversation}',
+      "conversationInstructions={activeConversation?.instructions || ''}",
+      'persona={activeConversation?.meta?.persona}',
+    ].join(' '),
+  },
 ];
 
 const matches = (list, source, importer) => {
   const file = decodeURIComponent(importer.split('?')[0]);
   // Vite's own alias plugin runs first, so '@/…' arrives here as an absolute path: compare by the path's end
-  const target = decodeURIComponent(source).replace(/\.jsx$/, '');
+  const raw = decodeURIComponent(source).replace(/\.jsx?$/, '');
+  const target = raw.startsWith('.') ? path.join(path.dirname(file), raw) : raw;
   return list.find(
     s =>
       (target === s.source || target.endsWith(`/${s.source}`)) &&
