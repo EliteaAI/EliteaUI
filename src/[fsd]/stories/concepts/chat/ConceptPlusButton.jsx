@@ -46,7 +46,7 @@ import PlusIcon from '@/components/Icons/PlusIcon';
 import ConceptModuleRow from './ConceptModuleRow';
 import ConceptPlusSubmenu from './ConceptPlusSubmenu';
 import { useConceptSwap } from './ConceptSwapContext';
-import { isMcpParticipant } from './conceptParticipant.helpers';
+import { isMcpParticipant, isPipelineParticipant } from './conceptParticipant.helpers';
 import { useConceptPlusSubmenu } from './useConceptPlusSubmenu.hooks';
 import { MODEL_SETTINGS_MODULES } from './whoAnswers.constants';
 
@@ -77,14 +77,11 @@ const SEARCHABLE_KEYS = [
 ];
 
 // concept: how many of each kind the chat has (the number on the menu's row)
-const isPipelineParticipant = p => p.entity_settings?.agent_type === 'pipeline';
 const countInChat = participants => ({
   [SUBMENU_KEYS.AGENTS]: participants.filter(
     p => p.entity_name === ChatParticipantType.Applications && !isPipelineParticipant(p),
   ).length,
-  [SUBMENU_KEYS.PIPELINES]: participants.filter(
-    p => p.entity_name === ChatParticipantType.Applications && isPipelineParticipant(p),
-  ).length,
+  [SUBMENU_KEYS.PIPELINES]: participants.filter(isPipelineParticipant).length,
   [SUBMENU_KEYS.SKILLS]: participants.filter(p => p.entity_name === ChatParticipantType.Skills).length,
   [SUBMENU_KEYS.TOOLKITS]: participants.filter(
     p => p.entity_name === ChatParticipantType.Toolkits && !isMcpParticipant(p),

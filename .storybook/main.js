@@ -140,13 +140,31 @@ const CONCEPT_PATCHES = [
     from: 'sx={styles.versionLabel}',
     to: 'sx={styles.versionLabel}\n                className="concept-version-label" /* concept */',
   },
+  {
+    // concept: the «+» lists show each kind's total («All agents · 116», «Scroll for more · 20 of 116»), so the
+    // concept's copy of useApplicationSubmenu gets the API's totals from the team's useDropdownData
+    importers: ['src/[fsd]/stories/concepts/chat/useConceptPlusSubmenu.hooks.js'],
+    source: 'src/[fsd]/features/chat/lib/hooks/chat-button/useDropdownData.hooks',
+    query: 'concept-totals',
+    from: '    // Agents (combined regular + public)\n',
+    to: [
+      '    totals: {',
+      '      agents: (agentsData?.total || 0) + (publicAgentsData?.total || 0),',
+      '      pipelines: pipelinesData?.total || 0,',
+      '      toolkits: toolkitsData?.total || 0,',
+      '      mcps: mcpsData?.total || 0,',
+      '    },',
+      '    // Agents (combined regular + public)',
+      '',
+    ].join('\n'),
+  },
 ];
 
 const matches = (list, source, importer) => {
   const file = decodeURIComponent(importer.split('?')[0]);
   // Vite's own alias plugin runs first, so '@/…' arrives here as an absolute path: compare by the path's end
   const raw = decodeURIComponent(source).replace(/\.jsx?$/, '');
-  const target = raw.startsWith('.') ? path.join(path.dirname(file), raw) : raw;
+  const target = raw.startsWith('.') ? path.posix.join(path.posix.dirname(file), raw) : raw;
   return list.find(
     s =>
       (target === s.source || target.endsWith(`/${s.source}`)) &&

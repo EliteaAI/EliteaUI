@@ -1,5 +1,6 @@
-// One module row of the chat concept: icon, name, description, switch; the whole row toggles it. Used by «+» › Modules
-// and «Model settings» › «How the AI works in this chat», so the two lists look the same.
+// One module row of the chat concept: icon, name, description, switch; the whole row toggles it, by the pointer or by
+// Tab and then Enter or Space (the team's PlusChatButton: the switch's own checkbox). Used by «+» › Modules and
+// «Model settings» › «How the AI works in this chat», so the two lists look the same.
 // Not AgentModuleMenuItem: it keeps the description in an «i» tooltip and toggles agent modules by its own hook
 import { memo } from 'react';
 
@@ -21,6 +22,8 @@ const ConceptModuleRow = memo(props => {
       role="menuitemcheckbox"
       aria-checked={checked}
       aria-disabled={disabled}
+      // the row is the one tab stop (the switch's input is out of the tab order); Enter and Space toggle it
+      tabIndex={disabled ? -1 : 0}
       onClick={() => !disabled && onToggle?.(!checked)}
       sx={[styles.row, disabled && styles.rowLocked, sx]}
       data-testid={`modules-row-${tool.name}`}
