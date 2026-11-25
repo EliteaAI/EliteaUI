@@ -1,11 +1,12 @@
 import { memo } from 'react';
 
-import { Chip, Tooltip, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
 import { ComplexityConstants } from '@/[fsd]/features/settings/lib/constants';
 
 const { LABELS, PENDING_TOOLTIP } = ComplexityConstants;
 
+// A coloured dot and the label in plain text, as the complexity legend draws it
 const ComplexityLabelChip = memo(props => {
   const { label, pending = false, testId = 'complexity-label' } = props;
 
@@ -18,26 +19,43 @@ const ComplexityLabelChip = memo(props => {
         title={PENDING_TOOLTIP}
         placement="top"
       >
-        <Typography
-          variant="bodySmall"
-          sx={styles.pending}
+        <Box
+          component="span"
+          sx={styles.pendingRoot}
           data-testid={`${testId}-pending`}
         >
-          Not enough runs
-        </Typography>
+          <Box
+            component="span"
+            sx={styles.pendingDot}
+          />
+          <Typography
+            variant="bodySmall"
+            sx={styles.pending}
+          >
+            Not scored yet
+          </Typography>
+        </Box>
       </Tooltip>
     );
   }
 
   return (
-    <Chip
-      size="small"
-      variant="outlined"
-      color={meta.color}
-      label={meta.text}
-      sx={styles.chip}
+    <Box
+      component="span"
+      sx={styles.root}
       data-testid={testId}
-    />
+    >
+      <Box
+        component="span"
+        sx={styles.dot(meta.color)}
+      />
+      <Typography
+        variant="bodySmall"
+        component="span"
+      >
+        {meta.text}
+      </Typography>
+    </Box>
   );
 });
 
@@ -45,10 +63,32 @@ ComplexityLabelChip.displayName = 'ComplexityLabelChip';
 
 /** @type {MuiSx} */
 const complexityLabelChipStyles = () => ({
-  chip: {
-    height: '1.25rem',
-    fontSize: '0.6875rem',
+  root: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
   },
+  dot:
+    color =>
+    ({ palette }) => ({
+      display: 'inline-block',
+      width: '0.5rem',
+      height: '0.5rem',
+      borderRadius: '50%',
+      backgroundColor: palette[color].main,
+    }),
+  pendingRoot: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  pendingDot: ({ palette }) => ({
+    display: 'inline-block',
+    width: '0.5rem',
+    height: '0.5rem',
+    borderRadius: '50%',
+    border: `0.0625rem solid ${palette.text.metrics || palette.text.disabled}`,
+  }),
   pending: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,
     fontStyle: 'italic',

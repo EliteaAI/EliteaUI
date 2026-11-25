@@ -22,16 +22,15 @@ const ANCHOR_ORIGIN = { vertical: 'bottom', horizontal: 'right' };
 const TRANSFORM_ORIGIN = { vertical: 'top', horizontal: 'right' };
 const COPIED_FEEDBACK_MS = 2500;
 
-const RunHistoryRowActions = memo(props => {
-  const {
-    item,
-    source,
-    onItemSelect,
-    handleRestoreConversation,
-    handleOpenAnalytics,
-    shareOpensHistoryTab = false,
-  } = props;
-
+// The run's menu items and state, shared by the row's hover menu and the run header's menu
+export const useRunHistoryRowMenu = ({
+  item,
+  source,
+  onItemSelect,
+  handleRestoreConversation,
+  handleOpenAnalytics,
+  shareOpensHistoryTab = false,
+}) => {
   const projectId = useSelectedProjectId();
   const { toastSuccess, toastError, toastInfo } = useToast();
   const theme = useTheme();
@@ -170,6 +169,25 @@ const RunHistoryRowActions = memo(props => {
       styles.deleteIcon,
     ],
   );
+  return {
+    menuItems,
+    slotProps,
+    menuOpened,
+    openMenu,
+    closeMenu,
+    styles,
+    deleteModal: {
+      open: confirmRemoveModal,
+      onClose: closeConfirmationModal,
+      onConfirm: confirmHistoryItemRemoval,
+    },
+  };
+};
+
+// The row's hover menu: it is revealed by a row hover (or while open), as before
+const RunHistoryRowActions = memo(props => {
+  const menu = useRunHistoryRowMenu(props);
+  const { menuItems, slotProps, menuOpened, openMenu, closeMenu, styles, deleteModal } = menu;
 
   if (!menuItems.length) return null;
 
@@ -191,22 +209,30 @@ const RunHistoryRowActions = memo(props => {
         </DotMenu>
       </Box>
 
-      <Modal.DeleteEntityModal
-        open={confirmRemoveModal}
-        onClose={closeConfirmationModal}
-        onConfirm={confirmHistoryItemRemoval}
-        title="Remove run?"
-        titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
-        customContent={
-          <Typography variant="bodyMedium">Are you sure you want to remove this run?</Typography>
-        }
-        confirmButtonText="Remove"
-      />
+      <RunHistoryDeleteModal {...deleteModal} />
     </>
   );
 });
 
 RunHistoryRowActions.displayName = 'RunHistoryRowActions';
+
+// The Remove run? confirmation, shared by the row menu and the run header menu
+export const RunHistoryDeleteModal = memo(props => {
+  const { open, onClose, onConfirm } = props;
+  return (
+    <Modal.DeleteEntityModal
+      open={open}
+      onClose={onClose}
+      onConfirm={onConfirm}
+      title="Remove run?"
+      titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
+      customContent={<Typography variant="bodyMedium">Are you sure you want to remove this run?</Typography>}
+      confirmButtonText="Remove"
+    />
+  );
+});
+
+RunHistoryDeleteModal.displayName = 'RunHistoryDeleteModal';
 
 /** @type {MuiSx} */
 const runHistoryRowActionsStyles = isDeleting => ({

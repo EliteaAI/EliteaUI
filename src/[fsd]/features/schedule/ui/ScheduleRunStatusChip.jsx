@@ -6,9 +6,10 @@ import { toRunStatusMeta } from '../lib/helpers';
 
 const ScheduleRunStatusChip = memo(props => {
   // variant: 'chip' (outlined, default), 'text' (icon and word in the status colour, no border) or 'icon' (icon only)
-  const { status, variant = 'chip' } = props;
+  // statusMeta: the status table to read; index runs pass the one that extends the run statuses (AC-38)
+  const { status, variant = 'chip', statusMeta } = props;
 
-  const { Icon, color, label: statusLabel, isSpinner } = toRunStatusMeta(status);
+  const { Icon, color, label: statusLabel, isSpinner } = toRunStatusMeta(status, statusMeta);
   const styles = scheduleRunStatusChipStyles(color);
   // The spinner already says the run is going; the ellipsis shows it in the word too
   const label = statusLabel ? `${statusLabel}${isSpinner ? '...' : ''}` : '-';

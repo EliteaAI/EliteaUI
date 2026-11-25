@@ -1,7 +1,8 @@
 import { memo } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 
+import { Text } from '@/[fsd]/shared/ui';
 import SortArrows from '@/assets/sort_arrows.svg?react';
 
 const RunHistorySortableHeader = memo(props => {
@@ -24,14 +25,14 @@ const RunHistorySortableHeader = memo(props => {
           ]}
         >
           {headerItem.sortable !== false && <SortArrows />}
-          <Typography
+          {/* A cut label shows in full in the shared tooltip */}
+          <Text.EllipsisTypography
             variant="labelMedium"
             color="text.secondary"
-            // A cut label shows in full on hover
-            title={headerItem.title ?? (typeof headerItem.label === 'string' ? headerItem.label : undefined)}
+            sx={styles.label}
           >
             {headerItem.label}
-          </Typography>
+          </Text.EllipsisTypography>
         </Box>
       ))}
     </Box>
@@ -66,6 +67,9 @@ const runHistorySortableHeaderStyles = gridTemplateColumns => ({
       cursor: 'pointer',
       margin: '.375rem 0rem',
       padding: '0 1rem',
+      // A grid cell may narrow below its label, so the label can show its ellipsis
+      minWidth: 0,
+      overflow: 'hidden',
       borderRight: '.0625rem solid ' + palette.divider,
 
       span: {
@@ -73,10 +77,21 @@ const runHistorySortableHeaderStyles = gridTemplateColumns => ({
         whiteSpace: 'nowrap',
         overflow: 'hidden',
       },
+      // The label fills the rest of its cell, so its ellipsis shows when the text is longer than the cell
+      '& > div': {
+        display: 'block',
+        flex: '1 1 0',
+        minWidth: 0,
+        maxWidth: '100%',
+      },
 
       ':last-of-type': { borderRight: 'none' },
     },
   }),
+  label: {
+    minWidth: 0,
+    flex: '1 1 auto',
+  },
   sortableHeader: (isActive, isDescending) => ({
     opacity: isActive ? 1 : 0.7,
 
@@ -85,9 +100,9 @@ const runHistorySortableHeaderStyles = gridTemplateColumns => ({
       transition: 'transform 0.2s ease',
     },
   }),
-  // An extra column has no sort, so no pointer and full strength
+  // An extra column has no sort, so no pointer; its colour matches the other headers (the same 0.7 opacity
+  // as an inactive sortable header)
   plainHeader: {
-    opacity: 1,
     // '&&' beats the header's `div` rule, which sets the pointer on every cell
     '&&': { cursor: 'default' },
   },

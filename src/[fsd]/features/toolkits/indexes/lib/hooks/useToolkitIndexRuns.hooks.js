@@ -3,11 +3,12 @@ import { useMemo } from 'react';
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import { isReclaimableRun } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
-import {
-  initialCompletedTsOf,
-  resolveIndexEventLabel,
-} from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexEvent.helpers';
+import { initialCompletedTsOf } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexEvent.helpers';
 import { resolveIndexRunDuration } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexHistoryRow.helpers';
+import {
+  resolveIndexRunEvent,
+  resolveIndexRunStatus,
+} from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexRunHistoryRow.helpers';
 import { useIndexRunLiveRefresh } from '@/[fsd]/features/toolkits/indexes/lib/hooks/useIndexRunLiveRefresh.hooks';
 
 const TERMINAL_STATES = new Set([
@@ -21,9 +22,12 @@ const TERMINAL_STATES = new Set([
 const toIsoString = unixSeconds =>
   Number.isFinite(unixSeconds) ? new Date(unixSeconds * 1000).toISOString() : null;
 
-const toRunRow = (entry, indexName, eventLabel) => {
+const toRunRow = (entry, indexName) => {
   const createdAt = toIsoString(entry.updated_on);
   if (!createdAt) return null;
+
+  // Event and Status follow ticket #7682 (AC-36, AC-38): the event never carries the outcome
+  const eventLabel = resolveIndexRunEvent(entry);
 
   return {
     id: `index-run:${indexName}:${entry.updated_on}`,
@@ -31,6 +35,7 @@ const toRunRow = (entry, indexName, eventLabel) => {
     name: `${eventLabel} — ${indexName}`,
     event_label: eventLabel,
     event_tooltip: `${eventLabel} — ${indexName}`,
+    run_status: resolveIndexRunStatus(entry),
     duration: resolveIndexRunDuration(entry),
     version_id: null,
     index_name: indexName,
@@ -99,15 +104,20 @@ export const useToolkitIndexRuns = ({ projectId, toolkitId, skip = false }) => {
       const indexName = metadata?.collection;
       if (!indexName || !Array.isArray(metadata.history)) return [];
 
-      const initialCompletedTs = initialCompletedTsOf(metadata.history);
       return metadata.history
         .filter(entry => entry && !entry.conversation_id && TERMINAL_STATES.has(entry.state))
-        .map(entry => toRunRow(entry, indexName, resolveIndexEventLabel(entry, initialCompletedTs)))
+        .map(entry => toRunRow(entry, indexName))
         .filter(Boolean);
     });
   }, [data]);
 
   const indexRunLookup = useMemo(() => buildIndexRunLookup(data), [data]);
 
-  return { indexRunRows: rows, indexRunLookup, isIndexRunsLoading: isLoading };
+  // Every index of the toolkit, with or without runs: the Index filter lists them all
+  const indexNames = useMemo(
+    () => (Array.isArray(data) ? data.map(index => index?.metadata?.collection).filter(Boolean) : []),
+    [data],
+  );
+
+  return { indexRunRows: rows, indexRunLookup, indexNames, isIndexRunsLoading: isLoading };
 };

@@ -5,6 +5,7 @@ import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-r
 import { Box, Link } from '@mui/material';
 
 import { RunHistoryContainer, SCHEDULE_RUN_COLUMNS } from '@/[fsd]/entities/run-history';
+import { RUN_HISTORY_LAYOUTS } from '@/[fsd]/entities/run-history/lib/helpers/runHistoryConfig.helpers';
 import {
   TRIGGER_KIND,
   buildOwnerViewModeParams,
@@ -27,6 +28,8 @@ import { useRunHistoryFilters } from '../lib/hooks/useRunHistoryFilters.hooks';
 import RunHistoryFilters from './RunHistoryFilters';
 
 const DEFAULT_TAB = 'all';
+// The mark for a cell with no value: a hyphen, the same on every page (set by the requester)
+const NO_VALUE = '-';
 
 // The mockup draws the schedule name in the bright text tone, underlined, not in the link blue
 const scheduleLinkSx = ({ palette }) => ({
@@ -62,8 +65,15 @@ const RunHistoryPage = memo(props => {
     skip: !scheduleEntityType,
   });
   const schedules = useMemo(() => [...cronSchedules, ...webhooks], [cronSchedules, webhooks]);
-  const filters = useRunHistoryFilters({ schedules, versions });
   const [loadedRows, setLoadedRows] = useState([]);
+  // The tool names of the loaded runs feed the MCP Event filter (the facets endpoint gives the full list later)
+  const toolNames = useMemo(
+    () => [...new Set(loadedRows.flatMap(row => row.tool_names ?? []))],
+    [loadedRows],
+  );
+  const filters = useRunHistoryFilters({ schedules, versions, toolNames });
+  // While a run is open it takes the whole content area, so the filter bar steps aside too
+  const [runOpen, setRunOpen] = useState(false);
   const complexityColumn = useRunComplexityColumn({ entityId: agentId, rows: loadedRows });
   const scheduleColumns = useMemo(() => {
     if (!scheduleEntityType) return [];
@@ -101,15 +111,18 @@ const RunHistoryPage = memo(props => {
       );
     };
     // The status reads with its icon and colour, as in the Runs card
-    const renderStatus = row =>
-      row.schedule_run ? (
+    // A schedule run's own status; a chat, API or MCP row takes the server's run_status (ticket AC-24)
+    const renderStatus = row => {
+      const status = row.schedule_run?.status ?? row.run_status;
+      return status ? (
         <ScheduleRunStatusChip
-          status={row.schedule_run.status}
+          status={status}
           variant="text"
         />
       ) : (
-        '-'
+        NO_VALUE
       );
+    };
     return [
       { ...scheduleColumn, render: renderSchedule },
       ...rest.map(column => (column.id === 'status' ? { ...column, render: renderStatus } : column)),
@@ -163,15 +176,18 @@ const RunHistoryPage = memo(props => {
         title={<Breadcrumbs />}
       />
       <Box sx={styles.content}>
-        <RunHistoryFilters
-          values={filters.values}
-          options={filters.options}
-          handlers={filters.handlers}
-          disabledFilters={filters.disabledFilters}
-          hasFilters={filters.hasFilters}
-          onClear={filters.onClear}
-          hasScheduleFilter={Boolean(scheduleEntityType)}
-        />
+        {!runOpen && (
+          <RunHistoryFilters
+            filterKeys={RUN_HISTORY_LAYOUTS[scheduleEntityType]?.filters ?? []}
+            values={filters.values}
+            options={filters.options}
+            handlers={filters.handlers}
+            hasFilters={filters.hasFilters}
+            onClear={filters.onClear}
+            hasScheduleFilter={Boolean(scheduleEntityType)}
+            hasComplexityFilter={Boolean(complexityColumn)}
+          />
+        )}
         <RunHistoryContainer
           // A new filter restarts paging at page 1
           key={JSON.stringify(filters.queryParams)}
@@ -188,6 +204,8 @@ const RunHistoryPage = memo(props => {
           onRowsChange={setLoadedRows}
           queryParams={filters.queryParams}
           shareOpensHistoryTab
+          openInPlace
+          onRunOpenChange={setRunOpen}
         />
       </Box>
     </Box>

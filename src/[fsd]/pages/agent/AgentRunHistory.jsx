@@ -12,7 +12,7 @@ const AgentRunHistory = memo(() => (
     source={ParticipantEntityTypes.Agent}
     detailRoute={RouteDefinitions.ApplicationsDetail}
     analyticsRoute={RouteDefinitions.ApplicationsRunAnalytics}
-    eventColumnLabel="Trigger Type"
+    eventColumnLabel="Event"
     decorateRow={toExecutionTypeRow}
     scheduleEntityType="agent"
   />

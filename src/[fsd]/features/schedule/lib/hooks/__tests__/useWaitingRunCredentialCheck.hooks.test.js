@@ -11,7 +11,8 @@ import {
 
 const mocks = vi.hoisted(() => ({ check: vi.fn(), projectId: 3 }));
 
-vi.mock('@/[fsd]/entities/schedule', () => ({
+vi.mock('@/[fsd]/entities/schedule', async importOriginal => ({
+  ...(await importOriginal()),
   useCheckScheduleRiskMutation: () => [mocks.check],
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({

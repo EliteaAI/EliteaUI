@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Box, Link, Typography } from '@mui/material';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
-import { byNewestRunFirst, resolveRunHistoryListWidth } from '@/[fsd]/entities/run-history/lib/helpers';
+import { byNewestRunFirst, formatRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
 import { RunHistoryChat, RunHistoryList } from '@/[fsd]/entities/run-history/ui';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useIsSmallWindow, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
@@ -13,6 +13,8 @@ import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SearchParams } from '@/common/constants';
 import CloseIcon from '@/components/Icons/CloseIcon';
+
+import RunHistoryRunView from './RunHistoryRunView';
 
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
@@ -43,6 +45,12 @@ const RunHistoryContainer = memo(props => {
     onRowsChange,
     // 'side': the detail is right of the list (full pages); 'stacked': below it, for a narrow parent
     layout = 'side',
+    // true: an opened run replaces the list in the same page, with ‹ › and X (agents and pipelines, AC-13)
+    openInPlace = false,
+    // Tells the parent when a run opens or closes, so the parent can hide its own filter bar with the table
+    onRunOpenChange,
+    // true: only the additional rows show, no conversation is fetched (an index Event or Index filter, AC-39)
+    skipConversations = false,
   } = props;
 
   const projectId = useSelectedProjectId();
@@ -55,6 +63,8 @@ const RunHistoryContainer = memo(props => {
   const [page, setPage] = useState(0);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
   const handledSharedRunId = useRef(null);
+  // The run the reader opened in place (its id is in the URL); null when no run is open
+  const openedRunId = useRef(null);
   const [mergedData, setMergedData] = useState();
 
   const [fetchRunList, { data, isLoading, isFetching, isUninitialized, isError, error }] =
@@ -62,9 +72,14 @@ const RunHistoryContainer = memo(props => {
 
   // Not part of server-side pagination, so they are merged into every page.
   const historyRows = useMemo(() => {
-    const conversationRows = decorateRow ? allConversations.map(decorateRow) : allConversations;
+    // With skipConversations the list shows only the additional rows (index runs), never a loaded conversation
+    const conversationRows = skipConversations
+      ? []
+      : decorateRow
+        ? allConversations.map(decorateRow)
+        : allConversations;
     return [...conversationRows, ...additionalRows].sort(byNewestRunFirst);
-  }, [allConversations, additionalRows, decorateRow]);
+  }, [allConversations, additionalRows, decorateRow, skipConversations]);
 
   const selectedRow = useMemo(
     () => historyRows.find(historyRow => historyRow.id === selectedHistoryItem) ?? null,
@@ -98,14 +113,14 @@ const RunHistoryContainer = memo(props => {
   useEffect(() => {
     const historyRunId = searchParams.get(SearchParams.HistoryRunId);
 
-    if (!historyRunId) handledSharedRunId.current = null;
+    // A run the reader opened in place is written to the URL by the reader, not a shared link: the
+    // effect must not treat its id as a new link. Only a link with no open run resets the handled ref.
+    if (!historyRunId && openedRunId.current === null) handledSharedRunId.current = null;
 
-    if (!historyRunId || handledSharedRunId.current === historyRunId) {
-      if (!selectedHistoryItem && !runsStillArriving && historyRows.length) {
-        setSelectedHistoryItem(historyRows[0].id);
-      }
-      return;
-    }
+    // No run opens on its own (ticket AC-18): only a shared link selects one
+    if (!historyRunId || handledSharedRunId.current === historyRunId) return;
+    // Once the reader has opened a run here, the URL is theirs to write: a stale id in it is not a shared link
+    if (openedRunId.current !== null) return;
 
     const sharedRow = historyRows.find(historyRow => String(historyRow.id) === historyRunId);
 
@@ -135,7 +150,7 @@ const RunHistoryContainer = memo(props => {
   ]);
 
   const loadRunList = useCallback(() => {
-    if (projectId && entityId) {
+    if (projectId && entityId && !skipConversations) {
       fetchRunList({
         source,
         projectId,
@@ -145,7 +160,7 @@ const RunHistoryContainer = memo(props => {
         ...queryParams,
       });
     }
-  }, [projectId, entityId, entityProjectId, page, fetchRunList, source, queryParams]);
+  }, [projectId, entityId, entityProjectId, page, fetchRunList, source, queryParams, skipConversations]);
 
   useEffect(() => {
     loadRunList();
@@ -174,15 +189,59 @@ const RunHistoryContainer = memo(props => {
     setPage(prev => prev + 1);
   }, []);
 
-  const handleHistoryItemSelect = useCallback(item => {
-    setSelectedHistoryItem(item);
-  }, []);
+  const handleHistoryItemSelect = useCallback(
+    item => {
+      setSelectedHistoryItem(item);
+      if (openInPlace && item !== null) {
+        // AC-15: the open run is in the address bar, as a history entry, so the browser Back button closes it
+        handledSharedRunId.current = String(item);
+        openedRunId.current = String(item);
+        setSearchParams(
+          params => {
+            params.set(SearchParams.HistoryRunId, String(item));
+            return params;
+          },
+          { replace: false },
+        );
+      }
+    },
+    [openInPlace, setSearchParams],
+  );
+
+  // AC-14: closes the open run and removes history_run_id, so the table returns with its state
+  const handleCloseRun = useCallback(() => {
+    openedRunId.current = null;
+    setSelectedHistoryItem(null);
+    setSearchParams(
+      params => {
+        params.delete(SearchParams.HistoryRunId);
+        return params;
+      },
+      { replace: false },
+    );
+  }, [setSearchParams]);
+
+  useEffect(() => {
+    if (openInPlace) onRunOpenChange?.(selectedHistoryItem !== null);
+  }, [openInPlace, selectedHistoryItem, onRunOpenChange]);
+
+  // AC-14, AC-17: Esc closes an open run in place
+  useEffect(() => {
+    if (!openInPlace || selectedHistoryItem === null) return undefined;
+    const handleKeyDown = event => {
+      if (event.key === 'Escape') handleCloseRun();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [openInPlace, selectedHistoryItem, handleCloseRun]);
 
   const isStacked = layout === 'stacked';
+  // With the run opened in place there is no detail beside the table, so the table takes the whole width
   const styles = runHistoryContainerStyles(
     isSmallWindow,
     isStacked,
-    resolveRunHistoryListWidth(extraColumns),
+    // Side by side the flex split below sets the widths, so the table is not capped at a fixed width
+    '100%',
   );
 
   const detail =
@@ -197,6 +256,31 @@ const RunHistoryContainer = memo(props => {
         onHitlResume={onHitlResume}
       />
     );
+
+  // AC-13: the open run replaces the table on the same page; the list stays mounted, hidden, so its state survives
+  const runDate = formatRunTimestamp(selectedRow?.created_at);
+  const openRunIndex = historyRows.findIndex(historyRow => historyRow.id === selectedHistoryItem);
+  const showInPlaceRun = openInPlace && selectedHistoryItem !== null && openRunIndex >= 0;
+
+  const handlePrevious = () => handleHistoryItemSelect(historyRows[openRunIndex - 1].id);
+  const handleNext = () => handleHistoryItemSelect(historyRows[openRunIndex + 1].id);
+
+  const inPlaceJsx = (
+    <RunHistoryRunView
+      runDate={runDate}
+      selectedRow={selectedRow}
+      openRunIndex={openRunIndex}
+      totalRuns={historyRows.length}
+      detail={detail}
+      onPrevious={handlePrevious}
+      onNext={handleNext}
+      onCloseRun={handleCloseRun}
+      source={source}
+      handleOpenAnalytics={handleOpenAnalytics}
+      handleRestoreConversation={handleRestoreConversation}
+      shareOpensHistoryTab={shareOpensHistoryTab}
+    />
+  );
 
   return (
     <Box sx={onClose ? styles.outerWrapper : styles.root}>
@@ -218,9 +302,18 @@ const RunHistoryContainer = memo(props => {
           </Typography>
         </Box>
       )}
+      {showInPlaceRun && (
+        // AC-13: the open run replaces the table on the same page; the list is only hidden, so its state survives
+        <Box sx={styles.inPlaceRun}>{inPlaceJsx}</Box>
+      )}
       <Box
         data-testid="run-history-layout"
-        sx={onClose ? styles.wrapperFlex : styles.wrapper}
+        sx={[
+          onClose ? styles.wrapperFlex : styles.wrapper,
+          // The table is replaced by the open run (AC-13). The style sets display, which would override the
+          // hidden attribute, so the hiding is done in the style.
+          showInPlaceRun && styles.tableHidden,
+        ]}
       >
         <Box
           data-testid="run-history-list-column"
@@ -265,10 +358,12 @@ const RunHistoryContainer = memo(props => {
             eventColumnLabel={eventColumnLabel}
             shareOpensHistoryTab={shareOpensHistoryTab}
             extraColumns={extraColumns}
+            fillWidth={openInPlace}
           />
         </Box>
 
-        {isStacked ? (
+        {/* In place (AC-18, AC-13) the run replaces the table, and no empty panel sits beside it */}
+        {openInPlace ? null : isStacked ? (
           <Box
             data-testid="run-history-detail-panel"
             sx={styles.detailPanel}
@@ -334,7 +429,8 @@ const runHistoryContainerStyles = (isSmallWindow, isStacked, listWidth = '32rem'
     padding: '0.75rem 1.5rem 0.75rem 1.5rem',
   },
   historyList: {
-    flex: isStacked ? 'none' : 3,
+    // Side by side the table takes two thirds and the chat one third (ticket #7682)
+    flex: isStacked ? 'none' : 2,
     height: isStacked ? '20rem' : undefined,
     // The column follows the list width, so the panel starts after it
     maxWidth: isSmallWindow || isStacked ? '100%' : listWidth,
@@ -346,8 +442,21 @@ const runHistoryContainerStyles = (isSmallWindow, isStacked, listWidth = '32rem'
   },
   detailPanel: {
     display: 'flex',
+    flex: isStacked ? 'none' : 1,
+    minWidth: 0,
     width: '100%',
     height: '32rem',
+    boxSizing: 'border-box',
+  },
+  tableHidden: {
+    display: 'none',
+  },
+  inPlaceRun: {
+    flex: 1,
+    minHeight: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    padding: '0.75rem 1.5rem',
     boxSizing: 'border-box',
   },
 });

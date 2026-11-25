@@ -151,3 +151,90 @@ describe('RunHistoryList extra columns', () => {
     expect(screen.getByTestId('header')).toHaveTextContent('Date|Event|Duration');
   });
 });
+
+describe('RunHistoryList sorts the extra columns', () => {
+  const SORTABLE_COLUMNS = [
+    {
+      id: 'schedule',
+      label: 'Schedule',
+      width: '9rem',
+      render: row => row.schedule_run?.schedule_name ?? '-',
+    },
+    {
+      id: 'status',
+      label: 'Status',
+      width: '7rem',
+      render: row => row.schedule_run?.status ?? row.run_status ?? '-',
+    },
+    {
+      id: 'complexity',
+      label: 'Complexity',
+      width: '7.5rem',
+      render: () => '-',
+      // low < medium < high < extreme; a run with no score sorts last
+      sortValue: row =>
+        ['low', 'medium', 'high', 'extreme'].indexOf(row.label) === -1
+          ? 4
+          : ['low', 'medium', 'high', 'extreme'].indexOf(row.label),
+    },
+  ];
+
+  const ROWS = [
+    {
+      id: 1,
+      created_at: 1786693433,
+      duration: 1,
+      event_label: 'Chat',
+      run_status: 'failed',
+      label: 'high',
+      schedule_run: null,
+    },
+    {
+      id: 2,
+      created_at: 1786693434,
+      duration: 2,
+      event_label: 'Chat',
+      run_status: 'success',
+      label: 'low',
+      schedule_run: { schedule_name: 'Nightly', status: 'skipped' },
+    },
+    {
+      id: 3,
+      created_at: 1786693435,
+      duration: 3,
+      event_label: 'Chat',
+      run_status: 'running',
+      label: null,
+      schedule_run: { schedule_name: 'Daily', status: 'running' },
+    },
+  ];
+
+  it('sorts by the Schedule name when its header is clicked', () => {
+    renderList({ extraColumns: SORTABLE_COLUMNS, conversations: ROWS });
+
+    fireEvent.click(screen.getByText('sort Schedule'));
+
+    // Ascending by name: no schedule first (empty name), then Daily, then Nightly
+    const rows = screen.getAllByTestId('run-history-list-item');
+    expect(rows[1]).toHaveTextContent('Daily');
+    expect(rows[2]).toHaveTextContent('Nightly');
+  });
+
+  it('sorts by the status it shows when its header is clicked', () => {
+    renderList({ extraColumns: SORTABLE_COLUMNS, conversations: ROWS });
+
+    fireEvent.click(screen.getByText('sort Status'));
+
+    // Ascending by the status shown: failed, running, skipped (the schedule status) then success
+    const rows = screen.getAllByTestId('run-history-list-item');
+    expect(rows[0]).toHaveTextContent('failed');
+    expect(rows[1]).toHaveTextContent('running');
+  });
+
+  it('sorts by the complexity label order, with an unscored run last', () => {
+    renderList({ extraColumns: SORTABLE_COLUMNS, conversations: ROWS });
+
+    fireEvent.click(screen.getByText('sort Complexity'));
+    expect(screen.getAllByTestId('run-history-list-item')[0]).toHaveTextContent('Chat');
+  });
+});

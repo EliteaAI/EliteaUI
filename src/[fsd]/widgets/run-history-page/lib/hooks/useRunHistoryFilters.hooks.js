@@ -5,90 +5,101 @@ import { useSearchParams } from 'react-router-dom';
 import { toRunStatusLabel } from '@/[fsd]/entities/schedule';
 
 import {
-  ALL_OPTION_VALUE,
   EXECUTION_TYPE_PARAM,
   FILTER_PARAMS,
   NO_QUERY_PARAMS,
-  RUN_RECORD_FILTERS,
-  STATUS_VALUES,
+  RUN_OUTCOME_VALUES,
   TRIGGER_OPTIONS,
 } from '../constants/runHistoryFilters.constants';
 
-const ALL_OPTION = { label: 'All', value: ALL_OPTION_VALUE };
 const WHOLE_NUMBER = /^[1-9]\d*$/;
 
-const STATUS_OPTIONS = [
-  ALL_OPTION,
-  ...STATUS_VALUES.map(value => ({ label: toRunStatusLabel(value), value })),
-];
-const TRIGGER_FILTER_OPTIONS = [ALL_OPTION, ...TRIGGER_OPTIONS];
-const NO_DISABLED_FILTERS = [];
+const RUN_OUTCOME_OPTIONS = RUN_OUTCOME_VALUES.map(value => ({ label: toRunStatusLabel(value), value }));
+const EVENT_OPTIONS = TRIGGER_OPTIONS.map(({ label, value }) => ({ label, value }));
 
 const paramOf = trigger => TRIGGER_OPTIONS.find(option => option.value === trigger)?.param;
 
-// A value outside the allowed set reads as "All", so a hand-edited link never sends a bad filter
-const readParam = (searchParams, name, isValid) => {
-  const raw = searchParams.get(name) ?? ALL_OPTION_VALUE;
-  return isValid(raw) ? raw : ALL_OPTION_VALUE;
-};
+// Multi-select values travel as a comma list in the URL. An unknown item is dropped, so a hand-edited link never
+// sends a bad filter, and a repeated item counts once.
+const readList = (searchParams, name, isValid) =>
+  (searchParams.get(name) ?? '')
+    .split(',')
+    .map(item => item.trim())
+    .filter(item => item && isValid(item))
+    .filter((item, index, all) => all.indexOf(item) === index);
 
-export const useRunHistoryFilters = ({ schedules, versions }) => {
+const isEvent = value => TRIGGER_OPTIONS.some(option => option.value === value);
+const isWholeNumber = value => WHOLE_NUMBER.test(value);
+const isRunOutcome = value => RUN_OUTCOME_VALUES.includes(value);
+
+export const useRunHistoryFilters = ({ schedules = [], versions = [], toolNames = [] } = {}) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const trigger = readParam(searchParams, FILTER_PARAMS.trigger, value =>
-    TRIGGER_OPTIONS.some(option => option.value === value),
-  );
-  const triggerParam = paramOf(trigger);
-  // An execution type run has no run record: the run record filters of a link read as "All"
-  const isExecutionType = triggerParam === EXECUTION_TYPE_PARAM;
-  const readRunParam = (name, isValid) =>
-    isExecutionType ? ALL_OPTION_VALUE : readParam(searchParams, name, isValid);
+  // Raw URL values; each is a plain array of strings
+  const eventValues = readList(searchParams, FILTER_PARAMS.trigger, isEvent);
+  const scheduleIds = readList(searchParams, FILTER_PARAMS.schedule, isWholeNumber);
+  const versionIds = readList(searchParams, FILTER_PARAMS.version, isWholeNumber);
+  const outcomes = readList(searchParams, FILTER_PARAMS.run_outcome, isRunOutcome);
+  const tools = readList(searchParams, FILTER_PARAMS.tool, value => toolNames.includes(value));
 
-  const scheduleId = readRunParam(FILTER_PARAMS.schedule, value => WHOLE_NUMBER.test(value));
-  const versionId = readRunParam(FILTER_PARAMS.version, value => WHOLE_NUMBER.test(value));
-  const status = readRunParam(FILTER_PARAMS.status, value => STATUS_VALUES.includes(value));
+  // The list API params. An Event value goes to `trigger` (a run trigger) or `execution_type` (Chat, API, MCP).
+  // Keyed on the joined strings, so the object keeps its identity until a filter really changes.
+  const eventKey = eventValues.join(',');
+  const scheduleKey = scheduleIds.join(',');
+  const versionKey = versionIds.join(',');
+  const outcomeKey = outcomes.join(',');
+  const toolKey = tools.join(',');
 
   const queryParams = useMemo(() => {
     const params = {};
-    if (scheduleId) params[FILTER_PARAMS.schedule] = Number(scheduleId);
-    if (versionId) params[FILTER_PARAMS.version] = Number(versionId);
-    if (status) params[FILTER_PARAMS.status] = status;
-    if (trigger) params[triggerParam] = trigger;
+    const runTriggers = eventKey
+      .split(',')
+      .filter(value => value && paramOf(value) === FILTER_PARAMS.trigger);
+    const executionTypes = eventKey
+      .split(',')
+      .filter(value => value && paramOf(value) === EXECUTION_TYPE_PARAM);
+
+    if (scheduleKey) params[FILTER_PARAMS.schedule] = scheduleKey;
+    if (versionKey) params[FILTER_PARAMS.version] = versionKey;
+    if (outcomeKey) params[FILTER_PARAMS.run_outcome] = outcomeKey;
+    if (toolKey) params[FILTER_PARAMS.tool] = toolKey;
+    if (runTriggers.length) params[FILTER_PARAMS.trigger] = runTriggers.join(',');
+    if (executionTypes.length) params[EXECUTION_TYPE_PARAM] = executionTypes.join(',');
+
     return Object.keys(params).length ? params : NO_QUERY_PARAMS;
-  }, [scheduleId, versionId, status, trigger, triggerParam]);
+  }, [eventKey, scheduleKey, versionKey, outcomeKey, toolKey]);
 
   const scheduleOptions = useMemo(
     () => [
-      ALL_OPTION,
       ...schedules.map(schedule => ({ label: schedule.name, value: String(schedule.id) })),
-      // A linked id the caller's list does not hold still shows, so the select is never blank
-      ...(scheduleId && !schedules.some(schedule => String(schedule.id) === scheduleId)
-        ? [{ label: `Schedule ${scheduleId}`, value: scheduleId }]
-        : []),
+      // A linked id the caller's list does not hold still shows, so the filter never hides a value in use
+      ...scheduleIds
+        .filter(id => !schedules.some(schedule => String(schedule.id) === id))
+        .map(id => ({ label: `Schedule ${id}`, value: id })),
     ],
-    [schedules, scheduleId],
+    [schedules, scheduleIds],
   );
 
   const versionOptions = useMemo(
     () => [
-      ALL_OPTION,
       ...versions.map(version => ({ label: version.name, value: String(version.id) })),
-      ...(versionId && !versions.some(version => String(version.id) === versionId)
-        ? [{ label: `Version ${versionId}`, value: versionId }]
-        : []),
+      ...versionIds
+        .filter(id => !versions.some(version => String(version.id) === id))
+        .map(id => ({ label: `Version ${id}`, value: id })),
     ],
-    [versions, versionId],
+    [versions, versionIds],
   );
 
-  // `alsoEdit` makes further changes to the same copy, so one change writes the URL once
-  const setParam = useCallback(
-    (name, value, alsoEdit) => {
+  const toolOptions = useMemo(() => toolNames.map(name => ({ label: name, value: name })), [toolNames]);
+
+  // Writes the whole list for one filter; an empty list removes its param
+  const setList = useCallback(
+    (name, values) => {
       setSearchParams(
         prev => {
           const next = new URLSearchParams(prev);
-          if (value) next.set(name, value);
+          if (values.length) next.set(name, values.join(','));
           else next.delete(name);
-          alsoEdit?.(next);
           return next;
         },
         { replace: true },
@@ -97,48 +108,51 @@ export const useRunHistoryFilters = ({ schedules, versions }) => {
     [setSearchParams],
   );
 
-  const onScheduleChange = useCallback(value => setParam(FILTER_PARAMS.schedule, value), [setParam]);
-  const onStatusChange = useCallback(value => setParam(FILTER_PARAMS.status, value), [setParam]);
-  const onTriggerChange = useCallback(
-    value =>
-      setParam(FILTER_PARAMS.trigger, value, next => {
-        if (paramOf(value) !== EXECUTION_TYPE_PARAM) return;
-        // readRunParam only hides the run record filters while an execution type is picked;
-        // dropping them here keeps them from coming back when a run trigger is picked later
-        RUN_RECORD_FILTERS.forEach(key => next.delete(FILTER_PARAMS[key]));
-      }),
-    [setParam],
-  );
-  const onVersionChange = useCallback(value => setParam(FILTER_PARAMS.version, value), [setParam]);
+  const onScheduleChange = useCallback(values => setList(FILTER_PARAMS.schedule, values), [setList]);
+  const onOutcomeChange = useCallback(values => setList(FILTER_PARAMS.run_outcome, values), [setList]);
+  const onVersionChange = useCallback(values => setList(FILTER_PARAMS.version, values), [setList]);
+  const onToolChange = useCallback(values => setList(FILTER_PARAMS.tool, values), [setList]);
+  const onEventChange = useCallback(values => setList(FILTER_PARAMS.trigger, values), [setList]);
 
   const onClear = useCallback(() => {
     setSearchParams(
       prev => {
         const next = new URLSearchParams(prev);
         Object.values(FILTER_PARAMS).forEach(name => next.delete(name));
+        next.delete(EXECUTION_TYPE_PARAM);
         return next;
       },
       { replace: true },
     );
   }, [setSearchParams]);
 
+  const hasFilters = queryParams !== NO_QUERY_PARAMS;
+
   return {
-    values: { schedule: scheduleId, status, trigger, version: versionId },
+    // Ticked values per filter, as arrays of strings. The keys match the layout's filter keys.
+    values: {
+      event: eventValues,
+      schedule: scheduleIds,
+      status: outcomes,
+      version: versionIds,
+      tool: tools,
+    },
     options: {
+      event: EVENT_OPTIONS,
       schedule: scheduleOptions,
-      status: STATUS_OPTIONS,
-      trigger: TRIGGER_FILTER_OPTIONS,
+      status: RUN_OUTCOME_OPTIONS,
       version: versionOptions,
+      tool: toolOptions,
     },
     handlers: {
+      event: onEventChange,
       schedule: onScheduleChange,
-      status: onStatusChange,
-      trigger: onTriggerChange,
+      status: onOutcomeChange,
       version: onVersionChange,
+      tool: onToolChange,
     },
-    disabledFilters: isExecutionType ? RUN_RECORD_FILTERS : NO_DISABLED_FILTERS,
     queryParams,
-    hasFilters: queryParams !== NO_QUERY_PARAMS,
+    hasFilters,
     onClear,
   };
 };

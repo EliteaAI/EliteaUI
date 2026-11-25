@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { toCreateBody } from '@/[fsd]/features/schedule/lib/helpers';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
@@ -44,7 +45,6 @@ vi.mock('@/[fsd]/shared/ui/schedule', () => ({
   },
 }));
 vi.mock('@/[fsd]/features/schedule', async importOriginal => {
-  const { toCreateBody } = await import('@/[fsd]/features/schedule/lib/helpers');
   return {
     ...(await importOriginal()),
     WebhookSettingsSection: props => <div data-testid="webhook-settings">{props.values.webhook_type}</div>,

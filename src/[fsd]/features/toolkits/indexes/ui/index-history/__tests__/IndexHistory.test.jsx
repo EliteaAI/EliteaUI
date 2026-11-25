@@ -11,6 +11,15 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 
 import IndexHistory from '../IndexHistory';
 
+// jsdom has no ResizeObserver; the history list measures its rows with one. Fill it in only when it is missing.
+if (!globalThis.ResizeObserver) {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
 vi.hoisted(() => {
   const entries = new Map();
 

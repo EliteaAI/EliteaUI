@@ -9,19 +9,28 @@ export const RUN_FULL_TIMESTAMP_FORMAT = 'dd-MM-yyyy, hh:mm:ss a';
 // Usage is tagged with `run_id` / `eval_run_id` only from this date; older runs have nothing to show
 const RUN_ANALYTICS_AVAILABLE_FROM = Date.UTC(2026, 8, 30);
 
-// With extra columns the tracks are fixed rem widths: Date, Trigger Type, extras, Version, Duration.
-// From live measures at 16 px per rem: a row grid has 736 px (a 768 px list minus 2 x 16 px of row
-// padding; the row menu is absolute and takes no track). A sortable header needs its label plus 57 px (padding,
-// sort icon, gap, border) and a plain one its label plus 33 px: Date 91, Schedule 99, Status 78, Trigger Type
-// 163, Version 110 and Duration 119 px. The minimum sum is 732 px. Dates up to 145 px stay cut, with a tooltip.
+// With extra columns the tracks are the prototype's fixed widths: Date, Event, extras, Version, Duration.
+// The run history prototype sets Date 10rem, Event minmax(9rem, 1fr), Schedule/Webhook 10rem, Status 9.5rem,
+// Complexity 7.5rem, Version 7rem and Duration 5.5rem (ticket #7682, AC-2). Event takes the leftover width.
 const FIXED_TRACKS = {
-  date: '7.5rem',
-  event: '9.25rem',
-  version: '7rem',
-  duration: 'minmax(7.5rem, 1fr)',
+  date: 'minmax(10rem, 1fr)',
+  event: 'minmax(7rem, 0.75fr)',
+  version: 'minmax(7rem, 1fr)',
+  duration: 'minmax(6rem, 1fr)',
 };
 
-// The schedule columns keep the measured 48 rem; any further column adds exactly its own width
+// Every column grows to share the free width, and never drops below the width its header label needs
+// (sort arrow, padding and the longest label of the column). A long label, such as "Schedule/Webhook", sets a larger minimum.
+const LABEL_MIN_WIDTH = {
+  schedule: '11rem',
+  status: '8.5rem',
+  complexity: '8rem',
+};
+
+// Each extra column is flexible: it grows with the table and keeps the minimum its label needs
+const flexTrack = column => `minmax(${LABEL_MIN_WIDTH[column.id] ?? column.width}, 1fr)`;
+
+// The list keeps 48 rem with the schedule and status columns; any further column adds exactly its own width
 const SCHEDULE_LIST_WIDTH_REM = 48;
 const sumColumnWidthsRem = columns => columns.reduce((sum, column) => sum + parseFloat(column.width), 0);
 
@@ -36,7 +45,7 @@ export const resolveRunHistoryColumns = (noVersions, hasEvent, extraColumns = []
     return [
       date,
       ...(hasEvent ? [event] : []),
-      ...extraColumns.map(column => column.width),
+      ...extraColumns.map(flexTrack),
       ...(noVersions ? [] : [version]),
       duration,
     ].join(' ');
@@ -169,7 +178,7 @@ const EXECUTION_TYPE_LABELS = new Map([
   ['webhook', 'Webhook'],
 ]);
 
-// A missing or unknown type (older runs) renders "-" and the row stays selectable. Older test runs were stored
+// A missing or unknown type (older runs) renders "—" and the row stays selectable. Older test runs were stored
 // as schedule_manual, so the run record's trigger still tells a test apart; a webhook test is its sample-body run
 const toEventLabel = row => {
   // Early webhook runs were stored as scheduled; their run record still says webhook
@@ -180,18 +189,22 @@ const toEventLabel = row => {
 
 export const toExecutionTypeRow = row => ({ ...row, event_label: toEventLabel(row) });
 
-// The Schedule and Status columns of Agent and Pipeline Run History; '-' without a run record
+// The Schedule and Status columns of Agent and Pipeline Run History; '-' when the row has no run record
 export const SCHEDULE_RUN_COLUMNS = [
   {
     id: 'schedule',
     label: 'Schedule/Webhook',
-    width: '7.5rem',
+    width: '10rem',
     render: row => row.schedule_run?.schedule_name ?? '-',
   },
   {
     id: 'status',
     label: 'Status',
-    width: '7rem',
-    render: row => (row.schedule_run ? toRunStatusLabel(row.schedule_run.status) : '-'),
+    width: '9.5rem',
+    // A schedule run keeps its own status; a chat, API or MCP row takes the server's run_status (AC-24)
+    render: row => {
+      const status = row.schedule_run?.status ?? row.run_status;
+      return status ? toRunStatusLabel(status) : '-';
+    },
   },
 ];

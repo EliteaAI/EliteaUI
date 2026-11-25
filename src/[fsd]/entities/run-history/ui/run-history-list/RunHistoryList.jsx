@@ -7,7 +7,6 @@ import {
   compareRunDuration,
   compareRunTimestamp,
   resolveRunHistoryColumns,
-  resolveRunHistoryListWidth,
 } from '@/[fsd]/entities/run-history/lib/helpers';
 import { useRunHistorySorting } from '@/[fsd]/entities/run-history/lib/hooks';
 import { RunHistoryListItem, RunHistorySortableHeader } from '@/[fsd]/entities/run-history/ui';
@@ -24,6 +23,8 @@ const SORT_TYPES = {
   EVENT: 'event',
   VERSION: 'version',
   DURATION: 'duration',
+  SCHEDULE: 'schedule',
+  STATUS: 'status',
 };
 
 const RunHistoryList = memo(props => {
@@ -45,11 +46,14 @@ const RunHistoryList = memo(props => {
     eventColumnLabel = 'Event',
     shareOpensHistoryTab = false,
     extraColumns = NO_EXTRA_COLUMNS,
+    // true: the table takes the whole width of its parent (the run opens in place, nothing beside it)
+    fillWidth = false,
   } = props;
   const { isSmallWindow } = useIsSmallWindow();
   const { windowWidth } = useGetWindowWidth();
 
-  const styles = runHistoryListStyles(isSmallWindow, resolveRunHistoryListWidth(extraColumns));
+  // Beside the chat the parent's flex split sets the width; in place the table fills the whole width
+  const styles = runHistoryListStyles(isSmallWindow, fillWidth ? '100%' : null);
 
   const { sortConfig, handleSortItems, getSortedData } = useRunHistorySorting(SORT_TYPES.DATE);
 
@@ -70,20 +74,38 @@ const RunHistoryList = memo(props => {
         return versionA.localeCompare(versionB);
       },
       [SORT_TYPES.DURATION]: compareRunDuration,
+      [SORT_TYPES.SCHEDULE]: (a, b) =>
+        (a.schedule_run?.schedule_name ?? '').localeCompare(b.schedule_run?.schedule_name ?? ''),
+      [SORT_TYPES.STATUS]: (a, b) =>
+        (a.schedule_run?.status ?? a.run_status ?? '').localeCompare(
+          b.schedule_run?.status ?? b.run_status ?? '',
+        ),
+      // The extra column's own sort value (Complexity reads the labels it loaded); unscored rows sort last
+      ...Object.fromEntries(
+        extraColumns
+          .filter(column => typeof column.sortValue === 'function')
+          .map(column => [
+            column.id,
+            (a, b) => {
+              const left = column.sortValue(a);
+              const right = column.sortValue(b);
+              return left < right ? -1 : left > right ? 1 : 0;
+            },
+          ]),
+      ),
     }),
-    [noVersions, versions],
+    [noVersions, versions, extraColumns],
   );
 
   const tableHeaderItems = useMemo(
     () => [
       { label: 'Date', type: SORT_TYPES.DATE },
       ...(hasEvent ? [{ label: eventColumnLabel, type: SORT_TYPES.EVENT }] : []),
-      // The extra columns do not sort
+      // The extra columns sort by their own value (Schedule/Webhook, Status and Complexity)
       ...extraColumns.map(column => ({
         label: column.label,
         title: column.title,
         type: column.id,
-        sortable: false,
       })),
       ...(noVersions ? [] : [{ label: 'Version', type: SORT_TYPES.VERSION }]),
       { label: 'Duration', type: SORT_TYPES.DURATION },
@@ -159,14 +181,15 @@ RunHistoryList.displayName = 'RunHistoryList';
 /** @type {MuiSx} */
 // The list grows with its extra columns (48 rem with Schedule and Status); without them it keeps 32 rem
 const runHistoryListStyles = (isSmallWindow, listWidth) => {
+  // A null width leaves the table to its flex share, so it does not stop short of the split
   const wrapperWidth = isSmallWindow ? '100%' : listWidth;
 
   return {
     wrapper: {
-      flex: 3,
-      width: wrapperWidth,
-      minWidth: wrapperWidth,
-      maxWidth: wrapperWidth,
+      flex: listWidth ? 1 : 2,
+      width: wrapperWidth ?? undefined,
+      minWidth: 0,
+      maxWidth: wrapperWidth ?? undefined,
       display: 'flex',
       flexDirection: 'column',
       boxSizing: 'border-box',

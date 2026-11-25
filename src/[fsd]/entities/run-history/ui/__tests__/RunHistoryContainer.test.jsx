@@ -47,7 +47,13 @@ vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
 vi.mock('@/[fsd]/entities/run-history/api', () => {
   const queryTuple = [fetchRunList, queryResult];
 
-  return { RunHistoryApi: { useLazyGetRunHistoryListQuery: () => queryTuple } };
+  return {
+    RunHistoryApi: {
+      useLazyGetRunHistoryListQuery: () => queryTuple,
+      // The shared row actions menu (reused in the run header) deletes through this mutation
+      useDeleteRunHistoryItemMutation: () => [vi.fn(), { isLoading: false }],
+    },
+  };
 });
 
 const CONVERSATION_ROWS = [
@@ -156,10 +162,10 @@ describe('RunHistoryContainer shared-link restore', () => {
     expect(screen.getByTestId('detail')).toHaveTextContent('1234');
   });
 
-  it('selects the newest run when no run is named', () => {
+  it('opens no run when none is named', () => {
     renderContainer('');
 
-    expect(screen.getByTestId('selection')).toHaveAttribute('data-value', '1234');
+    expect(screen.getByTestId('selection')).toHaveAttribute('data-value', 'null');
   });
 
   it('lets the reader pick another run once the shared one is open', () => {
@@ -310,29 +316,14 @@ describe('RunHistoryContainer shared-link restore', () => {
 describe('RunHistoryContainer initial selection', () => {
   const NEWER_INDEX_RUN_ROW = { ...INDEX_RUN_ROW, id: 'index-run:docs:1', created_at: '2026-08-20T10:00:00' };
 
-  it('waits for the index runs before picking the newest run', () => {
+  it('keeps no run open while the index runs load, and opens none when they arrive', () => {
     const { rerender } = renderContainer('', { additionalRows: [], additionalRowsLoading: true });
 
     expect(screen.getByTestId('selection')).toHaveAttribute('data-value', 'null');
 
     rerender(containerTree('', { additionalRows: [NEWER_INDEX_RUN_ROW], additionalRowsLoading: false }));
 
-    expect(screen.getByTestId('selection')).toHaveAttribute('data-value', NEWER_INDEX_RUN_ROW.id);
-  });
-
-  it('waits for the conversations before picking the newest run', () => {
-    queryResult.data = undefined;
-    queryResult.isUninitialized = true;
-
-    const { rerender } = renderContainer('', { additionalRows: [INDEX_RUN_ROW] });
-
     expect(screen.getByTestId('selection')).toHaveAttribute('data-value', 'null');
-
-    queryResult.data = { rows: CONVERSATION_ROWS, total: CONVERSATION_ROWS.length };
-    queryResult.isUninitialized = false;
-    rerender(containerTree('', { additionalRows: [INDEX_RUN_ROW] }));
-
-    expect(screen.getByTestId('selection')).toHaveAttribute('data-value', '1234');
   });
 
   it('orders the rows newest first even when there are no index runs', () => {
@@ -340,7 +331,9 @@ describe('RunHistoryContainer initial selection', () => {
 
     renderContainer('');
 
-    expect(screen.getByTestId('selection')).toHaveAttribute('data-value', '1234');
+    expect(screen.getByTestId('selection')).toHaveAttribute('data-value', 'null');
+    // the list still shows the newest run first, though nothing opens
+    expect(receivedRowSets[receivedRowSets.length - 1][0].id).toBe(1234);
   });
 
   it('hands the list the same rows when nothing about them changed', () => {
@@ -413,7 +406,9 @@ describe('RunHistoryContainer stacked layout', () => {
 
     expect(wrapper).toHaveStyle({ flexDirection: 'column' });
     expect(panel).toHaveStyle({ width: '100%', height: '32rem' });
-    expect(panel).toContainElement(screen.getByTestId('detail'));
+    // no run is open until the reader picks one, so the panel is there but empty
+    expect(panel).toBeEmptyDOMElement();
+    expect(screen.getByTestId('selection')).toHaveAttribute('data-value', 'null');
     expect(screen.getByTestId('selection').compareDocumentPosition(panel)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
@@ -459,34 +454,34 @@ describe('RunHistoryContainer height', () => {
 });
 
 describe('RunHistoryContainer list column width', () => {
-  it('widens the list column to 48 rem with the schedule columns, so the panel starts after it', () => {
+  // Beside the chat the table takes two thirds of the width from the flex split, not a fixed width (ticket #7682)
+  it('does not cap the list at a fixed width with schedule and status columns', () => {
     renderContainer('', {
       extraColumns: [
-        { id: 'schedule', label: 'Schedule', width: '7.5rem', render: () => '-' },
-        { id: 'status', label: 'Status', width: '7rem', render: () => '-' },
+        { id: 'schedule', label: 'Schedule/Webhook', width: '10rem', render: () => '—' },
+        { id: 'status', label: 'Status', width: '9.5rem', render: () => '—' },
       ],
     });
 
-    expect(screen.getByTestId('run-history-list-column')).toHaveStyle({ maxWidth: '48rem' });
+    expect(screen.getByTestId('run-history-list-column')).not.toHaveStyle({ maxWidth: '48rem' });
   });
 
-  // EL-7556: the Complexity column cut Duration off at the fixed 48 rem
-  it('grows by each further extra column, so Duration keeps its track', () => {
+  it('does not cap the list at a fixed width with a Complexity column either', () => {
     renderContainer('', {
       extraColumns: [
-        { id: 'schedule', label: 'Schedule', width: '7.5rem', render: () => '-' },
-        { id: 'status', label: 'Status', width: '7rem', render: () => '-' },
-        { id: 'complexity', label: 'CU', width: '5.5rem', render: () => '-' },
+        { id: 'schedule', label: 'Schedule/Webhook', width: '10rem', render: () => '—' },
+        { id: 'status', label: 'Status', width: '9.5rem', render: () => '—' },
+        { id: 'complexity', label: 'Complexity', width: '7.5rem', render: () => '—' },
       ],
     });
 
-    expect(screen.getByTestId('run-history-list-column')).toHaveStyle({ maxWidth: '53.5rem' });
+    expect(screen.getByTestId('run-history-list-column')).not.toHaveStyle({ maxWidth: '55.5rem' });
   });
 
-  it('keeps the 32 rem column for the other histories', () => {
+  it('does not cap the list at 32 rem for the other histories', () => {
     renderContainer('');
 
-    expect(screen.getByTestId('run-history-list-column')).toHaveStyle({ maxWidth: '32rem' });
+    expect(screen.getByTestId('run-history-list-column')).not.toHaveStyle({ maxWidth: '32rem' });
   });
 });
 
@@ -524,5 +519,127 @@ describe('RunHistoryContainer list error', () => {
     renderContainer('');
 
     expect(screen.queryByTestId('run-history-error')).not.toBeInTheDocument();
+  });
+});
+
+describe('RunHistoryContainer in-place run view (AC-13 to AC-15, AC-17)', () => {
+  it('opens no run until a row is clicked, and shows the table, not the run view', () => {
+    renderContainer('', { openInPlace: true });
+
+    expect(screen.queryByTestId('run-history-run-view')).not.toBeInTheDocument();
+    expect(screen.getByTestId('selection').dataset.value).toBe('null');
+  });
+
+  it('clicking a row opens it in place of the table and writes history_run_id into the URL', () => {
+    renderContainer('', { openInPlace: true });
+
+    fireEvent.click(screen.getByTestId(`select-${CONVERSATION_ID}`));
+
+    expect(screen.getByTestId('run-history-run-view')).toBeInTheDocument();
+    expect(screen.getByTestId('run-history-run-header')).toBeInTheDocument();
+    expect(screen.getByTestId('search').textContent).toContain(`history_run_id=${CONVERSATION_ID}`);
+  });
+
+  it('the open run is a named region with the run date', () => {
+    renderContainer('', { openInPlace: true });
+
+    fireEvent.click(screen.getByTestId(`select-${CONVERSATION_ID}`));
+
+    const region = screen.getByTestId('run-history-run-view');
+    expect(region).toHaveAttribute('role', 'region');
+    expect(region.getAttribute('aria-label')).toMatch(/^Run /);
+  });
+
+  it('the close button closes the run and removes history_run_id, so the table returns', () => {
+    renderContainer('', { openInPlace: true });
+    fireEvent.click(screen.getByTestId(`select-${CONVERSATION_ID}`));
+
+    fireEvent.click(screen.getByTestId('run-history-run-close-button'));
+
+    expect(screen.queryByTestId('run-history-run-view')).not.toBeInTheDocument();
+    expect(screen.getByTestId('selection').dataset.value).toBe('null');
+    expect(screen.getByTestId('search').textContent).not.toContain('history_run_id');
+  });
+
+  it('Escape closes an open run', () => {
+    renderContainer('', { openInPlace: true });
+    fireEvent.click(screen.getByTestId(`select-${CONVERSATION_ID}`));
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+
+    expect(screen.queryByTestId('run-history-run-view')).not.toBeInTheDocument();
+  });
+
+  it('the next and previous buttons move between loaded runs and show the position', () => {
+    renderContainer('', { openInPlace: true });
+    fireEvent.click(screen.getByTestId(`select-${CONVERSATION_ID}`));
+
+    expect(screen.getByText('1 of 2')).toBeInTheDocument();
+    expect(screen.getByTestId('run-history-run-prev-button')).toBeDisabled();
+
+    fireEvent.click(screen.getByTestId('run-history-run-next-button'));
+
+    expect(screen.getByText('2 of 2')).toBeInTheDocument();
+    expect(screen.getByTestId('run-history-run-next-button')).toBeDisabled();
+    expect(screen.getByTestId('search').textContent).toContain('history_run_id=5678');
+  });
+
+  it('the list stays mounted while a run is open, so its rows and state survive closing', () => {
+    renderContainer('', { openInPlace: true });
+    fireEvent.click(screen.getByTestId(`select-${CONVERSATION_ID}`));
+
+    // The list is hidden behind the run view, not unmounted: the row buttons are still in the tree
+    expect(screen.getByTestId(`select-${CONVERSATION_ID}`)).toBeInTheDocument();
+  });
+
+  it('without openInPlace a row click keeps the old side-by-side detail (skill, toolkit and index pages)', () => {
+    renderContainer('', { openInPlace: false });
+
+    fireEvent.click(screen.getByTestId(`select-${CONVERSATION_ID}`));
+
+    expect(screen.queryByTestId('run-history-run-view')).not.toBeInTheDocument();
+    expect(screen.getByTestId('detail')).toBeInTheDocument();
+  });
+});
+
+describe('RunHistoryContainer run header menu', () => {
+  it('shows the ⋯ menu in the run header, with the same items as the row menu, without a row hover', () => {
+    renderContainer('', { openInPlace: true });
+    fireEvent.click(screen.getByTestId(`select-${CONVERSATION_ID}`));
+
+    const header = screen.getByTestId('run-history-run-header');
+    const trigger = header.querySelector('[data-testid="run-view-menu-menu-button"]');
+    expect(trigger).not.toBeNull();
+    expect(trigger).toBeVisible();
+
+    fireEvent.click(trigger);
+
+    expect(screen.getByRole('menuitem', { name: /Share link/ })).toBeInTheDocument();
+  });
+
+  it('lists Analytics once in the run header: the button, not the menu', () => {
+    renderContainer('', { openInPlace: true });
+    fireEvent.click(screen.getByTestId(`select-${CONVERSATION_ID}`));
+
+    fireEvent.click(screen.getByTestId('run-view-menu-menu-button'));
+
+    expect(screen.queryByRole('menuitem', { name: /Analytics/ })).toBeNull();
+  });
+});
+
+describe('RunHistoryContainer run header Analytics (same as the table)', () => {
+  it('the header Analytics button calls the table Analytics handler with the run id', () => {
+    const handleOpenAnalytics = vi.fn();
+    // Analytics only covers runs from the cutoff on, so this run is dated after it
+    queryResult.data = {
+      rows: [{ id: CONVERSATION_ID, created_at: '2026-10-01T10:00:00', duration: 5, entry: {} }],
+      total: 1,
+    };
+    renderContainer('', { openInPlace: true, handleOpenAnalytics });
+    fireEvent.click(screen.getByTestId(`select-${CONVERSATION_ID}`));
+
+    fireEvent.click(screen.getByTestId('run-history-run-analytics-button'));
+
+    expect(handleOpenAnalytics).toHaveBeenCalledWith(CONVERSATION_ID);
   });
 });
