@@ -225,6 +225,11 @@ describe('getCaseHistorySource', () => {
     expect(getCaseHistorySource(historyCase({}, { redacted: true }), 7).canOpen).toBe(false);
   });
 
+  it('keeps the private note for a case the backend hid, which has no chat id', () => {
+    const hidden = { input: '[private]', redacted: true, source: { is_private: true } };
+    expect(getCaseHistorySource(hidden, 7)).toEqual({ conversationId: null, canOpen: false });
+  });
+
   it('returns null for a dataset case', () => {
     expect(getCaseHistorySource({ input: 'q' }, 7)).toBeNull();
     expect(getCaseHistorySource(undefined, 7)).toBeNull();

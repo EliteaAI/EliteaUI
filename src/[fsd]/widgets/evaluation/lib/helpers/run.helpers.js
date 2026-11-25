@@ -140,10 +140,12 @@ export const getRunHistorySource = meta => {
 /**
  * The stored chat a history case was taken from, and whether the viewer may open it: a private chat
  * opens for its author only, even when an admin can read the copied text. Legacy participant rows may
- * store the author id as a string.
+ * store the author id as a string. The backend strips a hidden case's source down to `is_private`, so
+ * it has no chat to link and only the private note is shown.
  */
 export const getCaseHistorySource = (caseItem, viewerId) => {
   const source = caseItem?.source;
+  if (caseItem?.redacted && source?.is_private) return { conversationId: null, canOpen: false };
   if (!source?.conversation_id) return null;
   const isAuthor = viewerId != null && String(source.author_id) === String(viewerId);
   const canOpen = !caseItem.redacted && (!source.is_private || isAuthor);

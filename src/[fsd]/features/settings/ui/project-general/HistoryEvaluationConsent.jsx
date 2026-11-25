@@ -1,10 +1,12 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 
 import { Box, FormControlLabel, Typography } from '@mui/material';
 
 import { useCanManageProjectSettings } from '@/[fsd]/features/settings/lib/hooks';
+import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
-import { Checkbox } from '@/[fsd]/shared/ui';
+import { Button, Checkbox, Modal } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import { useEvalHistoryConsentQuery, useSetEvalHistoryConsentMutation } from '@/[fsd]/widgets/evaluation/api';
 import { PERMISSIONS } from '@/common/constants';
@@ -13,20 +15,27 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 const CONSENT_TOOLTIP =
   'When the scheduled evaluation runs in **history** or **hybrid** mode, it scores agents from the chat turns they already answered instead of running them. Private chats are included. Each sampled turn is copied into the evaluation run and kept for as long as the run is. Only the chat author and project admins see the copied text; everyone else sees the scores. Secrets such as keys and tokens are masked, but **personal data is not**.';
 
+const CONFIRM_TEXT =
+  "The scheduled evaluation will read every member's chats with this project's agents, private ones included, and copy the sampled turns into evaluation runs. Personal data in them is not masked. Turn it on?";
+
 const HistoryEvaluationConsent = memo(() => {
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
   const { checkPermission } = useCheckPermission();
   const { canManageSettings, isLoading: isLoadingAdmin } = useCanManageProjectSettings();
 
-  const { data, isError, isFetching } = useEvalHistoryConsentQuery({ projectId }, { skip: !projectId });
+  const { data, isError, isFetching, refetch } = useEvalHistoryConsentQuery(
+    { projectId },
+    { skip: !projectId },
+  );
   const [setConsent, { isLoading: isSaving }] = useSetEvalHistoryConsentMutation();
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const styles = historyEvaluationConsentStyles(isError);
 
-  const handleChange = useCallback(
-    async event => {
+  const saveConsent = useCallback(
+    async consent => {
       try {
-        await setConsent({ projectId, consent: event.target.checked }).unwrap();
+        await setConsent({ projectId, consent }).unwrap();
       } catch (error) {
         toastError(error?.data?.error || 'Unable to update the chat history evaluation setting');
       }
@@ -34,12 +43,27 @@ const HistoryEvaluationConsent = memo(() => {
     [projectId, setConsent, toastError],
   );
 
+  // Turning it on exposes the project's chats to the pipeline, so it asks first; turning it off does not.
+  const handleChange = useCallback(
+    event => {
+      if (event.target.checked) setConfirmOpen(true);
+      else saveConsent(false);
+    },
+    [saveConsent],
+  );
+
+  const handleCancel = useCallback(() => setConfirmOpen(false), []);
+  const handleConfirm = useCallback(() => {
+    setConfirmOpen(false);
+    saveConsent(true);
+  }, [saveConsent]);
+
   const disabled =
     !checkPermission(PERMISSIONS.projectContext.edit) ||
     !canManageSettings ||
     isError ||
+    // A background refetch keeps the stored value, so only a first read locks the toggle.
     !data ||
-    isFetching ||
     isSaving;
 
   return (
@@ -76,9 +100,21 @@ const HistoryEvaluationConsent = memo(() => {
         sx={styles.description}
       >
         {isError
-          ? 'Could not load the setting'
+          ? 'Could not load the setting.'
           : 'Lets the scheduled evaluation score agents from their stored chats, private ones included. Chat text stays visible to its author and project admins only. Personal data is not masked.'}
       </Typography>
+      {isError && (
+        <Box>
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.text}
+            onClick={refetch}
+            disabled={isFetching}
+            data-testid="evaluation-history-consent-retry"
+          >
+            Retry
+          </Button.BaseBtn>
+        </Box>
+      )}
       {!isLoadingAdmin && !canManageSettings && (
         <Typography
           variant="bodySmall"
@@ -88,6 +124,17 @@ const HistoryEvaluationConsent = memo(() => {
           Only project admins can change it.
         </Typography>
       )}
+      <Modal.BaseModal
+        open={confirmOpen}
+        variant={ModalConstants.MODAL_VARIANT.simple}
+        title="Evaluate agents from chat history?"
+        content={<Typography variant="bodySmall">{CONFIRM_TEXT}</Typography>}
+        onClose={handleCancel}
+        onConfirm={handleConfirm}
+        confirmButtonText="Turn on"
+        confirmButtonTestId="evaluation-history-consent-confirm"
+        data-testid="evaluation-history-consent-dialog"
+      />
     </Box>
   );
 });

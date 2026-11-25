@@ -19,12 +19,14 @@ const api = vi.hoisted(() => ({
   currentError: false,
   currentFetching: false,
   toastError: vi.fn(),
+  refetch: vi.fn(),
 }));
 vi.mock('@/[fsd]/widgets/evaluation/api', () => ({
   useEvalHistoryConsentQuery: () => ({
     data: api.current,
     isError: api.currentError,
     isFetching: api.currentFetching,
+    refetch: api.refetch,
   }),
   useSetEvalHistoryConsentMutation: () => [api.setConsent, { isLoading: false }],
 }));
@@ -63,13 +65,39 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('chat history evaluation consent', () => {
-  it('starts off and turns on for an admin', async () => {
+  it('starts off and turns on for an admin after a confirmation', async () => {
     renderConsent();
     expect(checkbox()).not.toBeChecked();
 
     await userEvent.click(checkbox());
+    expect(api.setConsent).not.toHaveBeenCalled();
+    expect(screen.getByTestId('evaluation-history-consent-dialog')).toHaveTextContent(
+      'private ones included',
+    );
+
+    await userEvent.click(screen.getByTestId('evaluation-history-consent-confirm'));
 
     await waitFor(() => expect(api.setConsent).toHaveBeenCalledWith({ projectId: 2, consent: true }));
+  });
+
+  it('stays off when the confirmation is cancelled', async () => {
+    renderConsent();
+    await userEvent.click(checkbox());
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(api.setConsent).not.toHaveBeenCalled();
+  });
+
+  it('turns off without asking', async () => {
+    api.current = { history_evaluation_consent: true };
+    renderConsent();
+    await userEvent.click(checkbox());
+    await waitFor(() => expect(api.setConsent).toHaveBeenCalledWith({ projectId: 2, consent: false }));
+  });
+
+  it('keeps the toggle usable while a stored value is refetched', () => {
+    api.currentFetching = true;
+    renderConsent();
+    expect(checkbox()).not.toBeDisabled();
   });
 
   it('shows a stored consent as checked', () => {
@@ -101,12 +129,20 @@ describe('chat history evaluation consent', () => {
     );
   });
 
+  it('retries a failed read', async () => {
+    api.currentError = true;
+    renderConsent();
+    await userEvent.click(screen.getByTestId('evaluation-history-consent-retry'));
+    expect(api.refetch).toHaveBeenCalled();
+  });
+
   it('reports a refused save', async () => {
     api.setConsent.mockReturnValue({
       unwrap: () => Promise.reject({ data: { error: 'Only project admins can change it' } }),
     });
     renderConsent();
     await userEvent.click(checkbox());
+    await userEvent.click(screen.getByTestId('evaluation-history-consent-confirm'));
     await waitFor(() => expect(api.toastError).toHaveBeenCalledWith('Only project admins can change it'));
   });
 });
