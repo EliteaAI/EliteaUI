@@ -128,6 +128,7 @@ const WhoAnswers = memo(props => {
     showStepsLimit = false,
     internal_tools = [],
     onInternalToolsConfigChange,
+    disableInternalTools = false,
     disabled = false,
     pulseKey = 0,
     // as dev's VersionSelector: a version change with an editor open asks first when the editor has changes
@@ -717,6 +718,7 @@ const WhoAnswers = memo(props => {
           showStepsLimit={showStepsLimit}
           internal_tools={internal_tools}
           onInternalToolsConfigChange={onInternalToolsConfigChange}
+          disableInternalTools={disableInternalTools}
         />
       )}
     </Box>

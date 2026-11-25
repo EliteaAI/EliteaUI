@@ -346,6 +346,7 @@ const ConceptChatInput = memo(
         showStepsLimit={!!showStepsLimit}
         internal_tools={internal_tools}
         onInternalToolsConfigChange={onInternalToolsConfigChange}
+        disableInternalTools={isLoading || isStreaming}
         disabled={disableSwitchingParticipant || isStreaming || isLoading}
         pulseKey={pulseKey}
         isEditorDirty={isEditorDirty}

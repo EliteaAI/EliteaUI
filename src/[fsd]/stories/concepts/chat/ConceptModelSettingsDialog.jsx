@@ -43,6 +43,7 @@ const ConceptModelSettingsDialog = memo(props => {
     // concept: the chat's modules
     internal_tools = [],
     onInternalToolsConfigChange,
+    disableInternalTools = false,
   } = props;
 
   const [localSettings, setLocalSettings] = useState(llmSettings);
@@ -127,7 +128,7 @@ const ConceptModelSettingsDialog = memo(props => {
                         )
                   }`}
                   checked={internal_tools.includes(tool.name) && !tool.unavailable}
-                  disabled={tool.unavailable}
+                  disabled={disableInternalTools || tool.unavailable}
                   onToggle={value => onInternalToolsConfigChange?.({ key: tool.name, value })}
                   sx={styles.moduleRow}
                 />
