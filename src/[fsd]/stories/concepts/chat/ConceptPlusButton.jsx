@@ -114,6 +114,7 @@ const ConceptPlusButton = memo(props => {
   const buttonRef = useRef(null);
   const subMenuRef = useRef(null);
   const mainPaperRef = useRef(null);
+  const [mainHeight, setMainHeight] = useState(0);
 
   const [isOpen, setIsOpen] = useState(false);
   const [openItem, setOpenItem] = useState(null);
@@ -186,9 +187,18 @@ const ConceptPlusButton = memo(props => {
   }, [isOpen, handleClose]);
 
   // Callback ref: the main paper mounts only when the Popper opens
+  const resizeObserverRef = useRef(null);
   const setMainPaper = useCallback(node => {
     mainPaperRef.current = node;
+    resizeObserverRef.current?.disconnect();
+    resizeObserverRef.current = null;
+    if (!node) return;
+    setMainHeight(node.offsetHeight);
+    if (typeof ResizeObserver === 'undefined') return;
+    resizeObserverRef.current = new ResizeObserver(() => setMainHeight(node.offsetHeight));
+    resizeObserverRef.current.observe(node);
   }, []);
+  useEffect(() => () => resizeObserverRef.current?.disconnect(), []);
 
   const handleCloseAndCall = useCallback(
     (callback, ...args) => {
@@ -287,7 +297,7 @@ const ConceptPlusButton = memo(props => {
     ],
   );
 
-  const styles = conceptPlusButtonStyles(theme);
+  const styles = conceptPlusButtonStyles();
 
   const renderSubmenuContent = useCallback(() => {
     if (openItem === SUBMENU_KEYS.INTERNAL_TOOLS && availableTools.length > 0) {
@@ -419,7 +429,8 @@ const ConceptPlusButton = memo(props => {
                         {counts[key]}
                       </Typography>
                     )}
-                    <ArrowRightIcon
+                    <Box
+                      component={ArrowRightIcon}
                       sx={styles.chevron}
                       fill={theme.palette.icon.default}
                     />
@@ -447,6 +458,7 @@ const ConceptPlusButton = memo(props => {
             sx={[
               styles.subPaper,
               openItem === SUBMENU_KEYS.INTERNAL_TOOLS ? styles.internalToolsPaper : styles.kindPaper,
+              openItem !== SUBMENU_KEYS.INTERNAL_TOOLS && { height: mainHeight ? `${mainHeight}px` : 'auto' },
             ]}
             data-testid={`${openItem}-submenu`}
           >
@@ -461,7 +473,7 @@ const ConceptPlusButton = memo(props => {
 ConceptPlusButton.displayName = 'ConceptPlusButton';
 
 /** @type {MuiSx} */
-const conceptPlusButtonStyles = theme => ({
+const conceptPlusButtonStyles = () => ({
   hiddenAttachment: {
     position: 'absolute',
     width: 0,
@@ -472,15 +484,15 @@ const conceptPlusButtonStyles = theme => ({
   popper: {
     zIndex: 9998,
   },
-  paper: {
+  paper: ({ palette }) => ({
     minWidth: '15.125rem',
     borderRadius: '.75rem',
-    border: `.0625rem solid ${theme.palette.border.lines}`,
-    backgroundColor: theme.palette.background.default.secondary,
+    border: `.0625rem solid ${palette.border.lines}`,
+    backgroundColor: palette.background.default.secondary,
     padding: 0,
     overflow: 'hidden',
-  },
-  menuList: {
+  }),
+  menuList: ({ palette }) => ({
     padding: 0,
     '& > .MuiIconButton-root': {
       width: '100%',
@@ -488,16 +500,16 @@ const conceptPlusButtonStyles = theme => ({
       justifyContent: 'flex-start',
       padding: '.5rem 1rem',
       gap: '.75rem',
-      color: theme.palette.text.secondary,
+      color: palette.text.secondary,
       background: 'transparent !important',
       borderRadius: 0,
-      borderBottom: `.0625rem solid ${theme.palette.border.lines}`,
+      borderBottom: `.0625rem solid ${palette.border.lines}`,
       '&:hover': {
-        backgroundColor: `${theme.palette.action.hover} !important`,
+        backgroundColor: `${palette.action.hover} !important`,
       },
       '&.Mui-disabled': {
         background: 'transparent !important',
-        color: theme.palette.text.disabled,
+        color: palette.text.disabled,
         opacity: 1,
       },
     },
@@ -505,7 +517,7 @@ const conceptPlusButtonStyles = theme => ({
       width: '1rem',
       height: '1rem',
       flexShrink: 0,
-      color: theme.palette.icon.default,
+      color: palette.icon.default,
     },
     '& > .MuiIconButton-root .MuiTypography-root': {
       fontSize: '.875rem',
@@ -516,26 +528,26 @@ const conceptPlusButtonStyles = theme => ({
     '& > .MuiIconButton-root .MuiTypography-root + .MuiTypography-root': {
       display: 'none',
     },
-  },
-  menuItem: {
+  }),
+  menuItem: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
     gap: '.75rem',
     padding: '.5rem 1rem',
     height: '2.75rem',
-    color: theme.palette.text.secondary,
-    backgroundColor: theme.palette.background.default.secondary,
+    color: palette.text.secondary,
+    backgroundColor: palette.background.default.secondary,
     '&:hover, &.Mui-selected, &.Mui-selected:hover': {
-      backgroundColor: theme.palette.background.surface.interactive.active,
+      backgroundColor: palette.background.surface.interactive.active,
     },
-  },
-  menuIcon: {
+  }),
+  menuIcon: ({ palette }) => ({
     width: '1rem',
     height: '1rem',
     fontSize: '1rem',
     flexShrink: 0,
-    color: theme.palette.icon.default,
-  },
+    color: palette.icon.default,
+  }),
   menuLabel: {
     flex: 1,
     fontSize: '.875rem',
@@ -543,28 +555,28 @@ const conceptPlusButtonStyles = theme => ({
     fontWeight: 400,
   },
   // concept: the number before the chevron
-  count: {
-    color: theme.palette.text.primary,
+  count: ({ palette }) => ({
+    color: palette.text.primary,
     flexShrink: 0,
-  },
-  chevron: {
+  }),
+  chevron: ({ palette }) => ({
     fontSize: '1rem',
     flexShrink: 0,
-    color: theme.palette.icon.default,
-  },
+    color: palette.icon.default,
+  }),
   subPopper: {
     zIndex: 9999,
   },
-  subPaper: {
+  subPaper: ({ palette }) => ({
     boxSizing: 'border-box',
     borderRadius: '.75rem',
-    border: `.0625rem solid ${theme.palette.border.lines}`,
-    backgroundColor: theme.palette.background.default.secondary,
+    border: `.0625rem solid ${palette.border.lines}`,
+    backgroundColor: palette.background.default.secondary,
     padding: 0,
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
-  },
+  }),
   // a kind's list: the team's 300 px
   kindPaper: {
     width: '18.75rem',

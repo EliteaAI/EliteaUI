@@ -15,8 +15,8 @@
 //   field only (CONCEPT_PATCHES in .storybook/main.js); UserInput.jsx itself is not edited.
 // - concept: the «+» menu is ConceptPlusButton — no Invite Users, counts on its rows, modules with descriptions.
 // The Participants panel stays as is, without its context ring (the ring is here now).
-// The host (ChatBox, NewConversationView) does not change, except that in the product it passes the chat's
-// context_strategy, instructions, persona and setActiveConversation for the ring's card, as ParticipantsWrapper does now.
+// The host passes the chat's context_strategy, instructions, persona and setActiveConversation for the ring's card, as
+// ParticipantsWrapper does now; ChatBox gets that one line through CONCEPT_PATCHES in .storybook/main.js.
 import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import { Box, useTheme } from '@mui/material';
@@ -128,6 +128,12 @@ const ConceptChatInput = memo(
       onClearChat,
       disableClearChat = false,
       projectId,
+
+      // concept: the chat's values for the ring's card (Context settings, the Balanced / Full switch, Summarize now)
+      contextStrategy,
+      setActiveConversation,
+      conversationInstructions,
+      persona,
 
       // Participant management (for PlusChatButton submenus)
       onSelectParticipant,
@@ -400,6 +406,10 @@ const ConceptChatInput = memo(
                       <ContextBudgetUI.ContextBudgetInfo
                         conversationId={conversationId}
                         collapsed
+                        contextStrategy={contextStrategy}
+                        setActiveConversation={setActiveConversation}
+                        conversationInstructions={conversationInstructions}
+                        persona={persona}
                       />
                     </Box>
                   )}

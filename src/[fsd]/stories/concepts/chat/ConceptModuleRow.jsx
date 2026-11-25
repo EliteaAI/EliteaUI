@@ -2,7 +2,7 @@
 // Not AgentModuleMenuItem: it keeps the description in an «i» tooltip and toggles agent modules by its own hook
 import { memo } from 'react';
 
-import { Box, MenuItem, Typography, useTheme } from '@mui/material';
+import { Box, MenuItem, Typography } from '@mui/material';
 
 import { INTERNAL_TOOL_ICONS } from '@/[fsd]/features/agent/lib/constants';
 import { Switch } from '@/[fsd]/shared/ui';
@@ -11,8 +11,7 @@ import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 const ConceptModuleRow = memo(props => {
   const { tool, title, description, checked, disabled, onToggle, component, sx } = props;
 
-  const theme = useTheme();
-  const styles = conceptModuleRowStyles(theme);
+  const styles = conceptModuleRowStyles();
   const ToolSvg = INTERNAL_TOOL_ICONS[tool.icon];
 
   return (
@@ -71,21 +70,21 @@ const ConceptModuleRow = memo(props => {
 ConceptModuleRow.displayName = 'ConceptModuleRow';
 
 /** @type {MuiSx} */
-const conceptModuleRowStyles = theme => ({
-  row: {
+const conceptModuleRowStyles = () => ({
+  row: ({ palette }) => ({
     padding: '.5rem 1rem',
     minHeight: '3.5rem',
     gap: '.75rem',
     whiteSpace: 'normal',
     '&:hover': {
-      backgroundColor: theme.palette.background.interactiveItem.hover,
+      backgroundColor: palette.background.interactiveItem.hover,
     },
-  },
+  }),
   rowLocked: {
     cursor: 'default',
     '&:hover': { backgroundColor: 'transparent' },
   },
-  icon: {
+  icon: ({ palette }) => ({
     minWidth: '1.5rem',
     width: '1.5rem',
     height: '1.5rem',
@@ -97,10 +96,10 @@ const conceptModuleRowStyles = theme => ({
     },
     svg: {
       path: {
-        fill: theme.palette.secondary.main,
+        fill: palette.secondary.main,
       },
     },
-  },
+  }),
   svg: {
     width: '0.875rem',
     height: '0.875rem',
