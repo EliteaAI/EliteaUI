@@ -188,13 +188,18 @@ const conceptSwaps = () => ({
     if (!patch) return null;
     const { readFile } = await import('node:fs/promises');
     const code = await readFile(file, 'utf8');
-    return (patch.edits ?? [patch]).reduce((patched, { from, to }) => {
-      if (patched.includes(from)) return patched.replace(from, to);
-      console.warn(
-        `concept-swaps: ${patch.source}.jsx no longer has «${from}»; the concept story shows dev's line, update CONCEPT_PATCHES`,
+    // all edits or none: a later edit may use names an earlier one adds
+    const edits = patch.edits ?? [patch];
+    const missing = edits.filter(({ from }) => !code.includes(from));
+    if (missing.length) {
+      missing.forEach(({ from }) =>
+        console.warn(
+          `concept-swaps: ${patch.source}.jsx no longer has «${from}»; the concept story shows dev's file, update CONCEPT_PATCHES`,
+        ),
       );
-      return patched;
-    }, code);
+      return code;
+    }
+    return edits.reduce((patched, { from, to }) => patched.replace(from, to), code);
   },
 });
 
