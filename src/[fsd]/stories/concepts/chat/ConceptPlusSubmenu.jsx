@@ -52,7 +52,7 @@ const ConceptPlusSubmenu = memo(props => {
     sectionKey,
     // concept: the sections and the counts
     inChat = [],
-    total = 0,
+    total = null,
     kindLabel = 'Items',
     allLabel = 'All items',
     removeLabel = 'Remove from chat',
@@ -90,7 +90,7 @@ const ConceptPlusSubmenu = memo(props => {
       inChatRows,
       inChatCount,
       otherRows,
-      otherTotal: Math.max(total - inChatRows.length, otherRows.length),
+      otherTotal: total == null ? null : Math.max(total - inChatRows.length, otherRows.length),
     };
   }, [searchValue, openedInChat, items, total, inChat]);
 
@@ -112,6 +112,8 @@ const ConceptPlusSubmenu = memo(props => {
   const handleRemove = useCallback(
     item => event => {
       event.stopPropagation();
+      // the button unmounts with the check: the keyboard goes back to the search, not to the page's top
+      searchRef.current?.querySelector('input')?.focus();
       item.onRemove?.();
     },
     [],
@@ -221,12 +223,14 @@ const ConceptPlusSubmenu = memo(props => {
       sx={styles.sectionHead}
     >
       {label}
-      <Box
-        component="span"
-        sx={styles.sectionCount}
-      >
-        {count}
-      </Box>
+      {count != null && (
+        <Box
+          component="span"
+          sx={styles.sectionCount}
+        >
+          {count}
+        </Box>
+      )}
     </BaseListSubheader>
   );
 
@@ -314,7 +318,7 @@ const ConceptPlusSubmenu = memo(props => {
         )}
 
         {/* concept: how much is left to load */}
-        {!isLoading && items.length > 0 && shownOthers < othersTotal && (
+        {!isLoading && items.length > 0 && othersTotal != null && shownOthers < othersTotal && (
           <Box sx={styles.scrollMore}>
             <Typography
               variant="bodySmall"

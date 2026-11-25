@@ -1,6 +1,4 @@
-// a determinate CircularProgress is a progress ring that stays on the page, not loading
-const LOADING_SELECTOR =
-  '.MuiSkeleton-root, .MuiCircularProgress-root:not(.MuiCircularProgress-determinate), .MuiLinearProgress-root';
+import { LOADING_SELECTOR } from './screenshot.constants';
 
 // Resolves once nothing loads, readySelector (if given) is on the page and the DOM has not changed for quietMs: lazy
 // pages and sample answers come after the story's first render, and an element they re-render would lose a hover or

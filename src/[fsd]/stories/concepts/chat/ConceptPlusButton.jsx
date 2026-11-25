@@ -7,7 +7,7 @@
 //   «Toolkits 3», «MCPs 1» (today: a chevron only);
 // - concept: each Modules row has its icon, name, description and switch in a 420 px list (today: name, switch and an
 //   «i» tooltip, 300 px). All of today's modules stay here: Ask User, Planner, Python Sandbox, Swarm Mode and Smart
-//   Tools Selection;
+//   Tools Selection; the list grows to the window (today: every submenu is cut to the main menu's height);
 // - concept (the «whoAnswers» stories only): Ask User, Planner, Python Sandbox, Swarm Mode and Smart Tools Selection
 //   leave Modules for the model's settings in «who answers» (technical switches belong with the model); a pick of an
 //   agent, pipeline or skill makes the «who answers» button flash once;
