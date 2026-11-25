@@ -7,7 +7,9 @@
 //   under it;
 // - concept: a switch is saved when it is flipped, through onInternalToolsConfigChange, as «+» › Modules saves it
 //   (the team's handler builds each change from the chat's saved list, so a batch on Apply would keep only the last
-//   one); Apply and Cancel are the model settings' own, as on dev.
+//   one); Apply and Cancel are the model settings' own, as on dev;
+// - concept: the model's settings reset when the dialog opens (dev: also on every new llmSettings), since a flipped
+//   switch saves the chat at once and the chat then hands new llmSettings.
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Divider, Typography } from '@mui/material';
@@ -76,7 +78,7 @@ const ConceptModelSettingsDialog = memo(props => {
     return validationResult !== VALIDATION_RULE.VALID;
   }, [hasChanges, localSettings?.max_tokens, selectedModel]);
 
-  // reset on open only: a switch below saves at once and the chat hands new llmSettings, which must not drop the edits
+  // concept: reset on open only: a switch below saves at once and the chat hands new llmSettings, which must not drop the edits
   const wasOpenRef = useRef(false);
   useEffect(() => {
     if (open && !wasOpenRef.current) setLocalSettings(llmSettings);

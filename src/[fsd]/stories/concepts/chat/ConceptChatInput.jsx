@@ -40,6 +40,7 @@ import ConceptModelButton from './ConceptModelButton';
 import ConceptPlusButton from './ConceptPlusButton';
 import { useConceptSwap } from './ConceptSwapContext';
 import ConceptWhoAnswers from './ConceptWhoAnswers';
+import { isPipelineParticipant } from './conceptParticipant.helpers';
 
 // concept: the placeholder names «#»
 const DEV_PLACEHOLDER = 'Type your message...';
@@ -295,11 +296,7 @@ const ConceptChatInput = memo(
         const { entity_name } = participant;
         if (entity_name === ChatParticipantType.Toolkits) {
           onShowToolkitEditor?.(participant);
-        } else if (
-          entity_name === ChatParticipantType.Pipelines ||
-          (entity_name === ChatParticipantType.Applications &&
-            (participant.entity_settings?.agent_type === 'pipeline' || participant.agent_type === 'pipeline'))
-        ) {
+        } else if (isPipelineParticipant(participant)) {
           onShowPipelineEditor?.(participant);
         } else if (entity_name === ChatParticipantType.Applications) {
           onShowAgentEditor?.(participant);
