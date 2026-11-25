@@ -4,11 +4,9 @@ import { Navigate, Link as RouterLink, useNavigate, useParams, useSearchParams }
 
 import { Box, Link } from '@mui/material';
 
-import { RUN_HISTORY_LAYOUTS } from '@/[fsd]/entities/run-history/lib/helpers/runHistoryConfig.helpers';
-import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
-import { INDEX_RUN_STATUS_META } from '@/[fsd]/entities/schedule';
+import { RUN_HISTORY_LAYOUTS } from '@/[fsd]/entities/run-history/lib/constants/runHistory.constants';
+import { RunHistoryContainer, RunStatusCell } from '@/[fsd]/entities/run-history/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat';
-import { ScheduleRunStatusChip } from '@/[fsd]/features/schedule';
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
 import { buildRunHistoryRowDecorator } from '@/[fsd]/features/toolkits/indexes/lib/helpers';
@@ -58,16 +56,7 @@ const renderIndexCell = (row, { tab, toolkitId }) => {
   );
 };
 
-const renderStatusCell = row =>
-  row.run_status ? (
-    <ScheduleRunStatusChip
-      status={row.run_status}
-      statusMeta={INDEX_RUN_STATUS_META}
-      variant="text"
-    />
-  ) : (
-    '-'
-  );
+const renderStatusCell = row => <RunStatusCell status={row.run_status} />;
 
 const ToolkitRunHistory = memo(() => {
   const { tab, toolkitId, mcpId } = useParams();
@@ -106,10 +95,14 @@ const ToolkitRunHistory = memo(() => {
 
   // MCP filters (AC-45): Event lists the tools of this MCP that have runs, Status the MCP outcomes
   const [mcpToolNames, setMcpToolNames] = useState([]);
-  // The tools that have runs are the ones the Event filter lists (AC-45), read from the loaded rows
+  // The tools the Event filter lists (AC-45) grow as runs load: a name already seen stays listed, so ticking one
+  // tool never drops the others from the options
   const handleMcpRowsChange = useCallback(rows => {
-    const names = [...new Set(rows.flatMap(row => row.tool_names ?? []))].sort();
-    setMcpToolNames(previous => (previous.join(',') === names.join(',') ? previous : names));
+    const seen = rows.flatMap(row => row.tool_names ?? []);
+    setMcpToolNames(previous => {
+      const merged = [...new Set([...previous, ...seen])].sort();
+      return merged.length === previous.length ? previous : merged;
+    });
   }, []);
   const mcpFilters = useRunHistoryFilters({
     schedules: NO_SCHEDULES,
@@ -202,7 +195,6 @@ const ToolkitRunHistory = memo(() => {
           hasFilters={isMCP ? mcpFilters.hasFilters : filters.hasFilters}
           onClear={isMCP ? mcpFilters.onClear : filters.onClear}
           hasScheduleFilter={false}
-          hasComplexityFilter={false}
           // The MCP Event filter stays drawn while it has no tool yet, since its tools come from the loaded runs
           keepEmptyKeys={isMCP ? MCP_ALWAYS_SHOWN_FILTERS : NO_KEEP_KEYS}
         />

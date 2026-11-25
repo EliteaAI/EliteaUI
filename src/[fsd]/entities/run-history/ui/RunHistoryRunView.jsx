@@ -8,36 +8,9 @@ import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
 import ArrowLeftIcon from '@/assets/arrow-left-icon.svg?react';
 import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
-import DotMenu from '@/components/DotMenu';
 import CloseIcon from '@/components/Icons/CloseIcon';
 
-import { RunHistoryDeleteModal, useRunHistoryRowMenu } from './run-history-list/RunHistoryRowActions';
-
-// The run header's ⋯ menu: always visible, with the same items and Remove run? dialog as the row menu
-const RunMenu = memo(props => {
-  const menu = useRunHistoryRowMenu(props);
-  const { menuItems, slotProps, openMenu, closeMenu, deleteModal } = menu;
-
-  if (!menuItems.length) return null;
-
-  return (
-    <>
-      <DotMenu
-        id="run-view-menu"
-        slotProps={slotProps}
-        onClose={closeMenu}
-        onShowMenuList={openMenu}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        {menuItems}
-      </DotMenu>
-      <RunHistoryDeleteModal {...deleteModal} />
-    </>
-  );
-});
-
-RunMenu.displayName = 'RunMenu';
+import RunMenu from './RunMenu';
 
 // The open run in place of the run history table (ticket AC-13): the title row with ‹ › and X, the status line,
 // and the conversation (the detail is the existing RunHistoryChat, passed in)

@@ -28,6 +28,9 @@ const containerProps = vi.hoisted(() => ({ current: null }));
 
 vi.mock('@/[fsd]/entities/run-history', async () => ({
   ...(await vi.importActual('@/[fsd]/entities/run-history/lib/helpers')),
+  // The real status cell, so the Status column is drawn as it is in the app
+  RunStatusCell: (await vi.importActual('@/[fsd]/entities/run-history/ui/run-history-list/RunStatusCell'))
+    .default,
   RunHistoryContainer: props => {
     containerProps.current = props;
     return (
@@ -449,20 +452,24 @@ describe('RunHistoryPage schedule filter and links', () => {
 
 describe('RunHistoryPage status column', () => {
   beforeEach(() => vi.clearAllMocks());
+  afterEach(() => cleanup());
 
-  it('shows the server run_status of a chat row, not a hyphen', () => {
+  it('shows the server run_status of a chat row as its label, not a hyphen', () => {
     renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
 
     const statusColumn = containerProps.current.extraColumns.find(column => column.id === 'status');
     render(<>{statusColumn.render({ schedule_run: null, run_status: 'failed' })}</>);
 
-    expect(screen.getByTestId('status-chip')).toHaveTextContent('failed');
+    expect(screen.getByTestId('run-status-cell')).toHaveTextContent('Failed');
   });
 
   it('shows a hyphen when the row has neither a schedule run nor a run_status', () => {
     renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
 
     const statusColumn = containerProps.current.extraColumns.find(column => column.id === 'status');
-    expect(statusColumn.render({ schedule_run: null, run_status: null })).toBe('-');
+    render(<>{statusColumn.render({ schedule_run: null, run_status: null })}</>);
+
+    expect(screen.queryByTestId('run-status-cell')).not.toBeInTheDocument();
+    expect(screen.getByText('-')).toBeInTheDocument();
   });
 });

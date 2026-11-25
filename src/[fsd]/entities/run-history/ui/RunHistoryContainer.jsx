@@ -65,6 +65,8 @@ const RunHistoryContainer = memo(props => {
   const handledSharedRunId = useRef(null);
   // The run the reader opened in place (its id is in the URL); null when no run is open
   const openedRunId = useRef(null);
+  // Set once the open run's id is in the address bar; a later URL without it is Back, not a settling URL
+  const openedRunWritten = useRef(false);
   const [mergedData, setMergedData] = useState();
 
   const [fetchRunList, { data, isLoading, isFetching, isUninitialized, isError, error }] =
@@ -112,6 +114,18 @@ const RunHistoryContainer = memo(props => {
 
   useEffect(() => {
     const historyRunId = searchParams.get(SearchParams.HistoryRunId);
+
+    // Browser Back removes the open run's id from the URL after it was written: the run closes with it (AC-15).
+    // Until the write lands the URL has no id yet, so the rule waits for the id to have been written first.
+    if (!historyRunId && openedRunId.current !== null && openedRunWritten.current) {
+      openedRunId.current = null;
+      openedRunWritten.current = false;
+      setSelectedHistoryItem(null);
+      return;
+    }
+    if (historyRunId && openedRunId.current !== null && String(openedRunId.current) === historyRunId) {
+      openedRunWritten.current = true;
+    }
 
     // A run the reader opened in place is written to the URL by the reader, not a shared link: the
     // effect must not treat its id as a new link. Only a link with no open run resets the handled ref.
@@ -189,11 +203,12 @@ const RunHistoryContainer = memo(props => {
     setPage(prev => prev + 1);
   }, []);
 
+  // `replace`: moving between runs (prev, next) keeps the one history entry of the open run, so Back closes it
+  // rather than stepping back through every run visited (AC-15)
   const handleHistoryItemSelect = useCallback(
-    item => {
+    (item, { replace = false } = {}) => {
       setSelectedHistoryItem(item);
       if (openInPlace && item !== null) {
-        // AC-15: the open run is in the address bar, as a history entry, so the browser Back button closes it
         handledSharedRunId.current = String(item);
         openedRunId.current = String(item);
         setSearchParams(
@@ -201,7 +216,7 @@ const RunHistoryContainer = memo(props => {
             params.set(SearchParams.HistoryRunId, String(item));
             return params;
           },
-          { replace: false },
+          { replace },
         );
       }
     },
@@ -211,6 +226,7 @@ const RunHistoryContainer = memo(props => {
   // AC-14: closes the open run and removes history_run_id, so the table returns with its state
   const handleCloseRun = useCallback(() => {
     openedRunId.current = null;
+    openedRunWritten.current = false;
     setSelectedHistoryItem(null);
     setSearchParams(
       params => {
@@ -262,8 +278,8 @@ const RunHistoryContainer = memo(props => {
   const openRunIndex = historyRows.findIndex(historyRow => historyRow.id === selectedHistoryItem);
   const showInPlaceRun = openInPlace && selectedHistoryItem !== null && openRunIndex >= 0;
 
-  const handlePrevious = () => handleHistoryItemSelect(historyRows[openRunIndex - 1].id);
-  const handleNext = () => handleHistoryItemSelect(historyRows[openRunIndex + 1].id);
+  const handlePrevious = () => handleHistoryItemSelect(historyRows[openRunIndex - 1].id, { replace: true });
+  const handleNext = () => handleHistoryItemSelect(historyRows[openRunIndex + 1].id, { replace: true });
 
   const inPlaceJsx = (
     <RunHistoryRunView

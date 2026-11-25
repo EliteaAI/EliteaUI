@@ -2,19 +2,28 @@ import { useCallback, useMemo } from 'react';
 
 import { useSearchParams } from 'react-router-dom';
 
+import {
+  RUN_STATUS_STYLES,
+  STATUS_FILTER_KEYS,
+} from '@/[fsd]/entities/run-history/lib/constants/runHistory.constants';
 import { toRunStatusLabel } from '@/[fsd]/entities/schedule';
 
 import {
   EXECUTION_TYPE_PARAM,
   FILTER_PARAMS,
   NO_QUERY_PARAMS,
-  RUN_OUTCOME_VALUES,
   TRIGGER_OPTIONS,
 } from '../constants/runHistoryFilters.constants';
 
 const WHOLE_NUMBER = /^[1-9]\d*$/;
 
-const RUN_OUTCOME_OPTIONS = RUN_OUTCOME_VALUES.map(value => ({ label: toRunStatusLabel(value), value }));
+// The Status options of one list: its own status keys, labelled and coloured as the design shows them
+const statusOptionsOf = statusKeys =>
+  statusKeys.map(value => ({
+    label: RUN_STATUS_STYLES[value]?.label ?? toRunStatusLabel(value),
+    value,
+    color: RUN_STATUS_STYLES[value]?.color,
+  }));
 const EVENT_OPTIONS = TRIGGER_OPTIONS.map(({ label, value }) => ({ label, value }));
 
 const paramOf = trigger => TRIGGER_OPTIONS.find(option => option.value === trigger)?.param;
@@ -30,17 +39,25 @@ const readList = (searchParams, name, isValid) =>
 
 const isEvent = value => TRIGGER_OPTIONS.some(option => option.value === value);
 const isWholeNumber = value => WHOLE_NUMBER.test(value);
-const isRunOutcome = value => RUN_OUTCOME_VALUES.includes(value);
 
-export const useRunHistoryFilters = ({ schedules = [], versions = [], toolNames = [] } = {}) => {
+export const useRunHistoryFilters = ({
+  schedules = [],
+  versions = [],
+  toolNames = [],
+  statusKeys = STATUS_FILTER_KEYS.agent,
+} = {}) => {
+  const statusOptions = useMemo(() => statusOptionsOf(statusKeys), [statusKeys]);
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Raw URL values; each is a plain array of strings
   const eventValues = readList(searchParams, FILTER_PARAMS.trigger, isEvent);
   const scheduleIds = readList(searchParams, FILTER_PARAMS.schedule, isWholeNumber);
   const versionIds = readList(searchParams, FILTER_PARAMS.version, isWholeNumber);
-  const outcomes = readList(searchParams, FILTER_PARAMS.run_outcome, isRunOutcome);
-  const tools = readList(searchParams, FILTER_PARAMS.tool, value => toolNames.includes(value));
+  // A status a link names that this list does not offer is dropped, so the filter never shows a hidden value
+  const outcomes = readList(searchParams, FILTER_PARAMS.run_outcome, value => statusKeys.includes(value));
+  // A tool a shared link names is kept before its runs load: the list only offers names the page has seen, but the
+  // URL is the reader's own choice, and the server answers an unknown name
+  const tools = readList(searchParams, FILTER_PARAMS.tool, value => value.length > 0);
 
   // The list API params. An Event value goes to `trigger` (a run trigger) or `execution_type` (Chat, API, MCP).
   // Keyed on the joined strings, so the object keeps its identity until a filter really changes.
@@ -140,7 +157,7 @@ export const useRunHistoryFilters = ({ schedules = [], versions = [], toolNames 
     options: {
       event: EVENT_OPTIONS,
       schedule: scheduleOptions,
-      status: RUN_OUTCOME_OPTIONS,
+      status: statusOptions,
       version: versionOptions,
       tool: toolOptions,
     },

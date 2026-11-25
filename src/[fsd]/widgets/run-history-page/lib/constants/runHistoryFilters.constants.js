@@ -11,16 +11,6 @@ export const FILTER_PARAMS = {
   tool: 'tool_name',
 };
 
-// The derived run outcomes the server filters on
-export const RUN_OUTCOME_VALUES = [
-  'running',
-  'waiting_for_approval',
-  'success',
-  'failed',
-  'skipped',
-  'blocked',
-];
-
 // The list API param of an execution type: runs without a run record are told apart by the chat's own type
 export const EXECUTION_TYPE_PARAM = 'execution_type';
 

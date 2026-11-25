@@ -2,7 +2,10 @@ import { useCallback, useMemo } from 'react';
 
 import { useSearchParams } from 'react-router-dom';
 
-import { INDEX_RUN_STATUS_META } from '@/[fsd]/entities/schedule';
+import {
+  RUN_STATUS_STYLES,
+  STATUS_FILTER_KEYS,
+} from '@/[fsd]/entities/run-history/lib/constants/runHistory.constants';
 import { INDEX_RUN_EVENTS } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexRunHistoryRow.helpers';
 
 // URL params of the toolkit filters (ticket #7682, AC-39, AC-40)
@@ -10,15 +13,19 @@ const PARAMS = { event: 'index_event', index: 'index', status: 'run_status' };
 const RUN_OUTCOME_PARAM = 'run_outcome';
 const NO_QUERY_PARAMS = {};
 
-// The statuses of index runs (AC-38). Partial and Stopped exist only on index runs.
-const STATUS_KEYS = ['running', 'success', 'partial', 'failed', 'stopped'];
+// The statuses of toolkit and index runs (AC-38), in the design's order; Partial and Stopped are index-only
+const STATUS_KEYS = STATUS_FILTER_KEYS.toolkit;
 // The statuses a tool-call (conversation) run can have on the server (run_outcome)
 const CONVERSATION_OUTCOMES = ['running', 'success', 'failed'];
 // The index events an index run carries today. Index created and Search index are not produced by the list yet.
 const EVENT_LABELS = [INDEX_RUN_EVENTS.indexing, INDEX_RUN_EVENTS.reindex, INDEX_RUN_EVENTS.scheduledReindex];
 
 const EVENT_OPTIONS = EVENT_LABELS.map(label => ({ label, value: label }));
-const STATUS_OPTIONS = STATUS_KEYS.map(value => ({ label: INDEX_RUN_STATUS_META[value].label, value }));
+const STATUS_OPTIONS = STATUS_KEYS.map(value => ({
+  label: RUN_STATUS_STYLES[value].label,
+  value,
+  color: RUN_STATUS_STYLES[value].color,
+}));
 
 // A comma list in the URL; unknown items are dropped and a repeated item counts once
 const readList = (searchParams, name) =>

@@ -101,16 +101,18 @@ const RunHistoryList = memo(props => {
     () => [
       { label: 'Date', type: SORT_TYPES.DATE },
       ...(hasEvent ? [{ label: eventColumnLabel, type: SORT_TYPES.EVENT }] : []),
-      // The extra columns sort by their own value (Schedule/Webhook, Status and Complexity)
+      // The extra columns sort by their own value (Schedule/Webhook, Status and Complexity). A column with no
+      // sort function (the toolkit's Index) has no arrows and no click, so nothing looks sortable that is not
       ...extraColumns.map(column => ({
         label: column.label,
         title: column.title,
         type: column.id,
+        sortable: sortFunctions[column.id] !== undefined,
       })),
       ...(noVersions ? [] : [{ label: 'Version', type: SORT_TYPES.VERSION }]),
       { label: 'Duration', type: SORT_TYPES.DURATION },
     ],
-    [noVersions, hasEvent, eventColumnLabel, extraColumns],
+    [noVersions, hasEvent, eventColumnLabel, extraColumns, sortFunctions],
   );
 
   const sortedConversations = useMemo(

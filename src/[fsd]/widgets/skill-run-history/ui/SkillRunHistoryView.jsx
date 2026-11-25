@@ -4,10 +4,9 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { RUN_HISTORY_LAYOUTS } from '@/[fsd]/entities/run-history/lib/helpers/runHistoryConfig.helpers';
-import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
+import { RUN_HISTORY_LAYOUTS } from '@/[fsd]/entities/run-history/lib/constants/runHistory.constants';
+import { RunHistoryContainer, RunStatusCell } from '@/[fsd]/entities/run-history/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat';
-import { ScheduleRunStatusChip } from '@/[fsd]/features/schedule';
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
 import { SKILL_RUN_SEARCH_PARAMS } from '@/[fsd]/features/skill/lib/constants';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
@@ -46,15 +45,7 @@ const SkillRunHistoryView = memo(props => {
         id: 'status',
         label: 'Status',
         width: '9.5rem',
-        render: row =>
-          row.run_status ? (
-            <ScheduleRunStatusChip
-              status={row.run_status}
-              variant="text"
-            />
-          ) : (
-            '-'
-          ),
+        render: row => <RunStatusCell status={row.run_status} />,
       },
     ],
     [],
@@ -112,7 +103,6 @@ const SkillRunHistoryView = memo(props => {
           hasFilters={filters.hasFilters}
           onClear={filters.onClear}
           hasScheduleFilter={false}
-          hasComplexityFilter={false}
         />
         <RunHistoryContainer
           // A new filter restarts paging at page 1

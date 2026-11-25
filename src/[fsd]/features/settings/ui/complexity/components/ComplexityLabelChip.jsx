@@ -32,7 +32,7 @@ const ComplexityLabelChip = memo(props => {
             variant="bodySmall"
             sx={styles.pending}
           >
-            Not scored yet
+            Not enough runs
           </Typography>
         </Box>
       </Tooltip>

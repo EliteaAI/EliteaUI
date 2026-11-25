@@ -4,8 +4,8 @@ import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-r
 
 import { Box, Link } from '@mui/material';
 
-import { RunHistoryContainer, SCHEDULE_RUN_COLUMNS } from '@/[fsd]/entities/run-history';
-import { RUN_HISTORY_LAYOUTS } from '@/[fsd]/entities/run-history/lib/helpers/runHistoryConfig.helpers';
+import { RunHistoryContainer, RunStatusCell, SCHEDULE_RUN_COLUMNS } from '@/[fsd]/entities/run-history';
+import { RUN_HISTORY_LAYOUTS } from '@/[fsd]/entities/run-history/lib/constants/runHistory.constants';
 import {
   TRIGGER_KIND,
   buildOwnerViewModeParams,
@@ -13,7 +13,6 @@ import {
   useAllEntitySchedules,
 } from '@/[fsd]/entities/schedule';
 import { ChatMessageList } from '@/[fsd]/features/chat';
-import { ScheduleRunStatusChip } from '@/[fsd]/features/schedule';
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
 import { useRunComplexityColumn } from '@/[fsd]/features/settings/ui/complexity';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
@@ -110,19 +109,13 @@ const RunHistoryPage = memo(props => {
         </Link>
       );
     };
-    // The status reads with its icon and colour, as in the Runs card
     // A schedule run's own status; a chat, API or MCP row takes the server's run_status (ticket AC-24)
-    const renderStatus = row => {
-      const status = row.schedule_run?.status ?? row.run_status;
-      return status ? (
-        <ScheduleRunStatusChip
-          status={status}
-          variant="text"
-        />
-      ) : (
-        NO_VALUE
-      );
-    };
+    const renderStatus = row => (
+      <RunStatusCell
+        status={row.schedule_run?.status ?? row.run_status}
+        emptyMark={NO_VALUE}
+      />
+    );
     return [
       { ...scheduleColumn, render: renderSchedule },
       ...rest.map(column => (column.id === 'status' ? { ...column, render: renderStatus } : column)),
@@ -185,7 +178,6 @@ const RunHistoryPage = memo(props => {
             hasFilters={filters.hasFilters}
             onClear={filters.onClear}
             hasScheduleFilter={Boolean(scheduleEntityType)}
-            hasComplexityFilter={Boolean(complexityColumn)}
           />
         )}
         <RunHistoryContainer

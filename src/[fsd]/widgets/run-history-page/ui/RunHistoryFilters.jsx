@@ -17,7 +17,6 @@ const FILTER_LABELS = {
   schedule: 'Schedule/Webhook',
   index: 'Index',
   status: 'Status',
-  complexity: 'Complexity',
   version: 'Version',
 };
 
@@ -32,17 +31,53 @@ const summaryOf = (values, options) => {
   return `${values.length} selected`;
 };
 
+// A status option: the colour dot, then the label. Options without a colour (All, the other filters) show the label only.
+const StatusOptionLabel = memo(props => {
+  const { label, color } = props;
+  const styles = statusOptionLabelStyles(color);
+
+  if (!color) {
+    return <Typography variant="labelMedium">{label}</Typography>;
+  }
+
+  return (
+    <Box sx={styles.root}>
+      <Box
+        component="span"
+        sx={styles.dot}
+      />
+      <Typography variant="labelMedium">{label}</Typography>
+    </Box>
+  );
+});
+
+StatusOptionLabel.displayName = 'StatusOptionLabel';
+
+// The dot takes the palette colour of the status (a palette path such as 'success.main')
+/** @type {MuiSx} */
+const statusOptionLabelStyles = color => ({
+  root: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  dot: ({ palette }) => ({
+    display: 'inline-block',
+    width: '0.5rem',
+    height: '0.5rem',
+    borderRadius: '50%',
+    backgroundColor: color ? color.split('.').reduce((value, key) => value[key], palette) : undefined,
+  }),
+});
+
 const RunHistoryFilters = memo(props => {
   const { filterKeys, values, options, handlers, hasFilters, onClear, keepEmptyKeys = [] } = props;
   const styles = runHistoryFiltersStyles();
 
-  // The entity's layout decides which filters exist. A filter with no option is not drawn
-  // (complexity is shown whenever the layout lists it, because its options are fixed), unless the
-  // caller keeps it: an MCP's Event filter lists its tools, which are empty until its runs load.
+  // The entity's layout decides which filters exist. A filter with no option is not drawn, unless the caller keeps
+  // it: an MCP's Event filter lists its tools, which are empty until its runs load.
   const visible = filterKeys.filter(
-    key =>
-      FILTER_LABELS[key] &&
-      (key === 'complexity' || keepEmptyKeys.includes(key) || (options[key] ?? []).length > 0),
+    key => FILTER_LABELS[key] && (keepEmptyKeys.includes(key) || (options[key] ?? []).length > 0),
   );
 
   return (
@@ -73,6 +108,13 @@ const RunHistoryFilters = memo(props => {
                 ...option,
                 testId: `run-history-filter-${key}-option-${option.value || 'all'}-checkbox`,
               }))}
+              // A status option shows its colour dot before the label, as the design does
+              customRenderOption={option => (
+                <StatusOptionLabel
+                  label={option.label}
+                  color={option.color}
+                />
+              )}
               value={selected}
               // Ticking All clears the other ticks (ticket AC-6): an All choice sends the empty list
               onValueChange={next => {

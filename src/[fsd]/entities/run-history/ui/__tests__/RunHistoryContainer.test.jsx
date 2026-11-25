@@ -124,10 +124,25 @@ const ReshareControl = () => {
   const [, setSearchParams] = useSearchParams();
 
   return (
-    <button
-      data-testid="reshare"
-      onClick={() => setSearchParams({ history_run_id: String(CONVERSATION_ID) })}
-    />
+    <>
+      <button
+        data-testid="reshare"
+        onClick={() => setSearchParams({ history_run_id: String(CONVERSATION_ID) })}
+      />
+      {/* What the browser Back button does to the address bar: the open run's id is gone */}
+      <button
+        data-testid="back"
+        onClick={() =>
+          setSearchParams(
+            params => {
+              params.delete('history_run_id');
+              return params;
+            },
+            { replace: true },
+          )
+        }
+      />
+    </>
   );
 };
 
@@ -548,6 +563,17 @@ describe('RunHistoryContainer in-place run view (AC-13 to AC-15, AC-17)', () => 
     const region = screen.getByTestId('run-history-run-view');
     expect(region).toHaveAttribute('role', 'region');
     expect(region.getAttribute('aria-label')).toMatch(/^Run /);
+  });
+
+  it('browser Back removes the open run id, and the run closes so the table returns', () => {
+    renderContainer('', { openInPlace: true });
+    fireEvent.click(screen.getByTestId(`select-${CONVERSATION_ID}`));
+    expect(screen.getByTestId('search').textContent).toContain(`history_run_id=${CONVERSATION_ID}`);
+
+    fireEvent.click(screen.getByTestId('back'));
+
+    expect(screen.queryByTestId('run-history-run-view')).not.toBeInTheDocument();
+    expect(screen.getByTestId('selection').dataset.value).toBe('null');
   });
 
   it('the close button closes the run and removes history_run_id, so the table returns', () => {
