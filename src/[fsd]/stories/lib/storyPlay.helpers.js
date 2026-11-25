@@ -28,3 +28,5 @@ export const waitForQuietPage = ({ quietMs = 800, timeoutMs = 20000, readySelect
     const timeout = setTimeout(finish, timeoutMs);
     restart();
   });
+
+export const wait = ms => new Promise(resolve => setTimeout(resolve, ms));

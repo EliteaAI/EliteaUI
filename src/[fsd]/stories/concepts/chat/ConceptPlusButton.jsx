@@ -8,6 +8,9 @@
 // - concept: each Modules row has its icon, name, description and switch in a 420 px list (today: name, switch and an
 //   «i» tooltip, 300 px). All of today's modules stay here: Ask User, Planner, Python Sandbox, Swarm Mode and Smart
 //   Tools Selection; the list grows to the window (today: every submenu is cut to the main menu's height);
+// - concept (the «whoAnswers» stories only): Ask User, Planner, Python Sandbox, Swarm Mode and Smart Tools Selection
+//   leave Modules for the model's settings in «who answers» (technical switches belong with the model); a pick of an
+//   agent, pipeline or skill makes the «who answers» button flash once;
 // - concept: a kind's list is a 600 px window with two-line rows (ConceptPlusSubmenu, useConceptPlusSubmenu);
 //   it keeps the chat's agents, pipelines and skills on top under «In this chat · N».
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -42,8 +45,10 @@ import PlusIcon from '@/components/Icons/PlusIcon';
 
 import ConceptModuleRow from './ConceptModuleRow';
 import ConceptPlusSubmenu from './ConceptPlusSubmenu';
+import { useConceptSwap } from './ConceptSwapContext';
 import { isMcpParticipant, isPipelineParticipant } from './conceptParticipant.helpers';
 import { useConceptPlusSubmenu } from './useConceptPlusSubmenu.hooks';
+import { MODEL_SETTINGS_MODULES } from './whoAnswers.constants';
 
 const SUBMENU_KEYS = {
   INTERNAL_TOOLS: 'internalTools',
@@ -98,6 +103,8 @@ const ConceptPlusButton = memo(props => {
     internal_tools = [],
     disableInternalTools = false,
     onSelectParticipant,
+    // concept: called after an agent, pipeline or skill is picked — the «who answers» button flashes once
+    onPicked,
     onDeleteParticipant,
     onCreateAgent,
     onCreatePipeline,
@@ -108,7 +115,13 @@ const ConceptPlusButton = memo(props => {
 
   const theme = useTheme();
   const isMcpVisible = useIsMcpVisible();
-  const availableTools = useAvailableInternalTools({ activeToolNames: internal_tools });
+  const { whoAnswers } = useConceptSwap();
+  const allTools = useAvailableInternalTools({ activeToolNames: internal_tools });
+  // concept: with «who answers», Modules keeps only what a person turns on for a request
+  const availableTools = useMemo(
+    () => (whoAnswers ? allTools.filter(tool => !MODEL_SETTINGS_MODULES.includes(tool.name)) : allTools),
+    [allTools, whoAnswers],
+  );
   const buttonRef = useRef(null);
   const subMenuRef = useRef(null);
   const mainPaperRef = useRef(null);
@@ -126,9 +139,18 @@ const ConceptPlusButton = memo(props => {
     setOpenItem(null);
   }, []);
 
+  // concept: a picked agent, pipeline or skill makes the «who answers» button flash
+  const handleSelectParticipant = useCallback(
+    picked => {
+      onSelectParticipant?.(picked);
+      if (picked?.participantType !== ChatParticipantType.Toolkits) onPicked?.();
+    },
+    [onSelectParticipant, onPicked],
+  );
+
   const { agents, pipelines, skills, toolkits, mcps } = useConceptPlusSubmenu({
     participants,
-    onSelectParticipant,
+    onSelectParticipant: handleSelectParticipant,
     onDeleteParticipant,
     onClose: handleClose,
     isOpen,
@@ -302,7 +324,7 @@ const ConceptPlusButton = memo(props => {
 
   const renderSubmenuContent = useCallback(() => {
     if (openItem === SUBMENU_KEYS.INTERNAL_TOOLS && availableTools.length > 0) {
-      // concept: a module row — icon, name, description, switch (ConceptModuleRow)
+      // concept: a module row — icon, name, description, switch (ConceptModuleRow, shared with «Model settings»)
       return availableTools.map(tool => {
         const description = tool.unavailable ? { text: tool.unavailableTooltip } : tool.infoTooltip;
         return (

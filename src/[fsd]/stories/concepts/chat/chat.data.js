@@ -113,7 +113,22 @@ const TOOLKITS = [
   toolkit(45, 'SharePoint', 'sharepoint', 'Read documents of the project site'),
   toolkit(46, 'Figma', 'figma', 'Read frames and comments of the design files'),
   toolkit(47, 'GitLab', 'gitlab', 'Read merge requests of the platform repos'),
+  toolkit(48, 'Billing API', 'openapi', 'Reads invoices and plans through the billing OpenAPI'),
 ];
+// SharePoint (45) and Billing API (48) sign in with OAuth, and the user has not signed in in this browser: their
+// rows in «Toolkits & MCP» ask to log in. SharePoint keeps a reference
+// to a saved credential (answered by /configurations/configurations/), the OpenAPI toolkit keeps the endpoint inline.
+const SHAREPOINT_ID = 45;
+const OPENAPI_ID = 48;
+const OAUTH_ENDPOINT = 'https://login.example.com/.well-known/openid-configuration';
+const SHAREPOINT_CREDENTIAL = {
+  uuid: 'sp-project-site',
+  elitea_title: 'project-site',
+  data: {
+    site_url: 'https://example.sharepoint.com/sites/project',
+    oauth_discovery_endpoint: OAUTH_ENDPOINT,
+  },
+};
 const MCPS = [
   toolkit(51, 'Playwright', 'mcp', 'Opens pages in a browser and checks them', { mcp: true }),
   toolkit(52, 'Sentry', 'mcp', 'Reads errors and releases of the app', { mcp: true }),
@@ -243,7 +258,7 @@ const MODEL_PARTICIPANT = {
 };
 
 // The chat «Sprint 42 bugs» with something of every kind, as the prototype's full chat (?state=full): 3 agents (one
-// from Catalog), 1 pipeline, 2 skills, 3 toolkits, 1 MCP; the modules Web Search and Elitea Builder are on
+// from Catalog), 1 pipeline, 2 skills, 5 toolkits, 1 MCP; the modules Web Search and Elitea Builder are on
 export const FULL_CHAT_ID = 104;
 const participant = (id, entity_name, row, extra = {}) => ({
   id,
@@ -266,7 +281,14 @@ const FULL_PARTICIPANTS = [
   participant(9, 'toolkit', TOOLKITS[0]),
   participant(10, 'toolkit', TOOLKITS[1]),
   participant(11, 'toolkit', TOOLKITS[2]),
-  participant(12, 'toolkit', MCPS[0], { meta: { name: MCPS[0].name, mcp: true } }),
+  participant(13, 'toolkit', TOOLKITS[4], { entity_settings: { toolkit_type: 'sharepoint' } }),
+  participant(14, 'toolkit', TOOLKITS[7], { entity_settings: { toolkit_type: 'openapi' } }),
+  // a remote MCP carries toolkit_type «mcp», as on dev: the chat then knows the user is logged out of it (no token in
+  // this browser) and the row asks to log in — «Log in» on the row in the «who answers» list
+  participant(12, 'toolkit', MCPS[0], {
+    entity_settings: { toolkit_type: 'mcp' },
+    meta: { name: MCPS[0].name, mcp: true },
+  }),
 ];
 
 const textItem = (id, content) => ({
@@ -384,10 +406,30 @@ const versionOf = url => {
 const toolkitOf = url => {
   const row = [...TOOLKITS, ...MCPS].find(t => t.id === idIn(url));
   if (!row) return {};
+  if (row.id === SHAREPOINT_ID)
+    return {
+      ...row,
+      settings: { sharepoint_configuration: { elitea_title: SHAREPOINT_CREDENTIAL.elitea_title } },
+    };
+  if (row.id === OPENAPI_ID)
+    return { ...row, settings: { oauth_discovery_endpoint: OAUTH_ENDPOINT, client_id: 'billing-app' } };
   return row.meta?.mcp ? { ...row, online: true, settings: { url: 'https://mcp.example.com' } } : row;
 };
 
-export const routes = ({ context = contextStatus() } = {}) => [
+// SharePoint and Billing API (no sign-in) and the MCP's «mcp» type are in the full chat only in the «who answers»
+// stories (story 3.4 «Fix and Log in»); stories 1.x and 2.x keep their own chat (3 toolkits)
+const LOG_IN_PARTICIPANT_IDS = [13, 14];
+const fullChatDetails = whoAnswers =>
+  whoAnswers
+    ? FULL_CHAT_DETAILS
+    : {
+        ...FULL_CHAT_DETAILS,
+        participants: FULL_CHAT_DETAILS.participants
+          .filter(p => !LOG_IN_PARTICIPANT_IDS.includes(p.id))
+          .map(p => (p.id === 12 ? { ...p, entity_settings: {} } : p)),
+      };
+
+export const routes = ({ context = contextStatus(), whoAnswers = false } = {}) => [
   ['/permissions/prompt_lib/', ALL_PERMISSIONS],
   ['/author/', USER],
   [
@@ -400,7 +442,7 @@ export const routes = ({ context = contextStatus() } = {}) => [
   ['/secrets/secrets/', []],
   ['/folder/prompt_lib/', FOLDERS],
   [`/conversation/prompt_lib/${PROJECT_ID}/${CHAT_ID}`, CHAT_DETAILS],
-  [`/conversation/prompt_lib/${PROJECT_ID}/${FULL_CHAT_ID}`, FULL_CHAT_DETAILS],
+  [`/conversation/prompt_lib/${PROJECT_ID}/${FULL_CHAT_ID}`, fullChatDetails(whoAnswers)],
   [`/context_analytics/prompt_lib/${PROJECT_ID}/${CHAT_ID}`, context],
   [`/context_analytics/prompt_lib/${PROJECT_ID}/${FULL_CHAT_ID}`, context],
   [
@@ -411,7 +453,18 @@ export const routes = ({ context = contextStatus() } = {}) => [
     '/applications/prompt_lib/',
     url => list(byQuery(url, url.includes('agents_type=pipeline') ? PIPELINES : PROJECT_AGENTS), url),
   ],
-  ['/tools/prompt_lib/', url => list(byQuery(url, url.includes('mcp=true') ? MCPS : TOOLKITS), url)],
+  // Billing API exists only for story 3.4: in stories 1.x and 2.x the toolkit list stays as it was (7 toolkits)
+  [
+    '/tools/prompt_lib/',
+    url =>
+      list(
+        byQuery(
+          url,
+          url.includes('mcp=true') ? MCPS : whoAnswers ? TOOLKITS : TOOLKITS.filter(t => t.id !== OPENAPI_ID),
+        ),
+        url,
+      ),
+  ],
   ['/public_skills/prompt_lib/', url => list(byQuery(url, CATALOG_SKILLS), url)],
   ['/skills/prompt_lib/', url => list(byQuery(url, OWN_SKILLS), url)],
   // toolkit schemas: Image Creation is listed in Modules only when the image provider's toolkit type exists (as on dev)
@@ -420,6 +473,14 @@ export const routes = ({ context = contextStatus() } = {}) => [
     { ImageGenServiceProvider_ImageGen: { title: 'Image generation', properties: {} } },
   ],
   ['/platform_settings', { tool_spend: { web_search: { available: true } } }],
+  [
+    '/configurations/configurations/',
+    // the saved credentials of a type answer as «items» (useResolvedSharepointConfig reads them so)
+    url =>
+      url.includes('type=sharepoint')
+        ? { items: [SHAREPOINT_CREDENTIAL], total: 1 }
+        : { items: [], total: 0 },
+  ],
   ['/configurations/models/', { items: MODELS, total: MODELS.length, auto_routing: AUTO_ROUTING }],
   // details of the chat's participants (the panel's rows, versions, variables)
   ['/application/prompt_lib/', url => byId(url, [...PROJECT_AGENTS, ...PIPELINES], PIPELINE_IDS)],

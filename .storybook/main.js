@@ -23,6 +23,20 @@ const CONCEPT_SWAPS = [
     source: 'src/[fsd]/widgets/context-budget/ui/ContextBudgetRing',
     to: 'src/[fsd]/stories/concepts/chat/swaps/ContextBudgetRing.swap.jsx',
   },
+  // a row of the «who answers» list gets ⚙ (version, variables) and «Fix»; the panel's rows stay the team's
+  {
+    importers: [
+      'src/[fsd]/features/chat/participants/ui/expanded-participants/ParticipantNormalCard.jsx',
+      'src/[fsd]/features/chat/participants/ui/expanded-participants/ParticipantAttentionCard.jsx',
+    ],
+    source: 'src/[fsd]/features/chat/participants/ui/participant-actions/ParticipantActions',
+    to: 'src/[fsd]/stories/concepts/chat/swaps/ParticipantActions.swap.jsx',
+  },
+  {
+    importers: ['src/[fsd]/features/chat/participants/ui/expanded-participants/ParticipantAttentionCard.jsx'],
+    source: 'src/[fsd]/features/chat/participants/ui/expanded-participants/ParticipantWarning',
+    to: 'src/[fsd]/stories/concepts/chat/swaps/ParticipantWarning.swap.jsx',
+  },
 ];
 
 // A one-line change to a team file, seen only by the listed importer: the import gets its own patched copy of the
@@ -39,18 +53,92 @@ const CONCEPT_PATCHES = [
     to: 'placeholder={input?.placeholder /* concept: stays with focus (dev hides it) */}',
   },
   {
-    // concept: the ring sits in the field, so the field gets the chat's values that ParticipantsWrapper gives the ring
+    // concept: ChatBox hands the field what the concept needs, as two one-line edits: the chat's values for the ring's
+    // card (as ParticipantsWrapper gives the ring); onShowToolkitEditor, so the pencil of a toolkit in «who answers» opens
+    // its editor, and the page's editingToolkit and selected managers for the rows of that list
     importers: ['src/[fsd]/features/chat/ui/chat-box/index.js'],
     source: 'src/[fsd]/features/chat/ui/chat-box/ChatBox',
-    query: 'concept-context-ring',
-    from: 'internal_tools={activeConversation?.meta?.internal_tools || []}',
-    to: [
-      'internal_tools={activeConversation?.meta?.internal_tools || []}',
-      'contextStrategy={activeConversation?.meta?.context_strategy || {}}',
-      'setActiveConversation={setActiveConversation}',
-      "conversationInstructions={activeConversation?.instructions || ''}",
-      'persona={activeConversation?.meta?.persona}',
-    ].join(' '),
+    query: 'concept-chat-box',
+    edits: [
+      {
+        from: 'internal_tools={activeConversation?.meta?.internal_tools || []}',
+        to: [
+          'internal_tools={activeConversation?.meta?.internal_tools || []}',
+          'contextStrategy={activeConversation?.meta?.context_strategy || {}}',
+          'setActiveConversation={setActiveConversation}',
+          "conversationInstructions={activeConversation?.instructions || ''}",
+          'persona={activeConversation?.meta?.persona}',
+        ].join(' '),
+      },
+      {
+        from: 'onShowParticipantsList={onShowParticipantsList}',
+        to: [
+          'onShowParticipantsList={onShowParticipantsList}',
+          'onShowToolkitEditor={onShowToolkitEditor /* concept */}',
+          'editingToolkit={props.editingToolkit}',
+          'selectedManager={props.selectedManager}',
+          'newConversationSelectedManager={props.newConversationSelectedManager}',
+        ].join(' '),
+      },
+    ],
+  },
+  {
+    // concept: the «who answers» list draws the panel's rows and opens their editors, so the chat page hands ChatBox
+    // (a saved chat) and NewConversationView (a new chat) what it hands the panel
+    importers: ['src/pages/NewChat/index.jsx'],
+    source: 'src/pages/NewChat/NewChat',
+    query: 'concept-new-chat',
+    edits: [
+      {
+        from: 'showParticipantsWelcome',
+        to: [
+          'showParticipantsWelcome',
+          'editingToolkit={editingToolkit}',
+          'selectedManager={selectedManager}',
+          'newConversationSelectedManager={newConversationSelectedManager}',
+        ].join(' '),
+      },
+      {
+        // the first one is NewConversationView's
+        from: 'onShowAgentEditor={onEditAgent}',
+        to: [
+          'onShowAgentEditor={onEditAgent}',
+          'onShowToolkitEditor={onEditToolkit}',
+          'editingToolkit={editingToolkit}',
+          'newConversationSelectedManager={newConversationSelectedManager}',
+        ].join(' '),
+      },
+    ],
+  },
+  {
+    // concept: NewConversationView takes those three and hands them to the field
+    importers: ['src/pages/NewChat/NewChat.jsx'],
+    source: 'src/pages/NewChat/NewConversationView',
+    query: 'concept-new-conversation',
+    edits: [
+      {
+        from: 'addNewParticipants,',
+        to: 'addNewParticipants, onShowToolkitEditor, editingToolkit, newConversationSelectedManager,',
+      },
+      {
+        from: 'onShowParticipantsList={onShowParticipantsList}',
+        to: [
+          'onShowParticipantsList={onShowParticipantsList}',
+          'onShowToolkitEditor={onShowToolkitEditor}',
+          'editingToolkit={editingToolkit}',
+          'newConversationSelectedManager={newConversationSelectedManager}',
+        ].join(' '),
+      },
+    ],
+  },
+  {
+    // a row's version label gets a class, so the «who answers» list can give it room (the panel caps it at 2.5rem,
+    // «v3-strict-review» shows as «v3-s…»); the panel keeps the cap
+    importers: ['src/[fsd]/features/chat/participants/ui/expanded-participants/ParticipantItem.jsx'],
+    source: 'src/[fsd]/features/chat/participants/ui/expanded-participants/ParticipantNormalCard',
+    query: 'concept-version-label',
+    from: 'sx={styles.versionLabel}',
+    to: 'sx={styles.versionLabel}\n                className="concept-version-label" /* concept */',
   },
   {
     // concept: the «+» lists show each kind's total («All agents · 116», «Scroll for more · 20 of 116»), so the
@@ -98,13 +186,18 @@ const conceptSwaps = () => ({
     if (!patch) return null;
     const { readFile } = await import('node:fs/promises');
     const code = await readFile(file, 'utf8');
-    if (!code.includes(patch.from)) {
-      console.warn(
-        `concept-swaps: ${patch.source}.jsx no longer has «${patch.from}»; the concept story shows dev's line, update CONCEPT_PATCHES`,
+    // all edits or none: a later edit may use names an earlier one adds
+    const edits = patch.edits ?? [patch];
+    const missing = edits.filter(({ from }) => !code.includes(from));
+    if (missing.length) {
+      missing.forEach(({ from }) =>
+        console.warn(
+          `concept-swaps: ${patch.source}.jsx no longer has «${from}»; the concept story shows dev's file, update CONCEPT_PATCHES`,
+        ),
       );
       return code;
     }
-    return code.replace(patch.from, patch.to);
+    return edits.reduce((patched, { from, to }) => patched.replace(from, to), code);
   },
 });
 

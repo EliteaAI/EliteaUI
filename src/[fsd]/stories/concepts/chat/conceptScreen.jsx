@@ -1,6 +1,7 @@
 // The chat concept's screen for its stories: the team's real chat screen (AppLayout on /chat) on sample data, with the
 // concept's parts swapped in (ConceptSwapProvider; CONCEPT_SWAPS in .storybook/main.js). The right Participants panel
-// stays as on dev, without its context ring: the ring has moved into the field.
+// stays as it is today, without its context ring: the ring has moved into the field. With «who answers» (stories 3.x:
+// screen({ whoAnswers: true })) the panel is hidden: its list has become the «who answers» list under the field.
 import { Suspense, lazy } from 'react';
 
 import { Box } from '@mui/material';
@@ -20,14 +21,26 @@ const HIDE_PANEL_RING = {
   '& [data-tour="chat-context-budget"]:not([data-testid="concept-chat-input"] *)': { display: 'none' },
 };
 
-const CONCEPT = { chatInput: true, contextRing: true };
+// the chat page (src/pages/NewChat/NewChat.jsx) is a Grid: chats column (lg 3), conversation (xs 12), right
+// panel (lg 0.5) — the panel goes, its list is «who answers» now
+const HIDE_PARTICIPANTS_PANEL = {
+  '& main .MuiGrid-container > .MuiGrid-grid-lg-0\\.5': { display: 'none' },
+};
 
-export const screen = ({ concept }) => {
+const CONCEPT = { chatInput: true, contextRing: true };
+const CONCEPT_WHO_ANSWERS = { ...CONCEPT, whoAnswers: true };
+
+export const screen = ({ concept, whoAnswers = false }) => {
   const Screen = () => (
-    <ConceptSwapProvider value={concept ? CONCEPT : {}}>
+    <ConceptSwapProvider value={concept ? (whoAnswers ? CONCEPT_WHO_ANSWERS : CONCEPT) : {}}>
       {/* scrolls as the app's page does: below 1200 px the chats list stands over the chat (NewChat › isSmallWindow) and
           the page scrolls down to it; storyApi's frame is fixed, so without this the chat was out of reach */}
-      <Box sx={[{ width: '100%', height: '100%', overflowY: 'auto' }, concept && HIDE_PANEL_RING]}>
+      <Box
+        sx={[
+          { width: '100%', height: '100%', overflowY: 'auto' },
+          concept && (whoAnswers ? HIDE_PARTICIPANTS_PANEL : HIDE_PANEL_RING),
+        ]}
+      >
         <Suspense>
           <AppLayout />
         </Suspense>
@@ -65,9 +78,9 @@ export const freshChat = () => {
 
 // The screen fills the Storybook pane (storyApi's frame sized 100vw × 100vh, as the team's screen stories): the app lays
 // itself out for the window (isSmallWindow reads window.innerWidth); screenshots and the compare view open it at 1366×768.
-export const frame = ({ path, context }) => {
+export const frame = ({ path, context, whoAnswers = false }) => {
   const storyApi = withStoryApi({
-    routes: routes({ context }),
+    routes: routes({ context, whoAnswers }),
     state,
     width: '100vw',
     height: '100vh',
