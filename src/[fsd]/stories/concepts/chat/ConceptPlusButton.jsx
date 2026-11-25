@@ -48,6 +48,7 @@ import ConceptPlusSubmenu from './ConceptPlusSubmenu';
 import { isMcpParticipant } from './conceptParticipant.helpers';
 import { useConceptSwap } from './conceptSwap.hooks';
 import { useConceptPlusSubmenu } from './useConceptPlusSubmenu.hooks';
+import { MODEL_SETTINGS_MODULES } from './whoAnswers.constants';
 
 const SUBMENU_KEYS = {
   INTERNAL_TOOLS: 'internalTools',
@@ -74,9 +75,6 @@ const SEARCHABLE_KEYS = [
   SUBMENU_KEYS.TOOLKITS,
   SUBMENU_KEYS.MCPS,
 ];
-
-// concept: the modules that move to the model's settings in «who answers»
-export const MODEL_SETTINGS_MODULES = ['ask_user', 'planner', 'pyodide', 'swarm', 'lazy_tools_mode'];
 
 // concept: how many of each kind the chat has (the number on the menu's row)
 const isPipelineParticipant = p => p.entity_settings?.agent_type === 'pipeline';

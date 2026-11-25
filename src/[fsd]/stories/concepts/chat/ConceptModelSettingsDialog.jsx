@@ -19,7 +19,7 @@ import { VALIDATION_RULE, validateMaxTokens } from '@/[fsd]/widgets/llm-model-se
 import LLMSettings from '@/[fsd]/widgets/llm-model-selector/ui/LLMSettings';
 
 import ConceptModuleRow from './ConceptModuleRow';
-import { MODEL_SETTINGS_MODULES } from './ConceptPlusButton';
+import { MODEL_SETTINGS_MODULES } from './whoAnswers.constants';
 
 // concept: what each module does, in the prototype's words
 const MODULE_NAMES = {

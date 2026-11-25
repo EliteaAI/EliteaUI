@@ -23,7 +23,7 @@
 // pass it to the field yet; the stories keep those changes in the list.
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Box, Divider, Fade, IconButton, MenuItem, Popover, Tooltip, Typography } from '@mui/material';
+import { Box, Divider, Fade, MenuItem, Popover, Tooltip, Typography, alpha } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
@@ -321,17 +321,14 @@ const WhoAnswers = memo(props => {
         title="Model settings"
         placement="top"
       >
-        <IconButton
-          variant="elitea"
-          color="tertiary"
+        <Button.BaseBtn
+          variant={Button.BUTTON_VARIANTS.tertiary}
           onClick={openModelSettings}
           disabled={!onSetLLMSettings}
           aria-label="Model settings"
           data-testid="who-answers-model-settings"
-          sx={styles.iconButton}
-        >
-          <SettingIcon sx={styles.smallIcon} />
-        </IconButton>
+          startIcon={<SettingIcon sx={styles.smallIcon} />}
+        />
       </Tooltip>
     </Box>
   );
@@ -714,7 +711,7 @@ const whoAnswersStyles = () => ({
     minWidth: 0,
     maxWidth: '100%',
   },
-  button: {
+  button: ({ palette }) => ({
     position: 'relative',
     minWidth: 0,
     maxWidth: '100%',
@@ -722,15 +719,15 @@ const whoAnswersStyles = () => ({
     padding: '.375rem .5rem',
     '& .MuiButton-startIcon, & .MuiButton-endIcon': { margin: 0 },
     '&[aria-expanded="true"]': {
-      backgroundColor: ({ palette }) => palette.components.button.background.tertiary.hover,
+      backgroundColor: palette.components.button.background.tertiary.hover,
       '& .MuiButton-endIcon': { transform: 'rotate(180deg)' },
     },
     '@keyframes whopulse': {
-      '0%': { boxShadow: '0 0 0 0 rgba(106, 232, 250, .6)' },
-      '25%': { backgroundColor: 'rgba(106, 232, 250, .16)' },
-      '100%': { boxShadow: '0 0 0 .625rem rgba(106, 232, 250, 0)' },
+      '0%': { boxShadow: `0 0 0 0 ${alpha(palette.primary.main, 0.6)}` },
+      '25%': { backgroundColor: alpha(palette.primary.main, 0.16) },
+      '100%': { boxShadow: `0 0 0 .625rem ${alpha(palette.primary.main, 0)}` },
     },
-  },
+  }),
   // the flash after a pick in «+»
   pulse: {
     animation: 'whopulse .8s ease-out',
@@ -762,7 +759,7 @@ const whoAnswersStyles = () => ({
     fontSize: '1rem',
     color: 'icon.default',
   },
-  // 8 px, palette.icon.attention as the team's attention marks
+  // An icon glyph, as ConversationRunIndicator's dot: the token goes on color, the shape paints with it
   dot: ({ palette }) => ({
     position: 'absolute',
     top: '.125rem',
@@ -770,14 +767,16 @@ const whoAnswersStyles = () => ({
     width: '.5rem',
     height: '.5rem',
     borderRadius: '50%',
-    background: palette.icon.attention,
+    color: palette.icon.attention,
+    backgroundColor: 'currentColor',
   }),
   inlineDot: ({ palette }) => ({
     flexShrink: 0,
     width: '.5rem',
     height: '.5rem',
     borderRadius: '50%',
-    background: palette.icon.attention,
+    color: palette.icon.attention,
+    backgroundColor: 'currentColor',
   }),
   paper: {
     width: '24rem',
@@ -864,10 +863,6 @@ const whoAnswersStyles = () => ({
   }),
   toolsChevron: {
     marginLeft: '.25rem',
-  },
-  iconButton: {
-    width: '1.75rem',
-    height: '1.75rem',
   },
   versionRow: {
     gap: '.5rem',

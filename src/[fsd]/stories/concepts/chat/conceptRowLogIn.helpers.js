@@ -19,6 +19,16 @@ export const logInOnRow = status => {
   return null;
 };
 
+// Whether a row gets «Fix»: a misconfiguration the team's warning line would end with its «Check the …» link
+export const fixOnRow = status =>
+  Boolean(status.hasMisconfigurationErrors) &&
+  !status.governedRefusal &&
+  !status.isSkippedContainer &&
+  !status.isPublishedAgentGone &&
+  !status.isVersionUnavailable &&
+  !status.isSkillGone &&
+  !status.isSkillVersionUnavailable;
+
 // The warning line of such a row: the team's text without the link
 export const LOG_IN_TEXT = {
   mcp: 'Server is disconnected! Reconnect it to use.',

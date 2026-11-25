@@ -8,7 +8,7 @@ import { memo } from 'react';
 
 import ParticipantWarning from '@/[fsd]/features/chat/participants/ui/expanded-participants/ParticipantWarning';
 
-import { LOG_IN_TEXT, logInOnRow } from '../conceptRowLogIn.helpers';
+import { LOG_IN_TEXT, fixOnRow, logInOnRow } from '../conceptRowLogIn.helpers';
 import { useConceptSwap } from '../conceptSwap.hooks';
 import { useWhoAnswers } from '../whoAnswersContext.hooks';
 
@@ -17,16 +17,7 @@ const asSentence = message => (/[.!?]$/.test(message) ? message : `${message}.`)
 const ParticipantWarningSwap = memo(props => {
   const { whoAnswers } = useConceptSwap();
   const { inList } = useWhoAnswers();
-  const fixedOnRow =
-    whoAnswers &&
-    inList &&
-    props.hasMisconfigurationErrors &&
-    !props.governedRefusal &&
-    !props.isSkippedContainer &&
-    !props.isPublishedAgentGone &&
-    !props.isVersionUnavailable &&
-    !props.isSkillGone &&
-    !props.isSkillVersionUnavailable;
+  const fixedOnRow = whoAnswers && inList && fixOnRow(props);
   const logInKind = whoAnswers && inList ? logInOnRow(props) : null;
   if (logInKind) return LOG_IN_TEXT[logInKind];
   if (!fixedOnRow) return <ParticipantWarning {...props} />;

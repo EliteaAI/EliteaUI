@@ -15,7 +15,7 @@
 //   ⚙ as two equal gears.
 import { memo } from 'react';
 
-import { Box, IconButton } from '@mui/material';
+import { Box } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { ParticipantEditPermissionMap } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
@@ -32,7 +32,7 @@ import SettingIcon from '@/components/Icons/SettingIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import ConceptRowLogIn from './ConceptRowLogIn';
-import { logInOnRow } from './conceptRowLogIn.helpers';
+import { fixOnRow, logInOnRow } from './conceptRowLogIn.helpers';
 import { useWhoAnswers } from './whoAnswersContext.hooks';
 
 const getEditLabel = participant => {
@@ -78,7 +78,7 @@ const ConceptParticipantActions = memo(props => {
     participant.entity_meta?.id,
     participant.entity_meta?.project_id,
   );
-  const needsFix = status.hasMisconfigurationErrors && !status.governedRefusal;
+  const needsFix = fixOnRow(status);
   const logInKind = logInOnRow(status);
   const { onOpenSettings } = useWhoAnswers();
   const isSkill = participant.entity_name === ChatParticipantType.Skills;
@@ -108,18 +108,15 @@ const ConceptParticipantActions = memo(props => {
               title={getEditLabel(participant).replace(/^Edit/, 'View')}
               placement="top"
             >
-              <IconButton
+              <Button.BaseBtn
                 id="EditButton"
-                variant="elitea"
-                color="tertiary"
+                variant={Button.BUTTON_VARIANTS.tertiary}
                 onClick={() => onEdit?.(participant)}
                 disabled={disabledEdit}
                 data-testid="chat-participant-edit-view-button"
                 aria-label={getEditLabel(participant).replace(/^Edit/, 'View')}
-                sx={styles.iconButton}
-              >
-                <OpenEyeIcon sx={styles.icon} />
-              </IconButton>
+                startIcon={<OpenEyeIcon sx={styles.icon} />}
+              />
             </Tooltip>
           ))}
         {/* concept: ⚙ — this participant's settings in this chat */}
@@ -128,17 +125,14 @@ const ConceptParticipantActions = memo(props => {
             title={isSkill ? 'Settings in this chat: version' : 'Settings in this chat: version, variables'}
             placement="top"
           >
-            <IconButton
-              variant="elitea"
-              color="tertiary"
+            <Button.BaseBtn
+              variant={Button.BUTTON_VARIANTS.tertiary}
               disabled={disabledEdit}
               onClick={event => onOpenSettings?.(participant, event.currentTarget)}
               data-testid="who-answers-participant-settings"
               aria-label="Settings in this chat"
-              sx={styles.iconButton}
-            >
-              <SettingIcon sx={styles.icon} />
-            </IconButton>
+              startIcon={<SettingIcon sx={styles.icon} />}
+            />
           </Tooltip>
         )}
         <DeleteParticipantButton
