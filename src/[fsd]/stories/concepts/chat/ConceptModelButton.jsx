@@ -159,6 +159,7 @@ const conceptModelButtonStyles = () => ({
   group: {
     display: 'inline-flex',
     alignItems: 'center',
+    gap: '.5rem',
     minWidth: 0,
     maxWidth: '100%',
   },
