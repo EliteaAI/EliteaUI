@@ -1,18 +1,14 @@
-// Chat concept, part 1 (stories 2.1–2.2): the «+» menu under the field. A copy of
-// src/[fsd]/features/chat/ui/chat-button/PlusChatButton.jsx; the lines marked «concept:» are the changes, the rest
-// (the button and its tooltip, Attach Files with its limits and «not available» tooltip, the hidden file input for drop
-// and paste, a submenu per kind, Create <Kind>, closing on Esc, on a click outside and after a pick, the MCPs flag) is
-// the team's code. Reference: tag chat-prototype-approved-2026-11-18, default view (approved.html › plusMenu, openKind,
-// capsHTML); rows of the dev check marked «кусок 2» (research/concept-handoff/chat-capabilities/dev-check.md).
-// - concept: no «Invite Users» — people are invited from Share in the chat's header (owner 2026-11-19, «как в
-//   утверждённой версии»; people and Share are Katya's task #7489);
+// Chat concept: the «+» menu under the field. A copy of src/[fsd]/features/chat/ui/chat-button/PlusChatButton.jsx;
+// the lines marked «concept:» are the changes, the rest (the button and its tooltip, Attach Files with its limits and
+// «not available» tooltip, the hidden file input for drop and paste, a submenu per kind, Create <Kind>, closing on Esc,
+// on a click outside and after a pick, the MCPs flag) is the team's code.
+// - concept: no «Invite Users» — people are invited from Share in the chat's header;
 // - concept: each row says how many of its kind are in the chat: «Modules 2», «Agents 3», «Pipelines 1», «Skills 2»,
-//   «Toolkits 3», «MCPs 1» (dev: a chevron only);
-// - concept: each Modules row has its icon, name, description and switch in a 420 px list (dev: name, switch and an
-//   «i» tooltip, 300 px). The modules are dev's, all of them: Ask User, Planner, Python Sandbox, Swarm Mode and Smart
-//   Tools Selection stay here until a later part moves them to the model's settings (owner 2026-11-11);
-// - the list of each kind (Agents, Pipelines, Skills, Toolkits, MCPs) is the team's PlusChatSubmenu as on dev; its
-//   redesign («In this chat» on top, switches) is a later part.
+//   «Toolkits 3», «MCPs 1» (today: a chevron only);
+// - concept: each Modules row has its icon, name, description and switch in a 420 px list (today: name, switch and an
+//   «i» tooltip, 300 px). All of today's modules stay here: Ask User, Planner, Python Sandbox, Swarm Mode and Smart
+//   Tools Selection;
+// - the list of each kind (Agents, Pipelines, Skills, Toolkits, MCPs) is the team's PlusChatSubmenu as is.
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
@@ -431,7 +427,7 @@ const ConceptPlusButton = memo(props => {
                 ),
               )}
 
-              {/* concept: no «Invite Users» — people are invited from Share in the header (Katya's task #7489) */}
+              {/* concept: no «Invite Users» — people are invited from Share in the header */}
             </MenuList>
           </Paper>
         </ClickAwayListener>
@@ -480,7 +476,7 @@ const plusChatButtonStyles = theme => ({
     minWidth: '15.125rem',
     borderRadius: '.75rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
-    background: theme.palette.background.default.secondary,
+    backgroundColor: theme.palette.background.default.secondary,
     padding: 0,
     overflow: 'hidden',
   },
@@ -516,8 +512,7 @@ const plusChatButtonStyles = theme => ({
       lineHeight: '1.5rem',
       fontWeight: 400,
     },
-    // concept: no «10 left» after Attach Files (owner 2026-11-11: ««10 left» у Attach files убрано»); the limits and
-    // their toasts stay. In the product: AttachmentButton without its counter in the menu (a prop, not CSS)
+    // concept: no «10 left» after Attach Files; the limits and their toasts stay (in the product: a prop of AttachmentButton)
     '& > .MuiIconButton-root .MuiTypography-root + .MuiTypography-root': {
       display: 'none',
     },
@@ -529,9 +524,9 @@ const plusChatButtonStyles = theme => ({
     padding: '.5rem 1rem',
     height: '2.75rem',
     color: theme.palette.text.secondary,
-    background: theme.palette.background.default.secondary,
+    backgroundColor: theme.palette.background.default.secondary,
     '&:hover, &.Mui-selected, &.Mui-selected:hover': {
-      background: theme.palette.background.surface.interactive.active,
+      backgroundColor: theme.palette.background.surface.interactive.active,
     },
   },
   menuIcon: {
@@ -564,7 +559,7 @@ const plusChatButtonStyles = theme => ({
     boxSizing: 'border-box',
     borderRadius: '.75rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
-    background: theme.palette.background.default.secondary,
+    backgroundColor: theme.palette.background.default.secondary,
     padding: 0,
     overflow: 'hidden',
     display: 'flex',

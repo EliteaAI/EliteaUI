@@ -5,7 +5,7 @@ import { forwardRef, memo } from 'react';
 import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
 
 import ConceptChatInput from '../ConceptChatInput';
-import { useConceptSwap } from '../conceptSwap';
+import { useConceptSwap } from '../conceptSwap.hooks';
 
 const NewChatInputSwap = memo(
   forwardRef((props, ref) => {

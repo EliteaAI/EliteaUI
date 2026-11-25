@@ -5,9 +5,9 @@
 // Sample data, not wired to the API. What to build and the acceptance criteria: the GitHub issue of this branch.
 import { SCREENSHOT_MODES } from '@/[fsd]/stories/lib/screenshot.constants';
 
-import { CHAT, NEW_CHAT, frame, freshChat, screen } from './conceptScreen';
-import { contextStatus } from './data';
-import { pageSettled } from './storyPlay';
+import { contextStatus } from './chat.data';
+import { CHAT, NEW_CHAT, frame, freshChat, screen } from './conceptScreen.helpers';
+import { pageSettled } from './storyPlay.helpers';
 
 // The story counts as rendered once the chat page has loaded with the field (the app loads in two steps): screenshots
 // (npm run storybook:shots) wait for the story's play, otherwise they caught an empty page before the app drew.

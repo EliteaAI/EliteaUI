@@ -7,8 +7,8 @@ import { userEvent, within } from 'storybook/test';
 
 import { SCREENSHOT_MODES } from '@/[fsd]/stories/lib/screenshot.constants';
 
-import { FULL_CHAT, NEW_CHAT, frame, freshChat, screen } from './conceptScreen';
-import { pageSettled } from './storyPlay';
+import { FULL_CHAT, NEW_CHAT, frame, freshChat, screen } from './conceptScreen.helpers';
+import { pageSettled } from './storyPlay.helpers';
 
 export default {
   title: 'concepts/Chat/2 Plus menu',
@@ -18,8 +18,9 @@ export default {
   beforeEach: freshChat,
 };
 
-const open = (...rows) =>
-  async function play({ canvasElement, globals }) {
+const open =
+  (...rows) =>
+  async ({ canvasElement, globals }) => {
     // in the compare modes the screen lives in a frame that runs the story on its own
     if (globals.screenshot && globals.screenshot !== SCREENSHOT_MODES.live) return;
     const doc = canvasElement.ownerDocument;

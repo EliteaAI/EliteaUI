@@ -3,8 +3,7 @@ import { fileURLToPath } from 'url';
 
 import { screenshotHistory } from './screenshotHistory.js';
 
-// Storybook runs from the repository root (npm run storybook)
-const ROOT = process.cwd();
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
 // Concept stories show the team's real chat screen with one part replaced, without editing product files: an import
 // listed here is redirected to a switch in src/[fsd]/stories/concepts/chat/swaps/. The switch renders the team's own
@@ -32,7 +31,7 @@ const CONCEPT_SWAPS = [
 // live on main, where a team change must never break the whole Storybook (public since 2026-11-24).
 const CONCEPT_PATCHES = [
   {
-    // concept: the field's placeholder stays while the field is empty, also with focus (owner 2026-11-19)
+    // concept: the field's placeholder stays while the field is empty, also with focus
     importers: ['src/[fsd]/stories/concepts/chat/ConceptChatInput.jsx'],
     source: 'src/ComponentsLib/Chat/UserInput',
     query: 'concept-placeholder',
@@ -47,7 +46,7 @@ const matches = (list, source, importer) => {
   const target = decodeURIComponent(source).replace(/\.jsx$/, '');
   return list.find(
     s =>
-      (target === s.source || target.endsWith(`/${s.source}`) || target === s.specifier) &&
+      (target === s.source || target.endsWith(`/${s.source}`)) &&
       s.importers.some(i => file.endsWith(`/${i}`)),
   );
 };
@@ -131,7 +130,7 @@ const config = {
       },
       plugins: [
         // Versions of the saved story screenshots from git, for the stories' compare view
-        screenshotHistory(fileURLToPath(new URL('..', import.meta.url))),
+        screenshotHistory(ROOT),
         conceptSwaps(),
       ],
     });

@@ -18,7 +18,7 @@ const RING_SIZE = 26;
 
 const thousands = value => `${Math.round((value || 0) / 1000)}k`;
 
-export const contextRingTitle = stats => {
+const contextRingTitle = stats => {
   const used = stats.utilizationPercentage;
   const windowLabel = stats.windowMode === 'full' ? 'Full' : 'Balanced';
   return [
@@ -144,7 +144,7 @@ const conceptContextRingStyles = alertColor => ({
   }),
   track: ({ palette }) => ({
     position: 'absolute',
-    color: palette.border.lines,
+    color: palette.components.input.text.placeholder,
   }),
   progress: ({ palette }) => ({
     position: 'absolute',

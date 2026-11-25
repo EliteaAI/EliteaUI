@@ -1,8 +1,7 @@
-// Shared by the concept stories' play(): the chat screen loads in two steps (the app's shell, then the page with its own
-// spinner for ~1.5 s, which mounts the field again), so a story acts once no spinner has shown for 2 s in a row and the
-// element it needs is there. performance.now, not Date.now: a frozen clock (screenshots) would keep Date.now still.
+// Not waitForQuietPage: it treats every CircularProgress as loading, and the concept's context ring is a determinate one that stays
 const SPINNER = '.MuiCircularProgress-root:not(.MuiCircularProgress-determinate)';
 
+// The chat page mounts the field twice (shell, then the page after its own spinner), so wait for 2 s with no spinner and the element there
 export const pageSettled = async (doc, readySelector) => {
   const started = performance.now();
   let quietSince = null;
@@ -13,5 +12,3 @@ export const pageSettled = async (doc, readySelector) => {
     await new Promise(resolve => setTimeout(resolve, 200));
   }
 };
-
-export const wait = ms => new Promise(resolve => setTimeout(resolve, ms));

@@ -2,8 +2,8 @@
 // chat with a question and an answer, its context status. Not wired to the backend; the shapes are the API's.
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 
-export const PROJECT_ID = 42;
-export const USER = {
+const PROJECT_ID = 42;
+const USER = {
   id: 1,
   name: 'George Smith',
   email: 'george_smith@example.com',
@@ -11,7 +11,7 @@ export const USER = {
 };
 
 const flatten = value => (typeof value === 'string' ? [value] : Object.values(value).flatMap(flatten));
-export const ALL_PERMISSIONS = flatten(PERMISSIONS);
+const ALL_PERMISSIONS = flatten(PERMISSIONS);
 
 const entity = (id, name, project_id, description = '') => ({
   id,
@@ -35,7 +35,7 @@ const VERSIONS = {
 };
 const versionsOf = id => VERSIONS[id] || [version(id * 100 + 1, 'latest', 'published')];
 const VARIABLES = [{ name: 'project_key', value: 'BUGS' }];
-export const pinnedVersion = id => (id === 11 ? 1104 : id * 100 + 1);
+const pinnedVersion = id => (id === 11 ? 1104 : id * 100 + 1);
 const details = (row, { agent_type = 'chat', variables = VARIABLES } = {}) => {
   const versions = versionsOf(row.id);
   const pinned = versions.find(v => v.id === pinnedVersion(row.id)) || versions[0];
@@ -52,8 +52,7 @@ const details = (row, { agent_type = 'chat', variables = VARIABLES } = {}) => {
   };
 };
 
-// A project's real volume (Levon 13.11: «в одном проекте может быть условно 100»): a few named items, then generated
-// ones, as in the approved prototype — so the «+» lists load by 20 and show «Scroll for more · 20 of N»
+// A project's real volume (up to ~100 items of a kind): a few named items, then generated ones, so the «+» lists load by 20
 const AREAS = [
   'Release',
   'Sprint',

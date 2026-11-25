@@ -1,21 +1,20 @@
-// Chat concept, part 1 — the input field (stories 1.1–1.3) and its «+» menu (2.1–2.2). A copy of src/[fsd]/features/chat/ui/chat-input/NewChatInput.jsx; the
-// lines marked «concept:» are the only changes, everything else (keys, voice, speaking mode, files, «#», Stop, Inject)
-// is the team's code as on dev. Reference: tag chat-prototype-approved-2026-11-18, default view (#composer, #modelBtn).
-// - concept: the context ring moves into the field, right, before the mic (from the bottom of the right Participants
-//   panel); shown when the chat has messages (a conversation id), as the panel's block on dev;
+// Chat concept: the input field and its «+» menu. A copy of src/[fsd]/features/chat/ui/chat-input/NewChatInput.jsx;
+// the lines marked «concept:» are the only changes, everything else (keys, voice, speaking mode, files, «#», Stop,
+// Inject) is the team's code.
+// - concept: the context ring moves into the field, right, before the mic (from the bottom of the Participants panel);
+//   shown when the chat has messages (a conversation id), as the panel's block is today;
 // - concept: «who answers» (the model selector, or the agent / pipeline / skill panel) leaves the field and sits under
 //   it, right-aligned. The model's button has no fill (ConceptModelButton); its ⚙ «Model Settings» and its list of
-//   models are the team's, as on dev. The agent, pipeline and skill panels are the team's AgentEditorPanel and
-//   SkillChatPanel as on dev, only placed under the field;
+//   models are the team's. The agent, pipeline and skill panels are the team's AgentEditorPanel and SkillChatPanel,
+//   only placed under the field;
 // - concept: the placeholder names «#»: «Type your message… # for assistants»; with an agent answering —
-//   «Reply to <name>…»; a skill's argument hint («~<skill> <hint>») stays as on dev;
-// - concept: the placeholder stays while the field is empty, also when the field has focus (dev: UserInput hides it on
-//   focus, and a new chat focuses the field at once, so «# for assistants» is never seen). In the product it is one line
-//   of src/ComponentsLib/Chat/UserInput.jsx: placeholder={input?.placeholder}. Here Storybook patches that line for
-//   this field only (CONCEPT_PATCHES in .storybook/main.js); UserInput.jsx itself is not edited (owner 2026-11-19).
-// - concept: the «+» menu is ConceptPlusButton — no Invite Users, counts on its rows, modules with descriptions; the
-//   list of each kind (Agents, Toolkits …) is the team's (see the file's header).
-// The right Participants panel stays as on dev, without its context ring (the ring is here now).
+//   «Reply to <name>…»; a skill's argument hint («~<skill> <hint>») stays as is;
+// - concept: the placeholder stays while the field is empty, also with focus (UserInput hides it on focus today, and a
+//   new chat focuses the field at once, so «# for assistants» would never be seen). In the product it is one line of
+//   src/ComponentsLib/Chat/UserInput.jsx: placeholder={input?.placeholder}. Here Storybook patches that line for this
+//   field only (CONCEPT_PATCHES in .storybook/main.js); UserInput.jsx itself is not edited.
+// - concept: the «+» menu is ConceptPlusButton — no Invite Users, counts on its rows, modules with descriptions.
+// The Participants panel stays as is, without its context ring (the ring is here now).
 // The host (ChatBox, NewConversationView) does not change, except that in the product it passes the chat's
 // context_strategy, instructions, persona and setActiveConversation for the ring's card, as ParticipantsWrapper does now.
 import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
@@ -35,7 +34,7 @@ import { ChatParticipantType } from '@/common/constants';
 import ConceptModelButton from './ConceptModelButton';
 import ConceptPlusButton from './ConceptPlusButton';
 
-// concept: the placeholder (approved.html › composerD)
+// concept: the placeholder names «#»
 const DEV_PLACEHOLDER = 'Type your message...';
 // the one who answers is named by its details, else by the chat participant's meta (a participant has no `name`)
 const conceptPlaceholder = (placeholder, activeParticipant, activeParticipantDetails) => {
@@ -50,7 +49,7 @@ const conceptPlaceholder = (placeholder, activeParticipant, activeParticipantDet
   return 'Type your message… # for assistants';
 };
 
-const NewChatInput = memo(
+const ConceptChatInput = memo(
   forwardRef((props, ref) => {
     const {
       fromTheChat,
@@ -474,7 +473,7 @@ const NewChatInput = memo(
   }),
 );
 
-NewChatInput.displayName = 'ConceptChatInput';
+ConceptChatInput.displayName = 'ConceptChatInput';
 
 /** @type {MuiSx} */
 const newChatInputStyles = () => ({
@@ -529,4 +528,4 @@ const newChatInputStyles = () => ({
   },
 });
 
-export default NewChatInput;
+export default ConceptChatInput;
