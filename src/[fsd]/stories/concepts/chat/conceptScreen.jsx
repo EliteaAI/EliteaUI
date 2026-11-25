@@ -9,8 +9,8 @@ import { Box } from '@mui/material';
 import '@/[fsd]/app/routes';
 import { withStoryApi } from '@/[fsd]/stories/lib/storyApi';
 
-import { CHAT_ID, FULL_CHAT_ID, STATUS_MARK, routes, state } from './chat.data';
-import { ConceptSwapProvider } from './conceptSwap.hooks';
+import { ConceptSwapProvider } from './ConceptSwapContext';
+import { STATUS_MARK, routes, state } from './chat.data';
 
 // Lazy so the routes module loads before the layout
 const AppLayout = lazy(() => import('@/[fsd]/app/layout/AppLayout'));
@@ -94,7 +94,3 @@ export const frame = ({ path, context, whoAnswers = false }) => {
   };
   return ConceptFrame;
 };
-
-export const NEW_CHAT = '/chat?create=1';
-export const CHAT = `/chat?conversation=${CHAT_ID}`;
-export const FULL_CHAT = `/chat?conversation=${FULL_CHAT_ID}`;

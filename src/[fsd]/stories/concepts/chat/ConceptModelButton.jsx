@@ -75,8 +75,20 @@ const ConceptModelButton = memo(props => {
             aria-label={`Answers: ${name}`}
             data-testid="model-selector-name"
             data-tour={dataTourTargetId || undefined}
-            startIcon={selectedModel ? <ModelIcon sx={styles.icon} /> : undefined}
-            endIcon={<ArrowDownIcon sx={styles.chevron} />}
+            startIcon={
+              selectedModel ? (
+                <Box
+                  component={ModelIcon}
+                  sx={styles.icon}
+                />
+              ) : undefined
+            }
+            endIcon={
+              <Box
+                component={ArrowDownIcon}
+                sx={styles.chevron}
+              />
+            }
             sx={styles.button}
           >
             <Typography
@@ -105,9 +117,8 @@ const ConceptModelButton = memo(props => {
               aria-haspopup="menu"
               data-testid="model-settings-button"
               sx={styles.settingsButton}
-            >
-              <SettingIcon sx={styles.icon} />
-            </Button.BaseBtn>
+              startIcon={<SettingIcon sx={styles.icon} />}
+            />
           </Box>
         </Tooltip>
       )}
@@ -162,8 +173,6 @@ const conceptModelButtonStyles = () => ({
     minWidth: 0,
   },
   settingsButton: {
-    minWidth: 0,
-    padding: '.375rem',
     '&[aria-expanded="true"]': {
       backgroundColor: ({ palette }) => palette.components.button.background.tertiary.hover,
     },

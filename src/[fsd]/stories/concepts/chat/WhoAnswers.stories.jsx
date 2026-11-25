@@ -7,9 +7,10 @@
 import { userEvent, within } from 'storybook/test';
 
 import { SCREENSHOT_MODES } from '@/[fsd]/stories/lib/screenshot.constants';
+import { pageSettled, wait } from '@/[fsd]/stories/lib/storyPlay.helpers';
 
-import { FULL_CHAT, NEW_CHAT, frame, freshChat, screen } from './conceptScreen.helpers';
-import { pageSettled, wait } from './storyPlay.helpers';
+import { frame, freshChat, screen } from './conceptScreen';
+import { FULL_CHAT, NEW_CHAT } from './conceptScreen.constants';
 
 export default {
   title: 'concepts/Chat/3 Who answers',

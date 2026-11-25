@@ -8,9 +8,9 @@ import { memo } from 'react';
 
 import ParticipantWarning from '@/[fsd]/features/chat/participants/ui/expanded-participants/ParticipantWarning';
 
+import { useConceptSwap } from '../ConceptSwapContext';
+import { useWhoAnswers } from '../WhoAnswersContext';
 import { LOG_IN_TEXT, fixOnRow, logInOnRow } from '../conceptRowLogIn.helpers';
-import { useConceptSwap } from '../conceptSwap.hooks';
-import { useWhoAnswers } from '../whoAnswersContext.hooks';
 
 const asSentence = message => (/[.!?]$/.test(message) ? message : `${message}.`);
 

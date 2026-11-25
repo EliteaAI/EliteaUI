@@ -20,7 +20,7 @@ const CONCEPT_SWAPS = [
   },
   {
     importers: ['src/[fsd]/widgets/context-budget/ui/ContextBudgetInfo.jsx'],
-    source: './ContextBudgetRing',
+    source: 'src/[fsd]/widgets/context-budget/ui/ContextBudgetRing',
     to: 'src/[fsd]/stories/concepts/chat/swaps/ContextBudgetRing.swap.jsx',
   },
   // a row of the «who answers» list gets ⚙ (version, variables) and «Fix»; the panel's rows stay the team's
@@ -29,12 +29,12 @@ const CONCEPT_SWAPS = [
       'src/[fsd]/features/chat/participants/ui/expanded-participants/ParticipantNormalCard.jsx',
       'src/[fsd]/features/chat/participants/ui/expanded-participants/ParticipantAttentionCard.jsx',
     ],
-    source: '../participant-actions/ParticipantActions',
+    source: 'src/[fsd]/features/chat/participants/ui/participant-actions/ParticipantActions',
     to: 'src/[fsd]/stories/concepts/chat/swaps/ParticipantActions.swap.jsx',
   },
   {
     importers: ['src/[fsd]/features/chat/participants/ui/expanded-participants/ParticipantAttentionCard.jsx'],
-    source: './ParticipantWarning',
+    source: 'src/[fsd]/features/chat/participants/ui/expanded-participants/ParticipantWarning',
     to: 'src/[fsd]/stories/concepts/chat/swaps/ParticipantWarning.swap.jsx',
   },
 ];
@@ -53,20 +53,52 @@ const CONCEPT_PATCHES = [
     to: 'placeholder={input?.placeholder /* concept: stays with focus (dev hides it) */}',
   },
   {
-    // ChatBox hands the field onShowToolkitEditor, so the pencil of a toolkit in «who answers» opens its editor
-    // (ChatBox has the prop and does not pass it to the field today). The import is relative: chat-box/index.js
+    // concept: ChatBox hands the field what the concept needs, as two one-line edits: the chat's values for the ring's
+    // card (as ParticipantsWrapper gives the ring); onShowToolkitEditor, so the pencil of a toolkit in «who answers» opens
+    // its editor, and the page's editingToolkit and selected managers for the rows of that list
     importers: ['src/[fsd]/features/chat/ui/chat-box/index.js'],
-    specifier: './ChatBox',
     source: 'src/[fsd]/features/chat/ui/chat-box/ChatBox',
-    query: 'concept-toolkit-editor',
-    from: 'onShowParticipantsList={onShowParticipantsList}',
-    to: 'onShowParticipantsList={onShowParticipantsList}\n              onShowToolkitEditor={onShowToolkitEditor /* concept */}',
+    query: 'concept-chat-box',
+    edits: [
+      {
+        from: 'internal_tools={activeConversation?.meta?.internal_tools || []}',
+        to: [
+          'internal_tools={activeConversation?.meta?.internal_tools || []}',
+          'contextStrategy={activeConversation?.meta?.context_strategy || {}}',
+          'setActiveConversation={setActiveConversation}',
+          "conversationInstructions={activeConversation?.instructions || ''}",
+          'persona={activeConversation?.meta?.persona}',
+        ].join(' '),
+      },
+      {
+        from: 'onShowParticipantsList={onShowParticipantsList}',
+        to: [
+          'onShowParticipantsList={onShowParticipantsList}',
+          'onShowToolkitEditor={onShowToolkitEditor /* concept */}',
+          'editingToolkit={props.editingToolkit}',
+          'selectedManager={props.selectedManager}',
+          'newConversationSelectedManager={props.newConversationSelectedManager}',
+        ].join(' '),
+      },
+    ],
+  },
+  {
+    // concept: the «who answers» list draws the panel's rows, so the chat page hands ChatBox what it hands the panel
+    importers: ['src/pages/NewChat/index.jsx'],
+    source: 'src/pages/NewChat/NewChat',
+    query: 'concept-new-chat',
+    from: 'showParticipantsWelcome',
+    to: [
+      'showParticipantsWelcome',
+      'editingToolkit={editingToolkit}',
+      'selectedManager={selectedManager}',
+      'newConversationSelectedManager={newConversationSelectedManager}',
+    ].join(' '),
   },
   {
     // a row's version label gets a class, so the «who answers» list can give it room (the panel caps it at 2.5rem,
     // «v3-strict-review» shows as «v3-s…»); the panel keeps the cap
     importers: ['src/[fsd]/features/chat/participants/ui/expanded-participants/ParticipantItem.jsx'],
-    specifier: './ParticipantNormalCard',
     source: 'src/[fsd]/features/chat/participants/ui/expanded-participants/ParticipantNormalCard',
     query: 'concept-version-label',
     from: 'sx={styles.versionLabel}',
@@ -77,10 +109,11 @@ const CONCEPT_PATCHES = [
 const matches = (list, source, importer) => {
   const file = decodeURIComponent(importer.split('?')[0]);
   // Vite's own alias plugin runs first, so '@/…' arrives here as an absolute path: compare by the path's end
-  const target = decodeURIComponent(source).replace(/\.jsx$/, '');
+  const raw = decodeURIComponent(source).replace(/\.jsx?$/, '');
+  const target = raw.startsWith('.') ? path.join(path.dirname(file), raw) : raw;
   return list.find(
     s =>
-      (target === s.source || target.endsWith(`/${s.source}`) || target === s.specifier) &&
+      (target === s.source || target.endsWith(`/${s.source}`)) &&
       s.importers.some(i => file.endsWith(`/${i}`)),
   );
 };
@@ -101,13 +134,13 @@ const conceptSwaps = () => ({
     if (!patch) return null;
     const { readFile } = await import('node:fs/promises');
     const code = await readFile(file, 'utf8');
-    if (!code.includes(patch.from)) {
+    return (patch.edits ?? [patch]).reduce((patched, { from, to }) => {
+      if (patched.includes(from)) return patched.replace(from, to);
       console.warn(
-        `concept-swaps: ${patch.source}.jsx no longer has «${patch.from}»; the concept story shows dev's line, update CONCEPT_PATCHES`,
+        `concept-swaps: ${patch.source}.jsx no longer has «${from}»; the concept story shows dev's line, update CONCEPT_PATCHES`,
       );
-      return code;
-    }
-    return code.replace(patch.from, patch.to);
+      return patched;
+    }, code);
   },
 });
 

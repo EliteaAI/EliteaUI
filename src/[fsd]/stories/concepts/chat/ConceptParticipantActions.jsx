@@ -32,8 +32,8 @@ import SettingIcon from '@/components/Icons/SettingIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import ConceptRowLogIn from './ConceptRowLogIn';
+import { useWhoAnswers } from './WhoAnswersContext';
 import { fixOnRow, logInOnRow } from './conceptRowLogIn.helpers';
-import { useWhoAnswers } from './whoAnswersContext.hooks';
 
 const getEditLabel = participant => {
   if (participant.entity_settings?.agent_type === 'pipeline') return 'Edit pipeline';

@@ -6,7 +6,8 @@
 //   threshold and the error colour at the limit stay (useContextUtilization), the green «all is well» goes;
 // - the tooltip in three lines above the ring: «Context window · Balanced», «N% used (M% left)», «Xk / Yk tokens used»;
 // - the card (ContextBudgetPopover, unchanged) opens above the ring, not to its left; there is no panel to expand into.
-// Data, the card's content, Context settings and Summarize now are the team's, through ContextBudgetInfo as on dev.
+// Data, the card's content, Context settings and Summarize now are the team's: ContextBudgetInfo passes the chat's
+// values from the field (ConceptChatInput) to the card, as it does from the Participants panel on dev.
 import { memo, useCallback, useRef, useState } from 'react';
 
 import { Box, CircularProgress, Typography } from '@mui/material';
@@ -34,9 +35,9 @@ const ConceptContextRing = memo(props => {
     utilizationColor,
     isHighUtilization,
     // In the field the ring always opens its card; the panel's «expand» props are not passed on
-    // eslint-disable-next-line no-unused-vars
+    // eslint-disable-next-line no-unused-vars -- taken out so the card does not get them
     expandable,
-    // eslint-disable-next-line no-unused-vars
+    // eslint-disable-next-line no-unused-vars -- taken out so the card does not get them
     onCollapse,
     toggleFocusRef,
     ...popoverProps

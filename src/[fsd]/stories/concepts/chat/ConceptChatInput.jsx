@@ -18,10 +18,10 @@
 // - concept (the «whoAnswers» stories only): «who answers» under the field is one button with its list
 //   (ConceptWhoAnswers) — it replaces the model's button with its ⚙, AgentEditorPanel and SkillChatPanel, and takes the
 //   list of the Participants panel (hidden then); the model's ⚙ «Model settings» is in that list. The button flashes
-//   once after a pick in «+». The host also passes onShowToolkitEditor (ChatBox has it; Storybook adds that one prop,
-//   CONCEPT_PATCHES in .storybook/main.js).
-// The host (ChatBox, NewConversationView) does not change, except that in the product it passes the chat's
-// context_strategy, instructions, persona and setActiveConversation for the ring's card, as ParticipantsWrapper does now.
+//   once after a pick in «+».
+// The host passes the chat's context_strategy, instructions, persona and setActiveConversation for the ring's card, as
+// ParticipantsWrapper does now, and onShowToolkitEditor, which ChatBox has; Storybook adds these props to ChatBox through
+// CONCEPT_PATCHES in .storybook/main.js.
 import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import { Box, useTheme } from '@mui/material';
@@ -38,8 +38,8 @@ import { ChatParticipantType } from '@/common/constants';
 
 import ConceptModelButton from './ConceptModelButton';
 import ConceptPlusButton from './ConceptPlusButton';
+import { useConceptSwap } from './ConceptSwapContext';
 import ConceptWhoAnswers from './ConceptWhoAnswers';
-import { useConceptSwap } from './conceptSwap.hooks';
 
 // concept: the placeholder names «#»
 const DEV_PLACEHOLDER = 'Type your message...';
@@ -120,6 +120,10 @@ const ConceptChatInput = memo(
 
       // concept: the pencil of a toolkit row in the «who answers» list (ChatBox has it; today's field does not take it)
       onShowToolkitEditor,
+      // concept: for the rows of «who answers», as the Participants panel gets them
+      editingToolkit,
+      selectedManager,
+      newConversationSelectedManager,
 
       //attachment
       onAttachFiles,
@@ -138,6 +142,12 @@ const ConceptChatInput = memo(
       onClearChat,
       disableClearChat = false,
       projectId,
+
+      // concept: the chat's values for the ring's card (Context settings, the Balanced / Full switch, Summarize now)
+      contextStrategy,
+      setActiveConversation,
+      conversationInstructions,
+      persona,
 
       // Participant management (for PlusChatButton submenus)
       onSelectParticipant,
@@ -338,6 +348,9 @@ const ConceptChatInput = memo(
         onClosePipelineEditor={onClosePipelineEditor}
         onCloseSkillEditor={onCloseSkillEditor}
         activeSkillUnavailableReason={activeSkillUnavailableReason}
+        editingToolkit={editingToolkit}
+        selectedManager={selectedManager}
+        newConversationSelectedManager={newConversationSelectedManager}
       />
     );
 
@@ -479,6 +492,10 @@ const ConceptChatInput = memo(
                       <ContextBudgetUI.ContextBudgetInfo
                         conversationId={conversationId}
                         collapsed
+                        contextStrategy={contextStrategy}
+                        setActiveConversation={setActiveConversation}
+                        conversationInstructions={conversationInstructions}
+                        persona={persona}
                       />
                     </Box>
                   )}

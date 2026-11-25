@@ -122,7 +122,7 @@ const ConceptPlusSubmenu = memo(props => {
     [],
   );
 
-  const styles = conceptPlusSubmenuStyles(theme);
+  const styles = conceptPlusSubmenuStyles();
 
   const renderRow = item => {
     const isPublic = showPublicLabel && item.data?.project_id == PUBLIC_PROJECT_ID;
@@ -345,21 +345,21 @@ const ConceptPlusSubmenu = memo(props => {
 ConceptPlusSubmenu.displayName = 'ConceptPlusSubmenu';
 
 /** @type {MuiSx} */
-const conceptPlusSubmenuStyles = theme => ({
+const conceptPlusSubmenuStyles = () => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
     minHeight: 0,
   },
-  searchContainer: {
+  searchContainer: ({ palette }) => ({
     flexShrink: 0,
     padding: `${SPACING.XS} ${SPACING.LG}`,
-    borderBottom: `0.0625rem solid ${theme.palette.border.lines}`,
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
     height: HEIGHTS.buttonLarge,
     display: 'flex',
     alignItems: 'center',
-  },
+  }),
   searchInnerContainer: {
     display: 'flex',
     alignItems: 'center',
@@ -370,17 +370,17 @@ const conceptPlusSubmenuStyles = theme => ({
     width: '1.25rem',
     height: '1.25rem',
   },
-  searchField: {
+  searchField: ({ palette }) => ({
     width: '100%',
     '& .MuiInputBase-input': {
       padding: 0,
-      color: theme.palette.text.secondary,
+      color: palette.text.secondary,
       '&::placeholder': {
-        color: theme.palette.text.disabled,
+        color: palette.text.disabled,
         opacity: 1,
       },
     },
-  },
+  }),
   tooltipPopper: {
     // Must sit above the submenu Popper (zIndex 9999 in PlusChatButton)
     zIndex: 10000,
@@ -396,26 +396,26 @@ const conceptPlusSubmenuStyles = theme => ({
     width: '1rem',
     height: '1rem',
   },
-  createNewItem: {
+  createNewItem: ({ palette }) => ({
     flexShrink: 0,
     padding: `${SPACING.SM} ${SPACING.XL}`,
     height: HEIGHTS.buttonLarge,
     gap: '0.75rem',
-    color: theme.palette.text.primary,
+    color: palette.text.primary,
     '&:hover': {
-      backgroundColor: theme.palette.background.interactiveItem.hover,
+      backgroundColor: palette.background.interactiveItem.hover,
     },
-  },
+  }),
   dividerContainer: {
     flexShrink: 0,
     padding: '0 0 0.25rem',
     height: '0.3125rem',
   },
-  dividerLine: {
+  dividerLine: ({ palette }) => ({
     width: '100%',
     height: 0,
-    borderBottom: `0.0625rem solid ${theme.palette.border.lines}`,
-  },
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
+  }),
   ellipsisText: {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -442,49 +442,49 @@ const conceptPlusSubmenuStyles = theme => ({
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   },
-  publicLabelContainer: {
+  publicLabelContainer: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
     padding: '0.125rem 0.375rem',
     borderRadius: '0.875rem',
-    border: `0.0625rem solid ${theme.palette.border.lines}`,
+    border: `0.0625rem solid ${palette.border.lines}`,
     flexShrink: 0,
-  },
-  publicLabel: {
+  }),
+  publicLabel: ({ palette }) => ({
     textTransform: 'none',
-    color: theme.palette.text.metrics,
-  },
+    color: palette.text.metrics,
+  }),
   // concept: a two-line row (dev: one line, 2.5rem)
-  listItem: {
+  listItem: ({ palette }) => ({
     padding: `${SPACING.XS} ${SPACING.LG}`,
     minHeight: '3rem',
     flexShrink: 0,
     gap: '0.75rem',
-    color: theme.palette.text.primary,
+    color: palette.text.primary,
     '&:hover': {
-      backgroundColor: theme.palette.background.interactiveItem.hover,
+      backgroundColor: palette.background.interactiveItem.hover,
     },
-  },
+  }),
   statusItem: {
     padding: `${SPACING.SM} ${SPACING.LG}`,
     height: HEIGHTS.buttonLarge,
     flexShrink: 0,
   },
   // concept: a row in the chat is not clicked as a whole — only its delete icon acts
-  addedItem: {
+  addedItem: ({ palette }) => ({
     padding: `${SPACING.XS} ${SPACING.LG}`,
     minHeight: '3rem',
     flexShrink: 0,
     gap: '0.75rem',
     cursor: 'default',
-    color: theme.palette.text.primary,
+    color: palette.text.primary,
     '&:hover': {
-      backgroundColor: theme.palette.background.interactiveItem.hover,
+      backgroundColor: palette.background.interactiveItem.hover,
     },
     // the keyboard reaches the delete icon too: a focused row shows it as the pointer does
     '&:hover .concept-added, &:focus-within .concept-added': { display: 'none' },
     '&:hover .concept-remove, &:focus-within .concept-remove': { display: 'inline-flex' },
-  },
+  }),
   // concept: the check and the delete icon take the same place, the size of the product's delete button
   added: {
     display: 'flex',

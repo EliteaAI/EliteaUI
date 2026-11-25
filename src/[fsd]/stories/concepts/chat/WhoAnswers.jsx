@@ -54,7 +54,7 @@ import useNavBlocker from '@/hooks/useNavBlocker';
 
 import ConceptModelRow from './ConceptModelRow';
 import ConceptModelSettingsDialog from './ConceptModelSettingsDialog';
-import { WhoAnswersProvider } from './whoAnswersContext.hooks';
+import { WhoAnswersProvider } from './WhoAnswersContext';
 
 const isPipeline = p =>
   p.entity_name === ChatParticipantType.Pipelines ||
@@ -139,6 +139,9 @@ const WhoAnswers = memo(props => {
     onClosePipelineEditor,
     onCloseSkillEditor,
     activeSkillUnavailableReason,
+    editingToolkit,
+    selectedManager,
+    newConversationSelectedManager,
   } = props;
 
   const styles = whoAnswersStyles();
@@ -379,10 +382,18 @@ const WhoAnswers = memo(props => {
                   specifiedFontSize="0.75rem"
                 />
               ) : selectedModel ? (
-                <ModelIcon sx={styles.smallIcon} />
+                <Box
+                  component={ModelIcon}
+                  sx={styles.smallIcon}
+                />
               ) : undefined
             }
-            endIcon={<ArrowDownIcon sx={styles.chevron} />}
+            endIcon={
+              <Box
+                component={ArrowDownIcon}
+                sx={styles.chevron}
+              />
+            }
             sx={[styles.button, pulsing && styles.pulse]}
           >
             <Typography
@@ -457,7 +468,12 @@ const WhoAnswers = memo(props => {
                   isSelected={!answersEntity}
                   isOpen={Boolean(modelsAnchor)}
                   isFirstRow
-                  icon={<ModelIcon sx={styles.modelIcon} />}
+                  icon={
+                    <Box
+                      component={ModelIcon}
+                      sx={styles.modelIcon}
+                    />
+                  }
                   onClick={event => setModelsAnchor(event.currentTarget)}
                   rowProps={{
                     role: 'menuitem',
@@ -469,7 +485,10 @@ const WhoAnswers = memo(props => {
                   end={
                     <>
                       {gear}
-                      <ArrowRightIcon sx={styles.chevron} />
+                      <Box
+                        component={ArrowRightIcon}
+                        sx={styles.chevron}
+                      />
                     </>
                   }
                 />
@@ -487,6 +506,9 @@ const WhoAnswers = memo(props => {
                     onSelectParticipant={pickParticipant}
                     onDeleteParticipant={onDeleteParticipant}
                     onEditParticipant={editParticipant}
+                    editingToolkit={editingToolkit}
+                    selectedManager={selectedManager}
+                    newConversationSelectedManager={newConversationSelectedManager}
                     entityType={section.entityType}
                   />
                 ))}
@@ -533,7 +555,10 @@ const WhoAnswers = memo(props => {
                         />
                       </Tooltip>
                     )}
-                    <ArrowRightIcon sx={[styles.chevron, styles.toolsChevron]} />
+                    <Box
+                      component={ArrowRightIcon}
+                      sx={[styles.chevron, styles.toolsChevron]}
+                    />
                   </MenuItem>
                 </Box>
               )}
@@ -586,6 +611,7 @@ const WhoAnswers = memo(props => {
                 onClickItem={pickParticipant}
                 onDelete={onDeleteParticipant}
                 onEdit={editParticipant}
+                editingToolkit={editingToolkit}
               />
             ))}
           </Box>

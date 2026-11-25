@@ -6,8 +6,8 @@ import { memo } from 'react';
 import ParticipantActions from '@/[fsd]/features/chat/participants/ui/participant-actions/ParticipantActions';
 
 import ConceptParticipantActions from '../ConceptParticipantActions';
-import { useConceptSwap } from '../conceptSwap.hooks';
-import { useWhoAnswers } from '../whoAnswersContext.hooks';
+import { useConceptSwap } from '../ConceptSwapContext';
+import { useWhoAnswers } from '../WhoAnswersContext';
 
 const ParticipantActionsSwap = memo(props => {
   const { whoAnswers } = useConceptSwap();
