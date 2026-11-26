@@ -4,40 +4,33 @@ import { Alert, Box, Snackbar } from '@mui/material';
 
 import { ToastConstants } from '@/[fsd]/shared/lib/constants';
 
-const { DEFAULT_TOP_POSITION, TOAST_DURATION_DEFAULTS } = ToastConstants;
+const { TOAST_DURATION_DEFAULTS } = ToastConstants;
 
 const ANCHOR_ORIGIN = { vertical: 'top', horizontal: 'center' };
 
 const Toast = memo(props => {
-  const {
-    open,
-    severity,
-    message,
-    autoHideDuration = TOAST_DURATION_DEFAULTS.info,
-    onClose,
-    topPosition = DEFAULT_TOP_POSITION,
-    icon,
-  } = props;
+  const { open, severity, message, autoHideDuration = TOAST_DURATION_DEFAULTS.info, onClose, icon } = props;
 
   const [showToast, setShowToast] = useState(open);
 
-  const handleClose = useCallback(
-    (event, reason) => {
-      if (reason === 'clickaway') {
-        return;
-      }
+  const handleClose = useCallback((event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
 
-      onClose?.();
-      setShowToast(false);
-    },
-    [onClose],
-  );
+    setShowToast(false);
+  }, []);
+
+  // Report the close once the exit transition has finished, so the toast fades out before it is removed.
+  const handleExited = useCallback(() => {
+    onClose?.();
+  }, [onClose]);
 
   useEffect(() => {
     setShowToast(open);
   }, [open]);
 
-  const styles = toastStyles(topPosition);
+  const styles = toastStyles();
 
   return (
     <Snackbar
@@ -46,6 +39,7 @@ const Toast = memo(props => {
       open={showToast}
       autoHideDuration={autoHideDuration}
       onClose={handleClose}
+      slotProps={{ transition: { onExited: handleExited } }}
     >
       <Alert
         data-testid="toast-alert"
@@ -77,9 +71,14 @@ const Toast = memo(props => {
 Toast.displayName = 'Toast';
 
 /** @type {MuiSx} */
-const toastStyles = topPosition => ({
+const toastStyles = () => ({
+  // The toasts are stacked by the container in ToastComponent, so each one flows in place instead of being fixed.
   root: {
-    top: `${topPosition} !important`,
+    position: 'static !important',
+    top: 'auto !important',
+    left: 'auto !important',
+    right: 'auto !important',
+    transform: 'none !important',
   },
   alert: {
     width: '100%',
