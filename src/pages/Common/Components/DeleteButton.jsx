@@ -19,19 +19,7 @@ const useDeleteEntity = (_, setBlockNav) => {
   const { values: { name } = {} } = useFormikContext();
   const [deleteApplication, { isLoading, error, isError, isSuccess, reset }] = useDeleteApplicationMutation();
 
-  const onCloseToast = useCallback(() => {
-    if (isError) {
-      reset();
-    } else if (isSuccess) {
-      setBlockNav?.(false);
-      setTimeout(() => {
-        navigate(-1);
-      }, 0);
-    }
-  }, [isError, isSuccess, navigate, reset, setBlockNav]);
-
-  const toastProps = useMemo(() => ({ onCloseToast }), [onCloseToast]);
-  const { toastSuccess, toastError } = useToast(toastProps);
+  const { toastSuccess, toastError } = useToast();
 
   const onDelete = useCallback(async () => {
     const entityType = !isFromPipeline ? 'agent' : 'pipeline';
@@ -45,8 +33,23 @@ const useDeleteEntity = (_, setBlockNav) => {
     } else if (isSuccess) {
       const entityType = !isFromPipeline ? 'agent' : 'pipeline';
       toastSuccess(`The ${name || entityType} ${entityType} has been successfully deleted.`);
+      setBlockNav?.(false);
+      setTimeout(() => {
+        navigate(-1);
+      }, 0);
     }
-  }, [error, isError, isFromPipeline, isSuccess, name, reset, toastError, toastSuccess]);
+  }, [
+    error,
+    isError,
+    isFromPipeline,
+    isSuccess,
+    name,
+    navigate,
+    reset,
+    setBlockNav,
+    toastError,
+    toastSuccess,
+  ]);
 
   return {
     name,

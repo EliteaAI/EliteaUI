@@ -9,7 +9,6 @@ import { useToastHandlers } from '../useToastHandlers.hooks';
 const makeContext = () => ({
   toastHandlers: { toastError: vi.fn(), toastSuccess: vi.fn(), toastInfo: vi.fn(), toastWarning: vi.fn() },
   setTopPosition: vi.fn(),
-  setOnCloseToast: vi.fn(),
   setIcon: vi.fn(),
 });
 
@@ -29,7 +28,6 @@ describe('useToastHandlers', () => {
     expect(result.current).toBe(context.toastHandlers);
     expect(context.toastHandlers.toastError).toHaveBeenCalledWith('Failed');
     expect(context.setTopPosition).not.toHaveBeenCalled();
-    expect(context.setOnCloseToast).not.toHaveBeenCalled();
     expect(context.setIcon).not.toHaveBeenCalled();
   });
 });

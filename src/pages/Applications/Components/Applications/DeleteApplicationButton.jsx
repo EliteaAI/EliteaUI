@@ -20,14 +20,7 @@ const useDeleteApplication = setBlockNav => {
   const navigate = useNavigate();
   const [deleteApplication, { isLoading, error, isError, isSuccess, reset }] = useDeleteApplicationMutation();
 
-  const onCloseToast = useCallback(() => {
-    if (isError) {
-      reset();
-    }
-  }, [isError, reset]);
-
-  const toastProps = useMemo(() => ({ onCloseToast }), [onCloseToast]);
-  const { toastSuccess, toastError } = useToast(toastProps);
+  const { toastSuccess, toastError } = useToast();
   const onDelete = useCallback(async () => {
     const entityType = !isFromPipeline ? 'agent' : 'pipeline';
     await deleteApplication({ projectId, applicationId, entityType });
