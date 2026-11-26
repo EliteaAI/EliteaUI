@@ -1,32 +1,14 @@
-import { memo, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
+import { memo, useCallback, useContext, useMemo, useRef } from 'react';
 
 import { Formik, useFormikContext } from 'formik';
 
 import { FlowEditorContext, NodeConfigPanelContext } from '@/[fsd]/shared/lib/context';
 import { ReactFlowProvider } from '@xyflow/react';
 
+import SandboxToolsWatcher from './SandboxToolsWatcher';
+
 const noop = () => {};
 const PANEL_CONTEXT = { isEntrypoint: false, isLegacyLayout: false };
-
-/** Reports the sandbox tools upward; pickers write them through the nested Formik */
-const SandboxToolsWatcher = memo(props => {
-  const { onToolsChange } = props;
-  const { values } = useFormikContext();
-  const tools = values?.version_details?.tools;
-  const first = useRef(true);
-
-  useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
-    onToolsChange?.(tools || []);
-  }, [onToolsChange, tools]);
-
-  return null;
-});
-
-SandboxToolsWatcher.displayName = 'SandboxToolsWatcher';
 
 /**
  * Renders the node's own panel component on a draft without touching the pipeline (spec AC-12, plan R4).

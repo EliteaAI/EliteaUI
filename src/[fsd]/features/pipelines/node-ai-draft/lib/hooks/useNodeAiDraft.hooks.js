@@ -50,6 +50,8 @@ export const useNodeAiDraft = options => {
   const [step, setStep] = useState(NODE_DRAFT_STEPS.requirement);
   const [requirement, setRequirementState] = useState('');
   const [draft, setDraft] = useState(null);
+  // Bumped on every new draft, even one with the same content, so the modal can reset what belongs to the old one
+  const [draftVersion, setDraftVersion] = useState(0);
   const [isDraftEdited, setIsDraftEdited] = useState(false);
   const [error, setError] = useState(null);
   const requestRef = useRef(null);
@@ -85,6 +87,7 @@ export const useNodeAiDraft = options => {
       try {
         const response = await pending.unwrap();
         setDraft(toDraft(response));
+        setDraftVersion(version => version + 1);
         setIsDraftEdited(false);
         setStep(NODE_DRAFT_STEPS.review);
       } catch (caught) {
@@ -103,15 +106,6 @@ export const useNodeAiDraft = options => {
 
   const generate = useCallback(() => run({}, NODE_DRAFT_STEPS.requirement), [run]);
   const regenerate = generate;
-
-  const refine = useCallback(
-    instruction =>
-      run(
-        { mode: 'edit', requirement: instruction.trim(), draft_node: draft?.node },
-        NODE_DRAFT_STEPS.review,
-      ),
-    [run, draft?.node],
-  );
 
   const stop = useCallback(() => {
     if (!requestRef.current) return;
@@ -148,12 +142,12 @@ export const useNodeAiDraft = options => {
       charactersLeft: REQUIREMENT_MAX_LENGTH - requirement.length,
       canGenerate: Boolean(requirement.trim()) && step !== NODE_DRAFT_STEPS.generating,
       draft,
+      draftVersion,
       hasDraft: Boolean(draft),
       isDraftEdited,
       error,
       generate,
       regenerate,
-      refine,
       stop,
       back,
       updateDraftNode,
@@ -164,11 +158,11 @@ export const useNodeAiDraft = options => {
       requirement,
       setRequirement,
       draft,
+      draftVersion,
       isDraftEdited,
       error,
       generate,
       regenerate,
-      refine,
       stop,
       back,
       updateDraftNode,

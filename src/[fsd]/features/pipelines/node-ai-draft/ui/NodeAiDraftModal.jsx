@@ -6,9 +6,13 @@ import { Box, Typography } from '@mui/material';
 
 import { DumpYamlHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useNodeAiAssistantConfig } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
-import NodeTypeIconTile from '@/[fsd]/features/pipelines/flow-editor/ui/add-node/NodeTypeIconTile';
+import { NodeTypeIconTile } from '@/[fsd]/features/pipelines/flow-editor/ui/add-node';
 import { NodeAiDraftConstants } from '@/[fsd]/features/pipelines/node-ai-draft/lib/constants';
-import { useApplyNodeDraft, useNodeAiDraft } from '@/[fsd]/features/pipelines/node-ai-draft/lib/hooks';
+import {
+  NODE_DRAFT_STEPS,
+  useApplyNodeDraft,
+  useNodeAiDraft,
+} from '@/[fsd]/features/pipelines/node-ai-draft/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks/useSelectedProject.hooks';
@@ -46,7 +50,7 @@ const NodeAiDraftModal = memo(props => {
     llmSettings,
   });
   const { apply, error: applyError } = useApplyNodeDraft({ snapshot });
-  const { step, draft, hasDraft, error } = draftState;
+  const { step, draft, draftVersion, hasDraft, error } = draftState;
 
   const modelName = useMemo(() => {
     const model = (models?.items || []).find(item => item.name === llmSettings?.model_name);
@@ -67,11 +71,12 @@ const NodeAiDraftModal = memo(props => {
   );
 
   // Tools picked in the Flow view belong to that draft; a new draft starts from the pipeline's tools again
-  const draftKey = draft?.summary;
-  useEffect(() => setSandboxTools(null), [draftKey]);
+  useEffect(() => setSandboxTools(null), [draftVersion]);
 
   const styles = nodeAiDraftModalStyles();
-  const errorText = step === 'error' ? error?.message : step === 'review' ? applyError : null;
+  const isError = step === NODE_DRAFT_STEPS.error;
+  const isReview = step === NODE_DRAFT_STEPS.review;
+  const errorText = isError ? error?.message : isReview ? applyError : null;
 
   return (
     <>
@@ -104,7 +109,7 @@ const NodeAiDraftModal = memo(props => {
                 >
                   {errorText}
                 </Typography>
-                {step === 'error' && error?.canRetry && (
+                {isError && error?.canRetry && (
                   <Button.BaseBtn
                     variant={BUTTON_VARIANTS.secondary}
                     onClick={draftState.generate}
@@ -115,7 +120,7 @@ const NodeAiDraftModal = memo(props => {
                 )}
               </Box>
             )}
-            {step === 'review' && draft ? (
+            {isReview && draft ? (
               <NodeAiReviewStep
                 draft={draft}
                 original={snapshot}
@@ -140,7 +145,7 @@ const NodeAiDraftModal = memo(props => {
                 setRequirement={draftState.setRequirement}
                 charactersLeft={draftState.charactersLeft}
                 canGenerate={draftState.canGenerate}
-                isGenerating={step === 'generating'}
+                isGenerating={step === NODE_DRAFT_STEPS.generating}
                 generate={draftState.generate}
                 stop={draftState.stop}
                 onCancel={requestClose}

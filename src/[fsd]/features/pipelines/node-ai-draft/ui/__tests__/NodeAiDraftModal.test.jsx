@@ -15,6 +15,12 @@ const { mocks } = vi.hoisted(() => ({
 }));
 
 vi.mock('@/[fsd]/features/pipelines/node-ai-draft/lib/hooks', () => ({
+  NODE_DRAFT_STEPS: {
+    requirement: 'requirement',
+    generating: 'generating',
+    review: 'review',
+    error: 'error',
+  },
   useNodeAiDraft: () => mocks.draft,
   useApplyNodeDraft: () => ({ apply: mocks.apply, error: mocks.applyError }),
 }));

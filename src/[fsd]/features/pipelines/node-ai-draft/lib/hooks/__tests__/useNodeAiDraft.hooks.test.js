@@ -208,20 +208,4 @@ describe('useNodeAiDraft', () => {
     expect(result.current.requirement).toBe('Summarize');
     expect(result.current.hasDraft).toBe(true);
   });
-
-  it('refines in edit mode with the current draft', async () => {
-    generate.mockReturnValue(request(DRAFT));
-    const { result } = render();
-    act(() => result.current.setRequirement('Summarize'));
-    await act(async () => result.current.generate());
-
-    generate.mockReturnValue(request({ ...DRAFT, summary: 'Shorter.' }));
-    await act(async () => result.current.refine('Make it shorter'));
-
-    expect(generate).toHaveBeenLastCalledWith(
-      expect.objectContaining({ mode: 'edit', requirement: 'Make it shorter', draft_node: DRAFT.node }),
-    );
-    expect(result.current.draft.summary).toBe('Shorter.');
-    expect(result.current.requirement).toBe('Summarize');
-  });
 });

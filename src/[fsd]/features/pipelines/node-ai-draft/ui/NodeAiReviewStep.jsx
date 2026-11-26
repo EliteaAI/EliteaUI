@@ -4,7 +4,7 @@ import { Box, Checkbox, Chip, FormControlLabel, List, ListItem, Typography } fro
 
 import { NodePanelConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { NodeYamlHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
-import NodeConfigViewToggle from '@/[fsd]/features/pipelines/flow-editor/ui/node-panel/NodeConfigViewToggle';
+import { NodeConfigViewToggle } from '@/[fsd]/features/pipelines/flow-editor/ui/node-panel';
 import { NodeAiDraftConstants } from '@/[fsd]/features/pipelines/node-ai-draft/lib/constants';
 import {
   NodeDraftDiffHelpers,
