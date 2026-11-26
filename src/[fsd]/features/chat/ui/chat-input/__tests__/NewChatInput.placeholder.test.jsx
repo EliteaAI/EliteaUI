@@ -69,8 +69,8 @@ describe('NewChatInput placeholder', () => {
   it('replies to the agent that answers', () => {
     renderInput({
       fromTheChat: true,
-      activeParticipant: { entity_name: 'application', meta: { name: 'Meta' } },
-      activeParticipantDetails: { name: 'Jira Helper' },
+      activeParticipant: { entity_name: 'application', entity_meta: { id: 11 }, meta: { name: 'Meta' } },
+      activeParticipantDetails: { id: 11, name: 'Jira Helper' },
     });
 
     expect(screen.getByPlaceholderText('Reply to Jira Helper…')).toBeInTheDocument();

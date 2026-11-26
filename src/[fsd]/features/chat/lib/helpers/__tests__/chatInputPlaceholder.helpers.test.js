@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { CHAT_INPUT_PLACEHOLDER, getChatInputPlaceholder } from '../chatInputPlaceholder.helpers';
 
-const agent = { entity_name: 'application', meta: { name: 'Meta Name' } };
+const agent = {
+  entity_name: 'application',
+  entity_meta: { id: 11, project_id: 42 },
+  meta: { name: 'Meta Name' },
+};
 
 describe('getChatInputPlaceholder', () => {
   it('names «#» when nobody but the model answers', () => {
@@ -20,9 +24,28 @@ describe('getChatInputPlaceholder', () => {
     expect(
       getChatInputPlaceholder({
         activeParticipant: agent,
-        activeParticipantDetails: { name: 'Jira Helper' },
+        activeParticipantDetails: { id: 11, name: 'Jira Helper' },
       }),
     ).toBe('Reply to Jira Helper…');
+  });
+
+  it('ignores the details of the one who answered before until its own arrive', () => {
+    expect(
+      getChatInputPlaceholder({
+        activeParticipant: agent,
+        activeParticipantDetails: { id: 12, name: 'Previous Agent' },
+      }),
+    ).toBe('Reply to Meta Name…');
+    expect(
+      getChatInputPlaceholder({
+        activeParticipant: {
+          entity_name: 'llm',
+          entity_meta: { model_name: 'gpt-5' },
+          meta: { name: 'gpt-5' },
+        },
+        activeParticipantDetails: { id: 12, name: 'Previous Agent' },
+      }),
+    ).toBe('Reply to gpt-5…');
   });
 
   it('falls back to the participant meta name', () => {
