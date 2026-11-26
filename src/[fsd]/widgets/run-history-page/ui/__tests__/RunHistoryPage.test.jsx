@@ -43,8 +43,10 @@ vi.mock('@/[fsd]/entities/run-history', async () => ({
 }));
 
 vi.mock('@/[fsd]/features/chat', () => ({ ChatMessageList: () => null }));
+const complexitySwitch = vi.hoisted(() => ({ on: false }));
 vi.mock('@/[fsd]/features/settings/ui/complexity', () => ({
-  useRunComplexityColumn: () => null,
+  useRunComplexityColumn: () =>
+    complexitySwitch.on ? { id: 'complexity', label: 'Complexity', render: () => null } : null,
 }));
 vi.mock('@/[fsd]/features/schedule', () => ({
   ScheduleRunStatusChip: ({ status }) => <span data-testid="status-chip">{status}</span>,
@@ -85,7 +87,9 @@ vi.mock('@/[fsd]/shared/ui/button', () => ({
 
 // The shared multi-select, as the filter uses it: the closed button shows the summary, the menu lists the options
 // (each with its test id), a tick reports the whole array, and the search field appears only when asked for
-vi.mock('@/[fsd]/shared/ui', () => ({
+vi.mock('@/[fsd]/shared/ui', async () => ({
+  // The real status dot, which the Status column and filter draw with
+  StatusDot: (await vi.importActual('@/[fsd]/shared/ui/status-dot/StatusDot')).default,
   Select: {
     SingleSelect: ({
       options,
@@ -471,5 +475,45 @@ describe('RunHistoryPage status column', () => {
 
     expect(screen.queryByTestId('run-status-cell')).not.toBeInTheDocument();
     expect(screen.getByText('-')).toBeInTheDocument();
+  });
+});
+
+describe('RunHistoryPage complexity filter (BE-2)', () => {
+  afterEach(() => cleanup());
+
+  afterEach(() => {
+    complexitySwitch.on = false;
+  });
+
+  it('is not drawn while the platform complexity switch is off', () => {
+    renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
+
+    expect(screen.queryByTestId('run-history-filter-complexity-button')).not.toBeInTheDocument();
+    expect(containerProps.current.queryParams).toEqual({});
+  });
+
+  it('is drawn with its five labels once the switch is on, showing All', () => {
+    complexitySwitch.on = true;
+    renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
+
+    expect(screen.getByTestId('run-history-filter-complexity-button')).toHaveTextContent('All');
+    openFilter('complexity');
+    ['L', 'M', 'H', 'X', 'not_scored'].forEach(value =>
+      expect(
+        screen.getByTestId(`run-history-filter-complexity-option-${value}-checkbox`),
+      ).toBeInTheDocument(),
+    );
+  });
+
+  it('sends a ticked complexity label to the list as complexity, with the five labels as options', () => {
+    renderAt('/agents/all/127/history?complexity=L,not_scored', { scheduleEntityType: 'agent' });
+
+    expect(containerProps.current.queryParams).toEqual({ complexity: 'L,not_scored' });
+  });
+
+  it('drops a complexity value the server does not know from a hand-edited link', () => {
+    renderAt('/agents/all/127/history?complexity=bogus', { scheduleEntityType: 'agent' });
+
+    expect(containerProps.current.queryParams).toEqual({});
   });
 });

@@ -4,6 +4,7 @@ export * as Autocomplete from './autocomplete';
 export * as Banner from './banner-message';
 export * as Button from './button';
 export * as Chip from './chip';
+export { StatusDot } from './status-dot';
 export * as Tab from './tab-group-button';
 export * as Field from './field';
 export * as Input from './input';

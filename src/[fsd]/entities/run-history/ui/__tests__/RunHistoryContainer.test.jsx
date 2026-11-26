@@ -596,6 +596,19 @@ describe('RunHistoryContainer in-place run view (AC-13 to AC-15, AC-17)', () => 
     expect(screen.queryByTestId('run-history-run-view')).not.toBeInTheDocument();
   });
 
+  it('Escape does not close the run while a menu or dialog is open', () => {
+    renderContainer('', { openInPlace: true });
+    fireEvent.click(screen.getByTestId(`select-${CONVERSATION_ID}`));
+    const menu = document.createElement('div');
+    menu.setAttribute('role', 'menu');
+    document.body.appendChild(menu);
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+
+    expect(screen.getByTestId('run-history-run-view')).toBeInTheDocument();
+    menu.remove();
+  });
+
   it('the next and previous buttons move between loaded runs and show the position', () => {
     renderContainer('', { openInPlace: true });
     fireEvent.click(screen.getByTestId(`select-${CONVERSATION_ID}`));

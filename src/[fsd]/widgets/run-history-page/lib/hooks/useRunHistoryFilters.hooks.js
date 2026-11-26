@@ -9,6 +9,8 @@ import {
 import { toRunStatusLabel } from '@/[fsd]/entities/schedule';
 
 import {
+  COMPLEXITY_OPTIONS,
+  COMPLEXITY_VALUES,
   EXECUTION_TYPE_PARAM,
   FILTER_PARAMS,
   NO_QUERY_PARAMS,
@@ -58,6 +60,10 @@ export const useRunHistoryFilters = ({
   // A tool a shared link names is kept before its runs load: the list only offers names the page has seen, but the
   // URL is the reader's own choice, and the server answers an unknown name
   const tools = readList(searchParams, FILTER_PARAMS.tool, value => value.length > 0);
+  // The complexity labels (BE-2): only the five the server knows, the rest of a hand-edited link is dropped
+  const complexityValues = readList(searchParams, FILTER_PARAMS.complexity, value =>
+    COMPLEXITY_VALUES.includes(value),
+  );
 
   // The list API params. An Event value goes to `trigger` (a run trigger) or `execution_type` (Chat, API, MCP).
   // Keyed on the joined strings, so the object keeps its identity until a filter really changes.
@@ -66,6 +72,7 @@ export const useRunHistoryFilters = ({
   const versionKey = versionIds.join(',');
   const outcomeKey = outcomes.join(',');
   const toolKey = tools.join(',');
+  const complexityKey = complexityValues.join(',');
 
   const queryParams = useMemo(() => {
     const params = {};
@@ -80,11 +87,12 @@ export const useRunHistoryFilters = ({
     if (versionKey) params[FILTER_PARAMS.version] = versionKey;
     if (outcomeKey) params[FILTER_PARAMS.run_outcome] = outcomeKey;
     if (toolKey) params[FILTER_PARAMS.tool] = toolKey;
+    if (complexityKey) params[FILTER_PARAMS.complexity] = complexityKey;
     if (runTriggers.length) params[FILTER_PARAMS.trigger] = runTriggers.join(',');
     if (executionTypes.length) params[EXECUTION_TYPE_PARAM] = executionTypes.join(',');
 
     return Object.keys(params).length ? params : NO_QUERY_PARAMS;
-  }, [eventKey, scheduleKey, versionKey, outcomeKey, toolKey]);
+  }, [eventKey, scheduleKey, versionKey, outcomeKey, toolKey, complexityKey]);
 
   const scheduleOptions = useMemo(
     () => [
@@ -129,6 +137,7 @@ export const useRunHistoryFilters = ({
   const onOutcomeChange = useCallback(values => setList(FILTER_PARAMS.run_outcome, values), [setList]);
   const onVersionChange = useCallback(values => setList(FILTER_PARAMS.version, values), [setList]);
   const onToolChange = useCallback(values => setList(FILTER_PARAMS.tool, values), [setList]);
+  const onComplexityChange = useCallback(values => setList(FILTER_PARAMS.complexity, values), [setList]);
   const onEventChange = useCallback(values => setList(FILTER_PARAMS.trigger, values), [setList]);
 
   const onClear = useCallback(() => {
@@ -153,6 +162,7 @@ export const useRunHistoryFilters = ({
       status: outcomes,
       version: versionIds,
       tool: tools,
+      complexity: complexityValues,
     },
     options: {
       event: EVENT_OPTIONS,
@@ -160,6 +170,7 @@ export const useRunHistoryFilters = ({
       status: statusOptions,
       version: versionOptions,
       tool: toolOptions,
+      complexity: COMPLEXITY_OPTIONS,
     },
     handlers: {
       event: onEventChange,
@@ -167,6 +178,7 @@ export const useRunHistoryFilters = ({
       status: onOutcomeChange,
       version: onVersionChange,
       tool: onToolChange,
+      complexity: onComplexityChange,
     },
     queryParams,
     hasFilters,

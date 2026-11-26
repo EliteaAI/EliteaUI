@@ -9,7 +9,18 @@ export const FILTER_PARAMS = {
   trigger: 'trigger',
   version: 'version_id',
   tool: 'tool_name',
+  complexity: 'complexity',
 };
+
+// The Complexity filter's options (BE-2): the run's label, or not scored yet; the server accepts these values
+export const COMPLEXITY_OPTIONS = [
+  { label: 'Low', value: 'L', color: 'success.main' },
+  { label: 'Medium', value: 'M', color: 'info.main' },
+  { label: 'High', value: 'H', color: 'warning.main' },
+  { label: 'Extreme', value: 'X', color: 'error.main' },
+  { label: 'Not scored yet', value: 'not_scored', color: 'text.secondary' },
+];
+export const COMPLEXITY_VALUES = COMPLEXITY_OPTIONS.map(option => option.value);
 
 // The list API param of an execution type: runs without a run record are told apart by the chat's own type
 export const EXECUTION_TYPE_PARAM = 'execution_type';

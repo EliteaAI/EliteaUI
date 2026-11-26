@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useEffect, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -48,6 +48,8 @@ const RunHistoryList = memo(props => {
     extraColumns = NO_EXTRA_COLUMNS,
     // true: the table takes the whole width of its parent (the run opens in place, nothing beside it)
     fillWidth = false,
+    // Reports the rows in the order the table shows them, so the run's prev and next follow the sort
+    onSortedRowsChange,
   } = props;
   const { isSmallWindow } = useIsSmallWindow();
   const { windowWidth } = useGetWindowWidth();
@@ -119,6 +121,10 @@ const RunHistoryList = memo(props => {
     () => getSortedData(conversations, sortFunctions),
     [conversations, getSortedData, sortFunctions],
   );
+
+  useEffect(() => {
+    onSortedRowsChange?.(sortedConversations);
+  }, [sortedConversations, onSortedRowsChange]);
 
   return (
     <ContentContainer sx={styles.wrapper}>

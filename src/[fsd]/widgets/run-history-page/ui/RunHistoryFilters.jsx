@@ -6,6 +6,7 @@ import { Select } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 
 import { ALL_OPTION_VALUE } from '../lib/constants/runHistoryFilters.constants';
+import StatusOptionLabel from './StatusOptionLabel';
 
 // Only the Version filter gets a Search field, and only past this many versions (ticket AC-9)
 const VERSION_SEARCH_THRESHOLD = 10;
@@ -17,6 +18,7 @@ const FILTER_LABELS = {
   schedule: 'Schedule/Webhook',
   index: 'Index',
   status: 'Status',
+  complexity: 'Complexity',
   version: 'Version',
 };
 
@@ -30,45 +32,6 @@ const summaryOf = (values, options) => {
 
   return `${values.length} selected`;
 };
-
-// A status option: the colour dot, then the label. Options without a colour (All, the other filters) show the label only.
-const StatusOptionLabel = memo(props => {
-  const { label, color } = props;
-  const styles = statusOptionLabelStyles(color);
-
-  if (!color) {
-    return <Typography variant="labelMedium">{label}</Typography>;
-  }
-
-  return (
-    <Box sx={styles.root}>
-      <Box
-        component="span"
-        sx={styles.dot}
-      />
-      <Typography variant="labelMedium">{label}</Typography>
-    </Box>
-  );
-});
-
-StatusOptionLabel.displayName = 'StatusOptionLabel';
-
-// The dot takes the palette colour of the status (a palette path such as 'success.main')
-/** @type {MuiSx} */
-const statusOptionLabelStyles = color => ({
-  root: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-  dot: ({ palette }) => ({
-    display: 'inline-block',
-    width: '0.5rem',
-    height: '0.5rem',
-    borderRadius: '50%',
-    backgroundColor: color ? color.split('.').reduce((value, key) => value[key], palette) : undefined,
-  }),
-});
 
 const RunHistoryFilters = memo(props => {
   const { filterKeys, values, options, handlers, hasFilters, onClear, keepEmptyKeys = [] } = props;

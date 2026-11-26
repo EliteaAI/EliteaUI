@@ -3,7 +3,6 @@ import { memo } from 'react';
 import { Box, Divider, Typography } from '@mui/material';
 
 import { hasRunAnalytics } from '@/[fsd]/entities/run-history/lib/helpers';
-import { ScheduleRunStatusChip } from '@/[fsd]/features/schedule';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
 import ArrowLeftIcon from '@/assets/arrow-left-icon.svg?react';
@@ -11,6 +10,7 @@ import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
 import CloseIcon from '@/components/Icons/CloseIcon';
 
 import RunMenu from './RunMenu';
+import RunStatusCell from './run-history-list/RunStatusCell';
 
 // The open run in place of the run history table (ticket AC-13): the title row with ‹ › and X, the status line,
 // and the conversation (the detail is the existing RunHistoryChat, passed in)
@@ -106,10 +106,7 @@ const RunHistoryRunView = memo(props => {
           sx={styles.runMeta}
         >
           {selectedRow?.run_status || selectedRow?.schedule_run?.status ? (
-            <ScheduleRunStatusChip
-              status={selectedRow.schedule_run?.status ?? selectedRow.run_status}
-              variant="text"
-            />
+            <RunStatusCell status={selectedRow.schedule_run?.status ?? selectedRow.run_status} />
           ) : null}
           {selectedRow?.event_label ? (
             <Box sx={styles.metaItem}>

@@ -3,11 +3,9 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
-import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
 import TimerOffOutlinedIcon from '@mui/icons-material/TimerOffOutlined';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
 // The one table of run statuses: the card, the chip, the details and Run History read the label, the colour
 // and the icon from here. The API stores the pause for a person's answer as waiting_for_approval; the owner
@@ -23,15 +21,6 @@ export const RUN_STATUS_META = {
   blocked: { label: 'Blocked', color: 'error.main', Icon: BlockIcon },
   cancelled: { label: 'Cancelled', color: 'text.secondary', Icon: StopCircleOutlinedIcon },
   skipped: { label: 'Skipped', color: 'text.secondary', Icon: SkipNextIcon },
-};
-
-// Index runs (ticket #7682 AC-38) extend the one table with the two statuses only an index run has: Partial, an
-// index that finished with some files not indexed, and Stopped, a run that was cancelled. The schedule and chat
-// statuses above are not changed, so schedule pages draw exactly what they drew before.
-export const INDEX_RUN_STATUS_META = {
-  ...RUN_STATUS_META,
-  partial: { label: 'Partial', color: 'warning.main', Icon: WarningAmberIcon },
-  stopped: { label: 'Stopped', color: 'text.secondary', Icon: RemoveCircleOutlineIcon },
 };
 
 export const toWord = value => (value ? `${value[0].toUpperCase()}${value.slice(1).replace(/_/g, ' ')}` : '');

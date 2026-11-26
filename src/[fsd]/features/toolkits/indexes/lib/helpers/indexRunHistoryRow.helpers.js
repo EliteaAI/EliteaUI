@@ -10,7 +10,7 @@ export const INDEX_RUN_EVENTS = {
   searchIndex: 'Search index',
 };
 
-// The Status of an index run (ticket #7682 AC-38): the backend state, as a key of INDEX_RUN_STATUS_META
+// The Status of an index run (ticket #7682 AC-38): the backend state, as a key of RUN_STATUS_STYLES
 export const INDEX_RUN_STATUS_KEYS = {
   [IndexStatuses.progress]: 'running',
   [IndexStatuses.success]: 'success',

@@ -173,7 +173,10 @@ const RunHistoryPage = memo(props => {
       <Box sx={styles.content}>
         {!runOpen && (
           <RunHistoryFilters
-            filterKeys={RUN_HISTORY_LAYOUTS[scheduleEntityType]?.filters ?? []}
+            // Complexity is drawn only while the platform switch is on, the same as its column
+            filterKeys={(RUN_HISTORY_LAYOUTS[scheduleEntityType]?.filters ?? []).filter(
+              key => key !== 'complexity' || Boolean(complexityColumn),
+            )}
             values={filters.values}
             options={filters.options}
             handlers={filters.handlers}

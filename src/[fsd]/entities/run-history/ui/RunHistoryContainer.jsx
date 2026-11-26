@@ -60,6 +60,8 @@ const RunHistoryContainer = memo(props => {
   const { isSmallWindow } = useIsSmallWindow();
 
   const [allConversations, setAllConversations] = useState([]);
+  // The rows in the order the list shows them (its sort); prev and next walk this order
+  const [sortedRows, setSortedRows] = useState([]);
   const [page, setPage] = useState(0);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
   const handledSharedRunId = useRef(null);
@@ -245,7 +247,10 @@ const RunHistoryContainer = memo(props => {
   useEffect(() => {
     if (!openInPlace || selectedHistoryItem === null) return undefined;
     const handleKeyDown = event => {
-      if (event.key === 'Escape') handleCloseRun();
+      if (event.key !== 'Escape') return;
+      // Esc closes an open menu or dialog first (they call preventDefault); the run stays open until the next Esc
+      if (event.defaultPrevented || document.querySelector('[role="dialog"], [role="menu"]')) return;
+      handleCloseRun();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -275,11 +280,13 @@ const RunHistoryContainer = memo(props => {
 
   // AC-13: the open run replaces the table on the same page; the list stays mounted, hidden, so its state survives
   const runDate = formatRunTimestamp(selectedRow?.created_at);
-  const openRunIndex = historyRows.findIndex(historyRow => historyRow.id === selectedHistoryItem);
+  // Prev and next follow the order the table shows (the sort), not the newest-first order of the rows
+  const navigableRows = sortedRows.length ? sortedRows : historyRows;
+  const openRunIndex = navigableRows.findIndex(historyRow => historyRow.id === selectedHistoryItem);
   const showInPlaceRun = openInPlace && selectedHistoryItem !== null && openRunIndex >= 0;
 
-  const handlePrevious = () => handleHistoryItemSelect(historyRows[openRunIndex - 1].id, { replace: true });
-  const handleNext = () => handleHistoryItemSelect(historyRows[openRunIndex + 1].id, { replace: true });
+  const handlePrevious = () => handleHistoryItemSelect(navigableRows[openRunIndex - 1].id, { replace: true });
+  const handleNext = () => handleHistoryItemSelect(navigableRows[openRunIndex + 1].id, { replace: true });
 
   const inPlaceJsx = (
     <RunHistoryRunView
@@ -375,6 +382,7 @@ const RunHistoryContainer = memo(props => {
             shareOpensHistoryTab={shareOpensHistoryTab}
             extraColumns={extraColumns}
             fillWidth={openInPlace}
+            onSortedRowsChange={setSortedRows}
           />
         </Box>
 

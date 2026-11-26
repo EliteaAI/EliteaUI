@@ -22,7 +22,7 @@ const LOOKBACK_DAYS = 400;
 
 // Same muted italic as "Not enough runs" on the version table
 // Low to extreme: the order the labels sort in (the API's own values)
-const COMPLEXITY_LABEL_ORDER = ['low', 'medium', 'high', 'extreme'];
+const COMPLEXITY_LABEL_ORDER = ['L', 'M', 'H', 'X'];
 
 const unscoredSx = ({ palette }) => ({
   color: palette.text.metrics || palette.text.disabled,

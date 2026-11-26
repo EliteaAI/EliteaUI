@@ -4,7 +4,10 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { RUN_HISTORY_LAYOUTS } from '@/[fsd]/entities/run-history/lib/constants/runHistory.constants';
+import {
+  RUN_HISTORY_LAYOUTS,
+  STATUS_FILTER_KEYS,
+} from '@/[fsd]/entities/run-history/lib/constants/runHistory.constants';
 import { RunHistoryContainer, RunStatusCell } from '@/[fsd]/entities/run-history/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat';
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
@@ -36,6 +39,7 @@ const SkillRunHistoryView = memo(props => {
     schedules: NO_SCHEDULES,
     versions,
     toolNames: NO_TOOL_NAMES,
+    statusKeys: STATUS_FILTER_KEYS.skill,
   });
   const filterKeys = RUN_HISTORY_LAYOUTS.skill.filters;
   const decorateRow = useCallback(row => ({ ...row, event_label: SKILL_EVENT_LABEL }), []);

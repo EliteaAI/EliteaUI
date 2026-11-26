@@ -3,6 +3,7 @@ import { memo } from 'react';
 import { Box, Tooltip, Typography } from '@mui/material';
 
 import { ComplexityConstants } from '@/[fsd]/features/settings/lib/constants';
+import { StatusDot } from '@/[fsd]/shared/ui';
 
 const { LABELS, PENDING_TOOLTIP } = ComplexityConstants;
 
@@ -45,10 +46,7 @@ const ComplexityLabelChip = memo(props => {
       sx={styles.root}
       data-testid={testId}
     >
-      <Box
-        component="span"
-        sx={styles.dot(meta.color)}
-      />
+      <StatusDot color={`${meta.color}.main`} />
       <Typography
         variant="bodySmall"
         component="span"
@@ -68,15 +66,6 @@ const complexityLabelChipStyles = () => ({
     alignItems: 'center',
     gap: '0.5rem',
   },
-  dot:
-    color =>
-    ({ palette }) => ({
-      display: 'inline-block',
-      width: '0.5rem',
-      height: '0.5rem',
-      borderRadius: '50%',
-      backgroundColor: palette[color].main,
-    }),
   pendingRoot: {
     display: 'inline-flex',
     alignItems: 'center',
