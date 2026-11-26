@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback } from 'react';
 
 import { Alert, Box, Snackbar } from '@mui/material';
 
@@ -9,26 +9,30 @@ const { TOAST_DURATION_DEFAULTS } = ToastConstants;
 const ANCHOR_ORIGIN = { vertical: 'top', horizontal: 'center' };
 
 const Toast = memo(props => {
-  const { open, severity, message, autoHideDuration = TOAST_DURATION_DEFAULTS.info, onClose, icon } = props;
+  const {
+    open,
+    severity,
+    message,
+    autoHideDuration = TOAST_DURATION_DEFAULTS.info,
+    onClose,
+    onExited,
+    icon,
+  } = props;
 
-  const [showToast, setShowToast] = useState(open);
+  const handleClose = useCallback(
+    (event, reason) => {
+      if (reason === 'clickaway') {
+        return;
+      }
 
-  const handleClose = useCallback((event, reason) => {
-    if (reason === 'clickaway') {
-      return;
-    }
+      onClose?.();
+    },
+    [onClose],
+  );
 
-    setShowToast(false);
-  }, []);
-
-  // Report the close once the exit transition has finished, so the toast fades out before it is removed.
   const handleExited = useCallback(() => {
-    onClose?.();
-  }, [onClose]);
-
-  useEffect(() => {
-    setShowToast(open);
-  }, [open]);
+    onExited?.();
+  }, [onExited]);
 
   const styles = toastStyles();
 
@@ -36,7 +40,7 @@ const Toast = memo(props => {
     <Snackbar
       sx={styles.root}
       anchorOrigin={ANCHOR_ORIGIN}
-      open={showToast}
+      open={open}
       autoHideDuration={autoHideDuration}
       onClose={handleClose}
       slotProps={{ transition: { onExited: handleExited } }}
@@ -72,7 +76,7 @@ Toast.displayName = 'Toast';
 
 /** @type {MuiSx} */
 const toastStyles = () => ({
-  // The toasts are stacked by the container in ToastComponent, so each one flows in place instead of being fixed.
+  // The container in ToastComponent positions the stack, so each toast flows in place.
   root: {
     position: 'static !important',
     top: 'auto !important',

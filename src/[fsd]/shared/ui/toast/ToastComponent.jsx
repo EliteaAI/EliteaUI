@@ -13,8 +13,6 @@ const ToastComponent = memo(() => {
   const toastDurations = useAllToastDurations();
   const containerRef = useRef(null);
 
-  // Checked on every tick instead of tracking mouse and focus events: when the hovered or focused toast is
-  // removed, the browser sends no mouse leave or blur event, which would leave the timers paused forever.
   const isPaused = useCallback(() => {
     const container = containerRef.current;
     if (!container) {
@@ -52,7 +50,8 @@ const ToastComponent = memo(() => {
           severity={toast.severity}
           message={toast.message}
           icon={icon}
-          onClose={clearToast}
+          onClose={closeToast}
+          onExited={clearToast}
         />
       ))}
     </Box>

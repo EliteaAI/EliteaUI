@@ -3,10 +3,13 @@ import { useContext } from 'react';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { ToastConstants } from '@/[fsd]/shared/lib/constants';
 import { ToastContext } from '@/[fsd]/shared/lib/context/ToastContext';
 import { act, cleanup, renderHook } from '@testing-library/react';
 
 import ToastProvider from '../ToastProvider';
+
+const { MAX_TOASTS } = ToastConstants;
 
 const renderProvider = () =>
   renderHook(() => useContext(ToastContext), {
@@ -107,5 +110,34 @@ describe('ToastProvider onCloseToast', () => {
 
     expect(onCloseV1).not.toHaveBeenCalled();
     expect(onCloseV2).not.toHaveBeenCalled();
+  });
+
+  it('keeps at most MAX_TOASTS toasts and drops the oldest, running its callback once', () => {
+    const { result } = renderProvider();
+    const onClose = vi.fn();
+
+    act(() => {
+      result.current.setOnCloseToast(onClose);
+      for (let index = 1; index <= MAX_TOASTS + 1; index += 1) {
+        result.current.toastHandlers.toastInfo(`Toast ${index}`);
+      }
+    });
+
+    expect(result.current.toasts).toHaveLength(MAX_TOASTS);
+    expect(result.current.toasts[0].message).toBe('Toast 2');
+    expect(result.current.toasts.at(-1).message).toBe(`Toast ${MAX_TOASTS + 1}`);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('closeToast only marks the toast as closing and keeps it listed', () => {
+    const { result } = renderProvider();
+
+    act(() => {
+      result.current.toastHandlers.toastInfo('A');
+      result.current.toastHandlers.toastInfo('B');
+    });
+    act(() => result.current.closeToast(result.current.toasts[0].id));
+
+    expect(result.current.toasts.map(toast => toast.open)).toEqual([false, true]);
   });
 });

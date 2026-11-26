@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ToastContext } from '@/[fsd]/shared/lib/context/ToastContext';
 import '@testing-library/jest-dom/vitest';
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import ToastComponent from '../ToastComponent';
 import ToastProvider from '../ToastProvider';
@@ -56,5 +56,26 @@ describe('ToastComponent', () => {
 
     const messages = screen.getAllByTestId('toast-message').map(element => element.textContent);
     expect(messages).toEqual(['First', 'Second']);
+  });
+
+  it('marks a toast as closing in the provider when its close button is clicked', () => {
+    let toasts;
+    const ToastsProbe = () => {
+      toasts = useContext(ToastContext).toasts;
+      return null;
+    };
+
+    render(
+      <ToastProvider>
+        <HandlersProbe />
+        <ToastsProbe />
+        <ToastComponent />
+      </ToastProvider>,
+    );
+
+    act(() => handlers.toastInfo('First'));
+    fireEvent.click(screen.getByTestId('toast-dismiss-button'));
+
+    expect(toasts.map(toast => toast.open)).toEqual([false]);
   });
 });

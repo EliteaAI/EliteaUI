@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react';
 
-import { TOAST_STAGGER_GAP, TOAST_TICK_INTERVAL } from '@/[fsd]/shared/lib/constants/toast.constants';
+import { ToastConstants } from '@/[fsd]/shared/lib/constants';
 
-// Closes toasts automatically after their duration, with two rules that keep a stack of toasts readable:
-// - while `isPaused()` returns true, no time passes for any toast (hover or focus on the stack). It is a function
-//   that is checked on every tick, so the pause ends by itself when its cause is gone, even if no event is sent.
-// - toasts that are due are closed one at a time, at least TOAST_STAGGER_GAP apart, oldest first.
+const { TOAST_STAGGER_GAP, TOAST_TICK_INTERVAL } = ToastConstants;
+
+// Closes due toasts one at a time (oldest first, TOAST_STAGGER_GAP apart). No time passes while `isPaused()` is true;
+// it is polled every tick because a removed hovered or focused toast sends no mouse leave or blur event.
 export const useToastAutoClose = props => {
   const { toasts, durations, isPaused, onAutoClose } = props;
 
@@ -40,7 +40,6 @@ export const useToastAutoClose = props => {
       const elapsed = now - lastTickAt;
       lastTickAt = now;
 
-      // Time that passes while paused is not counted.
       if (isPausedRef.current?.()) {
         return;
       }
@@ -68,7 +67,7 @@ export const useToastAutoClose = props => {
 
       if (dueToast && now - lastAutoCloseAtRef.current >= TOAST_STAGGER_GAP) {
         lastAutoCloseAtRef.current = now;
-        // Never report the same toast twice, even if it is still listed as open on the next tick.
+        // Never report the same toast twice while it is still listed as open.
         remaining.set(dueToast.id, Number.POSITIVE_INFINITY);
         onAutoCloseRef.current(dueToast.id);
       }
