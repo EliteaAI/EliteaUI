@@ -7,6 +7,8 @@ import {
   SWARM_REASON,
   getAgentDisabledReason,
   getNestingDisabledReason,
+  isSwarmVersion,
+  isVersionDisabledForTool,
   wouldExceedAgentNestingDepth,
 } from '../agentNesting.helpers';
 
@@ -75,5 +77,23 @@ describe('getAgentDisabledReason', () => {
       NESTING_REASON('Deep', 3),
     );
     expect(getAgentDisabledReason({ name: 'Plain' })).toBe('');
+  });
+});
+
+describe('isSwarmVersion', () => {
+  it('detects a swarm version from its meta', () => {
+    expect(isSwarmVersion({ meta: { internal_tools: ['swarm'] } })).toBe(true);
+    expect(isSwarmVersion({ meta: { internal_tools: ['attachments'] } })).toBe(false);
+    expect(isSwarmVersion(undefined)).toBe(false);
+  });
+});
+
+describe('isVersionDisabledForTool', () => {
+  it('disables a version with Swarm Mode, the one a tool pins included', () => {
+    expect(isVersionDisabledForTool({ id: 2, meta: { internal_tools: ['swarm'] } })).toBe(true);
+  });
+
+  it('leaves a version without Swarm Mode pickable', () => {
+    expect(isVersionDisabledForTool({ id: 1, meta: {} })).toBe(false);
   });
 });

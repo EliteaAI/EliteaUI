@@ -145,6 +145,14 @@ describe('mapAssociationError', () => {
     expect(result).toContain('circular agent reference');
   });
 
+  it('maps a Swarm Mode error to a status-phrased card message (issue #7736)', () => {
+    const rawError =
+      "Agent 'Multipurpose' has Swarm Mode enabled and can't be used as a tool. Swarm agents are only supported in direct chat.";
+    const result = mapAssociationError(rawError, 'Multipurpose', { action: 'status', entityLabel: 'agent' });
+    expect(result).toContain('Swarm Mode');
+    expect(result).toContain('direct chat');
+  });
+
   // --- status action (inline tool-card message, issue #5717) ----------------
   it('maps circular error to a status-phrased card message without raw IDs', () => {
     const rawError =

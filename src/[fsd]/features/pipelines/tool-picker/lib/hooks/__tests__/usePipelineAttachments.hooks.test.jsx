@@ -8,7 +8,11 @@ import { act, renderHook } from '@testing-library/react';
 
 import { usePipelineAttachments } from '../usePipelineAttachments.hooks';
 
-const mocks = vi.hoisted(() => ({ fetchToolkitDetails: vi.fn(), toastError: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  fetchToolkitDetails: vi.fn(),
+  fetchApplicationDetails: vi.fn(),
+  toastError: vi.fn(),
+}));
 
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: () => 406,
@@ -18,7 +22,9 @@ vi.mock('@/[fsd]/features/pipelines/flow-editor/lib/hooks/useGetToolkitNameFromS
   useGetToolkitNameFromSchema: () => ({ getToolkitNameFromSchema: tool => tool.name }),
 }));
 vi.mock('@/api/toolkits', () => ({ useLazyToolkitsDetailsQuery: () => [mocks.fetchToolkitDetails] }));
-vi.mock('@/api/applications', () => ({ useLazyApplicationDetailsQuery: () => [vi.fn()] }));
+vi.mock('@/api/applications', () => ({
+  useLazyApplicationDetailsQuery: () => [mocks.fetchApplicationDetails],
+}));
 vi.mock('@/common/utils', () => ({ buildErrorMessage: () => 'error' }));
 
 const jiraRow = { id: 1, type: 'jira', name: 'jira', settings: { selected_tools: ['search'] } };
@@ -124,5 +130,56 @@ describe('usePipelineAttachments', () => {
     });
 
     expect(result.current.form.values.version_details.tools).toEqual([newAgent]);
+  });
+
+  describe('prepareApplicationAttachment with Swarm Mode (issue #7736)', () => {
+    const swarmMeta = { internal_tools: ['swarm'] };
+    const unwrap = value => ({ unwrap: () => Promise.resolve(value) });
+
+    it('shows an error instead of binding another version when the default version has Swarm Mode', async () => {
+      mocks.fetchApplicationDetails.mockReturnValue(
+        unwrap({
+          id: 5,
+          name: 'Multipurpose',
+          version_details: { id: 50, meta: swarmMeta },
+          versions: [
+            { id: 50, meta: swarmMeta },
+            { id: 49, meta: {} },
+          ],
+        }),
+      );
+      const { result } = renderAttachments();
+
+      let prepared;
+      await act(async () => {
+        prepared = await result.current.attachments.prepareApplicationAttachment({
+          id: 5,
+          name: 'Multipurpose',
+        });
+      });
+
+      expect(prepared).toBeNull();
+      expect(mocks.toastError).toHaveBeenCalledWith(expect.stringMatching(/default version.*Swarm Mode/));
+    });
+
+    it('attaches the default version when it has no Swarm Mode', async () => {
+      mocks.fetchApplicationDetails.mockReturnValue(
+        unwrap({
+          id: 5,
+          name: 'Writer',
+          version_details: { id: 7, meta: {} },
+          versions: [{ id: 7, meta: {} }],
+        }),
+      );
+      const { result } = renderAttachments();
+
+      let prepared;
+      await act(async () => {
+        prepared = await result.current.attachments.prepareApplicationAttachment({ id: 5, name: 'Writer' });
+      });
+
+      expect(prepared.settings.application_version_id).toBe(7);
+      expect(mocks.toastError).not.toHaveBeenCalled();
+    });
   });
 });

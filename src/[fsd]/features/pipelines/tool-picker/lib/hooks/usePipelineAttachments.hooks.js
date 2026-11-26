@@ -12,14 +12,13 @@ import {
   withApplicationVersion,
 } from '@/[fsd]/features/pipelines/tool-picker/lib/helpers/attachmentTool.helpers';
 import { isApplicationTool } from '@/[fsd]/features/pipelines/tool-picker/lib/helpers/pipelineToolUsage.helpers';
+import { AgentNestingHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useLazyApplicationDetailsQuery } from '@/api/applications';
 import { useLazyToolkitsDetailsQuery } from '@/api/toolkits';
 import { buildErrorMessage } from '@/common/utils';
 
 // The flow-editor hook by file: the flow-editor barrels reach the node components, which import this slice
-
-const SWARM_TOOL_NAME = 'swarm';
 
 /**
  * Attaches toolkits, MCPs, agents and pipelines picked in nodes. Edits the form only: Save applies the
@@ -133,11 +132,8 @@ export const usePipelineAttachments = () => {
         toastError(buildErrorMessage(error));
         return null;
       }
-      if ((details?.version_details?.meta?.internal_tools || []).includes(SWARM_TOOL_NAME)) {
-        toastError(
-          `"${application.name}" has Swarm Mode enabled and cannot be used in a pipeline. ` +
-            'Swarm agents are only supported in direct chat.',
-        );
+      if (AgentNestingHelpers.isSwarmVersion(details?.version_details)) {
+        toastError(AgentNestingHelpers.SWARM_DEFAULT_VERSION_REASON(application.name));
         return null;
       }
       return buildApplicationAttachment(details);

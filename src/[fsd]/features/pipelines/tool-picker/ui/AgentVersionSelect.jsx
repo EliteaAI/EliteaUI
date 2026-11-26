@@ -5,9 +5,17 @@ import { format } from 'date-fns';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { useIsVersionLocked } from '@/[fsd]/features/pipelines/tool-picker/lib/hooks/useIsVersionLocked.hooks';
 import { usePipelineAttachments } from '@/[fsd]/features/pipelines/tool-picker/lib/hooks/usePipelineAttachments.hooks';
+import { AgentNestingHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useApplicationDetailsQuery } from '@/api/applications';
+
+const SWARM_VERSION_HINT = 'Swarm Mode enabled: only supported in direct chat';
+
+const getHelperText = ({ isMissingVersion, isPinnedVersionSwarm }) => {
+  if (isMissingVersion) return 'This version no longer exists. Select another one.';
+  return isPinnedVersionSwarm ? AgentNestingHelpers.SWARM_PINNED_VERSION_WARNING : '';
+};
 
 const formatVersionLabel = version => {
   if (version.name === LATEST_VERSION_NAME) return LATEST_VERSION_NAME;
@@ -42,12 +50,25 @@ const AgentVersionSelect = memo(props => {
           if (b.name === LATEST_VERSION_NAME) return 1;
           return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
         })
-        .map(version => ({ value: Number(version.id), label: formatVersionLabel(version), version })),
+        .map(version => {
+          const isDisabled = AgentNestingHelpers.isVersionDisabledForTool(version);
+          return {
+            value: Number(version.id),
+            label: formatVersionLabel(version),
+            version,
+            // Swarm versions stay listed (the pinned one too) so it is clear why they can't be picked
+            ...(isDisabled && { disabled: true, description: SWARM_VERSION_HINT }),
+          };
+        }),
     [application?.versions],
   );
 
   const isMissingVersion =
     Boolean(versionId) && options.length > 0 && !options.some(o => o.value === versionId);
+  // Swarm Mode can be enabled on the version after the tool pinned it
+  const isPinnedVersionSwarm = AgentNestingHelpers.isSwarmVersion(
+    options.find(option => option.value === Number(versionId))?.version,
+  );
 
   const handleChange = useCallback(
     newVersionId => {
@@ -70,8 +91,8 @@ const AgentVersionSelect = memo(props => {
       showBorder
       showEmptyPlaceholder={false}
       isListFetching={isFetching}
-      error={isMissingVersion}
-      helperText={isMissingVersion ? 'This version no longer exists. Select another one.' : ''}
+      error={isMissingVersion || isPinnedVersionSwarm}
+      helperText={getHelperText({ isMissingVersion, isPinnedVersionSwarm })}
       className="nopan nodrag"
       maxDisplayValueLength="100%"
       data-testid={testId}
