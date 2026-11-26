@@ -18,6 +18,8 @@ const emptySubmenu = vi.hoisted(() => ({
   resetSearch: () => {},
 }));
 
+const mocks = vi.hoisted(() => ({ isMcpVisible: false, tools: [], projectId: 2 }));
+
 vi.mock('react-redux', () => ({ useSelector: selector => selector({ user: { personal_project_id: 1 } }) }));
 vi.mock('@/[fsd]/features/chat/lib/hooks', () => ({
   useApplicationSubmenu: () => ({
@@ -28,10 +30,10 @@ vi.mock('@/[fsd]/features/chat/lib/hooks', () => ({
     mcps: emptySubmenu,
   }),
 }));
-vi.mock('@/[fsd]/features/toolkits', () => ({ useAvailableInternalTools: () => [] }));
+vi.mock('@/[fsd]/features/toolkits', () => ({ useAvailableInternalTools: () => mocks.tools }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
-  useIsMcpVisible: () => false,
-  useSelectedProjectId: () => 2,
+  useIsMcpVisible: () => mocks.isMcpVisible,
+  useSelectedProjectId: () => mocks.projectId,
 }));
 vi.mock('../AttachmentButton', () => ({ default: () => null }));
 
@@ -76,5 +78,83 @@ describe('PlusChatButton skills submenu', () => {
 
     expect(screen.queryByTestId('skills-menuitem')).toBeNull();
     expect(screen.queryByTestId('skills-submenu')).toBeNull();
+  });
+});
+
+const renderMenu = (props = {}) => {
+  render(
+    <ThemeProvider theme={theme}>
+      <PlusChatButton {...props} />
+    </ThemeProvider>,
+  );
+  fireEvent.click(screen.getByTestId('plus-menu-button'));
+};
+
+const participants = [
+  { entity_name: 'user' },
+  { entity_name: 'application', entity_settings: { agent_type: 'openai' } },
+  { entity_name: 'application', entity_settings: { agent_type: 'react' } },
+  { entity_name: 'application', entity_settings: { agent_type: 'pipeline' } },
+  { entity_name: 'toolkit', entity_settings: { toolkit_type: 'mcp' } },
+];
+
+describe('PlusChatButton rows', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.isMcpVisible = true;
+    mocks.tools = [];
+    mocks.projectId = 2;
+  });
+  afterEach(() => cleanup());
+
+  it("shows how many of each kind the chat has, and no number for a kind it doesn't have", () => {
+    renderMenu({ participants });
+
+    expect(screen.getByTestId('agents-menuitem-count')).toHaveTextContent('2');
+    expect(screen.getByTestId('pipelines-menuitem-count')).toHaveTextContent('1');
+    expect(screen.getByTestId('mcps-menuitem-count')).toHaveTextContent('1');
+    expect(screen.queryByTestId('skills-menuitem-count')).toBeNull();
+    expect(screen.queryByTestId('toolkits-menuitem-count')).toBeNull();
+  });
+
+  it('counts the modules that are on and available', () => {
+    mocks.tools = [
+      { name: 'web_search', title: 'Web Search' },
+      { name: 'planner', title: 'Planner' },
+      { name: 'image_generation', title: 'Image Creation', unavailable: true },
+    ];
+    renderMenu({ internal_tools: ['web_search', 'image_generation'] });
+
+    expect(screen.getByTestId('internal-tools-menuitem-count')).toHaveTextContent('1');
+  });
+
+  it('has no MCPs row nor its count when MCP is hidden', () => {
+    mocks.isMcpVisible = false;
+    renderMenu({ participants });
+
+    expect(screen.queryByTestId('mcps-menuitem')).toBeNull();
+    expect(screen.queryByTestId('mcps-menuitem-count')).toBeNull();
+  });
+
+  it('offers Invite Users when the chat can invite (a new chat)', () => {
+    const onInviteUsers = vi.fn();
+    renderMenu({ onInviteUsers });
+
+    fireEvent.click(screen.getByTestId('invite-users-menuitem'));
+
+    expect(onInviteUsers).toHaveBeenCalledTimes(1);
+  });
+
+  it('has no Invite Users in the personal project', () => {
+    mocks.projectId = 1;
+    renderMenu({ onInviteUsers: vi.fn() });
+
+    expect(screen.queryByTestId('invite-users-menuitem')).toBeNull();
+  });
+
+  it('has no Invite Users in a saved chat', () => {
+    renderMenu();
+
+    expect(screen.queryByTestId('invite-users-menuitem')).toBeNull();
   });
 });

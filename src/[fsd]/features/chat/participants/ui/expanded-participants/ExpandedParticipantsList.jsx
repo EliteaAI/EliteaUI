@@ -4,8 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { Box, Typography } from '@mui/material';
 
-import { isSavedConversation } from '@/[fsd]/features/chat/participants/lib/helpers';
-import { isMcpToolkitType, isRemoteMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
+import { groupParticipantsByKind, isSavedConversation } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useIsMcpVisible, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { ChatParticipantType } from '@/common/constants';
 
@@ -67,26 +66,7 @@ const ExpandedPerticapantsList = memo(props => {
   }, [users, componentWidth]);
 
   const groupedByType = useMemo(
-    () =>
-      participants.reduce((acc, p) => {
-        let key = p.entity_name;
-        if (
-          p.entity_name === ChatParticipantType.Applications &&
-          p.entity_settings?.agent_type === ChatParticipantType.Pipelines
-        )
-          key = ChatParticipantType.Pipelines;
-        else if (
-          p.entity_name === ChatParticipantType.Toolkits &&
-          (isRemoteMcpToolkitType(p.entity_settings?.toolkit_type) || p.meta?.mcp === true)
-        )
-          key = 'mcp';
-
-        if (!acc[key]) acc[key] = [];
-        if (isMcpVisible || !isMcpToolkitType(p.entity_settings?.toolkit_type)) {
-          acc[key].push(p);
-        }
-        return acc;
-      }, {}),
+    () => groupParticipantsByKind(participants, isMcpVisible),
     [isMcpVisible, participants],
   );
 

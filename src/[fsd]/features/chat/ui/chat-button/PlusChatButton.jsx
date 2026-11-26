@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 
 import { useApplicationSubmenu } from '@/[fsd]/features/chat/lib/hooks';
+import { groupParticipantsByKind } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useAvailableInternalTools } from '@/[fsd]/features/toolkits';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useIsMcpVisible, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -25,6 +26,7 @@ import MCPIcon from '@/assets/mcp-icon.svg?react';
 import SkillIcon from '@/assets/skill-icon.svg?react';
 import ToolIcon from '@/assets/tool-icon.svg?react';
 import ValueIcon from '@/assets/value-icon.svg?react';
+import { ChatParticipantType } from '@/common/constants';
 import ApplicationsIcon from '@/components/Icons/ApplicationsIcon.jsx';
 import ArrowRightIcon from '@/components/Icons/ArrowRightIcon';
 import PlusIcon from '@/components/Icons/PlusIcon';
@@ -50,6 +52,15 @@ const EXPANDABLE_ITEMS = [
   { key: SUBMENU_KEYS.TOOLKITS, label: 'Toolkits', Icon: ToolIcon, testId: 'toolkits-menuitem' },
   { key: SUBMENU_KEYS.MCPS, label: 'MCPs', Icon: MCPIcon, testId: 'mcps-menuitem' },
 ];
+
+// The Participants panel's section of each «+» row, for the row's count
+const PARTICIPANT_KIND_BY_KEY = {
+  [SUBMENU_KEYS.AGENTS]: ChatParticipantType.Applications,
+  [SUBMENU_KEYS.PIPELINES]: ChatParticipantType.Pipelines,
+  [SUBMENU_KEYS.SKILLS]: ChatParticipantType.Skills,
+  [SUBMENU_KEYS.TOOLKITS]: ChatParticipantType.Toolkits,
+  [SUBMENU_KEYS.MCPS]: 'mcp',
+};
 
 const SEARCHABLE_KEYS = [
   SUBMENU_KEYS.AGENTS,
@@ -124,6 +135,18 @@ const PlusChatButton = memo(props => {
     }),
     [agents, pipelines, skills, toolkits, mcps, isMcpVisible],
   );
+
+  const counts = useMemo(() => {
+    const grouped = groupParticipantsByKind(participants, isMcpVisible);
+    return Object.entries(PARTICIPANT_KIND_BY_KEY).reduce(
+      (acc, [key, kind]) => ({ ...acc, [key]: grouped[kind]?.length || 0 }),
+      {
+        [SUBMENU_KEYS.INTERNAL_TOOLS]: availableTools.filter(
+          tool => !tool.unavailable && internal_tools.includes(tool.name),
+        ).length,
+      },
+    );
+  }, [participants, isMcpVisible, availableTools, internal_tools]);
 
   const handleClickAway = useCallback(
     event => {
@@ -413,6 +436,15 @@ const PlusChatButton = memo(props => {
                       sx={styles.menuIcon}
                     />
                     <Typography sx={styles.menuLabel}>{label}</Typography>
+                    {counts[key] > 0 && (
+                      <Typography
+                        variant="bodyMedium"
+                        sx={styles.count}
+                        data-testid={`${testId}-count`}
+                      >
+                        {counts[key]}
+                      </Typography>
+                    )}
                     <ArrowRightIcon
                       sx={styles.chevron}
                       fill={theme.palette.icon.default}
@@ -421,10 +453,9 @@ const PlusChatButton = memo(props => {
                 ),
               )}
 
-              {!isPrivateProject && (
+              {canInviteUsers && (
                 <MenuItem
                   sx={styles.menuItem}
-                  disabled={!canInviteUsers}
                   onClick={handleInviteUsers}
                   data-testid="invite-users-menuitem"
                 >
@@ -443,6 +474,7 @@ const PlusChatButton = memo(props => {
           anchorEl={mainPaperRef.current}
           placement="right-start"
           style={styles.subPopper}
+          modifiers={subPopperModifiers}
         >
           <Paper
             ref={subMenuRef}
@@ -542,6 +574,10 @@ const plusChatButtonStyles = theme => ({
     lineHeight: '1.5rem',
     fontWeight: 400,
   },
+  count: {
+    color: theme.palette.text.primary,
+    flexShrink: 0,
+  },
   chevron: {
     fontSize: '1rem',
     flexShrink: 0,
@@ -552,6 +588,8 @@ const plusChatButtonStyles = theme => ({
   },
   subPaper: {
     width: '18.75rem',
+    // A saved chat's menu has no Invite Users; its kind lists keep room for the search and three rows
+    minHeight: '17.5rem',
     boxSizing: 'border-box',
     borderRadius: '.75rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
@@ -606,6 +644,14 @@ const popperModifiers = [
       offset: [0, 8],
     },
   },
+  // Keeps the menu inside a short window (1440×630 cut MCPs)
+  { name: 'preventOverflow', options: { boundary: 'viewport', altAxis: true, padding: 8 } },
+];
+
+const subPopperModifiers = [
+  { name: 'offset', options: { offset: [0, 4] } },
+  { name: 'preventOverflow', options: { boundary: 'viewport', altAxis: true, padding: 8 } },
+  { name: 'flip', enabled: false },
 ];
 
 export default PlusChatButton;
