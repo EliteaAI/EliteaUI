@@ -7,7 +7,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import getDesignTokens from '@/MainTheme';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
 import NewChatInput from '../NewChatInput';
 
@@ -20,6 +20,8 @@ vi.mock('@/[fsd]/features/chat/lib/hooks', () => ({
   }),
 }));
 vi.mock('@/[fsd]/features/chat/ui', () => {
+  const VoiceButton = forwardRef(() => <span data-testid="voice-button" />);
+  VoiceButton.displayName = 'VoiceButton';
   const NoButton = forwardRef(() => null);
   NoButton.displayName = 'NoButton';
   return {
@@ -27,7 +29,7 @@ vi.mock('@/[fsd]/features/chat/ui', () => {
       ClearChatButton: () => null,
       AttachmentButton: NoButton,
       ChatInternalToolsConfigButton: () => null,
-      VoiceButton: NoButton,
+      VoiceButton,
     },
   };
 });
@@ -35,9 +37,15 @@ vi.mock('@/[fsd]/features/chat/ui/chat-button', () => ({
   PlusChatButton: () => null,
   SendButton: () => null,
 }));
-vi.mock('@/[fsd]/features/chat/ui/chat-input/AgentEditorPanel.jsx', () => ({ default: () => null }));
-vi.mock('@/[fsd]/features/chat/ui/chat-input/SkillChatPanel.jsx', () => ({ default: () => null }));
-vi.mock('@/[fsd]/widgets/llm-model-selector', () => ({ LLMModelSelector: () => null }));
+vi.mock('@/[fsd]/features/chat/ui/chat-input/AgentEditorPanel.jsx', () => ({
+  default: () => <span data-testid="agent-panel" />,
+}));
+vi.mock('@/[fsd]/features/chat/ui/chat-input/SkillChatPanel.jsx', () => ({
+  default: () => <span data-testid="skill-panel" />,
+}));
+vi.mock('@/[fsd]/widgets/llm-model-selector', () => ({
+  ChatModelButton: () => <span data-testid="chat-model-button" />,
+}));
 vi.mock('@/[fsd]/features/interactive-tours', () => ({ CHAT_TOUR_TARGET_IDS: {} }));
 vi.mock('@/[fsd]/shared/lib/hooks', async importOriginal => ({
   ...(await importOriginal()),
@@ -52,6 +60,42 @@ const renderInput = props =>
       <NewChatInput {...props} />
     </ThemeProvider>,
   );
+
+const below = () => screen.getByTestId('chat-input-below');
+
+describe('NewChatInput — who answers, under the field', () => {
+  beforeEach(() => vi.clearAllMocks());
+  afterEach(() => cleanup());
+
+  it('puts the model button under the field when the model answers', () => {
+    renderInput({ fromTheChat: true });
+
+    expect(within(below()).getByTestId('chat-model-button')).toBeInTheDocument();
+    expect(within(below()).queryByTestId('voice-button')).not.toBeInTheDocument();
+    expect(screen.getByTestId('voice-button')).toBeInTheDocument();
+  });
+
+  it.each(['application', 'pipeline'])('puts the agent panel under the field for a %s', entity_name => {
+    renderInput({ fromTheChat: true, activeParticipant: { entity_name } });
+
+    expect(within(below()).getByTestId('agent-panel')).toBeInTheDocument();
+    expect(screen.queryByTestId('chat-model-button')).not.toBeInTheDocument();
+  });
+
+  it('puts the skill panel under the field for a skill', () => {
+    renderInput({ fromTheChat: true, activeParticipant: { entity_name: 'skill' } });
+
+    expect(within(below()).getByTestId('skill-panel')).toBeInTheDocument();
+    expect(screen.queryByTestId('chat-model-button')).not.toBeInTheDocument();
+  });
+
+  it('shows only the model button under the field of a test chat', () => {
+    renderInput({ isAgentsPage: true, activeParticipant: { entity_name: 'application' } });
+
+    expect(within(below()).getByTestId('chat-model-button')).toBeInTheDocument();
+    expect(screen.queryByTestId('agent-panel')).not.toBeInTheDocument();
+  });
+});
 
 describe('NewChatInput placeholder', () => {
   beforeEach(() => vi.clearAllMocks());

@@ -1,1 +1,1 @@
-export { LLMModelSelector } from './ui';
+export { ChatModelButton, LLMModelSelector } from './ui';

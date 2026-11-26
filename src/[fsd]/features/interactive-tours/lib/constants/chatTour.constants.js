@@ -84,9 +84,9 @@ Turn on only the tools you need for this conversation.`,
   {
     id: 'conversation-model-settings',
     target: CHAT_TOUR_TARGETS.modelSettings,
-    placement: 'bottom',
+    placement: 'top',
     title: 'Model & Settings',
-    content: `Choose a language model from the model selector in the message input area. Click the settings (⚙️) icon to fine-tune response generation:
+    content: `Choose a language model from the model selector under the message input. Click the settings (⚙️) icon to fine-tune response generation:
 
 - **Reasoning models** (e.g. GPT-5.1) — choose a Reasoning depth: Low, Medium, or High
 - **Standard models** (e.g. GPT-4o) — set a Creativity level and Max Completion Tokens`,
