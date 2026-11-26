@@ -34,6 +34,7 @@ export * from './useShareLink.hooks';
 export * from './useLikeApplicationCard.hooks';
 export * from './useToast.hooks';
 export * from './useToastHandlers.hooks';
+export * from './useToastAutoClose.hooks';
 export * from './useFilePreviewNavigation.hooks';
 export * from './useListboxMaxHeight.hooks';
 export * from './useAutoBlur.hooks';

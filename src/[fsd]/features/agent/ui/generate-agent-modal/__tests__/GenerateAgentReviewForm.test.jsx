@@ -25,7 +25,6 @@ const toast = {
   clearToast: noop,
   setTopPosition: noop,
   setIcon: noop,
-  setOnCloseToast: noop,
 };
 
 const items = (count, extra = {}) =>

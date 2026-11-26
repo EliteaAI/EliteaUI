@@ -1,30 +1,35 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
-import { DEFAULT_TOP_POSITION } from '@/[fsd]/shared/lib/constants/toast.constants';
+import { ToastConstants } from '@/[fsd]/shared/lib/constants';
 import { ToastContext } from '@/[fsd]/shared/lib/context/ToastContext';
+
+const { DEFAULT_TOP_POSITION, MAX_TOASTS } = ToastConstants;
 
 const ToastProvider = memo(props => {
   const { children } = props;
 
   const [topPosition, setTopPosition] = useState(DEFAULT_TOP_POSITION);
-  const [onCloseToast, setOnCloseToast] = useState(undefined);
   const [icon, setIcon] = useState(undefined);
-  const [toastProps, setToastProps] = useState({
-    open: false,
-    message: '',
-    severity: 'info',
-  });
+  const [toasts, setToasts] = useState([]);
+  const nextToastIdRef = useRef(0);
 
   const openToast = useCallback((severity, message) => {
-    setToastProps({ open: true, severity, message });
+    nextToastIdRef.current += 1;
+    const toast = { id: nextToastIdRef.current, severity, message, open: true };
+    setToasts(prev => [...prev, toast].slice(-MAX_TOASTS));
   }, []);
 
-  const clearToast = useCallback(() => {
-    setToastProps(prev => ({ ...prev, message: '', open: false }));
-    if (onCloseToast) {
-      onCloseToast();
-    }
-  }, [onCloseToast]);
+  // Starts the fade-out of one toast. clearToast removes it once the fade-out has ended.
+  const closeToast = useCallback(
+    id => setToasts(prev => prev.map(toast => (toast.id === id ? { ...toast, open: false } : toast))),
+    [],
+  );
+
+  // Removes one toast, or all toasts when no id is given.
+  const clearToast = useCallback(
+    id => setToasts(prev => (id === undefined ? [] : prev.filter(toast => toast.id !== id))),
+    [],
+  );
 
   const toastHandlers = useMemo(
     () => ({
@@ -40,14 +45,13 @@ const ToastProvider = memo(props => {
     <ToastContext.Provider
       value={{
         toastHandlers,
-        toastProps,
+        toasts,
         topPosition,
         setTopPosition,
         icon,
         setIcon,
-        onCloseToast,
-        setOnCloseToast,
         clearToast,
+        closeToast,
       }}
     >
       {children}

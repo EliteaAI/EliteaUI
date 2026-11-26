@@ -1,10 +1,10 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback } from 'react';
 
 import { Alert, Box, Snackbar } from '@mui/material';
 
 import { ToastConstants } from '@/[fsd]/shared/lib/constants';
 
-const { DEFAULT_TOP_POSITION, TOAST_DURATION_DEFAULTS } = ToastConstants;
+const { TOAST_DURATION_DEFAULTS } = ToastConstants;
 
 const ANCHOR_ORIGIN = { vertical: 'top', horizontal: 'center' };
 
@@ -15,11 +15,9 @@ const Toast = memo(props => {
     message,
     autoHideDuration = TOAST_DURATION_DEFAULTS.info,
     onClose,
-    topPosition = DEFAULT_TOP_POSITION,
+    onExited,
     icon,
   } = props;
-
-  const [showToast, setShowToast] = useState(open);
 
   const handleClose = useCallback(
     (event, reason) => {
@@ -28,24 +26,24 @@ const Toast = memo(props => {
       }
 
       onClose?.();
-      setShowToast(false);
     },
     [onClose],
   );
 
-  useEffect(() => {
-    setShowToast(open);
-  }, [open]);
+  const handleExited = useCallback(() => {
+    onExited?.();
+  }, [onExited]);
 
-  const styles = toastStyles(topPosition);
+  const styles = toastStyles();
 
   return (
     <Snackbar
       sx={styles.root}
       anchorOrigin={ANCHOR_ORIGIN}
-      open={showToast}
+      open={open}
       autoHideDuration={autoHideDuration}
       onClose={handleClose}
+      slotProps={{ transition: { onExited: handleExited } }}
     >
       <Alert
         data-testid="toast-alert"
@@ -77,9 +75,14 @@ const Toast = memo(props => {
 Toast.displayName = 'Toast';
 
 /** @type {MuiSx} */
-const toastStyles = topPosition => ({
+const toastStyles = () => ({
+  // The container in ToastComponent positions the stack, so each toast flows in place.
   root: {
-    top: `${topPosition} !important`,
+    position: 'static !important',
+    top: 'auto !important',
+    left: 'auto !important',
+    right: 'auto !important',
+    transform: 'none !important',
   },
   alert: {
     width: '100%',

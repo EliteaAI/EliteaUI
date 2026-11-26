@@ -19,28 +19,7 @@ const useDeleteToolkit = (setBlockNav, isMCP) => {
   const navigate = useNavigate();
   const [deleteToolkit, { isLoading, error, isError, isSuccess, reset }] = useToolkitDeleteMutation();
 
-  const onCloseToast = useCallback(() => {
-    if (isError) {
-      reset();
-    } else if (isSuccess) {
-      setBlockNav(false);
-      setTimeout(() => {
-        if (window.history.length > 1) {
-          navigate(-1);
-        } else {
-          navigate(
-            (!isMCP ? RouteDefinitions.ToolkitsWithTab : RouteDefinitions.MCPsWithTab).replace(':tab', 'all'),
-            {
-              replace: true,
-            },
-          );
-        }
-      }, 0);
-    }
-  }, [isError, isMCP, isSuccess, navigate, reset, setBlockNav]);
-
-  const toastProps = useMemo(() => ({ onCloseToast }), [onCloseToast]);
-  const { toastSuccess, toastError } = useToast(toastProps);
+  const { toastSuccess, toastError } = useToast();
   const displayName = ToolkitsHelpers.getToolkitDisplayName({ name, toolkit_name, settings });
   const entityName = displayName || (isMCP ? 'MCP' : 'Toolkit');
   const onDelete = useCallback(async () => {
@@ -53,8 +32,19 @@ const useDeleteToolkit = (setBlockNav, isMCP) => {
       reset();
     } else if (isSuccess) {
       toastSuccess(`The ${entityName} ${isMCP ? 'mcp' : 'toolkit'} has been successfully deleted.`);
+      setBlockNav(false);
+      setTimeout(() => {
+        if (window.history.length > 1) {
+          navigate(-1);
+        } else {
+          navigate(
+            (!isMCP ? RouteDefinitions.ToolkitsWithTab : RouteDefinitions.MCPsWithTab).replace(':tab', 'all'),
+            { replace: true },
+          );
+        }
+      }, 0);
     }
-  }, [entityName, error, isError, isMCP, isSuccess, reset, toastError, toastSuccess]);
+  }, [entityName, error, isError, isMCP, isSuccess, navigate, reset, setBlockNav, toastError, toastSuccess]);
 
   return {
     name: entityName,

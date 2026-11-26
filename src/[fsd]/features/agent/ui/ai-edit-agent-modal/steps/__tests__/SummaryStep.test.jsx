@@ -26,7 +26,6 @@ const toast = {
   clearToast: noop,
   setTopPosition: noop,
   setIcon: noop,
-  setOnCloseToast: noop,
 };
 const starters = n => Array.from({ length: n }, (_, i) => `Starter ${i + 1}`);
 const flags = applyStarters => ({
