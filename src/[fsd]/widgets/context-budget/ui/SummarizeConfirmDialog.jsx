@@ -5,7 +5,7 @@ import { Modal } from '@/[fsd]/shared/ui';
 import { CONTEXT_MESSAGES } from '@/[fsd]/widgets/context-budget/lib/constants';
 
 /**
- * Confirmation dialog for manual summarization, shared by ContextBudgetPopover and ContextBudgetExpanded.
+ * Confirmation dialog for manual summarization in ContextBudgetPopover.
  */
 const SummarizeConfirmDialog = memo(props => {
   const { open, onClose, onConfirm, confirming } = props;

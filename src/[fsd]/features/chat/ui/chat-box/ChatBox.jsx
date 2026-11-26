@@ -61,6 +61,7 @@ import {
   areDetailsOfParticipant,
   getEveryoneUserIds,
   getSkillUnavailableReason,
+  isSavedConversation,
 } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
 import {
@@ -3293,6 +3294,11 @@ const ChatBox = memo(
               onInternalToolsConfigChange={onInternalToolsConfigChange}
               onAddNewUsers={onAddNewUsers}
               internal_tools={activeConversation?.meta?.internal_tools || []}
+              showContextBudget={isSavedConversation(activeConversation)}
+              contextStrategy={activeConversation?.meta?.context_strategy || {}}
+              setActiveConversation={setActiveConversation}
+              conversationInstructions={activeConversation?.instructions || ''}
+              persona={activeConversation?.meta?.persona}
               projectId={projectId}
               // Participant management (for PlusChatButton submenus)
               onSelectParticipant={onSelectThisParticipant}

@@ -19,6 +19,7 @@ import {
   AGENT_VERSION,
   CHAT_ID,
   PROJECT_ID,
+  contextStatus,
   routes,
   state,
 } from './chatInput.data';
@@ -42,8 +43,8 @@ const answeredBy = participantKey => () => {
   }
 };
 
-const chatScreen = path => ({
-  decorators: [withStoryApi({ routes: routes(), state, width: '100vw', height: '100vh', path })],
+const chatScreen = (path, chatRoutes = routes()) => ({
+  decorators: [withStoryApi({ routes: chatRoutes, state, width: '100vw', height: '100vh', path })],
 });
 
 // Rendered once the chat page has drawn its field and gone quiet; screenshots wait for the play. In the compare modes the
@@ -101,5 +102,31 @@ export const AgentTestChat = {
     const page = within(context.canvasElement);
     await userEvent.click(await page.findByRole('button', { name: 'Test Agent' }, { timeout: 30000 }));
     await settled(context);
+  },
+};
+
+// #7717 piece 3. A saved chat far from the limit: the grey ring in the field before the mic, the Participants panel
+// without its context block. Concept: concepts-chat-1-input-field--chat.
+export const ChatWithMessages = {
+  ...chatScreen(CHAT),
+  name: 'Chat — the context ring in the field',
+};
+
+// #7717 piece 3. The same chat past the compaction threshold: the ring in the warning colour.
+// Concept: concepts-chat-1-input-field--chat-near-limit.
+export const ChatNearLimit = {
+  ...chatScreen(CHAT, routes({ context: contextStatus(250000) })),
+  name: 'Chat — the context ring near the limit',
+};
+
+// #7717 piece 3. A click on the ring opens the context card above it.
+export const ContextCard = {
+  ...chatScreen(CHAT),
+  name: 'Chat — the context card above the ring',
+  play: async context => {
+    if (!(await settled(context))) return;
+    const page = within(context.canvasElement);
+    await userEvent.click(await page.findByTestId('context-budget-ring'));
+    await page.findByTestId('context-budget-popover');
   },
 };

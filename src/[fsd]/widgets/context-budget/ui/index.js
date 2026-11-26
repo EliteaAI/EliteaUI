@@ -11,7 +11,6 @@ export { default as ContextHighUsageBanner } from './ContextHighUsageBanner';
 export { default as ManualMaxContextTokensField } from './ManualMaxContextTokensField';
 export { default as SummarizationSettings } from './SummarizationSettings';
 export { default as ContextBudgetCompact } from './ContextBudgetCompact';
-export { default as ContextBudgetExpanded } from './ContextBudgetExpanded';
 export { default as ContextBudgetHeader } from './ContextBudgetHeader';
 export { default as ContextBudgetProgress } from './ContextBudgetProgress';
 export { default as ContextBudgetStatsDisplay } from './ContextBudgetStatsDisplay';

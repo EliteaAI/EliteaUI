@@ -1,10 +1,9 @@
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { memo, useMemo } from 'react';
 
 import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { useGetComponentWidth, useIsSmallWindow } from '@/[fsd]/shared/lib/hooks';
-import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
 import DoubleLeftIcon from '@/components/Icons/DoubleLeftIcon';
 import DoubleRightIcon from '@/components/Icons/DoubleRightIcon';
 
@@ -26,11 +25,6 @@ const Participants = memo(props => {
     onEditParticipant,
     disabledAdd,
     editingToolkit,
-    conversationId,
-    contextStrategy,
-    setActiveConversation,
-    conversationInstructions,
-    persona,
     selectedManager,
     newConversationSelectedManager,
   } = props;
@@ -38,8 +32,6 @@ const Participants = memo(props => {
 
   const { isSmallWindow } = useIsSmallWindow();
   const { componentRef, componentWidth } = useGetComponentWidth();
-  const [isContextBudgetCollapsed, setIsContextBudgetCollapsed] = useState(false);
-  const shouldFocusContextBudget = useRef(false);
 
   const { showTitle, showCollapsedParticipants, ExpandCollapseButton } = useMemo(
     () => ({
@@ -49,27 +41,6 @@ const Participants = memo(props => {
     }),
     [collapsed, isSmallWindow],
   );
-  const onCollapseContextManagement = useCallback(shouldCollapse => {
-    shouldFocusContextBudget.current = true;
-    setIsContextBudgetCollapsed(shouldCollapse);
-  }, []);
-  const focusContextBudgetToggle = useCallback(node => {
-    if (node && shouldFocusContextBudget.current) {
-      shouldFocusContextBudget.current = false;
-      node.focus();
-    }
-  }, []);
-
-  const handleParticipantsCollapsed = useCallback(
-    event => {
-      setIsContextBudgetCollapsed(false);
-      onCollapsed?.(event);
-    },
-    [onCollapsed],
-  );
-
-  const showContextBudgetRing = showCollapsedParticipants || isContextBudgetCollapsed;
-
   return (
     <Box
       ref={componentRef}
@@ -90,7 +61,7 @@ const Participants = memo(props => {
               sx={styles.collapseButton}
               variant="elitea"
               color="tertiary"
-              onClick={handleParticipantsCollapsed}
+              onClick={onCollapsed}
               data-testid="chat-participants-panel-toggle-button"
               data-expanded={collapsed ? 'false' : 'true'}
             >
@@ -136,25 +107,6 @@ const Participants = memo(props => {
           )}
         </Box>
       </Box>
-
-      {conversationId && (
-        <Box
-          data-tour={CHAT_TOUR_TARGET_IDS.contextBudget}
-          sx={showContextBudgetRing ? styles.contextBudgetRingWrapper : styles.contextBudgetWrapper}
-        >
-          <ContextBudgetUI.ContextBudgetInfo
-            conversationId={conversationId}
-            collapsed={showContextBudgetRing}
-            contextStrategy={contextStrategy}
-            setActiveConversation={setActiveConversation}
-            conversationInstructions={conversationInstructions}
-            persona={persona}
-            onCollapse={onCollapseContextManagement}
-            expandable={!showCollapsedParticipants}
-            toggleFocusRef={focusContextBudgetToggle}
-          />
-        </Box>
-      )}
     </Box>
   );
 });
@@ -218,14 +170,6 @@ const styles = {
     paddingTop: !collapsed || isSmallWindow ? '0rem' : '.5rem',
     width: '100%',
   }),
-  contextBudgetWrapper: { width: '100%' },
-  contextBudgetRingWrapper: {
-    display: 'flex',
-    justifyContent: 'center',
-    flexShrink: 0,
-    width: '3.25rem',
-    paddingBottom: '.5rem',
-  },
 };
 
 export default Participants;
