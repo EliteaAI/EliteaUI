@@ -197,8 +197,6 @@ const AttachmentButton = memo(
       return `Attach Files (${remainingAttachments} left)`;
     }, [isProcessing, isAtMaxCapacity, isAtMaxSize, remainingAttachments, limits.MAX_ATTACHMENTS]);
 
-    const remainingLabel = `${remainingAttachments} left`;
-
     const showDisabledTooltip = showLabel && isDisabled && !!disabledTooltip;
 
     const styles = attachmentButtonStyles(isDisabled);
@@ -229,20 +227,12 @@ const AttachmentButton = memo(
           sx={styles.attachIcon}
         />
         {showLabel && (
-          <>
-            <Typography
-              variant="labelSmall"
-              sx={styles.label}
-            >
-              Attach Files
-            </Typography>
-            <Typography
-              variant="labelSmall"
-              sx={styles.counter}
-            >
-              {remainingLabel}
-            </Typography>
-          </>
+          <Typography
+            variant="labelSmall"
+            sx={styles.label}
+          >
+            Attach Files
+          </Typography>
         )}
       </IconButton>
     );
@@ -301,10 +291,6 @@ const attachmentButtonStyles = isDisabled => ({
     color: isDisabled ? palette.text.primary : palette.text.secondary,
     flex: 1,
     textAlign: 'left',
-  }),
-  counter: ({ palette }) => ({
-    color: isDisabled ? palette.text.muted : palette.text.primary,
-    flexShrink: 0,
   }),
 });
 

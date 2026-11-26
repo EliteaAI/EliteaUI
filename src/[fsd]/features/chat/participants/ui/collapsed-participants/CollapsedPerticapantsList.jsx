@@ -8,10 +8,10 @@ import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { useParticipantDetailsContext } from '@/[fsd]/features/chat/participants/lib/context/ParticipantDetailsContext';
 import {
   getChatParticipantUniqueId,
+  groupParticipantsByKind,
   isSavedConversation,
   isSkippedContainerParticipant,
 } from '@/[fsd]/features/chat/participants/lib/helpers';
-import { isMcpToolkitType, isRemoteMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
 import { useIsMcpVisible, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import AgentSvg from '@/assets/agent.svg?react';
 import FlowSvg from '@/assets/flow-icon.svg?react';
@@ -99,27 +99,7 @@ const CollapsedPerticapantsList = memo(props => {
   const isSaved = isSavedConversation(conversation);
 
   const groupedByType = useMemo(
-    () =>
-      participants.reduce((acc, p) => {
-        let key = p.entity_name;
-        if (
-          p.entity_name === ChatParticipantType.Applications &&
-          p.entity_settings?.agent_type === ChatParticipantType.Pipelines
-        )
-          key = ChatParticipantType.Pipelines;
-        else if (
-          p.entity_name === ChatParticipantType.Toolkits &&
-          (isRemoteMcpToolkitType(p.entity_settings?.toolkit_type) || p.meta?.mcp === true)
-        )
-          key = 'mcp';
-
-        if (!acc[key]) acc[key] = { count: 0, participants: [] };
-        acc[key].count += 1;
-        if (isMcpVisible || !isMcpToolkitType(p.entity_settings?.toolkit_type)) {
-          acc[key].participants.push(p);
-        }
-        return acc;
-      }, {}),
+    () => groupParticipantsByKind(participants, isMcpVisible),
     [isMcpVisible, participants],
   );
 
@@ -178,7 +158,7 @@ const CollapsedPerticapantsList = memo(props => {
           >
             <UsersParticipantDropdown
               showTrigger
-              users={usersGroup.participants}
+              users={usersGroup}
               onSelectUser={onSelectParticipant}
               onDeleteUser={onDeleteParticipant}
               disabledAdd={disabledAdd}
@@ -189,7 +169,7 @@ const CollapsedPerticapantsList = memo(props => {
                 IconButton: {
                   variant: 'elitea',
                   color: 'secondary',
-                  sx: styles.collapsedTriggerButton(usersGroup.count),
+                  sx: styles.collapsedTriggerButton(usersGroup.length),
                 },
                 Icon: {
                   sx: styles.collapsedIcon,
@@ -203,10 +183,10 @@ const CollapsedPerticapantsList = memo(props => {
       {ENTITY_SECTIONS.map(entity => {
         const group = groupedByType[entity.type];
 
-        if (!group || group.participants?.length === 0) return null;
+        if (!group?.length) return null;
         if (entity.type === 'mcp' && !isMcpVisible) return null;
 
-        const sectionHasError = group.participants.some(p =>
+        const sectionHasError = group.some(p =>
           hasParticipantError(p.entity_name, p.entity_meta?.id, p.entity_meta?.project_id),
         );
 
@@ -216,7 +196,7 @@ const CollapsedPerticapantsList = memo(props => {
         // this only shows when the section has no error.
         const sectionHasSkippedContainer =
           !sectionHasError &&
-          group.participants.some(
+          group.some(
             p => getChatParticipantUniqueId(p) !== activeParticipantId && isSkippedContainerParticipant(p),
           );
 
@@ -248,7 +228,11 @@ const CollapsedPerticapantsList = memo(props => {
                   variant="elitea"
                   color="secondary"
                   onClick={e => onCollapsedTriggerClick(entity.type, e)}
-                  sx={styles.collapsedTriggerButton(group.count, sectionHasError, sectionHasSkippedContainer)}
+                  sx={styles.collapsedTriggerButton(
+                    group.length,
+                    sectionHasError,
+                    sectionHasSkippedContainer,
+                  )}
                   data-testid="chat-participants-badge-button"
                 >
                   <entity.icon
@@ -272,7 +256,7 @@ const CollapsedPerticapantsList = memo(props => {
                 anchorEl={sectionAnchorsRef.current[entity.type]}
                 open={openSectionType === entity.type}
                 onClose={onCloseDropdown}
-                participants={group.participants}
+                participants={group}
                 showDivider={false}
                 disabledEdit={disabledEdit}
                 onSelectParticipant={onSelectParticipant}

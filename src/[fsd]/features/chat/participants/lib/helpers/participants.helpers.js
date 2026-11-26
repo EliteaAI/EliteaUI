@@ -1,6 +1,6 @@
 import { findSkillParticipant, withPinnedSkillVersion } from '@/[fsd]/features/skill/lib/helpers';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
-import { ValidationErrorHelpers } from '@/[fsd]/shared/lib/helpers';
+import { ValidationErrorHelpers, isMcpToolkitType, isRemoteMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
 import { ChatParticipantType, DEFAULT_PARTICIPANT_NAME } from '@/common/constants';
 
 import { SkillUnavailableReason } from '../constants/participant.constants';
@@ -170,3 +170,24 @@ export const getEveryoneUserIds = ({ everyoneUserIds, participants = [], userId 
       .map(item => item.entity_meta?.id);
   return [...new Set(ids.filter(id => id != null && id != userId))];
 };
+
+// The chat's participants by the Participants panel's sections: pipelines apart from agents, MCPs apart from toolkits
+export const groupParticipantsByKind = (participants = [], isMcpVisible = true) =>
+  participants.reduce((acc, participant) => {
+    const { entity_name, entity_settings, meta } = participant;
+    let key = entity_name;
+    if (
+      entity_name === ChatParticipantType.Applications &&
+      entity_settings?.agent_type === ChatParticipantType.Pipelines
+    )
+      key = ChatParticipantType.Pipelines;
+    else if (
+      entity_name === ChatParticipantType.Toolkits &&
+      (isRemoteMcpToolkitType(entity_settings?.toolkit_type) || meta?.mcp === true)
+    )
+      key = 'mcp';
+
+    if (!acc[key]) acc[key] = [];
+    if (isMcpVisible || !isMcpToolkitType(entity_settings?.toolkit_type)) acc[key].push(participant);
+    return acc;
+  }, {});

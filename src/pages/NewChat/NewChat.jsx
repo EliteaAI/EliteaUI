@@ -386,13 +386,12 @@ const NewChat = props => {
   });
 
   const isDraftConversation = !activeConversation?.id || !!activeConversation?.isNew;
-  // Only the owner changes access, as the Share item of the chat menu; the Public project has no team
-  const canShareWithTeam =
-    projectId != PUBLIC_PROJECT_ID && (isDraftConversation || activeConversation?.author_id == userId);
+  // «+» › Invite Users only before the first message; a saved chat shares from its menu. The Public project has no team
+  const canInviteUsers = projectId != PUBLIC_PROJECT_ID && isDraftConversation;
 
   const onAddNewUsers = useMemo(
-    () => (canShareWithTeam ? () => setIsShareOpen(true) : undefined),
-    [canShareWithTeam],
+    () => (canInviteUsers ? () => setIsShareOpen(true) : undefined),
+    [canInviteUsers],
   );
 
   const handleCloseShare = useCallback(() => setIsShareOpen(false), []);

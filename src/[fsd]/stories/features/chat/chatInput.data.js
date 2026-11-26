@@ -137,6 +137,52 @@ const CHAT_DETAILS = {
   total_message_groups: 2,
 };
 
+// «API error triage», a chat with something of every kind: 3 agents, 1 pipeline, 2 skills, 3 toolkits, 1 MCP; the
+// modules Planner, Ask User and Web Search are on, Web Search without the platform's search (locked, with its reason)
+export const FULL_CHAT_ID = 108;
+const participant = (id, entity_name, entityId, name, extra = {}) => ({
+  id,
+  entity_name,
+  entity_meta: { id: entityId, project_id: PROJECT_ID },
+  entity_settings: {},
+  meta: { name },
+  ...extra,
+});
+const FULL_PARTICIPANTS = [
+  AGENT_PARTICIPANT,
+  participant(4, 'application', 12, 'Jira Triage'),
+  participant(5, 'application', 13, 'UX Design Analyst'),
+  participant(6, 'application', 32, 'Bug to Fix Flow', { entity_settings: { agent_type: 'pipeline' } }),
+  participant(7, 'skill', 43, 'Accessibility Check'),
+  participant(8, 'skill', 44, 'SQL Helper'),
+  participant(9, 'toolkit', 51, 'Jira', { entity_settings: { toolkit_type: 'jira' } }),
+  participant(10, 'toolkit', 52, 'Confluence', { entity_settings: { toolkit_type: 'confluence' } }),
+  participant(11, 'toolkit', 53, 'GitHub', { entity_settings: { toolkit_type: 'github' } }),
+  participant(12, 'toolkit', 61, 'Figma', {
+    entity_settings: { toolkit_type: 'mcp' },
+    meta: { name: 'Figma', mcp: true },
+  }),
+];
+const FULL_QUESTION = 'Triage last night’s API errors and file the new ones in Jira';
+const FULL_ANSWER =
+  'Filed 2 tickets in BUGS: BUGS-1412 “Export drops the last row” and BUGS-1413 “Date filter ignores the time ' +
+  'zone”. Both are linked to release 2.4.';
+const FULL_CHAT_DETAILS = {
+  ...CHAT_DETAILS,
+  id: FULL_CHAT_ID,
+  uuid: `conv-${FULL_CHAT_ID}`,
+  name: 'API error triage',
+  participants: [USER_PARTICIPANT, MODEL_PARTICIPANT, ...FULL_PARTICIPANTS],
+  meta: {
+    context_strategy: { context_window_mode: 'balanced' },
+    internal_tools: ['planner', 'ask_user', 'web_search'],
+  },
+  message_groups: [
+    { ...CHAT_DETAILS.message_groups[0], message_items: [textItem(5101, FULL_QUESTION)] },
+    { ...CHAT_DETAILS.message_groups[1], message_items: [textItem(5102, FULL_ANSWER)] },
+  ],
+};
+
 // The chat's context: 7 300 of 269 280 input tokens, Balanced; the usage totals grow with it
 export const contextStatus = (current_tokens = 7300) => ({
   utilization: current_tokens / 269280,
@@ -164,6 +210,8 @@ export const contextStatus = (current_tokens = 7300) => ({
 export const routes = ({ context = contextStatus() } = {}) => [
   [`/conversation/prompt_lib/${PROJECT_ID}/${CHAT_ID}`, CHAT_DETAILS],
   [`/context_analytics/prompt_lib/${PROJECT_ID}/${CHAT_ID}`, context],
+  [`/conversation/prompt_lib/${PROJECT_ID}/${FULL_CHAT_ID}`, FULL_CHAT_DETAILS],
+  [`/context_analytics/prompt_lib/${PROJECT_ID}/${FULL_CHAT_ID}`, context],
   ['/configurations/models/', { items: MODELS, total: MODELS.length, auto_routing: AUTO_ROUTING }],
   ['/configurations/configurations/', { items: [], total: 0 }],
   ['/application/prompt_lib/', AGENT_DETAILS],

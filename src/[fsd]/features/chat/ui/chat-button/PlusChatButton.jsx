@@ -16,21 +16,24 @@ import {
 } from '@mui/material';
 
 import { useApplicationSubmenu } from '@/[fsd]/features/chat/lib/hooks';
+import { groupParticipantsByKind } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useAvailableInternalTools } from '@/[fsd]/features/toolkits';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useIsMcpVisible, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
-import { Switch, Text } from '@/[fsd]/shared/ui';
+import { Text } from '@/[fsd]/shared/ui';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import MCPIcon from '@/assets/mcp-icon.svg?react';
 import SkillIcon from '@/assets/skill-icon.svg?react';
 import ToolIcon from '@/assets/tool-icon.svg?react';
 import ValueIcon from '@/assets/value-icon.svg?react';
+import { ChatParticipantType } from '@/common/constants';
 import ApplicationsIcon from '@/components/Icons/ApplicationsIcon.jsx';
 import ArrowRightIcon from '@/components/Icons/ArrowRightIcon';
 import PlusIcon from '@/components/Icons/PlusIcon';
 import UsersIcon from '@/components/Icons/UsersIcon';
 
 import AttachmentButton from './AttachmentButton';
+import ModuleRow from './ModuleRow';
 import PlusChatSubmenu from './PlusChatSubmenu';
 
 const SUBMENU_KEYS = {
@@ -50,6 +53,15 @@ const EXPANDABLE_ITEMS = [
   { key: SUBMENU_KEYS.TOOLKITS, label: 'Toolkits', Icon: ToolIcon, testId: 'toolkits-menuitem' },
   { key: SUBMENU_KEYS.MCPS, label: 'MCPs', Icon: MCPIcon, testId: 'mcps-menuitem' },
 ];
+
+// The Participants panel's section of each «+» row, for the row's count
+const PARTICIPANT_KIND_BY_KEY = {
+  [SUBMENU_KEYS.AGENTS]: ChatParticipantType.Applications,
+  [SUBMENU_KEYS.PIPELINES]: ChatParticipantType.Pipelines,
+  [SUBMENU_KEYS.SKILLS]: ChatParticipantType.Skills,
+  [SUBMENU_KEYS.TOOLKITS]: ChatParticipantType.Toolkits,
+  [SUBMENU_KEYS.MCPS]: 'mcp',
+};
 
 const SEARCHABLE_KEYS = [
   SUBMENU_KEYS.AGENTS,
@@ -124,6 +136,18 @@ const PlusChatButton = memo(props => {
     }),
     [agents, pipelines, skills, toolkits, mcps, isMcpVisible],
   );
+
+  const counts = useMemo(() => {
+    const grouped = groupParticipantsByKind(participants, isMcpVisible);
+    return Object.entries(PARTICIPANT_KIND_BY_KEY).reduce(
+      (acc, [key, kind]) => ({ ...acc, [key]: grouped[kind]?.length || 0 }),
+      {
+        [SUBMENU_KEYS.INTERNAL_TOOLS]: availableTools.filter(
+          tool => !tool.unavailable && internal_tools.includes(tool.name),
+        ).length,
+      },
+    );
+  }, [participants, isMcpVisible, availableTools, internal_tools]);
 
   const handleClickAway = useCallback(
     event => {
@@ -272,43 +296,21 @@ const PlusChatButton = memo(props => {
 
   const renderSubmenuContent = useCallback(() => {
     if (openItem === SUBMENU_KEYS.INTERNAL_TOOLS && availableTools.length > 0) {
-      return availableTools.map(tool => {
-        const isChecked = internal_tools.includes(tool.name);
-        const handleRowClick = () => {
-          if (!disableInternalTools && !tool.unavailable) {
-            onInternalToolsConfigChange?.({ key: tool.name, value: !isChecked });
+      return availableTools.map(tool => (
+        <ModuleRow
+          key={tool.name}
+          tool={tool}
+          title={tool.title}
+          description={
+            <Text.TextWithLink
+              {...(tool.unavailable ? { text: tool.unavailableTooltip } : tool.infoTooltip)}
+            />
           }
-        };
-        return (
-          <Switch.BaseSwitch
-            key={tool.name}
-            label={tool.title}
-            checked={isChecked && !tool.unavailable}
-            disabled={disableInternalTools || tool.unavailable}
-            onChange={(_, checkedValue) =>
-              onInternalToolsConfigChange?.({ key: tool.name, value: checkedValue })
-            }
-            width="100%"
-            infoTooltip={
-              tool.unavailable ? tool.unavailableTooltip : <Text.TextWithLink {...tool.infoTooltip} />
-            }
-            slotProps={{
-              formControlLabel: {
-                sx: styles.toolFormControlLabel,
-                labelPlacement: 'start',
-                onClick: handleRowClick,
-              },
-              label: { sx: { whiteSpace: 'nowrap' } },
-              switch: {
-                size: 'small',
-                onClick: e => e.stopPropagation(),
-                // MUI v7 Switch drops `inputProps`, the testid must go via slotProps.input
-                slotProps: { input: { 'data-testid': `modules-toggle-${tool.name}` } },
-              },
-            }}
-          />
-        );
-      });
+          checked={internal_tools.includes(tool.name) && !tool.unavailable}
+          disabled={disableInternalTools || tool.unavailable}
+          onToggle={value => onInternalToolsConfigChange?.({ key: tool.name, value })}
+        />
+      ));
     }
 
     if (SEARCHABLE_KEYS.includes(openItem)) {
@@ -339,7 +341,6 @@ const PlusChatButton = memo(props => {
     onInternalToolsConfigChange,
     submenuMap,
     submenuConfigs,
-    styles,
   ]);
 
   return (
@@ -413,6 +414,15 @@ const PlusChatButton = memo(props => {
                       sx={styles.menuIcon}
                     />
                     <Typography sx={styles.menuLabel}>{label}</Typography>
+                    {counts[key] > 0 && (
+                      <Typography
+                        variant="bodyMedium"
+                        sx={styles.count}
+                        data-testid={`${testId}-count`}
+                      >
+                        {counts[key]}
+                      </Typography>
+                    )}
                     <ArrowRightIcon
                       sx={styles.chevron}
                       fill={theme.palette.icon.default}
@@ -421,10 +431,9 @@ const PlusChatButton = memo(props => {
                 ),
               )}
 
-              {!isPrivateProject && (
+              {canInviteUsers && (
                 <MenuItem
                   sx={styles.menuItem}
-                  disabled={!canInviteUsers}
                   onClick={handleInviteUsers}
                   data-testid="invite-users-menuitem"
                 >
@@ -443,14 +452,16 @@ const PlusChatButton = memo(props => {
           anchorEl={mainPaperRef.current}
           placement="right-start"
           style={styles.subPopper}
+          modifiers={subPopperModifiers}
         >
           <Paper
             ref={subMenuRef}
             elevation={8}
             sx={[
               styles.subPaper,
-              openItem === SUBMENU_KEYS.INTERNAL_TOOLS && styles.internalToolsPaper,
-              { height: mainHeight ? `${mainHeight}px` : 'auto' },
+              openItem === SUBMENU_KEYS.INTERNAL_TOOLS
+                ? styles.internalToolsPaper
+                : { height: mainHeight ? `${mainHeight}px` : 'auto' },
             ]}
             data-testid={`${openItem}-submenu`}
           >
@@ -542,6 +553,10 @@ const plusChatButtonStyles = theme => ({
     lineHeight: '1.5rem',
     fontWeight: 400,
   },
+  count: {
+    color: theme.palette.text.primary,
+    flexShrink: 0,
+  },
   chevron: {
     fontSize: '1rem',
     flexShrink: 0,
@@ -552,6 +567,8 @@ const plusChatButtonStyles = theme => ({
   },
   subPaper: {
     width: '18.75rem',
+    // A saved chat's menu has no Invite Users; its kind lists keep room for the search and three rows
+    minHeight: '17.5rem',
     boxSizing: 'border-box',
     borderRadius: '.75rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
@@ -561,34 +578,13 @@ const plusChatButtonStyles = theme => ({
     display: 'flex',
     flexDirection: 'column',
   },
+  // Modules grow to the window, not to the main menu's height
   internalToolsPaper: {
+    width: '26.25rem',
+    minHeight: 'auto',
+    maxHeight: 'calc(100vh - 1rem)',
     padding: '.5rem 0',
     overflowY: 'auto',
-  },
-  toolFormControlLabel: {
-    margin: 0,
-    width: '100%',
-    height: '2.75rem',
-    flexShrink: 0,
-    boxSizing: 'border-box',
-    display: 'flex',
-    padding: '.5rem 1rem',
-    gap: '.5rem',
-    justifyContent: 'space-between',
-    cursor: 'pointer',
-
-    '&:hover': {
-      backgroundColor: theme.palette.background.interactiveItem.hover,
-    },
-
-    '&:active': {
-      backgroundColor: theme.palette.components.tabGroupButton.background.active,
-    },
-
-    '& .MuiFormControlLabel-label': {
-      marginLeft: '.5rem',
-      whiteSpace: 'nowrap',
-    },
   },
   comingSoon: {
     color: theme.palette.text.disabled,
@@ -606,6 +602,14 @@ const popperModifiers = [
       offset: [0, 8],
     },
   },
+  // Keeps the menu inside a short window (1440×630 cut MCPs)
+  { name: 'preventOverflow', options: { boundary: 'viewport', altAxis: true, padding: 8 } },
+];
+
+const subPopperModifiers = [
+  { name: 'offset', options: { offset: [0, 4] } },
+  { name: 'preventOverflow', options: { boundary: 'viewport', altAxis: true, padding: 8 } },
+  { name: 'flip', enabled: false },
 ];
 
 export default PlusChatButton;

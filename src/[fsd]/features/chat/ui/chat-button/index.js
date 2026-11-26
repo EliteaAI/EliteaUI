@@ -3,4 +3,5 @@ export { default as ChatInternalToolsConfigButton } from './ChatInternalToolsCon
 export { default as ClearChatButton } from './ClearChatButton';
 export { default as VoiceButton } from './VoiceButton';
 export { default as SendButton } from './SendButton';
+export { default as ModuleRow } from './ModuleRow';
 export { default as PlusChatButton } from './PlusChatButton';

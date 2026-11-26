@@ -6,6 +6,7 @@ import {
   getDefaultActiveParticipant,
   getEveryoneUserIds,
   getSkillUnavailableReason,
+  groupParticipantsByKind,
   isSameChatEntity,
   isSavedConversation,
   isSkippedContainerParticipant,
@@ -277,5 +278,57 @@ describe('getEveryoneUserIds', () => {
     expect(
       getEveryoneUserIds({ participants: [person(10, 1), person(11, 2), person(12, 3), agent], userId: 1 }),
     ).toEqual([2, 3]);
+  });
+});
+
+describe('groupParticipantsByKind', () => {
+  const agent = { entity_name: 'application', entity_settings: { agent_type: 'openai' } };
+  const pipelineApp = { entity_name: 'application', entity_settings: { agent_type: 'pipeline' } };
+  const newChatPipeline = { entity_name: 'pipeline', entity_settings: {} };
+  const skill = { entity_name: 'skill' };
+  const toolkit = { entity_name: 'toolkit', entity_settings: { toolkit_type: 'github' } };
+  const remoteMcp = { entity_name: 'toolkit', entity_settings: { toolkit_type: 'mcp' } };
+  const metaMcp = {
+    entity_name: 'toolkit',
+    entity_settings: { toolkit_type: 'custom' },
+    meta: { mcp: true },
+  };
+  const prebuiltMcp = { entity_name: 'toolkit', entity_settings: { toolkit_type: 'mcp_github' } };
+  const user = { entity_name: 'user' };
+
+  it('puts a pipeline application under pipelines and keeps agents apart', () => {
+    const grouped = groupParticipantsByKind([agent, pipelineApp]);
+    expect(grouped.application).toEqual([agent]);
+    expect(grouped.pipeline).toEqual([pipelineApp]);
+  });
+
+  it("puts a new chat's pipeline entity under pipelines", () => {
+    expect(groupParticipantsByKind([newChatPipeline, pipelineApp]).pipeline).toEqual([
+      newChatPipeline,
+      pipelineApp,
+    ]);
+  });
+
+  it('groups skills, toolkits and users by their entity', () => {
+    const grouped = groupParticipantsByKind([skill, toolkit, user]);
+    expect(grouped.skill).toEqual([skill]);
+    expect(grouped.toolkit).toEqual([toolkit]);
+    expect(grouped.user).toEqual([user]);
+  });
+
+  it('puts a remote MCP and a meta.mcp toolkit under mcp, a pre-built MCP under toolkits', () => {
+    const grouped = groupParticipantsByKind([remoteMcp, metaMcp, prebuiltMcp, toolkit]);
+    expect(grouped.mcp).toEqual([remoteMcp, metaMcp]);
+    expect(grouped.toolkit).toEqual([prebuiltMcp, toolkit]);
+  });
+
+  it('drops MCP toolkits when MCP is hidden', () => {
+    const grouped = groupParticipantsByKind([remoteMcp, prebuiltMcp, toolkit], false);
+    expect(grouped.mcp).toEqual([]);
+    expect(grouped.toolkit).toEqual([toolkit]);
+  });
+
+  it('returns no groups for no participants', () => {
+    expect(groupParticipantsByKind()).toEqual({});
   });
 });
