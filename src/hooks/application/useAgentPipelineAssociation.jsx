@@ -43,12 +43,14 @@ export const mapAssociationError = (rawError, entityName, opts = {}) => {
       ? `use "${entityName}"`
       : `add "${entityName}"`;
 
-  // #7736: Swarm Mode enabled on an agent that was already bound as a tool
+  // #7736: Swarm agents are chat-only; the pinned (or default) version has Swarm Mode
   if (lower.includes('swarm mode')) {
-    return (
-      `Cannot ${target}: it has Swarm Mode enabled. Swarm agents are only supported in direct chat. ` +
-      `Turn off Swarm Mode on the ${entityLabel} or remove it from the tools.`
-    );
+    const swarmNotice = `Cannot ${target}: it has Swarm Mode enabled. Swarm agents are only supported in direct chat.`;
+    if (isSwitch) return `${swarmNotice} Choose a version without Swarm Mode.`;
+    if (isStatus) {
+      return `${swarmNotice} Point it to a version without Swarm Mode, or remove it.`;
+    }
+    return `${swarmNotice} Make a version without Swarm Mode its default, then add it.`;
   }
   if (lower.includes('circular') || lower.includes('cycle')) {
     if (isSwitch)

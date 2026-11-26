@@ -8,9 +8,6 @@ export const SWARM_DEFAULT_VERSION_REASON = name =>
   `The default version of ${name} has Swarm Mode enabled and can't be added as a tool. ` +
   'Swarm agents are only supported in direct chat. Make a version without Swarm Mode its default to add it.';
 
-/** Swarm versions are chat-only, so they can't be picked for an agent or pipeline tool */
-export const isVersionDisabledForTool = version => isSwarmVersion(version);
-
 /** Warning for a tool whose pinned version has Swarm Mode (enabled after it was picked) */
 export const SWARM_PINNED_VERSION_WARNING =
   'This version has Swarm Mode enabled, which is only supported in direct chat. Select another version.';

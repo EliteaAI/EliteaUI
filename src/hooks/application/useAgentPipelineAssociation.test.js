@@ -145,12 +145,30 @@ describe('mapAssociationError', () => {
     expect(result).toContain('circular agent reference');
   });
 
-  it('maps a Swarm Mode error to a status-phrased card message (issue #7736)', () => {
+  describe('Swarm Mode error (issue #7736)', () => {
     const rawError =
       "Agent 'Multipurpose' has Swarm Mode enabled and can't be used as a tool. Swarm agents are only supported in direct chat.";
-    const result = mapAssociationError(rawError, 'Multipurpose', { action: 'status', entityLabel: 'agent' });
-    expect(result).toContain('Swarm Mode');
-    expect(result).toContain('direct chat');
+
+    it('tells a status card to point the tool to a version without Swarm Mode, or remove it', () => {
+      const result = mapAssociationError(rawError, 'Multipurpose', {
+        action: 'status',
+        entityLabel: 'agent',
+      });
+      expect(result).toContain('direct chat');
+      expect(result).toContain('Point it to a version without Swarm Mode');
+    });
+
+    it('tells a version switch to choose a version without Swarm Mode', () => {
+      const result = mapAssociationError(rawError, 'Multipurpose', { action: 'switch', versionLabel: 'v2' });
+      expect(result).toContain('to version v2');
+      expect(result).toContain('Choose a version without Swarm Mode');
+    });
+
+    it('does not suggest removing the tool when adding', () => {
+      const result = mapAssociationError(rawError, 'Multipurpose', { action: 'add' });
+      expect(result).toContain('Make a version without Swarm Mode its default');
+      expect(result).not.toContain('remove');
+    });
   });
 
   // --- status action (inline tool-card message, issue #5717) ----------------

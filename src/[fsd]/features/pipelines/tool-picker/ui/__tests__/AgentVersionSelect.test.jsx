@@ -24,12 +24,14 @@ vi.mock('@/[fsd]/shared/ui/select', () => ({
   SingleSelect: props => (
     <div data-testid="single-select">
       <span data-testid="helper-text">{props.helperText}</span>
+      <span data-testid="shows-descriptions">{String(Boolean(props.showOptionDescription))}</span>
       <span data-testid="has-error">{String(Boolean(props.error))}</span>
       {props.options.map(option => (
         <span
           key={option.value}
           data-testid={`option-${option.value}`}
           data-disabled={String(Boolean(option.disabled))}
+          data-description={option.description}
         >
           {option.label}
         </span>
@@ -58,6 +60,12 @@ describe('AgentVersionSelect', () => {
 
     expect(screen.getByTestId('option-2')).toHaveAttribute('data-disabled', 'true');
     expect(screen.getByTestId('option-1')).toHaveAttribute('data-disabled', 'false');
+    // the reason only renders when the select is asked to show option descriptions
+    expect(screen.getByTestId('option-2')).toHaveAttribute(
+      'data-description',
+      expect.stringMatching(/Swarm Mode/),
+    );
+    expect(screen.getByTestId('shows-descriptions')).toHaveTextContent('true');
     expect(screen.getByTestId('has-error')).toHaveTextContent('false');
     expect(screen.getByTestId('helper-text')).toBeEmptyDOMElement();
   });

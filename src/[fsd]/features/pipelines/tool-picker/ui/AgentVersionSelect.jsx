@@ -51,7 +51,7 @@ const AgentVersionSelect = memo(props => {
           return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
         })
         .map(version => {
-          const isDisabled = AgentNestingHelpers.isVersionDisabledForTool(version);
+          const isDisabled = AgentNestingHelpers.isSwarmVersion(version);
           return {
             value: Number(version.id),
             label: formatVersionLabel(version),
@@ -90,6 +90,7 @@ const AgentVersionSelect = memo(props => {
       disabled={disabled || isVersionLocked || !applicationId}
       showBorder
       showEmptyPlaceholder={false}
+      showOptionDescription
       isListFetching={isFetching}
       error={isMissingVersion || isPinnedVersionSwarm}
       helperText={getHelperText({ isMissingVersion, isPinnedVersionSwarm })}
