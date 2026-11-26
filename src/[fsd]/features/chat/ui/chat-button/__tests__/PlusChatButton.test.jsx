@@ -35,6 +35,7 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useIsMcpVisible: () => mocks.isMcpVisible,
   useSelectedProjectId: () => mocks.projectId,
 }));
+vi.mock('@/[fsd]/shared/ui/icon', () => ({ EntityIcon: () => null }));
 vi.mock('../AttachmentButton', () => ({ default: () => null }));
 
 const theme = createTheme(getDesignTokens('dark'));
@@ -156,5 +157,64 @@ describe('PlusChatButton rows', () => {
     renderMenu();
 
     expect(screen.queryByTestId('invite-users-menuitem')).toBeNull();
+  });
+});
+
+describe('PlusChatButton modules', () => {
+  const tools = [
+    {
+      name: 'planner',
+      title: 'Planner',
+      icon: 'CalendarIcon',
+      infoTooltip: { text: 'Create, manage, and track tasks.' },
+    },
+    {
+      name: 'web_search',
+      title: 'Web Search',
+      icon: 'GlobeIcon',
+      infoTooltip: { text: 'Search the Internet.' },
+      unavailable: true,
+      unavailableTooltip: 'Web search is not configured on this platform.',
+    },
+  ];
+
+  const openModules = (props = {}) => {
+    renderMenu(props);
+    fireEvent.click(screen.getByTestId('internal-tools-menuitem'));
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.tools = tools;
+  });
+  afterEach(() => cleanup());
+
+  it('lists each module with its description, an unavailable one with its reason', () => {
+    openModules({ internal_tools: ['web_search'] });
+
+    expect(screen.getByTestId('modules-row-planner')).toHaveTextContent('Create, manage, and track tasks.');
+    const webSearch = screen.getByTestId('modules-row-web_search');
+    expect(webSearch).toHaveTextContent('Web search is not configured on this platform.');
+    expect(webSearch).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByTestId('modules-toggle-web_search')).not.toBeChecked();
+  });
+
+  it('turns a module on by a click on its row', () => {
+    const onInternalToolsConfigChange = vi.fn();
+    openModules({ onInternalToolsConfigChange });
+
+    fireEvent.click(screen.getByTestId('modules-row-planner'));
+
+    expect(onInternalToolsConfigChange).toHaveBeenCalledWith({ key: 'planner', value: true });
+  });
+
+  it('locks every module while the chat cannot change them', () => {
+    const onInternalToolsConfigChange = vi.fn();
+    openModules({ onInternalToolsConfigChange, disableInternalTools: true });
+
+    fireEvent.click(screen.getByTestId('modules-row-planner'));
+
+    expect(screen.getByTestId('modules-row-planner')).toHaveAttribute('aria-disabled', 'true');
+    expect(onInternalToolsConfigChange).not.toHaveBeenCalled();
   });
 });

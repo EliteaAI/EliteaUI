@@ -20,7 +20,7 @@ import { groupParticipantsByKind } from '@/[fsd]/features/chat/participants/lib/
 import { useAvailableInternalTools } from '@/[fsd]/features/toolkits';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useIsMcpVisible, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
-import { Switch, Text } from '@/[fsd]/shared/ui';
+import { Text } from '@/[fsd]/shared/ui';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import MCPIcon from '@/assets/mcp-icon.svg?react';
 import SkillIcon from '@/assets/skill-icon.svg?react';
@@ -33,6 +33,7 @@ import PlusIcon from '@/components/Icons/PlusIcon';
 import UsersIcon from '@/components/Icons/UsersIcon';
 
 import AttachmentButton from './AttachmentButton';
+import ModuleRow from './ModuleRow';
 import PlusChatSubmenu from './PlusChatSubmenu';
 
 const SUBMENU_KEYS = {
@@ -295,43 +296,21 @@ const PlusChatButton = memo(props => {
 
   const renderSubmenuContent = useCallback(() => {
     if (openItem === SUBMENU_KEYS.INTERNAL_TOOLS && availableTools.length > 0) {
-      return availableTools.map(tool => {
-        const isChecked = internal_tools.includes(tool.name);
-        const handleRowClick = () => {
-          if (!disableInternalTools && !tool.unavailable) {
-            onInternalToolsConfigChange?.({ key: tool.name, value: !isChecked });
+      return availableTools.map(tool => (
+        <ModuleRow
+          key={tool.name}
+          tool={tool}
+          title={tool.title}
+          description={
+            <Text.TextWithLink
+              {...(tool.unavailable ? { text: tool.unavailableTooltip } : tool.infoTooltip)}
+            />
           }
-        };
-        return (
-          <Switch.BaseSwitch
-            key={tool.name}
-            label={tool.title}
-            checked={isChecked && !tool.unavailable}
-            disabled={disableInternalTools || tool.unavailable}
-            onChange={(_, checkedValue) =>
-              onInternalToolsConfigChange?.({ key: tool.name, value: checkedValue })
-            }
-            width="100%"
-            infoTooltip={
-              tool.unavailable ? tool.unavailableTooltip : <Text.TextWithLink {...tool.infoTooltip} />
-            }
-            slotProps={{
-              formControlLabel: {
-                sx: styles.toolFormControlLabel,
-                labelPlacement: 'start',
-                onClick: handleRowClick,
-              },
-              label: { sx: { whiteSpace: 'nowrap' } },
-              switch: {
-                size: 'small',
-                onClick: e => e.stopPropagation(),
-                // MUI v7 Switch drops `inputProps`, the testid must go via slotProps.input
-                slotProps: { input: { 'data-testid': `modules-toggle-${tool.name}` } },
-              },
-            }}
-          />
-        );
-      });
+          checked={internal_tools.includes(tool.name) && !tool.unavailable}
+          disabled={disableInternalTools || tool.unavailable}
+          onToggle={value => onInternalToolsConfigChange?.({ key: tool.name, value })}
+        />
+      ));
     }
 
     if (SEARCHABLE_KEYS.includes(openItem)) {
@@ -362,7 +341,6 @@ const PlusChatButton = memo(props => {
     onInternalToolsConfigChange,
     submenuMap,
     submenuConfigs,
-    styles,
   ]);
 
   return (
@@ -481,8 +459,9 @@ const PlusChatButton = memo(props => {
             elevation={8}
             sx={[
               styles.subPaper,
-              openItem === SUBMENU_KEYS.INTERNAL_TOOLS && styles.internalToolsPaper,
-              { height: mainHeight ? `${mainHeight}px` : 'auto' },
+              openItem === SUBMENU_KEYS.INTERNAL_TOOLS
+                ? styles.internalToolsPaper
+                : { height: mainHeight ? `${mainHeight}px` : 'auto' },
             ]}
             data-testid={`${openItem}-submenu`}
           >
@@ -599,34 +578,13 @@ const plusChatButtonStyles = theme => ({
     display: 'flex',
     flexDirection: 'column',
   },
+  // Modules grow to the window, not to the main menu's height
   internalToolsPaper: {
+    width: '26.25rem',
+    minHeight: 'auto',
+    maxHeight: 'calc(100vh - 1rem)',
     padding: '.5rem 0',
     overflowY: 'auto',
-  },
-  toolFormControlLabel: {
-    margin: 0,
-    width: '100%',
-    height: '2.75rem',
-    flexShrink: 0,
-    boxSizing: 'border-box',
-    display: 'flex',
-    padding: '.5rem 1rem',
-    gap: '.5rem',
-    justifyContent: 'space-between',
-    cursor: 'pointer',
-
-    '&:hover': {
-      backgroundColor: theme.palette.background.interactiveItem.hover,
-    },
-
-    '&:active': {
-      backgroundColor: theme.palette.components.tabGroupButton.background.active,
-    },
-
-    '& .MuiFormControlLabel-label': {
-      marginLeft: '.5rem',
-      whiteSpace: 'nowrap',
-    },
   },
   comingSoon: {
     color: theme.palette.text.disabled,

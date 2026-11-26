@@ -70,3 +70,12 @@ export const ChatMenuWithCounts = {
   name: 'Chat — the «+» menu with counts',
   play: open(),
 };
+
+// #7717 piece 5. «+» › Modules: a 420 px list, each module with its icon, name, description and switch; the whole row
+// toggles it. Planner and Ask User are on; Web Search is on in the chat but the platform has no search, so it is locked
+// with its reason. Concept: concepts-chat-2-plus-menu--modules-with-descriptions.
+export const Modules = {
+  ...chatScreen(`/chat/${FULL_CHAT_ID}`),
+  name: 'Chat — «+» › Modules with descriptions',
+  play: open('internal-tools-menuitem'),
+};
