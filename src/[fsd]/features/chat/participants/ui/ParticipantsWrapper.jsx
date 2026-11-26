@@ -24,7 +24,6 @@ const ParticipantsWrapper = memo(props => {
     onSelectParticipant,
     onChangeParticipantSettings,
     onEditParticipant,
-    setActiveConversation,
     selectedManager,
     newConversationSelectedManager,
   } = props;
@@ -63,13 +62,6 @@ const ParticipantsWrapper = memo(props => {
           onEditParticipant={onEditParticipant}
           disabledAdd={disabledAdd}
           editingToolkit={editingToolkit}
-          conversationId={
-            !activeConversation?.isNew && !activeConversation?.isPlayback ? activeConversation?.id : undefined
-          }
-          contextStrategy={activeConversation?.meta?.context_strategy || {}}
-          setActiveConversation={setActiveConversation}
-          conversationInstructions={activeConversation?.instructions || ''}
-          persona={activeConversation?.meta?.persona}
           newConversationSelectedManager={newConversationSelectedManager}
         />
       </ParticipantDetailsProvider>

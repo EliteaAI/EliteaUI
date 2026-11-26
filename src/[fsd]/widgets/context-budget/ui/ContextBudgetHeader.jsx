@@ -1,10 +1,9 @@
-import { memo, useCallback } from 'react';
+import { memo } from 'react';
 
 import { Box, Tooltip } from '@mui/material';
 
 import { Button, Text } from '@/[fsd]/shared/ui';
 import { CONTEXT_WINDOW_COPY, TOOLTIP_CONFIG } from '@/[fsd]/widgets/context-budget/lib/constants';
-import CollapseIcon from '@/assets/collapse-icon.svg?react';
 import EditIcon from '@/assets/edit.svg?react';
 import InfoIcon from '@/components/Icons/InfoIcon';
 
@@ -12,11 +11,8 @@ import InfoIcon from '@/components/Icons/InfoIcon';
  * Header section with title, info icon, and edit button
  */
 const ContextBudgetHeader = memo(props => {
-  const { onEdit, canEdit = true, onCollapse, toggleFocusRef } = props;
+  const { onEdit, canEdit = true } = props;
   const styles = contextBudgetHeaderStyles();
-  const onClick = useCallback(() => {
-    onCollapse?.(true);
-  }, [onCollapse]);
 
   return (
     <Box sx={styles.header}>
@@ -53,21 +49,6 @@ const ContextBudgetHeader = memo(props => {
           />
         </Box>
       </Tooltip>
-      {onCollapse && (
-        <Tooltip
-          title="Collapse context management"
-          placement={TOOLTIP_CONFIG.INFO.placement}
-        >
-          <Button.BaseBtn
-            ref={toggleFocusRef}
-            variant="tertiary"
-            startIcon={<CollapseIcon />}
-            onClick={onClick}
-            data-testid="context-budget-collapse-button"
-            aria-label="Collapse context management"
-          />
-        </Tooltip>
-      )}
     </Box>
   );
 });

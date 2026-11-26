@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material';
 
 import getDesignTokens from '@/MainTheme';
+import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
@@ -45,6 +46,9 @@ vi.mock('@/[fsd]/features/chat/ui/chat-input/SkillChatPanel.jsx', () => ({
 }));
 vi.mock('@/[fsd]/widgets/llm-model-selector', () => ({
   ChatModelButton: () => <span data-testid="chat-model-button" />,
+}));
+vi.mock('@/[fsd]/widgets/context-budget', () => ({
+  ContextBudgetUI: { ContextBudgetInfo: vi.fn(() => <span data-testid="context-budget-info" />) },
 }));
 vi.mock('@/[fsd]/features/interactive-tours', () => ({ CHAT_TOUR_TARGET_IDS: {} }));
 vi.mock('@/[fsd]/shared/lib/hooks', async importOriginal => ({
@@ -137,5 +141,47 @@ describe('NewChatInput placeholder', () => {
     fireEvent.focus(field);
 
     expect(field).toHaveAttribute('placeholder', 'Type your message...');
+  });
+});
+
+describe('NewChatInput context ring', () => {
+  beforeEach(() => vi.clearAllMocks());
+  afterEach(() => cleanup());
+
+  const ringProps = {
+    fromTheChat: true,
+    conversationId: 101,
+    showContextBudget: true,
+    contextStrategy: { context_window_mode: 'full' },
+    setActiveConversation: vi.fn(),
+    conversationInstructions: 'Be brief',
+    persona: 'generic',
+  };
+
+  it('puts the ring in the field, before the mic, with the chat values for its card', () => {
+    renderInput(ringProps);
+
+    const ring = screen.getByTestId('context-budget-info');
+    expect(within(below()).queryByTestId('context-budget-info')).not.toBeInTheDocument();
+    expect(ring.compareDocumentPosition(screen.getByTestId('voice-button'))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(ContextBudgetUI.ContextBudgetInfo.mock.calls[0][0]).toEqual({
+      conversationId: 101,
+      contextStrategy: ringProps.contextStrategy,
+      setActiveConversation: ringProps.setActiveConversation,
+      conversationInstructions: 'Be brief',
+      persona: 'generic',
+    });
+  });
+
+  it.each([
+    ['a new chat', { conversationId: undefined }],
+    ['a chat that is not saved', { showContextBudget: false }],
+    ['a test chat', { fromTheChat: false, isAgentsPage: true }],
+  ])('has no ring in %s', (_, props) => {
+    renderInput({ ...ringProps, ...props });
+
+    expect(screen.queryByTestId('context-budget-info')).not.toBeInTheDocument();
   });
 });

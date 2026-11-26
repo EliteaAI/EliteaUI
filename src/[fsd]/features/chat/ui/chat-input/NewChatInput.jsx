@@ -20,6 +20,7 @@ import AgentEditorPanel from '@/[fsd]/features/chat/ui/chat-input/AgentEditorPan
 import SkillChatPanel from '@/[fsd]/features/chat/ui/chat-input/SkillChatPanel.jsx';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
 import { ChatModelButton } from '@/[fsd]/widgets/llm-model-selector';
 import { ChatParticipantType } from '@/common/constants';
 
@@ -102,6 +103,13 @@ const NewChatInput = memo(
       onClearChat,
       disableClearChat = false,
       projectId,
+
+      // Context ring (the chat page's saved chat)
+      showContextBudget = false,
+      contextStrategy,
+      setActiveConversation,
+      conversationInstructions,
+      persona,
 
       // Participant management (for PlusChatButton submenus)
       onSelectParticipant,
@@ -306,6 +314,20 @@ const NewChatInput = memo(
                   )}
                 </Box>
                 <Box sx={styles.toolbarRight}>
+                  {fromTheChat && showContextBudget && conversationId && (
+                    <Box
+                      data-tour={CHAT_TOUR_TARGET_IDS.contextBudget}
+                      sx={styles.ring}
+                    >
+                      <ContextBudgetUI.ContextBudgetInfo
+                        conversationId={conversationId}
+                        contextStrategy={contextStrategy}
+                        setActiveConversation={setActiveConversation}
+                        conversationInstructions={conversationInstructions}
+                        persona={persona}
+                      />
+                    </Box>
+                  )}
                   <ChatButton.VoiceButton
                     ref={voiceButtonRef}
                     inputRef={userInputRef}
@@ -447,6 +469,11 @@ const newChatInputStyles = () => ({
     paddingRight: '.25rem',
     minWidth: 0,
     overflow: 'hidden',
+  },
+  ring: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    flexShrink: 0,
   },
   toolbar: {
     flex: 1,

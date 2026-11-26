@@ -6,35 +6,33 @@ import Tooltip from '@/ComponentsLib/Tooltip';
 
 import ContextBudgetPopover from './ContextBudgetPopover';
 
-const RING_SIZE = 30;
+const RING_SIZE = 26;
+
+const thousands = value => `${Math.round((value || 0) / 1000)}k`;
+
+const contextRingTitle = stats => {
+  const used = stats.utilizationPercentage;
+  const windowLabel = stats.windowMode === 'full' ? 'Full' : 'Balanced';
+  return [
+    `Context window · ${windowLabel}`,
+    `${used}% used (${Math.max(0, 100 - used)}% left)`,
+    `${thousands(stats.currentTokens)} / ${thousands(stats.maxTokens)} tokens used`,
+  ].join('\n');
+};
 
 /**
- * Collapsed participants panel: a circular budget indicator that opens the full budget card in a popover.
+ * Chat input: a circular budget indicator that opens the full budget card in a popover above it.
  */
 const ContextBudgetRing = memo(props => {
-  const { stats, utilizationColor, expandable, onCollapse, toggleFocusRef, ...popoverProps } = props;
+  const { stats, utilizationColor, isHighUtilization, ...popoverProps } = props;
 
   const anchorRef = useRef(null);
   const [open, setOpen] = useState(false);
-  const styles = contextBudgetRingStyles(utilizationColor);
+  const styles = contextBudgetRingStyles(isHighUtilization ? utilizationColor : null);
 
   const percentage = stats.utilizationPercentage;
-  const windowLabel = stats.windowMode === 'full' ? 'Full' : 'Balanced';
 
-  const setAnchorRef = useCallback(
-    node => {
-      anchorRef.current = node;
-      toggleFocusRef?.(node);
-    },
-    [toggleFocusRef],
-  );
-  const toggle = useCallback(() => {
-    if (!expandable) {
-      setOpen(prev => !prev);
-    } else {
-      onCollapse?.(false);
-    }
-  }, [expandable, onCollapse]);
+  const toggle = useCallback(() => setOpen(prev => !prev), []);
   const close = useCallback(() => setOpen(false), []);
 
   const handleKeyDown = useCallback(
@@ -52,20 +50,16 @@ const ContextBudgetRing = memo(props => {
   return (
     <>
       <Tooltip
-        title={
-          open
-            ? ''
-            : `${expandable ? 'Expand context management · ' : ''}Context ${percentage}% · ${windowLabel}`
-        }
-        placement="left"
+        title={open ? '' : <Box sx={styles.tooltip}>{contextRingTitle(stats)}</Box>}
+        placement="top"
       >
         <Box
-          ref={setAnchorRef}
+          ref={anchorRef}
           role="button"
           tabIndex={0}
-          aria-label={`${expandable ? 'Expand context management' : 'Context management'} ${percentage}%`}
-          aria-expanded={expandable ? false : open}
-          aria-haspopup={expandable ? undefined : 'dialog'}
+          aria-label={`Context ${percentage}% used`}
+          aria-expanded={open}
+          aria-haspopup="dialog"
           onClick={toggle}
           onKeyDown={handleKeyDown}
           sx={styles.ring}
@@ -80,10 +74,11 @@ const ContextBudgetRing = memo(props => {
           />
           <CircularProgress
             variant="determinate"
-            value={Math.min(percentage, 100)}
+            value={Math.min(Math.max(percentage, 2), 100)}
             size={`${RING_SIZE / 16}rem`}
             thickness={4}
             sx={styles.progress}
+            data-testid="context-budget-ring-progress"
           />
           <Typography
             variant="caption"
@@ -97,10 +92,11 @@ const ContextBudgetRing = memo(props => {
       <ContextBudgetPopover
         {...popoverProps}
         stats={stats}
+        isHighUtilization={isHighUtilization}
         anchorRef={anchorRef}
         open={open}
         onClose={close}
-        placement="left-end"
+        placement="top-end"
       />
     </>
   );
@@ -109,12 +105,13 @@ const ContextBudgetRing = memo(props => {
 ContextBudgetRing.displayName = 'ContextBudgetRing';
 
 /** @type {MuiSx} */
-const contextBudgetRingStyles = utilizationColor => ({
+const contextBudgetRingStyles = alertColor => ({
   ring: ({ palette }) => ({
     position: 'relative',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
     width: `${RING_SIZE / 16}rem`,
     height: `${RING_SIZE / 16}rem`,
     borderRadius: '50%',
@@ -128,15 +125,18 @@ const contextBudgetRingStyles = utilizationColor => ({
     position: 'absolute',
     color: palette.border.lines,
   }),
-  progress: {
+  progress: ({ palette }) => ({
     position: 'absolute',
-    color: utilizationColor,
-  },
+    color: alertColor || palette.icon.default,
+  }),
   percentage: ({ palette }) => ({
     fontSize: '0.625rem',
     lineHeight: '0.75rem',
     color: palette.text.secondary,
   }),
+  tooltip: {
+    whiteSpace: 'pre-line',
+  },
 });
 
 export default ContextBudgetRing;

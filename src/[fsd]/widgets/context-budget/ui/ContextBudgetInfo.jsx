@@ -14,27 +14,23 @@ import { useContextUtilization } from '../lib/hooks/useContextUtilization.hooks'
 import { useContextWindowSwitch } from '../lib/hooks/useContextWindowSwitch.hooks';
 import { getWindowModeTokens } from '../lib/utils';
 import ContextBudgetCompact from './ContextBudgetCompact';
-import ContextBudgetExpanded from './ContextBudgetExpanded';
 import ContextBudgetPill from './ContextBudgetPill';
 import ContextBudgetRing from './ContextBudgetRing';
 import ContextStrategyModal from './ContextStrategyModal';
 
 /**
- * Main context budget component - orchestrates data fetching and view selection
+ * Main context budget component - orchestrates data fetching and view selection:
+ * the ring (chat input, default), `pill` or `compact` (Agents / Pipelines test panels)
  */
 const ContextBudgetInfo = memo(props => {
   const {
     conversationId,
-    collapsed = false,
     compact = false,
     pill = false,
     contextStrategy = {},
     setActiveConversation,
     conversationInstructions,
     persona,
-    onCollapse,
-    expandable,
-    toggleFocusRef,
   } = props;
   const selectedProjectId = useSelectedProjectId();
   const { isOpen, handleOpen, handleClose } = useModal();
@@ -81,7 +77,7 @@ const ContextBudgetInfo = memo(props => {
   const summariesGenerated = context_analytics?.summaries_generated || 0;
   const windowMode = contextStrategy?.context_window_mode || window_mode || CONTEXT_WINDOW_MODES.BALANCED;
   // `compact` and `pill` are the Agents/Pipelines panels, whose model is not in currentChatModel;
-  // the ring is `collapsed`
+  // the ring (default) is the chat input
   const previewWindow =
     !compact && !pill && selectedModelWindow && selectedModelWindow !== model_window
       ? windowMode === CONTEXT_WINDOW_MODES.FULL
@@ -136,25 +132,6 @@ const ContextBudgetInfo = memo(props => {
     isSwitching,
   };
 
-  // Render appropriate view based on props
-  if (collapsed || pill) {
-    const TriggerView = pill ? ContextBudgetPill : ContextBudgetRing;
-    return (
-      <TriggerView
-        {...commonProps}
-        conversationId={conversationId}
-        contextStatus={contextStatus}
-        contextStrategy={contextStrategy}
-        setActiveConversation={setActiveConversation}
-        conversationInstructions={conversationInstructions}
-        persona={persona}
-        expandable={expandable}
-        onCollapse={onCollapse}
-        toggleFocusRef={toggleFocusRef}
-      />
-    );
-  }
-
   if (compact) {
     return (
       <>
@@ -177,16 +154,16 @@ const ContextBudgetInfo = memo(props => {
     );
   }
 
+  const TriggerView = pill ? ContextBudgetPill : ContextBudgetRing;
   return (
-    <ContextBudgetExpanded
+    <TriggerView
       {...commonProps}
       conversationId={conversationId}
+      contextStatus={contextStatus}
       contextStrategy={contextStrategy}
       setActiveConversation={setActiveConversation}
       conversationInstructions={conversationInstructions}
       persona={persona}
-      onCollapse={onCollapse}
-      toggleFocusRef={toggleFocusRef}
     />
   );
 });

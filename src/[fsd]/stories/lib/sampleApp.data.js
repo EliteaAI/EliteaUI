@@ -368,6 +368,9 @@ export const ROUTES = [
     },
   ],
   ['/chat_templates/', []],
+  // Settings › Users: the roles list is a plain array (the page maps it), the members a page of rows
+  ['/roles/', [{ name: 'system' }, { name: 'editor' }, { name: 'viewer' }]],
+  ['/users/', { rows: [{ ...USER, roles: ['system'], last_login: null }], total: 1 }],
 ];
 
 export const STATE = {
