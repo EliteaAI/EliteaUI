@@ -27,6 +27,8 @@ import { useRunHistoryFilters } from '../lib/hooks/useRunHistoryFilters.hooks';
 import RunHistoryFilters from './RunHistoryFilters';
 
 const DEFAULT_TAB = 'all';
+// The Schedule/Webhook filter is always drawn on an agent or pipeline (design), even before any schedule exists
+const SCHEDULE_ALWAYS_SHOWN = ['schedule'];
 // The mark for a cell with no value: a hyphen, the same on every page (set by the requester)
 const NO_VALUE = '-';
 
@@ -178,6 +180,8 @@ const RunHistoryPage = memo(props => {
             hasFilters={filters.hasFilters}
             onClear={filters.onClear}
             hasScheduleFilter={Boolean(scheduleEntityType)}
+            // The design draws Schedule/Webhook on every agent and pipeline, even with no schedule to pick
+            keepEmptyKeys={SCHEDULE_ALWAYS_SHOWN}
           />
         )}
         <RunHistoryContainer

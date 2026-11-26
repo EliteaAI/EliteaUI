@@ -427,7 +427,7 @@ describe('RunHistoryPage schedule filter and links', () => {
     expect(containerProps.current.queryParams).toEqual({});
   });
 
-  it('histories without schedules hide the Schedule filter but keep the Schedule/Webhook column', () => {
+  it('histories without schedules still draw the Schedule/Webhook filter, showing All (design)', () => {
     const { rows, webhookRows } = scheduleList;
     scheduleList.rows = [];
     scheduleList.webhookRows = [];
@@ -438,8 +438,8 @@ describe('RunHistoryPage schedule filter and links', () => {
       scheduleList.webhookRows = webhookRows;
     }
 
-    // No schedule to filter by: the filter is not drawn
-    expect(screen.queryByTestId('run-history-filter-schedule-button')).not.toBeInTheDocument();
+    // The design draws the Schedule/Webhook filter on every agent and pipeline, showing All with no schedule
+    expect(screen.getByTestId('run-history-filter-schedule-button')).toHaveTextContent('All');
     expect(screen.getByTestId('run-history-filter-status-button')).toBeInTheDocument();
     // The Schedule/Webhook column is always drawn for an agent; a row without a schedule shows a hyphen
     const scheduleColumn = containerProps.current.extraColumns.find(column => column.id === 'schedule');
