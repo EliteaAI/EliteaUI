@@ -75,6 +75,18 @@ describe('ContextBudgetRing', () => {
     expect(await screen.findByRole('tooltip')).toHaveTextContent('Context window · Full');
   });
 
+  it('shows «-» without a context limit', async () => {
+    renderRing({ stats: { ...baseStats, utilizationPercentage: 0, maxTokens: 0 } });
+
+    const ring = screen.getByTestId('context-budget-ring');
+    expect(ring).toHaveTextContent(/^-$/);
+    fireEvent.mouseOver(ring);
+
+    const tooltip = await screen.findByRole('tooltip');
+    expect(tooltip).toHaveTextContent('7k / - tokens used');
+    expect(tooltip).not.toHaveTextContent('% used');
+  });
+
   it('stays grey far from the limit and takes the alert colour near it', () => {
     renderRing();
     expect(progressColor()).not.toBe(ALERT_COLOR);

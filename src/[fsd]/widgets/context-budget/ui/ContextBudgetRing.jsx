@@ -3,6 +3,7 @@ import { memo, useCallback, useRef, useState } from 'react';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { CONTEXT_WINDOW_MODES } from '@/[fsd]/widgets/context-budget/lib/constants';
 
 import ContextBudgetPopover from './ContextBudgetPopover';
 
@@ -12,12 +13,15 @@ const thousands = value => `${Math.round((value || 0) / 1000)}k`;
 
 const contextRingTitle = stats => {
   const used = stats.utilizationPercentage;
-  const windowLabel = stats.windowMode === 'full' ? 'Full' : 'Balanced';
+  const hasLimit = stats.maxTokens !== 0;
+  const windowLabel = stats.windowMode === CONTEXT_WINDOW_MODES.FULL ? 'Full' : 'Balanced';
   return [
     `Context window · ${windowLabel}`,
-    `${used}% used (${Math.max(0, 100 - used)}% left)`,
-    `${thousands(stats.currentTokens)} / ${thousands(stats.maxTokens)} tokens used`,
-  ].join('\n');
+    hasLimit && `${used}% used (${Math.max(0, 100 - used)}% left)`,
+    `${thousands(stats.currentTokens)} / ${hasLimit ? thousands(stats.maxTokens) : '-'} tokens used`,
+  ]
+    .filter(Boolean)
+    .join('\n');
 };
 
 /**
@@ -31,6 +35,7 @@ const ContextBudgetRing = memo(props => {
   const styles = contextBudgetRingStyles(isHighUtilization ? utilizationColor : null);
 
   const percentage = stats.utilizationPercentage;
+  const hasLimit = stats.maxTokens !== 0;
 
   const toggle = useCallback(() => setOpen(prev => !prev), []);
   const close = useCallback(() => setOpen(false), []);
@@ -57,7 +62,7 @@ const ContextBudgetRing = memo(props => {
           ref={anchorRef}
           role="button"
           tabIndex={0}
-          aria-label={`Context ${percentage}% used`}
+          aria-label={hasLimit ? `Context ${percentage}% used` : 'Context usage'}
           aria-expanded={open}
           aria-haspopup="dialog"
           onClick={toggle}
@@ -84,7 +89,7 @@ const ContextBudgetRing = memo(props => {
             variant="caption"
             sx={styles.percentage}
           >
-            {percentage}
+            {hasLimit ? percentage : '-'}
           </Typography>
         </Box>
       </Tooltip>
