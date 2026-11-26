@@ -13,7 +13,6 @@ const TAG_EVAL_BINDING = 'EVAL_BINDING';
 const TAG_EVAL_DATASET = 'EVAL_DATASET';
 const TAG_EVAL_DATASET_CASE = 'EVAL_DATASET_CASE';
 const TAG_EVAL_AGENT_DEFAULT_DATASET = 'EVAL_AGENT_DEFAULT_DATASET';
-const TAG_EVAL_HISTORY_CONSENT = 'EVAL_HISTORY_CONSENT';
 export const TAG_EVAL_RUN = 'EVAL_RUN';
 const TAG_EVAL_RESULT = 'EVAL_RESULT';
 const TAG_EVAL_HUMAN_SCORE = 'EVAL_HUMAN_SCORE';
@@ -27,7 +26,6 @@ export const evaluationApi = eliteaApi
       TAG_EVAL_DATASET,
       TAG_EVAL_DATASET_CASE,
       TAG_EVAL_AGENT_DEFAULT_DATASET,
-      TAG_EVAL_HISTORY_CONSENT,
       TAG_EVAL_RUN,
       TAG_EVAL_RESULT,
       TAG_EVAL_HUMAN_SCORE,
@@ -251,22 +249,6 @@ export const evaluationApi = eliteaApi
           body: { dataset_id: datasetId ?? null },
         }),
         invalidatesTags: [TAG_EVAL_DATASET],
-      }),
-      // Whether the scheduled evaluation may score this project's agents from their stored chats.
-      evalHistoryConsent: build.query({
-        query: ({ projectId }) => ({
-          url: `/elitea_core/eval_history_consent/prompt_lib/${projectId}`,
-          method: 'GET',
-        }),
-        providesTags: [TAG_EVAL_HISTORY_CONSENT],
-      }),
-      setEvalHistoryConsent: build.mutation({
-        query: ({ projectId, consent }) => ({
-          url: `/elitea_core/eval_history_consent/prompt_lib/${projectId}`,
-          method: 'PUT',
-          body: { history_evaluation_consent: Boolean(consent) },
-        }),
-        invalidatesTags: [TAG_EVAL_HISTORY_CONSENT],
       }),
       // Deleting or unsharing the dataset clears it on the server, so those mutations refresh it too.
       // Saving it touches only the agent, so the dataset list and cases are left alone.
@@ -567,8 +549,6 @@ export const {
   useDeleteEvalDatasetMutation,
   useProjectDefaultEvalDatasetQuery,
   useSetProjectDefaultEvalDatasetMutation,
-  useEvalHistoryConsentQuery,
-  useSetEvalHistoryConsentMutation,
   useAgentDefaultEvalDatasetQuery,
   useSetAgentDefaultEvalDatasetMutation,
   useAddEvalDatasetCaseMutation,

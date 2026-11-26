@@ -2,13 +2,16 @@ import { memo, useCallback, useState } from 'react';
 
 import { Box, FormControlLabel, Typography } from '@mui/material';
 
+import {
+  useEvalHistoryConsentQuery,
+  useSetEvalHistoryConsentMutation,
+} from '@/[fsd]/features/settings/api/historyEvaluationConsentApi';
 import { useCanManageProjectSettings } from '@/[fsd]/features/settings/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Checkbox, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
-import { useEvalHistoryConsentQuery, useSetEvalHistoryConsentMutation } from '@/[fsd]/widgets/evaluation/api';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 

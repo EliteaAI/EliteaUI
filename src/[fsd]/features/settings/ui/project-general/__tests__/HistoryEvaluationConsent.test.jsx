@@ -21,7 +21,7 @@ const api = vi.hoisted(() => ({
   toastError: vi.fn(),
   refetch: vi.fn(),
 }));
-vi.mock('@/[fsd]/widgets/evaluation/api', () => ({
+vi.mock('@/[fsd]/features/settings/api/historyEvaluationConsentApi', () => ({
   useEvalHistoryConsentQuery: () => ({
     data: api.current,
     isError: api.currentError,

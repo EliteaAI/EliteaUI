@@ -127,7 +127,7 @@ const ProjectGeneralContent = memo(() => {
                 {
                   title: 'Schedules',
                   content: (
-                    <Box sx={styles.schedulesStyles}>
+                    <Box sx={styles.stackedStyles}>
                       <ScheduleNotificationsSection />
                       <RunWithoutAskingSetting />
                       <WebhookRunCapSetting />
@@ -146,7 +146,7 @@ const ProjectGeneralContent = memo(() => {
                 {
                   title: 'Evaluation',
                   content: (
-                    <Box sx={styles.evaluationStyles}>
+                    <Box sx={styles.stackedStyles}>
                       <EvaluationSettings />
                       <HistoryEvaluationConsent />
                     </Box>
@@ -219,12 +219,7 @@ const componentStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
   },
-  schedulesStyles: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-  },
-  evaluationStyles: {
+  stackedStyles: {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
