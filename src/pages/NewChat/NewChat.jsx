@@ -1336,7 +1336,7 @@ const NewChat = props => {
                 onClosePipelineEditor={handleClosePipelineEditor}
                 isEditorDirty={editorIsDirty}
                 onShowVersionChangeAlert={handleShowVersionChangeAlert}
-                inputPlaceholder={skillComposerPlaceholder(activeParticipant, 'Type your message...')}
+                inputPlaceholder={skillComposerPlaceholder(activeParticipant, '')}
                 uploadAttachments={uploadAttachments}
                 isUploadingAttachments={isUploadingAttachments}
                 uploadProgress={uploadProgress}

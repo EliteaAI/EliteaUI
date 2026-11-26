@@ -1,8 +1,18 @@
-import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import {
+  forwardRef,
+  memo,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { Box, useTheme } from '@mui/material';
 
 import UserInput from '@/ComponentsLib/Chat/UserInput';
+import { getChatInputPlaceholder } from '@/[fsd]/features/chat/lib/helpers';
 import { useChatConfig, useSpeakingModeLoop } from '@/[fsd]/features/chat/lib/hooks';
 import { ChatButton } from '@/[fsd]/features/chat/ui';
 import { PlusChatButton } from '@/[fsd]/features/chat/ui/chat-button';
@@ -118,6 +128,11 @@ const NewChatInput = memo(
     const userInputRef = useRef(null);
     const voiceButtonRef = useRef(null);
     const [isRecording, setIsRecording] = useState(false);
+
+    const inputPlaceholder = useMemo(() => {
+      if (!fromTheChat) return placeholder;
+      return getChatInputPlaceholder({ placeholder, activeParticipant, activeParticipantDetails });
+    }, [fromTheChat, placeholder, activeParticipant, activeParticipantDetails]);
 
     const {
       isRecording: isSpeakingModeRecording,
@@ -362,7 +377,7 @@ const NewChatInput = memo(
             onDrop,
           },
           input: {
-            placeholder: isRecording || isSpeakingMode ? 'Speak your message' : placeholder,
+            placeholder: isRecording || isSpeakingMode ? 'Speak your message' : inputPlaceholder,
             color: theme.palette.text.secondary,
             iconColor: theme.palette.icon.default,
           },
