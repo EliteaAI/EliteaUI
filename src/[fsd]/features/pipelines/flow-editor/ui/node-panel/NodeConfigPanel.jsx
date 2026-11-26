@@ -6,7 +6,7 @@ import {
   FlowEditorConstants,
   NodePanelConstants,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { NodeHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { NodeHelpers, NodeYamlHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { FlowEditorContext, NodeConfigPanelContext } from '@/[fsd]/shared/lib/context';
 
 import NodeConfigFooter from './NodeConfigFooter';
@@ -29,6 +29,10 @@ const NodeConfigPanel = memo(props => {
 
   const { id, type, data } = flowNode;
   const isEntrypoint = yamlJsonObject?.entry_point === id;
+  const yamlNode = useMemo(
+    () => NodeYamlHelpers.findYamlNode(yamlJsonObject?.nodes, id),
+    [yamlJsonObject?.nodes, id],
+  );
   const isDeprecated = NodeHelpers.isDeprecatedNodeType(type);
   // Types without a Basic/Advanced split show all of their current fields in Basic
   const isLegacyDecision =
@@ -114,15 +118,17 @@ const NodeConfigPanel = memo(props => {
           </>
         )}
       </Box>
-      {!isReadOnly && (
-        <NodeConfigFooter
-          id={id}
-          type={type}
-          isEntrypoint={isEntrypoint}
-          canMakeEntrypoint={!isDeprecated}
-          canDuplicate={!isDeprecated && !isLegacyDecision}
-        />
-      )}
+      {/* Read-only keeps the footer for the disabled AI button and its reason; the other actions are hidden */}
+      <NodeConfigFooter
+        id={id}
+        type={type}
+        yamlNode={yamlNode}
+        NodeComponent={NodeComponent}
+        isReadOnly={isReadOnly}
+        isEntrypoint={isEntrypoint}
+        canMakeEntrypoint={!isDeprecated}
+        canDuplicate={!isDeprecated && !isLegacyDecision}
+      />
     </Box>
   );
 });

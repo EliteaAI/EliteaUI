@@ -32,7 +32,19 @@ vi.mock('@/[fsd]/features/pipelines/yaml-editor/ui', () => ({
   ),
 }));
 
+vi.mock('@/[fsd]/features/pipelines/node-ai-draft/ui/NodeAiDraftModal', () => ({
+  default: props =>
+    props.open ? (
+      <div
+        data-testid="node-ai-modal-stub"
+        data-mode={props.mode}
+      />
+    ) : null,
+}));
+
 const { PipelineNodeTypes } = FlowEditorConstants;
+
+const MODEL_VALUES = { version_details: { tools: [], llm_settings: { model_name: 'gpt-5-mini' } } };
 
 const theme = createTheme({ palette: darkPalette });
 
@@ -53,6 +65,7 @@ const NodeFieldsStub = props => {
 const renderPanel = ({
   flowNode = { id: 'router_1', type: PipelineNodeTypes.Router, data: {} },
   context,
+  formikValues = { version_details: { tools: [] } },
 } = {}) => {
   const contextValue = {
     yamlJsonObject: {
@@ -76,7 +89,7 @@ const renderPanel = ({
   render(
     <ThemeProvider theme={theme}>
       <Formik
-        initialValues={{ version_details: { tools: [] } }}
+        initialValues={formikValues}
         onSubmit={vi.fn()}
       >
         <FlowEditorContext.Provider value={contextValue}>
@@ -204,14 +217,59 @@ describe('NodeConfigPanel', () => {
     expect(contextValue.handleDuplicateNode).toHaveBeenCalledWith('router_1', []);
   });
 
-  it('shows Build with AI as disabled with a Coming soon tooltip', async () => {
-    renderPanel();
+  it('enables Build with AI for an empty node when the version has a model', async () => {
+    renderPanel({ formikValues: MODEL_VALUES });
     const button = screen.getByTestId('pipeline-node-panel-build-with-ai');
 
     expect(button).toHaveAttribute('aria-label', 'Build with AI');
+    expect(button).toBeEnabled();
+    fireEvent.mouseOver(button);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Build with AI');
+    expect(screen.queryByText('Coming soon')).toBeNull();
+  });
+
+  it('shows Edit with AI for a configured node', () => {
+    renderPanel({
+      formikValues: MODEL_VALUES,
+      context: {
+        yamlJsonObject: {
+          entry_point: 'router_1',
+          nodes: [{ id: 'router_1', type: PipelineNodeTypes.Router, routes: ['END'], condition: '' }],
+        },
+      },
+    });
+
+    expect(screen.getByTestId('pipeline-node-panel-build-with-ai')).toHaveAttribute(
+      'aria-label',
+      'Edit with AI',
+    );
+  });
+
+  it('opens the node AI modal on click', () => {
+    renderPanel({ formikValues: MODEL_VALUES });
+    fireEvent.click(screen.getByTestId('pipeline-node-panel-build-with-ai'));
+
+    expect(screen.getByTestId('node-ai-modal-stub')).toHaveAttribute('data-mode', 'build');
+  });
+
+  it('disables the AI button without a model', async () => {
+    renderPanel();
+    const button = screen.getByTestId('pipeline-node-panel-build-with-ai');
+
     expect(button).toBeDisabled();
     fireEvent.mouseOver(button.parentElement);
-    expect(await screen.findByRole('tooltip')).toHaveTextContent('Coming soon');
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'Select a model for this pipeline to use AI',
+    );
+  });
+
+  it('hides the AI button for deprecated node types', () => {
+    renderPanel({
+      flowNode: { id: 'loop_1', type: PipelineNodeTypes.Loop, data: {} },
+      formikValues: MODEL_VALUES,
+    });
+
+    expect(screen.queryByTestId('pipeline-node-panel-build-with-ai')).toBeNull();
   });
 
   it.each([
@@ -235,15 +293,25 @@ describe('NodeConfigPanel', () => {
     expect(contextValue.handleDuplicateNode).not.toHaveBeenCalled();
   });
 
-  it('hides the footer and disables the name in read-only mode and while running', () => {
-    renderPanel({ context: { disabled: true } });
-    expect(screen.queryByTestId('pipeline-node-panel-footer')).toBeNull();
-    expect(screen.getByTestId('pipeline-node-panel-name-input')).toBeDisabled();
+  it.each([
+    ['read-only mode', { context: { disabled: true } }, "You can't edit this pipeline"],
+    ['a running pipeline', { context: { isRunningPipeline: true } }, 'Wait for the run to finish'],
+    [
+      'a published version',
+      { formikValues: { version_details: { ...MODEL_VALUES.version_details, status: 'published' } } },
+      "This version can't be edited",
+    ],
+  ])('keeps only a disabled AI button in %s', async (_label, options, tooltip) => {
+    renderPanel({ formikValues: MODEL_VALUES, ...options });
+    const button = screen.getByTestId('pipeline-node-panel-build-with-ai');
 
-    cleanup();
-    renderPanel({ context: { isRunningPipeline: true } });
-    expect(screen.queryByTestId('pipeline-node-panel-footer')).toBeNull();
-    expect(screen.queryByTestId('pipeline-node-panel-duplicate')).toBeNull();
+    expect(button).toBeDisabled();
+    fireEvent.mouseOver(button.parentElement);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(tooltip);
+    if (options.context) {
+      expect(screen.queryByTestId('pipeline-node-panel-duplicate')).toBeNull();
+      expect(screen.getByTestId('pipeline-node-panel-name-input')).toBeDisabled();
+    }
   });
 
   it('renames on blur and reports the new id', () => {

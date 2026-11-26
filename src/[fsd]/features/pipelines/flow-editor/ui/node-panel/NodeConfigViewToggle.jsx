@@ -9,8 +9,11 @@ import FormIcon from '@/assets/form-icon.svg?react';
 
 const { NODE_CONFIG_VIEWS } = NodePanelConstants;
 
+const PANEL_TEST_IDS = { flow: 'pipeline-node-panel-view-flow', yaml: 'pipeline-node-panel-view-yaml' };
+
 const NodeConfigViewToggle = memo(props => {
-  const { value = NODE_CONFIG_VIEWS.flow, onChange } = props;
+  // The node AI modal reuses the toggle with its own test ids
+  const { value = NODE_CONFIG_VIEWS.flow, onChange, testIds = PANEL_TEST_IDS } = props;
 
   const viewButtons = useMemo(
     () => [
@@ -18,16 +21,16 @@ const NodeConfigViewToggle = memo(props => {
         value: NODE_CONFIG_VIEWS.flow,
         icon: <FormIcon fill="currentColor" />,
         tooltip: 'Flow view',
-        buttonProps: { 'data-testid': 'pipeline-node-panel-view-flow', 'aria-label': 'Flow view' },
+        buttonProps: { 'data-testid': testIds.flow, 'aria-label': 'Flow view' },
       },
       {
         value: NODE_CONFIG_VIEWS.yaml,
         icon: <CodeIcon fill="currentColor" />,
         tooltip: 'YAML view',
-        buttonProps: { 'data-testid': 'pipeline-node-panel-view-yaml', 'aria-label': 'YAML view' },
+        buttonProps: { 'data-testid': testIds.yaml, 'aria-label': 'YAML view' },
       },
     ],
-    [],
+    [testIds],
   );
 
   const handleChange = useCallback(
