@@ -4,11 +4,11 @@ import { Box, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { useNodeToolNames } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
+import { NodeAiButton } from '@/[fsd]/features/pipelines/node-ai-draft';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import SparkleIcon from '@/assets/ai-sparkle-icon.svg?react';
 import DuplicateNodeIcon from '@/assets/duplicate-node-icon.svg?react';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 
@@ -23,6 +23,9 @@ const NodeConfigFooter = memo(props => {
     isEntrypoint,
     canMakeEntrypoint: canMakeEntrypointProp = true,
     canDuplicate = true,
+    yamlNode,
+    NodeComponent,
+    isReadOnly = false,
   } = props;
   const { setYamlJsonObject, handleDeleteNode, handleDuplicateNode } = useContext(FlowEditorContext);
   const { toastSuccess } = useToast();
@@ -53,7 +56,7 @@ const NodeConfigFooter = memo(props => {
       data-testid="pipeline-node-panel-footer"
     >
       <Box>
-        {isEntrypoint && (
+        {!isReadOnly && isEntrypoint && (
           <Box
             sx={styles.entrypointState}
             data-testid="pipeline-node-panel-entrypoint-state"
@@ -66,7 +69,7 @@ const NodeConfigFooter = memo(props => {
             </Typography>
           </Box>
         )}
-        {!isEntrypoint && canBeEntrypoint && (
+        {!isReadOnly && !isEntrypoint && canBeEntrypoint && (
           <Button.BaseBtn
             variant={BUTTON_VARIANTS.secondary}
             onClick={onMakeEntrypoint}
@@ -77,22 +80,11 @@ const NodeConfigFooter = memo(props => {
         )}
       </Box>
       <Box sx={styles.actions}>
-        <Tooltip
-          title="Coming soon"
-          placement="top"
-        >
-          <Box component="span">
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.special}
-              startIcon={<SparkleIcon />}
-              disabled
-              sx={styles.buildWithAi}
-              aria-label="Build with AI"
-              data-testid="pipeline-node-panel-build-with-ai"
-            />
-          </Box>
-        </Tooltip>
-        {handleDuplicateNode && (
+        <NodeAiButton
+          yamlNode={yamlNode}
+          NodeComponent={NodeComponent}
+        />
+        {!isReadOnly && handleDuplicateNode && (
           <Tooltip
             title={canDuplicate ? 'Duplicate node' : DEPRECATED_DUPLICATE_TOOLTIP}
             placement="top"
@@ -116,25 +108,27 @@ const NodeConfigFooter = memo(props => {
             </Box>
           </Tooltip>
         )}
-        <Tooltip
-          title="Delete"
-          placement="top"
-        >
-          <Box component="span">
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.secondary}
-              startIcon={
-                <DeleteIcon
-                  sx={styles.icon}
-                  fill={palette.icon.secondary}
-                />
-              }
-              onClick={onDelete}
-              aria-label="Delete node"
-              data-testid="pipeline-node-panel-delete"
-            />
-          </Box>
-        </Tooltip>
+        {!isReadOnly && (
+          <Tooltip
+            title="Delete"
+            placement="top"
+          >
+            <Box component="span">
+              <Button.BaseBtn
+                variant={BUTTON_VARIANTS.secondary}
+                startIcon={
+                  <DeleteIcon
+                    sx={styles.icon}
+                    fill={palette.icon.secondary}
+                  />
+                }
+                onClick={onDelete}
+                aria-label="Delete node"
+                data-testid="pipeline-node-panel-delete"
+              />
+            </Box>
+          </Tooltip>
+        )}
       </Box>
     </Box>
   );
@@ -170,13 +164,6 @@ const nodeConfigFooterStyles = () => ({
   icon: {
     fontSize: '1rem',
   },
-  // Disabled until the feature ships, but keeps the Build with AI look
-  buildWithAi: ({ palette }) => ({
-    '&.Mui-disabled': {
-      backgroundColor: palette.components.button.background.split.default,
-      color: palette.components.split.text.default,
-    },
-  }),
   // SVGR icons don't take sx: the wrapper sizes the 14px glyph in a 16px box and colours it
   duplicateIcon:
     isEnabled =>
