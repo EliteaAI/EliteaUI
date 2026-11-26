@@ -1,63 +1,103 @@
 import { memo } from 'react';
 
-import { Box, Tooltip } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
+import { Select } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
-import { SingleSelect } from '@/[fsd]/shared/ui/select';
 
-import { RUN_RECORD_FILTERS_HINT } from '../lib/constants/runHistoryFilters.constants';
+import { ALL_OPTION_VALUE } from '../lib/constants/runHistoryFilters.constants';
+import StatusOptionLabel from './StatusOptionLabel';
 
-// The order and the inline "Label: All" form of the Run History mockup
-const FILTERS = [
-  { key: 'trigger', label: 'Trigger Type' },
-  { key: 'status', label: 'Status' },
-  { key: 'version', label: 'Version' },
-  { key: 'schedule', label: 'Schedule/Webhook' },
-];
+const VERSION_SEARCH_THRESHOLD = 10;
+const SEARCH_THRESHOLD_BY_FILTER = { version: VERSION_SEARCH_THRESHOLD };
+
+const FILTER_LABELS = {
+  event: 'Event',
+  schedule: 'Schedule/Webhook',
+  index: 'Index',
+  status: 'Status',
+  complexity: 'Complexity',
+  version: 'Version',
+};
+
+const ALL_ROW = { label: 'All', value: ALL_OPTION_VALUE };
+
+const summaryOf = (values, options) => {
+  if (!values.length) return 'All';
+  if (values.length === 1) return options.find(option => option.value === values[0])?.label ?? values[0];
+
+  return `${values.length} selected`;
+};
 
 const RunHistoryFilters = memo(props => {
-  const { values, options, handlers, disabledFilters = [], hasFilters, onClear, hasScheduleFilter } = props;
+  const { filterKeys, values, options, handlers, hasFilters, onClear, keepEmptyKeys = [] } = props;
   const styles = runHistoryFiltersStyles();
+
+  // A filter with no options is hidden unless the caller keeps it
+  const visible = filterKeys.filter(
+    key => FILTER_LABELS[key] && (keepEmptyKeys.includes(key) || (options[key] ?? []).length > 0),
+  );
 
   return (
     <Box
       sx={styles.bar}
       data-testid="run-history-filters"
     >
-      {FILTERS.filter(({ key }) => key !== 'schedule' || hasScheduleFilter).map(({ key, label }) => {
-        const disabled = disabledFilters.includes(key);
+      {visible.map(key => {
+        const label = FILTER_LABELS[key];
+        const selected = values[key] ?? [];
+        const filterOptions = options[key] ?? [];
+        const searchable = filterOptions.length > (SEARCH_THRESHOLD_BY_FILTER[key] ?? Infinity);
+
         return (
-          <Tooltip
+          <Box
             key={key}
-            title={disabled ? RUN_RECORD_FILTERS_HINT : ''}
-            placement="top"
+            data-testid={`run-history-filter-${key}`}
           >
-            <Box
-              sx={styles.select}
-              data-testid={`run-history-filter-${key}`}
-            >
-              <SingleSelect
-                separateLabel
-                label={label}
-                labelSX={styles.label}
-                options={options[key]}
-                value={values[key]}
-                onValueChange={handlers[key]}
-                disabled={disabled}
-                // The empty value is "All": show its label instead of a blank select
-                displayEmpty
-                showEmptyPlaceholder={false}
-                inputProps={{ 'aria-label': label }}
-              />
-            </Box>
-          </Tooltip>
+            <Select.SingleSelect
+              separateLabel
+              multiple
+              showBorder
+              displayEmpty
+              showEmptyPlaceholder={false}
+              label={`${label}: `}
+              options={[ALL_ROW, ...filterOptions].map(option => ({
+                ...option,
+                testId: `run-history-filter-${key}-option-${option.value || 'all'}-checkbox`,
+              }))}
+              customRenderOption={option => (
+                <StatusOptionLabel
+                  label={option.label}
+                  color={option.color}
+                />
+              )}
+              value={selected}
+              onValueChange={next => {
+                // Ticking All clears the other ticks
+                const ticked =
+                  next.includes(ALL_OPTION_VALUE) && !selected.includes(ALL_OPTION_VALUE) ? [] : next;
+                handlers[key](ticked.filter(item => item !== ALL_OPTION_VALUE));
+              }}
+              customRenderValue={() => (
+                <Typography
+                  variant="bodyMedium"
+                  data-testid={`run-history-filter-${key}-button`}
+                >
+                  {summaryOf(selected, filterOptions)}
+                </Typography>
+              )}
+              withSearch={searchable}
+              searchPlaceholder="Search"
+              data-testid={`run-history-filter-${key}-select`}
+            />
+          </Box>
         );
       })}
       {hasFilters && (
         <BaseBtn
           variant={BUTTON_VARIANTS.text}
           onClick={onClear}
-          data-testid="run-history-filters-clear"
+          data-testid="run-history-clear-filters-button"
         >
           Clear filters
         </BaseBtn>
@@ -77,10 +117,6 @@ const runHistoryFiltersStyles = () => ({
     gap: '2rem',
     padding: '0 0.5rem',
   },
-  // Each filter is as wide as its text, so the bar reads as one line
-  select: { minWidth: 0 },
-  // the inline "Label: All" form
-  label: { '&::after': { content: '":"' } },
 });
 
 export default RunHistoryFilters;

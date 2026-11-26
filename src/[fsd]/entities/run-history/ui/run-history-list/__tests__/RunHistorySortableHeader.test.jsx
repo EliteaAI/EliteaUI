@@ -8,6 +8,13 @@ import { cleanup, render, screen } from '@testing-library/react';
 
 import RunHistorySortableHeader from '../RunHistorySortableHeader';
 
+// The shared EllipsisTypography measures its text with ResizeObserver, which jsdom does not provide
+globalThis.ResizeObserver ??= class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
 afterEach(cleanup);
 
 const theme = createTheme({

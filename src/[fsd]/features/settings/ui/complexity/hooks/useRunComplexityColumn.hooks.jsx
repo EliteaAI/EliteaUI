@@ -20,6 +20,8 @@ const CHUNK_SIZE = 20;
 // Run History has no date filter, so labels cover the retention window of scored runs
 const LOOKBACK_DAYS = 400;
 
+const COMPLEXITY_LABEL_ORDER = ['L', 'M', 'H', 'X'];
+
 // Same muted italic as "Not enough runs" on the version table
 const unscoredSx = ({ palette }) => ({
   color: palette.text.metrics || palette.text.disabled,
@@ -77,9 +79,15 @@ export const useRunComplexityColumn = ({ entityId, rows }) => {
     return {
       id: 'complexity',
       // Short header so the chip column stays narrow; the full name shows on hover
-      label: 'CU',
+      label: 'Complexity',
       title: 'Complexity',
       width: '5.5rem',
+      // Unscored runs sort last
+      sortValue: row => {
+        const run = byConversation.get(row.uuid);
+        const index = COMPLEXITY_LABEL_ORDER.indexOf(run?.label);
+        return index === -1 ? COMPLEXITY_LABEL_ORDER.length : index;
+      },
       render: row => {
         const run = byConversation.get(row.uuid);
         const state = ComplexityHelpers.runScoreState(
@@ -99,7 +107,7 @@ export const useRunComplexityColumn = ({ entityId, rows }) => {
                 sx={unscoredSx}
                 data-testid={pending ? 'run-complexity-pending' : 'run-complexity-not-scored'}
               >
-                {pending ? 'Pending' : '—'}
+                {pending ? 'Pending' : '-'}
               </Typography>
             </Tooltip>
           );

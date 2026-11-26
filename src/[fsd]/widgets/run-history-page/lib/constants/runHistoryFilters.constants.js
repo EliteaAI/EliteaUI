@@ -1,22 +1,27 @@
 export const ALL_OPTION_VALUE = '';
 export const NO_QUERY_PARAMS = {};
 
+// `run_outcome` is a row's derived status; the API's `status` is the schedule run record's
 export const FILTER_PARAMS = {
   schedule: 'schedule_id',
-  status: 'status',
+  run_outcome: 'run_outcome',
   trigger: 'trigger',
   version: 'version_id',
+  tool: 'tool_name',
+  complexity: 'complexity',
 };
 
-// The values the Run History list API accepts; any other value in the URL is ignored
-export const STATUS_VALUES = ['running', 'waiting_for_approval', 'success', 'failed', 'skipped', 'blocked'];
+export const COMPLEXITY_OPTIONS = [
+  { label: 'Low', value: 'L', color: 'success.main' },
+  { label: 'Medium', value: 'M', color: 'info.main' },
+  { label: 'High', value: 'H', color: 'warning.main' },
+  { label: 'Extreme', value: 'X', color: 'error.main' },
+  { label: 'Not scored yet', value: 'not_scored', color: 'text.secondary' },
+];
+export const COMPLEXITY_VALUES = COMPLEXITY_OPTIONS.map(option => option.value);
 
 // The list API param of an execution type: runs without a run record are told apart by the chat's own type
 export const EXECUTION_TYPE_PARAM = 'execution_type';
-
-// The filters read from the run record: an execution type run has none, so they never match it
-export const RUN_RECORD_FILTERS = ['schedule', 'status', 'version'];
-export const RUN_RECORD_FILTERS_HINT = 'Chat, API and MCP runs have no run record to filter by';
 
 // One `trigger` value in the URL; `param` is the list API param it is sent as
 export const TRIGGER_OPTIONS = [

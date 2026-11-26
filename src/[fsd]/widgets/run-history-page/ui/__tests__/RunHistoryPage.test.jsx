@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { useState } from 'react';
+
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -26,6 +28,9 @@ const containerProps = vi.hoisted(() => ({ current: null }));
 
 vi.mock('@/[fsd]/entities/run-history', async () => ({
   ...(await vi.importActual('@/[fsd]/entities/run-history/lib/helpers')),
+  // The real status cell, so the Status column is drawn as it is in the app
+  RunStatusCell: (await vi.importActual('@/[fsd]/entities/run-history/ui/run-history-list/RunStatusCell'))
+    .default,
   RunHistoryContainer: props => {
     containerProps.current = props;
     return (
@@ -38,8 +43,10 @@ vi.mock('@/[fsd]/entities/run-history', async () => ({
 }));
 
 vi.mock('@/[fsd]/features/chat', () => ({ ChatMessageList: () => null }));
+const complexitySwitch = vi.hoisted(() => ({ on: false }));
 vi.mock('@/[fsd]/features/settings/ui/complexity', () => ({
-  useRunComplexityColumn: () => null,
+  useRunComplexityColumn: () =>
+    complexitySwitch.on ? { id: 'complexity', label: 'Complexity', render: () => null } : null,
 }));
 vi.mock('@/[fsd]/features/schedule', () => ({
   ScheduleRunStatusChip: ({ status }) => <span data-testid="status-chip">{status}</span>,
@@ -78,26 +85,64 @@ vi.mock('@/[fsd]/shared/ui/button', () => ({
   BaseBtn: ({ children, ...rest }) => <button {...rest}>{children}</button>,
 }));
 
-vi.mock('@/[fsd]/shared/ui/select', () => ({
-  SingleSelect: ({ label, options, value, onValueChange, displayEmpty, disabled }) => (
-    <select
-      data-display-empty={String(Boolean(displayEmpty))}
-      aria-label={label}
-      disabled={disabled}
-      value={value}
-      onChange={event => onValueChange(event.target.value)}
-    >
-      {options.map(option => (
-        <option
-          key={option.value}
-          value={option.value}
-        >
-          {option.label}
-        </option>
-      ))}
-    </select>
-  ),
+// The shared multi-select, as the filter uses it: the closed button shows the summary, the menu lists the options
+// (each with its test id), a tick reports the whole array, and the search field appears only when asked for
+vi.mock('@/[fsd]/shared/ui', async () => ({
+  // The real status dot, which the Status column and filter draw with
+  StatusDot: (await vi.importActual('@/[fsd]/shared/ui/status-dot/StatusDot')).default,
+  Select: {
+    SingleSelect: ({
+      options,
+      value,
+      onValueChange,
+      customRenderValue,
+      withSearch,
+      label,
+      'data-testid': testId,
+    }) => {
+      const [open, setOpen] = useState(false);
+      return (
+        <div data-testid={testId}>
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+          >
+            {customRenderValue(value)}
+          </button>
+          {open && (
+            <div role="listbox">
+              {withSearch && <input aria-label={`Search ${label}`} />}
+              {options.map(option => {
+                const checked = value.includes(option.value);
+                return (
+                  <label key={option.value}>
+                    <input
+                      type="checkbox"
+                      data-testid={option.testId}
+                      checked={checked}
+                      onChange={() =>
+                        onValueChange(
+                          checked ? value.filter(v => v !== option.value) : [...value, option.value],
+                        )
+                      }
+                    />
+                    {option.label}
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
 }));
+
+// Opens a filter's dropdown by its visible name, then ticks or unticks options by their label text
+const openFilter = name => fireEvent.click(screen.getByTestId(`run-history-filter-${name}-button`));
+const tickFilterOption = (filterName, optionValue) =>
+  fireEvent.click(screen.getByTestId(`run-history-filter-${filterName}-option-${optionValue}-checkbox`));
+const filterSummary = name => screen.getByTestId(`run-history-filter-${name}-button`).textContent;
 
 const AnalyticsProbe = () => {
   const { pathname, search } = useLocation();
@@ -178,14 +223,15 @@ describe('RunHistoryPage execution type column', () => {
 describe('RunHistoryPage schedule filter and links', () => {
   afterEach(() => cleanup());
 
-  it('?schedule_id=4 sends schedule_id to the list and preselects the filter', () => {
+  it('?schedule_id=4 sends schedule_id to the list and shows the filter summary', () => {
     renderAt('/agents/all/127/history?schedule_id=4', { scheduleEntityType: 'agent' });
 
     expect(scheduleList.args).toMatchObject({ entityType: 'agent', entityId: '127', skip: false });
-    expect(containerProps.current.queryParams).toEqual({ schedule_id: 4 });
-    expect(screen.getByLabelText('Schedule/Webhook')).toHaveValue('4');
+    expect(containerProps.current.queryParams).toEqual({ schedule_id: '4' });
+    expect(filterSummary('schedule')).toContain('Daily digest');
 
-    fireEvent.change(screen.getByLabelText('Schedule/Webhook'), { target: { value: '' } });
+    openFilter('schedule');
+    tickFilterOption('schedule', '4');
     expect(containerProps.current.queryParams).toEqual({});
   });
 
@@ -252,64 +298,76 @@ describe('RunHistoryPage schedule filter and links', () => {
   it('ignores a schedule_id that is not a number, and keeps an unknown valid id as an option', () => {
     renderAt('/agents/all/127/history?schedule_id=abc', { scheduleEntityType: 'agent' });
     expect(containerProps.current.queryParams).toEqual({});
-    expect(screen.getByLabelText('Schedule/Webhook')).toHaveValue('');
+    expect(filterSummary('schedule')).toContain('All');
     cleanup();
 
     renderAt('/agents/all/127/history?schedule_id=55', { scheduleEntityType: 'agent' });
-    expect(containerProps.current.queryParams).toEqual({ schedule_id: 55 });
-    expect(screen.getByLabelText('Schedule/Webhook')).toHaveValue('55');
-    expect(screen.getByRole('option', { name: 'Schedule 55' })).toBeInTheDocument();
+    expect(containerProps.current.queryParams).toEqual({ schedule_id: '55' });
+    openFilter('schedule');
+    expect(screen.getByTestId('run-history-filter-schedule-option-55-checkbox')).toBeChecked();
   });
 
-  it('shows "All" as the value when no schedule is chosen', () => {
+  it('shows "All" as the summary when nothing is ticked', () => {
     renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
 
-    const select = screen.getByLabelText('Schedule/Webhook');
-    expect(select).toHaveValue('');
-    expect(select).toHaveAttribute('data-display-empty', 'true');
-    // the label sits above the shown "All", not on top of it
-    expect(screen.queryByRole('option', { name: 'All schedules' })).not.toBeInTheDocument();
+    expect(filterSummary('schedule')).toContain('All');
   });
 
-  it('sends status, trigger type and version together with the schedule', () => {
-    renderAt('/agents/all/127/history?schedule_id=4&status=failed&trigger=test&version_id=9', {
+  it('sends status, event and version together, each as a comma list when several are ticked', () => {
+    renderAt('/agents/all/127/history?schedule_id=4&run_outcome=failed,skipped&trigger=test&version_id=9', {
       scheduleEntityType: 'agent',
     });
 
     expect(containerProps.current.queryParams).toEqual({
-      schedule_id: 4,
-      status: 'failed',
+      schedule_id: '4',
+      run_outcome: 'failed,skipped',
       trigger: 'test',
-      version_id: 9,
+      version_id: '9',
     });
-    expect(screen.getByLabelText('Status')).toHaveValue('failed');
-    expect(screen.getByLabelText('Trigger Type')).toHaveValue('test');
+    expect(filterSummary('status')).toContain('2 selected');
+    expect(filterSummary('event')).toContain('Test');
   });
 
-  it('changing a filter updates the list params and Clear filters resets all of them', () => {
+  it('ticking two statuses writes both to the URL, and Clear filters resets every filter', () => {
     renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
-    expect(screen.queryByTestId('run-history-filters-clear')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('run-history-clear-filters-button')).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'success' } });
-    fireEvent.change(screen.getByLabelText('Trigger Type'), { target: { value: 'manual' } });
-    expect(containerProps.current.queryParams).toEqual({ status: 'success', trigger: 'manual' });
+    openFilter('status');
+    tickFilterOption('status', 'failed');
+    tickFilterOption('status', 'skipped');
+    expect(containerProps.current.queryParams).toEqual({ run_outcome: 'failed,skipped' });
+    expect(filterSummary('status')).toContain('2 selected');
 
-    fireEvent.click(screen.getByTestId('run-history-filters-clear'));
+    fireEvent.click(screen.getByTestId('run-history-clear-filters-button'));
     expect(containerProps.current.queryParams).toEqual({});
   });
 
-  it('sends trigger=cron for the Scheduled option', () => {
+  it('unticking the last option of a filter removes its param', () => {
+    renderAt('/agents/all/127/history?run_outcome=failed', { scheduleEntityType: 'agent' });
+
+    openFilter('status');
+    tickFilterOption('status', 'failed');
+
+    expect(containerProps.current.queryParams).toEqual({});
+  });
+
+  it('ticking All clears the other ticks of the filter', () => {
+    renderAt('/agents/all/127/history?run_outcome=failed,skipped', { scheduleEntityType: 'agent' });
+
+    openFilter('status');
+    fireEvent.click(screen.getByTestId('run-history-filter-status-option-all-checkbox'));
+
+    expect(containerProps.current.queryParams).toEqual({});
+    expect(filterSummary('status')).toContain('All');
+  });
+
+  it('sends a Scheduled event as trigger=cron', () => {
     renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
 
-    fireEvent.change(screen.getByLabelText('Trigger Type'), { target: { value: 'cron' } });
+    openFilter('event');
+    tickFilterOption('event', 'cron');
 
     expect(containerProps.current.queryParams).toEqual({ trigger: 'cron' });
-  });
-
-  it('ignores the old trigger_type param in the link', () => {
-    renderAt('/agents/all/127/history?trigger_type=test', { scheduleEntityType: 'agent' });
-
-    expect(containerProps.current.queryParams).toEqual({});
   });
 
   it.each([
@@ -319,48 +377,51 @@ describe('RunHistoryPage schedule filter and links', () => {
   ])('sends execution_type=%s for the %s option, not a run trigger', (value, label) => {
     renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
 
-    fireEvent.change(screen.getByLabelText('Trigger Type'), { target: { value } });
+    openFilter('event');
+    tickFilterOption('event', value);
 
     expect(containerProps.current.queryParams).toEqual({ execution_type: value });
-    expect(screen.getByLabelText('Trigger Type')).toHaveValue(value);
-    expect(screen.getByRole('option', { name: label })).toBeInTheDocument();
+    expect(filterSummary('event')).toContain(label);
+  });
+
+  it('Chat and Scheduled together list both kinds: trigger and execution_type are sent side by side', () => {
+    renderAt('/agents/all/127/history?trigger=chat,cron', { scheduleEntityType: 'agent' });
+
+    expect(containerProps.current.queryParams).toEqual({ trigger: 'cron', execution_type: 'chat' });
+    expect(filterSummary('event')).toContain('2 selected');
+  });
+
+  it('keeps Status, Version and Schedule filters enabled for Chat, API and MCP runs', () => {
+    renderAt('/agents/all/127/history?trigger=api&run_outcome=failed&schedule_id=4&version_id=9', {
+      scheduleEntityType: 'agent',
+    });
+
+    expect(containerProps.current.queryParams).toEqual({
+      execution_type: 'api',
+      run_outcome: 'failed',
+      schedule_id: '4',
+      version_id: '9',
+    });
+    ['schedule', 'status', 'version'].forEach(name => {
+      expect(screen.getByTestId(`run-history-filter-${name}-button`)).toBeEnabled();
+    });
   });
 
   it('reads trigger=chat from the link and Clear filters resets it', () => {
     renderAt('/agents/all/127/history?trigger=chat', { scheduleEntityType: 'agent' });
     expect(containerProps.current.queryParams).toEqual({ execution_type: 'chat' });
 
-    fireEvent.click(screen.getByTestId('run-history-filters-clear'));
+    fireEvent.click(screen.getByTestId('run-history-clear-filters-button'));
     expect(containerProps.current.queryParams).toEqual({});
   });
 
-  it('an execution type link ignores the run record filters and disables them', () => {
-    renderAt('/agents/all/127/history?trigger=api&status=failed&schedule_id=4&version_id=9', {
-      scheduleEntityType: 'agent',
-    });
+  it('ignores an unknown trigger and an unknown status in the link', () => {
+    renderAt('/agents/all/127/history?trigger=bogus&run_outcome=bogus', { scheduleEntityType: 'agent' });
 
-    expect(containerProps.current.queryParams).toEqual({ execution_type: 'api' });
-    ['Status', 'Version', 'Schedule/Webhook'].forEach(label => {
-      expect(screen.getByLabelText(label)).toBeDisabled();
-      expect(screen.getByLabelText(label)).toHaveValue('');
-    });
-    expect(screen.getByLabelText('Trigger Type')).toBeEnabled();
-  });
-
-  it('picking an execution type clears the run record filters, and a run trigger enables them again', () => {
-    renderAt('/agents/all/127/history?status=failed&schedule_id=4&version_id=9', {
-      scheduleEntityType: 'agent',
-    });
-
-    fireEvent.change(screen.getByLabelText('Trigger Type'), { target: { value: 'chat' } });
-    expect(containerProps.current.queryParams).toEqual({ execution_type: 'chat' });
-    expect(screen.getByLabelText('Status')).toBeDisabled();
-
-    fireEvent.change(screen.getByLabelText('Trigger Type'), { target: { value: 'manual' } });
-    // the cleared filters stay cleared: they are not restored from before
-    expect(containerProps.current.queryParams).toEqual({ trigger: 'manual' });
-    ['Status', 'Version', 'Schedule/Webhook'].forEach(label =>
-      expect(screen.getByLabelText(label)).toBeEnabled(),
+    expect(containerProps.current.queryParams).toEqual({});
+    openFilter('event');
+    ['cron', 'manual', 'webhook', 'test', 'chat', 'api', 'mcp'].forEach(value =>
+      expect(screen.getByTestId(`run-history-filter-event-option-${value}-checkbox`)).toBeInTheDocument(),
     );
   });
 
@@ -370,29 +431,89 @@ describe('RunHistoryPage schedule filter and links', () => {
     expect(containerProps.current.queryParams).toEqual({});
   });
 
-  it('offers every trigger type and ignores an unknown value in the link', () => {
-    renderAt('/agents/all/127/history?trigger=bogus&status=bogus', { scheduleEntityType: 'agent' });
+  it('histories without schedules still draw the Schedule/Webhook filter, showing All (design)', () => {
+    const { rows, webhookRows } = scheduleList;
+    scheduleList.rows = [];
+    scheduleList.webhookRows = [];
+    try {
+      renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
+    } finally {
+      scheduleList.rows = rows;
+      scheduleList.webhookRows = webhookRows;
+    }
 
-    expect(containerProps.current.queryParams).toEqual({});
-    const select = screen.getByLabelText('Trigger Type');
-    expect([...select.options].map(option => option.textContent)).toEqual([
-      'All',
-      'Scheduled',
-      'Manual',
-      'Webhook',
-      'Test',
-      'Chat',
-      'API',
-      'MCP',
-    ]);
+    // The design draws the Schedule/Webhook filter on every agent and pipeline, showing All with no schedule
+    expect(screen.getByTestId('run-history-filter-schedule-button')).toHaveTextContent('All');
+    expect(screen.getByTestId('run-history-filter-status-button')).toBeInTheDocument();
+    // The Schedule/Webhook column is always drawn for an agent; a row without a schedule shows a hyphen
+    const scheduleColumn = containerProps.current.extraColumns.find(column => column.id === 'schedule');
+    expect(scheduleColumn).toBeDefined();
+    expect(scheduleColumn.render({ schedule_run: null })).toBe('-');
+    // The page still asks for the agent's schedules, so a run that has one can link its name
+    expect(scheduleList.args).toMatchObject({ entityType: 'agent', skip: false });
+  });
+});
+
+describe('RunHistoryPage status column', () => {
+  beforeEach(() => vi.clearAllMocks());
+  afterEach(() => cleanup());
+
+  it('shows the server run_status of a chat row as its label, not a hyphen', () => {
+    renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
+
+    const statusColumn = containerProps.current.extraColumns.find(column => column.id === 'status');
+    render(<>{statusColumn.render({ schedule_run: null, run_status: 'failed' })}</>);
+
+    expect(screen.getByTestId('run-status-cell')).toHaveTextContent('Failed');
   });
 
-  it('histories without schedules show no Schedule filter and no extra columns', () => {
-    renderAt('/agents/all/127/history');
+  it('shows a hyphen when the row has neither a schedule run nor a run_status', () => {
+    renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
 
-    expect(screen.queryByLabelText('Schedule/Webhook')).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Status')).toBeInTheDocument();
-    expect(containerProps.current.extraColumns).toBeUndefined();
-    expect(scheduleList.args.skip).toBe(true);
+    const statusColumn = containerProps.current.extraColumns.find(column => column.id === 'status');
+    render(<>{statusColumn.render({ schedule_run: null, run_status: null })}</>);
+
+    expect(screen.queryByTestId('run-status-cell')).not.toBeInTheDocument();
+    expect(screen.getByText('-')).toBeInTheDocument();
+  });
+});
+
+describe('RunHistoryPage complexity filter (BE-2)', () => {
+  afterEach(() => cleanup());
+
+  afterEach(() => {
+    complexitySwitch.on = false;
+  });
+
+  it('is not drawn while the platform complexity switch is off', () => {
+    renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
+
+    expect(screen.queryByTestId('run-history-filter-complexity-button')).not.toBeInTheDocument();
+    expect(containerProps.current.queryParams).toEqual({});
+  });
+
+  it('is drawn with its five labels once the switch is on, showing All', () => {
+    complexitySwitch.on = true;
+    renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
+
+    expect(screen.getByTestId('run-history-filter-complexity-button')).toHaveTextContent('All');
+    openFilter('complexity');
+    ['L', 'M', 'H', 'X', 'not_scored'].forEach(value =>
+      expect(
+        screen.getByTestId(`run-history-filter-complexity-option-${value}-checkbox`),
+      ).toBeInTheDocument(),
+    );
+  });
+
+  it('sends a ticked complexity label to the list as complexity, with the five labels as options', () => {
+    renderAt('/agents/all/127/history?complexity=L,not_scored', { scheduleEntityType: 'agent' });
+
+    expect(containerProps.current.queryParams).toEqual({ complexity: 'L,not_scored' });
+  });
+
+  it('drops a complexity value the server does not know from a hand-edited link', () => {
+    renderAt('/agents/all/127/history?complexity=bogus', { scheduleEntityType: 'agent' });
+
+    expect(containerProps.current.queryParams).toEqual({});
   });
 });

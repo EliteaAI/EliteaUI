@@ -136,3 +136,26 @@ describe('serializeRunHistory — execution type', () => {
     expect(rows[0].execution_type).toBeNull();
   });
 });
+
+describe('serializeRunHistory — run status and tool names', () => {
+  it('keeps the run_status the server sends for a chat run', () => {
+    const { rows } = serializeRunHistoryListResponse([{ ...agentRun, run_status: 'failed' }]);
+
+    expect(rows[0].run_status).toBe('failed');
+  });
+
+  it('keeps the tool names of an MCP run in call order', () => {
+    const { rows } = serializeRunHistoryListResponse([
+      { ...agentRun, tool_names: ['resolve-library-id', 'query-docs'] },
+    ]);
+
+    expect(rows[0].tool_names).toEqual(['resolve-library-id', 'query-docs']);
+  });
+
+  it('gives a null status and no tool names for a row the server did not describe', () => {
+    const { rows } = serializeRunHistoryListResponse([agentRun]);
+
+    expect(rows[0].run_status).toBeNull();
+    expect(rows[0].tool_names).toEqual([]);
+  });
+});

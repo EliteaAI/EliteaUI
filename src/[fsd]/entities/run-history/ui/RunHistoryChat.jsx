@@ -107,7 +107,7 @@ RunHistoryChat.displayName = 'RunHistoryChat';
 /** @type {MuiSx} */
 const runHistoryChatStyles = isSmallWindow => ({
   wrapper: {
-    flex: 7,
+    flex: 1,
     display: 'flex',
     flexDirection: 'column',
     height: '100%',

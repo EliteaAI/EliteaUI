@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Box, Link, Typography } from '@mui/material';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
-import { byNewestRunFirst, resolveRunHistoryListWidth } from '@/[fsd]/entities/run-history/lib/helpers';
+import { byNewestRunFirst, formatRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
 import { RunHistoryChat, RunHistoryList } from '@/[fsd]/entities/run-history/ui';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useIsSmallWindow, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
@@ -13,6 +13,8 @@ import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SearchParams } from '@/common/constants';
 import CloseIcon from '@/components/Icons/CloseIcon';
+
+import RunHistoryRunView from './RunHistoryRunView';
 
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
@@ -43,6 +45,11 @@ const RunHistoryContainer = memo(props => {
     onRowsChange,
     // 'side': the detail is right of the list (full pages); 'stacked': below it, for a narrow parent
     layout = 'side',
+    // true: an opened run replaces the list, with prev/next and close
+    openInPlace = false,
+    onRunOpenChange,
+    // true: only the additional rows show and no conversation is fetched
+    skipConversations = false,
   } = props;
 
   const projectId = useSelectedProjectId();
@@ -52,9 +59,14 @@ const RunHistoryContainer = memo(props => {
   const { isSmallWindow } = useIsSmallWindow();
 
   const [allConversations, setAllConversations] = useState([]);
+  // Rows in the list's sort order; prev and next walk this order
+  const [sortedRows, setSortedRows] = useState([]);
   const [page, setPage] = useState(0);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
   const handledSharedRunId = useRef(null);
+  const openedRunId = useRef(null);
+  // Set once the open run's id is in the URL; a later URL without it means Back
+  const openedRunWritten = useRef(false);
   const [mergedData, setMergedData] = useState();
 
   const [fetchRunList, { data, isLoading, isFetching, isUninitialized, isError, error }] =
@@ -62,9 +74,13 @@ const RunHistoryContainer = memo(props => {
 
   // Not part of server-side pagination, so they are merged into every page.
   const historyRows = useMemo(() => {
-    const conversationRows = decorateRow ? allConversations.map(decorateRow) : allConversations;
+    const conversationRows = skipConversations
+      ? []
+      : decorateRow
+        ? allConversations.map(decorateRow)
+        : allConversations;
     return [...conversationRows, ...additionalRows].sort(byNewestRunFirst);
-  }, [allConversations, additionalRows, decorateRow]);
+  }, [allConversations, additionalRows, decorateRow, skipConversations]);
 
   const selectedRow = useMemo(
     () => historyRows.find(historyRow => historyRow.id === selectedHistoryItem) ?? null,
@@ -98,14 +114,23 @@ const RunHistoryContainer = memo(props => {
   useEffect(() => {
     const historyRunId = searchParams.get(SearchParams.HistoryRunId);
 
-    if (!historyRunId) handledSharedRunId.current = null;
-
-    if (!historyRunId || handledSharedRunId.current === historyRunId) {
-      if (!selectedHistoryItem && !runsStillArriving && historyRows.length) {
-        setSelectedHistoryItem(historyRows[0].id);
-      }
+    // Back removed the open run's id after it was written: close the run
+    if (!historyRunId && openedRunId.current !== null && openedRunWritten.current) {
+      openedRunId.current = null;
+      openedRunWritten.current = false;
+      setSelectedHistoryItem(null);
       return;
     }
+    if (historyRunId && openedRunId.current !== null && String(openedRunId.current) === historyRunId) {
+      openedRunWritten.current = true;
+    }
+
+    // An id written by opening a run in place is not a shared link
+    if (!historyRunId && openedRunId.current === null) handledSharedRunId.current = null;
+
+    // No run opens on its own; only a shared link selects one
+    if (!historyRunId || handledSharedRunId.current === historyRunId) return;
+    if (openedRunId.current !== null) return;
 
     const sharedRow = historyRows.find(historyRow => String(historyRow.id) === historyRunId);
 
@@ -135,7 +160,7 @@ const RunHistoryContainer = memo(props => {
   ]);
 
   const loadRunList = useCallback(() => {
-    if (projectId && entityId) {
+    if (projectId && entityId && !skipConversations) {
       fetchRunList({
         source,
         projectId,
@@ -145,7 +170,7 @@ const RunHistoryContainer = memo(props => {
         ...queryParams,
       });
     }
-  }, [projectId, entityId, entityProjectId, page, fetchRunList, source, queryParams]);
+  }, [projectId, entityId, entityProjectId, page, fetchRunList, source, queryParams, skipConversations]);
 
   useEffect(() => {
     loadRunList();
@@ -174,16 +199,56 @@ const RunHistoryContainer = memo(props => {
     setPage(prev => prev + 1);
   }, []);
 
-  const handleHistoryItemSelect = useCallback(item => {
-    setSelectedHistoryItem(item);
-  }, []);
+  // `replace` keeps one history entry per open run, so Back closes it
+  const handleHistoryItemSelect = useCallback(
+    (item, { replace = false } = {}) => {
+      setSelectedHistoryItem(item);
+      if (openInPlace && item !== null) {
+        handledSharedRunId.current = String(item);
+        openedRunId.current = String(item);
+        setSearchParams(
+          params => {
+            params.set(SearchParams.HistoryRunId, String(item));
+            return params;
+          },
+          { replace },
+        );
+      }
+    },
+    [openInPlace, setSearchParams],
+  );
+
+  const handleCloseRun = useCallback(() => {
+    openedRunId.current = null;
+    openedRunWritten.current = false;
+    setSelectedHistoryItem(null);
+    setSearchParams(
+      params => {
+        params.delete(SearchParams.HistoryRunId);
+        return params;
+      },
+      { replace: false },
+    );
+  }, [setSearchParams]);
+
+  useEffect(() => {
+    if (openInPlace) onRunOpenChange?.(selectedHistoryItem !== null);
+  }, [openInPlace, selectedHistoryItem, onRunOpenChange]);
+
+  useEffect(() => {
+    if (!openInPlace || selectedHistoryItem === null) return undefined;
+    const handleKeyDown = event => {
+      if (event.key !== 'Escape') return;
+      // Let Esc close an open menu or dialog first
+      if (event.defaultPrevented || document.querySelector('[role="dialog"], [role="menu"]')) return;
+      handleCloseRun();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [openInPlace, selectedHistoryItem, handleCloseRun]);
 
   const isStacked = layout === 'stacked';
-  const styles = runHistoryContainerStyles(
-    isSmallWindow,
-    isStacked,
-    resolveRunHistoryListWidth(extraColumns),
-  );
+  const styles = runHistoryContainerStyles(isSmallWindow, isStacked, '100%');
 
   const detail =
     selectedRow?.entry && DetailComponent ? (
@@ -197,6 +262,31 @@ const RunHistoryContainer = memo(props => {
         onHitlResume={onHitlResume}
       />
     );
+
+  const runDate = formatRunTimestamp(selectedRow?.created_at);
+  const navigableRows = sortedRows.length ? sortedRows : historyRows;
+  const openRunIndex = navigableRows.findIndex(historyRow => historyRow.id === selectedHistoryItem);
+  const showInPlaceRun = openInPlace && selectedHistoryItem !== null && openRunIndex >= 0;
+
+  const handlePrevious = () => handleHistoryItemSelect(navigableRows[openRunIndex - 1].id, { replace: true });
+  const handleNext = () => handleHistoryItemSelect(navigableRows[openRunIndex + 1].id, { replace: true });
+
+  const inPlaceJsx = (
+    <RunHistoryRunView
+      runDate={runDate}
+      selectedRow={selectedRow}
+      openRunIndex={openRunIndex}
+      totalRuns={historyRows.length}
+      detail={detail}
+      onPrevious={handlePrevious}
+      onNext={handleNext}
+      onCloseRun={handleCloseRun}
+      source={source}
+      handleOpenAnalytics={handleOpenAnalytics}
+      handleRestoreConversation={handleRestoreConversation}
+      shareOpensHistoryTab={shareOpensHistoryTab}
+    />
+  );
 
   return (
     <Box sx={onClose ? styles.outerWrapper : styles.root}>
@@ -218,9 +308,14 @@ const RunHistoryContainer = memo(props => {
           </Typography>
         </Box>
       )}
+      {showInPlaceRun && <Box sx={styles.inPlaceRun}>{inPlaceJsx}</Box>}
       <Box
         data-testid="run-history-layout"
-        sx={onClose ? styles.wrapperFlex : styles.wrapper}
+        sx={[
+          onClose ? styles.wrapperFlex : styles.wrapper,
+          // Hidden, not unmounted, so the list keeps its state
+          showInPlaceRun && styles.tableHidden,
+        ]}
       >
         <Box
           data-testid="run-history-list-column"
@@ -265,10 +360,12 @@ const RunHistoryContainer = memo(props => {
             eventColumnLabel={eventColumnLabel}
             shareOpensHistoryTab={shareOpensHistoryTab}
             extraColumns={extraColumns}
+            fillWidth={openInPlace}
+            onSortedRowsChange={setSortedRows}
           />
         </Box>
 
-        {isStacked ? (
+        {openInPlace ? null : isStacked ? (
           <Box
             data-testid="run-history-detail-panel"
             sx={styles.detailPanel}
@@ -334,7 +431,7 @@ const runHistoryContainerStyles = (isSmallWindow, isStacked, listWidth = '32rem'
     padding: '0.75rem 1.5rem 0.75rem 1.5rem',
   },
   historyList: {
-    flex: isStacked ? 'none' : 3,
+    flex: isStacked ? 'none' : 2,
     height: isStacked ? '20rem' : undefined,
     // The column follows the list width, so the panel starts after it
     maxWidth: isSmallWindow || isStacked ? '100%' : listWidth,
@@ -346,8 +443,21 @@ const runHistoryContainerStyles = (isSmallWindow, isStacked, listWidth = '32rem'
   },
   detailPanel: {
     display: 'flex',
+    flex: isStacked ? 'none' : 1,
+    minWidth: 0,
     width: '100%',
     height: '32rem',
+    boxSizing: 'border-box',
+  },
+  tableHidden: {
+    display: 'none',
+  },
+  inPlaceRun: {
+    flex: 1,
+    minHeight: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    padding: '0.75rem 1.5rem',
     boxSizing: 'border-box',
   },
 });

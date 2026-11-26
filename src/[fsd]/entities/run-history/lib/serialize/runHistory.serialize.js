@@ -17,6 +17,8 @@ const serializeRunHistory = conversation => {
     operation_type: conversation.meta?.operation_type ?? null,
     execution_type: conversation.execution_type ?? null,
     schedule_run: conversation.schedule_run ?? null,
+    run_status: conversation.run_status ?? null,
+    tool_names: conversation.tool_names ?? [],
   };
 };
 

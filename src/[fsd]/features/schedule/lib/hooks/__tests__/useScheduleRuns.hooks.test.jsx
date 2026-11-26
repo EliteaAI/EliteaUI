@@ -14,7 +14,8 @@ const mocks = vi.hoisted(() => ({
   useGetRunHistoryDetailsQuery: vi.fn(),
 }));
 
-vi.mock('@/[fsd]/entities/schedule', () => ({
+vi.mock('@/[fsd]/entities/schedule', async importOriginal => ({
+  ...(await importOriginal()),
   useGetScheduleRunsQuery: mocks.useGetScheduleRunsQuery,
   useGetScheduleRunQuery: mocks.useGetScheduleRunQuery,
 }));

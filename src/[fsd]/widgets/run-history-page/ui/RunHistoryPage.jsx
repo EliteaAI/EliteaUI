@@ -4,7 +4,8 @@ import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-r
 
 import { Box, Link } from '@mui/material';
 
-import { RunHistoryContainer, SCHEDULE_RUN_COLUMNS } from '@/[fsd]/entities/run-history';
+import { RunHistoryContainer, RunStatusCell, SCHEDULE_RUN_COLUMNS } from '@/[fsd]/entities/run-history';
+import { RUN_HISTORY_LAYOUTS } from '@/[fsd]/entities/run-history/lib/constants/runHistory.constants';
 import {
   TRIGGER_KIND,
   buildOwnerViewModeParams,
@@ -12,7 +13,6 @@ import {
   useAllEntitySchedules,
 } from '@/[fsd]/entities/schedule';
 import { ChatMessageList } from '@/[fsd]/features/chat';
-import { ScheduleRunStatusChip } from '@/[fsd]/features/schedule';
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
 import { useRunComplexityColumn } from '@/[fsd]/features/settings/ui/complexity';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
@@ -27,6 +27,8 @@ import { useRunHistoryFilters } from '../lib/hooks/useRunHistoryFilters.hooks';
 import RunHistoryFilters from './RunHistoryFilters';
 
 const DEFAULT_TAB = 'all';
+const SCHEDULE_ALWAYS_SHOWN = ['schedule'];
+const NO_VALUE = '-';
 
 // The mockup draws the schedule name in the bright text tone, underlined, not in the link blue
 const scheduleLinkSx = ({ palette }) => ({
@@ -62,8 +64,13 @@ const RunHistoryPage = memo(props => {
     skip: !scheduleEntityType,
   });
   const schedules = useMemo(() => [...cronSchedules, ...webhooks], [cronSchedules, webhooks]);
-  const filters = useRunHistoryFilters({ schedules, versions });
   const [loadedRows, setLoadedRows] = useState([]);
+  const toolNames = useMemo(
+    () => [...new Set(loadedRows.flatMap(row => row.tool_names ?? []))],
+    [loadedRows],
+  );
+  const filters = useRunHistoryFilters({ schedules, versions, toolNames });
+  const [runOpen, setRunOpen] = useState(false);
   const complexityColumn = useRunComplexityColumn({ entityId: agentId, rows: loadedRows });
   const scheduleColumns = useMemo(() => {
     if (!scheduleEntityType) return [];
@@ -100,16 +107,12 @@ const RunHistoryPage = memo(props => {
         </Link>
       );
     };
-    // The status reads with its icon and colour, as in the Runs card
-    const renderStatus = row =>
-      row.schedule_run ? (
-        <ScheduleRunStatusChip
-          status={row.schedule_run.status}
-          variant="text"
-        />
-      ) : (
-        '-'
-      );
+    const renderStatus = row => (
+      <RunStatusCell
+        status={row.schedule_run?.status ?? row.run_status}
+        emptyMark={NO_VALUE}
+      />
+    );
     return [
       { ...scheduleColumn, render: renderSchedule },
       ...rest.map(column => (column.id === 'status' ? { ...column, render: renderStatus } : column)),
@@ -163,15 +166,20 @@ const RunHistoryPage = memo(props => {
         title={<Breadcrumbs />}
       />
       <Box sx={styles.content}>
-        <RunHistoryFilters
-          values={filters.values}
-          options={filters.options}
-          handlers={filters.handlers}
-          disabledFilters={filters.disabledFilters}
-          hasFilters={filters.hasFilters}
-          onClear={filters.onClear}
-          hasScheduleFilter={Boolean(scheduleEntityType)}
-        />
+        {!runOpen && (
+          <RunHistoryFilters
+            // Complexity filter only while its column is on
+            filterKeys={(RUN_HISTORY_LAYOUTS[scheduleEntityType]?.filters ?? []).filter(
+              key => key !== 'complexity' || Boolean(complexityColumn),
+            )}
+            values={filters.values}
+            options={filters.options}
+            handlers={filters.handlers}
+            hasFilters={filters.hasFilters}
+            onClear={filters.onClear}
+            keepEmptyKeys={SCHEDULE_ALWAYS_SHOWN}
+          />
+        )}
         <RunHistoryContainer
           // A new filter restarts paging at page 1
           key={JSON.stringify(filters.queryParams)}
@@ -188,6 +196,8 @@ const RunHistoryPage = memo(props => {
           onRowsChange={setLoadedRows}
           queryParams={filters.queryParams}
           shareOpensHistoryTab
+          openInPlace
+          onRunOpenChange={setRunOpen}
         />
       </Box>
     </Box>

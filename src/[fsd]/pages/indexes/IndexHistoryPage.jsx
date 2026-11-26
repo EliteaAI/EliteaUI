@@ -207,9 +207,8 @@ const indexHistoryPageStyles = () => ({
     overflow: 'hidden',
   },
   historyColumn: {
-    flex: '0 0 25.56rem',
-    minWidth: '20rem',
-    maxWidth: '28rem',
+    flex: 2,
+    minWidth: 0,
     overflow: 'hidden',
   },
   chatColumn: {
