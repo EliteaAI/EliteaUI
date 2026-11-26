@@ -6,6 +6,7 @@ import { useCanDeleteProjectData } from '@/[fsd]/features/settings/lib/hooks';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import DefaultModulesSettings from '@/[fsd]/features/settings/ui/project-general/DefaultModulesSettings';
 import EvaluationSettings from '@/[fsd]/features/settings/ui/project-general/EvaluationSettings';
+import HistoryEvaluationConsent from '@/[fsd]/features/settings/ui/project-general/HistoryEvaluationConsent';
 import WebSearchSettings from '@/[fsd]/features/settings/ui/project-general/WebSearchSettings';
 import { ProjectBackupRestore } from '@/[fsd]/features/settings/ui/project-general/backup-restore';
 import { ProjectDataDelete } from '@/[fsd]/features/settings/ui/project-general/delete-project-data';
@@ -126,7 +127,7 @@ const ProjectGeneralContent = memo(() => {
                 {
                   title: 'Schedules',
                   content: (
-                    <Box sx={styles.schedulesStyles}>
+                    <Box sx={styles.stackedStyles}>
                       <ScheduleNotificationsSection />
                       <RunWithoutAskingSetting />
                       <WebhookRunCapSetting />
@@ -144,7 +145,12 @@ const ProjectGeneralContent = memo(() => {
               items={[
                 {
                   title: 'Evaluation',
-                  content: <EvaluationSettings />,
+                  content: (
+                    <Box sx={styles.stackedStyles}>
+                      <EvaluationSettings />
+                      <HistoryEvaluationConsent />
+                    </Box>
+                  ),
                 },
               ]}
             />
@@ -213,7 +219,7 @@ const componentStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
   },
-  schedulesStyles: {
+  stackedStyles: {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',

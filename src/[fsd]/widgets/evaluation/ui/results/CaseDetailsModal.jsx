@@ -1,12 +1,16 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { Box } from '@mui/material';
+import { useSelector } from 'react-redux';
+import { Link as RouterLink } from 'react-router-dom';
+
+import { Box, Link, Typography } from '@mui/material';
 
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Modal } from '@/[fsd]/shared/ui';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
+import RouteDefinitions from '@/routes';
 
-import { buildCaseContentColumns } from '../../lib/helpers';
+import { buildCaseContentColumns, getCaseHistorySource } from '../../lib/helpers';
 import CaseContentColumn from './CaseContentColumn';
 import CaseContentPreviewModal from './CaseContentPreviewModal';
 import CaseTrajectoryPanel from './CaseTrajectoryPanel';
@@ -46,6 +50,8 @@ const CaseDetailsModal = memo(props => {
   const caseId = caseData?.id;
 
   const columns = useMemo(() => buildCaseContentColumns(caseItem), [caseItem]);
+  const viewerId = useSelector(state => state.user.id);
+  const historySource = getCaseHistorySource(caseItem, viewerId);
 
   const styles = caseDetailsModalStyles(columns.length);
 
@@ -76,6 +82,30 @@ const CaseDetailsModal = memo(props => {
                     data-testid="case-details-tab-trajectory"
                   />
                 </BaseTabs>
+              </Box>
+            )}
+            {historySource && (
+              <Box
+                sx={styles.source}
+                data-testid="case-details-source"
+              >
+                {historySource.canOpen ? (
+                  <Link
+                    component={RouterLink}
+                    to={`${RouteDefinitions.Chat}/${historySource.conversationId}`}
+                    variant="bodySmall"
+                    data-testid="case-details-source-chat"
+                  >
+                    Open the source chat
+                  </Link>
+                ) : (
+                  <Typography
+                    variant="bodySmall"
+                    color="text.secondary"
+                  >
+                    Taken from a private chat; the link is shown to its author only.
+                  </Typography>
+                )}
               </Box>
             )}
             {activeTab === CASE_DETAILS_TAB.trajectory && runId != null ? (
@@ -138,6 +168,10 @@ const caseDetailsModalStyles = columnCount => ({
   },
   tabs: ({ palette }) => ({
     padding: '0 1.5rem',
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
+  }),
+  source: ({ palette }) => ({
+    padding: '0.5rem 1.5rem',
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
   }),
   columnsContainer: {

@@ -36,6 +36,7 @@ export const formatCaseContent = (value, emptyText = '—') => {
 };
 
 export const NO_EXPECTED_OUTPUT = 'No expected output provided.';
+const NO_REFERENCE_OUTPUT = 'Taken from a stored chat turn, so there is no expected output.';
 
 /**
  * The read-only evidence columns for one evaluated case, shared by the case details and human
@@ -50,7 +51,7 @@ export const buildCaseContentColumns = (caseItem, { evidenceScope = null } = {})
       key: 'expectedOutput',
       label: 'Expected Output',
       content: caseItem?.expected_output,
-      emptyText: NO_EXPECTED_OUTPUT,
+      emptyText: caseItem?.source ? NO_REFERENCE_OUTPUT : NO_EXPECTED_OUTPUT,
     },
   ];
 

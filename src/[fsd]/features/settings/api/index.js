@@ -7,3 +7,4 @@ export * from './projectSkillsSettingsApi';
 export * from './schedulePreferencesApi';
 export * from './usageApi';
 export * from './projectDataDeleteApi';
+export * from './historyEvaluationConsentApi';

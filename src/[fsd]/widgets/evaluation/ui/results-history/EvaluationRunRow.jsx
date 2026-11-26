@@ -9,6 +9,7 @@ import { EVAL_RUN_TRIGGER } from '../../lib/constants';
 import {
   formatScoreDelta,
   getRunHistoryGuardrails,
+  getRunHistorySource,
   getRunHistoryTrajectory,
   getRunHistoryUsage,
   getRunOverBudgetLabel,
@@ -51,6 +52,7 @@ const EvaluationRunRow = memo(props => {
   const usage = getRunHistoryUsage(run.meta);
   const trajectory = getRunHistoryTrajectory(run.meta);
   const guardrails = getRunHistoryGuardrails(run.meta);
+  const historySource = run.trigger_type === EVAL_RUN_TRIGGER.history ? getRunHistorySource(run.meta) : null;
   const styles = evaluationRunRowStyles(isSelected, gridTemplateColumns, run.delta);
 
   return (
@@ -209,6 +211,20 @@ const EvaluationRunRow = memo(props => {
               data-testid={`evaluation-run-scheduled-${run.id}`}
             >
               Scheduled
+            </Box>
+          </Tooltip>
+        )}
+        {run.trigger_type === EVAL_RUN_TRIGGER.history && (
+          <Tooltip
+            title={historySource?.tooltip ?? 'Scored from stored chat turns by the scheduled evaluation'}
+            placement="top"
+          >
+            <Box
+              component="span"
+              sx={styles.scheduled}
+              data-testid={`evaluation-run-history-${run.id}`}
+            >
+              History
             </Box>
           </Tooltip>
         )}
