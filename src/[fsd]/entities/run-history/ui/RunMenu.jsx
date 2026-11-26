@@ -5,7 +5,6 @@ import DotMenu from '@/components/DotMenu';
 import { useRunHistoryRowMenu } from '../lib/hooks/useRunHistoryRowMenu.hooks';
 import RunHistoryDeleteModal from './run-history-list/RunHistoryDeleteModal';
 
-// The run header's ⋯ menu: always visible, with the same items and Remove run? dialog as the row menu
 const RunMenu = memo(props => {
   const menu = useRunHistoryRowMenu(props);
   const { menuItems, slotProps, openMenu, closeMenu, deleteModal } = menu;

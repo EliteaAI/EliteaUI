@@ -28,5 +28,5 @@ export const toWord = value => (value ? `${value[0].toUpperCase()}${value.slice(
 export const toRunStatusLabel = status => RUN_STATUS_META[status]?.label ?? toWord(status);
 
 // An unknown status gets a label made from its words and no icon
-export const toRunStatusMeta = (status, statusMeta = RUN_STATUS_META) =>
-  statusMeta[status] ?? { label: toWord(status), color: 'text.secondary', Icon: null };
+export const toRunStatusMeta = status =>
+  RUN_STATUS_META[status] ?? { label: toWord(status), color: 'text.secondary', Icon: null };

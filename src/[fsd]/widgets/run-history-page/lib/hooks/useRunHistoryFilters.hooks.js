@@ -19,7 +19,6 @@ import {
 
 const WHOLE_NUMBER = /^[1-9]\d*$/;
 
-// The Status options of one list: its own status keys, labelled and coloured as the design shows them
 const statusOptionsOf = statusKeys =>
   statusKeys.map(value => ({
     label: RUN_STATUS_STYLES[value]?.label ?? toRunStatusLabel(value),
@@ -30,8 +29,7 @@ const EVENT_OPTIONS = TRIGGER_OPTIONS.map(({ label, value }) => ({ label, value 
 
 const paramOf = trigger => TRIGGER_OPTIONS.find(option => option.value === trigger)?.param;
 
-// Multi-select values travel as a comma list in the URL. An unknown item is dropped, so a hand-edited link never
-// sends a bad filter, and a repeated item counts once.
+// Comma list in the URL; unknown and repeated items are dropped
 const readList = (searchParams, name, isValid) =>
   (searchParams.get(name) ?? '')
     .split(',')
@@ -51,22 +49,18 @@ export const useRunHistoryFilters = ({
   const statusOptions = useMemo(() => statusOptionsOf(statusKeys), [statusKeys]);
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Raw URL values; each is a plain array of strings
   const eventValues = readList(searchParams, FILTER_PARAMS.trigger, isEvent);
-  const scheduleIds = readList(searchParams, FILTER_PARAMS.schedule, isWholeNumber);
+  // The list API takes one schedule_id, so the Schedule filter keeps a single value
+  const scheduleIds = readList(searchParams, FILTER_PARAMS.schedule, isWholeNumber).slice(0, 1);
   const versionIds = readList(searchParams, FILTER_PARAMS.version, isWholeNumber);
-  // A status a link names that this list does not offer is dropped, so the filter never shows a hidden value
   const outcomes = readList(searchParams, FILTER_PARAMS.run_outcome, value => statusKeys.includes(value));
-  // A tool a shared link names is kept before its runs load: the list only offers names the page has seen, but the
-  // URL is the reader's own choice, and the server answers an unknown name
+  // A linked tool is kept before its runs load
   const tools = readList(searchParams, FILTER_PARAMS.tool, value => value.length > 0);
-  // The complexity labels (BE-2): only the five the server knows, the rest of a hand-edited link is dropped
   const complexityValues = readList(searchParams, FILTER_PARAMS.complexity, value =>
     COMPLEXITY_VALUES.includes(value),
   );
 
-  // The list API params. An Event value goes to `trigger` (a run trigger) or `execution_type` (Chat, API, MCP).
-  // Keyed on the joined strings, so the object keeps its identity until a filter really changes.
+  // Keyed on joined strings so the object stays stable until a filter changes
   const eventKey = eventValues.join(',');
   const scheduleKey = scheduleIds.join(',');
   const versionKey = versionIds.join(',');
@@ -117,7 +111,6 @@ export const useRunHistoryFilters = ({
 
   const toolOptions = useMemo(() => toolNames.map(name => ({ label: name, value: name })), [toolNames]);
 
-  // Writes the whole list for one filter; an empty list removes its param
   const setList = useCallback(
     (name, values) => {
       setSearchParams(
@@ -133,7 +126,11 @@ export const useRunHistoryFilters = ({
     [setSearchParams],
   );
 
-  const onScheduleChange = useCallback(values => setList(FILTER_PARAMS.schedule, values), [setList]);
+  // A new tick replaces the previous one
+  const onScheduleChange = useCallback(
+    values => setList(FILTER_PARAMS.schedule, values.slice(-1)),
+    [setList],
+  );
   const onOutcomeChange = useCallback(values => setList(FILTER_PARAMS.run_outcome, values), [setList]);
   const onVersionChange = useCallback(values => setList(FILTER_PARAMS.version, values), [setList]);
   const onToolChange = useCallback(values => setList(FILTER_PARAMS.tool, values), [setList]);
@@ -155,7 +152,6 @@ export const useRunHistoryFilters = ({
   const hasFilters = queryParams !== NO_QUERY_PARAMS;
 
   return {
-    // Ticked values per filter, as arrays of strings. The keys match the layout's filter keys.
     values: {
       event: eventValues,
       schedule: scheduleIds,

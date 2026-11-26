@@ -4,8 +4,6 @@ import { Box, Typography } from '@mui/material';
 
 import { StatusDot } from '@/[fsd]/shared/ui';
 
-// A Status filter option: the status's dot, then its label. Options without a colour (All, the other filters) show the
-// label only.
 const StatusOptionLabel = memo(props => {
   const { label, color } = props;
 

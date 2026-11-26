@@ -7,7 +7,6 @@ import { StatusDot } from '@/[fsd]/shared/ui';
 
 const { LABELS, PENDING_TOOLTIP } = ComplexityConstants;
 
-// A coloured dot and the label in plain text, as the complexity legend draws it
 const ComplexityLabelChip = memo(props => {
   const { label, pending = false, testId = 'complexity-label' } = props;
 

@@ -12,8 +12,6 @@ import CloseIcon from '@/components/Icons/CloseIcon';
 import RunMenu from './RunMenu';
 import RunStatusCell from './run-history-list/RunStatusCell';
 
-// The open run in place of the run history table (ticket AC-13): the title row with ‹ › and X, the status line,
-// and the conversation (the detail is the existing RunHistoryChat, passed in)
 const RunHistoryRunView = memo(props => {
   const {
     runDate,
@@ -201,7 +199,6 @@ const runHistoryRunViewStyles = () => ({
     alignItems: 'center',
     gap: '0.75rem',
   },
-  // Each subtitle item: the label in the secondary colour, the value in the primary colour (the design)
   metaItem: {
     display: 'flex',
     alignItems: 'center',

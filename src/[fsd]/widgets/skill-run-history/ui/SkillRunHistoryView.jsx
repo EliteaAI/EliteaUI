@@ -15,8 +15,7 @@ import { SKILL_RUN_SEARCH_PARAMS } from '@/[fsd]/features/skill/lib/constants';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
-import { useRunHistoryFilters } from '@/[fsd]/widgets/run-history-page/lib/hooks/useRunHistoryFilters.hooks';
-import RunHistoryFilters from '@/[fsd]/widgets/run-history-page/ui/RunHistoryFilters';
+import { RunHistoryFilters, useRunHistoryFilters } from '@/[fsd]/widgets/run-history-page';
 import { useSkillHistoryEntity } from '@/[fsd]/widgets/skill-run-history/lib/hooks';
 import { SearchParams, SkillsTabs } from '@/common/constants';
 import RouteDefinitions from '@/routes';
@@ -24,7 +23,6 @@ import RouteDefinitions from '@/routes';
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 const NO_SCHEDULES = [];
 const NO_TOOL_NAMES = [];
-// Every skill run is a chat run, so the Event column reads Chat (ticket AC-31)
 const SKILL_EVENT_LABEL = 'Chat';
 
 const SkillRunHistoryView = memo(props => {
@@ -106,7 +104,6 @@ const SkillRunHistoryView = memo(props => {
           handlers={filters.handlers}
           hasFilters={filters.hasFilters}
           onClear={filters.onClear}
-          hasScheduleFilter={false}
         />
         <RunHistoryContainer
           // A new filter restarts paging at page 1

@@ -8,16 +8,14 @@ import {
 } from '@/[fsd]/entities/run-history/lib/constants/runHistory.constants';
 import { INDEX_RUN_EVENTS } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexRunHistoryRow.helpers';
 
-// URL params of the toolkit filters (ticket #7682, AC-39, AC-40)
 const PARAMS = { event: 'index_event', index: 'index', status: 'run_status' };
 const RUN_OUTCOME_PARAM = 'run_outcome';
 const NO_QUERY_PARAMS = {};
 
-// The statuses of toolkit and index runs (AC-38), in the design's order; Partial and Stopped are index-only
 const STATUS_KEYS = STATUS_FILTER_KEYS.toolkit;
-// The statuses a tool-call (conversation) run can have on the server (run_outcome)
+// Statuses a tool-call run can have (sent as run_outcome)
 const CONVERSATION_OUTCOMES = ['running', 'success', 'failed'];
-// The index events an index run carries today. Index created and Search index are not produced by the list yet.
+// Index created and Search index are not produced by the index list yet
 const EVENT_LABELS = [INDEX_RUN_EVENTS.indexing, INDEX_RUN_EVENTS.reindex, INDEX_RUN_EVENTS.scheduledReindex];
 
 const EVENT_OPTIONS = EVENT_LABELS.map(label => ({ label, value: label }));
@@ -27,7 +25,6 @@ const STATUS_OPTIONS = STATUS_KEYS.map(value => ({
   color: RUN_STATUS_STYLES[value].color,
 }));
 
-// A comma list in the URL; unknown items are dropped and a repeated item counts once
 const readList = (searchParams, name) =>
   (searchParams.get(name) ?? '')
     .split(',')
@@ -40,7 +37,7 @@ const toSet = key => new Set(key ? key.split(',') : []);
 export const useToolkitRunFilters = ({ indexNames = [], enabled = true } = {}) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // The Index filter is drawn only when the toolkit has more than one index (AC-40)
+  // Only drawn when the toolkit has more than one index
   const indexOptions = useMemo(
     () => (enabled && indexNames.length > 1 ? indexNames.map(name => ({ label: name, value: name })) : []),
     [enabled, indexNames],
@@ -64,7 +61,7 @@ export const useToolkitRunFilters = ({ indexNames = [], enabled = true } = {}) =
   const indexSet = useMemo(() => toSet(indexKey), [indexKey]);
   const statusSet = useMemo(() => toSet(statusKey), [statusKey]);
 
-  // An Event or Index tick leaves out the tool-call rows (AC-39, AC-40). A status no conversation can have does too.
+  // Event or Index ticks, or an index-only status, leave out the tool-call rows
   const showConversations = enabled && !eventKey && !indexKey && (!statusKey || Boolean(serverOutcomeKey));
 
   const queryParams = useMemo(
@@ -73,7 +70,6 @@ export const useToolkitRunFilters = ({ indexNames = [], enabled = true } = {}) =
     [showConversations, serverOutcomeKey],
   );
 
-  // Index runs are all loaded, so their filter runs here on the rows the page holds
   const filterIndexRows = useCallback(
     rows =>
       rows.filter(
@@ -85,7 +81,6 @@ export const useToolkitRunFilters = ({ indexNames = [], enabled = true } = {}) =
     [eventSet, indexSet, statusSet],
   );
 
-  // Writes the whole list for one filter; an empty list removes its param
   const setList = useCallback(
     (name, values) => {
       setSearchParams(
@@ -123,7 +118,7 @@ export const useToolkitRunFilters = ({ indexNames = [], enabled = true } = {}) =
 
   const values = useMemo(
     () => ({ event: eventValues, index: indexValues, status: statusValues }),
-    // The keys stand for the arrays, so the object keeps its identity until a filter really changes
+    // The joined keys stand in for the arrays
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [eventKey, indexKey, statusKey],
   );

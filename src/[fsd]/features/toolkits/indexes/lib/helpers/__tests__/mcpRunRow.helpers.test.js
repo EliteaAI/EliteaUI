@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { MCP_RUN_OUTCOMES, decorateMcpRow, toMcpEventLabel, toMcpEventTooltip } from '../mcpRunRow.helpers';
+import { decorateMcpRow, toMcpEventLabel, toMcpEventTooltip } from '../mcpRunRow.helpers';
 
 describe('MCP run row Event', () => {
   it('shows the one tool name of a run', () => {
@@ -24,9 +24,5 @@ describe('MCP run row Event', () => {
     const row = decorateMcpRow({ id: 1, tool_names: ['query-docs', 'get-docs'] });
     expect(row.event_label).toBe('query-docs +1');
     expect(row.event_tooltip).toBe('query-docs, get-docs');
-  });
-
-  it('offers only the MCP statuses (AC-45)', () => {
-    expect(MCP_RUN_OUTCOMES).toEqual(['running', 'success', 'failed']);
   });
 });

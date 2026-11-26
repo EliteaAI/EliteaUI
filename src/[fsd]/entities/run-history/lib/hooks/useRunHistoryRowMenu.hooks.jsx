@@ -42,7 +42,14 @@ export const useRunHistoryRowMenu = ({
   const canDelete = hasConversation && !isChatRun;
   const canOpenAnalytics = hasConversation && !!handleOpenAnalytics && hasRunAnalytics(item);
 
-  const styles = runHistoryRowActionsStyles(isDeleting);
+  const deleteIconSx = useMemo(
+    () => ({
+      fontSize: '.875rem',
+      opacity: isDeleting ? 0.5 : 1,
+      pointerEvents: isDeleting ? 'none' : 'auto',
+    }),
+    [isDeleting],
+  );
 
   const closeConfirmationModal = useCallback(() => setConfirmRemoveModal(false), []);
   const openConfirmationModal = useCallback(() => setConfirmRemoveModal(true), []);
@@ -123,7 +130,7 @@ export const useRunHistoryRowMenu = ({
         ? [
             {
               label: 'Delete',
-              icon: <DeleteIcon sx={styles.deleteIcon} />,
+              icon: <DeleteIcon sx={deleteIconSx} />,
               onClick: openConfirmationModal,
             },
           ]
@@ -161,7 +168,7 @@ export const useRunHistoryRowMenu = ({
       handleOpenAnalytics,
       item?.id,
       source,
-      styles.deleteIcon,
+      deleteIconSx,
     ],
   );
   return {
@@ -170,7 +177,6 @@ export const useRunHistoryRowMenu = ({
     menuOpened,
     openMenu,
     closeMenu,
-    styles,
     deleteModal: {
       open: confirmRemoveModal,
       onClose: closeConfirmationModal,
@@ -178,37 +184,3 @@ export const useRunHistoryRowMenu = ({
     },
   };
 };
-
-/** @type {MuiSx} */
-export const runHistoryRowActionsStyles = isDeleting => ({
-  actions: ({ palette }) => ({
-    display: 'none',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'absolute',
-    right: '0rem',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    gap: '0.25rem',
-    padding: '0.5rem',
-    borderRadius: '0.25rem',
-
-    svg: {
-      fontSize: '.9rem',
-
-      path: {
-        fill: palette.secondary.main,
-      },
-    },
-  }),
-  actionsRevealed: {
-    display: 'flex',
-  },
-  deleteIcon: {
-    fontSize: '.875rem',
-    opacity: isDeleting ? 0.5 : 1,
-    pointerEvents: isDeleting ? 'none' : 'auto',
-  },
-});
-
-export default useRunHistoryRowMenu;

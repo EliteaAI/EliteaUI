@@ -9,9 +9,7 @@ export const RUN_FULL_TIMESTAMP_FORMAT = 'dd-MM-yyyy, hh:mm:ss a';
 // Usage is tagged with `run_id` / `eval_run_id` only from this date; older runs have nothing to show
 const RUN_ANALYTICS_AVAILABLE_FROM = Date.UTC(2026, 8, 30);
 
-// With extra columns the tracks are the prototype's fixed widths: Date, Event, extras, Version, Duration.
-// The run history prototype sets Date 10rem, Event minmax(9rem, 1fr), Schedule/Webhook 10rem, Status 9.5rem,
-// Complexity 7.5rem, Version 7rem and Duration 5.5rem (ticket #7682, AC-2). Event takes the leftover width.
+// Date, Event, Version and Duration tracks; Event takes the leftover width
 const FIXED_TRACKS = {
   date: 'minmax(10rem, 1fr)',
   event: 'minmax(7rem, 0.75fr)',
@@ -19,15 +17,13 @@ const FIXED_TRACKS = {
   duration: 'minmax(6rem, 1fr)',
 };
 
-// Every column grows to share the free width, and never drops below the width its header label needs
-// (sort arrow, padding and the longest label of the column). A long label, such as "Schedule/Webhook", sets a larger minimum.
+// Minimum widths that fit each header label with its sort arrow
 const LABEL_MIN_WIDTH = {
   schedule: '11rem',
   status: '8.5rem',
   complexity: '8rem',
 };
 
-// Each extra column is flexible: it grows with the table and keeps the minimum its label needs
 const flexTrack = column => `minmax(${LABEL_MIN_WIDTH[column.id] ?? column.width}, 1fr)`;
 
 // The list keeps 48 rem with the schedule and status columns; any further column adds exactly its own width
@@ -178,7 +174,7 @@ const EXECUTION_TYPE_LABELS = new Map([
   ['webhook', 'Webhook'],
 ]);
 
-// A missing or unknown type (older runs) renders "—" and the row stays selectable. Older test runs were stored
+// A missing or unknown type (older runs) renders "-" and the row stays selectable. Older test runs were stored
 // as schedule_manual, so the run record's trigger still tells a test apart; a webhook test is its sample-body run
 const toEventLabel = row => {
   // Early webhook runs were stored as scheduled; their run record still says webhook
@@ -201,7 +197,7 @@ export const SCHEDULE_RUN_COLUMNS = [
     id: 'status',
     label: 'Status',
     width: '9.5rem',
-    // A schedule run keeps its own status; a chat, API or MCP row takes the server's run_status (AC-24)
+    // A schedule run keeps its own status; other rows use the server's run_status
     render: row => {
       const status = row.schedule_run?.status ?? row.run_status;
       return status ? toRunStatusLabel(status) : '-';

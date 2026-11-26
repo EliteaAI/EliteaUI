@@ -207,7 +207,6 @@ const indexHistoryPageStyles = () => ({
     overflow: 'hidden',
   },
   historyColumn: {
-    // The table takes two thirds and the chat one third of the page (ticket #7682)
     flex: 2,
     minWidth: 0,
     overflow: 'hidden',

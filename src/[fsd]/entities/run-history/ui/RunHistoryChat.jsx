@@ -107,7 +107,6 @@ RunHistoryChat.displayName = 'RunHistoryChat';
 /** @type {MuiSx} */
 const runHistoryChatStyles = isSmallWindow => ({
   wrapper: {
-    // Beside the table the chat takes one third of the width (ticket #7682); the table takes two thirds
     flex: 1,
     display: 'flex',
     flexDirection: 'column',

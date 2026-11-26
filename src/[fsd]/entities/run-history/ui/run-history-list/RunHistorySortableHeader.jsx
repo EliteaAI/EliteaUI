@@ -25,7 +25,6 @@ const RunHistorySortableHeader = memo(props => {
           ]}
         >
           {headerItem.sortable !== false && <SortArrows />}
-          {/* A cut label shows in full in the shared tooltip */}
           <Text.EllipsisTypography
             variant="labelMedium"
             color="text.secondary"
@@ -67,7 +66,7 @@ const runHistorySortableHeaderStyles = gridTemplateColumns => ({
       cursor: 'pointer',
       margin: '.375rem 0rem',
       padding: '0 1rem',
-      // A grid cell may narrow below its label, so the label can show its ellipsis
+      // Lets the label shrink and show its ellipsis
       minWidth: 0,
       overflow: 'hidden',
       borderRight: '.0625rem solid ' + palette.divider,
@@ -77,7 +76,6 @@ const runHistorySortableHeaderStyles = gridTemplateColumns => ({
         whiteSpace: 'nowrap',
         overflow: 'hidden',
       },
-      // The label fills the rest of its cell, so its ellipsis shows when the text is longer than the cell
       '& > div': {
         display: 'block',
         flex: '1 1 0',
@@ -100,8 +98,7 @@ const runHistorySortableHeaderStyles = gridTemplateColumns => ({
       transition: 'transform 0.2s ease',
     },
   }),
-  // An extra column has no sort, so no pointer; its colour matches the other headers (the same 0.7 opacity
-  // as an inactive sortable header)
+  // No sort, so no pointer cursor
   plainHeader: {
     // '&&' beats the header's `div` rule, which sets the pointer on every cell
     '&&': { cursor: 'default' },

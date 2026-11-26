@@ -1,7 +1,6 @@
 import { IndexRunInitiators, IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 
-// The Event of an index run in Run History (ticket #7682 AC-36): one of five events, never the outcome.
-// The per-index History page keeps its own labels; only the run-history rows use these.
+// Run History events of an index run; the per-index History page keeps its own labels
 export const INDEX_RUN_EVENTS = {
   created: 'Index created',
   indexing: 'Indexing',
@@ -10,7 +9,6 @@ export const INDEX_RUN_EVENTS = {
   searchIndex: 'Search index',
 };
 
-// The Status of an index run (ticket #7682 AC-38): the backend state, as a key of RUN_STATUS_STYLES
 export const INDEX_RUN_STATUS_KEYS = {
   [IndexStatuses.progress]: 'running',
   [IndexStatuses.success]: 'success',
@@ -19,8 +17,7 @@ export const INDEX_RUN_STATUS_KEYS = {
   [IndexStatuses.cancelled]: 'stopped',
 };
 
-// Scheduled reindex is an event whatever its outcome: "Reindexed by schedule" and "Scheduled reindex failed"
-// both read Scheduled reindex (AC-36)
+// A scheduled reindex reads as Scheduled reindex whatever its outcome
 export const resolveIndexRunEvent = (entry, { isSearch = false } = {}) => {
   if (isSearch) return INDEX_RUN_EVENTS.searchIndex;
   if (entry.state === IndexStatuses.scheduledReindex || entry.initiator === IndexRunInitiators.schedule) {

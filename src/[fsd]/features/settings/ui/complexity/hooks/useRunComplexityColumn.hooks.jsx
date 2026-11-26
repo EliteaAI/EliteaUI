@@ -20,10 +20,9 @@ const CHUNK_SIZE = 20;
 // Run History has no date filter, so labels cover the retention window of scored runs
 const LOOKBACK_DAYS = 400;
 
-// Same muted italic as "Not enough runs" on the version table
-// Low to extreme: the order the labels sort in (the API's own values)
 const COMPLEXITY_LABEL_ORDER = ['L', 'M', 'H', 'X'];
 
+// Same muted italic as "Not enough runs" on the version table
 const unscoredSx = ({ palette }) => ({
   color: palette.text.metrics || palette.text.disabled,
   fontStyle: 'italic',
@@ -83,7 +82,7 @@ export const useRunComplexityColumn = ({ entityId, rows }) => {
       label: 'Complexity',
       title: 'Complexity',
       width: '5.5rem',
-      // Sorts by the label order (low < medium < high < extreme); a run with no score sorts last
+      // Unscored runs sort last
       sortValue: row => {
         const run = byConversation.get(row.uuid);
         const index = COMPLEXITY_LABEL_ORDER.indexOf(run?.label);

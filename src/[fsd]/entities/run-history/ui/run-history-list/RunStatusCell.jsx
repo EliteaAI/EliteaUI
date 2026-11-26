@@ -3,17 +3,18 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { RUN_STATUS_STYLES } from '@/[fsd]/entities/run-history/lib/constants/runHistory.constants';
+import { toRunStatusMeta } from '@/[fsd]/entities/schedule';
 import { StatusDot } from '@/[fsd]/shared/ui';
 
-// The Status cell of a run row: a coloured dot and the label, as the run history design and its Status filter show
-// them. A status with no style (or no status) shows the empty mark, so every list reads the same.
 const RunStatusCell = memo(props => {
   const { status, emptyMark = '-' } = props;
 
   const styles = runStatusCellStyles();
-  const style = RUN_STATUS_STYLES[status];
 
   if (!status) return emptyMark;
+
+  // Schedule-only statuses (waiting for input, expired, cancelled) fall back to the shared status table
+  const { label, color } = RUN_STATUS_STYLES[status] ?? toRunStatusMeta(status);
 
   return (
     <Box
@@ -21,12 +22,12 @@ const RunStatusCell = memo(props => {
       sx={styles.root}
       data-testid="run-status-cell"
     >
-      <StatusDot color={RUN_STATUS_STYLES[status]?.color} />
+      <StatusDot color={color} />
       <Typography
         variant="bodySmall"
         component="span"
       >
-        {style?.label ?? status}
+        {label}
       </Typography>
     </Box>
   );

@@ -46,15 +46,12 @@ const RunHistoryList = memo(props => {
     eventColumnLabel = 'Event',
     shareOpensHistoryTab = false,
     extraColumns = NO_EXTRA_COLUMNS,
-    // true: the table takes the whole width of its parent (the run opens in place, nothing beside it)
     fillWidth = false,
-    // Reports the rows in the order the table shows them, so the run's prev and next follow the sort
     onSortedRowsChange,
   } = props;
   const { isSmallWindow } = useIsSmallWindow();
   const { windowWidth } = useGetWindowWidth();
 
-  // Beside the chat the parent's flex split sets the width; in place the table fills the whole width
   const styles = runHistoryListStyles(isSmallWindow, fillWidth ? '100%' : null);
 
   const { sortConfig, handleSortItems, getSortedData } = useRunHistorySorting(SORT_TYPES.DATE);
@@ -82,7 +79,6 @@ const RunHistoryList = memo(props => {
         (a.schedule_run?.status ?? a.run_status ?? '').localeCompare(
           b.schedule_run?.status ?? b.run_status ?? '',
         ),
-      // The extra column's own sort value (Complexity reads the labels it loaded); unscored rows sort last
       ...Object.fromEntries(
         extraColumns
           .filter(column => typeof column.sortValue === 'function')
@@ -103,8 +99,7 @@ const RunHistoryList = memo(props => {
     () => [
       { label: 'Date', type: SORT_TYPES.DATE },
       ...(hasEvent ? [{ label: eventColumnLabel, type: SORT_TYPES.EVENT }] : []),
-      // The extra columns sort by their own value (Schedule/Webhook, Status and Complexity). A column with no
-      // sort function (the toolkit's Index) has no arrows and no click, so nothing looks sortable that is not
+      // A column without a sort function gets no arrows
       ...extraColumns.map(column => ({
         label: column.label,
         title: column.title,
@@ -189,7 +184,6 @@ RunHistoryList.displayName = 'RunHistoryList';
 /** @type {MuiSx} */
 // The list grows with its extra columns (48 rem with Schedule and Status); without them it keeps 32 rem
 const runHistoryListStyles = (isSmallWindow, listWidth) => {
-  // A null width leaves the table to its flex share, so it does not stop short of the split
   const wrapperWidth = isSmallWindow ? '100%' : listWidth;
 
   return {

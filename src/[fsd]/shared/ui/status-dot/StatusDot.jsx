@@ -2,8 +2,7 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
-// A small round status mark. The colour is a palette path (such as 'success.main'), so it follows the theme in light
-// and dark mode. Used by the run statuses (the Status column and its filter) and the complexity labels.
+// `color` is a palette path such as 'success.main'
 const StatusDot = memo(props => {
   const { color } = props;
 

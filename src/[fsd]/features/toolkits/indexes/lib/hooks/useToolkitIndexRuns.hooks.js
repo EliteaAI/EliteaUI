@@ -26,7 +26,6 @@ const toRunRow = (entry, indexName) => {
   const createdAt = toIsoString(entry.updated_on);
   if (!createdAt) return null;
 
-  // Event and Status follow ticket #7682 (AC-36, AC-38): the event never carries the outcome
   const eventLabel = resolveIndexRunEvent(entry);
 
   return {
@@ -113,7 +112,7 @@ export const useToolkitIndexRuns = ({ projectId, toolkitId, skip = false }) => {
 
   const indexRunLookup = useMemo(() => buildIndexRunLookup(data), [data]);
 
-  // Every index of the toolkit, with or without runs: the Index filter lists them all
+  // All indexes, with or without runs, for the Index filter
   const indexNames = useMemo(
     () => (Array.isArray(data) ? data.map(index => index?.metadata?.collection).filter(Boolean) : []),
     [data],

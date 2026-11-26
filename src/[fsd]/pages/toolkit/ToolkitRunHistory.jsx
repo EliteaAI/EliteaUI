@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Navigate, Link as RouterLink, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
@@ -10,10 +10,7 @@ import { ChatMessageList } from '@/[fsd]/features/chat';
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
 import { buildRunHistoryRowDecorator } from '@/[fsd]/features/toolkits/indexes/lib/helpers';
-import {
-  MCP_RUN_OUTCOMES,
-  decorateMcpRow,
-} from '@/[fsd]/features/toolkits/indexes/lib/helpers/mcpRunRow.helpers';
+import { decorateMcpRow } from '@/[fsd]/features/toolkits/indexes/lib/helpers/mcpRunRow.helpers';
 import { useToolkitIndexRuns } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { useToolkitRunFilters } from '@/[fsd]/features/toolkits/indexes/lib/hooks/useToolkitRunFilters.hooks';
 import { IndexRunDetail } from '@/[fsd]/features/toolkits/indexes/ui';
@@ -22,8 +19,7 @@ import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { UntrustedMarkdownBoundary } from '@/[fsd]/shared/ui/markdown';
-import { useRunHistoryFilters } from '@/[fsd]/widgets/run-history-page/lib/hooks/useRunHistoryFilters.hooks';
-import RunHistoryFilters from '@/[fsd]/widgets/run-history-page/ui/RunHistoryFilters';
+import { RunHistoryFilters, useMcpRunFilters } from '@/[fsd]/widgets/run-history-page';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import RouteDefinitions from '@/routes';
@@ -32,11 +28,8 @@ const { ParticipantEntityTypes } = ParticipantEntityConstants;
 const NO_INDEX_NAMES = [];
 const NO_KEEP_KEYS = [];
 const MCP_ALWAYS_SHOWN_FILTERS = ['event'];
-const NO_SCHEDULES = [];
 const NO_ADDITIONAL_ROWS = [];
-const NO_VERSIONS = [];
 
-// The Index column: a link to the index page, or a hyphen for a tool-call row (AC-35, AC-37)
 const renderIndexCell = (row, { tab, toolkitId }) => {
   if (!row.index_name) return '-';
   return (
@@ -86,45 +79,14 @@ const ToolkitRunHistory = memo(() => {
     skip: isMCP || isLegacyMcpLink,
   });
 
-  // Toolkit filters (AC-39, AC-40): Event and Index hide the tool-call rows, Status sends run_outcome for them
   const filters = useToolkitRunFilters({
     indexNames: isMCP ? NO_INDEX_NAMES : indexNames,
     enabled: !isMCP,
   });
   const filteredIndexRows = useMemo(() => filters.filterIndexRows(indexRunRows), [filters, indexRunRows]);
 
-  // MCP filters (AC-45): Event lists the tools of this MCP that have runs, Status the MCP outcomes
-  const [mcpToolNames, setMcpToolNames] = useState([]);
-  // The tools the Event filter lists (AC-45) grow as runs load: a name already seen stays listed, so ticking one
-  // tool never drops the others from the options
-  const handleMcpRowsChange = useCallback(rows => {
-    const seen = rows.flatMap(row => row.tool_names ?? []);
-    setMcpToolNames(previous => {
-      const merged = [...new Set([...previous, ...seen])].sort();
-      return merged.length === previous.length ? previous : merged;
-    });
-  }, []);
-  const mcpFilters = useRunHistoryFilters({
-    schedules: NO_SCHEDULES,
-    versions: NO_VERSIONS,
-    toolNames: mcpToolNames,
-  });
-  const mcpStatusOptions = useMemo(
-    () => mcpFilters.options.status.filter(option => MCP_RUN_OUTCOMES.includes(option.value)),
-    [mcpFilters.options.status],
-  );
-  const mcpFilterValues = useMemo(
-    () => ({ event: mcpFilters.values.tool, status: mcpFilters.values.status }),
-    [mcpFilters.values],
-  );
-  const mcpFilterOptions = useMemo(
-    () => ({ event: mcpFilters.options.tool, status: mcpStatusOptions }),
-    [mcpFilters.options.tool, mcpStatusOptions],
-  );
-  const mcpFilterHandlers = useMemo(
-    () => ({ event: mcpFilters.handlers.tool, status: mcpFilters.handlers.status }),
-    [mcpFilters.handlers],
-  );
+  const mcpFilters = useMcpRunFilters();
+  const activeFilters = isMCP ? mcpFilters : filters;
 
   const extraColumns = useMemo(
     () =>
@@ -189,19 +151,18 @@ const ToolkitRunHistory = memo(() => {
       <Box sx={styles.content}>
         <RunHistoryFilters
           filterKeys={isMCP ? RUN_HISTORY_LAYOUTS.mcp.filters : RUN_HISTORY_LAYOUTS.toolkit.filters}
-          values={isMCP ? mcpFilterValues : filters.values}
-          options={isMCP ? mcpFilterOptions : filters.options}
-          handlers={isMCP ? mcpFilterHandlers : filters.handlers}
-          hasFilters={isMCP ? mcpFilters.hasFilters : filters.hasFilters}
-          onClear={isMCP ? mcpFilters.onClear : filters.onClear}
-          hasScheduleFilter={false}
-          // The MCP Event filter stays drawn while it has no tool yet, since its tools come from the loaded runs
+          values={activeFilters.values}
+          options={activeFilters.options}
+          handlers={activeFilters.handlers}
+          hasFilters={activeFilters.hasFilters}
+          onClear={activeFilters.onClear}
+          // MCP tools come from loaded runs, so Event stays drawn while empty
           keepEmptyKeys={isMCP ? MCP_ALWAYS_SHOWN_FILTERS : NO_KEEP_KEYS}
         />
         <UntrustedMarkdownBoundary>
           <RunHistoryContainer
             // A new filter restarts paging at page 1
-            key={JSON.stringify(isMCP ? mcpFilters.queryParams : filters.queryParams)}
+            key={JSON.stringify(activeFilters.queryParams)}
             entityId={entityId}
             source={isMCP ? ParticipantEntityTypes.MCP : ParticipantEntityTypes.Toolkit}
             versions={null}
@@ -212,10 +173,9 @@ const ToolkitRunHistory = memo(() => {
             decorateRow={isMCP ? decorateMcpRow : decorateRow}
             DetailComponent={IndexRunDetail}
             extraColumns={extraColumns}
-            queryParams={isMCP ? mcpFilters.queryParams : filters.queryParams}
-            // An Event or Index tick shows index runs only (AC-39, AC-40); a Status tick sends run_outcome for chats
+            queryParams={activeFilters.queryParams}
             skipConversations={!isMCP && !filters.showConversations}
-            onRowsChange={isMCP ? handleMcpRowsChange : undefined}
+            onRowsChange={isMCP ? mcpFilters.handleRowsChange : undefined}
           />
         </UntrustedMarkdownBoundary>
       </Box>

@@ -5,7 +5,6 @@ import { Typography } from '@mui/material';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Modal } from '@/[fsd]/shared/ui';
 
-// The Remove run? confirmation, shared by the row menu and the run header menu
 export const RunHistoryDeleteModal = memo(props => {
   const { open, onClose, onConfirm } = props;
   return (

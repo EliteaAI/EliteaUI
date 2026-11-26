@@ -27,9 +27,7 @@ import { useRunHistoryFilters } from '../lib/hooks/useRunHistoryFilters.hooks';
 import RunHistoryFilters from './RunHistoryFilters';
 
 const DEFAULT_TAB = 'all';
-// The Schedule/Webhook filter is always drawn on an agent or pipeline (design), even before any schedule exists
 const SCHEDULE_ALWAYS_SHOWN = ['schedule'];
-// The mark for a cell with no value: a hyphen, the same on every page (set by the requester)
 const NO_VALUE = '-';
 
 // The mockup draws the schedule name in the bright text tone, underlined, not in the link blue
@@ -67,13 +65,11 @@ const RunHistoryPage = memo(props => {
   });
   const schedules = useMemo(() => [...cronSchedules, ...webhooks], [cronSchedules, webhooks]);
   const [loadedRows, setLoadedRows] = useState([]);
-  // The tool names of the loaded runs feed the MCP Event filter (the facets endpoint gives the full list later)
   const toolNames = useMemo(
     () => [...new Set(loadedRows.flatMap(row => row.tool_names ?? []))],
     [loadedRows],
   );
   const filters = useRunHistoryFilters({ schedules, versions, toolNames });
-  // While a run is open it takes the whole content area, so the filter bar steps aside too
   const [runOpen, setRunOpen] = useState(false);
   const complexityColumn = useRunComplexityColumn({ entityId: agentId, rows: loadedRows });
   const scheduleColumns = useMemo(() => {
@@ -111,7 +107,6 @@ const RunHistoryPage = memo(props => {
         </Link>
       );
     };
-    // A schedule run's own status; a chat, API or MCP row takes the server's run_status (ticket AC-24)
     const renderStatus = row => (
       <RunStatusCell
         status={row.schedule_run?.status ?? row.run_status}
@@ -173,7 +168,7 @@ const RunHistoryPage = memo(props => {
       <Box sx={styles.content}>
         {!runOpen && (
           <RunHistoryFilters
-            // Complexity is drawn only while the platform switch is on, the same as its column
+            // Complexity filter only while its column is on
             filterKeys={(RUN_HISTORY_LAYOUTS[scheduleEntityType]?.filters ?? []).filter(
               key => key !== 'complexity' || Boolean(complexityColumn),
             )}
@@ -182,8 +177,6 @@ const RunHistoryPage = memo(props => {
             handlers={filters.handlers}
             hasFilters={filters.hasFilters}
             onClear={filters.onClear}
-            hasScheduleFilter={Boolean(scheduleEntityType)}
-            // The design draws Schedule/Webhook on every agent and pipeline, even with no schedule to pick
             keepEmptyKeys={SCHEDULE_ALWAYS_SHOWN}
           />
         )}

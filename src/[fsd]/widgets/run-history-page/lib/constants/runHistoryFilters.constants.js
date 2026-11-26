@@ -1,8 +1,7 @@
 export const ALL_OPTION_VALUE = '';
 export const NO_QUERY_PARAMS = {};
 
-// URL param of each filter. `status` is not here: the list API's `status` is the schedule run record, while the
-// derived status of a row is `run_outcome` (ticket AC-24, AC-26)
+// `run_outcome` is a row's derived status; the API's `status` is the schedule run record's
 export const FILTER_PARAMS = {
   schedule: 'schedule_id',
   run_outcome: 'run_outcome',
@@ -12,7 +11,6 @@ export const FILTER_PARAMS = {
   complexity: 'complexity',
 };
 
-// The Complexity filter's options (BE-2): the run's label, or not scored yet; the server accepts these values
 export const COMPLEXITY_OPTIONS = [
   { label: 'Low', value: 'L', color: 'success.main' },
   { label: 'Medium', value: 'M', color: 'info.main' },

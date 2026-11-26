@@ -17,7 +17,6 @@ const serializeRunHistory = conversation => {
     operation_type: conversation.meta?.operation_type ?? null,
     execution_type: conversation.execution_type ?? null,
     schedule_run: conversation.schedule_run ?? null,
-    // The derived status of a run without a schedule record (AC-24), and the MCP tool names of the run (AC-44)
     run_status: conversation.run_status ?? null,
     tool_names: conversation.tool_names ?? [],
   };
