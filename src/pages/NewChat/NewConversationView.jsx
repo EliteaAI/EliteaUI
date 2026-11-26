@@ -1235,7 +1235,7 @@ const NewConversationView = forwardRef(
             />
             <NewChatInput
               fromTheChat
-              placeholder={skillComposerPlaceholder(selectedParticipant, 'Type your message...')}
+              placeholder={skillComposerPlaceholder(selectedParticipant, '')}
               ref={chatInput}
               onSend={onSend}
               isLoading={isSending || isFetchingParticipant || isUploadingAttachments}
