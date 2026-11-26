@@ -7,6 +7,7 @@ import {
   SWARM_REASON,
   getAgentDisabledReason,
   getNestingDisabledReason,
+  isSwarmVersion,
   wouldExceedAgentNestingDepth,
 } from '../agentNesting.helpers';
 
@@ -75,5 +76,13 @@ describe('getAgentDisabledReason', () => {
       NESTING_REASON('Deep', 3),
     );
     expect(getAgentDisabledReason({ name: 'Plain' })).toBe('');
+  });
+});
+
+describe('isSwarmVersion', () => {
+  it('detects a swarm version from its meta', () => {
+    expect(isSwarmVersion({ meta: { internal_tools: ['swarm'] } })).toBe(true);
+    expect(isSwarmVersion({ meta: { internal_tools: ['attachments'] } })).toBe(false);
+    expect(isSwarmVersion(undefined)).toBe(false);
   });
 });

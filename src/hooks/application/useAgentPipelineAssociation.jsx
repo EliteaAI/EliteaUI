@@ -43,6 +43,15 @@ export const mapAssociationError = (rawError, entityName, opts = {}) => {
       ? `use "${entityName}"`
       : `add "${entityName}"`;
 
+  // #7736: Swarm agents are chat-only; the pinned (or default) version has Swarm Mode
+  if (lower.includes('swarm mode')) {
+    const swarmNotice = `Cannot ${target}: it has Swarm Mode enabled. Swarm agents are only supported in direct chat.`;
+    if (isSwitch) return `${swarmNotice} Choose a version without Swarm Mode.`;
+    if (isStatus) {
+      return `${swarmNotice} Point it to a version without Swarm Mode, or remove it.`;
+    }
+    return `${swarmNotice} Make a version without Swarm Mode its default, then add it.`;
+  }
   if (lower.includes('circular') || lower.includes('cycle')) {
     if (isSwitch)
       return (
@@ -118,13 +127,9 @@ export const useAgentPipelineAssociation = (applicationId, versionId) => {
         applicationId: agent.id,
       });
 
-      // Block swarm agents from being added as tools
-      const internalTools = selectedApplication?.version_details?.meta?.internal_tools || [];
-      if (internalTools.includes('swarm')) {
-        toastError(
-          `"${agent.name}" has Swarm Mode enabled and cannot be added as a tool. ` +
-            `Swarm agents are only supported in direct chat.`,
-        );
+      // Swarm agents are chat-only; the add flow binds the default version, so that is the one checked
+      if (AgentNestingHelpers.isSwarmVersion(selectedApplication?.version_details)) {
+        toastError(AgentNestingHelpers.SWARM_DEFAULT_VERSION_REASON(agent.name));
         return;
       }
 
