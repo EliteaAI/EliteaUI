@@ -8,7 +8,7 @@ const USER = STATE.user;
 // «Release notes for 2.4», the first chat of the sample chat list
 export const CHAT_ID = 101;
 const CHAT_NAME = 'Release notes for 2.4';
-const AGENT = { id: 11, name: 'Release Notes Writer' };
+export const AGENT = { id: 11, name: 'Release Notes Writer' };
 
 const MODEL = {
   id: 1,
@@ -56,7 +56,7 @@ const MODEL_PARTICIPANT = {
   meta: { name: MODEL.display_name },
 };
 const AGENT_PARTICIPANT_ID = 3;
-const AGENT_VERSION = {
+export const AGENT_VERSION = {
   id: AGENT.id * 100 + 1,
   name: 'latest',
   status: 'published',

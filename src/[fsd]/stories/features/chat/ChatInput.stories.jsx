@@ -2,6 +2,8 @@
 // (concepts/Chat) it implements; the concept stays the design for the pieces not built yet.
 import { Suspense, lazy } from 'react';
 
+import { userEvent, within } from 'storybook/test';
+
 import { Box } from '@mui/material';
 
 import '@/[fsd]/app/routes';
@@ -11,13 +13,22 @@ import { withStoryApi } from '@/[fsd]/stories/lib/storyApi';
 import { waitForQuietPage } from '@/[fsd]/stories/lib/storyPlay.helpers';
 import { ActiveConversationParticipantKey } from '@/common/constants';
 
-import { AGENT_PARTICIPANT_KEY, CHAT_ID, PROJECT_ID, routes, state } from './chatInput.data';
+import {
+  AGENT,
+  AGENT_PARTICIPANT_KEY,
+  AGENT_VERSION,
+  CHAT_ID,
+  PROJECT_ID,
+  routes,
+  state,
+} from './chatInput.data';
 
 // Lazy so the routes module loads before the layout
 const AppLayout = lazy(() => import('@/[fsd]/app/layout/AppLayout'));
 
 const NEW_CHAT = '/chat?create=1';
 const CHAT = `/chat/${CHAT_ID}`;
+const AGENT_EDITOR = `/agents/all/${AGENT.id}/${AGENT_VERSION.id}?viewMode=owner`;
 const INPUT_SELECTOR = `[data-tour="${CHAT_TOUR_TARGET_IDS.messageInput}"] textarea`;
 
 // The chat keeps the one who answers in localStorage; each story sets it (or clears it) before the app reads it
@@ -37,8 +48,10 @@ const chatScreen = path => ({
 
 // Rendered once the chat page has drawn its field and gone quiet; screenshots wait for the play. In the compare modes the
 // screen lives in a frame that runs the story on its own.
-const settled = async ({ globals }) => {
-  if (globals.screenshot && globals.screenshot !== SCREENSHOT_MODES.live) return false;
+const isLive = ({ globals }) => !globals.screenshot || globals.screenshot === SCREENSHOT_MODES.live;
+
+const settled = async context => {
+  if (!isLive(context)) return false;
   await waitForQuietPage({ quietMs: 1500, timeoutMs: 30000, readySelector: INPUT_SELECTOR });
   return true;
 };
@@ -77,4 +90,16 @@ export const ReplyToAgent = {
   ...chatScreen(CHAT),
   name: 'Chat — an agent answers, «Reply to <agent>…»',
   beforeEach: answeredBy(AGENT_PARTICIPANT_KEY),
+};
+
+// #7717 piece 1. The agent editor's test chat: the same field, the model and ⚙ under it.
+export const AgentTestChat = {
+  ...chatScreen(AGENT_EDITOR),
+  name: 'Agent editor — test chat, the model under the field',
+  play: async context => {
+    if (!isLive(context)) return;
+    const page = within(context.canvasElement);
+    await userEvent.click(await page.findByRole('button', { name: 'Test Agent' }, { timeout: 30000 }));
+    await settled(context);
+  },
 };

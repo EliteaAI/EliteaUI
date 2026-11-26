@@ -20,7 +20,7 @@ import AgentEditorPanel from '@/[fsd]/features/chat/ui/chat-input/AgentEditorPan
 import SkillChatPanel from '@/[fsd]/features/chat/ui/chat-input/SkillChatPanel.jsx';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
-import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
+import { ChatModelButton } from '@/[fsd]/widgets/llm-model-selector';
 import { ChatParticipantType } from '@/common/constants';
 
 const NewChatInput = memo(
@@ -245,176 +245,183 @@ const NewChatInput = memo(
     );
 
     return (
-      <UserInput
-        dataTourTargetId={CHAT_TOUR_TARGET_IDS.messageInput}
-        isStreaming={isStreaming}
-        isInjectable={isInjectable}
-        onInject={handleInject}
-        onStop={onStopGeneration}
-        attachments={attachments}
-        onDeleteAttachment={onDeleteAttachment}
-        isCreatingConversation={isCreatingConversation}
-        slots={{
-          footer: (
-            <Box sx={styles.toolbar}>
-              <Box sx={styles.toolbarLeft}>
-                {fromTheChat && (
-                  <PlusChatButton
-                    attachmentButtonRef={attachmentButtonRef}
-                    onAttachFiles={onAttachFiles}
-                    disableAttachments={disableAttachments || isLoading || isStreaming}
-                    participantDisablesAttachments={disableAttachments}
-                    attachments={attachments}
-                    limits={limits}
-                    onInviteUsers={onAddNewUsers}
-                    onInternalToolsConfigChange={onInternalToolsConfigChange}
-                    internal_tools={internal_tools}
-                    disableInternalTools={isLoading || isStreaming}
-                    onSelectParticipant={onSelectParticipant}
-                    onCreateAgent={onCreateAgent}
-                    onCreatePipeline={onCreatePipeline}
-                    onCreateSkill={onCreateSkill}
-                    onCreateToolkit={onCreateToolkit}
-                    onDeleteParticipant={onDeleteParticipant}
-                    participants={participants}
-                  />
-                )}
-                {fromTheChat && onClearChat && (
-                  <ChatButton.ClearChatButton
-                    disabled={disableClearChat}
-                    onClear={onClearChat}
-                  />
-                )}
-                {!hideAttachments && !fromTheChat && (
-                  <ChatButton.AttachmentButton
-                    ref={attachmentButtonRef}
-                    onAttachFiles={onAttachFiles}
-                    disableAttachments={disableAttachments || isLoading || isStreaming}
-                    attachments={attachments}
-                    limits={limits}
-                    testId="chat-attach-button"
-                  />
-                )}
-                {!isAgentsPage && !fromTheChat && (
-                  <ChatButton.ChatInternalToolsConfigButton
-                    onInternalToolsConfigChange={onInternalToolsConfigChange}
-                    internal_tools={internal_tools}
-                    projectId={projectId}
-                    disabled={isLoading || isStreaming}
-                  />
-                )}
-              </Box>
-              <Box sx={styles.toolbarRight}>
-                {(activeParticipant?.entity_name === 'application' ||
-                  activeParticipant?.entity_name === 'pipeline') &&
-                  !isAgentsPage && (
-                    <AgentEditorPanel
-                      activeParticipant={activeParticipant}
-                      participantDetails={activeParticipantDetails}
-                      onClickParticipant={onShowParticipantsList}
-                      selectedVersionId={selectedVersionId}
-                      onSelectVersion={onSelectVersion}
-                      variables={variables}
-                      onChangeVariables={onChangeVariables}
-                      disabled={isStreaming}
-                      onShowAgentEditor={onShowAgentEditor}
-                      onShowPipelineEditor={onShowPipelineEditor}
-                      onCloseAgentEditor={onCloseAgentEditor}
-                      onClosePipelineEditor={onClosePipelineEditor}
-                      isEditorDirty={isEditorDirty}
-                      onShowVersionChangeAlert={onShowVersionChangeAlert}
-                      onRefreshParticipantDetails={onRefreshParticipantDetails}
-                      onSwitchToModel={selectSavedOrDefaultModel}
-                      disableSwitchToModel={disableSwitchingParticipant || isLoading || isStreaming}
+      <Box sx={styles.column}>
+        <UserInput
+          dataTourTargetId={CHAT_TOUR_TARGET_IDS.messageInput}
+          isStreaming={isStreaming}
+          isInjectable={isInjectable}
+          onInject={handleInject}
+          onStop={onStopGeneration}
+          attachments={attachments}
+          onDeleteAttachment={onDeleteAttachment}
+          isCreatingConversation={isCreatingConversation}
+          slots={{
+            footer: (
+              <Box sx={styles.toolbar}>
+                <Box sx={styles.toolbarLeft}>
+                  {fromTheChat && (
+                    <PlusChatButton
+                      attachmentButtonRef={attachmentButtonRef}
+                      onAttachFiles={onAttachFiles}
+                      disableAttachments={disableAttachments || isLoading || isStreaming}
+                      participantDisablesAttachments={disableAttachments}
+                      attachments={attachments}
+                      limits={limits}
+                      onInviteUsers={onAddNewUsers}
+                      onInternalToolsConfigChange={onInternalToolsConfigChange}
+                      internal_tools={internal_tools}
+                      disableInternalTools={isLoading || isStreaming}
+                      onSelectParticipant={onSelectParticipant}
+                      onCreateAgent={onCreateAgent}
+                      onCreatePipeline={onCreatePipeline}
+                      onCreateSkill={onCreateSkill}
+                      onCreateToolkit={onCreateToolkit}
+                      onDeleteParticipant={onDeleteParticipant}
+                      participants={participants}
                     />
                   )}
-                {activeParticipant?.entity_name === ChatParticipantType.Skills && !isAgentsPage && (
-                  <SkillChatPanel
-                    activeParticipant={activeParticipant}
-                    participantDetails={activeParticipantDetails}
-                    onClickParticipant={onShowParticipantsList}
-                    selectedVersionId={selectedVersionId}
-                    onSelectVersion={onSelectVersion}
-                    onShowSkillEditor={onShowSkillEditor}
-                    onCloseSkillEditor={onCloseSkillEditor}
-                    editingSkill={editingSkill}
-                    isEditorDirty={isEditorDirty}
-                    onShowVersionChangeAlert={onShowVersionChangeAlert}
-                    unavailableReason={activeSkillUnavailableReason}
-                    disabled={isStreaming}
-                    onSwitchToModel={selectSavedOrDefaultModel}
-                    disableSwitchToModel={disableSwitchingParticipant || isLoading || isStreaming}
+                  {fromTheChat && onClearChat && (
+                    <ChatButton.ClearChatButton
+                      disabled={disableClearChat}
+                      onClear={onClearChat}
+                    />
+                  )}
+                  {!hideAttachments && !fromTheChat && (
+                    <ChatButton.AttachmentButton
+                      ref={attachmentButtonRef}
+                      onAttachFiles={onAttachFiles}
+                      disableAttachments={disableAttachments || isLoading || isStreaming}
+                      attachments={attachments}
+                      limits={limits}
+                      testId="chat-attach-button"
+                    />
+                  )}
+                  {!isAgentsPage && !fromTheChat && (
+                    <ChatButton.ChatInternalToolsConfigButton
+                      onInternalToolsConfigChange={onInternalToolsConfigChange}
+                      internal_tools={internal_tools}
+                      projectId={projectId}
+                      disabled={isLoading || isStreaming}
+                    />
+                  )}
+                </Box>
+                <Box sx={styles.toolbarRight}>
+                  <ChatButton.VoiceButton
+                    ref={voiceButtonRef}
+                    inputRef={userInputRef}
+                    disabled={isLoading || isStreaming || isSpeakingMode}
+                    onRecordingChange={handleVoiceRecordingChange}
                   />
-                )}
-                {(isAgentsPage || !activeParticipant) && (
-                  <LLMModelSelector
-                    dataTourTargetId={CHAT_TOUR_TARGET_IDS.modelSettings}
-                    selectedModel={selectedModel}
-                    onSelectModel={onSelectModel}
-                    models={modelList}
-                    disabled={disableSwitchingParticipant || isStreaming || isLoading}
-                    llmSettings={llmSettings}
-                    onSetLLMSettings={onSetLLMSettings}
-                    showWebhookSecret={showWebhookSecret}
-                    showStepsLimit={showStepsLimit}
-                  />
-                )}
-                <ChatButton.VoiceButton
-                  ref={voiceButtonRef}
-                  inputRef={userInputRef}
-                  disabled={isLoading || isStreaming || isSpeakingMode}
-                  onRecordingChange={handleVoiceRecordingChange}
-                />
+                </Box>
               </Box>
-            </Box>
-          ),
-        }}
-        slotProps={{
-          footerContainer: {
-            overflow: 'scroll',
-          },
-          container: {
-            onDrop,
-          },
-          input: {
-            placeholder: isRecording || isSpeakingMode ? 'Speak your message' : inputPlaceholder,
-            color: theme.palette.text.secondary,
-            iconColor: theme.palette.icon.default,
-          },
-          sendButton: {
-            iconColor: theme.palette.icon.send,
-            disabledBackground: theme.palette.components.button.background.primary.disabled,
-            background: theme.palette.primary.main,
-          },
-          stopButton: {
-            iconColor: theme.palette.icon.attention,
-          },
-          mentionUser: {
-            users,
-            onMentionChange,
-          },
-          highlight: {
-            ranges: slashHighlights,
-            color: theme.palette.primary.main,
-          },
-        }}
-        clearInputAfterSend={clearInputAfterSubmit}
-        disabledSend={disabledSend || isRecording}
-        disabledInput={isLoading || isReadOnly}
-        onSend={handleSend}
-        onNormalKeyDown={onNormalKeyDown}
-        onInputChange={handleInputChange}
-        tooltipOfSendButton={tooltipOfSendButton}
-        showLoading={isLoading}
-        onFilePaste={handleFilePaste}
-        isUploadingAttachments={isUploadingAttachments}
-        uploadProgress={uploadProgress}
-        isRecording={isRecording || isSpeakingModeRecording}
-        isSpeakingMode={isSpeakingMode}
-        onEnterSpeakingMode={onSpeakingModeToggle}
-        onExitSpeakingMode={onSpeakingModeToggle}
-        ref={userInputRef}
-      />
+            ),
+          }}
+          slotProps={{
+            footerContainer: {
+              overflow: 'scroll',
+            },
+            container: {
+              onDrop,
+            },
+            input: {
+              placeholder: isRecording || isSpeakingMode ? 'Speak your message' : inputPlaceholder,
+              color: theme.palette.text.secondary,
+              iconColor: theme.palette.icon.default,
+            },
+            sendButton: {
+              iconColor: theme.palette.icon.send,
+              disabledBackground: theme.palette.components.button.background.primary.disabled,
+              background: theme.palette.primary.main,
+            },
+            stopButton: {
+              iconColor: theme.palette.icon.attention,
+            },
+            mentionUser: {
+              users,
+              onMentionChange,
+            },
+            highlight: {
+              ranges: slashHighlights,
+              color: theme.palette.primary.main,
+            },
+          }}
+          clearInputAfterSend={clearInputAfterSubmit}
+          disabledSend={disabledSend || isRecording}
+          disabledInput={isLoading || isReadOnly}
+          onSend={handleSend}
+          onNormalKeyDown={onNormalKeyDown}
+          onInputChange={handleInputChange}
+          tooltipOfSendButton={tooltipOfSendButton}
+          showLoading={isLoading}
+          onFilePaste={handleFilePaste}
+          isUploadingAttachments={isUploadingAttachments}
+          uploadProgress={uploadProgress}
+          isRecording={isRecording || isSpeakingModeRecording}
+          isSpeakingMode={isSpeakingMode}
+          onEnterSpeakingMode={onSpeakingModeToggle}
+          onExitSpeakingMode={onSpeakingModeToggle}
+          ref={userInputRef}
+        />
+        <Box
+          sx={styles.below}
+          data-testid="chat-input-below"
+        >
+          {(activeParticipant?.entity_name === 'application' ||
+            activeParticipant?.entity_name === 'pipeline') &&
+            !isAgentsPage && (
+              <AgentEditorPanel
+                activeParticipant={activeParticipant}
+                participantDetails={activeParticipantDetails}
+                onClickParticipant={onShowParticipantsList}
+                selectedVersionId={selectedVersionId}
+                onSelectVersion={onSelectVersion}
+                variables={variables}
+                onChangeVariables={onChangeVariables}
+                disabled={isStreaming}
+                onShowAgentEditor={onShowAgentEditor}
+                onShowPipelineEditor={onShowPipelineEditor}
+                onCloseAgentEditor={onCloseAgentEditor}
+                onClosePipelineEditor={onClosePipelineEditor}
+                isEditorDirty={isEditorDirty}
+                onShowVersionChangeAlert={onShowVersionChangeAlert}
+                onRefreshParticipantDetails={onRefreshParticipantDetails}
+                onSwitchToModel={selectSavedOrDefaultModel}
+                disableSwitchToModel={disableSwitchingParticipant || isLoading || isStreaming}
+              />
+            )}
+          {activeParticipant?.entity_name === ChatParticipantType.Skills && !isAgentsPage && (
+            <SkillChatPanel
+              activeParticipant={activeParticipant}
+              participantDetails={activeParticipantDetails}
+              onClickParticipant={onShowParticipantsList}
+              selectedVersionId={selectedVersionId}
+              onSelectVersion={onSelectVersion}
+              onShowSkillEditor={onShowSkillEditor}
+              onCloseSkillEditor={onCloseSkillEditor}
+              editingSkill={editingSkill}
+              isEditorDirty={isEditorDirty}
+              onShowVersionChangeAlert={onShowVersionChangeAlert}
+              unavailableReason={activeSkillUnavailableReason}
+              disabled={isStreaming}
+              onSwitchToModel={selectSavedOrDefaultModel}
+              disableSwitchToModel={disableSwitchingParticipant || isLoading || isStreaming}
+            />
+          )}
+          {(isAgentsPage || !activeParticipant) && (
+            <ChatModelButton
+              dataTourTargetId={CHAT_TOUR_TARGET_IDS.modelSettings}
+              selectedModel={selectedModel}
+              onSelectModel={onSelectModel}
+              models={modelList}
+              disabled={disableSwitchingParticipant || isStreaming || isLoading}
+              llmSettings={llmSettings}
+              onSetLLMSettings={onSetLLMSettings}
+              showWebhookSecret={showWebhookSecret}
+              showStepsLimit={showStepsLimit}
+            />
+          )}
+        </Box>
+      </Box>
     );
   }),
 );
@@ -423,6 +430,24 @@ NewChatInput.displayName = 'NewChatInput';
 
 /** @type {MuiSx} */
 const newChatInputStyles = () => ({
+  // The field, then the row under it: who answers (the model, or the agent / pipeline / skill panel)
+  column: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100%',
+    minWidth: 0,
+  },
+  below: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: '.5rem',
+    minHeight: '2rem',
+    marginTop: '.375rem',
+    paddingRight: '.25rem',
+    minWidth: 0,
+    overflow: 'hidden',
+  },
   toolbar: {
     flex: 1,
     display: 'flex',

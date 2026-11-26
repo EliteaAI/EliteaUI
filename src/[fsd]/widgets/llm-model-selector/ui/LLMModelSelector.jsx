@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { memo } from 'react';
 
 import { Box, ButtonGroup, Divider, Tooltip, Typography, useTheme } from '@mui/material';
 
@@ -8,7 +8,7 @@ import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
 import SettingIcon from '@/components/Icons/SettingIcon';
 
-import { normalizeLlmSettings } from '../lib/helpers';
+import { useLlmModelSelector } from '../lib/hooks';
 import LLMModelsMenu from './LLMModelsMenu';
 import LLMSettingsDialog from './LLMSettingsDialog';
 
@@ -41,51 +41,19 @@ const LLMModelSelector = memo(props => {
 
   const theme = useTheme();
 
-  const anchorRef = useRef(null);
-  const [showLLMSettings, setShowLLMSettings] = useState(false);
-
-  const [anchorEl, setAnchorEl] = useState(null);
+  const {
+    anchorRef,
+    anchorEl,
+    showLLMSettings,
+    normalizedLlmSettings,
+    handleModelMenuClick,
+    handleClose,
+    handleSettingsClick,
+    handleApplySettings,
+    handleCancelSettings,
+  } = useLlmModelSelector({ llmSettings, selectedModel, showStepsLimit, onSetLLMSettings, onClickSettings });
 
   const styles = llmModelSelectorStyles(!!anchorEl);
-
-  const normalizedLlmSettings = useMemo(
-    // Default param `llmSettings = {}` only substitutes for `undefined`; the Toolkit Index History
-    // page passes `llmSettings={null}` explicitly, which would crash normalizeLlmSettings with
-    // "Cannot read properties of null (reading 'max_tokens')".
-    () => normalizeLlmSettings(llmSettings || {}, selectedModel, { showStepsLimit }),
-    [llmSettings, selectedModel, showStepsLimit],
-  );
-
-  const handleModelMenuClick = () => {
-    setAnchorEl(anchorRef.current);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleSettingsClick = useCallback(() => {
-    if (onClickSettings) {
-      // Use external settings handler if provided
-      onClickSettings();
-    } else if (onSetLLMSettings) {
-      // Use internal modal dialog
-      setShowLLMSettings(true);
-    }
-  }, [onClickSettings, onSetLLMSettings]);
-
-  const handleApplySettings = useCallback(
-    newSettings => {
-      if (onSetLLMSettings) {
-        onSetLLMSettings(newSettings);
-      }
-      setShowLLMSettings(false);
-    },
-    [onSetLLMSettings],
-  );
-
-  const handleCancelSettings = useCallback(() => {
-    setShowLLMSettings(false);
-  }, []);
 
   if (variant === 'field') {
     return (
