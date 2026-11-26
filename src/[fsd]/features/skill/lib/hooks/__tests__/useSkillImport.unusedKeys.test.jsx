@@ -13,6 +13,15 @@ const spies = vi.hoisted(() => ({
 }));
 
 vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn() }));
+vi.mock('@/[fsd]/entities/import-wizard/api', async importOriginal => ({
+  ...(await importOriginal()),
+  useLazySkillsLimitsQuery: () => [
+    () => ({
+      unwrap: () =>
+        Promise.resolve({ max_file_bytes: 10485760, max_package_bytes: 31457280, max_package_files: 500 }),
+    }),
+  ],
+}));
 vi.mock('@/[fsd]/features/skill/api', () => ({
   useSkillImportMutation: () => [spies.importSkill, { isLoading: false }],
 }));

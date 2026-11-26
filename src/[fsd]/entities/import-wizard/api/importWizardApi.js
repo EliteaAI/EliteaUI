@@ -40,4 +40,9 @@ export const importWizardApi = eliteaApi
     }),
   });
 
-export const { useImportWizardMutation, useForkAgentMutation, useSkillsLimitsQuery } = importWizardApi;
+export const {
+  useImportWizardMutation,
+  useForkAgentMutation,
+  useSkillsLimitsQuery,
+  useLazySkillsLimitsQuery,
+} = importWizardApi;

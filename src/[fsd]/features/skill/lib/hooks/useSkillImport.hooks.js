@@ -1,8 +1,9 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
 import { parseMdFrontmatter } from '@/[fsd]/entities/import-wizard';
+import { useLazySkillsLimitsQuery } from '@/[fsd]/entities/import-wizard/api';
 import { useSkillImportMutation } from '@/[fsd]/features/skill/api';
 import { isSkillPackage, readSkillZip } from '@/[fsd]/features/skill/lib/helpers';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
@@ -42,9 +43,17 @@ const parsePackage = ({ content, commandName, ...rest }) => ({
   ...rest,
 });
 
-const readSkillFile = async file => {
+const awaitLimits = limitsRequest =>
+  limitsRequest
+    ? Promise.race([
+        limitsRequest.unwrap().catch(() => null),
+        new Promise(resolve => setTimeout(resolve, 5000, null)),
+      ])
+    : null;
+
+const readSkillFile = async (file, limitsRequest) => {
   const packages = isSkillPackage(file.name)
-    ? await readSkillZip(file)
+    ? await readSkillZip(file, await awaitLimits(limitsRequest))
     : [{ content: await file.text(), filePaths: [] }];
   return packages.map(parsePackage);
 };
@@ -65,6 +74,8 @@ export const useSkillImport = () => {
   const projectId = useSelectedProjectId();
   const [importSkill, { isLoading: isImporting }] = useSkillImportMutation();
   const { toastError, toastSuccess, toastInfo } = useToast();
+  const [fetchSkillsLimits] = useLazySkillsLimitsQuery();
+  const skillsLimitsRequest = useRef(null);
 
   const [pending, setPending] = useState(null);
 
@@ -86,7 +97,7 @@ export const useSkillImport = () => {
       }
 
       try {
-        const packages = await readSkillFile(file);
+        const packages = await readSkillFile(file, skillsLimitsRequest.current);
         const incomplete = packages.find(
           ({ frontmatter }) => !frontmatter?.name || !frontmatter?.description,
         );
@@ -115,12 +126,13 @@ export const useSkillImport = () => {
   );
 
   const openFileDialog = useCallback(() => {
+    skillsLimitsRequest.current = projectId ? fetchSkillsLimits({ projectId }) : null;
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = ACCEPT;
     fileInput.onchange = handleFileUpload;
     fileInput.click();
-  }, [handleFileUpload]);
+  }, [fetchSkillsLimits, handleFileUpload, projectId]);
 
   const cancelImport = useCallback(() => setPending(null), []);
 
