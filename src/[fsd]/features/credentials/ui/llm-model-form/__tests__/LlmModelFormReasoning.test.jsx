@@ -989,6 +989,81 @@ describe('LlmModelForm reasoning settings from the LiteLLM catalog', () => {
       expect(readSettings()).toEqual(edited);
     });
 
+    it('shows the thinking mode as it will be saved when the late catalog fills nothing in', async () => {
+      catalog = undefined;
+      isCatalogPending = true;
+      const user = userEvent.setup();
+      const { rerender } = renderForm(NEW_MODEL);
+      await typeName(user, 'claude-sonnet-5');
+      await user.click(reasoningSwitch());
+
+      catalog = LLM_MODEL_CATALOG_FIXTURE;
+      isCatalogPending = false;
+      rerenderForm(rerender, NEW_MODEL);
+
+      expect(reasoningOf().thinking_type).toBeNull();
+      expect(screen.queryByTestId('llm-model-thinking-type-fixed')).not.toBeInTheDocument();
+      expect(screen.getByTestId('llm-model-thinking-type-select')).toHaveTextContent('Not set');
+
+      await user.click(nameInput());
+      expect(screen.queryByTestId('llm-model-thinking-type-fixed')).not.toBeInTheDocument();
+      expect(screen.getByTestId('llm-model-thinking-type-select')).toHaveTextContent('Not set');
+    });
+
+    it('shows the saved thinking mode when the catalog arrives with the name focused after an edit', async () => {
+      catalog = undefined;
+      isCatalogPending = true;
+      const user = userEvent.setup();
+      const { rerender } = renderForm(NEW_MODEL);
+      await typeName(user, 'claude-sonnet-5');
+      await user.click(reasoningSwitch());
+      await user.click(nameInput());
+      const edited = readSettings();
+
+      catalog = LLM_MODEL_CATALOG_FIXTURE;
+      isCatalogPending = false;
+      rerenderForm(rerender, NEW_MODEL);
+
+      expect(screen.queryByTestId('llm-model-thinking-type-fixed')).not.toBeInTheDocument();
+      expect(screen.getByTestId('llm-model-thinking-type-select')).toHaveTextContent('Not set');
+
+      await user.tab();
+      expect(readSettings()).toEqual(edited);
+
+      await typeName(user, 'gpt-5.6-luna');
+      expect(reasoningOf()).toEqual({
+        supports_reasoning: true,
+        thinking_type: null,
+        supported_efforts: ['none', 'low', 'medium', 'high', 'xhigh'],
+        default_effort: 'medium',
+      });
+    });
+
+    it('shows the mode of the entry when the catalog arrives with the name focused, and writes it on leaving', async () => {
+      catalog = undefined;
+      isCatalogPending = true;
+      const stored = storedModel('gpt-5.6-luna', {
+        supports_reasoning: true,
+        supported_efforts: ['low', 'high'],
+        default_effort: 'low',
+      });
+      const user = userEvent.setup();
+      const { rerender } = renderForm(stored);
+      await typeNameWithoutLeavingTheField(user, 'claude-sonnet-5-5');
+
+      catalog = LLM_MODEL_CATALOG_FIXTURE;
+      isCatalogPending = false;
+      rerenderForm(rerender, stored);
+      await waitFor(() =>
+        expect(screen.getByTestId('llm-model-thinking-type-fixed')).toHaveTextContent('Adaptive · always on'),
+      );
+      expect(reasoningOf().thinking_type ?? null).toBeNull();
+
+      await user.tab();
+      expect(reasoningOf().thinking_type).toBe('always_on');
+      expect(screen.getByTestId('llm-model-thinking-type-fixed')).toHaveTextContent('Adaptive · always on');
+    });
+
     it('leaves a stored row alone when the catalog arrives while its name is being typed', async () => {
       catalog = undefined;
       isCatalogPending = true;

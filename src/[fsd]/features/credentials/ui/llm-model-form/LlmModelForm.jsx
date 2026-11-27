@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -273,12 +273,14 @@ const LlmModelForm = memo(props => {
     setIsModelNameFocused(false);
   }, [editSetting, settings.name]);
 
-  const prefilledCatalogKeyRef = useRef(catalogEntry?.key ?? null);
+  const [handledCatalogKey, setHandledCatalogKey] = useState(catalogEntry?.key ?? null);
   const prefilledNameRef = useRef(catalogEntry ? settledName : null);
   const lastPrefillRef = useRef(null);
   const nameSettledBeforeCatalogRef = useRef(null);
   const isSettledNameEdited = settledName !== initialSettings?.name;
-  useEffect(() => {
+  const isStoredEntryLookedUp =
+    isEditing && (!isSettledNameEdited || catalogEntry?.key === storedCatalogEntry?.key);
+  useLayoutEffect(() => {
     if (isCatalogPending) {
       if (nameSettledBeforeCatalogRef.current?.name !== settledName) {
         nameSettledBeforeCatalogRef.current = {
@@ -288,17 +290,17 @@ const LlmModelForm = memo(props => {
       }
       return;
     }
-    if (isModelNameFocused) return;
     const nameSettledBeforeCatalog = nameSettledBeforeCatalogRef.current;
-    nameSettledBeforeCatalogRef.current = null;
-    const catalogKey = catalogEntry?.key ?? null;
-    if (catalogKey === prefilledCatalogKeyRef.current) return;
-    prefilledCatalogKeyRef.current = catalogKey;
-    if (prefilledNameRef.current !== settledName) prefilledNameRef.current = null;
-    if (!catalogEntry || (isEditing && !isSettledNameEdited)) return;
     const isEditedWhileCatalogLoaded =
       nameSettledBeforeCatalog?.name === settledName &&
       !areSettingsAsPrefilled(settings, nameSettledBeforeCatalog.settings);
+    if (isModelNameFocused && !isEditedWhileCatalogLoaded) return;
+    nameSettledBeforeCatalogRef.current = null;
+    const catalogKey = catalogEntry?.key ?? null;
+    if (catalogKey === handledCatalogKey) return;
+    setHandledCatalogKey(catalogKey);
+    if (prefilledNameRef.current !== settledName) prefilledNameRef.current = null;
+    if (!catalogEntry || (isEditing && !isSettledNameEdited)) return;
     if (isEditedWhileCatalogLoaded) {
       prefilledNameRef.current = settledName;
       lastPrefillRef.current = nameSettledBeforeCatalog.settings;
@@ -316,6 +318,7 @@ const LlmModelForm = memo(props => {
   }, [
     catalogEntry,
     editSetting,
+    handledCatalogKey,
     isCatalogPending,
     isEditing,
     isModelNameFocused,
@@ -526,8 +529,9 @@ const LlmModelForm = memo(props => {
                   settings={displayedSettings}
                   initialSettings={initialSettings}
                   isEditing={isEditing}
-                  isStoredEntryLookedUp={
-                    isEditing && (!isSettledNameEdited || catalogEntry?.key === storedCatalogEntry?.key)
+                  isStoredEntryLookedUp={isStoredEntryLookedUp}
+                  isCatalogFillPending={
+                    !isStoredEntryLookedUp && (catalogEntry?.key ?? null) !== handledCatalogKey
                   }
                   catalogEntry={catalogEntry}
                   visibleErrors={visibleErrors}

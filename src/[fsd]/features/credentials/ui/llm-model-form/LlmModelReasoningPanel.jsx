@@ -40,6 +40,7 @@ const LlmModelReasoningPanel = memo(props => {
     initialSettings,
     isEditing,
     isStoredEntryLookedUp,
+    isCatalogFillPending,
     catalogEntry,
     visibleErrors,
     editSetting,
@@ -82,9 +83,8 @@ const LlmModelReasoningPanel = memo(props => {
 
   const storedThinkingType = isEditing ? (initialSettings?.[FIELDS.thinkingType] ?? null) : null;
   const catalogThinkingType = catalogEntry?.thinking_type ?? null;
-  const chosenThinkingType = isStoredEntryLookedUp
-    ? (settings[FIELDS.thinkingType] ?? null)
-    : (settings[FIELDS.thinkingType] ?? catalogThinkingType);
+  const chosenThinkingType =
+    settings[FIELDS.thinkingType] ?? (isCatalogFillPending ? catalogThinkingType : null);
   const isStoredModeKept =
     isStoredEntryLookedUp &&
     (isLlmModelReasoningConfigured(initialSettings) ||
