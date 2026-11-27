@@ -29,7 +29,7 @@ const ResourcesButton = memo(props => {
         dispatch(settingsActions.setSideBarCollapsed(true));
         return;
       }
-      // useCollapseAfterSidebarNavigation folds the menu once it lands
+      // useToggleSidebarAfterNavigation folds the menu once it lands
       navigate(RouteDefinitions.HelpCenter, {
         state: { from: location.pathname, [SIDEBAR_COLLAPSE_STATE_KEY]: Date.now() },
       });

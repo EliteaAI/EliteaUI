@@ -3,6 +3,7 @@ import { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { SIDEBAR_EXPAND_STATE_KEY } from '@/[fsd]/widgets/sidebar-root/lib/constants/sidebar.constants';
 import { useDisablePersonalSpace } from '@/[fsd]/widgets/sidebar-root/lib/hooks/useDisablePersonalSpace.hooks';
 import { PERMISSIONS, SearchParams, ViewMode } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
@@ -40,6 +41,8 @@ export const useNewChat = () => {
         replace,
         state: {
           routeStack: [{ breadCrumb: 'Chat', viewMode: ViewMode.Owner, pagePath: RouteDefinitions.Chat }],
+          // useToggleSidebarAfterNavigation unfolds the menu once it lands
+          [SIDEBAR_EXPAND_STATE_KEY]: Date.now(),
         },
       },
     );

@@ -35,7 +35,7 @@ export const useSidebarNavigation = () => {
         } else {
           resetApiState();
         }
-        // A guard may cancel it: useCollapseAfterSidebarNavigation folds the menu once it lands
+        // A guard may cancel it: useToggleSidebarAfterNavigation folds the menu once it lands
         navigate(pagePath, {
           state: {
             routeStack: [{ breadCrumb, pagePath }],

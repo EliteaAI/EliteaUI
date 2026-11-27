@@ -2,20 +2,24 @@
 import { RouterProvider, createMemoryRouter, useBlocker } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { SIDEBAR_COLLAPSE_STATE_KEY } from '@/[fsd]/widgets/sidebar-root/lib/constants/sidebar.constants';
+import {
+  SIDEBAR_COLLAPSE_STATE_KEY,
+  SIDEBAR_EXPAND_STATE_KEY,
+} from '@/[fsd]/widgets/sidebar-root/lib/constants/sidebar.constants';
 import { actions as settingsActions } from '@/slices/settings';
 import { act, cleanup, render } from '@testing-library/react';
 
-import { useCollapseAfterSidebarNavigation } from '../useCollapseAfterSidebarNavigation.hooks';
+import { useToggleSidebarAfterNavigation } from '../useToggleSidebarAfterNavigation.hooks';
 
 const fixture = vi.hoisted(() => ({ dispatch: vi.fn(), block: false, blocker: null }));
 
 vi.mock('react-redux', () => ({ useDispatch: () => fixture.dispatch }));
 
 const COLLAPSE = settingsActions.setSideBarCollapsed(true);
+const EXPAND = settingsActions.setSideBarCollapsed(false);
 
 const Layout = () => {
-  useCollapseAfterSidebarNavigation();
+  useToggleSidebarAfterNavigation();
   fixture.blocker = useBlocker(() => fixture.block);
   return null;
 };
@@ -36,7 +40,7 @@ const renderRouter = () => {
 const pick = (router, path, id = 1) =>
   act(() => router.navigate(path, { state: { routeStack: [], [SIDEBAR_COLLAPSE_STATE_KEY]: id } }));
 
-describe('useCollapseAfterSidebarNavigation', () => {
+describe('useToggleSidebarAfterNavigation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     fixture.block = false;
@@ -90,6 +94,29 @@ describe('useCollapseAfterSidebarNavigation', () => {
     render(<RouterProvider router={reloaded} />);
     await act(() => reloaded.navigate(-1));
     expect(reloaded.state.location.pathname).toBe('/pipelines');
+    expect(fixture.dispatch).not.toHaveBeenCalled();
+  });
+
+  it('unfolds the menu once a New chat pick has opened, once per pick', async () => {
+    const router = renderRouter();
+    await act(() => router.navigate('/pipelines', { state: { [SIDEBAR_EXPAND_STATE_KEY]: 4 } }));
+    await act(() => router.navigate('/skills', { replace: true, state: router.state.location.state }));
+    expect(fixture.dispatch).toHaveBeenCalledTimes(1);
+    expect(fixture.dispatch).toHaveBeenCalledWith(EXPAND);
+  });
+
+  it('does not unfold on Back to a New chat entry', async () => {
+    const router = createMemoryRouter([{ path: '*', element: <Layout /> }], {
+      initialEntries: [
+        '/skills',
+        { pathname: '/pipelines', state: { [SIDEBAR_EXPAND_STATE_KEY]: 2 } },
+        '/skills',
+      ],
+      initialIndex: 2,
+    });
+    render(<RouterProvider router={router} />);
+    await act(() => router.navigate(-1));
+    expect(router.state.location.pathname).toBe('/pipelines');
     expect(fixture.dispatch).not.toHaveBeenCalled();
   });
 
