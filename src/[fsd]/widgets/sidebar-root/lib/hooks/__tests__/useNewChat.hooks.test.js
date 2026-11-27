@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { SIDEBAR_EXPAND_STATE_KEY } from '@/[fsd]/widgets/sidebar-root/lib/constants/sidebar.constants';
 import { PERMISSIONS } from '@/common/constants';
 import { cleanup, renderHook } from '@testing-library/react';
 
@@ -43,13 +44,16 @@ describe('useNewChat', () => {
   beforeEach(() => vi.clearAllMocks());
   afterEach(cleanup);
 
-  it('opens a new chat draft', () => {
+  it('opens a new chat draft and asks to unfold the menu', () => {
     renderNewChat().createNewChat();
     expect(fixture.navigate).toHaveBeenCalledWith(
       { pathname: '/chat', search: 'create=1' },
       {
         replace: false,
-        state: { routeStack: [{ breadCrumb: 'Chat', viewMode: 'owner', pagePath: '/chat' }] },
+        state: {
+          routeStack: [{ breadCrumb: 'Chat', viewMode: 'owner', pagePath: '/chat' }],
+          [SIDEBAR_EXPAND_STATE_KEY]: expect.any(Number),
+        },
       },
     );
   });

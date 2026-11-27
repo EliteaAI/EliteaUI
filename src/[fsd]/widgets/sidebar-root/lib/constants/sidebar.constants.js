@@ -1,6 +1,7 @@
 import RouteDefinitions from '@/routes';
 
 export const SIDEBAR_COLLAPSE_STATE_KEY = 'sidebarCollapseId';
+export const SIDEBAR_EXPAND_STATE_KEY = 'sidebarExpandId';
 
 // Explore list order; `permissionKey` is the PERMISSION_GROUPS entry gating the row (none = always shown)
 export const ExploreSections = [
