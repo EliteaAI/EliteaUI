@@ -28,12 +28,22 @@ const {
   LLM_MODEL_REMOVED_EFFORTS_WARNING,
   LLM_MODEL_THINKING_TYPE_CHOICE_HELPER_TEXT,
   LLM_MODEL_THINKING_TYPE_FIXED_HELPER_TEXTS,
+  LLM_MODEL_THINKING_TYPE_ALWAYS_ON_OPTION,
   LLM_MODEL_THINKING_TYPE_NOT_SET,
   LLM_MODEL_THINKING_TYPE_OPTIONS,
+  LLM_MODEL_THINKING_TYPES,
 } = LlmModelFormConstants;
 
 const LlmModelReasoningPanel = memo(props => {
-  const { settings, initialSettings, isEditing, catalogEntry, visibleErrors, editSetting } = props;
+  const {
+    settings,
+    initialSettings,
+    isEditing,
+    isStoredEntryLookedUp,
+    catalogEntry,
+    visibleErrors,
+    editSetting,
+  } = props;
   const styles = llmModelReasoningPanelStyles();
   const areEffortsFromCatalog = Boolean(catalogEntry?.supported_efforts);
   const isConfigured = isLlmModelReasoningConfigured(settings);
@@ -70,8 +80,30 @@ const LlmModelReasoningPanel = memo(props => {
     [editSetting],
   );
 
-  const fixedThinkingType = catalogEntry ? settings[FIELDS.thinkingType] || catalogEntry.thinking_type : null;
-  const isThinkingTypeShown = !catalogEntry || Boolean(fixedThinkingType);
+  const storedThinkingType = isEditing ? (initialSettings?.[FIELDS.thinkingType] ?? null) : null;
+  const catalogThinkingType = catalogEntry?.thinking_type ?? null;
+  const chosenThinkingType = isStoredEntryLookedUp
+    ? (settings[FIELDS.thinkingType] ?? null)
+    : (settings[FIELDS.thinkingType] ?? catalogThinkingType);
+  const isStoredModeKept =
+    isStoredEntryLookedUp &&
+    (isLlmModelReasoningConfigured(initialSettings) ||
+      (Boolean(initialSettings?.[FIELDS.reasoning]) && !catalogEntry?.supported_efforts));
+  const isThinkingTypeEditable =
+    !catalogEntry ||
+    chosenThinkingType !== catalogThinkingType ||
+    (isStoredModeKept && storedThinkingType !== catalogThinkingType);
+  const fixedThinkingType = isThinkingTypeEditable ? null : chosenThinkingType;
+  const isThinkingTypeShown = isThinkingTypeEditable || Boolean(fixedThinkingType);
+  const thinkingTypeOptions = useMemo(
+    () =>
+      [chosenThinkingType, storedThinkingType, catalogThinkingType].includes(
+        LLM_MODEL_THINKING_TYPES.alwaysOn,
+      )
+        ? [...LLM_MODEL_THINKING_TYPE_OPTIONS, LLM_MODEL_THINKING_TYPE_ALWAYS_ON_OPTION]
+        : LLM_MODEL_THINKING_TYPE_OPTIONS,
+    [chosenThinkingType, storedThinkingType, catalogThinkingType],
+  );
   const effortWarnings = [
     supportedEfforts.includes(LLM_MODEL_EFFORT_NONE) && LLM_MODEL_EFFORT_NONE_WARNING,
     removedLevels.length > 0 && LLM_MODEL_REMOVED_EFFORTS_WARNING(removedLevels.map(getEffortLevelLabel)),
@@ -112,7 +144,7 @@ const LlmModelReasoningPanel = memo(props => {
               id={`llm-model-${FIELDS.thinkingType}`}
               data-testid="llm-model-thinking-type-select"
               value={settings[FIELDS.thinkingType] ?? LLM_MODEL_THINKING_TYPE_NOT_SET}
-              options={LLM_MODEL_THINKING_TYPE_OPTIONS}
+              options={thinkingTypeOptions}
               onValueChange={onThinkingTypeChange}
               error={Boolean(visibleErrors[FIELDS.thinkingType])}
               showBorder

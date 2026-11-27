@@ -8,7 +8,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import lightPalette from '@/lightPalette';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import LlmModelForm from '../LlmModelForm';
@@ -298,13 +298,149 @@ describe('LlmModelForm reasoning settings from the LiteLLM catalog', () => {
       );
 
       await typeNameWithoutLeavingTheField(user, 'claude-sonnet-5-5');
-      await screen.findByText('Adaptive · always on');
+      await waitFor(() => expect(reasoningDescription()).toHaveTextContent('Always on for this model.'));
+      expect(screen.getByTestId('llm-model-thinking-type-fixed')).toHaveTextContent('Adaptive · always on');
+      expect(screen.queryByTestId('llm-model-thinking-type-select')).not.toBeInTheDocument();
       expect(screen.queryByTestId('llm-model-error-supported_efforts')).not.toBeInTheDocument();
       expect(setToolErrors).toHaveBeenLastCalledWith({});
 
       await user.tab();
       expect(screen.queryByTestId('llm-model-error-supported_efforts')).not.toBeInTheDocument();
+      expect(screen.getByTestId('llm-model-thinking-type-fixed')).toHaveTextContent('Adaptive · always on');
       expect(reasoningOf().supported_efforts).toEqual(['low', 'medium', 'high', 'xhigh', 'max']);
+    });
+
+    it('keeps the thinking mode editable when a stored model has none and its entry names one', () => {
+      renderForm(
+        storedModel('claude-sonnet-5-5', {
+          supports_reasoning: true,
+          supported_efforts: ['low', 'high'],
+          default_effort: 'low',
+        }),
+      );
+
+      expect(screen.queryByTestId('llm-model-thinking-type-fixed')).not.toBeInTheDocument();
+      expect(screen.getByTestId('llm-model-thinking-type-select')).toHaveTextContent('Not set');
+      expect(reasoningOf().thinking_type).toBeNull();
+    });
+
+    it('keeps the thinking mode editable when a stored model has one and its entry names none', () => {
+      renderForm(
+        storedModel('gpt-5.6-luna', {
+          supports_reasoning: true,
+          thinking_type: 'enabled',
+          supported_efforts: ['low', 'high'],
+          default_effort: 'low',
+        }),
+      );
+
+      expect(screen.queryByTestId('llm-model-thinking-type-fixed')).not.toBeInTheDocument();
+      expect(screen.getByTestId('llm-model-thinking-type-select')).toHaveTextContent(/Enabled/);
+    });
+
+    it('keeps the thinking mode field after a stored mode its entry does not name is cleared', async () => {
+      const user = userEvent.setup();
+      renderForm(
+        storedModel('gpt-5.6-luna', {
+          supports_reasoning: true,
+          thinking_type: 'enabled',
+          supported_efforts: ['low', 'high'],
+          default_effort: 'low',
+        }),
+      );
+
+      await user.click(within(screen.getByTestId('llm-model-thinking-type-select')).getByRole('combobox'));
+      await user.click(await screen.findByRole('option', { name: 'Not set' }));
+
+      expect(reasoningOf().thinking_type).toBeNull();
+      expect(screen.getByTestId('llm-model-thinking-type-select')).toHaveTextContent('Not set');
+    });
+
+    it('offers the always-on mode of the entry to a stored model that has none', async () => {
+      const user = userEvent.setup();
+      renderForm(
+        storedModel('claude-sonnet-5-5', {
+          supports_reasoning: true,
+          supported_efforts: ['low', 'high'],
+          default_effort: 'low',
+        }),
+      );
+
+      await user.click(within(screen.getByTestId('llm-model-thinking-type-select')).getByRole('combobox'));
+      await user.click(await screen.findByRole('option', { name: 'Adaptive · always on' }));
+
+      expect(reasoningOf().thinking_type).toBe('always_on');
+    });
+
+    it('keeps the thinking mode editable while the name of a corrected stored model is being typed', async () => {
+      const user = userEvent.setup();
+      renderForm(
+        storedModel('claude-sonnet-5', {
+          supports_reasoning: true,
+          thinking_type: 'enabled',
+          supported_efforts: ['low', 'high'],
+          default_effort: 'low',
+        }),
+      );
+      await user.click(within(screen.getByTestId('llm-model-thinking-type-select')).getByRole('combobox'));
+      await user.click(await screen.findByRole('option', { name: 'Adaptive' }));
+
+      await user.click(nameInput());
+      await user.keyboard('x');
+
+      expect(screen.queryByTestId('llm-model-thinking-type-fixed')).not.toBeInTheDocument();
+      expect(screen.getByTestId('llm-model-thinking-type-select')).toBeInTheDocument();
+    });
+
+    it('keeps the thinking mode editable for a stored model whose entry names a mode and no levels', async () => {
+      const user = userEvent.setup();
+      renderForm(storedModel('claude-without-levels', { supports_reasoning: true }));
+
+      await user.click(within(screen.getByTestId('llm-model-thinking-type-select')).getByRole('combobox'));
+      await user.click(await screen.findByRole('option', { name: 'Adaptive' }));
+
+      expect(reasoningOf().thinking_type).toBe('adaptive');
+      expect(screen.getByTestId('llm-model-thinking-type-select')).toHaveTextContent('Adaptive');
+    });
+
+    it('keeps the thinking mode editable when a stored model is renamed to another name of its entry', async () => {
+      const user = userEvent.setup();
+      credentialType = 'vertex_ai';
+      renderForm(
+        storedModel('claude-sonnet-5-5', {
+          supports_reasoning: true,
+          supported_efforts: ['low', 'high'],
+          default_effort: 'low',
+        }),
+      );
+      await typeName(user, 'vertex_ai/claude-sonnet-5-5');
+
+      expect(reasoningOf().thinking_type).toBeNull();
+      expect(screen.queryByTestId('llm-model-thinking-type-fixed')).not.toBeInTheDocument();
+      expect(screen.getByTestId('llm-model-thinking-type-select')).toHaveTextContent('Not set');
+    });
+
+    it('fixes the mode of the entry when reasoning is switched on for a stored model that had it off', async () => {
+      const user = userEvent.setup();
+      renderForm(storedModel('claude-without-levels', { supports_reasoning: false }));
+      await user.click(reasoningSwitch());
+
+      expect(reasoningOf().thinking_type).toBe('adaptive');
+      expect(screen.getByTestId('llm-model-thinking-type-fixed')).toHaveTextContent('Adaptive · always on');
+      expect(screen.queryByTestId('llm-model-thinking-type-select')).not.toBeInTheDocument();
+    });
+
+    it('names a stored always-on mode that its entry does not', () => {
+      renderForm(
+        storedModel('gpt-5.6-luna', {
+          supports_reasoning: true,
+          thinking_type: 'always_on',
+          supported_efforts: ['low', 'high'],
+          default_effort: 'low',
+        }),
+      );
+
+      expect(screen.getByTestId('llm-model-thinking-type-select')).toHaveTextContent('Adaptive · always on');
     });
 
     it('looks the name up at once when the field is left before the pause ends', async () => {

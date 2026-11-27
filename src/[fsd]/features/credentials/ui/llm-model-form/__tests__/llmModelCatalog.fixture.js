@@ -43,6 +43,12 @@ export const LLM_MODEL_CATALOG_FIXTURE = {
     'vertex_ai/claude-sonnet-5-5': claudeThinking('vertex_ai-anthropic_models', 'always_on'),
     'claude-sonnet-5': claudeThinking('anthropic', 'adaptive'),
     'anthropic.claude-sonnet-5': claudeThinking('bedrock_converse', 'adaptive'),
+    'claude-without-levels': {
+      provider: 'anthropic',
+      supports_reasoning: true,
+      thinking_type: 'adaptive',
+      reasoning_locked: true,
+    },
     'claude-haiku-4-5': reasoning('anthropic', ['low', 'medium', 'high'], { thinking_type: 'enabled' }),
     'gemini-3.7-flash': reasoning('vertex_ai-language-models', ['none', 'low', 'medium', 'high']),
     'global.xai.grok-4.6': { provider: 'bedrock_converse', supports_reasoning: true, supports_vision: true },

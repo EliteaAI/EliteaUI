@@ -132,6 +132,11 @@ export const LLM_MODEL_THINKING_TYPE_FIXED_LABELS = {
   [LLM_MODEL_THINKING_TYPES.enabled]: 'Enabled (token budget)',
 };
 
+export const LLM_MODEL_THINKING_TYPE_ALWAYS_ON_OPTION = {
+  value: LLM_MODEL_THINKING_TYPES.alwaysOn,
+  label: LLM_MODEL_THINKING_TYPE_FIXED_LABELS[LLM_MODEL_THINKING_TYPES.alwaysOn],
+};
+
 export const LLM_MODEL_THINKING_TYPE_FIXED_HELPER_TEXTS = {
   [LLM_MODEL_THINKING_TYPES.adaptive]: 'The model decides how much to think. Nothing to configure.',
   [LLM_MODEL_THINKING_TYPES.alwaysOn]: 'The model decides how much to think. Nothing to configure.',

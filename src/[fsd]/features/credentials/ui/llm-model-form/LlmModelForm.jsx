@@ -118,6 +118,10 @@ const LlmModelForm = memo(props => {
     () => findLlmModelCatalogEntry({ catalog, name: settledName, credentialType, apiProtocol }),
     [catalog, settledName, credentialType, apiProtocol],
   );
+  const storedCatalogEntry = useMemo(
+    () => findLlmModelCatalogEntry({ catalog, name: initialSettings?.name, credentialType, apiProtocol }),
+    [catalog, initialSettings?.name, credentialType, apiProtocol],
+  );
   const isRecognitionSettled = !isCatalogPending && settledName === settings.name;
   const recognition = useMemo(
     () => (isRecognitionSettled ? getLlmModelRecognition(settledName, catalogEntry) : null),
@@ -487,6 +491,9 @@ const LlmModelForm = memo(props => {
                   settings={displayedSettings}
                   initialSettings={initialSettings}
                   isEditing={isEditing}
+                  isStoredEntryLookedUp={
+                    isEditing && (!isSettledNameEdited || catalogEntry?.key === storedCatalogEntry?.key)
+                  }
                   catalogEntry={catalogEntry}
                   visibleErrors={visibleErrors}
                   editSetting={editSetting}

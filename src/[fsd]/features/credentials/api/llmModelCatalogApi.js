@@ -9,6 +9,7 @@ const llmModelCatalogApi = eliteaApi.injectEndpoints({
         validateStatus: (response, catalog) =>
           response.status === 200 && Object.keys(catalog?.models ?? {}).length > 0,
       }),
+      serializeQueryArgs: ({ endpointName }) => endpointName,
       keepUnusedDataFor: 3600,
     }),
   }),
