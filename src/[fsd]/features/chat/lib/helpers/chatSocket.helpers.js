@@ -97,6 +97,8 @@ export const mergeChatSocketMessage = (history, message, { messageId = message?.
   nextHistory[messageIndex] = {
     ...nextHistory[messageIndex],
     ...message,
+    // Socket handlers push steps into the stored array; a new reference lets memoized step lists see them
+    ...(Array.isArray(message.toolActions) ? { toolActions: [...message.toolActions] } : {}),
     ...(messageId ? { id: messageId } : {}),
   };
   return nextHistory;
