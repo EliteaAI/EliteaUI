@@ -172,21 +172,20 @@ export const createHitlEditUserMessage = props => {
  * @param {string} userId - The user ID
  * @returns {Object|null} The selected model or null if not found
  */
-export const getSelectedConversationModel = (conversation, availableModels, userId) => {
-  const userSettings = NewConversationHelpers.getChatUserSettings(conversation, userId);
-
-  if (!userSettings?.model_name || !availableModels?.length) return null;
-
-  // First try to find the model with exact project_id match
-  let model = availableModels.find(
-    m => m.name === userSettings.model_name && m.project_id === userSettings.model_project_id,
+// Exact project match first, then by name only (shared models)
+const findModelBySettings = (availableModels, llmSettings) => {
+  if (!llmSettings?.model_name || !availableModels?.length) return null;
+  return (
+    availableModels.find(
+      m => m.name === llmSettings.model_name && m.project_id === llmSettings.model_project_id,
+    ) ||
+    availableModels.find(m => m.name === llmSettings.model_name) ||
+    null
   );
-
-  // If not found, try to find by name only (for shared models)
-  if (!model) model = availableModels.find(m => m.name === userSettings.model_name);
-
-  return model || null;
 };
+
+export const getSelectedConversationModel = (conversation, availableModels, userId) =>
+  findModelBySettings(availableModels, NewConversationHelpers.getChatUserSettings(conversation, userId));
 
 /**
  * Model an Agent/Pipeline participant runs on: its llm_settings override, else its version's.
@@ -209,14 +208,7 @@ export const getParticipantChatModel = (
       : undefined;
   const llmSettings = participant.entity_settings?.llm_settings || versionLlmSettings;
   if (isAutoSelection(llmSettings)) return autoModel(llmSettings.selection.profile_ref, autoLimits);
-  if (!llmSettings?.model_name) return null;
-  return (
-    availableModels.find(
-      m => m.name === llmSettings.model_name && m.project_id === llmSettings.model_project_id,
-    ) ||
-    availableModels.find(m => m.name === llmSettings.model_name) ||
-    null
-  );
+  return findModelBySettings(availableModels, llmSettings);
 };
 
 export const getModelSettings = participant => {
