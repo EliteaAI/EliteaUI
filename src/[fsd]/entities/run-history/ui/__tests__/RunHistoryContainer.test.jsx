@@ -513,6 +513,41 @@ describe('RunHistoryContainer list error', () => {
     expect(fetchRunList).toHaveBeenCalledTimes(1);
   });
 
+  it('says the Complexity labels are unavailable on that 503, not a plain failure', () => {
+    queryResult.isError = true;
+    queryResult.error = {
+      status: 503,
+      data: { code: 'complexity_unavailable', error: 'Traceback: usage down' },
+    };
+    renderContainer('');
+
+    expect(screen.getByTestId('run-history-error')).toHaveTextContent('Complexity labels are not available');
+    expect(screen.getByTestId('run-history-error')).not.toHaveTextContent('Traceback');
+  });
+
+  it('shows the plain text for a 503 that is not the Complexity one', () => {
+    queryResult.isError = true;
+    queryResult.error = { status: 503, data: { error: 'Traceback: db down' } };
+    renderContainer('');
+
+    expect(screen.getByTestId('run-history-error')).toHaveTextContent('Failed to load the run history.');
+  });
+
+  it('tells the user when the Complexity filter returned only the newest runs', () => {
+    queryResult.data = { ...queryResult.data, complexityTruncated: true };
+    renderContainer('');
+
+    expect(screen.getByTestId('run-history-complexity-truncated')).toHaveTextContent(
+      'Showing the newest ones',
+    );
+  });
+
+  it('shows no truncation note for a complete answer', () => {
+    renderContainer('');
+
+    expect(screen.queryByTestId('run-history-complexity-truncated')).not.toBeInTheDocument();
+  });
+
   it('hides the server text of a server error and shows the plain text', () => {
     queryResult.isError = true;
     queryResult.error = { status: 500, data: { error: 'Traceback: db down' } };

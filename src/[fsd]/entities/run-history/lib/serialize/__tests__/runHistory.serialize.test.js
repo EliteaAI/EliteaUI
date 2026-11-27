@@ -159,3 +159,17 @@ describe('serializeRunHistory — run status and tool names', () => {
     expect(rows[0].tool_names).toEqual([]);
   });
 });
+
+describe('serializeRunHistoryListResponse — complexity truncation', () => {
+  it('carries the truncation flag of the Complexity filter', () => {
+    expect(serializeRunHistoryListResponse({ rows: [], total: 0, complexity_truncated: true })).toMatchObject(
+      {
+        complexityTruncated: true,
+      },
+    );
+  });
+
+  it('is not truncated when the server says nothing', () => {
+    expect(serializeRunHistoryListResponse({ rows: [], total: 0 }).complexityTruncated).toBe(false);
+  });
+});
