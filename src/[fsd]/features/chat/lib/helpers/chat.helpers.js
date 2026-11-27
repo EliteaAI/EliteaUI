@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import * as NewConversationHelpers from '@/[fsd]/features/chat/lib/helpers/newConversation.helpers';
 import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
+import { autoModel, isAutoSelection } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import { ChatParticipantType, ROLES, WELCOME_MESSAGE_ID } from '@/common/constants';
 
 import { normalizeHitlInterrupt } from './hitl.helpers';
@@ -185,6 +186,37 @@ export const getSelectedConversationModel = (conversation, availableModels, user
   if (!model) model = availableModels.find(m => m.name === userSettings.model_name);
 
   return model || null;
+};
+
+/**
+ * Model an Agent/Pipeline participant runs on: its llm_settings override, else its version's.
+ * Null for other participants or while the version details are not loaded.
+ */
+export const getParticipantChatModel = (
+  participant,
+  participantDetails,
+  availableModels = [],
+  autoLimits,
+) => {
+  if (
+    participant?.entity_name !== ChatParticipantType.Applications &&
+    participant?.entity_name !== ChatParticipantType.Pipelines
+  )
+    return null;
+  const versionLlmSettings =
+    String(participantDetails?.id) === String(participant.entity_meta?.id)
+      ? participantDetails?.version_details?.llm_settings
+      : undefined;
+  const llmSettings = participant.entity_settings?.llm_settings || versionLlmSettings;
+  if (isAutoSelection(llmSettings)) return autoModel(llmSettings.selection.profile_ref, autoLimits);
+  if (!llmSettings?.model_name) return null;
+  return (
+    availableModels.find(
+      m => m.name === llmSettings.model_name && m.project_id === llmSettings.model_project_id,
+    ) ||
+    availableModels.find(m => m.name === llmSettings.model_name) ||
+    null
+  );
 };
 
 export const getModelSettings = participant => {
