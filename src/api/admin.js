@@ -175,7 +175,8 @@ export const apis = eliteaApi
             method: 'DELETE',
           };
         },
-        invalidatesTags: [TAG_TYPE_USERS],
+        // Removing yourself revokes the permission to list users, so refetching it would only return a 403
+        invalidatesTags: (_result, _error, { removesSelf }) => (removesSelf ? [] : [TAG_TYPE_USERS]),
       }),
       moderationStatus: build.query({
         query: ({ projectId, entityId }) => ({
