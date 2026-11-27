@@ -954,6 +954,41 @@ describe('LlmModelForm reasoning settings from the LiteLLM catalog', () => {
       expect(reasoningOf().supported_efforts).toEqual(['none', 'low', 'medium', 'high', 'xhigh']);
     });
 
+    it('keeps what the admin changed while the catalog was still loading', async () => {
+      catalog = undefined;
+      isCatalogPending = true;
+      const user = userEvent.setup();
+      const { rerender } = renderForm(NEW_MODEL);
+      await typeName(user, 'gpt-5.6-luna');
+      await user.click(screen.getByTestId('llm-model-switch-supports_vision'));
+      const edited = readSettings();
+
+      catalog = LLM_MODEL_CATALOG_FIXTURE;
+      isCatalogPending = false;
+      rerenderForm(rerender, NEW_MODEL);
+
+      expect(screen.getByTestId('llm-model-status-name')).toHaveTextContent('Recognized');
+      expect(readSettings()).toEqual(edited);
+    });
+
+    it('keeps those changes when a credential is picked after the catalog loaded', async () => {
+      catalog = undefined;
+      isCatalogPending = true;
+      const user = userEvent.setup();
+      const { rerender } = renderForm(NEW_MODEL);
+      await typeName(user, 'gpt-6-astra');
+      await user.click(screen.getByTestId('llm-model-switch-supports_vision'));
+      const edited = readSettings();
+      catalog = LLM_MODEL_CATALOG_FIXTURE;
+      isCatalogPending = false;
+      rerenderForm(rerender, NEW_MODEL);
+
+      credentialType = 'azure_open_ai';
+      rerenderForm(rerender, NEW_MODEL);
+
+      expect(readSettings()).toEqual(edited);
+    });
+
     it('leaves a stored row alone when the catalog arrives while its name is being typed', async () => {
       catalog = undefined;
       isCatalogPending = true;

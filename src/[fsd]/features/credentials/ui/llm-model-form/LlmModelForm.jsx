@@ -276,14 +276,34 @@ const LlmModelForm = memo(props => {
   const prefilledCatalogKeyRef = useRef(catalogEntry?.key ?? null);
   const prefilledNameRef = useRef(catalogEntry ? settledName : null);
   const lastPrefillRef = useRef(null);
+  const nameSettledBeforeCatalogRef = useRef(null);
   const isSettledNameEdited = settledName !== initialSettings?.name;
   useEffect(() => {
+    if (isCatalogPending) {
+      if (nameSettledBeforeCatalogRef.current?.name !== settledName) {
+        nameSettledBeforeCatalogRef.current = {
+          name: settledName,
+          settings: pickPrefillableSettings(settings, !isEditing),
+        };
+      }
+      return;
+    }
     if (isModelNameFocused) return;
+    const nameSettledBeforeCatalog = nameSettledBeforeCatalogRef.current;
+    nameSettledBeforeCatalogRef.current = null;
     const catalogKey = catalogEntry?.key ?? null;
     if (catalogKey === prefilledCatalogKeyRef.current) return;
     prefilledCatalogKeyRef.current = catalogKey;
     if (prefilledNameRef.current !== settledName) prefilledNameRef.current = null;
     if (!catalogEntry || (isEditing && !isSettledNameEdited)) return;
+    const isEditedWhileCatalogLoaded =
+      nameSettledBeforeCatalog?.name === settledName &&
+      !areSettingsAsPrefilled(settings, nameSettledBeforeCatalog.settings);
+    if (isEditedWhileCatalogLoaded) {
+      prefilledNameRef.current = settledName;
+      lastPrefillRef.current = nameSettledBeforeCatalog.settings;
+      return;
+    }
     const isRouteChangeOnly = prefilledNameRef.current === settledName;
     if (isRouteChangeOnly && !areSettingsAsPrefilled(settings, lastPrefillRef.current)) return;
     const prefill = buildPrefillFromCatalogEntry(catalogEntry, {
@@ -293,7 +313,16 @@ const LlmModelForm = memo(props => {
     prefilledNameRef.current = settledName;
     lastPrefillRef.current = { ...pickPrefillableSettings(settings, !isEditing), ...prefill };
     Object.entries(prefill).forEach(([field, value]) => editSetting(field, value));
-  }, [catalogEntry, editSetting, isEditing, isModelNameFocused, isSettledNameEdited, settings, settledName]);
+  }, [
+    catalogEntry,
+    editSetting,
+    isCatalogPending,
+    isEditing,
+    isModelNameFocused,
+    isSettledNameEdited,
+    settings,
+    settledName,
+  ]);
 
   const onReasoningChange = useCallback(
     (field, isChecked) => {
