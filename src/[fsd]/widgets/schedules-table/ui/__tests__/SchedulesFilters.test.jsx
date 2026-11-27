@@ -94,6 +94,16 @@ describe('SchedulesFilters', () => {
     ]);
   });
 
+  it('the Type filter of the Webhooks page lists All, Agent and Pipeline only', () => {
+    renderBar({ showWebhookType: true });
+    fireEvent.mouseDown(within(screen.getByTestId('schedules-filter-type')).getByRole('combobox'));
+    expect(screen.getAllByRole('option').map(option => option.textContent)).toEqual([
+      'All',
+      'Agent',
+      'Pipeline',
+    ]);
+  });
+
   it('picking a status emits status', () => {
     const onChange = renderBar();
     pick('status', 'Failed');

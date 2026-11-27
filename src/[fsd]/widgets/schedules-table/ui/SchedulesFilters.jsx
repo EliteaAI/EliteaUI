@@ -19,6 +19,7 @@ const TYPE_OPTIONS = [
   { label: 'Pipeline', value: 'pipeline' },
   { label: 'Toolkit Index', value: TOOLKIT_INDEX_TYPE },
 ];
+const WEBHOOK_ENTITY_TYPE_OPTIONS = TYPE_OPTIONS.filter(option => option.value !== TOOLKIT_INDEX_TYPE);
 const STATUS_OPTIONS = [
   ALL,
   { label: 'Running', value: 'running' },
@@ -124,7 +125,7 @@ const SchedulesFilters = memo(props => {
           id="type"
           label="Type"
           width="9.5rem"
-          options={TYPE_OPTIONS}
+          options={showWebhookType ? WEBHOOK_ENTITY_TYPE_OPTIONS : TYPE_OPTIONS}
           value={value.entityType}
           onValueChange={handleEntityType}
         />
