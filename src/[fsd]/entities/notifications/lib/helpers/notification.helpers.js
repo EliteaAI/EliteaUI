@@ -9,6 +9,19 @@ export const isProjectMembershipNotification = eventType =>
   eventType === NotificationType.UserWasAddedToSomeProjectAsTeammate ||
   eventType === NotificationType.UserWasRemovedFromProject;
 
+/**
+ * Builds the " as Admin, Editor" suffix for a project invitation notification from `meta.roles`.
+ * Returns an empty string for older notifications that have no stored roles.
+ */
+export const formatMembershipRoles = roles => {
+  if (!Array.isArray(roles)) return '';
+  const names = roles
+    .filter(role => typeof role === 'string' && role.trim())
+    .map(role => role.trim())
+    .map(role => `${role.charAt(0).toUpperCase()}${role.slice(1)}`);
+  return names.length ? ` as ${names.join(', ')}` : '';
+};
+
 const RUN_EVENT_TYPES = new Set([
   NotificationType.ScheduleRunFailed,
   NotificationType.ScheduleRunSucceeded,
