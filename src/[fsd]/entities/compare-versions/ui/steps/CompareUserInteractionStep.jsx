@@ -191,7 +191,7 @@ const CompareUserInteractionStep = memo(props => {
                   isDirty={leftStartersDirty}
                   isSaving={Boolean(savingLeftKeys.conversation_starters)}
                   disabledReason={leftSaveDisabledReason}
-                  onClick={() => onSaveLeft({ conversation_starters: leftStarters.filter(s => s?.trim()) })}
+                  onClick={() => onSaveLeft({ conversation_starters: filterEmptyStarters(leftStarters) })}
                   sx={compareUserInteractionStepStyles.saveBtn}
                 />
               )}
@@ -297,7 +297,7 @@ const CompareUserInteractionStep = memo(props => {
                   variant={BUTTON_VARIANTS.elitea}
                   size="small"
                   disabled={!rightStartersDirty || savingRightKeys.conversation_starters}
-                  onClick={() => onSaveRight({ conversation_starters: rightStarters.filter(s => s?.trim()) })}
+                  onClick={() => onSaveRight({ conversation_starters: filterEmptyStarters(rightStarters) })}
                   sx={compareUserInteractionStepStyles.saveBtn}
                 >
                   {savingRightKeys.conversation_starters

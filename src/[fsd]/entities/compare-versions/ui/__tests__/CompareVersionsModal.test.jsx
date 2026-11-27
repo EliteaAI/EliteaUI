@@ -44,6 +44,12 @@ vi.mock('../steps', () => {
         </button>
         <button
           type="button"
+          onClick={() => props.onLeftEdit?.('instructions', props.leftData?.instructions)}
+        >
+          revert-instructions
+        </button>
+        <button
+          type="button"
           onClick={() => props.onLeftEdit?.('instructions', 'edited')}
         >
           {`edit-${name}`}
@@ -231,6 +237,24 @@ describe('CompareVersionsModal', () => {
           versionId: 1,
         }),
       );
+    });
+
+    it('keeps the header Save disabled once an edit is reverted to the saved text', async () => {
+      renderSkill();
+      await openWizard();
+      fireEvent.click(screen.getByRole('button', { name: 'edit-instructions' }));
+      expect(screen.getByTestId('stub-instructions')).toHaveAttribute('data-header-save', 'true');
+      fireEvent.click(screen.getByRole('button', { name: 'revert-instructions' }));
+      expect(screen.getByTestId('stub-instructions')).toHaveAttribute('data-header-save', 'false');
+    });
+
+    it('does not ask to discard when every edit was reverted to the saved text', async () => {
+      renderSkill();
+      await openWizard();
+      fireEvent.click(screen.getByRole('button', { name: 'edit-instructions' }));
+      fireEvent.click(screen.getByRole('button', { name: 'revert-instructions' }));
+      fireEvent.click(screen.getByTestId('compare-select-versions'));
+      expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument();
     });
 
     it('blocks Save with a reason while the instructions are blank', async () => {

@@ -65,6 +65,42 @@ describe('CompareInstructionsStep', () => {
     expect(screen.getByRole('button', { name: 'Save public' })).toBeInTheDocument();
   });
 
+  describe('Save under each field', () => {
+    it('stays disabled with no edit, and when an edit is reverted to the saved text', () => {
+      renderStep();
+      expect(screen.getByRole('button', { name: 'Save mine' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Save public' })).toBeDisabled();
+      cleanup();
+
+      renderStep({
+        leftEdits: { instructions: 'my text' },
+        rightEdits: { instructions: 'their text' },
+      });
+      expect(screen.getByRole('button', { name: 'Save mine' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Save public' })).toBeDisabled();
+    });
+
+    it('enables once an edit differs from the saved text', () => {
+      renderStep({
+        leftEdits: { instructions: 'changed' },
+        rightEdits: { instructions: 'changed too' },
+      });
+      expect(screen.getByRole('button', { name: 'Save mine' })).toBeEnabled();
+      expect(screen.getByRole('button', { name: 'Save public' })).toBeEnabled();
+    });
+
+    it('treats a missing saved text as empty, so an emptied field is not an edit', () => {
+      renderStep({
+        leftData: {},
+        rightData: {},
+        leftEdits: { instructions: '' },
+        rightEdits: { instructions: '' },
+      });
+      expect(screen.getByRole('button', { name: 'Save mine' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Save public' })).toBeDisabled();
+    });
+  });
+
   describe('with one Save in each version header', () => {
     const headerSave = overrides => ({ isDirty: true, isSaving: false, onSave: vi.fn(), ...overrides });
 

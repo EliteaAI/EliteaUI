@@ -35,6 +35,10 @@ const CompareInstructionsStep = memo(props => {
   const rightValue = rightEdits.instructions ?? rightData.instructions ?? '';
   const noDiff = leftValue === rightValue;
 
+  // An edit only counts when it differs from what is saved, so reverting it to the saved text clears it
+  const leftDirty = leftEdits.instructions !== undefined && leftValue !== (leftData.instructions ?? '');
+  const rightDirty = rightEdits.instructions !== undefined && rightValue !== (rightData.instructions ?? '');
+
   const handleLeftChange = useCallback(val => onLeftEdit('instructions', val), [onLeftEdit]);
   const handleRightChange = useCallback(val => onRightEdit('instructions', val), [onRightEdit]);
 
@@ -89,7 +93,7 @@ const CompareInstructionsStep = memo(props => {
           {!readOnly && !leftHeaderSave && (
             <CompareSaveButton
               label={`Save ${leftVersion?.name}`}
-              isDirty={leftEdits.instructions !== undefined && !(instructionsRequired && !leftValue?.trim())}
+              isDirty={leftDirty && !(instructionsRequired && !leftValue?.trim())}
               isSaving={Boolean(savingLeftKeys.instructions)}
               disabledReason={leftSaveDisabledReason}
               onClick={() => onSaveLeft({ instructions: leftValue })}
@@ -135,9 +139,7 @@ const CompareInstructionsStep = memo(props => {
               variant={BUTTON_VARIANTS.elitea}
               size="small"
               disabled={
-                rightEdits.instructions === undefined ||
-                (instructionsRequired && !rightValue?.trim()) ||
-                savingRightKeys.instructions
+                !rightDirty || (instructionsRequired && !rightValue?.trim()) || savingRightKeys.instructions
               }
               onClick={() => onSaveRight({ instructions: rightValue })}
               sx={compareInstructionsStepStyles.saveBtn}
