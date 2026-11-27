@@ -38,7 +38,6 @@ const CompareVersionSelector = memo(props => {
             <Typography
               variant="bodySmall"
               color="text.secondary"
-              sx={compareVersionSelectorStyles.versionMeta}
             >
               {leftMeta}
             </Typography>
@@ -87,14 +86,15 @@ const compareVersionSelectorStyles = {
     gap: '0.5rem',
   },
   readOnlyVersion: ({ palette }) => ({
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'baseline',
+    columnGap: '0.5rem',
     padding: '0.5rem 1rem',
     borderRadius: '0.5rem',
     border: `0.0625rem solid ${palette.border.lines}`,
     backgroundColor: palette.background.surface.interactive.default,
   }),
-  versionMeta: {
-    marginTop: '0.125rem',
-  },
   selectInput: {
     width: '100%',
   },
