@@ -402,10 +402,6 @@ const ChatBox = memo(
       onChangeParticipantSettings,
     });
 
-    useEffect(() => {
-      dispatch(chatActions.setCurrentChatModel(selectedModel));
-    }, [dispatch, selectedModel]);
-
     // Create LLM settings for conversation pages from user settings
     const conversationLlmSettings = useMemo(() => {
       if (isAgentsPage) return llmSettings; // Use prop directly for agents page
@@ -2613,6 +2609,30 @@ const ChatBox = memo(
         activeParticipant?.entity_settings?.agent_type,
       ],
     );
+
+    // On the Chat page an active Agent/Pipeline runs on its own model, not the composer's
+    const activeParticipantModel = useMemo(
+      () =>
+        isAgentsPage
+          ? null
+          : ChatHelpers.getParticipantChatModel(
+              activeParticipant,
+              originalParticipant,
+              modelsData.items,
+              modelsData.auto_routing?.limits,
+            ),
+      [
+        isAgentsPage,
+        activeParticipant,
+        originalParticipant,
+        modelsData.items,
+        modelsData.auto_routing?.limits,
+      ],
+    );
+
+    useEffect(() => {
+      dispatch(chatActions.setCurrentChatModel(activeParticipantModel || selectedModel));
+    }, [dispatch, activeParticipantModel, selectedModel]);
 
     useEffect(() => {
       setShowRecommendationList(false);

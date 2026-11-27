@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   applyMessageRegenerationError,
+  getParticipantChatModel,
   prepareMessageForRegeneration,
   toRegenerationReason,
 } from '../chat.helpers';
@@ -107,4 +108,73 @@ describe('toRegenerationReason', () => {
       expect(toRegenerationReason(reason)).toBe('Regeneration Failed. Please try again.');
     },
   );
+});
+
+describe('getParticipantChatModel', () => {
+  const sol = { name: 'gpt-sol', project_id: 1, context_window: 400000 };
+  const haiku = { name: 'haiku', project_id: 1, context_window: 128000 };
+  const haikuOwn = { name: 'haiku', project_id: 28, context_window: 128000 };
+  const models = [sol, haiku, haikuOwn];
+  const agent = (llm_settings, entity_name = 'application') => ({
+    entity_name,
+    entity_meta: { id: 533, project_id: 28 },
+    entity_settings: llm_settings ? { llm_settings } : {},
+  });
+  const details = (llm_settings, id = 533) => ({ id, version_details: { llm_settings } });
+
+  it('uses the version model when the participant has no override', () => {
+    expect(
+      getParticipantChatModel(agent(), details({ model_name: 'haiku', model_project_id: 1 }), models),
+    ).toBe(haiku);
+  });
+
+  it('prefers the participant llm_settings override over the version', () => {
+    const result = getParticipantChatModel(
+      agent({ model_name: 'gpt-sol', model_project_id: 1 }),
+      details({ model_name: 'haiku', model_project_id: 1 }),
+      models,
+    );
+    expect(result).toBe(sol);
+  });
+
+  it('ignores details that belong to another participant', () => {
+    expect(
+      getParticipantChatModel(agent(), details({ model_name: 'haiku', model_project_id: 1 }, 344), models),
+    ).toBeNull();
+  });
+
+  it('matches the model project first, then falls back to the name only', () => {
+    expect(
+      getParticipantChatModel(agent(), details({ model_name: 'haiku', model_project_id: 28 }), models),
+    ).toBe(haikuOwn);
+    expect(
+      getParticipantChatModel(agent(), details({ model_name: 'haiku', model_project_id: 99 }), models),
+    ).toBe(haiku);
+  });
+
+  it('returns null when the model is not in the list', () => {
+    expect(
+      getParticipantChatModel(agent(), details({ model_name: 'gpt-luna', model_project_id: 1 }), models),
+    ).toBeNull();
+  });
+
+  it('resolves an Auto selection with the auto-routing limits', () => {
+    const result = getParticipantChatModel(
+      agent(),
+      details({ selection: { mode: 'auto', profile_ref: 'balanced' } }),
+      models,
+      { context_window: 128000 },
+    );
+    expect(result.selection.mode).toBe('auto');
+    expect(result.selection.profile_ref).toBe('balanced');
+    expect(result.context_window).toBe(128000);
+  });
+
+  it('handles pipelines and skips other participant types', () => {
+    const settings = { model_name: 'haiku', model_project_id: 1 };
+    expect(getParticipantChatModel(agent(settings, 'pipeline'), null, models)).toBe(haiku);
+    expect(getParticipantChatModel(agent(settings, 'user'), null, models)).toBeNull();
+    expect(getParticipantChatModel(agent(settings, 'skill'), null, models)).toBeNull();
+    expect(getParticipantChatModel(null, null, models)).toBeNull();
+  });
 });

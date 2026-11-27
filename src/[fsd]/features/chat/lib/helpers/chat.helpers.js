@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import * as NewConversationHelpers from '@/[fsd]/features/chat/lib/helpers/newConversation.helpers';
 import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
+import { autoModel, isAutoSelection } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import { ChatParticipantType, ROLES, WELCOME_MESSAGE_ID } from '@/common/constants';
 
 import { normalizeHitlInterrupt } from './hitl.helpers';
@@ -171,20 +172,43 @@ export const createHitlEditUserMessage = props => {
  * @param {string} userId - The user ID
  * @returns {Object|null} The selected model or null if not found
  */
-export const getSelectedConversationModel = (conversation, availableModels, userId) => {
-  const userSettings = NewConversationHelpers.getChatUserSettings(conversation, userId);
-
-  if (!userSettings?.model_name || !availableModels?.length) return null;
-
-  // First try to find the model with exact project_id match
-  let model = availableModels.find(
-    m => m.name === userSettings.model_name && m.project_id === userSettings.model_project_id,
+// Exact project match first, then by name only (shared models)
+const findModelBySettings = (availableModels, llmSettings) => {
+  if (!llmSettings?.model_name || !availableModels?.length) return null;
+  return (
+    availableModels.find(
+      m => m.name === llmSettings.model_name && m.project_id === llmSettings.model_project_id,
+    ) ||
+    availableModels.find(m => m.name === llmSettings.model_name) ||
+    null
   );
+};
 
-  // If not found, try to find by name only (for shared models)
-  if (!model) model = availableModels.find(m => m.name === userSettings.model_name);
+export const getSelectedConversationModel = (conversation, availableModels, userId) =>
+  findModelBySettings(availableModels, NewConversationHelpers.getChatUserSettings(conversation, userId));
 
-  return model || null;
+/**
+ * Model an Agent/Pipeline participant runs on: its llm_settings override, else its version's.
+ * Null for other participants or while the version details are not loaded.
+ */
+export const getParticipantChatModel = (
+  participant,
+  participantDetails,
+  availableModels = [],
+  autoLimits,
+) => {
+  if (
+    participant?.entity_name !== ChatParticipantType.Applications &&
+    participant?.entity_name !== ChatParticipantType.Pipelines
+  )
+    return null;
+  const versionLlmSettings =
+    String(participantDetails?.id) === String(participant.entity_meta?.id)
+      ? participantDetails?.version_details?.llm_settings
+      : undefined;
+  const llmSettings = participant.entity_settings?.llm_settings || versionLlmSettings;
+  if (isAutoSelection(llmSettings)) return autoModel(llmSettings.selection.profile_ref, autoLimits);
+  return findModelBySettings(availableModels, llmSettings);
 };
 
 export const getModelSettings = participant => {
