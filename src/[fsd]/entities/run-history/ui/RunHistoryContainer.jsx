@@ -21,6 +21,20 @@ const { ParticipantEntityTypes } = ParticipantEntityConstants;
 const NO_ADDITIONAL_ROWS = [];
 const NO_QUERY_PARAMS = {};
 
+const COMPLEXITY_UNAVAILABLE_TEXT =
+  'Complexity labels are not available right now, so this filter cannot be applied.';
+const COMPLEXITY_TRUNCATED_TEXT =
+  'Too many runs match the Complexity filter. Showing the newest ones; narrow the filters to see the rest.';
+
+// A 400 names the filter the server refused; a 503 from the Complexity filter says its labels cannot be read.
+// Any other error shows a plain text, never the server's own.
+const runListErrorText = error => {
+  if (error?.status === 400 && error?.data?.error) return error.data.error;
+  if (error?.status === 503 && error?.data?.code === 'complexity_unavailable')
+    return COMPLEXITY_UNAVAILABLE_TEXT;
+  return 'Failed to load the run history.';
+};
+
 const RunHistoryContainer = memo(props => {
   const {
     entityId,
@@ -328,9 +342,7 @@ const RunHistoryContainer = memo(props => {
                 variant="bodySmall"
                 data-testid="run-history-error"
               >
-                {error?.status === 400 && error?.data?.error
-                  ? error.data.error
-                  : 'Failed to load the run history.'}{' '}
+                {runListErrorText(error)}{' '}
                 <Link
                   component="button"
                   type="button"
@@ -339,6 +351,16 @@ const RunHistoryContainer = memo(props => {
                 >
                   Retry
                 </Link>
+              </Typography>
+            </BannerMessage>
+          )}
+          {data?.complexityTruncated && (
+            <BannerMessage variant="info">
+              <Typography
+                variant="bodySmall"
+                data-testid="run-history-complexity-truncated"
+              >
+                {COMPLEXITY_TRUNCATED_TEXT}
               </Typography>
             </BannerMessage>
           )}

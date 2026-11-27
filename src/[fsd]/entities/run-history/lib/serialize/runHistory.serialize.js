@@ -43,6 +43,7 @@ export const serializeRunHistoryListResponse = (response, isLoadMore) => {
     rows: serializeRunHistoryList(response.rows || response.conversations || []),
     total: response.total || 0,
     hasMore: response.has_more ?? false,
+    complexityTruncated: response.complexity_truncated === true,
     nextPage: response.next_page || null,
     isLoadMore,
   };
