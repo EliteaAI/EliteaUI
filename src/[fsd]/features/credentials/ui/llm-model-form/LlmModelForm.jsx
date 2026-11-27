@@ -4,7 +4,7 @@ import { useFormikContext } from 'formik';
 
 import { Box } from '@mui/material';
 
-import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
+import { useDebounceValue, useFieldFocus } from '@/[fsd]/shared/lib/hooks';
 import { Input, Select, Text } from '@/[fsd]/shared/ui';
 import LockSimple from '@/components/Icons/LockSimple';
 
@@ -106,16 +106,7 @@ const LlmModelForm = memo(props => {
     settings.api_protocol || (isStoredModelWithoutProtocol ? LLM_MODEL_STORED_DIAL_PROTOCOL_FALLBACK : '');
 
   const [isModelNameFocused, setIsModelNameFocused] = useState(false);
-  const [nameAfterTypingPause, setNameAfterTypingPause] = useState(settings.name);
-  useEffect(() => {
-    if (!isModelNameFocused) {
-      setNameAfterTypingPause(settings.name);
-      return undefined;
-    }
-    const typingPause = setTimeout(() => setNameAfterTypingPause(settings.name), 500);
-    return () => clearTimeout(typingPause);
-  }, [isModelNameFocused, settings.name]);
-  const settledName = isModelNameFocused ? nameAfterTypingPause : settings.name;
+  const settledName = useDebounceValue(settings.name, 500, { isImmediate: !isModelNameFocused });
   const catalogEntry = useMemo(
     () =>
       findLlmModelCatalogEntry({
