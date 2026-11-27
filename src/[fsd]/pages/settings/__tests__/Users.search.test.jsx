@@ -22,6 +22,7 @@ const listUsers = ({ page, pageSize, params }) => {
   return { rows: matches.slice(0, (page + 1) * pageSize), total: matches.length };
 };
 
+vi.mock('react-redux', () => ({ useSelector: selector => selector({ user: { id: 1 } }) }));
 vi.mock('@/api/admin', () => ({
   useUserListQuery: args => ({ data: listUsers(args), isFetching: false, isError: false }),
   useRoleListQuery: () => ({ data: [] }),

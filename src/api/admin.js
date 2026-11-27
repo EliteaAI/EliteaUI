@@ -5,8 +5,6 @@ import { eliteaApi } from './eliteaApi.js';
 
 const apiSlicePath = '/admin';
 const TAG_TYPE_USERS = 'TAG_TYPE_USERS';
-// Provided by the project list in project.js
-const TAG_TYPE_PROJECT = 'PROJECT';
 const TAG_TYPE_ROLES = 'TAG_TYPE_ROLES';
 const TAG_TYPE_MODERATION_STATUS = 'TAG_TYPE_MODERATION_STATUS';
 const PROJECT_MODE = 'default';
@@ -17,7 +15,7 @@ const getUsersUrl = projectId => apiSlicePath + '/users/' + PROJECT_MODE + '/' +
 
 export const apis = eliteaApi
   .enhanceEndpoints({
-    addTagTypes: [TAG_TYPE_USERS, TAG_TYPE_PROJECT],
+    addTagTypes: [TAG_TYPE_USERS],
   })
   .injectEndpoints({
     endpoints: build => ({
@@ -177,13 +175,7 @@ export const apis = eliteaApi
             method: 'DELETE',
           };
         },
-        // Removing yourself revokes the permission to list users, so refetching it would only return a 403.
-        // The project list is refetched instead so the project the user just left disappears from it.
-        // A rejected mutation also runs this callback, and a failed delete changed nothing.
-        invalidatesTags: (_result, error, { removesSelf }) => {
-          if (!removesSelf) return [TAG_TYPE_USERS];
-          return error ? [] : [TAG_TYPE_PROJECT];
-        },
+        invalidatesTags: [TAG_TYPE_USERS],
       }),
       moderationStatus: build.query({
         query: ({ projectId, entityId }) => ({

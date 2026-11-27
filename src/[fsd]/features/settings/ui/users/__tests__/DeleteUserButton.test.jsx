@@ -9,7 +9,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 
 import DeleteUserButton from '../DeleteUserButton';
 
-const { deleteUser, unwrap, toastError, toastSuccess, dispatch, setProject, navigate } = vi.hoisted(() => {
+const { deleteUser, unwrap, toastError, toastSuccess } = vi.hoisted(() => {
   const entries = new Map();
   globalThis.localStorage = {
     getItem: key => entries.get(key) ?? null,
@@ -23,19 +23,8 @@ const { deleteUser, unwrap, toastError, toastSuccess, dispatch, setProject, navi
     deleteUser: vi.fn(() => ({ unwrap: unwrapMock })),
     toastError: vi.fn(),
     toastSuccess: vi.fn(),
-    dispatch: vi.fn(),
-    navigate: vi.fn(),
-    setProject: vi.fn(payload => ({ type: 'settings/setProject', payload })),
   };
 });
-
-vi.mock('react-redux', () => ({
-  useDispatch: () => dispatch,
-  useSelector: selector => selector({ user: { id: 1, personal_project_id: 77 } }),
-}));
-vi.mock('react-router-dom', () => ({ useNavigate: () => navigate }));
-vi.mock('@/routes', () => ({ default: { SettingsProjectGeneral: '/settings/project-general' } }));
-vi.mock('@/slices/settings.js', () => ({ actions: { setProject } }));
 
 vi.mock('@/api/admin', () => ({
   useUserDeleteMutation: () => [deleteUser, { isLoading: false }],
@@ -93,7 +82,7 @@ describe('DeleteUserButton', () => {
     await confirmDelete();
 
     expect(deleteUser).toHaveBeenCalledTimes(1);
-    expect(deleteUser).toHaveBeenCalledWith({ projectId: 406, removesSelf: false, params: { ids: [994] } });
+    expect(deleteUser).toHaveBeenCalledWith({ projectId: 406, params: { ids: [994] } });
     expect(toastSuccess).toHaveBeenCalledTimes(1);
     expect(toastSuccess).toHaveBeenCalledWith('The samvel test user has been successfully deleted.');
     expect(setSelectedUsers).toHaveBeenCalledTimes(1);
@@ -131,32 +120,9 @@ describe('DeleteUserButton', () => {
 
     await confirmDelete();
 
-    expect(deleteUser).toHaveBeenCalledWith({
-      projectId: 406,
-      removesSelf: false,
-      params: { ids: [994, 995] },
-    });
+    expect(deleteUser).toHaveBeenCalledWith({ projectId: 406, params: { ids: [994, 995] } });
     expect(toastError).toHaveBeenCalledTimes(1);
     expect(toastError).toHaveBeenCalledWith('Forbidden');
-    expect(toastSuccess).not.toHaveBeenCalled();
-    expect(setSelectedUsers).not.toHaveBeenCalled();
-  });
-
-  it('leaves for the private project instead of refetching when the user removes themselves', async () => {
-    unwrap.mockResolvedValue(null);
-    const setSelectedUsers = vi.fn();
-    renderButton({ users: [{ id: 1, name: 'me' }], setSelectedUsers });
-
-    await confirmDelete();
-
-    expect(deleteUser).toHaveBeenCalledWith({
-      projectId: 406,
-      removesSelf: true,
-      params: { ids: [1] },
-    });
-    expect(setProject).toHaveBeenCalledWith({ id: 77, name: 'Private' });
-    expect(navigate).toHaveBeenCalledWith('/settings/project-general', { replace: true });
-    expect(toastError).not.toHaveBeenCalled();
     expect(toastSuccess).not.toHaveBeenCalled();
     expect(setSelectedUsers).not.toHaveBeenCalled();
   });
