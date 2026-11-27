@@ -9,8 +9,9 @@ import Users from '../Users';
 
 // EL-5202: projects linked to an Entra ID group keep every member action; only members synced from the group
 // can't be removed here (they are removed in the IdP), so bulk delete leaves them out.
-const server = vi.hoisted(() => ({ list: null }));
+const server = vi.hoisted(() => ({ list: null, currentUserId: 99 }));
 
+vi.mock('react-redux', () => ({ useSelector: selector => selector({ user: { id: server.currentUserId } }) }));
 vi.mock('@/api/admin', () => ({
   useUserListQuery: () => server.list,
   useRoleListQuery: () => ({ data: [] }),
@@ -35,14 +36,31 @@ vi.mock('@/[fsd]/features/settings', () => ({
     </div>
   ),
   EditUsersButton: () => <span data-testid="edit-button" />,
-  DeleteUserButton: ({ users }) => <span data-testid="delete-button">{users.map(u => u.id).join(',')}</span>,
-  UsersTable: ({ users, onSelectPage }) => (
+  DeleteUserButton: ({ users, disabled, tooltip }) => (
     <button
-      data-testid="select-all"
-      onClick={() => onSelectPage(true)}
+      data-testid="delete-button"
+      disabled={disabled}
+      title={tooltip}
     >
-      {users.length}
+      {users.map(u => u.id).join(',')}
     </button>
+  ),
+  UsersTable: ({ users, onSelectPage, onSelectRow }) => (
+    <div>
+      <button
+        data-testid="select-all"
+        onClick={() => onSelectPage(true)}
+      >
+        {users.length}
+      </button>
+      {users.map(user => (
+        <button
+          key={user.id}
+          data-testid={`select-${user.id}`}
+          onClick={() => onSelectRow(user, true)}
+        />
+      ))}
+    </div>
   ),
 }));
 
@@ -67,7 +85,10 @@ const renderPage = (path = '/settings/users') =>
   );
 
 describe('Settings → Users of a project linked to an Entra ID group', () => {
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    server.currentUserId = 99;
+  });
 
   it('keeps invite, edit and delete', () => {
     server.list = loaded;
@@ -91,5 +112,39 @@ describe('Settings → Users of a project linked to an Entra ID group', () => {
     renderPage('/settings/users?inviteUsers=1');
 
     expect(screen.getByTestId('invite-dialog')).toBeInTheDocument();
+  });
+
+  it('disables bulk delete while the current admin is selected', () => {
+    server.list = {
+      ...loaded,
+      data: {
+        ...loaded.data,
+        rows: [
+          { id: 3, name: 'Me', email: 'me@corp.test', roles: ['admin'], scim_synced: false },
+          { id: 2, name: 'Bob', email: 'bob@corp.test', roles: ['editor'], scim_synced: false },
+        ],
+      },
+    };
+    server.currentUserId = 3;
+    renderPage();
+
+    fireEvent.click(screen.getByTestId('select-2'));
+    expect(screen.getByTestId('delete-button')).toBeEnabled();
+
+    fireEvent.click(screen.getByTestId('select-3'));
+    expect(screen.getByTestId('delete-button')).toBeDisabled();
+    expect(screen.getByTestId('delete-button')).toHaveAttribute(
+      'title',
+      'You cannot delete yourself while you have the admin role',
+    );
+  });
+
+  it('keeps bulk delete enabled when the current user selects themselves without the admin role', () => {
+    server.list = loaded;
+    server.currentUserId = 2;
+    renderPage();
+
+    fireEvent.click(screen.getByTestId('select-2'));
+    expect(screen.getByTestId('delete-button')).toBeEnabled();
   });
 });

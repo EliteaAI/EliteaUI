@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { useSelector } from 'react-redux';
 import { useLocation, useSearchParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
@@ -12,6 +13,8 @@ import {
   EditUsersButton,
   UsersTable,
 } from '@/[fsd]/features/settings';
+import { UsersConstants } from '@/[fsd]/features/settings/lib/constants';
+import { UsersHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { useDebounceValue, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useRoleListQuery, useUserCreateMutation, useUserListQuery } from '@/api/admin';
 import { PERMISSIONS } from '@/common/constants';
@@ -26,6 +29,7 @@ const Users = memo(() => {
   const projectId = useSelectedProjectId();
   const { toastError, toastSuccess } = useToast();
   const { checkPermission } = useCheckPermission();
+  const currentUserId = useSelector(state => state.user.id);
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -95,6 +99,16 @@ const Users = memo(() => {
   // Members synced from an Entra ID group (EL-5202) can only be removed in the IdP
   const deletableSelectedUsers = useMemo(() => selectedUsers.filter(u => !u.scim_synced), [selectedUsers]);
   const skippedSyncedCount = selectedUsers.length - deletableSelectedUsers.length;
+  // An admin cannot delete themselves, so the whole bulk delete is blocked while they are selected
+  const hasSelfAdminSelected = useMemo(
+    () => deletableSelectedUsers.some(u => UsersHelpers.isSelfAdmin(u, currentUserId)),
+    [currentUserId, deletableSelectedUsers],
+  );
+  const deleteTooltip = hasSelfAdminSelected
+    ? UsersConstants.SELF_DELETE_BLOCKED_MESSAGE
+    : skippedSyncedCount
+      ? `${skippedSyncedCount} selected user(s) synced from Entra ID are not deleted: remove them from the group in Entra ID`
+      : undefined;
 
   const visibleRows = useMemo(
     () => users.slice(visiblePage * pageSize, visiblePage * pageSize + pageSize),
@@ -236,12 +250,8 @@ const Users = memo(() => {
               {checkPermission(PERMISSIONS.users.delete) && (
                 <DeleteUserButton
                   users={deletableSelectedUsers}
-                  disabled={!deletableSelectedUsers.length}
-                  tooltip={
-                    skippedSyncedCount
-                      ? `${skippedSyncedCount} selected user(s) synced from Entra ID are not deleted: remove them from the group in Entra ID`
-                      : undefined
-                  }
+                  disabled={!deletableSelectedUsers.length || hasSelfAdminSelected}
+                  tooltip={deleteTooltip}
                   setSelectedUsers={setSelectedUsers}
                   useSecondaryButton
                   sx={styles.actionButton}

@@ -15,6 +15,8 @@ import {
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
 import { USERS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { UsersConstants } from '@/[fsd]/features/settings/lib/constants';
+import { UsersHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { useGetWindowWidth } from '@/[fsd]/shared/lib/hooks';
 import { Text } from '@/[fsd]/shared/ui';
 import { PERMISSIONS } from '@/common/constants';
@@ -56,6 +58,7 @@ const UsersTable = memo(props => {
   const { windowWidth } = useGetWindowWidth();
   const [hoveredRowId, setHoveredRowId] = useState(null);
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
+  const currentUserId = useSelector(state => state.user.id);
 
   const { visibleColumns, gridTemplateColumns, dataColumns } = useResponsiveColumns({
     columns: USERS_COLUMNS,
@@ -174,6 +177,12 @@ const UsersTable = memo(props => {
             checkPermission(PERMISSIONS.users.delete) && (
               <DeleteUserButton
                 users={[row]}
+                disabled={UsersHelpers.isSelfAdmin(row, currentUserId)}
+                tooltip={
+                  UsersHelpers.isSelfAdmin(row, currentUserId)
+                    ? UsersConstants.SELF_DELETE_BLOCKED_MESSAGE
+                    : undefined
+                }
                 setSelectedUsers={setSelectedUsers}
                 testId="user-row-delete-button"
               />
@@ -182,7 +191,7 @@ const UsersTable = memo(props => {
         </Box>
       );
     },
-    [checkPermission, rolesOptions, setSelectedUsers, styles],
+    [checkPermission, currentUserId, rolesOptions, setSelectedUsers, styles],
   );
 
   return !isFetching ? (
