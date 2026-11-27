@@ -108,6 +108,30 @@ describe('project membership notice text', () => {
     expect(container.firstElementChild).toHaveStyle({ overflowWrap: 'anywhere' });
   });
 
+  it('appends the assigned role to the added notice', () => {
+    const { container } = renderMessage(
+      build(NotificationType.UserWasAddedToSomeProjectAsTeammate, {
+        project_name: 'Research',
+        roles: ['admin', 'editor'],
+        message: 'You have been added to Research project as Admin, Editor.',
+      }),
+    );
+
+    expect(screen.getByRole('link', { name: 'Research' })).toBeInTheDocument();
+    expect(container.textContent).toBe('You have been added to Research project as Admin, Editor.');
+  });
+
+  it('renders the added notice without a role for older notifications', () => {
+    const { container } = renderMessage(
+      build(NotificationType.UserWasAddedToSomeProjectAsTeammate, {
+        project_name: 'Research',
+        message: 'You have been added to Research project.',
+      }),
+    );
+
+    expect(container.textContent).toBe('You have been added to Research project.');
+  });
+
   it('renders a removed project name as plain text with no link', () => {
     const projectName = 'Research [Archive]';
     const { container } = renderMessage(

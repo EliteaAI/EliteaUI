@@ -3,6 +3,7 @@ import { Fragment, memo, useMemo } from 'react';
 import { Link, Typography } from '@mui/material';
 
 import {
+  formatMembershipRoles,
   isProjectMembershipNotification,
   parseMessage,
   resolveHref,
@@ -20,6 +21,7 @@ const NotificationListItemMessage = memo(props => {
   const isAddedToProject = notification.event_type === NotificationType.UserWasAddedToSomeProjectAsTeammate;
   const isLegacyMembership = Array.isArray(notification.meta?.users);
   const projectName = notification.meta?.project_name;
+  const roleSuffix = isAddedToProject ? formatMembershipRoles(notification.meta?.roles) : '';
   const styles = notificationListItemMessageStyles(notification.is_seen);
 
   if (
@@ -47,7 +49,7 @@ const NotificationListItemMessage = memo(props => {
         ) : (
           projectName
         )}
-        {' project.'}
+        {` project${roleSuffix}.`}
       </Typography>
     );
   }
