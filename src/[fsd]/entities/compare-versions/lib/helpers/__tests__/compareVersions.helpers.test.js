@@ -23,33 +23,16 @@ describe('extractSkillCompareData', () => {
 });
 
 describe('buildRunSettingsRows', () => {
-  it('describes a version without run settings as the project defaults', () => {
-    expect(valuesOf(buildRunSettingsRows(null))).toEqual({
-      model: 'Project default',
-      temperature: 'Default',
-      reasoning_effort: 'Default',
-      max_tokens: 'Default',
-      project_context: 'Included',
-    });
+  it('describes a version without run settings as including the project context', () => {
+    expect(valuesOf(buildRunSettingsRows(null))).toEqual({ project_context: 'Included' });
   });
 
-  it('describes a fixed model with its settings', () => {
+  it('shows only the project context, not the model settings', () => {
     const rows = buildRunSettingsRows({
-      llm_settings: { model_name: 'gpt-4.1', temperature: 0.3, max_tokens: 4096 },
+      llm_settings: { model_name: 'gpt-4.1', temperature: 0.3, reasoning_effort: 'medium', max_tokens: -1 },
       ignore_project_context: true,
     });
-    expect(valuesOf(rows)).toMatchObject({
-      model: 'gpt-4.1',
-      temperature: '0.3',
-      max_tokens: '4096',
-      project_context: 'Excluded',
-    });
-  });
-
-  it('names Auto rather than a model', () => {
-    expect(valuesOf(buildRunSettingsRows({ llm_settings: { selection: { mode: 'auto' } } })).model).toBe(
-      'Auto',
-    );
+    expect(valuesOf(rows)).toEqual({ project_context: 'Excluded' });
   });
 });
 
