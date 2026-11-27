@@ -5,7 +5,6 @@ import { Box, FormControlLabel, Typography } from '@mui/material';
 import { Checkbox, Select } from '@/[fsd]/shared/ui';
 
 import { LlmModelFormConstants } from '../../lib/constants';
-import { getLlmModelSelectLabelProps } from '../../lib/helpers/llmModelForm.helpers';
 import {
   getDefaultEffortOptions,
   getEffortLevelLabel,
@@ -13,7 +12,8 @@ import {
   getRemovedEffortLevels,
   isLlmModelReasoningConfigured,
   toggleEffortLevel,
-} from '../../lib/helpers/llmModelProfiles.helpers.js';
+} from '../../lib/helpers/llmModelCatalog.helpers.js';
+import { getLlmModelSelectLabelProps } from '../../lib/helpers/llmModelForm.helpers';
 import LlmModelField from './LlmModelField';
 import LlmModelFieldLabel from './LlmModelFieldLabel';
 import LlmModelThinkingModeValue from './LlmModelThinkingModeValue';
@@ -28,21 +28,32 @@ const {
   LLM_MODEL_REMOVED_EFFORTS_WARNING,
   LLM_MODEL_THINKING_TYPE_CHOICE_HELPER_TEXT,
   LLM_MODEL_THINKING_TYPE_FIXED_HELPER_TEXTS,
+  LLM_MODEL_THINKING_TYPE_ALWAYS_ON_OPTION,
   LLM_MODEL_THINKING_TYPE_NOT_SET,
   LLM_MODEL_THINKING_TYPE_OPTIONS,
+  LLM_MODEL_THINKING_TYPES,
 } = LlmModelFormConstants;
 
 const LlmModelReasoningPanel = memo(props => {
-  const { settings, initialSettings, isEditing, profile, effortLevels, visibleErrors, editSetting } = props;
+  const {
+    settings,
+    initialSettings,
+    isEditing,
+    isStoredEntryLookedUp,
+    isCatalogFillPending,
+    catalogEntry,
+    visibleErrors,
+    editSetting,
+  } = props;
   const styles = llmModelReasoningPanelStyles();
-  const isRecognized = Boolean(profile?.supports_reasoning);
+  const areEffortsFromCatalog = Boolean(catalogEntry?.supported_efforts);
   const isConfigured = isLlmModelReasoningConfigured(settings);
   const storedEfforts = settings[FIELDS.supportedEfforts];
   const supportedEfforts = useMemo(() => storedEfforts || [], [storedEfforts]);
 
   const effortOptions = useMemo(
-    () => getEffortLevelOptions(profile, effortLevels, supportedEfforts),
-    [profile, effortLevels, supportedEfforts],
+    () => getEffortLevelOptions(catalogEntry, supportedEfforts, settings[FIELDS.thinkingType]),
+    [catalogEntry, supportedEfforts, settings],
   );
   const defaultEffortOptions = useMemo(() => getDefaultEffortOptions(supportedEfforts), [supportedEfforts]);
   const removedLevels = useMemo(
@@ -70,8 +81,29 @@ const LlmModelReasoningPanel = memo(props => {
     [editSetting],
   );
 
-  const fixedThinkingType = isRecognized ? settings[FIELDS.thinkingType] || profile.thinking_type : null;
-  const isThinkingTypeShown = !isRecognized || Boolean(fixedThinkingType);
+  const storedThinkingType = isEditing ? (initialSettings?.[FIELDS.thinkingType] ?? null) : null;
+  const catalogThinkingType = catalogEntry?.thinking_type ?? null;
+  const chosenThinkingType =
+    settings[FIELDS.thinkingType] ?? (isCatalogFillPending ? catalogThinkingType : null);
+  const isStoredModeKept =
+    isStoredEntryLookedUp &&
+    (isLlmModelReasoningConfigured(initialSettings) ||
+      (Boolean(initialSettings?.[FIELDS.reasoning]) && !catalogEntry?.supported_efforts));
+  const isThinkingTypeEditable =
+    !catalogEntry ||
+    chosenThinkingType !== catalogThinkingType ||
+    (isStoredModeKept && storedThinkingType !== catalogThinkingType);
+  const fixedThinkingType = isThinkingTypeEditable ? null : chosenThinkingType;
+  const isThinkingTypeShown = isThinkingTypeEditable || Boolean(fixedThinkingType);
+  const thinkingTypeOptions = useMemo(
+    () =>
+      [chosenThinkingType, storedThinkingType, catalogThinkingType].includes(
+        LLM_MODEL_THINKING_TYPES.alwaysOn,
+      )
+        ? [...LLM_MODEL_THINKING_TYPE_OPTIONS, LLM_MODEL_THINKING_TYPE_ALWAYS_ON_OPTION]
+        : LLM_MODEL_THINKING_TYPE_OPTIONS,
+    [chosenThinkingType, storedThinkingType, catalogThinkingType],
+  );
   const effortWarnings = [
     supportedEfforts.includes(LLM_MODEL_EFFORT_NONE) && LLM_MODEL_EFFORT_NONE_WARNING,
     removedLevels.length > 0 && LLM_MODEL_REMOVED_EFFORTS_WARNING(removedLevels.map(getEffortLevelLabel)),
@@ -112,7 +144,7 @@ const LlmModelReasoningPanel = memo(props => {
               id={`llm-model-${FIELDS.thinkingType}`}
               data-testid="llm-model-thinking-type-select"
               value={settings[FIELDS.thinkingType] ?? LLM_MODEL_THINKING_TYPE_NOT_SET}
-              options={LLM_MODEL_THINKING_TYPE_OPTIONS}
+              options={thinkingTypeOptions}
               onValueChange={onThinkingTypeChange}
               error={Boolean(visibleErrors[FIELDS.thinkingType])}
               showBorder
@@ -128,7 +160,7 @@ const LlmModelReasoningPanel = memo(props => {
         error={visibleErrors[FIELDS.supportedEfforts]}
         warning={effortWarnings.length ? effortWarnings.join('\n') : undefined}
         helperText={
-          isRecognized
+          areEffortsFromCatalog
             ? LLM_MODEL_EFFORT_LEVELS_HELPER_TEXTS.recognized
             : LLM_MODEL_EFFORT_LEVELS_HELPER_TEXTS.unrecognized
         }

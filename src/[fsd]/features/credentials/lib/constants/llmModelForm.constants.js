@@ -132,6 +132,11 @@ export const LLM_MODEL_THINKING_TYPE_FIXED_LABELS = {
   [LLM_MODEL_THINKING_TYPES.enabled]: 'Enabled (token budget)',
 };
 
+export const LLM_MODEL_THINKING_TYPE_ALWAYS_ON_OPTION = {
+  value: LLM_MODEL_THINKING_TYPES.alwaysOn,
+  label: LLM_MODEL_THINKING_TYPE_FIXED_LABELS[LLM_MODEL_THINKING_TYPES.alwaysOn],
+};
+
 export const LLM_MODEL_THINKING_TYPE_FIXED_HELPER_TEXTS = {
   [LLM_MODEL_THINKING_TYPES.adaptive]: 'The model decides how much to think. Nothing to configure.',
   [LLM_MODEL_THINKING_TYPES.alwaysOn]: 'The model decides how much to think. Nothing to configure.',
@@ -142,19 +147,11 @@ export const LLM_MODEL_THINKING_TYPE_FIXED_HELPER_TEXTS = {
 export const LLM_MODEL_THINKING_TYPE_CHOICE_HELPER_TEXT =
   'Anthropic models only. Leave it not set for other providers.';
 
-export const LLM_MODEL_REASONING_LOCK_REASONS = {
-  provider: 'provider',
-  platform: 'platform',
-};
-
 export const LLM_MODEL_REASONING_DESCRIPTIONS = {
   default: 'Thinks before answering. Configure which effort levels users can pick.',
-  unsupported: "This model family doesn't support reasoning. Turn it off to save.",
+  unsupported: "This model doesn't support reasoning.",
   recognized: 'On by default for this model. Configure which effort levels users can pick.',
-  [LLM_MODEL_REASONING_LOCK_REASONS.provider]:
-    'Always on for this model. Configure which effort levels users can pick.',
-  [LLM_MODEL_REASONING_LOCK_REASONS.platform]:
-    'Always on in Elitea. Configure which effort levels users can pick.',
+  locked: 'Always on for this model. Configure which effort levels users can pick.',
 };
 
 export const LLM_MODEL_STATUS_TONES = {
@@ -179,10 +176,8 @@ export const LLM_MODEL_CONNECTION_TEST_TEXTS = {
 };
 
 export const LLM_MODEL_RECOGNITION_TEXTS = {
-  recognized: label => `Recognized: ${label}. Only the settings it supports are shown.`,
-  recognizedWithoutReasoning: label =>
-    `Recognized: ${label}. Reasoning isn't supported, so its settings are hidden.`,
-  unrecognized: 'Not recognized. All reasoning options are shown; check compatibility with DevOps.',
+  recognized: 'Recognized',
+  unrecognized: 'Not recognized',
 };
 
 export const LLM_MODEL_EFFORT_LEVELS_HELPER_TEXTS = {

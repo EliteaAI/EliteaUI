@@ -49,21 +49,22 @@ vi.mock('../../../lib/hooks/useLlmModelTargetProjectId.hooks.js', () => ({
 }));
 
 vi.mock('../../../lib/hooks', async () => {
-  const { LLM_MODEL_PROFILES_FIXTURE } = await import('./llmModelProfiles.fixture.js');
+  const { useLlmModelCatalogPrefill } = await vi.importActual(
+    '../../../lib/hooks/useLlmModelCatalogPrefill.hooks.js',
+  );
+  const { LLM_MODEL_CATALOG_FIXTURE } = await import('./llmModelCatalog.fixture.js');
   const { useLlmModelCheckConnection } = await vi.importActual(
     '../../../lib/hooks/useLlmModelCheckConnection.hooks.js',
   );
   return {
+    useLlmModelCatalogPrefill,
     useLlmModelCheckConnection,
     useLlmModelCredentialType: credential => ({
       credentialType: CREDENTIAL_TYPES[credential?.elitea_title] || '',
       isCredentialTypePending,
     }),
     useLlmModelTakenIds: () => takenIds,
-    useLlmModelProfiles: () => ({
-      profilesPayload: LLM_MODEL_PROFILES_FIXTURE,
-      effortLevels: LLM_MODEL_PROFILES_FIXTURE.effort_levels,
-    }),
+    useLlmModelCatalog: () => ({ catalog: LLM_MODEL_CATALOG_FIXTURE, isCatalogPending: false }),
   };
 });
 
@@ -680,7 +681,7 @@ describe('LlmModelForm', () => {
       renderForm(
         {
           ...EXISTING_DIAL_MODEL,
-          settings: { ...EXISTING_DIAL_MODEL.settings, name: 'gemini-3.8-flash', supports_reasoning: true },
+          settings: { ...EXISTING_DIAL_MODEL.settings, name: 'gemini-3.7-flash', supports_reasoning: true },
         },
         { showValidation: true },
       );

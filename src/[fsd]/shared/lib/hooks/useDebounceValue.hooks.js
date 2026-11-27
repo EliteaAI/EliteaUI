@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
 
-export const useDebounceValue = (value, delay) => {
+export const useDebounceValue = (value, delay, { isImmediate = false } = {}) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
   useEffect(() => {
+    if (isImmediate) {
+      setDebouncedValue(value);
+      return undefined;
+    }
     const handler = setTimeout(() => {
       setDebouncedValue(value);
     }, delay);
@@ -11,7 +15,7 @@ export const useDebounceValue = (value, delay) => {
     return () => {
       clearTimeout(handler);
     };
-  }, [value, delay]);
+  }, [value, delay, isImmediate]);
 
-  return debouncedValue;
+  return isImmediate ? value : debouncedValue;
 };
