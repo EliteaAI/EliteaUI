@@ -39,6 +39,16 @@ export const mergeDateGroupsFirstPage = (loadedGroups = [], serverGroups = [], o
   });
 };
 
+// A chat the user no longer has access to leaves every list (#7757)
+export const removeFromLists = ({ conversationId }) => {
+  const keep = conversation => conversation.id !== conversationId;
+  return {
+    updateConversations: prev => prev.filter(keep),
+    updateFolders: prev =>
+      prev.map(folder => ({ ...folder, conversations: (folder.conversations || []).filter(keep) })),
+  };
+};
+
 export const applyPrivacyToLists = ({ conversationId, isPrivate }) => {
   const applyPrivate = conversation =>
     conversation.id === conversationId ? { ...conversation, is_private: isPrivate } : conversation;

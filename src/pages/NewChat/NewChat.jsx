@@ -10,7 +10,10 @@ import { Box, CircularProgress, Grid, useTheme } from '@mui/material';
 import { useEditingArtifactsNavBlocker } from '@/[fsd]/features/artifacts/lib/hooks';
 import { useManualSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { useLazyConversationDetailsQuery } from '@/[fsd]/features/chat/api';
-import { applyParticipantChanges } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
+import {
+  applyParticipantChanges,
+  removeFromLists,
+} from '@/[fsd]/features/chat/conversation-list/lib/helpers';
 import { hasWholeTeam } from '@/[fsd]/features/chat/conversation-list/lib/helpers/shareChat.helpers';
 import {
   useChatHistoryActions,
@@ -26,6 +29,7 @@ import { ShareChatModal } from '@/[fsd]/features/chat/conversation-list/ui/share
 import {
   useApplyChatSendFailures,
   useChatEditors,
+  useChatRights,
   useChatSocketReconnect,
   useConversationNavigation,
   useCreatedAwayConversationName,
@@ -386,6 +390,8 @@ const NewChat = props => {
   });
 
   const isDraftConversation = !activeConversation?.id || !!activeConversation?.isNew;
+  // An invited Viewer uses the chat's participants as they are (#7757)
+  const { canManage: canManageChat } = useChatRights(activeConversation);
   // «+» › Invite Users only before the first message; a saved chat shares from its menu. The Public project has no team
   const canInviteUsers = projectId != PUBLIC_PROJECT_ID && isDraftConversation;
 
@@ -446,6 +452,8 @@ const NewChat = props => {
   const [getConversationDetailForRefresh] = useLazyConversationDetailsQuery();
 
   const activeConversationIdRef = useRef(activeConversation?.id);
+  // Set once startNewConversation exists below; the Share window may need it first
+  const startNewConversationRef = useRef(null);
   useLayoutEffect(() => {
     activeConversationIdRef.current = activeConversation?.id;
   }, [activeConversation?.id]);
@@ -470,6 +478,15 @@ const NewChat = props => {
 
   const handleRestrictAccessSuccess = useCallback(
     async (conversationId, participantChanges = {}) => {
+      // A manager who removed themselves from the chat loses it (#7757)
+      if (participantChanges.isSelfRemoved) {
+        const { updateConversations, updateFolders } = removeFromLists({ conversationId });
+        setConversations(updateConversations);
+        setPinnedConversations(updateConversations);
+        setFolders(updateFolders);
+        if (activeConversationIdRef.current === conversationId) startNewConversationRef.current?.();
+        return;
+      }
       // The Share window can also make the chat public
       const isPrivate = participantChanges.isPrivate ?? true;
       const applyPrivate = conv => (conv.id === conversationId ? { ...conv, is_private: isPrivate } : conv);
@@ -707,6 +724,7 @@ const NewChat = props => {
       );
 
       if (!foundParticipant && activeConversation && !activeConversation?.isNew) {
+        if (!canManageChat) return;
         addNewParticipants([selectedParticipant], addedParticipants => {
           if (canParticipantBeActiveInChat(addedParticipants[0])) {
             onSelectParticipant(addedParticipants[0], false);
@@ -718,7 +736,7 @@ const NewChat = props => {
         }
       }
     },
-    [activeConversation, addNewParticipants, onSelectParticipant],
+    [activeConversation, addNewParticipants, canManageChat, onSelectParticipant],
   );
 
   const detectedEditorType = useMemo(() => {
@@ -1095,6 +1113,7 @@ const NewChat = props => {
       stopListenCanvasContentChangeEvent,
     ],
   );
+  startNewConversationRef.current = startNewConversation;
 
   const onCreateConversationInFolder = useCallback(
     folder => {
@@ -1222,7 +1241,7 @@ const NewChat = props => {
         editingToolkit,
         onParticipantsCollapsed,
         activeParticipant,
-        onDeleteParticipant,
+        onDeleteParticipant: canManageChat ? onDeleteParticipant : undefined,
         onSelectParticipant,
         onChangeParticipantSettings,
         onEditParticipant,
@@ -1242,6 +1261,7 @@ const NewChat = props => {
       newConversationSelectedManager,
       onParticipantsCollapsed,
       activeParticipant,
+      canManageChat,
       onDeleteParticipant,
       onSelectParticipant,
       onChangeParticipantSettings,

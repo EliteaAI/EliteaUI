@@ -112,7 +112,13 @@ describe('useShareChat', () => {
     expect(conversationEdit).toHaveBeenCalledWith({ projectId: 406, id: 500, is_private: false });
     expect(addParticipant).not.toHaveBeenCalled();
     expect(deleteParticipant).not.toHaveBeenCalled();
-    expect(changes).toEqual({ isPrivate: false, deletedIds: [], addedParticipants: [], failed: false });
+    expect(changes).toEqual({
+      isPrivate: false,
+      deletedIds: [],
+      addedParticipants: [],
+      failed: false,
+      isSelfRemoved: false,
+    });
   });
 
   it('makes a public chat private and adds the picked people', async () => {
@@ -148,7 +154,13 @@ describe('useShareChat', () => {
     expect(addParticipant).not.toHaveBeenCalled();
     expect(deleteParticipant).toHaveBeenCalledTimes(1);
     expect(deleteParticipant).toHaveBeenCalledWith({ projectId: 406, conversationId: 500, id: 12 });
-    expect(changes).toEqual({ isPrivate: true, deletedIds: [12], addedParticipants: [], failed: false });
+    expect(changes).toEqual({
+      isPrivate: true,
+      deletedIds: [12],
+      addedParticipants: [],
+      failed: false,
+      isSelfRemoved: false,
+    });
   });
 
   it('keeps the owner when the server sends the ids as strings', async () => {
@@ -167,6 +179,77 @@ describe('useShareChat', () => {
     expect(deleteParticipant).toHaveBeenCalledWith({ projectId: 406, conversationId: 500, id: 12 });
   });
 
+  it('adds the picked people before it closes a team-wide chat', async () => {
+    details.current = { author_id: 1, is_private: false, participants: [userParticipant(11, 1, 'Owner')] };
+    const calls = [];
+    addParticipant.mockImplementation(() => calls.push('add') && unwrapped([{ id: 30 }]));
+    conversationEdit.mockImplementation(() => calls.push('private') && unwrapped({}));
+    const result = renderShare();
+
+    await act(async () => {
+      await result.current.saveAccess([{ id: 2, name: 'Ann' }]);
+    });
+
+    expect(calls).toEqual(['add', 'private']);
+  });
+
+  it('removes a manager’s own row last and reports that they left', async () => {
+    details.current = {
+      author_id: 9,
+      is_private: true,
+      participants: [
+        userParticipant(10, 9, 'Owner'),
+        userParticipant(13, 1, 'Me'),
+        userParticipant(12, 2, 'Ann'),
+      ],
+    };
+    const removed = [];
+    deleteParticipant.mockImplementation(({ id }) => removed.push(id) && unwrapped({}));
+    const result = renderHook(() => useShareChat({ conversation: { id: 500, author_id: 9 } })).result;
+
+    let changes;
+    await act(async () => {
+      changes = await result.current.saveAccess([]);
+    });
+
+    expect(removed).toEqual([12, 13]);
+    expect(changes).toMatchObject({ deletedIds: [12, 13], failed: false, isSelfRemoved: true });
+  });
+
+  it('keeps a manager’s own row when removing someone else fails', async () => {
+    details.current = {
+      author_id: 9,
+      is_private: true,
+      participants: [
+        userParticipant(10, 9, 'Owner'),
+        userParticipant(13, 1, 'Me'),
+        userParticipant(12, 2, 'Ann'),
+      ],
+    };
+    deleteParticipant.mockReturnValue({ unwrap: () => Promise.reject(new Error('500')) });
+    const result = renderHook(() => useShareChat({ conversation: { id: 500, author_id: 9 } })).result;
+
+    let changes;
+    await act(async () => {
+      changes = await result.current.saveAccess([]);
+    });
+
+    expect(deleteParticipant).toHaveBeenCalledTimes(1);
+    expect(changes).toMatchObject({ deletedIds: [], failed: true, isSelfRemoved: false });
+  });
+
+  it('reports a manager who left a team-wide chat they never wrote in', async () => {
+    details.current = { author_id: 9, is_private: false, participants: [userParticipant(10, 9, 'Owner')] };
+    const result = renderHook(() => useShareChat({ conversation: { id: 500, author_id: 9 } })).result;
+
+    let changes;
+    await act(async () => {
+      changes = await result.current.saveAccess([{ id: 2, name: 'Ann' }]);
+    });
+
+    expect(changes).toMatchObject({ isPrivate: true, failed: false, isSelfRemoved: true });
+  });
+
   it('reports what was saved when a later call fails', async () => {
     details.current = {
       author_id: 1,
@@ -181,7 +264,14 @@ describe('useShareChat', () => {
       changes = await result.current.saveAccess([{ id: 2, name: 'Ann' }]);
     });
 
-    expect(changes).toEqual({ isPrivate: true, deletedIds: [], addedParticipants: [], failed: true });
+    // Nothing changed: the people are added before the chat closes to the team
+    expect(changes).toEqual({
+      isPrivate: false,
+      deletedIds: [],
+      addedParticipants: [],
+      failed: true,
+      isSelfRemoved: false,
+    });
   });
 
   it('reads the saved list and leaves the owner out of the members', () => {

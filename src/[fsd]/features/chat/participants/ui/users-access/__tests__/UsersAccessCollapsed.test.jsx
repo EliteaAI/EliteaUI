@@ -38,7 +38,9 @@ const user = (id, userId, name) => ({
   entity_meta: { id: userId },
   meta: { user_name: name },
 });
-const conversation = { id: 5, name: 'Plan' };
+const conversation = { id: 5, name: 'Plan', author_id: 1 };
+// Someone else's chat, without the permission to manage it (#7757)
+const sharedConversation = { ...conversation, author_id: 2 };
 
 const renderCollapsed = props =>
   render(
@@ -136,11 +138,11 @@ describe('UsersAccessCollapsed', () => {
 
   it('copies the chat link for anyone else from the Share row', () => {
     access.current = { ...access.current, isOwner: false };
-    renderCollapsed();
+    renderCollapsed({ conversation: sharedConversation });
     openMenu();
     fireEvent.click(screen.getByTestId('chat-users-mention-share'));
 
-    expect(copyChatLink).toHaveBeenCalledWith(conversation, expect.any(String));
+    expect(copyChatLink).toHaveBeenCalledWith(sharedConversation, expect.any(String));
     expect(screen.queryByTestId('share-chat-modal')).not.toBeInTheDocument();
   });
 

@@ -41,6 +41,7 @@ export const getIcon = (type, theme, notification) => {
       return <SuccessIcon fill={theme.palette.icon.tips} />;
 
     case NotificationType.UserWasRemovedFromProject:
+    case NotificationType.ChatUserRemoved:
       return <PersonRemoveOutlinedIcon sx={{ color: theme.palette.status.rejected }} />;
 
     case NotificationType.PromptModeratorReject:

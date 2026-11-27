@@ -18,13 +18,12 @@ const UsersAccessCollapsed = memo(props => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleCloseMenu = useCallback(() => setIsMenuOpen(false), []);
-  const { access, userId, isShareOpen, handleShare, handleMention, handleCloseShare } = useUsersAccessActions(
-    {
+  const { access, userId, isShareOpen, canShare, handleShare, handleMention, handleCloseShare } =
+    useUsersAccessActions({
       conversation,
       onSelectParticipant,
       onBeforeAction: handleCloseMenu,
-    },
-  );
+    });
 
   const isOnlyYou = access.kind === USERS_ACCESS_KIND.onlyYou;
   const styles = usersAccessCollapsedStyles();
@@ -73,7 +72,7 @@ const UsersAccessCollapsed = memo(props => {
         currentUserId={userId}
         ownerId={access.ownerId}
         access={access}
-        showShare
+        showShare={canShare}
         onMention={handleMention}
         onShare={handleShare}
         onClose={handleCloseMenu}

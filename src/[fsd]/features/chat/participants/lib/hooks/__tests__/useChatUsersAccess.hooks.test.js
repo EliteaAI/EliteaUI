@@ -12,6 +12,10 @@ const userList = vi.hoisted(() => vi.fn());
 vi.mock('react-redux', () => ({
   useSelector: selector => selector({ user: { id: 1 } }),
 }));
+// Only who may create links asks for them: the owner here (#7757)
+vi.mock('@/[fsd]/features/chat/lib/hooks', () => ({
+  useChatRights: conversation => ({ canManage: conversation?.author_id == 1 }),
+}));
 vi.mock('@/[fsd]/features/chat/conversation-list/api/sharedLinksApi', () => ({
   useListShareLinksQuery: (args, options) => linksQuery(args, options),
 }));

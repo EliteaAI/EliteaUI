@@ -42,7 +42,14 @@ export const resolveHref = (eventType, meta, projectId) => {
     case NotificationType.PersonalAccessTokenExpiring:
       return `${base}${RouteDefinitions.SettingsWithTab.replace(':tab', 'tokens')}`;
 
-    case NotificationType.ChatUserAdded:
+    // The chat itself, in the project it lives in (#7757); a removed person gets no link
+    case NotificationType.ChatUserAdded: {
+      const convId = meta?.conversation_id;
+      const route = `${base}/${projectId}`;
+      if (!convId) return `${route}${RouteDefinitions.Chat}`;
+      return `${route}${NavigationHelpers.buildRoute(RouteDefinitions.ChatConversation, { conversationId: convId })}`;
+    }
+
     case NotificationType.ChatUserMentioned: {
       const convId = meta?.conversation_id;
       const messageId = meta?.message_id;

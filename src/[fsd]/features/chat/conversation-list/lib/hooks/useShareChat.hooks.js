@@ -120,7 +120,13 @@ export const useShareChat = ({ conversation, query = '', isExternallyShown = fal
   // Resolves with what the server confirmed even when a later call fails, so the chat list stays in step
   const saveAccess = useCallback(
     async list => {
-      const changes = { isPrivate, deletedIds: [], addedParticipants: [], failed: false };
+      const changes = {
+        isPrivate,
+        deletedIds: [],
+        addedParticipants: [],
+        failed: false,
+        isSelfRemoved: false,
+      };
       try {
         if (hasWholeTeam(list)) {
           if (isPrivate)
@@ -134,8 +140,8 @@ export const useShareChat = ({ conversation, query = '', isExternallyShown = fal
           selectedUsers: list,
           initialUserEntityIds: new Set(others.map(item => item.entity_meta?.id).filter(Boolean)),
         });
-        if (!isPrivate) await conversationEdit({ projectId, id: conversationId, is_private: true }).unwrap();
-        changes.isPrivate = true;
+        // Everyone who keeps access is added before the chat closes to the team: a manager who never wrote in a
+        // team-wide chat is not a participant and loses access with the switch. Their own row goes last (#7757)
         const toAdd = buildNewParticipants({ usersToAdd, aiToAdd: [], projectId });
         if (toAdd.length) {
           const result = await addParticipant({
@@ -145,13 +151,26 @@ export const useShareChat = ({ conversation, query = '', isExternallyShown = fal
           }).unwrap();
           changes.addedParticipants = Array.isArray(result) ? result : [];
         }
-        const results = await Promise.allSettled(
-          usersToRemove.map(item => deleteParticipant({ projectId, conversationId, id: item.id }).unwrap()),
-        );
-        changes.deletedIds = usersToRemove
-          .filter((_, index) => results[index].status === 'fulfilled')
-          .map(item => item.id);
-        changes.failed = results.some(item => item.status === 'rejected');
+        const isSelf = item => item.entity_meta?.id == user?.id;
+        const removeRows = async rows => {
+          const results = await Promise.allSettled(
+            rows.map(item => deleteParticipant({ projectId, conversationId, id: item.id }).unwrap()),
+          );
+          return rows.filter((_, index) => results[index].status === 'fulfilled').map(item => item.id);
+        };
+        const otherRows = usersToRemove.filter(item => !isSelf(item));
+        const ownRows = usersToRemove.filter(isSelf);
+        changes.deletedIds = await removeRows(otherRows);
+        changes.failed = changes.deletedIds.length < otherRows.length;
+        if (!isPrivate) await conversationEdit({ projectId, id: conversationId, is_private: true }).unwrap();
+        changes.isPrivate = true;
+        if (!changes.failed && ownRows.length) {
+          const ownIds = await removeRows(ownRows);
+          changes.deletedIds = [...changes.deletedIds, ...ownIds];
+          changes.failed = ownIds.length < ownRows.length;
+        }
+        changes.isSelfRemoved =
+          !changes.failed && ownerId != user?.id && !list.some(item => item.id == user?.id);
       } catch {
         changes.failed = true;
       }
@@ -165,6 +184,7 @@ export const useShareChat = ({ conversation, query = '', isExternallyShown = fal
       isPrivate,
       ownerId,
       projectId,
+      user?.id,
       userParticipants,
     ],
   );

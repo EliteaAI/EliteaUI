@@ -16,3 +16,4 @@ export { findNoticeAgent } from './scheduleRunNotice.helpers.js';
 export * from './canvas.helpers';
 export * from './chatInputPlaceholder.helpers';
 export * as ConversationStartersLayoutHelpers from './conversationStartersLayout.helpers.js';
+export * from './chatRights.helpers';

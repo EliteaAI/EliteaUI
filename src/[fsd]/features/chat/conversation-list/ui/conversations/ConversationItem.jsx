@@ -1,7 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useSelector } from 'react-redux';
-
 import { Box, CircularProgress, ClickAwayListener, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
@@ -11,7 +9,8 @@ import {
   ConversationRunIndicator,
   DraggableConversationItem,
 } from '@/[fsd]/features/chat/conversation-list/ui';
-import { useConversationRunStatus } from '@/[fsd]/features/chat/lib/hooks';
+import { ChatRightsConstants } from '@/[fsd]/features/chat/lib/constants';
+import { useChatRights, useConversationRunStatus } from '@/[fsd]/features/chat/lib/hooks';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { AppLink, Button, Input } from '@/[fsd]/shared/ui';
@@ -69,7 +68,6 @@ const ConversationItem = memo(props => {
     isPlayback,
     isPinned,
     isNew,
-    author_id,
     isNamingPending,
   } = conversation;
 
@@ -78,10 +76,10 @@ const ConversationItem = memo(props => {
   const { checkPermission } = useCheckPermission();
   const projectId = useSelectedProjectId();
   const { isRunning, unread } = useConversationRunStatus(projectId, conversation);
+  const rights = useChatRights(conversation);
+  const { SHARE_ACTIONS } = ChatRightsConstants;
   // The open chat shows its own run; the row only speaks for chats that are not on screen
   const showRunIndicator = !isPlayback && !isNew && (isRunning || (!!unread && !isActive));
-
-  const { id: userId } = useSelector(state => state.user);
 
   const [isHovering, setIsHovering] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -180,11 +178,11 @@ const ConversationItem = memo(props => {
 
   const copyChatLink = useCopyChatLink();
 
-  // Only the owner manages access and links; anyone else gets the chat link
+  // The owner and a manager get the Share window; anyone else gets the chat link (#7757)
   const handleShare = useCallback(() => {
-    if (userId == author_id && onShare) onShare(conversation);
+    if (rights.shareAction === SHARE_ACTIONS.window && onShare) onShare(conversation);
     else copyChatLink(conversation, SHARE_MESSAGES.saved);
-  }, [author_id, conversation, copyChatLink, onShare, userId]);
+  }, [SHARE_ACTIONS.window, conversation, copyChatLink, onShare, rights.shareAction]);
 
   const menuItems = useMemo(() => {
     return !isPlayback
@@ -197,7 +195,7 @@ const ConversationItem = memo(props => {
                 <EditIcon sx={{ fontSize: '1rem' }} />
               </Box>
             ),
-            disabled: userId != author_id || (isActive && isEditingCanvas),
+            disabled: !rights.canManage || (isActive && isEditingCanvas),
             onClick: handleEdit,
           },
           {
@@ -212,6 +210,7 @@ const ConversationItem = memo(props => {
             hasSubMenu: true,
             disabled:
               isPinned ||
+              !rights.canMoveToFolder ||
               !checkPermission(PERMISSIONS.chat.folders.create) ||
               !checkPermission(PERMISSIONS.chat.folders.update) ||
               (isActive && isEditingCanvas),
@@ -231,7 +230,7 @@ const ConversationItem = memo(props => {
                 {
                   label: 'Duplicate',
                   icon: <CopyIcon sx={{ fontSize: '1rem' }} />,
-                  disabled: isActive && isEditingCanvas,
+                  disabled: !rights.canManage || (isActive && isEditingCanvas),
                   onClick: handleDuplicate,
                 },
               ]
@@ -240,19 +239,23 @@ const ConversationItem = memo(props => {
             key: 'chat-conversation-menu-export',
             label: 'Export',
             icon: <ExportIcon sx={{ fontSize: '1rem' }} />,
-            disabled: isActive && isEditingCanvas,
+            disabled: !rights.canManage || (isActive && isEditingCanvas),
             onClick: handleExport,
           },
-          {
-            key: 'chat-conversation-menu-share',
-            label: 'Share',
-            icon: (
-              <Box sx={{ svg: { path: { fill: ({ palette }) => palette.secondary.main } } }}>
-                <ShareIcon />
-              </Box>
-            ),
-            onClick: handleShare,
-          },
+          ...(rights.shareAction !== SHARE_ACTIONS.none
+            ? [
+                {
+                  key: 'chat-conversation-menu-share',
+                  label: 'Share',
+                  icon: (
+                    <Box sx={{ svg: { path: { fill: ({ palette }) => palette.secondary.main } } }}>
+                      <ShareIcon />
+                    </Box>
+                  ),
+                  onClick: handleShare,
+                },
+              ]
+            : []),
           {
             key: 'chat-conversation-menu-pin',
             label: isPinned ? 'Unpin' : 'Pin on top',
@@ -268,7 +271,7 @@ const ConversationItem = memo(props => {
             inlineExtraContent: " chat? It can't be restored.",
             shouldRequestInputName: false,
             alarm: true,
-            disabled: userId != author_id || (isActive && isEditingCanvas),
+            disabled: !rights.canDelete || (isActive && isEditingCanvas),
             onConfirm: handleDelete,
           },
         ]
@@ -290,8 +293,8 @@ const ConversationItem = memo(props => {
         ];
   }, [
     isPlayback,
-    userId,
-    author_id,
+    rights,
+    SHARE_ACTIONS.none,
     isActive,
     isEditingCanvas,
     handleDelete,
@@ -498,7 +501,7 @@ const ConversationItem = memo(props => {
       <DraggableConversationItem
         conversation={conversation}
         isActive={isActive}
-        isDragDisabled={isDragDisabled || isEditingCanvas}
+        isDragDisabled={isDragDisabled || isEditingCanvas || !rights.canMoveToFolder}
       >
         {renderConversationContent()}
       </DraggableConversationItem>

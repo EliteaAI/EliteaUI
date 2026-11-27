@@ -119,6 +119,8 @@ const NewChatInput = memo(
       onCreateToolkit,
       onDeleteParticipant,
       participants = [],
+      // The owner or a manager changes the chat's participants and settings (#7757)
+      canManageChat = true,
 
       slashHighlights = [],
 
@@ -278,7 +280,8 @@ const NewChatInput = memo(
                       onInviteUsers={onAddNewUsers}
                       onInternalToolsConfigChange={onInternalToolsConfigChange}
                       internal_tools={internal_tools}
-                      disableInternalTools={isLoading || isStreaming}
+                      disableInternalTools={isLoading || isStreaming || !canManageChat}
+                      canManageParticipants={canManageChat}
                       onSelectParticipant={onSelectParticipant}
                       onCreateAgent={onCreateAgent}
                       onCreatePipeline={onCreatePipeline}
@@ -321,6 +324,7 @@ const NewChatInput = memo(
                     >
                       <ContextBudgetUI.ContextBudgetInfo
                         conversationId={conversationId}
+                        canManage={canManageChat}
                         contextStrategy={contextStrategy}
                         setActiveConversation={setActiveConversation}
                         conversationInstructions={conversationInstructions}

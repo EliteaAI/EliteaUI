@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { useListShareLinksQuery } from '@/[fsd]/features/chat/conversation-list/api/sharedLinksApi';
 import { countShareLinks } from '@/[fsd]/features/chat/conversation-list/lib/helpers/shareChat.helpers';
+import { useChatRights } from '@/[fsd]/features/chat/lib/hooks';
 import { useDebounceValue, useUserList } from '@/[fsd]/shared/lib/hooks';
 import { ChatParticipantType } from '@/common/constants';
 
@@ -27,6 +28,7 @@ export const useChatUsersAccess = ({ conversation, projectId }) => {
   const conversationId = conversation?.id;
   const isPublic = conversation?.is_private === false;
   const isOwner = !!conversationId && userId == conversation?.author_id;
+  const { canManage } = useChatRights(conversation);
 
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebounceValue(query, SEARCH_DEBOUNCE_MS).trim();
@@ -48,10 +50,10 @@ export const useChatUsersAccess = ({ conversation, projectId }) => {
     setMembersTotal(membersData.total);
   }
   const onQueryChange = useCallback(value => setQuery(value ?? ''), []);
-  // The server lists only the links the current user created, so only the owner asks
+  // The server lists only the links the current user created, so only those who may create them ask
   const { data: links = NO_LINKS } = useListShareLinksQuery(
     { projectId, conversationId },
-    { skip: !conversationId || !projectId || !isOwner },
+    { skip: !conversationId || !projectId || !canManage },
   );
 
   const participants = useMemo(

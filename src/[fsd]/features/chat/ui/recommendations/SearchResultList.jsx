@@ -14,6 +14,7 @@ const SearchResultList = memo(props => {
     existingParticipants = [],
     onClose = () => {},
     excludePublic = false,
+    onlyExisting = false,
   } = props;
 
   const mismatchedTimerRef = useRef(0);
@@ -61,17 +62,26 @@ const SearchResultList = memo(props => {
 
   const resetPageDependencies = useMemo(() => [query], [query]);
 
+  // Someone who may not change the chat's participants picks from those already in it (#7757)
+  const shownParticipants = useMemo(
+    () =>
+      onlyExisting
+        ? participants.filter(participant => existingParticipantUids.includes(participant.participantId))
+        : participants,
+    [existingParticipantUids, onlyExisting, participants],
+  );
+
   return (
     <NewParticipantList
       onSelectParticipant={onSelectParticipant}
       isLoading={isLoading}
       isFetching={isFetching}
-      participants={participants}
+      participants={shownParticipants}
       existingParticipantUids={existingParticipantUids}
       onClose={onClose}
       resetPageDependencies={resetPageDependencies}
       onLoadMore={onLoadMore}
-      total={total}
+      total={onlyExisting ? shownParticipants.length : total}
       title={'Search results'}
     />
   );

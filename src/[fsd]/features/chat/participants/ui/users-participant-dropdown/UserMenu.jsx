@@ -77,12 +77,14 @@ const UserMenu = memo(props => {
                   {user_name}
                 </Typography>
               </Box>
-              <DeleteParticipantButton
-                id="DeleteButton"
-                sx={itemStyles.deleteButton}
-                participant={user}
-                onDelete={onRemoveOption}
-              />
+              {onRemoveOption && (
+                <DeleteParticipantButton
+                  id="DeleteButton"
+                  sx={itemStyles.deleteButton}
+                  participant={user}
+                  onDelete={onRemoveOption}
+                />
+              )}
             </Box>
           </MenuItem>
         );

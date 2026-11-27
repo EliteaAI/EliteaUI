@@ -13,7 +13,7 @@ const access = vi.hoisted(() => ({ current: null }));
 const copyChatLink = vi.hoisted(() => vi.fn());
 
 vi.mock('react-redux', () => ({
-  useSelector: selector => selector({ user: { id: 1 } }),
+  useSelector: selector => selector({ user: { id: 1, personal_project_id: 28 } }),
 }));
 const projectId = vi.hoisted(() => ({ current: 406 }));
 
@@ -50,7 +50,9 @@ const user = (id, userId, name) => ({
   entity_meta: { id: userId },
   meta: { user_name: name },
 });
-const conversation = { id: 5, name: 'Plan' };
+const conversation = { id: 5, name: 'Plan', author_id: 1 };
+// Someone else's chat, without the permission to manage it (#7757)
+const sharedConversation = { ...conversation, author_id: 2 };
 
 const renderCard = props =>
   render(
@@ -102,10 +104,10 @@ describe('UsersAccessCard', () => {
 
   it('copies the chat link for anyone else', () => {
     access.current = { ...access.current, isOwner: false };
-    renderCard();
+    renderCard({ conversation: sharedConversation });
     fireEvent.click(screen.getByTestId('chat-users-access-share'));
 
-    expect(copyChatLink).toHaveBeenCalledWith(conversation, expect.any(String));
+    expect(copyChatLink).toHaveBeenCalledWith(sharedConversation, expect.any(String));
     expect(screen.queryByTestId('share-chat-modal')).not.toBeInTheDocument();
   });
 
@@ -281,5 +283,20 @@ describe('UsersAccessCard', () => {
 
       expect(screen.getByTestId('chat-users-mention-search')).toBeInTheDocument();
     });
+  });
+});
+
+describe('UsersAccessCard Share by role (#7757)', () => {
+  afterEach(() => {
+    cleanup();
+    delete globalThis.elitea_ui_config;
+  });
+
+  it('has no Share button in a private project with external sharing turned off', () => {
+    globalThis.elitea_ui_config = { chat_sharing: { external_enabled: false } };
+    projectId.current = 28;
+    renderCard();
+
+    expect(screen.queryByTestId('chat-users-access-share')).not.toBeInTheDocument();
   });
 });

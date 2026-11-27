@@ -58,6 +58,28 @@ describe('resolveHref for project membership notifications', () => {
   });
 });
 
+describe('resolveHref for shared chat notifications (#7757)', () => {
+  it('opens the chat someone was added to, in its own project', () => {
+    expect(resolveHref(NotificationType.ChatUserAdded, { conversation_id: 42 }, 19)).toBe(
+      `${BASE}/19/chat/42`,
+    );
+  });
+
+  it('falls back to the chat page when the chat is not named', () => {
+    expect(resolveHref(NotificationType.ChatUserAdded, {}, 19)).toBe(`${BASE}/19/chat`);
+  });
+
+  it('gives no link to a chat someone was removed from', () => {
+    expect(resolveHref(NotificationType.ChatUserRemoved, { conversation_id: 42 }, 19)).toBeNull();
+  });
+
+  it('keeps the message link of a mention', () => {
+    expect(
+      resolveHref(NotificationType.ChatUserMentioned, { conversation_id: 42, message_id: 'm1' }, 19),
+    ).toBe(`${BASE}/19/chat?conversation=42&message_id=m1`);
+  });
+});
+
 describe('resolveHref for index notifications', () => {
   // `indexes` is not a toolkits list tab, so a link built with it only reaches the index page
   // through a back-compat redirect and leaves the breadcrumb parent pointing at a dead list.
