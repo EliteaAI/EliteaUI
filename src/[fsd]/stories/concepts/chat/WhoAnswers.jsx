@@ -429,7 +429,7 @@ const WhoAnswers = memo(props => {
         onClose={closeAll}
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         transformOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        slotProps={{ paper: { sx: styles.paper, 'data-testid': 'who-answers-list' } }}
+        slotProps={{ paper: { sx: [styles.menuPaper, styles.paper], 'data-testid': 'who-answers-list' } }}
       >
         <WhoAnswersProvider value={whoAnswersContext}>
           <Typography
@@ -589,7 +589,9 @@ const WhoAnswers = memo(props => {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         slots={{ transition: Fade }}
-        slotProps={{ paper: { sx: styles.sidePaper, 'data-testid': 'who-answers-tools-list' } }}
+        slotProps={{
+          paper: { sx: [styles.menuPaper, styles.sidePaper], 'data-testid': 'who-answers-tools-list' },
+        }}
       >
         <WhoAnswersProvider value={whoAnswersContext}>
           <Typography
@@ -629,7 +631,10 @@ const WhoAnswers = memo(props => {
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}
         slots={{ transition: Fade }}
         slotProps={{
-          paper: { sx: styles.settingsPaper, 'data-testid': 'who-answers-participant-settings-list' },
+          paper: {
+            sx: [styles.menuPaper, styles.settingsPaper],
+            'data-testid': 'who-answers-participant-settings-list',
+          },
         }}
       >
         {settingsParticipant && (
@@ -807,6 +812,13 @@ const whoAnswersStyles = () => ({
     borderRadius: '50%',
     color: palette.icon.attention,
     backgroundColor: 'currentColor',
+  }),
+  // as the «+» menu: rounded, framed, one solid colour (the theme's MuiPaper gradient is a background-image)
+  menuPaper: ({ palette }) => ({
+    borderRadius: '.75rem',
+    border: `.0625rem solid ${palette.border.lines}`,
+    backgroundColor: palette.background.default.secondary,
+    backgroundImage: 'none',
   }),
   paper: {
     width: '24rem',

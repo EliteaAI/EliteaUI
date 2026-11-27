@@ -513,6 +513,8 @@ const conceptPlusButtonStyles = () => ({
     borderRadius: '.75rem',
     border: `.0625rem solid ${palette.border.lines}`,
     backgroundColor: palette.background.default.secondary,
+    // the theme's MuiPaper gradient is a background-image; it would stay under the colour
+    backgroundImage: 'none',
     padding: 0,
     overflow: 'hidden',
   }),
@@ -596,6 +598,7 @@ const conceptPlusButtonStyles = () => ({
     borderRadius: '.75rem',
     border: `.0625rem solid ${palette.border.lines}`,
     backgroundColor: palette.background.default.secondary,
+    backgroundImage: 'none',
     padding: 0,
     overflow: 'hidden',
     display: 'flex',
