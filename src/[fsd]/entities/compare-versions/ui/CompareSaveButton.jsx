@@ -19,7 +19,7 @@ const CompareSaveButton = memo(props => {
         sx={[compareSaveButtonStyles.wrapper, sx]}
       >
         <BaseBtn
-          variant={BUTTON_VARIANTS.elitea}
+          variant={BUTTON_VARIANTS.secondary}
           size="small"
           disabled={isDisabled}
           onClick={onClick}
