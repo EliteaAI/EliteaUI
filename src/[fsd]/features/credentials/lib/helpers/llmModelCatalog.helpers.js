@@ -18,6 +18,15 @@ const THINKING_TYPES_WITHOUT_OFF_PATH = [
   LLM_MODEL_THINKING_TYPES.alwaysOn,
 ];
 const EFFORTS_CLAUDE_THINKING_REJECTS = [LLM_MODEL_EFFORT_NONE, 'minimal'];
+const TOKEN_BUDGET_EFFORTS = ['low', 'medium', 'high'];
+
+const isEffortAcceptedByThinkingType = (level, thinkingType) => {
+  if (thinkingType === LLM_MODEL_THINKING_TYPES.enabled) return TOKEN_BUDGET_EFFORTS.includes(level);
+  return (
+    !THINKING_TYPES_WITHOUT_OFF_PATH.includes(thinkingType) ||
+    !EFFORTS_CLAUDE_THINKING_REJECTS.includes(level)
+  );
+};
 
 const ownValue = (record, key) => (record && Object.hasOwn(record, key) ? record[key] : undefined);
 
@@ -112,10 +121,8 @@ export const getLlmModelReasoningDescription = entry => {
 export const getEffortLevelLabel = level => LLM_MODEL_EFFORT_LEVEL_LABELS[level] || level;
 
 const getOfferedEffortLevels = (entry, thinkingType) =>
-  (entry?.supported_efforts || LLM_MODEL_EFFORT_LEVELS).filter(
-    level =>
-      !THINKING_TYPES_WITHOUT_OFF_PATH.includes(thinkingType) ||
-      !EFFORTS_CLAUDE_THINKING_REJECTS.includes(level),
+  (entry?.supported_efforts || LLM_MODEL_EFFORT_LEVELS).filter(level =>
+    isEffortAcceptedByThinkingType(level, thinkingType),
   );
 
 export const getUnsupportedStoredLevels = (entry, storedEfforts, thinkingType) => {

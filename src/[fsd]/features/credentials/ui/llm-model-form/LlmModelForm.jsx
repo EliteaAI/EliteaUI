@@ -115,7 +115,13 @@ const LlmModelForm = memo(props => {
   }, [isModelNameFocused, settings.name]);
   const settledName = isModelNameFocused ? nameAfterTypingPause : settings.name;
   const catalogEntry = useMemo(
-    () => findLlmModelCatalogEntry({ catalog, name: settledName, credentialType, apiProtocol }),
+    () =>
+      findLlmModelCatalogEntry({
+        catalog,
+        name: String(settledName ?? '').trim(),
+        credentialType,
+        apiProtocol,
+      }),
     [catalog, settledName, credentialType, apiProtocol],
   );
   const storedCatalogEntry = useMemo(

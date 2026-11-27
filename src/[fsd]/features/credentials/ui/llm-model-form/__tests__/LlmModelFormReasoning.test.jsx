@@ -443,6 +443,16 @@ describe('LlmModelForm reasoning settings from the LiteLLM catalog', () => {
       expect(screen.getByTestId('llm-model-thinking-type-select')).toHaveTextContent('Adaptive · always on');
     });
 
+    it('recognizes a pasted name with a trailing space while the field is still focused', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+      await typeNameWithoutLeavingTheField(user, 'gpt-5.6-luna ');
+
+      await waitFor(() =>
+        expect(screen.getByTestId('llm-model-status-name')).toHaveAttribute('data-tone', 'success'),
+      );
+    });
+
     it('looks the name up at once when the field is left before the pause ends', async () => {
       const user = userEvent.setup();
       renderForm(NEW_MODEL);
@@ -852,6 +862,43 @@ describe('LlmModelForm reasoning settings from the LiteLLM catalog', () => {
   });
 
   describe('models outside the catalog', () => {
+    it('flags a ticked level the token budget mode cannot take and offers only its three levels', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL, { showValidation: true });
+      await typeName(user, 'model-router');
+      await user.click(reasoningSwitch());
+      await user.click(screen.getByTestId('llm-model-effort-low'));
+      await user.click(screen.getByTestId('llm-model-effort-xhigh'));
+
+      await user.click(within(screen.getByTestId('llm-model-thinking-type-select')).getByRole('combobox'));
+      await user.click(await screen.findByRole('option', { name: /Enabled \(token budget\)/ }));
+
+      expect(offeredLevels()).toEqual(['low', 'medium', 'high', 'xhigh']);
+      expect(screen.getByTestId('llm-model-error-supported_efforts')).toHaveTextContent(
+        "Extra high isn't offered for this model. Uncheck to save.",
+      );
+
+      await user.click(screen.getByTestId('llm-model-effort-xhigh'));
+      expect(offeredLevels()).toEqual(['low', 'medium', 'high']);
+      expect(screen.queryByTestId('llm-model-error-supported_efforts')).not.toBeInTheDocument();
+    });
+
+    it('flags a stored token budget model that keeps a level above high', () => {
+      renderForm(
+        storedModel('my-claude-alias', {
+          supports_reasoning: true,
+          thinking_type: 'enabled',
+          supported_efforts: ['low', 'xhigh'],
+          default_effort: 'low',
+        }),
+        { showValidation: true },
+      );
+
+      expect(screen.getByTestId('llm-model-error-supported_efforts')).toHaveTextContent(
+        "Extra high isn't offered for this model. Uncheck to save.",
+      );
+    });
+
     it('starts with reasoning off and shows the full set with nothing preselected once it is on', async () => {
       const user = userEvent.setup();
       renderForm(NEW_MODEL, { showValidation: true });

@@ -229,9 +229,23 @@ describe('stored levels outside the catalog entry', () => {
         'none',
         'minimal',
       ]);
-      expect(getUnsupportedStoredLevels(null, ['none', 'minimal', 'low'], 'enabled')).toEqual([]);
     },
   );
+
+  it('offers only the token budget levels with the enabled thinking mode', () => {
+    expect(getEffortLevelOptions(null, [], 'enabled').map(option => option.value)).toEqual([
+      'low',
+      'medium',
+      'high',
+    ]);
+    expect(getUnsupportedStoredLevels(null, ['none', 'minimal', 'low', 'xhigh', 'max'], 'enabled')).toEqual([
+      'none',
+      'minimal',
+      'xhigh',
+      'max',
+    ]);
+    expect(getUnsupportedStoredLevels(find('claude-haiku-4-5'), ['low', 'high'], 'enabled')).toEqual([]);
+  });
 });
 
 // #6919: DIAL serves Gemini on the azure route and reasoning works there, so only
