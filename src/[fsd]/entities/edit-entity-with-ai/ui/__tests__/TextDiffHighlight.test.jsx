@@ -83,4 +83,31 @@ describe('TextDiffHighlight (editable)', () => {
 
     expect(onChange).toHaveBeenCalledWith('changed');
   });
+
+  it('emits an empty string when only the browser placeholder <br> remains after deleting the last character', () => {
+    const onChange = vi.fn();
+    const { container } = renderEditable({ onChange, original: ' ', modified: ' ' });
+    const editable = getEditable(container);
+
+    fireEvent.focus(editable);
+    editable.innerHTML = '<br>';
+    // jsdom has no layout, so mimic what real browsers report for an element holding only a <br>.
+    Object.defineProperty(editable, 'innerText', { value: '\n', configurable: true });
+    fireEvent.input(editable);
+
+    expect(onChange).toHaveBeenLastCalledWith('');
+  });
+
+  it('keeps real newlines when the user has entered line breaks', () => {
+    const onChange = vi.fn();
+    const { container } = renderEditable({ onChange });
+    const editable = getEditable(container);
+
+    fireEvent.focus(editable);
+    editable.innerHTML = '<div><br></div><div><br></div>';
+    Object.defineProperty(editable, 'innerText', { value: '\n\n', configurable: true });
+    fireEvent.input(editable);
+
+    expect(onChange).toHaveBeenLastCalledWith('\n\n');
+  });
 });

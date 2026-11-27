@@ -15,6 +15,7 @@ import {
   PUBLIC_AGENT_COMPARE_STEPS,
   SKILL_COMPARE_STEPS,
 } from '../lib/constants/compareVersions.constants';
+import { hasUnsavedEdits } from '../lib/helpers';
 import ComparePublicVersionSelector from './ComparePublicVersionSelector';
 import CompareVersionSelector from './CompareVersionSelector';
 import CompareVersionsStepIndicator from './CompareVersionsStepIndicator';
@@ -185,7 +186,9 @@ const CompareVersionsModal = memo(props => {
     }
   }, [rightVersionId, effectiveLeftId, onLoadVersions]);
 
-  const isDirty = Object.keys(leftEdits).length > 0 || Object.keys(rightEdits).length > 0;
+  const isLeftDirty = useMemo(() => hasUnsavedEdits(leftEdits, leftData), [leftEdits, leftData]);
+  const isRightDirty = useMemo(() => hasUnsavedEdits(rightEdits, rightData), [rightEdits, rightData]);
+  const isDirty = isLeftDirty || isRightDirty;
 
   const handleClose = useCallback(() => {
     if (isDirty) {
@@ -281,26 +284,26 @@ const CompareVersionsModal = memo(props => {
     () =>
       isSkill
         ? {
-            isDirty: Object.keys(leftEdits).length > 0,
+            isDirty: isLeftDirty,
             isSaving: Object.keys(savingLeftKeys ?? {}).length > 0,
             disabledReason: leftSaveDisabledReason ?? blankInstructionsReason(leftEdits),
             onSave: () => handleSaveLeftField(leftEdits),
           }
         : undefined,
-    [isSkill, leftEdits, savingLeftKeys, leftSaveDisabledReason, handleSaveLeftField],
+    [isSkill, isLeftDirty, leftEdits, savingLeftKeys, leftSaveDisabledReason, handleSaveLeftField],
   );
 
   const rightHeaderSave = useMemo(
     () =>
       isSkill
         ? {
-            isDirty: Object.keys(rightEdits).length > 0,
+            isDirty: isRightDirty,
             isSaving: Object.keys(savingRightKeys ?? {}).length > 0,
             disabledReason: blankInstructionsReason(rightEdits),
             onSave: () => handleSaveRightField(rightEdits),
           }
         : undefined,
-    [isSkill, rightEdits, savingRightKeys, handleSaveRightField],
+    [isSkill, isRightDirty, rightEdits, savingRightKeys, handleSaveRightField],
   );
 
   const onLeftEdit = useCallback((field, val) => setLeftEdits(prev => ({ ...prev, [field]: val })), []);

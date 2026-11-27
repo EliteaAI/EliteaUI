@@ -6,6 +6,7 @@ import { EditEntityComparisonLayout, TextDiffHighlight } from '@/[fsd]/entities/
 import { CopyIconButton } from '@/[fsd]/shared/ui/button';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
+import { areStartersEqual, filterEmptyStarters } from '../../lib/helpers';
 import CompareSaveButton from '../CompareSaveButton';
 import CompareVersionHeader from '../CompareVersionHeader';
 
@@ -46,10 +47,10 @@ const CompareUserInteractionStep = memo(props => {
   const maxStarters = Math.max(leftStarters.length, rightStarters.length, alwaysShowStarters ? 1 : 0);
 
   const welcomeNoDiff = leftWelcome === rightWelcome;
-  const startersNoDiff = useMemo(() => {
-    if (leftStarters.length !== rightStarters.length) return false;
-    return leftStarters.every((v, i) => v === rightStarters[i]);
-  }, [leftStarters, rightStarters]);
+  const startersNoDiff = useMemo(
+    () => areStartersEqual(leftStarters, rightStarters),
+    [leftStarters, rightStarters],
+  );
 
   const handleLeftWelcomeChange = useCallback(val => onLeftEdit('welcome_message', val), [onLeftEdit]);
   const handleRightWelcomeChange = useCallback(val => onRightEdit('welcome_message', val), [onRightEdit]);
@@ -72,10 +73,21 @@ const CompareUserInteractionStep = memo(props => {
     [rightStarters, onRightEdit],
   );
 
-  const leftWelcomeDirty = leftEdits.welcome_message !== undefined;
-  const rightWelcomeDirty = rightEdits.welcome_message !== undefined;
-  const leftStartersDirty = leftEdits.conversation_starters !== undefined;
-  const rightStartersDirty = rightEdits.conversation_starters !== undefined;
+  // An edit only counts when it differs from what is saved. Both sides are normalized the way the field
+  // displays them (and, for starters, the way they are saved), so a missing value equals an emptied field.
+  const leftWelcomeDirty =
+    leftEdits.welcome_message !== undefined && leftWelcome !== (leftData.welcome_message ?? '');
+  const rightWelcomeDirty =
+    rightEdits.welcome_message !== undefined && rightWelcome !== (rightData.welcome_message ?? '');
+  const leftStartersDirty =
+    leftEdits.conversation_starters !== undefined &&
+    !areStartersEqual(filterEmptyStarters(leftStarters), filterEmptyStarters(leftData.conversation_starters));
+  const rightStartersDirty =
+    rightEdits.conversation_starters !== undefined &&
+    !areStartersEqual(
+      filterEmptyStarters(rightStarters),
+      filterEmptyStarters(rightData.conversation_starters),
+    );
 
   return (
     <EditEntityComparisonLayout
@@ -179,7 +191,7 @@ const CompareUserInteractionStep = memo(props => {
                   isDirty={leftStartersDirty}
                   isSaving={Boolean(savingLeftKeys.conversation_starters)}
                   disabledReason={leftSaveDisabledReason}
-                  onClick={() => onSaveLeft({ conversation_starters: leftStarters.filter(s => s?.trim()) })}
+                  onClick={() => onSaveLeft({ conversation_starters: filterEmptyStarters(leftStarters) })}
                   sx={compareUserInteractionStepStyles.saveBtn}
                 />
               )}
@@ -285,7 +297,7 @@ const CompareUserInteractionStep = memo(props => {
                   variant={BUTTON_VARIANTS.elitea}
                   size="small"
                   disabled={!rightStartersDirty || savingRightKeys.conversation_starters}
-                  onClick={() => onSaveRight({ conversation_starters: rightStarters.filter(s => s?.trim()) })}
+                  onClick={() => onSaveRight({ conversation_starters: filterEmptyStarters(rightStarters) })}
                   sx={compareUserInteractionStepStyles.saveBtn}
                 >
                   {savingRightKeys.conversation_starters

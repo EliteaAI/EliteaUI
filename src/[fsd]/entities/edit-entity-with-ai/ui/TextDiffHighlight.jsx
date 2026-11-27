@@ -4,6 +4,13 @@ import { Box, Typography, useTheme } from '@mui/material';
 
 import { computeWordDiff } from '../lib/helpers';
 
+// Once its last character is deleted, a contentEditable keeps a lone placeholder <br> so the caret has a line box.
+// That <br> is not content, but innerText reports it as "\n".
+const isOnlyPlaceholderBreak = element =>
+  element.textContent === '' && element.childNodes.length === 1 && element.firstChild.nodeName === 'BR';
+
+const readEditableText = element => (isOnlyPlaceholderBreak(element) ? '' : element.innerText || '');
+
 const TextDiffHighlight = memo(props => {
   const { original, modified, mode, editable, onChange, maxLength } = props;
 
@@ -60,7 +67,7 @@ const TextDiffHighlight = memo(props => {
     isFocusedRef.current = false;
 
     if (onChange && editableRef.current) {
-      let newText = editableRef.current.innerText || '';
+      let newText = readEditableText(editableRef.current);
       if (maxLength && newText.length > maxLength) newText = newText.slice(0, maxLength);
 
       if (newText !== modified) onChange(newText);
@@ -72,7 +79,7 @@ const TextDiffHighlight = memo(props => {
   const handleInput = useCallback(() => {
     if (!editableRef.current) return;
 
-    const text = editableRef.current.innerText || '';
+    const text = readEditableText(editableRef.current);
     if (!maxLength || text.length <= maxLength) {
       onChange?.(text);
       return;

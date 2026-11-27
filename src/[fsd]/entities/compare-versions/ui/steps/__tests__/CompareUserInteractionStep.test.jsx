@@ -82,6 +82,47 @@ describe('CompareUserInteractionStep', () => {
     expect(screen.queryByRole('button', { name: /Save starters/ })).not.toBeInTheDocument();
   });
 
+  describe('save buttons', () => {
+    const saveWelcome = () => screen.getByRole('button', { name: 'Save base' });
+    const saveStarters = () => screen.getByRole('button', { name: 'Save starters — base' });
+
+    it('stay disabled when there are no edits', () => {
+      renderStep({ welcome_message: 'hi', conversation_starters: ['a'] }, {});
+      expect(saveWelcome()).toBeDisabled();
+      expect(saveStarters()).toBeDisabled();
+    });
+
+    it('stay disabled when an edit equals the saved value', () => {
+      renderStep(
+        { welcome_message: 'hi', conversation_starters: ['a'] },
+        {},
+        { leftEdits: { welcome_message: 'hi', conversation_starters: ['a'] } },
+      );
+      expect(saveWelcome()).toBeDisabled();
+      expect(saveStarters()).toBeDisabled();
+    });
+
+    it('stay disabled when an emptied field is compared with a missing saved value', () => {
+      renderStep(
+        { conversation_starters: [''] },
+        {},
+        { leftEdits: { welcome_message: '', conversation_starters: [] }, alwaysShowStarters: true },
+      );
+      expect(saveWelcome()).toBeDisabled();
+      expect(saveStarters()).toBeDisabled();
+    });
+
+    it('enable when an edit differs from the saved value', () => {
+      renderStep(
+        { welcome_message: 'hi', conversation_starters: ['a'] },
+        {},
+        { leftEdits: { welcome_message: 'changed', conversation_starters: ['a', 'b'] } },
+      );
+      expect(saveWelcome()).toBeEnabled();
+      expect(saveStarters()).toBeEnabled();
+    });
+  });
+
   describe('when comparing with a public version', () => {
     const left = { welcome_message: 'mine', conversation_starters: ['a'] };
     const right = { welcome_message: 'theirs', conversation_starters: ['b'] };
