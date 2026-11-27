@@ -57,6 +57,27 @@ describe('chat socket message identity', () => {
     expect(updated[3].toolActions).toEqual([{ id: 'llm-after-hitl' }]);
   });
 
+  it('gives the merged message a new toolActions array when a handler pushed into the stored one (#7763)', () => {
+    const toolActions = [{ id: 'restored-step' }];
+    const message = { id: 'assistant-1', role: ROLES.Assistant, toolActions };
+    const history = [message];
+
+    message.toolActions.push({ id: 'live-step' });
+    const updated = mergeChatSocketMessage(history, message, { messageId: 'assistant-1' });
+
+    expect(updated[0].toolActions).not.toBe(toolActions);
+    expect(updated[0].toolActions.map(action => action.id)).toEqual(['restored-step', 'live-step']);
+  });
+
+  it('leaves a message without toolActions without them', () => {
+    const updated = mergeChatSocketMessage([{ id: 'assistant-1', role: ROLES.Assistant }], {
+      id: 'assistant-1',
+      content: 'text',
+    });
+
+    expect(updated[0]).not.toHaveProperty('toolActions');
+  });
+
   it('never treats a user decision as the assistant question-id fallback', () => {
     const history = [
       { id: 'hitl-decision', role: ROLES.User, question_id: 'hitl-decision' },

@@ -98,13 +98,7 @@ const SubAgentThinkBlock = memo(props => {
       {groups.length > 0 && (
         <Box sx={badgesContainerSx}>
           {groups.flatMap((group, index) =>
-            renderGroupChips(
-              group,
-              `${instanceKey}-${index}`,
-              streaming,
-              inflight || currentAction,
-              streaming,
-            ),
+            renderGroupChips(group, `${instanceKey}-${index}`, streaming, inflight || currentAction),
           )}
         </Box>
       )}
@@ -948,10 +942,10 @@ const ApplicationThinkView = memo(props => {
   }, [actions, displayedActionIndex, finishedActions, deriveSubAgentInstanceKey]);
 
   // Render the chips for one turn-group. Streaming keeps the "skip reasoning chip
-  // when it's the same node as the in-flight action" behavior and shows tool
-  // chips as toolkit-only; history shows full tool chips (click → modal).
+  // when it's the same node as the in-flight action" behavior. Tool chips show
+  // "<toolkit>: <tool>" while streaming and in history alike (#7763).
   const renderGroupChips = useCallback(
-    (group, keyPrefix, streaming, inflightAction, fullToolNames = false) => {
+    (group, keyPrefix, streaming, inflightAction) => {
       const items = [];
       let skipReasoning = false;
       // id of the in-flight TOOL action whose static chip must be skipped because
@@ -991,7 +985,6 @@ const ApplicationThinkView = memo(props => {
             action={action}
             tools={tools}
             isStreaming={streaming}
-            onlyShowToolkit={streaming && !fullToolNames}
             width="auto"
           />,
         );
