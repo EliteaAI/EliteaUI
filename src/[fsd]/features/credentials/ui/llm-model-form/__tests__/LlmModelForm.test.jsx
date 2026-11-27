@@ -49,11 +49,15 @@ vi.mock('../../../lib/hooks/useLlmModelTargetProjectId.hooks.js', () => ({
 }));
 
 vi.mock('../../../lib/hooks', async () => {
+  const { useLlmModelCatalogPrefill } = await vi.importActual(
+    '../../../lib/hooks/useLlmModelCatalogPrefill.hooks.js',
+  );
   const { LLM_MODEL_CATALOG_FIXTURE } = await import('./llmModelCatalog.fixture.js');
   const { useLlmModelCheckConnection } = await vi.importActual(
     '../../../lib/hooks/useLlmModelCheckConnection.hooks.js',
   );
   return {
+    useLlmModelCatalogPrefill,
     useLlmModelCheckConnection,
     useLlmModelCredentialType: credential => ({
       credentialType: CREDENTIAL_TYPES[credential?.elitea_title] || '',

@@ -33,9 +33,13 @@ const EMPTY_CATALOG = { prefixes: {}, models: {} };
 
 let catalog = LLM_MODEL_CATALOG_FIXTURE;
 let isCatalogPending = false;
+let isCatalogUnavailable = false;
 let credentialType = 'open_ai';
 
-vi.mock('../../../lib/hooks', () => {
+vi.mock('../../../lib/hooks', async () => {
+  const { useLlmModelCatalogPrefill } = await vi.importActual(
+    '../../../lib/hooks/useLlmModelCatalogPrefill.hooks.js',
+  );
   const idleConnectionTest = {
     result: null,
     isTesting: false,
@@ -44,10 +48,11 @@ vi.mock('../../../lib/hooks', () => {
     reset: () => {},
   };
   return {
+    useLlmModelCatalogPrefill,
     useLlmModelCheckConnection: () => idleConnectionTest,
     useLlmModelCredentialType: () => ({ credentialType, isCredentialTypePending: false }),
     useLlmModelTakenIds: () => [],
-    useLlmModelCatalog: () => ({ catalog, isCatalogPending }),
+    useLlmModelCatalog: () => ({ catalog, isCatalogPending, isCatalogUnavailable }),
   };
 });
 
@@ -199,6 +204,7 @@ describe('LlmModelForm reasoning settings from the LiteLLM catalog', () => {
     vi.clearAllMocks();
     catalog = LLM_MODEL_CATALOG_FIXTURE;
     isCatalogPending = false;
+    isCatalogUnavailable = false;
     credentialType = 'open_ai';
   });
 
@@ -934,6 +940,19 @@ describe('LlmModelForm reasoning settings from the LiteLLM catalog', () => {
         supported_efforts: ['none', 'max'],
         default_effort: 'max',
       });
+    });
+
+    it('says nothing about recognition when the catalog could not be loaded, and offers every setting', async () => {
+      catalog = undefined;
+      isCatalogUnavailable = true;
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+      await typeName(user, 'gpt-5.6-luna');
+
+      expect(screen.queryByTestId('llm-model-status-name')).not.toBeInTheDocument();
+      await user.click(reasoningSwitch());
+      expect(screen.getByTestId('llm-model-thinking-type-select')).toHaveTextContent('Not set');
+      expect(offeredLevels()).toEqual(EVERY_LEVEL);
     });
 
     it('says nothing about recognition until the catalog has loaded, then applies the entry', async () => {

@@ -3,10 +3,10 @@ import { useLlmModelTargetProjectId } from './useLlmModelTargetProjectId.hooks.j
 
 export const useLlmModelCatalog = () => {
   const targetProjectId = useLlmModelTargetProjectId();
-  const { data, isFetching, isUninitialized } = useLlmModelCatalogQuery(
+  const { data, isError, isFetching, isUninitialized } = useLlmModelCatalogQuery(
     { projectId: targetProjectId },
     { skip: !targetProjectId },
   );
 
-  return { catalog: data, isCatalogPending: isFetching || isUninitialized };
+  return { catalog: data, isCatalogPending: isFetching || isUninitialized, isCatalogUnavailable: isError };
 };

@@ -4,6 +4,7 @@ export { useCredentialLabel } from './useCredentialLabel.hooks.js';
 export { useLlmModelCredentialType } from './useLlmModelCredentialType.hooks.js';
 export { useLlmModelTakenIds } from './useLlmModelTakenIds.hooks.js';
 export { useLlmModelCatalog } from './useLlmModelCatalog.hooks.js';
+export { useLlmModelCatalogPrefill } from './useLlmModelCatalogPrefill.hooks.js';
 export { useLlmModelTargetProjectId } from './useLlmModelTargetProjectId.hooks.js';
 export { useLlmModelCheckConnection } from './useLlmModelCheckConnection.hooks.js';
 export { useGetCurrentConfigurationAsSchemas } from './useGetCurrentConfigurationAsSchemas.hooks.js';

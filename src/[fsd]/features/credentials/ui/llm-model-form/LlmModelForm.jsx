@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -11,8 +11,6 @@ import LockSimple from '@/components/Icons/LockSimple';
 import { LlmModelFormConstants } from '../../lib/constants';
 import { credentialKeyOf, isApiProtocolCredentialType } from '../../lib/helpers/apiProtocol.helpers.js';
 import {
-  areSettingsAsPrefilled,
-  buildPrefillFromCatalogEntry,
   buildReasoningSettingsFromCatalogEntry,
   findLlmModelCatalogEntry,
   getEffortLevelLabel,
@@ -21,7 +19,6 @@ import {
   getUnsupportedStoredLevels,
   isAzureReasoningWarned,
   isLlmModelReasoningConfigured,
-  pickPrefillableSettings,
 } from '../../lib/helpers/llmModelCatalog.helpers.js';
 import {
   convertDisplayNameToLlmModelId,
@@ -36,7 +33,12 @@ import {
   parseLlmModelTokenLimitInput,
   pickVisibleLlmModelErrors,
 } from '../../lib/helpers/llmModelForm.helpers.js';
-import { useLlmModelCatalog, useLlmModelCredentialType, useLlmModelTakenIds } from '../../lib/hooks';
+import {
+  useLlmModelCatalog,
+  useLlmModelCatalogPrefill,
+  useLlmModelCredentialType,
+  useLlmModelTakenIds,
+} from '../../lib/hooks';
 import { validateLlmModelSettings } from '../../lib/validation';
 import CredentialsSelect from '../credentials-select/CredentialsSelect';
 import LlmModelConnectionTest from './LlmModelConnectionTest';
@@ -88,7 +90,7 @@ const LlmModelForm = memo(props => {
 
   const { credentialType, isCredentialTypePending } = useLlmModelCredentialType(settings.ai_credentials);
   const takenIds = useLlmModelTakenIds({ skip: isEditing });
-  const { catalog, isCatalogPending } = useLlmModelCatalog();
+  const { catalog, isCatalogPending, isCatalogUnavailable } = useLlmModelCatalog();
 
   const isApiProtocolShown = isApiProtocolCredentialType(credentialType);
   const isStoredCredentialKept =
@@ -128,7 +130,7 @@ const LlmModelForm = memo(props => {
     () => findLlmModelCatalogEntry({ catalog, name: initialSettings?.name, credentialType, apiProtocol }),
     [catalog, initialSettings?.name, credentialType, apiProtocol],
   );
-  const isRecognitionSettled = !isCatalogPending && settledName === settings.name;
+  const isRecognitionSettled = !isCatalogPending && !isCatalogUnavailable && settledName === settings.name;
   const recognition = useMemo(
     () => (isRecognitionSettled ? getLlmModelRecognition(settledName, catalogEntry) : null),
     [isRecognitionSettled, settledName, catalogEntry],
@@ -273,59 +275,17 @@ const LlmModelForm = memo(props => {
     setIsModelNameFocused(false);
   }, [editSetting, settings.name]);
 
-  const [handledCatalogKey, setHandledCatalogKey] = useState(catalogEntry?.key ?? null);
-  const prefilledNameRef = useRef(catalogEntry ? settledName : null);
-  const lastPrefillRef = useRef(null);
-  const nameSettledBeforeCatalogRef = useRef(null);
-  const isSettledNameEdited = settledName !== initialSettings?.name;
-  const isStoredEntryLookedUp =
-    isEditing && (!isSettledNameEdited || catalogEntry?.key === storedCatalogEntry?.key);
-  useLayoutEffect(() => {
-    if (isCatalogPending) {
-      if (nameSettledBeforeCatalogRef.current?.name !== settledName) {
-        nameSettledBeforeCatalogRef.current = {
-          name: settledName,
-          settings: pickPrefillableSettings(settings, !isEditing),
-        };
-      }
-      return;
-    }
-    const nameSettledBeforeCatalog = nameSettledBeforeCatalogRef.current;
-    const isEditedWhileCatalogLoaded =
-      nameSettledBeforeCatalog?.name === settledName &&
-      !areSettingsAsPrefilled(settings, nameSettledBeforeCatalog.settings);
-    if (isModelNameFocused && !isEditedWhileCatalogLoaded) return;
-    nameSettledBeforeCatalogRef.current = null;
-    const catalogKey = catalogEntry?.key ?? null;
-    if (catalogKey === handledCatalogKey) return;
-    setHandledCatalogKey(catalogKey);
-    if (prefilledNameRef.current !== settledName) prefilledNameRef.current = null;
-    if (!catalogEntry || (isEditing && !isSettledNameEdited)) return;
-    if (isEditedWhileCatalogLoaded) {
-      prefilledNameRef.current = settledName;
-      lastPrefillRef.current = nameSettledBeforeCatalog.settings;
-      return;
-    }
-    const isRouteChangeOnly = prefilledNameRef.current === settledName;
-    if (isRouteChangeOnly && !areSettingsAsPrefilled(settings, lastPrefillRef.current)) return;
-    const prefill = buildPrefillFromCatalogEntry(catalogEntry, {
-      isVisionIncluded: !isEditing,
-      isUnreportedReasoningKept: isRouteChangeOnly,
-    });
-    prefilledNameRef.current = settledName;
-    lastPrefillRef.current = { ...pickPrefillableSettings(settings, !isEditing), ...prefill };
-    Object.entries(prefill).forEach(([field, value]) => editSetting(field, value));
-  }, [
+  const { isStoredEntryLookedUp, isCatalogFillPending } = useLlmModelCatalogPrefill({
     catalogEntry,
-    editSetting,
-    handledCatalogKey,
+    storedCatalogEntry,
     isCatalogPending,
     isEditing,
     isModelNameFocused,
-    isSettledNameEdited,
+    initialName: initialSettings?.name,
     settings,
     settledName,
-  ]);
+    editSetting,
+  });
 
   const onReasoningChange = useCallback(
     (field, isChecked) => {
@@ -530,9 +490,7 @@ const LlmModelForm = memo(props => {
                   initialSettings={initialSettings}
                   isEditing={isEditing}
                   isStoredEntryLookedUp={isStoredEntryLookedUp}
-                  isCatalogFillPending={
-                    !isStoredEntryLookedUp && (catalogEntry?.key ?? null) !== handledCatalogKey
-                  }
+                  isCatalogFillPending={isCatalogFillPending}
                   catalogEntry={catalogEntry}
                   visibleErrors={visibleErrors}
                   editSetting={editSetting}
