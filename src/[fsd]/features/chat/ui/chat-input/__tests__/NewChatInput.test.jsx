@@ -168,11 +168,18 @@ describe('NewChatInput context ring', () => {
     );
     expect(ContextBudgetUI.ContextBudgetInfo.mock.calls[0][0]).toEqual({
       conversationId: 101,
+      canManage: true,
       contextStrategy: ringProps.contextStrategy,
       setActiveConversation: ringProps.setActiveConversation,
       conversationInstructions: 'Be brief',
       persona: 'generic',
     });
+  });
+
+  it('shows the ring read-only to someone who may not change the chat (#7757)', () => {
+    renderInput({ ...ringProps, canManageChat: false });
+
+    expect(ContextBudgetUI.ContextBudgetInfo.mock.calls[0][0]).toMatchObject({ canManage: false });
   });
 
   it.each([

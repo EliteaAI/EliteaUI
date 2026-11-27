@@ -3,7 +3,7 @@ export {
   redistributeConversationsIntoGroups,
   sortConversations,
 } from './conversationList.helpers';
-export { applyPrivacyToLists, mergeDateGroupsFirstPage } from './chatHistory.helpers';
+export { applyPrivacyToLists, mergeDateGroupsFirstPage, removeFromLists } from './chatHistory.helpers';
 export {
   applyParticipantChanges,
   buildNewParticipants,

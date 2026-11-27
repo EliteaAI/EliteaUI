@@ -6,7 +6,7 @@ import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/l
 import NewParticipantList from './NewParticipantList';
 
 const RecommendationList = memo(props => {
-  const { onSelectParticipant, existingParticipants = [], onClose = () => {} } = props;
+  const { onSelectParticipant, existingParticipants = [], onClose = () => {}, onlyExisting = false } = props;
 
   const { recommendations, isFetching, isLoading } = useRecommendations();
   const existingParticipantUids = useMemo(
@@ -22,11 +22,20 @@ const RecommendationList = memo(props => {
     isFetchingRef.current = isFetching;
   }, [isFetching]);
 
+  // Someone who may not change the chat's participants picks from those already in it (#7757)
+  const shownParticipants = useMemo(
+    () =>
+      onlyExisting
+        ? recommendations.filter(participant => existingParticipantUids.includes(participant.participantId))
+        : recommendations,
+    [existingParticipantUids, onlyExisting, recommendations],
+  );
+
   return (
     <NewParticipantList
       onSelectParticipant={onSelectParticipant}
       isLoading={isLoading}
-      participants={recommendations}
+      participants={shownParticipants}
       existingParticipantUids={existingParticipantUids}
       onClose={onClose}
     />

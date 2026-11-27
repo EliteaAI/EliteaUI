@@ -54,16 +54,19 @@ const ParticipantActions = memo(props => {
           isPublic={isPublic}
         />
       )}
-      <DeleteParticipantButton
-        id="DeleteButton"
-        sx={{
-          width: '1.75rem',
-          height: '1.75rem',
-        }}
-        participant={participant}
-        disabled={disabledDeleteButton}
-        onDelete={onDelete}
-      />
+      {/* Without onDelete the viewer may not change the chat's participants (#7757) */}
+      {onDelete && (
+        <DeleteParticipantButton
+          id="DeleteButton"
+          sx={{
+            width: '1.75rem',
+            height: '1.75rem',
+          }}
+          participant={participant}
+          disabled={disabledDeleteButton}
+          onDelete={onDelete}
+        />
+      )}
     </Box>
   );
 });

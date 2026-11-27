@@ -5,13 +5,15 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import getDesignTokens from '@/MainTheme';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import ShareChatModal from '../ShareChatModal';
 
 const saveAccess = vi.hoisted(() => vi.fn());
 const savedAccess = vi.hoisted(() => ({ current: [] }));
 
+const rights = vi.hoisted(() => ({ canShareExternally: true }));
+vi.mock('@/[fsd]/features/chat/lib/hooks', () => ({ useChatRights: () => rights }));
 vi.mock('@/[fsd]/features/chat/conversation-list/lib/hooks', () => ({
   useCopyChatLink: () => vi.fn(),
   useCopyToClipboard: () => vi.fn(),
@@ -113,5 +115,61 @@ describe('ShareChatModal for a chat not sent yet', () => {
     expect(screen.getByTestId('share-copy-link')).not.toBeDisabled();
     expect(screen.getByTestId('share-save')).toBeInTheDocument();
     expect(screen.queryByTestId('share-done')).not.toBeInTheDocument();
+  });
+});
+
+describe('ShareChatModal without external sharing (#7757)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    savedAccess.current = [ann];
+    rights.canShareExternally = false;
+  });
+  afterEach(() => {
+    cleanup();
+    rights.canShareExternally = true;
+  });
+
+  it('shows the Team content without the tabs', () => {
+    renderModal({ conversation: { id: 500 } });
+
+    expect(screen.queryByTestId('share-tab-externally')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('share-tab-team')).not.toBeInTheDocument();
+    expect(screen.getByTestId('share-save')).toBeInTheDocument();
+  });
+});
+
+describe('ShareChatModal for a manager who removes themselves (#7757)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    savedAccess.current = [ann];
+  });
+  afterEach(() => cleanup());
+
+  it('closes after Save, since there is nothing left to manage', async () => {
+    saveAccess.mockResolvedValue({ failed: false, isSelfRemoved: true, isPrivate: true, deletedIds: [13] });
+    const onClose = vi.fn();
+    const onAccessSaved = vi.fn();
+    renderModal({ conversation: { id: 500 }, onClose, onAccessSaved });
+
+    fireEvent.click(screen.getByTestId('team-tab-remove-all'));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('share-save'));
+    });
+
+    expect(onAccessSaved).toHaveBeenCalledWith(500, expect.objectContaining({ isSelfRemoved: true }));
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('stays open after a usual Save', async () => {
+    saveAccess.mockResolvedValue({ failed: false, isSelfRemoved: false, isPrivate: true, deletedIds: [12] });
+    const onClose = vi.fn();
+    renderModal({ conversation: { id: 500 }, onClose });
+
+    fireEvent.click(screen.getByTestId('team-tab-remove-all'));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('share-save'));
+    });
+
+    expect(onClose).not.toHaveBeenCalled();
   });
 });

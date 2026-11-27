@@ -8,6 +8,7 @@ import {
   useShareChat,
   useShareChatMessages,
 } from '@/[fsd]/features/chat/conversation-list/lib/hooks';
+import { useChatRights } from '@/[fsd]/features/chat/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { useDebounceValue, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Banner, Button, Modal } from '@/[fsd]/shared/ui';
@@ -57,7 +58,10 @@ const ShareChatModal = memo(props => {
     isDraft,
   });
   const { mode, savedAccess, links, membersTotal, createLink, revokeLink, saveAccess, refetchLinks } = share;
-  const currentTab = tab ?? (mode === SHARE_MODES.linksOnly ? SHARE_TABS.externally : SHARE_TABS.team);
+  // External links follow the admin switch and the role: an invited Viewer never gets them (#7757)
+  const { canShareExternally } = useChatRights(conversation);
+  const defaultTab = mode === SHARE_MODES.linksOnly ? SHARE_TABS.externally : SHARE_TABS.team;
+  const currentTab = canShareExternally ? (tab ?? defaultTab) : SHARE_TABS.team;
   const [access, setAccess] = useState(savedAccess);
   const [isSaving, setIsSaving] = useState(false);
   const [isFormRequested, setIsFormRequested] = useState(false);
@@ -116,7 +120,7 @@ const ShareChatModal = memo(props => {
     () => ({ messages: messagesTotal, files: share.filesTotal, isLoaded: isTotalsLoaded }),
     [isTotalsLoaded, messagesTotal, share.filesTotal],
   );
-  const showTabs = mode === SHARE_MODES.owner;
+  const showTabs = mode === SHARE_MODES.owner && canShareExternally;
   const canGenerate = canGenerateLink(form, totals) && !share.isCreatingLink && !awaitedToken;
 
   const askOrRun = useCallback(
@@ -138,7 +142,9 @@ const ShareChatModal = memo(props => {
     if (failed) toastError(SHARE_MESSAGES.accessFailed);
     else toastSuccess(SHARE_MESSAGES.accessUpdated);
     setIsSaving(false);
-  }, [access, conversation?.id, onAccessSaved, saveAccess, toastError, toastSuccess]);
+    // Someone who removed themselves has nothing left to manage here
+    if (changes.isSelfRemoved) onClose?.();
+  }, [access, conversation?.id, onAccessSaved, onClose, saveAccess, toastError, toastSuccess]);
 
   const handleDone = useCallback(() => {
     onDone?.(access);

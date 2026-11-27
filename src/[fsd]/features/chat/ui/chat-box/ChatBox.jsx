@@ -45,6 +45,7 @@ import {
 import * as NewConversationHelpers from '@/[fsd]/features/chat/lib/helpers/newConversation.helpers';
 import {
   useBudgetWarning,
+  useChatRights,
   useChatSkillMention,
   useDeleteMessageAlert,
   useEveryoneMentionIds,
@@ -2590,6 +2591,8 @@ const ChatBox = memo(
     );
 
     const [showRecommendationList, setShowRecommendationList] = useState(false);
+    // An invited Viewer uses the chat's participants as they are (#7757)
+    const { canManage: canManageChat } = useChatRights(activeConversation);
     const [originalParticipant, setOriginalParticipant] = useState();
 
     const modelList = useMemo(
@@ -3173,6 +3176,7 @@ const ChatBox = memo(
               <RecommendationList
                 onSelectParticipant={onSelectParticipant}
                 existingParticipants={activeConversation?.participants || []}
+                onlyExisting={!canManageChat}
                 onClose={onShowParticipantsList}
               />
             )}
@@ -3188,6 +3192,7 @@ const ChatBox = memo(
               <SearchResultList
                 query={query.slice(1)}
                 excludePublic={query.startsWith(MentionConstants.PRIVATE_PARTICIPANT_TRIGGER)}
+                onlyExisting={!canManageChat}
                 onSelectParticipant={onSelectParticipant}
                 stopProcessingSymbols={stopProcessingSymbols}
                 existingParticipants={activeConversation?.participants || []}
@@ -3313,6 +3318,7 @@ const ChatBox = memo(
               //internal tools config
               onInternalToolsConfigChange={onInternalToolsConfigChange}
               onAddNewUsers={onAddNewUsers}
+              canManageChat={canManageChat}
               internal_tools={activeConversation?.meta?.internal_tools || []}
               showContextBudget={isSavedConversation(activeConversation)}
               contextStrategy={activeConversation?.meta?.context_strategy || {}}

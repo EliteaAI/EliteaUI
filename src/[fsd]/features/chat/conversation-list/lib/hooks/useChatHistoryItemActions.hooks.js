@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef } from 'react';
 
 import { v4 as uuidv4 } from 'uuid';
 
-import { applyPrivacyToLists } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
+import { applyPrivacyToLists, removeFromLists } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
 import {
   useChatHistoryActions,
   useChatHistoryData,
@@ -117,10 +117,9 @@ export const useChatHistoryItemActions = props => {
 
   const onRestrictAccessSuccess = useCallback(
     (conversationId, participantChanges = {}) => {
-      const { updateConversations, updateFolders } = applyPrivacyToLists({
-        conversationId,
-        isPrivate: participantChanges.isPrivate ?? true,
-      });
+      const { updateConversations, updateFolders } = participantChanges.isSelfRemoved
+        ? removeFromLists({ conversationId })
+        : applyPrivacyToLists({ conversationId, isPrivate: participantChanges.isPrivate ?? true });
       setConversations(updateConversations);
       setPinnedConversations(updateConversations);
       setFolders(updateFolders);

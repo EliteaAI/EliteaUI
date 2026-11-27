@@ -129,6 +129,15 @@ describe('PlusChatButton rows', () => {
     expect(screen.getByTestId('internal-tools-menuitem-count')).toHaveTextContent('1');
   });
 
+  it('keeps only Attach and Modules for someone who may not change the participants (#7757)', () => {
+    renderMenu({ participants, canManageParticipants: false });
+
+    expect(screen.getByTestId('internal-tools-menuitem')).toBeInTheDocument();
+    ['agents', 'pipelines', 'skills', 'toolkits', 'mcps'].forEach(kind =>
+      expect(screen.queryByTestId(`${kind}-menuitem`)).toBeNull(),
+    );
+  });
+
   it('has no MCPs row nor its count when MCP is hidden', () => {
     mocks.isMcpVisible = false;
     renderMenu({ participants });

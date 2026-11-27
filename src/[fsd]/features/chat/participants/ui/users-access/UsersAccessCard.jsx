@@ -20,13 +20,12 @@ const UsersAccessCard = memo(props => {
   const [isMentionOpen, setIsMentionOpen] = useState(false);
 
   const handleCloseMention = useCallback(() => setIsMentionOpen(false), []);
-  const { access, userId, isShareOpen, handleShare, handleMention, handleCloseShare } = useUsersAccessActions(
-    {
+  const { access, userId, isShareOpen, canShare, handleShare, handleMention, handleCloseShare } =
+    useUsersAccessActions({
       conversation,
       onSelectParticipant,
       onBeforeAction: handleCloseMention,
-    },
-  );
+    });
 
   const styles = usersAccessCardStyles();
 
@@ -46,23 +45,25 @@ const UsersAccessCard = memo(props => {
           expiredLinksCount={access.expiredLinksCount}
           onLabelClick={handleOpenMention}
         />
-        <Tooltip
-          title="Share"
-          placement="top"
-        >
-          <Box
-            className="users-access-share"
-            sx={styles.shareSlot}
+        {canShare && (
+          <Tooltip
+            title="Share"
+            placement="top"
           >
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.tertiary}
-              aria-label="Share"
-              startIcon={<ShareIcon />}
-              onClick={handleShare}
-              data-testid="chat-users-access-share"
-            />
-          </Box>
-        </Tooltip>
+            <Box
+              className="users-access-share"
+              sx={styles.shareSlot}
+            >
+              <Button.BaseBtn
+                variant={BUTTON_VARIANTS.tertiary}
+                aria-label="Share"
+                startIcon={<ShareIcon />}
+                onClick={handleShare}
+                data-testid="chat-users-access-share"
+              />
+            </Box>
+          </Tooltip>
+        )}
       </Box>
       <UsersMentionDropdown
         open={isMentionOpen}

@@ -85,6 +85,8 @@ const PlusChatButton = memo(props => {
     disableInternalTools = false,
     onSelectParticipant,
     onDeleteParticipant,
+    // An invited Viewer keeps Attach and a read-only Modules list (#7757)
+    canManageParticipants = true,
     onCreateAgent,
     onCreatePipeline,
     onCreateToolkit,
@@ -398,38 +400,40 @@ const PlusChatButton = memo(props => {
                 }
               />
 
-              {EXPANDABLE_ITEMS.filter(item => item.key !== SUBMENU_KEYS.MCPS || isMcpVisible).map(
-                ({ key, label, Icon, testId }) => (
-                  <MenuItem
-                    key={key}
-                    sx={styles.menuItem}
-                    data-testid={testId}
-                    selected={openItem === key}
-                    aria-haspopup="menu"
-                    aria-expanded={openItem === key}
-                    onClick={() => handleItemClick(key)}
-                  >
-                    <Box
-                      component={Icon}
-                      sx={styles.menuIcon}
-                    />
-                    <Typography sx={styles.menuLabel}>{label}</Typography>
-                    {counts[key] > 0 && (
-                      <Typography
-                        variant="bodyMedium"
-                        sx={styles.count}
-                        data-testid={`${testId}-count`}
-                      >
-                        {counts[key]}
-                      </Typography>
-                    )}
-                    <ArrowRightIcon
-                      sx={styles.chevron}
-                      fill={theme.palette.icon.default}
-                    />
-                  </MenuItem>
-                ),
-              )}
+              {EXPANDABLE_ITEMS.filter(
+                item =>
+                  (item.key !== SUBMENU_KEYS.MCPS || isMcpVisible) &&
+                  (canManageParticipants || item.key === SUBMENU_KEYS.INTERNAL_TOOLS),
+              ).map(({ key, label, Icon, testId }) => (
+                <MenuItem
+                  key={key}
+                  sx={styles.menuItem}
+                  data-testid={testId}
+                  selected={openItem === key}
+                  aria-haspopup="menu"
+                  aria-expanded={openItem === key}
+                  onClick={() => handleItemClick(key)}
+                >
+                  <Box
+                    component={Icon}
+                    sx={styles.menuIcon}
+                  />
+                  <Typography sx={styles.menuLabel}>{label}</Typography>
+                  {counts[key] > 0 && (
+                    <Typography
+                      variant="bodyMedium"
+                      sx={styles.count}
+                      data-testid={`${testId}-count`}
+                    >
+                      {counts[key]}
+                    </Typography>
+                  )}
+                  <ArrowRightIcon
+                    sx={styles.chevron}
+                    fill={theme.palette.icon.default}
+                  />
+                </MenuItem>
+              ))}
 
               {canInviteUsers && (
                 <MenuItem

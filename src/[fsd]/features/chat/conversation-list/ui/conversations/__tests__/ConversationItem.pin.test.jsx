@@ -16,7 +16,8 @@ vi.mock('@/[fsd]/features/chat/conversation-list/ui', () => ({
   ConversationRunIndicator: () => null,
   DraggableConversationItem: props => props.children,
 }));
-vi.mock('@/[fsd]/features/chat/lib/hooks', () => ({
+vi.mock('@/[fsd]/features/chat/lib/hooks', async () => ({
+  ...(await vi.importActual('@/[fsd]/features/chat/lib/hooks/useChatRights.hooks')),
   useConversationRunStatus: () => ({ isRunning: false, unread: null }),
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({

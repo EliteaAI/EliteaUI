@@ -535,6 +535,8 @@ export const PERMISSIONS = {
     list: 'models.chat.conversations.list',
     create: 'models.chat.conversations.create',
     edit: 'models.chat.conversation.edit',
+    // Manage a chat its owner shared with you (#7757)
+    manageShared: 'models.chat.conversations.manage_shared',
     canvas: {
       create: 'models.chat.canvas.create',
       update: 'models.chat.canvas.update',
@@ -1102,6 +1104,7 @@ export const NotificationType = {
   UserWasRemovedFromProject: 'user_was_removed_from_project',
   ChatUserAdded: 'chat_user_added',
   ChatUserMentioned: 'chat_user_mentioned',
+  ChatUserRemoved: 'chat_user_removed',
   PrivateProjectCreated: 'private_project_created',
   IndexDataChanged: 'index_data_changed',
   IndexScheduleExpiring: 'index_schedule_expiring',

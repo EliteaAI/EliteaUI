@@ -10,23 +10,45 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import ConversationItem from '../ConversationItem';
 
-const copyChatLink = vi.hoisted(() => vi.fn());
+const MANAGE_SHARED = 'models.chat.conversations.manage_shared';
+const TEAM_PROJECT = 406;
+const PERSONAL_PROJECT = 7;
 
-vi.mock('react-redux', () => ({ useSelector: selector => selector({ user: { id: 1 } }) }));
+const copyChatLink = vi.hoisted(() => vi.fn());
+const access = vi.hoisted(() => ({ projectId: 406, manageShared: false }));
+
+vi.mock('react-redux', () => ({
+  useSelector: selector => selector({ user: { id: 1, personal_project_id: 7 } }),
+}));
 vi.mock('@/[fsd]/features/chat/conversation-list/lib/hooks', () => ({ useCopyChatLink: () => copyChatLink }));
 vi.mock('@/[fsd]/features/chat/conversation-list/ui', () => ({
   ConversationRunIndicator: () => null,
-  DraggableConversationItem: props => props.children,
+  DraggableConversationItem: props => (
+    <div
+      data-testid="draggable"
+      data-drag-disabled={String(!!props.isDragDisabled)}
+    >
+      {props.children}
+    </div>
+  ),
 }));
-vi.mock('@/[fsd]/features/chat/lib/hooks', () => ({
-  useConversationRunStatus: () => ({ isRunning: false, unread: null }),
-}));
+vi.mock('@/[fsd]/features/chat/lib/hooks', async () => {
+  const { useChatRights } = await vi.importActual('@/[fsd]/features/chat/lib/hooks/useChatRights.hooks');
+  return {
+    useChatRights,
+    useConversationRunStatus: () => ({ isRunning: false, unread: null }),
+  };
+});
 // DotMenu reads useDeleteConfirmationDisabled for its confirmation items
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
-  useSelectedProjectId: () => 406,
+  useSelectedProjectId: () => access.projectId,
   useDeleteConfirmationDisabled: () => false,
 }));
-vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => true }) }));
+vi.mock('@/hooks/useCheckPermission', () => ({
+  default: () => ({
+    checkPermission: permission => (permission === MANAGE_SHARED ? access.manageShared : true),
+  }),
+}));
 
 const theme = createTheme(getDesignTokens('dark'));
 
@@ -48,19 +70,36 @@ const renderItem = (conversation, props = {}) =>
     </MemoryRouter>,
   );
 
-const renderMenu = (conversation, onShare) => {
-  renderItem(conversation, { onShare });
+const renderMenu = (conversation, onShare, props = {}) => {
+  renderItem(conversation, { onShare, ...props });
   fireEvent.click(screen.getByTestId('conversation-menu-menu-button'));
 };
 
+const menuLabels = () => screen.getAllByRole('menuitem').map(item => item.textContent);
+
+const isDisabled = label =>
+  screen
+    .getAllByRole('menuitem')
+    .find(item => item.textContent === label)
+    .getAttribute('aria-disabled') === 'true';
+
+const setExternalSharing = enabled => {
+  globalThis.elitea_ui_config = { chat_sharing: { external_enabled: enabled } };
+};
+
 describe('ConversationItem share menu', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    access.projectId = TEAM_PROJECT;
+    access.manageShared = false;
+    delete globalThis.elitea_ui_config;
+  });
   afterEach(() => cleanup());
 
   it('has one Share item in place of the old access and link items', () => {
     renderMenu({ author_id: 1 }, vi.fn());
 
-    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
+    expect(menuLabels()).toEqual([
       'Rename',
       'Move to',
       'Playback',
@@ -82,7 +121,17 @@ describe('ConversationItem share menu', () => {
     expect(copyChatLink).not.toHaveBeenCalled();
   });
 
-  it('copies the chat link for anyone else', () => {
+  it('opens the Share Chat window for a manager the chat is shared with', () => {
+    access.manageShared = true;
+    const onShare = vi.fn();
+    renderMenu({ author_id: 2 }, onShare);
+
+    fireEvent.click(screen.getByTestId('chat-conversation-menu-share-menuitem'));
+
+    expect(onShare).toHaveBeenCalledWith(expect.objectContaining({ id: 5 }));
+  });
+
+  it('copies the chat link for an invited viewer', () => {
     const onShare = vi.fn();
     renderMenu({ author_id: 2 }, onShare);
 
@@ -93,6 +142,59 @@ describe('ConversationItem share menu', () => {
       expect.objectContaining({ id: 5 }),
       'Link copied. Only people with access can open it.',
     );
+  });
+
+  it('hides Share in a private project when external sharing is off', () => {
+    access.projectId = PERSONAL_PROJECT;
+    setExternalSharing(false);
+    renderMenu({ author_id: 1 }, vi.fn());
+
+    expect(menuLabels()).not.toContain('Share');
+  });
+
+  it('keeps Share in a private project while external sharing is on', () => {
+    access.projectId = PERSONAL_PROJECT;
+    setExternalSharing(true);
+    renderMenu({ author_id: 1 }, vi.fn());
+
+    expect(menuLabels()).toContain('Share');
+  });
+});
+
+describe('ConversationItem actions by role (#7757)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    access.projectId = TEAM_PROJECT;
+    access.manageShared = false;
+  });
+  afterEach(() => cleanup());
+
+  it('lets an invited viewer pin and play back, nothing that changes the chat', () => {
+    renderMenu({ author_id: 2 }, vi.fn(), { showChatPageActions: true });
+
+    expect(isDisabled('Pin on top')).toBe(false);
+    expect(isDisabled('Playback')).toBe(false);
+    ['Rename', 'Move to', 'Duplicate', 'Export', 'Delete'].forEach(label =>
+      expect(isDisabled(label)).toBe(true),
+    );
+  });
+
+  it('lets a manager rename, duplicate and export, but not move or delete', () => {
+    access.manageShared = true;
+    renderMenu({ author_id: 2 }, vi.fn());
+
+    ['Rename', 'Duplicate', 'Export'].forEach(label => expect(isDisabled(label)).toBe(false));
+    ['Move to', 'Delete'].forEach(label => expect(isDisabled(label)).toBe(true));
+  });
+
+  it('keeps drag-and-drop to folders for the owner only', () => {
+    access.manageShared = true;
+    renderItem({ author_id: 2 }, { enableDragAndDrop: true });
+    expect(screen.getByTestId('draggable')).toHaveAttribute('data-drag-disabled', 'true');
+    cleanup();
+
+    renderItem({ author_id: 1 }, { enableDragAndDrop: true });
+    expect(screen.getByTestId('draggable')).toHaveAttribute('data-drag-disabled', 'false');
   });
 });
 

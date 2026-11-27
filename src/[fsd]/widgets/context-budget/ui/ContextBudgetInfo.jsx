@@ -31,6 +31,8 @@ const ContextBudgetInfo = memo(props => {
     setActiveConversation,
     conversationInstructions,
     persona,
+    // Context settings apply to everyone in the chat: an invited Viewer only reads them (#7757)
+    canManage = true,
   } = props;
   const selectedProjectId = useSelectedProjectId();
   const { isOpen, handleOpen, handleClose } = useModal();
@@ -45,7 +47,7 @@ const ContextBudgetInfo = memo(props => {
   );
 
   const { checkPermission } = useCheckPermission();
-  const canEdit = checkPermission(PERMISSIONS.chat.edit);
+  const canEdit = checkPermission(PERMISSIONS.chat.edit) && canManage;
   const { switchMode, isSwitching } = useContextWindowSwitch({
     conversationId,
     contextStrategy,
